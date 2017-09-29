@@ -27,10 +27,10 @@ class CallStateTestObserver : WireCallCenterCallStateObserver {
     var token : Any?
     
     func observe(conversation: ZMConversation, context: NSManagedObjectContext) {
-        token = WireCallCenterV3.addCallStateObserver(observer: self, conversation: conversation)
+        token = WireCallCenterV3.addCallStateObserver(observer: self, for: conversation, context: context)
     }
     
-    func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
+    func callCenterDidChange(callState: CallState, conversation: ZMConversation, user: ZMUser?, timeStamp: Date?) {
         changes.append(callState)
     }
     
@@ -50,7 +50,7 @@ class VoiceChannelParticipantTestObserver : VoiceChannelParticipantObserver {
     var token : Any?
     
     func observe(conversation: ZMConversation, context: NSManagedObjectContext) {
-        token = WireCallCenterV3.addVoiceChannelParticipantObserver(observer: self, forConversation: conversation, context: context)
+        token = WireCallCenterV3.addVoiceChannelParticipantObserver(observer: self, for: conversation, context: context)
     }
     
     func voiceChannelParticipantsDidChange(_ changeInfo: VoiceChannelParticipantNotification) {

@@ -89,8 +89,8 @@ class CallStateObserverTests : MessagingTest {
     func testThatMissedCallMessageIsAppendedForCanceledCallByReceiver() {
 
         // when
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: nil)
-        sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversationId: conversation.remoteIdentifier!, userId: receiver.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversation: conversation, user:sender, timeStamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversation: conversation, user: receiver, timeStamp: nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -105,8 +105,8 @@ class CallStateObserverTests : MessagingTest {
     func testThatMissedCallMessageIsAppendedForCanceledCallBySender() {
         
         // given when
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: nil)
-        sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversation: conversation, user: sender, timeStamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversation: conversation, user: sender, timeStamp: nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         self.syncMOC.performGroupedBlockAndWait {
@@ -138,7 +138,7 @@ class CallStateObserverTests : MessagingTest {
         
         // when
         for callState in ignoredCallStates {
-            sut.callCenterDidChange(callState: callState, conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: nil)
+            sut.callCenterDidChange(callState: callState, conversation: conversation, user: sender, timeStamp: nil)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -149,7 +149,7 @@ class CallStateObserverTests : MessagingTest {
     func testThatMissedCallMessageIsAppendedForMissedCalls() {
         
         // given when
-        sut.callCenterMissedCall(conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timestamp: Date(), video: false)
+        sut.callCenterMissedCall(conversation: conversation, user: sender, timestamp: Date(), video: false)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -163,7 +163,7 @@ class CallStateObserverTests : MessagingTest {
     
     func testThatMissedCallsAreForwardedToTheNotificationDispatcher() {
         // given when
-        sut.callCenterMissedCall(conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timestamp: Date(), video: false)
+        sut.callCenterMissedCall(conversation: conversation, user: sender, timestamp: Date(), video: false)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -172,7 +172,7 @@ class CallStateObserverTests : MessagingTest {
     
     func testThatCallStatesAreForwardedToTheNotificationDispatcher() {
         // given when
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversation, user: sender, timeStamp: nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -182,7 +182,7 @@ class CallStateObserverTests : MessagingTest {
     func testThatWeSendNotificationWhenCallStarts() {
         
         // given when
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversation: conversation, user: sender, timeStamp: nil)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
@@ -201,7 +201,7 @@ class CallStateObserverTests : MessagingTest {
         }
         
         // given when
-        sut.callCenterDidChange(callState: .outgoing(degraded: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: Date())
+        sut.callCenterDidChange(callState: .outgoing(degraded: false), conversation: conversation, user: sender, timeStamp: Date())
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
         // tear down
@@ -213,7 +213,7 @@ class CallStateObserverTests : MessagingTest {
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
         mockCallCenter?.mockNonIdleCalls = [conversation.remoteIdentifier! : .incoming(video: false, shouldRing: true, degraded: false)]
         mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: Date())
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversation: conversation, user: sender, timeStamp: Date())
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // expect
@@ -227,7 +227,7 @@ class CallStateObserverTests : MessagingTest {
         
         // when
         mockCallCenter?.mockNonIdleCalls = [:]
-        sut.callCenterDidChange(callState: .none, conversationId: conversation.remoteIdentifier!, userId: sender.remoteIdentifier!, timeStamp: Date())
+        sut.callCenterDidChange(callState: .none, conversation: conversation, user: sender, timeStamp: Date())
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
         // tear down

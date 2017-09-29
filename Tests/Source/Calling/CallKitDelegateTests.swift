@@ -614,7 +614,7 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversation, user: otherUser, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 1)
@@ -630,7 +630,7 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversation, user: otherUser, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
@@ -645,7 +645,7 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversation: conversation, user: otherUser, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
@@ -661,7 +661,7 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .lostMedia), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .lostMedia), conversation: conversation, user: otherUser, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.lastEndedReason, .failed)
@@ -673,7 +673,7 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .timeout), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .timeout), conversation: conversation, user: otherUser, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.lastEndedReason, .unanswered)
@@ -685,7 +685,7 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .anweredElsewhere), conversationId: conversation.remoteIdentifier!, userId: otherUser.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .anweredElsewhere), conversation: conversation, user: otherUser, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.lastEndedReason, .answeredElsewhere)
@@ -697,7 +697,7 @@ class CallKitDelegateTest: MessagingTest {
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversationId: conversation.remoteIdentifier!, userId: selfUser.remoteIdentifier!, timeStamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversation: conversation, user: selfUser, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)

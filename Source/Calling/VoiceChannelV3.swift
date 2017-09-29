@@ -190,17 +190,17 @@ extension VoiceChannelV3 : CallObservers {
     
     /// Add observer of voice channel state. Returns a token which needs to be retained as long as the observer should be active.
     public func addCallStateObserver(_ observer: WireCallCenterCallStateObserver) -> Any {
-        return WireCallCenterV3.addCallStateObserver(observer: observer, conversation: conversation!)
+        return WireCallCenterV3.addCallStateObserver(observer: observer, for: conversation!, context: conversation!.managedObjectContext!)
     }
     
     /// Add observer of voice channel participants. Returns a token which needs to be retained as long as the observer should be active.
     public func addParticipantObserver(_ observer: VoiceChannelParticipantObserver) -> Any {
-        return WireCallCenterV3.addVoiceChannelParticipantObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+        return WireCallCenterV3.addVoiceChannelParticipantObserver(observer: observer, for: conversation!, context: conversation!.managedObjectContext!)
     }
     
     /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
     public func addVoiceGainObserver(_ observer: VoiceGainObserver) -> Any {
-        return WireCallCenterV3.addVoiceGainObserver(observer: observer, forConversation: conversation!, context: conversation!.managedObjectContext!)
+        return WireCallCenterV3.addVoiceGainObserver(observer: observer, for: conversation!, context: conversation!.managedObjectContext!)
     }
     
     /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.

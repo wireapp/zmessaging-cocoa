@@ -60,11 +60,12 @@ public final class CallStateObserver : NSObject {
 
 extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
-    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, user: ZMUser?, timeStamp: Date?) {
         
         syncManagedObjectContext.performGroupedBlock {
             guard
-                let userId = userId,
+                let userId = user?.remoteIdentifier,
+                let conversationId = conversation.remoteIdentifier,
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncManagedObjectContext),
                 let user = ZMUser(remoteID: userId, createIfNeeded: false, in: self.syncManagedObjectContext)
             else {
@@ -129,9 +130,11 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
         }
     }
     
-    public func callCenterMissedCall(conversationId: UUID, userId: UUID, timestamp: Date, video: Bool) {
+    public func callCenterMissedCall(conversation: ZMConversation, user: ZMUser, timestamp: Date, video: Bool) {
         syncManagedObjectContext.performGroupedBlock {
             guard
+                let userId = user.remoteIdentifier,
+                let conversationId = conversation.remoteIdentifier,
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncManagedObjectContext),
                 let user = ZMUser(remoteID: userId, createIfNeeded: false, in: self.syncManagedObjectContext)
                 else {

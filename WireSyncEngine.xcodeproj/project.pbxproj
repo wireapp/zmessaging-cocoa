@@ -268,8 +268,8 @@
 		85D85EAFA1CB6E457D14E3B7 /* MockEntity2.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D85C9E7A2AAAE14D4BC2CC /* MockEntity2.m */; };
 		85D85EEDD5DD19FB747ED4A5 /* MockModelObjectContextFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D852DA0CD2C94CADB3B6FE /* MockModelObjectContextFactory.m */; };
 		871667FA1BB2AE9C009C6EEA /* APSSignalingKeysStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 871667F91BB2AE9C009C6EEA /* APSSignalingKeysStore.swift */; };
-		872C99531DB525A1006A3BDE /* CallKitDelegateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 872C99511DB5256E006A3BDE /* CallKitDelegateTests.swift */; };
 		8717DFA71F6EF44E0087EFE4 /* SessionManager+Push.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8717DFA61F6EF44E0087EFE4 /* SessionManager+Push.swift */; };
+		872C99531DB525A1006A3BDE /* CallKitDelegateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 872C99511DB5256E006A3BDE /* CallKitDelegateTests.swift */; };
 		872C99591DB659E6006A3BDE /* ringing_from_them_long.caf in Resources */ = {isa = PBXBuildFile; fileRef = 872C99571DB659E6006A3BDE /* ringing_from_them_long.caf */; };
 		872C995B1DB65D0D006A3BDE /* harp.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 872C995A1DB65D0D006A3BDE /* harp.m4a */; };
 		872C99601DB6722C006A3BDE /* CallKitDelegateTests+Mocking.m in Sources */ = {isa = PBXBuildFile; fileRef = 872C995F1DB6722C006A3BDE /* CallKitDelegateTests+Mocking.m */; };
@@ -809,8 +809,8 @@
 		85D85D997334755E841D13EA /* SlowSyncTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SlowSyncTests.m; sourceTree = "<group>"; };
 		85D85F3EC8565FD102AC0E5B /* ZMOperationLoop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMOperationLoop.h; sourceTree = "<group>"; };
 		871667F91BB2AE9C009C6EEA /* APSSignalingKeysStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = APSSignalingKeysStore.swift; sourceTree = "<group>"; };
-		872C99511DB5256E006A3BDE /* CallKitDelegateTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallKitDelegateTests.swift; sourceTree = "<group>"; };
 		8717DFA61F6EF44E0087EFE4 /* SessionManager+Push.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SessionManager+Push.swift"; sourceTree = "<group>"; };
+		872C99511DB5256E006A3BDE /* CallKitDelegateTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallKitDelegateTests.swift; sourceTree = "<group>"; };
 		872C99571DB659E6006A3BDE /* ringing_from_them_long.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = ringing_from_them_long.caf; sourceTree = "<group>"; };
 		872C995A1DB65D0D006A3BDE /* harp.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = harp.m4a; sourceTree = "<group>"; };
 		872C995E1DB6722C006A3BDE /* CallKitDelegateTests+Mocking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CallKitDelegateTests+Mocking.h"; sourceTree = "<group>"; };
@@ -1246,8 +1246,8 @@
 				165911521DEF38EC007FA847 /* CallStateObserver.swift */,
 				166A8BF21E015F3B00F5EEEA /* WireCallCenterV3Factory.swift */,
 				165D3A141E1D3EF30052E654 /* WireCallCenterV3.swift */,
-				F90EC5A21E7BF1AC00A6779E /* AVSWrapper.swift */,
 				F9E577201E77EC6D0065EFE4 /* WireCallCenterV3+Notifications.swift */,
+				F90EC5A21E7BF1AC00A6779E /* AVSWrapper.swift */,
 				165D3A3C1E1D60520052E654 /* ZMConversation+VoiceChannel.swift */,
 			);
 			path = Calling;

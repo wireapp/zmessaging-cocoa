@@ -369,32 +369,28 @@ extension CallKitDelegate : CXProviderDelegate {
 @available(iOS 10.0, *)
 extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
     
-    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
-        guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.managedObjectContext) else {
-            return
-        }
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, user: ZMUser?, timeStamp: Date?) {
         
         switch callState {
         case .incoming(video: let video, shouldRing: let shouldRing, degraded: _):
-            guard let userId = userId, let user = ZMUser(remoteID: userId, createIfNeeded: false, in: userSession.managedObjectContext) else {
-                break
-            }
+            guard let user = user else { break }
+            
             if shouldRing {
                 if !conversation.isSilenced {
                     reportIncomingCall(from: user, in: conversation, video: video)
                 }
             } else {
-                provider.reportCall(with: conversationId, endedAt: timeStamp, reason: .unanswered)
+                provider.reportCall(with: conversation.remoteIdentifier!, endedAt: timeStamp, reason: .unanswered)
             }
-        case let .terminating(reason: reason) where !(reason == .normal && userId == ZMUser.selfUser(inUserSession: userSession).remoteIdentifier):
-            provider.reportCall(with: conversationId, endedAt: timeStamp, reason: reason.CXCallEndedReason)
+        case let .terminating(reason: reason) where !(reason == .normal && user == ZMUser.selfUser(inUserSession: userSession)):
+            provider.reportCall(with: conversation.remoteIdentifier!, endedAt: timeStamp, reason: reason.CXCallEndedReason)
         default:
             break
         }
     }
     
-    public func callCenterMissedCall(conversationId: UUID, userId: UUID, timestamp: Date, video: Bool) {
-        provider.reportCall(with: conversationId, endedAt: timestamp, reason: .unanswered)
+    public func callCenterMissedCall(conversation: ZMConversation, user: ZMUser, timestamp: Date, video: Bool) {
+        provider.reportCall(with: conversation.remoteIdentifier!, endedAt: timestamp, reason: .unanswered)
     }
     
 }
@@ -476,10 +472,10 @@ class CallObserver : WireCallCenterCallStateObserver {
     public var onFailedToJoin : (() -> Void)?
     
     public init(conversation: ZMConversation) {
-        token = WireCallCenterV3.addCallStateObserver(observer: self, conversation: conversation)
+        token = WireCallCenterV3.addCallStateObserver(observer: self, for: conversation, context: conversation.managedObjectContext!)
     }
     
-    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, user userId: ZMUser?, timeStamp: Date?) {
         switch callState {
         case .answered(degraded: false):
             onAnswered?()
