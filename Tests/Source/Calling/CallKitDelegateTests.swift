@@ -20,6 +20,7 @@ import Foundation
 import WireDataModel
 import Intents
 import CallKit
+import OCMock
 
 @testable import WireSyncEngine
 
@@ -379,6 +380,9 @@ class CallKitDelegateTest: MessagingTest {
         
         let action = self.callKitController.requestedTransactions.last!.actions.last! as! CXAnswerCallAction
         XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
+        
+        // teardown
+        CallKitDelegateTestsMocking.stopMock(call)
     }
     
     // Actions - answer / start call

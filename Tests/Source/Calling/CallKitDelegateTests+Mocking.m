@@ -44,4 +44,9 @@
     return mockCall;
 }
 
++ (void)stopMockingMock:(NSObject *)mock
+{
+    [(OCMockObject* )mock stopMocking];
+}
+
 @end
