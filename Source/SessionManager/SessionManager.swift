@@ -320,7 +320,8 @@ public protocol LocalMessageNotificationResponder : class {
     /// - completion: runs when the user session was loaded
     /// - tearDownCompletion: runs when the UI no longer holds any references to the previous user session.
     public func select(_ account: Account, completion: ((ZMUserSession)->())? = nil, tearDownCompletion: (() -> Void)? = nil) {
-        delegate?.sessionManagerWillOpenAccount(account, userSessionCanBeTornDown: { 
+        delegate?.sessionManagerWillOpenAccount(account, userSessionCanBeTornDown: { [weak self] in
+            self?.activeUserSession = nil
             tearDownCompletion?()
         })
         
