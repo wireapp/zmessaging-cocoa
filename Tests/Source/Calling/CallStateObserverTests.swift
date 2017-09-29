@@ -242,4 +242,32 @@ class CallStateObserverTests : MessagingTest {
         mockCallCenter = nil
     }
     
+    func testThatMissedCallMessageAndNotificationIsAppendedForGroupCallNotJoined() {
+        
+        self.syncMOC.performGroupedBlockAndWait {
+            // given when
+            self.conversation.conversationType = .group
+            self.sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false), conversationId: self.conversation.remoteIdentifier!, userId: self.sender.remoteIdentifier!, timeStamp: nil)
+            self.sut.callCenterDidChange(callState: .terminating(reason: .normal), conversationId: self.conversation.remoteIdentifier!, userId: self.sender.remoteIdentifier!, timeStamp: nil)
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(conversation.messages.count, 1)
+        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
+    }
+
+    func testThatMissedCallNotificationIsNotForwardedForGroupCallAnsweredElsewhere() {
+        
+        self.syncMOC.performGroupedBlockAndWait {
+            // given when
+            self.conversation.conversationType = .group
+            self.sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false), conversationId: self.conversation.remoteIdentifier!, userId: self.sender.remoteIdentifier!, timeStamp: nil)
+            self.sut.callCenterDidChange(callState: .terminating(reason: .anweredElsewhere), conversationId: self.conversation.remoteIdentifier!, userId: self.sender.remoteIdentifier!, timeStamp: nil)
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0)
+    }
 }
