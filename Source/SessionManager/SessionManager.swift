@@ -229,6 +229,8 @@ public protocol LocalMessageNotificationResponder : class {
             log.debug("Received memory warning, tearing down background user sessions.")
             self.tearDownAllBackgroundSessions()
         })
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(applicationWillEnterForeground(_:)), name: .UIApplicationWillEnterForeground, object: nil)
     }
 
     init(
@@ -720,9 +722,13 @@ extension SessionManager: PostLoginAuthenticationObserver {
 
 }
 
-// MARK: - ConversationListObserver
+// MARK: - Unread Conversation Count
 
 extension SessionManager: ZMConversationListObserver {
+    
+    @objc fileprivate func applicationWillEnterForeground(_ note: Notification) {
+        updateAllUnreadCounts()
+    }
     
     public func conversationListDidChange(_ changeInfo: ConversationListChangeInfo) {
         
@@ -730,10 +736,24 @@ extension SessionManager: ZMConversationListObserver {
         guard let moc = changeInfo.conversationList.managedObjectContext else { return }
         
         for (accountId, session) in backgroundUserSessions where session.managedObjectContext == moc {
-            guard let account = self.accountManager.account(with: accountId) else {
-                return
-            }
-            account.unreadConversationCount = Int(ZMConversation.unreadConversationCount(in: moc))
+            updateUnreadCount(for: accountId)
+        }
+    }
+
+    fileprivate func updateUnreadCount(for accountID: UUID) {
+        guard
+            let account = self.accountManager.account(with: accountID),
+            let session = backgroundUserSessions[accountID]
+        else {
+            return
+        }
+        
+        account.unreadConversationCount = Int(ZMConversation.unreadConversationCount(in: session.managedObjectContext))
+    }
+    
+    fileprivate func updateAllUnreadCounts() {
+        for accountID in backgroundUserSessions.keys {
+            updateUnreadCount(for: accountID)
         }
     }
 }
