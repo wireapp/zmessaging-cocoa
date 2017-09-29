@@ -23,13 +23,10 @@ class ZMUserSessionRelocationTests : ZMUserSessionTestsBase {
     func testThatItMovesCaches() throws {
         // given
         let oldLocation = FileManager.default.cachesURLForAccount(with: nil, in: self.sut.sharedContainerURL)
-        if FileManager.default.fileExists(atPath: oldLocation.path) {
-            let items = try! FileManager.default.contentsOfDirectory(at: oldLocation, includingPropertiesForKeys:nil)
-            items.forEach{ try! FileManager.default.removeItem(at: $0) }
-        }
+        clearFolder(at: oldLocation)
         
         let _ = UserImageLocalCache(location: oldLocation)
-        let itemNames = try! FileManager.default.contentsOfDirectory(atPath: oldLocation.path)
+        let itemNames = try FileManager.default.contentsOfDirectory(atPath: oldLocation.path)
         XCTAssertTrue(itemNames.count > 0)
         
         // when
@@ -42,5 +39,49 @@ class ZMUserSessionRelocationTests : ZMUserSessionTestsBase {
         itemNames.forEach {
             XCTAssertTrue(movedItemNames.contains($0))
         }
+    }
+    
+    func testMovingWhitelistedFile() throws {
+        
+        // given
+        let oldLocation = FileManager.default.cachesURLForAccount(with: nil, in: self.sut.sharedContainerURL)
+        clearFolder(at: oldLocation)
+        
+        // when
+        let newLocation = try writeTestFile(name: "com.apple.nsurlsessiond", at: oldLocation)
+        ZMUserSession.moveCachesIfNeededForAccount(with: self.userIdentifier, in: self.sut.sharedContainerURL)
+        
+        //then
+        XCTAssertTrue(FileManager.default.fileExists(atPath: newLocation.path))
+    }
+    
+    func testMovingNonWhitelistedFile() throws {
+        
+        // given
+        let oldLocation = FileManager.default.cachesURLForAccount(with: nil, in: self.sut.sharedContainerURL)
+        clearFolder(at: oldLocation)
+        
+        // when
+        let newLocation = try writeTestFile(name: "example", at: oldLocation)
+        ZMUserSession.moveCachesIfNeededForAccount(with: self.userIdentifier, in: self.sut.sharedContainerURL)
+        
+        //then
+        XCTAssertFalse(FileManager.default.fileExists(atPath: newLocation.path))
+    }
+    
+    
+    func clearFolder(at location : URL) {
+        if FileManager.default.fileExists(atPath: location.path) {
+            let items = try! FileManager.default.contentsOfDirectory(at: location, includingPropertiesForKeys:nil)
+            items.forEach{ try! FileManager.default.removeItem(at: $0) }
+        }
+    }
+    
+    func writeTestFile(name: String, at location: URL) throws -> URL {
+        let content = "ZMUserSessionTest"
+        let newLocation = location.appendingPathComponent(name)
+        try content.write(to: newLocation, atomically: true, encoding: .utf8)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: newLocation.path))
+        return newLocation
     }
 }
