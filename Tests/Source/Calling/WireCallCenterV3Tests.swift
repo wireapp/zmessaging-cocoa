@@ -44,7 +44,7 @@ class WireCallCenterV3Tests: MessagingTest {
     var selfUserID : UUID!
     var conversationID : UUID!
     var clientID: String!
-    var mockTransport = WireCallCenterTransportMock()
+    var mockTransport : WireCallCenterTransportMock!
     
     override func setUp() {
         super.setUp()
@@ -60,12 +60,19 @@ class WireCallCenterV3Tests: MessagingTest {
         clientID = "foo"
         flowManager = FlowManagerMock()
         mockAVSWrapper = MockAVSWrapper(userId: selfUserID, clientId: clientID, observer: nil)
+        mockTransport = WireCallCenterTransportMock()
         sut = WireCallCenterV3(userId: selfUserID, clientId: clientID, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: mockTransport)
     }
     
     override func tearDown() {
         sut = nil
         flowManager = nil
+        clientID = nil
+        selfUserID = nil
+        conversationID = nil
+        mockTransport = nil
+        mockAVSWrapper = nil
+        
         super.tearDown()
     }
     
