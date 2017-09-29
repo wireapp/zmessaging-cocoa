@@ -20,8 +20,6 @@
 #import "ZMClientRegistrationStatus.h"
 #import "ZMOperationLoop.h"
 #import "ZMAuthenticationStatus_Internal.h"
-#import "ZMUserSessionAuthenticationNotification.h"
-#import "ZMNotifications+UserSession.h"
 #import "ZMClientRegistrationStatus+Internal.h"
 #import "ZMCredentials.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
@@ -44,7 +42,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 @property (nonatomic, weak) id <ZMClientRegistrationStatusDelegate> registrationStatusDelegate;
 @property (nonatomic) ZMPersistentCookieStorage *cookieStorage;
 
-@property (nonatomic) id <ZMClientUpdateObserverToken> clientUpdateToken;
+@property (nonatomic) id clientUpdateToken;
 @property (nonatomic) BOOL tornDown;
 
 @end
@@ -72,20 +70,20 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)observeClientUpdates
 {
     ZM_WEAK(self);
-    self.clientUpdateToken = [ZMClientUpdateNotification addObserverWithBlock:^(ZMClientUpdateNotification *note) {
+    self.clientUpdateToken = [ZMClientUpdateNotification addOserverWithContext:self.managedObjectContext block:^(enum ZMClientUpdateNotificationType type, NSArray<NSManagedObjectID *> *clientObjectIDs, NSError *error) {
         ZM_STRONG(self);
         [self.managedObjectContext performGroupedBlock:^{
-            if (note.type == ZMClientUpdateNotificationTypeFetchCompleted) {
-                [self didFetchClients:note.clientObjectIDs];
+            if (type == ZMClientUpdateNotificationTypeFetchCompleted) {
+                [self didFetchClients:clientObjectIDs];
             }
-            if (note.type == ZMClientUpdateNotificationTypeDeletionCompleted) {
+            if (type == ZMClientUpdateNotificationTypeDeletionCompleted) {
                 [self didDeleteClient];
             }
-            if (note.type == ZMClientUpdateNotificationTypeDeletionFailed) {
-                [self failedDeletingClient:note.error];
+            if (type == ZMClientUpdateNotificationTypeDeletionFailed) {
+                [self failedDeletingClient:error];
             }
-            if (note.type == ZMClientUpdateNotificationTypeFetchFailed) {
-                [self failedFetchingClients:note.error];
+            if (type == ZMClientUpdateNotificationTypeFetchFailed) {
+                [self failedFetchingClients:error];
             }
         }];
     }];
@@ -93,7 +91,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (void)tearDown
 {
-    [ZMClientUpdateNotification removeObserver:self.clientUpdateToken];
     self.clientUpdateToken = nil;
     self.tornDown = YES;
 }
@@ -271,7 +268,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
         [self prepareForClientRegistration];
     }
     else {
-        [ZMUserSessionAuthenticationNotification notifyAuthenticationDidSucceed];
         if (!self.needsToVerifySelfClient) {
             self.emailCredentials = nil;
         }
@@ -287,7 +283,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     
     [self fetchExistingSelfClientsAfterClientRegistered:client];
     
-    [ZMUserSessionAuthenticationNotification notifyDidRegisterClient];
+    [PostLoginAuthenticationNotification notifyClientRegistrationDidSucceedInContext:self.managedObjectContext];
     [self.registrationStatusDelegate didRegisterUserClient:client];
     self.emailCredentials = nil;
     self.needsToCheckCredentials = NO;
@@ -335,7 +331,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
     else {
-        [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:error];
+        [PostLoginAuthenticationNotification notifyClientRegistrationDidFailWithError:error context:self.managedObjectContext];
     }
 }
 
@@ -344,7 +340,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     NSError *emailMissingError = [[NSError alloc] initWithDomain:ZMUserSessionErrorDomain
                                                             code:ZMUserSessionNeedsToRegisterEmailToRegisterClient
                                                         userInfo:nil];
-    [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:emailMissingError];
+    [PostLoginAuthenticationNotification notifyClientRegistrationDidFailWithError:emailMissingError context:self.managedObjectContext];
 }
 
 - (void)didFetchClients:(NSArray<NSManagedObjectID *> *)clientIDs;
@@ -352,8 +348,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
  
     if (self.needsToVerifySelfClient) {
-        
-        [ZMUserSessionAuthenticationNotification notifyAuthenticationDidSucceed];
         self.emailCredentials = nil;
         self.needsToVerifySelfClient = NO;
     }
@@ -362,7 +356,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
         NSMutableDictionary *errorUserInfo = [NSMutableDictionary dictionary];
         errorUserInfo[ZMClientsKey] = clientIDs;
         NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionCanNotRegisterMoreClients userInfo:errorUserInfo];
-        [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:outError];
+        [PostLoginAuthenticationNotification notifyClientRegistrationDidFailWithError:outError context:self.managedObjectContext];
         self.isWaitingForUserClients = NO;
         self.isWaitingForClientsToBeDeleted = YES;
     }
@@ -424,7 +418,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 
     ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
     NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:selfUser.credentialsUserInfo];
-    [ZMUserSessionAuthenticationNotification notifyAuthenticationDidFail:outError];
+    [PostLoginAuthenticationNotification notifyAuthenticationInvalidatedWithError:outError context:self.managedObjectContext];
 }
 
 - (void)didDeleteClient

@@ -25,6 +25,7 @@ class LocalNotificationDispatcherTests: MessagingTest {
     var sut: LocalNotificationDispatcher!
     var conversation1: ZMConversation!
     var conversation2: ZMConversation!
+    var notificationDelegate: MockForegroundNotificationDelegate!
     
     var user1: ZMUser!
     var user2: ZMUser!
@@ -35,9 +36,11 @@ class LocalNotificationDispatcherTests: MessagingTest {
     
     override func setUp() {
         super.setUp()
+        self.notificationDelegate = MockForegroundNotificationDelegate()
         self.sut = LocalNotificationDispatcher(in: self.syncMOC,
+                                               foregroundNotificationDelegate: self.notificationDelegate,
                                                application: self.application)
-        
+        self.application.applicationState = .background
         syncMOC.performGroupedBlockAndWait {
             self.user1 = ZMUser.insertNewObject(in: self.syncMOC)
             self.user2 = ZMUser.insertNewObject(in: self.syncMOC)
@@ -63,6 +66,7 @@ class LocalNotificationDispatcherTests: MessagingTest {
     }
     
     override func tearDown() {
+        self.notificationDelegate = nil
         self.user1 = nil
         self.user2 = nil
         self.conversation1 = nil
@@ -76,7 +80,7 @@ class LocalNotificationDispatcherTests: MessagingTest {
 
 extension LocalNotificationDispatcherTests {
 
-    func testThatItCreatesNotificationFromMessages() {
+    func testThatItCreatesNotificationFromMessagesIfNotActive() {
         // GIVEN
         let text = UUID.create().transportString()
         let message = self.conversation1.appendMessage(withText: text) as! ZMClientMessage
@@ -87,11 +91,44 @@ extension LocalNotificationDispatcherTests {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
-        guard self.application.scheduledLocalNotifications.count == 1 else {
-            return XCTFail("Wrong number of notifications")
-        }
+        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
+        XCTAssertEqual(self.notificationDelegate.receivedLocalNotifications.count, 0)
         guard let notification = self.application.scheduledLocalNotifications.first else { return XCTFail() }
         XCTAssertTrue(notification.alertBody!.contains(text))
+    }
+    
+    func testThatItDoesNotCreateNotificationFromMessagesIfActive() {
+        // GIVEN
+        let text = UUID.create().transportString()
+        let message = self.conversation1.appendMessage(withText: text) as! ZMClientMessage
+        message.sender = self.user1
+        self.application.applicationState = .active
+
+        
+        // WHEN
+        self.sut.process(message)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0)
+        XCTAssertEqual(self.notificationDelegate.receivedLocalNotifications.count, 0)
+    }
+    
+    func testThatItForwardsNotificationFromMessagesIfActive() {
+        // GIVEN
+        let text = UUID.create().transportString()
+        let message = self.conversation1.appendMessage(withText: text) as! ZMClientMessage
+        message.sender = self.user1
+        self.application.applicationState = .active
+        
+        // WHEN
+        self.sut.process(message)
+        self.sut.processBuffer()
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0)
+        XCTAssertEqual(self.notificationDelegate.receivedLocalNotifications.count, 1)
     }
 
     func testThatItAddsNotificationOfDifferentConversationsToTheList() {
@@ -297,3 +334,14 @@ extension LocalNotificationDispatcherTests {
     }
     
 }
+
+
+class MockForegroundNotificationDelegate: NSObject, ForegroundNotificationsDelegate {
+
+    var receivedLocalNotifications: [UILocalNotification] = []
+    
+    func didReceieveLocalMessage(notification: UILocalNotification, application: ZMApplication) {
+        self.receivedLocalNotifications.append(notification)
+    }
+}
+

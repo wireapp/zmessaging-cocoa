@@ -57,11 +57,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 
 @interface ZMUserSession ()
 
-@property (nonatomic) BOOL networkIsOnline;
-@property (nonatomic) BOOL isPerformingSync;
-@property (nonatomic) BOOL didStartInitialSync;
-@property (nonatomic) BOOL pushChannelIsOpen;
-@property (nonatomic) BOOL didNotifyThirdPartyServices;
 @property (nonatomic, readonly) id<ZMApplication> application;
 @property (nonatomic) ZMCallKitDelegate *callKitDelegate;
 @property (nonatomic) ZMCallStateObserver *callStateObserver;
@@ -96,17 +91,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 
 - (void)tearDown;
 
-@property (nonatomic) ZMPushRegistrant *pushRegistrant;
-@property (nonatomic) ZMApplicationRemoteNotification *applicationRemoteNotification;
-@property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
-
-/// Called from ZMUserSession init to initialize the push notification receiving objects
-- (void)enablePushNotifications;
-
-/// When starting the app due to a push notification action, we store the notification information and wait until sync completed before processing pending local notifications.
-/// This is important for possibly outdated calling notifications for which we need to fetch the call state before joining the call.
-- (void)processPendingNotificationActions;
-
 @end
 
 
@@ -115,13 +99,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 
 
 @interface ZMUserSession(NetworkState) <ZMNetworkStateDelegate, ZMSyncStateDelegate>
-@end
-
-
-@interface ZMUserSession (Test)
-
-@property (nonatomic, readonly) NSArray *allManagedObjectContexts;
-
 @end
 
 
@@ -135,19 +112,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @interface ZMUserSession (RequestToOpenConversation)
 
 + (void)requestToOpenSyncConversationOnUI:(ZMConversation *)conversation;
-
-@end
-
-
-@interface ZMUserSession (PushToken)
-
-
-- (void)setPushToken:(NSData *)deviceToken;
-- (void)setPushKitToken:(NSData *)deviceToken;
-
-/// deletes the pushKit token from the backend
-- (void)deletePushKitToken;
-
 
 @end
 

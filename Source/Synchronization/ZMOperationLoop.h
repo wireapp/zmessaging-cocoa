@@ -28,7 +28,6 @@
 
 @class ZMPersistentCookieStorage;
 
-extern NSString * const ZMPushChannelStateChangeNotificationName;
 extern NSString * const ZMPushChannelIsOpenKey;
 extern NSString * const ZMPushChannelResponseStatusKey;
 
@@ -39,7 +38,7 @@ extern NSString * const ZMPushChannelResponseStatusKey;
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                            cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
-             localNotificationdispatcher:(LocalNotificationDispatcher *)dispatcher
+             localNotificationDispatcher:(LocalNotificationDispatcher *)dispatcher
                             mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider

@@ -45,7 +45,15 @@ static NSString * const PushNotificationTypeNotice = @"notice";
 - (void)saveEventsAndSendNotificationForPayload:(NSDictionary *)payload fetchCompletionHandler:(ZMPushResultHandler)completionHandler source:(ZMPushNotficationType)source;
 {
     ZMLogDebug(@"----> Received push notification payload: %@, source: %lu", payload, (unsigned long)source);
+    
     [self.syncMOC performGroupedBlock:^{
+        if (![self notificationIsForCurrentUser:payload]) {
+            ZMLogDebug(@"Push is for the different user: skipping");
+            if (nil != completionHandler) {
+                completionHandler(ZMPushPayloadResultNoData);
+            }
+            return;
+        }
         
         EventsWithIdentifier *eventsWithID = [self eventsFromPushChannelData:payload];
         BOOL isValidNotification = (nil != eventsWithID) && (eventsWithID.isNotice || eventsWithID.events.count > 0);
@@ -92,7 +100,6 @@ static NSString * const PushNotificationTypeNotice = @"notice";
                               
     [self.syncStrategy consumeUpdateEvents:nonFlowEvents];
     [self.syncMOC saveOrRollback];
-    [self.syncStrategy updateBadgeCount];
     [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
@@ -132,6 +139,15 @@ static NSString * const PushNotificationTypeNotice = @"notice";
 
     identifier = [internalData optionalUuidForKey:PushChannelIdentifierKey];
     return [[EventsWithIdentifier alloc] initWithEvents:events identifier:identifier isNotice:isNotice];
+}
+
+- (BOOL)notificationIsForCurrentUser:(NSDictionary *)userInfo {
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+    // No reason to process the push when the user is not given
+    if (selfUser == nil) {
+        return NO;
+    }
+    return [userInfo isPayloadForUser:selfUser];
 }
 
 - (EventsWithIdentifier *)eventArrayFromEncryptedMessage:(NSDictionary *)encryptedPayload

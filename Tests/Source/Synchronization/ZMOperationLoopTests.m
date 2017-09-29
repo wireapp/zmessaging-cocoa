@@ -40,6 +40,7 @@
 @property (nonatomic) id pingBackStatus;
 @property (nonatomic) id mockPushChannel;
 @property (nonatomic) NSMutableArray *pushChannelNotifications;
+@property (nonatomic) id pushChannelObserverToken;
 @end
 
 
@@ -70,12 +71,19 @@
                                                     syncStrategy:self.syncStrategy
                                                            uiMOC:self.uiMOC
                                                          syncMOC:self.syncMOC];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
+    self.pushChannelObserverToken = [NotificationInContext addObserverWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
+                                       context:self.uiMOC.notificationContext
+                                        object:nil
+                                         queue:nil
+                                         using:^(NotificationInContext * note) {
+                                             [self pushChannelDidChange:note];
+                                         }];
 }
 
 - (void)tearDown;
 {
     WaitForAllGroupsToBeEmpty(0.5);
+    self.pushChannelObserverToken = nil;
     [self.pingBackStatus stopMocking];
     self.pingBackStatus = nil;
     [self.mockPushChannel stopMocking];
@@ -90,7 +98,7 @@
     [super tearDown];
 }
 
-- (void)pushChannelDidChange:(NSNotification *)note
+- (void)pushChannelDidChange:(NotificationInContext *)note
 {
     [self.pushChannelNotifications addObject:note];
 }
@@ -844,7 +852,6 @@
     
     // expect
     [(ZMSyncStrategy *)[self.syncStrategy expect] consumeUpdateEvents:events];
-    [(ZMSyncStrategy *)[self.syncStrategy expect] updateBadgeCount];
 
     [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
         handler(ZMPushPayloadResultSuccess, events);
@@ -893,7 +900,6 @@
     ZMUpdateEvent *event = [[ZMUpdateEvent eventsArrayFromPushChannelData:eventPayload] firstObject];
     
     // expect
-    [[self.syncStrategy expect] updateBadgeCount];
     [[self.syncStrategy expect] consumeUpdateEvents:OCMOCK_ANY];
     [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
         handler(ZMPushPayloadResultSuccess, @[event]);
@@ -929,7 +935,6 @@
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:pushPayload[@"data"]];
     
     // expect
-    [[self.syncStrategy expect] updateBadgeCount];
     [[self.syncStrategy expect] consumeUpdateEvents:OCMOCK_ANY];
     [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
         handler(ZMPushPayloadResultSuccess, events);
@@ -952,7 +957,6 @@
     NSDictionary *payload = [self fallbackAPNSPayloadWithIdentifier:NSUUID.createUUID];
     
     // reject
-    [[self.syncStrategy reject] updateBadgeCount];
     [[self.pingBackStatus reject] didReceiveVoIPNotification:OCMOCK_ANY handler:OCMOCK_ANY];
     
     // when
@@ -973,7 +977,6 @@
     
     // expect
     [(ZMSyncStrategy *)[self.syncStrategy reject] consumeUpdateEvents:events];
-    [(ZMSyncStrategy *)[self.syncStrategy reject] updateBadgeCount];
 
     // when
     [self.sut saveEventsAndSendNotificationForPayload:pushPayload fetchCompletionHandler:nil source:ZMPushNotficationTypeAlert];
@@ -1015,6 +1018,53 @@
     
     // then
     [self.pingBackStatus verify];
+}
+
+- (void)testThatItUsesTheNotificationWithoutUserID
+{
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // GIVEN
+        NSDictionary *pushPayload =  @{@"aps" : @{},
+                                       @"data" : @{
+                                               @"type" : @"notice"
+                                               }
+                                       };
+        // WHEN & THEN
+        XCTAssertTrue([self.sut notificationIsForCurrentUser:pushPayload]);
+    }];
+}
+
+- (void)testThatItUsesTheNotificationForCurrentUser
+{
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // GIVEN
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        selfUser.remoteIdentifier = [NSUUID UUID];
+        
+        NSDictionary *pushPayload =  @{@"aps" : @{},
+                                       @"data" : @{
+                                               @"user": selfUser.remoteIdentifier.transportString,
+                                               @"type" : @"notice"
+                                               }
+                                       };
+        // WHEN & THEN
+        XCTAssertTrue([self.sut notificationIsForCurrentUser:pushPayload]);
+    }];
+}
+
+- (void)testThatItIgnoresTheNotificationForOtherUser
+{
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // GIVEN
+        NSDictionary *pushPayload =  @{@"aps" : @{},
+                                       @"data" : @{
+                                               @"user": [NSUUID UUID].transportString,
+                                               @"type" : @"notice"
+                                               }
+                                       };
+        // WHEN & THEN
+        XCTAssertFalse([self.sut notificationIsForCurrentUser:pushPayload]);
+    }];
 }
 
 - (NSArray *)messageAddPayloadWithNonces:(NSArray <NSUUID *>*)nonces

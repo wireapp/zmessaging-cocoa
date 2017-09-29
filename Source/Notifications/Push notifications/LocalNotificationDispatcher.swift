@@ -18,10 +18,17 @@
 
 import Foundation
 
+@objc public protocol ForegroundNotificationsDelegate: NSObjectProtocol {
+    
+    func didReceieveLocalMessage(notification: UILocalNotification, application: ZMApplication)
+}
+
 /// Creates and cancels local notifications
 public class LocalNotificationDispatcher: NSObject {
     
     public static let ZMShouldHideNotificationContentKey = "ZMShouldHideNotificationContentKey"
+    
+    private(set) weak var foregroundNotificationDelegate: ForegroundNotificationsDelegate?
     
     let eventNotifications: ZMLocalNotificationSet
     let messageNotifications: ZMLocalNotificationSet
@@ -31,12 +38,17 @@ public class LocalNotificationDispatcher: NSObject {
     let application: ZMApplication
     let sessionTracker: SessionTracker
     let syncMOC: NSManagedObjectContext
-    var isTornDown: Bool
+    private(set) var isTornDown: Bool
+    private var observers: [Any] = []
     
-    @objc(initWithManagedObjectContext:application:)
+    var localNotificationBuffer = [UILocalNotification]()
+    
+    @objc(initWithManagedObjectContext:foregroundNotificationDelegate:application:)
     public init(in managedObjectContext: NSManagedObjectContext,
+                foregroundNotificationDelegate: ForegroundNotificationsDelegate,
                 application: ZMApplication) {
         self.syncMOC = managedObjectContext
+        self.foregroundNotificationDelegate = foregroundNotificationDelegate
         self.eventNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherEventNotificationsKey", keyValueStore: managedObjectContext)
         self.failedMessageNotification = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherFailedNotificationsKey", keyValueStore: managedObjectContext)
         self.callingNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherCallingNotificationsKey", keyValueStore: managedObjectContext)
@@ -45,16 +57,17 @@ public class LocalNotificationDispatcher: NSObject {
         self.sessionTracker = SessionTracker(managedObjectContext: managedObjectContext)
         self.isTornDown = false
         super.init()
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(self.cancelNotificationForLastReadChanged(notification:)),
-                                               name: NSNotification.Name(rawValue: ZMConversationLastReadDidChangeNotificationName),
-                                               object: nil)
+        observers.append(
+            NotificationInContext.addObserver(name: ZMConversation.lastReadDidChangeNotificationName,
+                                              context: managedObjectContext.notificationContext,
+                                              using: { [weak self] in self?.cancelNotificationForLastReadChanged(notification: $0)})
+        )
     }
  
     public func tearDown() {
         self.isTornDown = true
         self.sessionTracker.tearDown()
-        NotificationCenter.default.removeObserver(self)
+        self.observers = []
         syncMOC.performGroupedBlock { [weak self] in
             self?.cancelAllNotifications()
         }
@@ -183,7 +196,7 @@ extension LocalNotificationDispatcher {
     }
     
     /// Cancels all notification in the conversation that is speficied as object of the notification
-    func cancelNotificationForLastReadChanged(notification: NSNotification) {
+    func cancelNotificationForLastReadChanged(notification: NotificationInContext) {
         guard let conversation = notification.object as? ZMConversation else { return }
         let isUIObject = conversation.managedObjectContext?.zm_isUserInterfaceContext ?? false
         

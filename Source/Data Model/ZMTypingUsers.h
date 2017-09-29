@@ -20,7 +20,7 @@
 @import Foundation;
 @import CoreData;
 
-@class ZMTypingChangeNotification;
+@class ZMUser;
 @class ZMConversation;
 
 
@@ -30,7 +30,7 @@
 /// The changes on the sync side are pushed into this class to keep it up-to-date.
 @interface ZMTypingUsers : NSObject
 
-- (void)updateTypingUsersWithNotification:(ZMTypingChangeNotification *)note;
+- (void)updateTypingUsers:(NSSet<ZMUser *> *)typingUsers inConversation:(ZMConversation *)conversation;
 
 - (NSSet *)typingUsersInConversation:(ZMConversation *)conversation;
 

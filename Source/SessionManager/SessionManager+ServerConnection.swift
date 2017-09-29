@@ -32,8 +32,7 @@ public protocol ServerConnection {
     var isMobileConnection : Bool { get }
     var isOffline : Bool { get }
     
-    func addObserver(_ observer: ServerConnectionObserver) -> Any
-    func removeObserver(_ token: Any)
+    func addServerConnectionObserver(_ observer: ServerConnectionObserver) -> Any
 }
 
 extension SessionManager {
@@ -55,19 +54,12 @@ extension SessionManager : ServerConnection {
     }
 
     /// Add observer of server connection. Returns a token for de-registering the observer.
-    public func addObserver(_ observer: ServerConnectionObserver) -> Any {
+    public func addServerConnectionObserver(_ observer: ServerConnectionObserver) -> Any {
         
-        return NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: ZMTransportSessionReachabilityChangedNotificationName),
-                                                      object: nil,
-                                                      queue: OperationQueue.main) { [weak self, weak observer] (note) in
-                                                        guard let `self` = self else { return }
-                                                        observer?.serverConnection(didChange: self)
+        return reachability.addReachabilityObserver(on: .main) { [weak self, weak observer] _ in
+            guard let `self` = self else { return }
+            observer?.serverConnection(didChange: self)
         }
-    }
-    
-    // Remove an observer by supplying a token.
-    public func removeObserver(_ token: Any) {
-        NotificationCenter.default.removeObserver(token)
     }
     
 }

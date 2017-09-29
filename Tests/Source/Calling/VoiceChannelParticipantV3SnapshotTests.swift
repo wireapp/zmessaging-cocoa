@@ -28,7 +28,7 @@ class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
     override func setUp() {
         super.setUp()
         mockFlowManager = FlowManagerMock()
-        mockWireCallCenterV3 = WireCallCenterV3Mock(userId: UUID(), clientId: "foo", uiMOC: uiMOC, flowManager: mockFlowManager)
+        mockWireCallCenterV3 = WireCallCenterV3Mock(userId: UUID(), clientId: "foo", uiMOC: uiMOC, flowManager: mockFlowManager, transport: WireCallCenterTransportMock())
     }
     
     override func tearDown() {
@@ -46,7 +46,8 @@ class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
         // when
         let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(conversationId: UUID(),
                                                                    selfUserID: UUID(),
-                                                                   members: [callMember1, callMember2])
+                                                                   members: [callMember1, callMember2],
+                                                                   callCenter: mockWireCallCenterV3)
         
         // then
         // it does not crash and
@@ -63,7 +64,8 @@ class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
         let callMember2 = CallMember(userId: userId, audioEstablished: false)
         let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(conversationId: UUID(),
                                                                    selfUserID: UUID(),
-                                                                   members: [])
+                                                                   members: [],
+                                                                   callCenter: mockWireCallCenterV3)
 
         // when
         sut.callParticipantsChanged(newParticipants: [callMember1, callMember2])
@@ -83,7 +85,8 @@ class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
         let callMember2 = CallMember(userId: userId, audioEstablished: true)
         let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(conversationId: UUID(),
                                                                    selfUserID: UUID(),
-                                                                   members: [])
+                                                                   members: [],
+                                                                   callCenter: mockWireCallCenterV3)
         
         // when
         sut.callParticipantsChanged(newParticipants: [callMember1, callMember2])

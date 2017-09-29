@@ -82,6 +82,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// This tears down all objects in the managedObjectContext's userInfo that respond to the selector tearDown and subsequently removes them from the userInfo
 - (void)tearDownUserInfoObjectsOfMOC:(NSManagedObjectContext *)moc;
 
+/// Deletes all the files in the shared container
+- (void)removeFilesInSharedContainer;
+
 @end
 
 

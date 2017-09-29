@@ -24,7 +24,6 @@
 #import "ZMUserSession+Internal.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
-#import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMPushToken.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
@@ -87,8 +86,6 @@ static NSString *const HasHistoryKey = @"hasHistory";
 
     refUIMoc = nil;
     refSyncMOC = nil;
-
-    [StorageStack reset];
 }
 
 @end

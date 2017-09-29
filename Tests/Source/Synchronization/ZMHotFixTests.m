@@ -413,32 +413,32 @@
     
     ZMAssetClientMessage *uploadedImageMessage = [conversation appendOTRMessageWithImageData:self.mediumJPEGData nonce:NSUUID.createUUID];
     [uploadedImageMessage markAsSent];
-    uploadedImageMessage.uploadState = ZMAssetUploadStateDone;
+    uploadedImageMessage.uploadState = AssetUploadStateDone;
     uploadedImageMessage.assetId = NSUUID.createUUID;
     XCTAssertTrue(uploadedImageMessage.delivered);
     XCTAssertTrue(uploadedImageMessage.hasDownloadedImage);
-    XCTAssertEqual(uploadedImageMessage.uploadState, ZMAssetUploadStateDone);
+    XCTAssertEqual(uploadedImageMessage.uploadState, AssetUploadStateDone);
     
     ZMAssetClientMessage *notUploadedImageMessage = [conversation appendOTRMessageWithImageData:self.mediumJPEGData nonce:NSUUID.createUUID];
-    notUploadedImageMessage.uploadState = ZMAssetUploadStateUploadingFullAsset;
+    notUploadedImageMessage.uploadState = AssetUploadStateUploadingFullAsset;
     XCTAssertFalse(notUploadedImageMessage.delivered);
     XCTAssertTrue(notUploadedImageMessage.hasDownloadedImage);
-    XCTAssertEqual(notUploadedImageMessage.uploadState, ZMAssetUploadStateUploadingFullAsset);
+    XCTAssertEqual(notUploadedImageMessage.uploadState, AssetUploadStateUploadingFullAsset);
     
     ZMAssetClientMessage *uploadedFileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:self.testVideoFileURL thumbnail:self.verySmallJPEGData]];
     [uploadedFileMessage markAsSent];
-    uploadedFileMessage.uploadState = ZMAssetUploadStateDone;
+    uploadedFileMessage.uploadState = AssetUploadStateDone;
     uploadedFileMessage.assetId = NSUUID.createUUID;
     XCTAssertTrue(uploadedFileMessage.delivered);
     XCTAssertTrue(uploadedFileMessage.hasDownloadedImage);
-    XCTAssertEqual(uploadedFileMessage.uploadState, ZMAssetUploadStateDone);
+    XCTAssertEqual(uploadedFileMessage.uploadState, AssetUploadStateDone);
     
     ZMAssetClientMessage *notUploadedFileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:self.testVideoFileURL thumbnail:self.verySmallJPEGData]];
     [notUploadedFileMessage markAsSent];
-    notUploadedFileMessage.uploadState = ZMAssetUploadStateDone;
+    notUploadedFileMessage.uploadState = AssetUploadStateDone;
     XCTAssertTrue(notUploadedFileMessage.delivered);
     XCTAssertTrue(notUploadedFileMessage.hasDownloadedImage);
-    XCTAssertEqual(notUploadedFileMessage.uploadState, ZMAssetUploadStateDone);
+    XCTAssertEqual(notUploadedFileMessage.uploadState, AssetUploadStateDone);
     
     XCTAssertTrue([self.syncMOC saveOrRollback]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -456,19 +456,19 @@
     // then
     XCTAssertTrue(uploadedImageMessage.delivered);
     XCTAssertTrue(uploadedImageMessage.hasDownloadedImage);
-    XCTAssertEqual(uploadedImageMessage.uploadState, ZMAssetUploadStateDone);
+    XCTAssertEqual(uploadedImageMessage.uploadState, AssetUploadStateDone);
     
     XCTAssertFalse(notUploadedImageMessage.delivered);
     XCTAssertTrue(notUploadedImageMessage.hasDownloadedImage);
-    XCTAssertEqual(notUploadedImageMessage.uploadState, ZMAssetUploadStateUploadingFailed);
+    XCTAssertEqual(notUploadedImageMessage.uploadState, AssetUploadStateUploadingFailed);
     
     XCTAssertTrue(uploadedFileMessage.delivered);
     XCTAssertTrue(uploadedFileMessage.hasDownloadedImage);
-    XCTAssertEqual(uploadedFileMessage.uploadState, ZMAssetUploadStateDone);
+    XCTAssertEqual(uploadedFileMessage.uploadState, AssetUploadStateDone);
     
     XCTAssertTrue(notUploadedFileMessage.delivered);
     XCTAssertTrue(notUploadedFileMessage.hasDownloadedImage);
-    XCTAssertEqual(notUploadedFileMessage.uploadState, ZMAssetUploadStateUploadingFailed);
+    XCTAssertEqual(notUploadedFileMessage.uploadState, AssetUploadStateUploadingFailed);
 }
 
 - (void)testThatItAddANewConversationSystemMessageForAllOneOnOneAndGroupConversation_HasHistory_44_4;

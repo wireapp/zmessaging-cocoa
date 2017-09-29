@@ -50,7 +50,6 @@ class UserImageStrategyTests : MessagingTest {
     override func tearDown() {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockApplicationStatus = nil
-        self.sut.tearDown()
         self.sut = nil;
         self.user1 = nil;
         self.user1ID = nil;
@@ -255,7 +254,7 @@ extension UserImageStrategyTests {
     
         // when
         expectation(forNotification: "ZMRequestUserProfileAssetNotification", object: nil, handler: nil)
-        UserImageStrategy.requestAssetForUser(with:self.user1.objectID)
+        UserImageStrategy.requestAsset(for: self.user1)
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 1.5))
 

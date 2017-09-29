@@ -213,7 +213,7 @@
         <key>push.notification.knock.group.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ a ping%2$#@new_knocks@dans une conversation</string>
+            <string>%1$@ a fait signe%2$#@new_knocks@dans une conversation</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -237,7 +237,7 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>Ping</string>
+                <string>Signe</string>
                 <key>other</key>
                 <string>%2$@ pings</string>
             </dict>
@@ -253,15 +253,15 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>Ping</string>
+                <string>Signe</string>
                 <key>other</key>
-                <string>%1$@ pings</string>
+                <string>%1$@ signes</string>
             </dict>
         </dict>
         <key>push.notification.knock.oneonone</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ a ping%3$#@new_knocks@</string>
+            <string>%1$@ a fait signe%3$#@new_knocks@</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -285,9 +285,9 @@
                 <key>NSStringFormatValueTypeKey</key>
                 <string>@</string>
                 <key>one</key>
-                <string>Ping</string>
+                <string>Signe</string>
                 <key>other</key>
-                <string>%2$@ pings</string>
+                <string>%2$@ signes</string>
             </dict>
         </dict>
     </dict>

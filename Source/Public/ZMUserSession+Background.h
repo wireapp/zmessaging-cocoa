@@ -25,9 +25,6 @@
 
 @interface ZMUserSession (ZMBackground)
 
-/// Store deviceToken
-- (void)application:(id<ZMApplication>)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
-
 /// Process the payload of the remote notification. This may cause a @c UILocalNotification to be displayed.
 - (void)application:(id<ZMApplication>)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 
@@ -54,5 +51,19 @@
 
 - (void)applicationDidEnterBackground:(NSNotification *)note;
 - (void)applicationWillEnterForeground:(NSNotification *)note;
+
+@end
+
+
+// PRIVATE
+@interface ZMUserSession (PushToken)
+
+- (void)setPushToken:(NSData *)deviceToken;
+- (void)setPushKitToken:(NSData *)deviceToken;
+
+/// deletes the pushKit token from the backend
+- (void)deletePushKitToken;
+
+- (BOOL)isAuthenticated;
 
 @end

@@ -108,6 +108,17 @@ NSString *const ZMPushStringNewConnection = @"new_user";
     return  @[];
 }
 
+- (NSString *)titleToDisplayForManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
+{
+    if (managedObjectContext == nil) {
+        return nil;
+    }
+    
+    ZMUser *selfUser = [ZMUser selfUserInContext:managedObjectContext];
+    Team *team = selfUser.team;
+    return team.name;
+}
+
 @end
 
 

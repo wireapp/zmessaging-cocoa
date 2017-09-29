@@ -24,11 +24,13 @@ public class WireCallCenterV3Factory : NSObject {
     
     public static var wireCallCenterClass : WireCallCenterV3.Type = WireCallCenterV3.self
     
-    public class func callCenter(withUserId userId: UUID, clientId: String, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil) -> WireCallCenterV3 {
-        if let wireCallCenter =  WireCallCenterV3Factory.wireCallCenterClass.activeInstance {
+    public class func callCenter(withUserId userId: UUID, clientId: String, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport) -> WireCallCenterV3 {
+        if let wireCallCenter = uiMOC.zm_callCenter {
             return wireCallCenter
         } else {
-            return WireCallCenterV3Factory.wireCallCenterClass.init(userId: userId, clientId: clientId, uiMOC: uiMOC, flowManager: flowManager, analytics: analytics)
+            let newInstance = WireCallCenterV3Factory.wireCallCenterClass.init(userId: userId, clientId: clientId, uiMOC: uiMOC, flowManager: flowManager, analytics: analytics, transport: transport)
+            uiMOC.zm_callCenter = newInstance
+            return newInstance
         }
     }
     

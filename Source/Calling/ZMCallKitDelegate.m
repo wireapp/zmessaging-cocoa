@@ -35,7 +35,7 @@
  
  CallKit is supported from iOS 10. On the devices that do not support it we still show the notifications.
  
- It is possible to disable CallKit and use old-style notifications logic: `+[ZMUserSession setUseCallKit:]`.
+ It is possible to disable CallKit and use old-style notifications logic: `-[ZMUserSession setCallNotificationStyle:]`.
  
  CallKit integration consists of 2 parts:
  I.  Showing iOS calling UI when call happens
@@ -196,8 +196,7 @@ NS_ASSUME_NONNULL_END
 
 - (void)dealloc
 {
-    [WireCallCenterV3 removeObserverWithToken:self.callStateObserverToken];
-    [WireCallCenterV3 removeObserverWithToken:self.missedCallsObserverToken];
+    [self.provider invalidate];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 

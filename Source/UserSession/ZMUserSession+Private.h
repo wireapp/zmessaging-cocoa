@@ -21,7 +21,23 @@
 @import WireTransport;
 @import WireDataModel;
 
+@class ZMStoredLocalNotification;
+
 #import "ZMUserSession.h"
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface ZMUserSession ()
+
+// Status flags.
+
+@property (nonatomic) BOOL didStartInitialSync;
+@property (nonatomic) BOOL networkIsOnline;
+@property (nonatomic) BOOL isPerformingSync;
+@property (nonatomic) BOOL pushChannelIsOpen;
+@property (nonatomic) BOOL didNotifyThirdPartyServices;
+
+@end
 
 @interface ZMUserSession (Private)
 
@@ -30,4 +46,26 @@
 
 - (void)tearDown;
 
+// Notifications-related
+
+// Notification that was received during the time when the sync engine is not ready to process it.
+@property (nonatomic, nullable) ZMStoredLocalNotification *pendingLocalNotification;
+
+/// When starting the app due to a push notification action, we store the notification information and wait until sync completed before processing pending local notifications.
+/// This is important for possibly outdated calling notifications for which we need to fetch the call state before joining the call.
+- (void)processPendingNotificationActions;
+
 @end
+
+
+@interface ZMUserSession (NotificationProcessing)
+
+- (void)ignoreCallForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
+- (void)replyToNotification:(UILocalNotification *)notification withReply:(NSString*)reply completionHandler:(void (^)())completionHandler;
+- (void)muteConversationForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
+- (void)likeMessageForNotification:(UILocalNotification *)note withCompletionHandler:(void (^)(void))completionHandler;
+- (void)openConversation:(nullable ZMConversation *)conversation atMessage:(nullable ZMMessage *)message;
+
+@end
+
+NS_ASSUME_NONNULL_END

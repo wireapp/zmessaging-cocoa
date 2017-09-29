@@ -209,13 +209,13 @@ extension UserProfileUpdateStatus {
     /// Invoked when requested a phone verification code successfully
     func didRequestPhoneVerificationCodeSuccessfully() {
         self.phoneNumberForWhichCodeIsRequested = nil
-        UserProfileUpdateNotification.post(type: .phoneNumberVerificationCodeRequestDidSucceed)
+        UserProfileUpdateNotification(type: .phoneNumberVerificationCodeRequestDidSucceed).post(in: managedObjectContext.notificationContext)
     }
     
     /// Invoked when failed to request a verification code
     func didFailPhoneVerificationCodeRequest(error: Error) {
         self.phoneNumberForWhichCodeIsRequested = nil
-        UserProfileUpdateNotification.post(type: .phoneNumberVerificationCodeRequestDidFail(error: error))
+        UserProfileUpdateNotification(type: .phoneNumberVerificationCodeRequestDidFail(error: error)).post(in: managedObjectContext.notificationContext)
     }
     
     /// Invoked when changing the phone number succeeded
@@ -226,7 +226,7 @@ extension UserProfileUpdateStatus {
     /// Invoked when changing the phone number failed
     func didFailChangingPhone(error: Error) {
         self.phoneNumberToSet = nil
-        UserProfileUpdateNotification.post(type: .phoneNumberChangeDidFail(error: error))
+        UserProfileUpdateNotification(type: .phoneNumberChangeDidFail(error: error)).post(in: managedObjectContext.notificationContext)
     }
     
     /// Invoked when the request to set password succedeed
@@ -239,25 +239,25 @@ extension UserProfileUpdateStatus {
         self.lastEmailAndPassword = nil
         self.emailToSet = nil
         self.passwordToSet = nil
-        UserProfileUpdateNotification.post(type: .passwordUpdateDidFail)
+        UserProfileUpdateNotification(type: .passwordUpdateDidFail).post(in: managedObjectContext.notificationContext)
     }
     
     /// Invoked when the request to change email was sent successfully
     func didUpdateEmailSuccessfully() {
         self.emailToSet = nil
-        UserProfileUpdateNotification.post(type: .emailDidSendVerification)
+        UserProfileUpdateNotification(type: .emailDidSendVerification).post(in: managedObjectContext.notificationContext)
     }
     
     /// Invoked when the request to change phone number was sent successfully
     func didRemovePhoneNumberSuccessfully() {
         self.removePhoneNumber = nil
-        UserProfileUpdateNotification.post(type: .didRemovePhoneNumber)
+        UserProfileUpdateNotification(type: .didRemovePhoneNumber).post(in: managedObjectContext.notificationContext)
     }
 
     /// Invoked when the request to change phone number failed
     func didFailPhoneNumberRemoval(error: Error) {
         self.removePhoneNumber = nil
-        UserProfileUpdateNotification.post(type: .phoneNumberRemovalDidFail(error: error))
+        UserProfileUpdateNotification(type: .phoneNumberRemovalDidFail(error: error)).post(in: managedObjectContext.notificationContext)
     }
     
     /// Invoked when the request to change email failed
@@ -265,7 +265,7 @@ extension UserProfileUpdateStatus {
         self.lastEmailAndPassword = nil
         self.emailToSet = nil
         self.passwordToSet = nil
-        UserProfileUpdateNotification.post(type: .emailUpdateDidFail(error: error))
+        UserProfileUpdateNotification(type: .emailUpdateDidFail(error: error)).post(in: managedObjectContext.notificationContext)
     }
     
     /// Invoked when the request to fetch a handle returned not found
@@ -273,7 +273,7 @@ extension UserProfileUpdateStatus {
         if self.handleToCheck == handle {
             self.handleToCheck = nil
         }
-        UserProfileUpdateNotification.post(type: .didCheckAvailabilityOfHandle(handle: handle, available: true))
+        UserProfileUpdateNotification(type: .didCheckAvailabilityOfHandle(handle: handle, available: true)).post(in: managedObjectContext.notificationContext)
     }
     
     /// Invoked when the request to fetch a handle returned successfully
@@ -281,7 +281,7 @@ extension UserProfileUpdateStatus {
         if self.handleToCheck == handle {
             self.handleToCheck = nil
         }
-        UserProfileUpdateNotification.post(type: .didCheckAvailabilityOfHandle(handle: handle, available: false))
+        UserProfileUpdateNotification(type: .didCheckAvailabilityOfHandle(handle: handle, available: false)).post(in: managedObjectContext.notificationContext)
     }
     
     /// Invoked when the request to fetch a handle failed with
@@ -290,7 +290,7 @@ extension UserProfileUpdateStatus {
         if self.handleToCheck == handle {
             self.handleToCheck = nil
         }
-        UserProfileUpdateNotification.post(type: .didFailToCheckAvailabilityOfHandle(handle: handle))
+        UserProfileUpdateNotification(type: .didFailToCheckAvailabilityOfHandle(handle: handle)).post(in: managedObjectContext.notificationContext)
     }
     
     /// Invoked when the handle was succesfully set
@@ -299,27 +299,27 @@ extension UserProfileUpdateStatus {
             ZMUser.selfUser(in: self.managedObjectContext).setHandle(handle)
         }
         self.handleToSet = nil
-        UserProfileUpdateNotification.post(type: .didSetHandle)
+        UserProfileUpdateNotification(type: .didSetHandle).post(in: managedObjectContext.notificationContext)
 
     }
     
     /// Invoked when the handle was not set because of a generic error
     func didFailToSetHandle() {
         self.handleToSet = nil
-        UserProfileUpdateNotification.post(type: .didFailToSetHandle)
+        UserProfileUpdateNotification(type: .didFailToSetHandle).post(in: managedObjectContext.notificationContext)
     }
     
     /// Invoked when the handle was not set because it was already existing
     func didFailToSetAlreadyExistingHandle() {
         self.handleToSet = nil
-        UserProfileUpdateNotification.post(type: .didFailToSetHandleBecauseExisting)
+        UserProfileUpdateNotification(type: .didFailToSetHandleBecauseExisting).post(in: managedObjectContext.notificationContext)
     }
     
     /// Invoked when a good handle suggestion is found
     func didFindHandleSuggestion(handle: String) {
         self.bestHandleSuggestion = handle
         self.suggestedHandlesToCheck = nil
-        UserProfileUpdateNotification.post(type: .didFindHandleSuggestion(handle: handle))
+        UserProfileUpdateNotification(type: .didFindHandleSuggestion(handle: handle)).post(in: managedObjectContext.notificationContext)
         handleSuggestionTracker?.didFindHandleSuggestion()
         handleSuggestionTracker = nil
     }

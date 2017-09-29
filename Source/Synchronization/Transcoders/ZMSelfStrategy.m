@@ -37,16 +37,13 @@ static NSString * const CompleteProfileAssetIdentifierKey = @"completeProfileAss
 NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
 
 @interface ZMSelfStrategy ()
-{
-    dispatch_once_t didCheckNeedsToBeUdpatedFromBackend;
-}
 
 @property (nonatomic) ZMUpstreamModifiedObjectSync *upstreamObjectSync;
 @property (nonatomic) ZMSingleRequestSync *downstreamSelfUserSync;
 @property (nonatomic) NSPredicate *needsToBeUdpatedFromBackend;
 @property (nonatomic, weak) ZMClientRegistrationStatus *clientStatus;
 @property (nonatomic, weak) SyncStatus *syncStatus;
-
+@property (nonatomic) BOOL didCheckNeedsToBeUdpatedFromBackend;
 @end
 
 @interface ZMSelfStrategy (SingleRequestTranscoder) <ZMSingleRequestTranscoder>
@@ -158,12 +155,13 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
 
 - (void)checkIfNeedsToBeUdpatedFromBackend;
 {
-    dispatch_once(&didCheckNeedsToBeUdpatedFromBackend, ^{
+    if (!self.didCheckNeedsToBeUdpatedFromBackend) {
+        self.didCheckNeedsToBeUdpatedFromBackend = YES;
         ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
         if ([self.needsToBeUdpatedFromBackend evaluateWithObject:selfUser]) {
             [self.downstreamSelfUserSync readyForNextRequest];
         }
-    });
+    }
 }
 
 - (BOOL)isSelfUserComplete

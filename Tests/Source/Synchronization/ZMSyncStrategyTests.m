@@ -34,7 +34,6 @@
 #import "ZMOperationLoop.h"
 #import "MessagingTest+EventFactory.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
-#import "ZMNotifications+UserSession.h"
 
 // Transcoders & strategies
 #import "ZMUserTranscoder.h"
@@ -112,6 +111,7 @@
     self.mockUpstreamSync2 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     [self verifyMockLater:self.mockUpstreamSync1];
     [self verifyMockLater:self.mockUpstreamSync2];
+    [(id)[self.mockDispatcher stub] processBuffer];
     
     self.syncStateDelegate = [[MockSyncStateDelegate alloc] init];
     
@@ -183,6 +183,7 @@
                                     taskCancellationProvider:nil
                                                  application:self.application];
     
+    self.application.applicationState = UIApplicationStateBackground;
     XCTAssertEqual(self.sut.userTranscoder, self.userTranscoder);
     XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
     XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
@@ -1051,24 +1052,6 @@
     [mockRequestAvailableNotification stopMocking];
 }
 
-- (void)testThatItUpdatesTheBadgeCount
-{
-    // given
-    [self.syncMOC performGroupedBlockAndWait:^{
-        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        conversation.conversationType = ZMConversationTypeGroup;
-        conversation.internalEstimatedUnreadCount = 1;
-        [self.syncMOC saveOrRollback];
-        
-        // when
-        [self.sut updateBadgeCount];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqual(self.application.applicationIconBadgeNumber, 1);
-}
-
 @end
 
 
@@ -1090,10 +1073,10 @@
     [[self.updateEventsBuffer stub] processAllEventsInBuffer];
 
     id mockObserver = [OCMockObject niceMockForProtocol:@protocol(ZMInitialSyncCompletionObserver)];
-    [ZMUserSession addInitalSyncCompletionObserver:mockObserver];
+    id token = [ZMUserSession addInitialSyncCompletionObserver:mockObserver context:self.uiMOC];
 
     // expect
-    [[mockObserver expect] initialSyncCompleted:OCMOCK_ANY];
+    [[mockObserver expect] initialSyncCompleted];
 
     // when
     [self.sut didFinishSync];
@@ -1103,7 +1086,7 @@
 
 
     // tearDown
-    [ZMUserSession removeInitalSyncCompletionObserver:mockObserver];
+    token = nil;
 
     [self performIgnoringZMLogError:^{
         WaitForAllGroupsToBeEmpty(0.5);

@@ -36,7 +36,7 @@
 "push.notification.add.unknown.oneonone" = "%1$@ heeft u een bericht verstuurd";
 "push.notification.add.unknown.oneonone.nousername" = "Nieuw bericht";
 
-"push.notification.add.image.group" = "%1$@ deelt een afbeelding in %2$@";
+"push.notification.add.image.group" = "%1$@ deelde een afbeelding in %2$@";
 "push.notification.add.image.group.nousername" = "Nieuwe afbeelding in %1$@";
 "push.notification.add.image.group.nousername.noconversationname" = "Een nieuwe afbeelding in een gesprek";
 "push.notification.add.image.group.noconversationname" = "%1$@ heeft een foto in een gesprek gedeeld";
@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "Mensen werden verwijderd uit een gesprek";
 "push.notification.member.leave.nootherusername.nousername" = "Mensen werden verwijderd uit de %1$@";
 
-"push.notification.member.leave.sender.nootherusername" = "%1$@ verliet %2$@";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ verliet een gesprek";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Mensen verlieten een gesprek";
-"push.notification.member.leave.sender.nootherusername.nousername" = "Mensen verlieten %1$@";
-
-
 "push.notification.call.started.video.oneonone" = "%1$@ is aan het videobellen";
 "push.notification.call.started.video.oneonone.nousername" = "Iemand is aan het videobellen";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "%1$@ maakte een groepsgesprek met jou";
 "push.notification.conversation.create.nousername" = "Iemand maakte een groepsgesprek met jou";
-
-"push.notification.conversation.rename" = "%1$@ heeft een gesprek hernoemd naar %2$@";
-"push.notification.conversation.rename.nousername" = "Een gesprek is hernoemd naar %1$@";
 
 "push.notification.connection.request" = "%@ wil met jou verbinden";
 "push.notification.connection.request.nousername" = "Iemand wil met je verbinden";

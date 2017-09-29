@@ -29,9 +29,11 @@
 @property (readonly, copy, nullable) NSUUID *zm_messageNonce;
 @property (readonly, copy, nullable) NSUUID *zm_senderUUID;
 @property (readonly, copy, nullable) NSDate *zm_eventTime;
+@property (readonly, copy, nullable) NSUUID *zm_selfUserUUID;
 
 - (nullable ZMConversation *)conversationInManagedObjectContext:(nonnull NSManagedObjectContext *)MOC;
 - (nullable ZMMessage *)messageInConversation:(nonnull ZMConversation *)conversation inManagedObjectContext:(nonnull NSManagedObjectContext *)MOC;
+- (nullable ZMUser *)senderInManagedObjectContext:(nonnull NSManagedObjectContext *)MOC;
 
 - (void)setupUserInfo:(nonnull ZMConversation *)conversation sender:(nonnull ZMUser *)sender;
 - (void)setupUserInfo:(nullable ZMConversation *)conversation forEvent:(nullable ZMUpdateEvent *)event;

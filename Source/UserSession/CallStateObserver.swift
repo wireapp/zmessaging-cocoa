@@ -29,19 +29,10 @@ public final class CallStateObserver : NSObject {
     fileprivate weak var userSession: ZMUserSession?
     fileprivate let localNotificationDispatcher : LocalNotificationDispatcher
     fileprivate let syncManagedObjectContext : NSManagedObjectContext
-    fileprivate var callStateToken : WireCallCenterObserverToken? = nil
-    fileprivate var missedCalltoken : WireCallCenterObserverToken? = nil
+    fileprivate var callStateToken : Any? = nil
+    fileprivate var missedCalltoken : Any? = nil
     fileprivate let systemMessageGenerator = CallSystemMessageGenerator()
-    fileprivate var voiceChannelStatetoken : WireCallCenterObserverToken? = nil
-
-    deinit {
-        if let token = callStateToken {
-            WireCallCenterV3.removeObserver(token: token)
-        }
-        if let token = missedCalltoken {
-            WireCallCenterV3.removeObserver(token: token)
-        }
-    }
+    fileprivate var voiceChannelStatetoken : Any? = nil
     
     public init(localNotificationDispatcher : LocalNotificationDispatcher, userSession: ZMUserSession) {
         self.userSession = userSession
@@ -50,15 +41,19 @@ public final class CallStateObserver : NSObject {
         
         super.init()
         
-        self.callStateToken = WireCallCenterV3.addCallStateObserver(observer: self)
-        self.missedCalltoken = WireCallCenterV3.addMissedCallObserver(observer: self)
+        self.callStateToken = WireCallCenterV3.addCallStateObserver(observer: self, context: userSession.managedObjectContext)
+        self.missedCalltoken = WireCallCenterV3.addMissedCallObserver(observer: self, context: userSession.managedObjectContext)
         self.voiceChannelStatetoken = WireCallCenter.addVoiceChannelStateObserver(observer: self, context: userSession.managedObjectContext)
     }
     
     fileprivate var callInProgress : Bool = false {
         didSet {
             if callInProgress != oldValue {
-                NotificationCenter.default.post(name: CallStateObserver.CallInProgressNotification, object: nil, userInfo: [ CallStateObserver.CallInProgressKey : callInProgress ])
+                syncManagedObjectContext.performGroupedBlock {
+                    NotificationInContext(name: CallStateObserver.CallInProgressNotification,
+                                          context: self.syncManagedObjectContext.notificationContext,
+                                          userInfo: [ CallStateObserver.CallInProgressKey : self.callInProgress ]).post()
+                }
             }
         }
     }
@@ -78,7 +73,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                 return
             }
             
-            if !ZMUserSession.useCallKit {
+            if (self.userSession?.callNotificationStyle ?? .callKit) == .pushNotifications {
                 self.localNotificationDispatcher.process(callState: callState, in: conversation, sender: user)
             }
             
@@ -86,8 +81,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             let systemMessage = self.systemMessageGenerator.appendSystemMessageIfNeeded(callState: callState, conversation: conversation, user: user, timeStamp: timeStamp)
             if systemMessage?.systemMessageType == .missedCall
-                && callState == .terminating(reason: .normal)
-                && conversation.conversationType == .group
+                && (callState == .terminating(reason: .canceled) || callState == .terminating(reason: .normal) && conversation.conversationType == .group)
             {
                 // group calls we didn't join, end with reason .normal. We should still insert a missed call in this case.
                 // since the systemMessageGenerator keeps track whether we joined or not, we can use it to decide whether we should show a missed call APNS
@@ -98,6 +92,8 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                 conversation.updateLastModifiedDateIfNeeded(timeStamp)
             }
             self.syncManagedObjectContext.enqueueDelayedSave()
+            
+            self.localNotificationDispatcher.processBuffer()
         }
     }
     
@@ -137,12 +133,13 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                     return
             }
             
-            if !ZMUserSession.useCallKit {
+            if (self.userSession?.callNotificationStyle ?? .callKit) == .pushNotifications {
                 self.localNotificationDispatcher.processMissedCall(in: conversation, sender: user)
             }
             
             conversation.appendMissedCallMessage(fromUser: user, at: timestamp)
             self.syncManagedObjectContext.enqueueDelayedSave()
+            self.localNotificationDispatcher.processBuffer()
         }
     }
 

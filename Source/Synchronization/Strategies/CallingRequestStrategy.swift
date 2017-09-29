@@ -20,6 +20,7 @@ import Foundation
 import WireMessageStrategy
 import WireDataModel
 
+
 extension ZMConversation {
     @objc (appendCallingMessageWithContent:)
     public func appendCallingMessage(content: String) -> ZMClientMessage? {
@@ -37,26 +38,26 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     fileprivate let managedObjectContext    : NSManagedObjectContext
     fileprivate let genericMessageStrategy  : GenericMessageRequestStrategy
     fileprivate let flowManager             : FlowManagerType
-    fileprivate var callConfigRequest       : ZMTransportRequest?
+    fileprivate var callConfigRequestSync   : ZMSingleRequestSync! = nil
+    fileprivate var callConfigCompletion    : CallConfigRequestCompletion? = nil
     
     public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType) {
         self.managedObjectContext = managedObjectContext
         self.genericMessageStrategy = GenericMessageRequestStrategy(context: managedObjectContext, clientRegistrationDelegate: clientRegistrationDelegate)
         self.flowManager = flowManager
-        
         super.init()
         
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
+        self.callConfigRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: self.managedObjectContext)
         
         if let userId = selfUser.remoteIdentifier, let clientId = selfUser.selfClient()?.remoteIdentifier {
-            callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, flowManager: flowManager, analytics: managedObjectContext.analytics)
-            callCenter?.transport = self
+            zmLog.debug("Creating callCenter from init")
+            callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, flowManager: flowManager, analytics: managedObjectContext.analytics, transport: self)
         }
     }
     
     public func nextRequest() -> ZMTransportRequest? {
-        if let request = callConfigRequest  {
-            callConfigRequest = nil
+        if let request = self.callConfigRequestSync.nextRequest() {
             return request
         }
         
@@ -68,6 +69,27 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     }
     
 }
+
+
+extension CallingRequestStrategy : ZMSingleRequestTranscoder {
+    public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
+        zmLog.debug("Scheduling request to '/calls/config'")
+        return ZMTransportRequest(path: "/calls/config", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
+    }
+    
+    public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
+        
+        zmLog.debug("Received response for \(self): \(response)")
+        var payloadAsString : String? = nil
+        if let payload = response.payload, let data = try? JSONSerialization.data(withJSONObject: payload, options: []) {
+            payloadAsString = String(data: data, encoding: .utf8)
+        }
+        zmLog.debug("Callback: \(String(describing: self.callConfigCompletion))")
+        self.callConfigCompletion?(payloadAsString, response.httpStatus)
+        self.callConfigCompletion = nil
+    }
+}
+
 
 extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTrackerSource {
     
@@ -87,9 +109,13 @@ extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTracke
         guard callCenter == nil else { return }
         
         for object in objects {
-            if let  userClient = object as? UserClient, userClient.isSelfClient(), let clientId = userClient.remoteIdentifier, let userId = userClient.user?.remoteIdentifier {
-                callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, flowManager: flowManager, analytics: managedObjectContext.analytics)
-                callCenter?.transport = self
+            if let userClient = object as? UserClient, userClient.isSelfClient(), let clientId = userClient.remoteIdentifier, let userId = userClient.user?.remoteIdentifier {
+                zmLog.debug("Creating callCenter")
+                let uiContext = managedObjectContext.zm_userInterface!
+                let analytics = managedObjectContext.analytics
+                uiContext.performGroupedBlock {
+                    self.callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: uiContext.zm_userInterface, flowManager: self.flowManager, analytics: analytics, transport: self)
+                }
                 break
             }
         }
@@ -162,18 +188,13 @@ extension CallingRequestStrategy : WireCallCenterTransport {
         }
     }
     
-    public func requestCallConfig(completionHandler: @escaping (String?, Int) -> Void) {
-        managedObjectContext.performGroupedBlock {
-            self.callConfigRequest = ZMTransportRequest(path: "/calls/config", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
-            self.callConfigRequest?.add(ZMCompletionHandler(on: self.managedObjectContext.zm_userInterface, block: { (response) in
-                
-                var payloadAsString : String? = nil
-                if let payload = response.payload, let data = try? JSONSerialization.data(withJSONObject: payload, options: []) {
-                    payloadAsString = String(data: data, encoding: .utf8)
-                }
-                
-                completionHandler(payloadAsString, response.httpStatus)
-            }))
+    public func requestCallConfig(completionHandler: @escaping CallConfigRequestCompletion) {
+        self.zmLog.debug("requestCallConfig() called, moc = \(managedObjectContext)")
+        managedObjectContext.performGroupedBlock { [unowned self] in
+            self.zmLog.debug("requestCallConfig() on the moc queue")
+            self.callConfigCompletion = completionHandler
+            
+            self.callConfigRequestSync.readyForNextRequestIfNotBusy()
             RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
     }

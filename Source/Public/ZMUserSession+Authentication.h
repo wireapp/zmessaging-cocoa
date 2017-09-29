@@ -22,12 +22,7 @@
 
 #import <WireSyncEngine/ZMUserSession.h>
 
-
-@protocol ZMAuthenticationObserver;
 @class ZMCredentials;
-
-@protocol ZMAuthenticationObserverToken <NSObject>
-@end
 
 @interface ZMUserSession (Authentication)
 

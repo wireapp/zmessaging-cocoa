@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "Учасники були видалені з розмови";
 "push.notification.member.leave.nootherusername.nousername" = "Учасники були видалені з %1$@";
 
-"push.notification.member.leave.sender.nootherusername" = "%1$@ вийшов(-ла) з %2$@";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "%1$@ вийшов(-ла) з розмови";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "Учасники вийшли з розмови";
-"push.notification.member.leave.sender.nootherusername.nousername" = "Учасники вийшли з %1$@";
-
-
 "push.notification.call.started.video.oneonone" = "Відеодзвінок від %1$@";
 "push.notification.call.started.video.oneonone.nousername" = "Хтось дзвонить з відео";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "%1$@ створив(-ла) групову розмову з вами";
 "push.notification.conversation.create.nousername" = "Хтось створив групову розмову з вами";
-
-"push.notification.conversation.rename" = "%1$@ перейменував(-ла) розмову на %2$@";
-"push.notification.conversation.rename.nousername" = "Розмова була перейменована на %1$@";
 
 "push.notification.connection.request" = "%@ хоче бути доданий(-а) до ваших контактів";
 "push.notification.connection.request.nousername" = "Хтось був доданий до ваших контактів";

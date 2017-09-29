@@ -23,7 +23,6 @@
 
 #import "ZMCallFlowRequestStrategy.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
-#import "ZMUserSessionAuthenticationNotification.h"
 
 static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 
@@ -36,6 +35,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 @property (nonatomic, readonly, weak) NSManagedObjectContext *uiManagedObjectContext;
 @property (nonatomic, strong) dispatch_queue_t avsLogQueue;
 @property (nonatomic, readonly, weak) id<ZMApplication> application;
+@property (nonatomic) id pushChannelObserverToken;
 
 @end
 
@@ -60,7 +60,15 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         self.flowManager = flowManager;
         self.flowManager.delegate = self;
         
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushChannelDidChange:) name:ZMPushChannelStateChangeNotificationName object:nil];
+        ZM_WEAK(self);
+        self.pushChannelObserverToken = [NotificationInContext addObserverWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
+                                           context:self.managedObjectContext.notificationContext
+                                            object:nil
+                                             queue:nil
+                                             using:^(NotificationInContext * note) {
+                                                 ZM_STRONG(self);
+                                                 [self pushChannelDidChange:note];
+                                             }];
         self.pushChannelIsOpen = NO;
         self.avsLogQueue = dispatch_queue_create("AVSLog", DISPATCH_QUEUE_SERIAL);
     }
@@ -78,7 +86,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 - (void)tearDown;
 {
     self.flowManager = nil;
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    self.pushChannelObserverToken = nil;
     [self.application unregisterObserverForStateChange:self];
 }
 
@@ -94,7 +102,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
     });
 }
 
-- (void)pushChannelDidChange:(NSNotification *)note
+- (void)pushChannelDidChange:(NotificationInContext *)note
 {
     BOOL newValue = [note.userInfo[ZMPushChannelIsOpenKey] boolValue];
     self.pushChannelIsOpen = newValue;
@@ -137,10 +145,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
         VoiceGainNotification *voiceGainNotification = [[VoiceGainNotification alloc] initWithVolume:(float)volume conversationId:conversationID userId:userID];
         
         [self.uiManagedObjectContext performGroupedBlock:^{
-            [self.voiceGainNotificationQueue enqueueNotification:voiceGainNotification.notification
-                                                    postingStyle:NSPostWhenIdle
-                                                    coalesceMask:NSNotificationCoalescingOnSender | NSNotificationCoalescingOnName
-                                                        forModes:nil];
+            [voiceGainNotification postIn:self.uiManagedObjectContext.notificationContext queue:self.voiceGainNotificationQueue];
         }];
     }];
 }

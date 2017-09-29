@@ -57,6 +57,8 @@
     self.mockAPNSEnvironment = nil;
     self.currentUserIdentifier = nil;
     
+    WaitForAllGroupsToBeEmpty(0.5);
+    
     [super tearDown];
 }
 

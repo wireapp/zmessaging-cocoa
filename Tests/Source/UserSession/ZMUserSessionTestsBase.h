@@ -27,7 +27,6 @@
 # import "ZMUserSession+UserNotificationCategories.h"
 # import "ZMUserSession+Authentication.h"
 # import "ZMUserSession+Registration.h"
-# import "ZMUserSessionAuthenticationNotification.h"
 # import "ZMUserSessionRegistrationNotification.h"
 
 #import "ZMOperationLoop+Background.h"
@@ -58,6 +57,7 @@
 
 @property (nonatomic, copy) NSUUID *userIdentifier;
 @property (nonatomic, copy) NSURL *applicationContainer;
+@property (nonatomic, copy) NSURL *accountContainer;
 @property (nonatomic, strong) ManagedObjectContextDirectory *contextDirectory;
 
 - (instancetype)initWithSharedContainerDirectory:(NSURL *)sharedContainerDirectory userIdentifier:(NSUUID *)userIdentifier contextDirectory:(ManagedObjectContextDirectory *)contextDirectory;

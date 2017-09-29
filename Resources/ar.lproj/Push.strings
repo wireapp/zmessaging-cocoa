@@ -116,12 +116,6 @@
 "push.notification.member.leave.nootherusername.nousername.noconversationname" = "تم إزالة أشخاص من مُحادثة";
 "push.notification.member.leave.nootherusername.nousername" = "تم إزالة أشخاص من %1$@";
 
-"push.notification.member.leave.sender.nootherusername" = "غادر %1$@ %2$@";
-"push.notification.member.leave.sender.nootherusername.noconversationname" = "غادر %1$@ مُحادثة";
-"push.notification.member.leave.sender.nootherusername.nousername.noconversationname" = "غادر أشخاص مُحادثة";
-"push.notification.member.leave.sender.nootherusername.nousername" = "غادر أشخاص %1$@";
-
-
 "push.notification.call.started.video.oneonone" = "مُكالمة فيديو من %1$@";
 "push.notification.call.started.video.oneonone.nousername" = "اتصال فيديو من شخص ما";
 
@@ -140,9 +134,6 @@
 
 "push.notification.conversation.create" = "أنشأ %1$@ مُحادثة جماعية معك";
 "push.notification.conversation.create.nousername" = "أنشأ شخص مُحادثة جماعية معك";
-
-"push.notification.conversation.rename" = "أعاد %1$@ تسمية مُحادثة لـ%2$@";
-"push.notification.conversation.rename.nousername" = "تم إعادة تسمية مُحادثة لـ%1$@";
 
 "push.notification.connection.request" = "يريد %@ التواصل معك";
 "push.notification.connection.request.nousername" = "شخص يريد التواصل معك";

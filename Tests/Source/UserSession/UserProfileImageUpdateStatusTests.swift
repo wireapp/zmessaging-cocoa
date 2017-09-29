@@ -95,10 +95,10 @@ enum MockUploadError: String, Error {
 }
 
 class MockImageOwner: NSObject, ZMImageOwner {
-    public func requiredImageFormats() -> NSOrderedSet! { return NSOrderedSet() }
-    public func imageData(for format: ZMImageFormat) -> Data! { return Data() }
-    public func setImageData(_ imageData: Data!, for format: ZMImageFormat, properties: ZMIImageProperties!) {}
-    public func originalImageData() -> Data! { return Data() }
+    public func requiredImageFormats() -> NSOrderedSet { return NSOrderedSet() }
+    public func imageData(for format: ZMImageFormat) -> Data? { return Data() }
+    public func setImageData(_ imageData: Data, for format: ZMImageFormat, properties: ZMIImageProperties?) {}
+    public func originalImageData() -> Data? { return Data() }
     public func originalImageSize() -> CGSize { return .zero }
     public func isInline(for format: ZMImageFormat) -> Bool { return false }
     public func isPublic(for format: ZMImageFormat) -> Bool { return false }

@@ -24,8 +24,6 @@ import Intents
 @available(iOS 10.0, *)
 class MockCallKitProvider: NSObject, CallKitProviderType {
 
-
-
     required init(configuration: CXProviderConfiguration) {
         
     }
@@ -61,6 +59,12 @@ class MockCallKitProvider: NSObject, CallKitProviderType {
     func reportOutgoingCall(with UUID: UUID, startedConnectingAt dateStartedConnecting: Date?) {
         timesReportOutgoingCallStartedConnectingCalled += 1
     }
+    
+    public var isInvalidated : Bool = false
+    func invalidate() {
+        isInvalidated = true
+    }
+
 }
 
 @available(iOS 10.0, *)
@@ -184,7 +188,6 @@ class ZMCallKitDelegateTest: MessagingTest {
     
     override func setUp() {
         super.setUp()
-        ZMUserSession.useCallKit = true
         
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
         selfUser.emailAddress = "self@user.mail"
@@ -194,7 +197,7 @@ class ZMCallKitDelegateTest: MessagingTest {
         let configuration = ZMCallKitDelegate.providerConfiguration()
         self.callKitProvider = MockCallKitProvider(configuration: configuration)
         self.callKitController = MockCallKitCallController()
-        self.mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: "123", uiMOC: uiMOC, flowManager: flowManager)
+        self.mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: "123", uiMOC: uiMOC, flowManager: flowManager, transport: WireCallCenterTransportMock())
         self.mockWireCallCenterV3.overridenCallingProtocol = .version2
         
         self.sut = ZMCallKitDelegate(callKitProvider: self.callKitProvider,
@@ -207,11 +210,10 @@ class ZMCallKitDelegateTest: MessagingTest {
         mockUserSession.callKitDelegate = sut
         ZMCallKitDelegateTestsMocking.mockUserSession(self.mockUserSession, callKitDelegate: self.sut)
         
-        
+        self.uiMOC.zm_callCenter = mockWireCallCenterV3
     }
     
     override func tearDown() {
-        ZMUserSession.useCallKit = false
         self.sut = nil
         self.mockWireCallCenterV3 = nil
         
@@ -249,6 +251,21 @@ class ZMCallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(configuration.ringtoneSound, customSoundName + ".m4a")
+    }
+    
+    func testThatItInvalidatesTheProviderOnDealloc() {
+        // given
+        sut = ZMCallKitDelegate(callKitProvider: self.callKitProvider,
+                          callController: self.callKitController,
+                          flowManager: FlowManagerMock(),
+                          userSession: self.mockUserSession,
+                          mediaManager: nil)
+        
+        // when
+        sut = nil
+        
+        // then
+        XCTAssertTrue(callKitProvider.isInvalidated)
     }
     
     // Public API - outgoing calls
@@ -341,7 +358,6 @@ class ZMCallKitDelegateTest: MessagingTest {
         createOneOnOneConversation(user: otherUser)
         let conversation = otherUser.oneToOneConversation!
         self.uiMOC.saveOrRollback()
-        
         
         self.callKitController.mockErrorCount = 1
         let error = NSError(domain: "foo", code: CXErrorCodeRequestTransactionError.Code.unknownCallUUID.rawValue, userInfo: nil)

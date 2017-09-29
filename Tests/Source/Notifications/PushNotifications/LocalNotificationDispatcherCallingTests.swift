@@ -27,8 +27,11 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
     override func setUp() {
         super.setUp()
         
-        sut = LocalNotificationDispatcher(in: syncMOC, application: application)
+        sut = LocalNotificationDispatcher(in: syncMOC,
+                                          foregroundNotificationDelegate: MockForegroundNotificationDelegate(),
+                                          application: application)
         
+        self.application.applicationState = .background
         syncMOC.performGroupedBlockAndWait {
             let sender = ZMUser.insertNewObject(in: self.syncMOC)
             sender.name = "Callie"
@@ -42,6 +45,8 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
             conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral:sender), isAuthoritative: true)
             
             self.conversation = conversation
+            
+            ZMUser.selfUser(in: self.syncMOC).remoteIdentifier = UUID()
         }
     }
     

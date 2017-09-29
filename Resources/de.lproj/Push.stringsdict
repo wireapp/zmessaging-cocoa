@@ -101,7 +101,7 @@
         <key>push.notification.call.missed.group</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ hat%3$#@new_calls@in %2$@ angerufen</string>
+            <string>%1$@ hat%3$#@new_calls@ in %2$@ angerufen</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -117,7 +117,7 @@
         <key>push.notification.call.missed.group.nousername</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>Jemand hat%2$#@new_calls@in %1$@ angerufen</string>
+            <string>Jemand hat%2$#@new_calls@ in %1$@ angerufen</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -133,7 +133,7 @@
         <key>push.notification.call.missed.group.nousername.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>Jemand hat %1$#@new_calls@in einer Unterhaltung angerufen</string>
+            <string>Jemand hat %1$#@new_calls@ in einer Unterhaltung angerufen</string>
             <key>new_calls</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -197,7 +197,7 @@
         <key>push.notification.knock.group</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ hat%3$#@new_knocks@in %2$@ gepingt</string>
+            <string>%1$@ hat%3$#@new_knocks@ in %2$@ gepingt</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>
@@ -213,7 +213,7 @@
         <key>push.notification.knock.group.noconversationname</key>
         <dict>
             <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ hat%2$#@new_knocks@in einer Unterhaltung gepingt</string>
+            <string>%1$@ hat%2$#@new_knocks@ in einer Unterhaltung gepingt</string>
             <key>new_knocks</key>
             <dict>
                 <key>NSStringFormatSpecTypeKey</key>

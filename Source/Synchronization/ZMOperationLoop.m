@@ -34,7 +34,6 @@
 #import "WireSyncEngineLogs.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
-NSString * const ZMPushChannelStateChangeNotificationName = @"ZMPushChannelStateChangeNotification";
 NSString * const ZMPushChannelIsOpenKey = @"pushChannelIsOpen";
 NSString * const ZMPushChannelResponseStatusKey = @"responseStatus";
 
@@ -72,7 +71,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                            cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
-             localNotificationdispatcher:(LocalNotificationDispatcher *)dispatcher
+             localNotificationDispatcher:(LocalNotificationDispatcher *)dispatcher
                             mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
@@ -333,14 +332,25 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 - (void)pushChannelDidClose:(ZMPushChannelConnection *)channel withResponse:(NSHTTPURLResponse *)response;
 {
     NOT_USED(response);
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMPushChannelStateChangeNotificationName object:self userInfo:@{ZMPushChannelIsOpenKey : @(NO), ZMPushChannelResponseStatusKey : @(response.statusCode)}];
+    [[[NotificationInContext alloc] initWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
+                                         context:self.syncMOC.notificationContext
+                                          object:self userInfo:@{
+                                                                 ZMPushChannelIsOpenKey : @(NO),
+                                                                 ZMPushChannelResponseStatusKey : @(response.statusCode)
+                                                                 }] post];
     [self.syncStrategy didInterruptUpdateEventsStream];
     [ZMRequestAvailableNotification notifyNewRequestsAvailable:channel];
 }
 
 - (void)pushChannelDidOpen:(ZMPushChannelConnection *)channel withResponse:(NSHTTPURLResponse *)response;
 {
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMPushChannelStateChangeNotificationName object:self userInfo:@{ZMPushChannelIsOpenKey : @(YES), ZMPushChannelResponseStatusKey : @(response.statusCode)}];
+    [[[NotificationInContext alloc] initWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
+                                         context:self.syncMOC.notificationContext
+                                          object:self userInfo: @{
+                                                                  ZMPushChannelIsOpenKey : @(YES),
+                                                                  ZMPushChannelResponseStatusKey : @(response.statusCode)
+                                                  }
+      ] post];
     [self.syncStrategy didEstablishUpdateEventsStream];
     [ZMRequestAvailableNotification notifyNewRequestsAvailable:channel];
 }

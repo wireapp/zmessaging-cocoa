@@ -45,6 +45,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)reportCallWithUUID:(NSUUID *)UUID endedAtDate:(nullable NSDate *)dateEnded reason:(NSUInteger)endedReason;
 - (void)reportOutgoingCallWithUUID:(NSUUID *)UUID startedConnectingAtDate:(nullable NSDate *)dateStartedConnecting;
 - (void)reportOutgoingCallWithUUID:(NSUUID *)UUID connectedAtDate:(nullable NSDate *)dateConnected;
+
+/// Invalidates the provider and completes all active calls with an error.
+- (void)invalidate;
 @end
 
 /// Needed to unbound @c ZMCallKitDelegate from OS CallKit implementation (for testing).
@@ -66,6 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Finds the appropriate conversation described by the list of @c INPerson objects.
 + (nullable instancetype)resolveConversationForPersons:(NSArray<INPerson *> *)persons
                                              inContext:(NSManagedObjectContext *)context;
+
 @end
 
 

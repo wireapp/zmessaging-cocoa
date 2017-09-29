@@ -28,4 +28,6 @@
 /// Process the payload of the remote notification. This may cause a @c UILocalNotification to be displayed.
 - (void)saveEventsAndSendNotificationForPayload:(NSDictionary *)payload fetchCompletionHandler:(ZMPushResultHandler)completionHandler source:(ZMPushNotficationType)source;
 
+/// Checks if notification refers to the current user.
+- (BOOL)notificationIsForCurrentUser:(NSDictionary *)userInfo;
 @end

@@ -44,6 +44,8 @@ internal enum AssetTransportError: Error {
     internal let moc: NSManagedObjectContext
     internal weak var imageUploadStatus: UserProfileImageUploadStatusProtocol?
     
+    fileprivate var observers: [Any] = []
+    
     @objc public convenience init(managedObjectContext: NSManagedObjectContext, applicationStatusDirectory: ApplicationStatusDirectory) {
         self.init(managedObjectContext: managedObjectContext, applicationStatus: applicationStatusDirectory, imageUploadStatus: applicationStatusDirectory.userProfileImageUpdateStatus)
     }
@@ -63,8 +65,16 @@ internal enum AssetTransportError: Error {
         upstreamRequestSyncs[.complete] = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
         deleteRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
         
-        NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: ZMUser.previewAssetFetchNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(requestAssetForNotification(note:)), name: ZMUser.completeAssetFetchNotification, object: nil)
+        observers.append(NotificationInContext.addObserver(
+            name: ZMUser.completeAssetFetchNotification,
+            context: managedObjectContext.notificationContext,
+            using: { [weak self] in self?.requestAssetForNotification(note: $0) })
+        )
+        observers.append(NotificationInContext.addObserver(
+            name: ZMUser.previewAssetFetchNotification,
+            context: managedObjectContext.notificationContext,
+            using: { [weak self] in self?.requestAssetForNotification(note: $0) })
+        )
     }
     
     fileprivate func whitelistUserImageSync(for size: ProfileImageSize) -> ZMDownstreamObjectSyncWithWhitelist {
@@ -100,7 +110,7 @@ internal enum AssetTransportError: Error {
         return nil
     }
     
-    func requestAssetForNotification(note: Notification) {
+    func requestAssetForNotification(note: NotificationInContext) {
         moc.performGroupedBlock {
             guard let objectID = note.object as? NSManagedObjectID,
                 let object = self.moc.object(with: objectID) as? ZMManagedObject

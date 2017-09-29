@@ -20,6 +20,76 @@ import XCTest
 import WireTesting
 @testable import WireSyncEngine
 
+// This enum only exist due to obj-c compatibility
+@objc
+public enum PreLoginAuthenticationEventObjc : Int {
+    case loginCodeRequestDidSucceed
+    case loginCodeRequestDidFail
+    case authenticationDidSucceed
+    case authenticationDidFail
+}
+
+public typealias PreLoginAuthenticationObserverHandler = (_ event: PreLoginAuthenticationEventObjc, _ error : NSError?) -> Void
+
+@objc
+public class PreLoginAuthenticationObserverToken : NSObject, PreLoginAuthenticationObserver {
+    
+    private var token : Any?
+    private var handler : PreLoginAuthenticationObserverHandler
+
+    public init(authenticationStatus: ZMAuthenticationStatus, handler : @escaping PreLoginAuthenticationObserverHandler) {
+        self.handler = handler
+        
+        super.init()
+        
+        token = WireSyncEngine.PreLoginAuthenticationNotification.register(self, context: authenticationStatus)
+    }
+    
+    public func loginCodeRequestDidSucceed() {
+        handler(.loginCodeRequestDidSucceed, nil)
+    }
+    
+    public func loginCodeRequestDidFail(_ error: NSError) {
+        handler(.loginCodeRequestDidFail, error)
+    }
+    
+    public func authenticationDidSucceed() {
+        handler(.authenticationDidSucceed, nil)
+    }
+    
+    public func authenticationDidFail(_ error: NSError) {
+        handler(.authenticationDidFail, error)
+    }
+}
+
+@objc
+public class PreLoginAuthenticationNotificationEvent : NSObject {
+    
+    let event : PreLoginAuthenticationEventObjc
+    var error : NSError?
+    
+    init(event : PreLoginAuthenticationEventObjc, error : NSError?) {
+        self.event = event
+        self.error = error
+    }
+    
+}
+
+@objc
+public class PreLoginAuthenticationNotificationRecorder : NSObject {
+    
+    private var token : Any?
+    public var notifications : [PreLoginAuthenticationNotificationEvent] = []
+    
+    init(authenticationStatus: ZMAuthenticationStatus) {
+        super.init()
+        
+        token = PreLoginAuthenticationObserverToken(authenticationStatus: authenticationStatus) { [weak self] (event, error) in
+            self?.notifications.append(PreLoginAuthenticationNotificationEvent(event: event, error: error))
+        }
+    }
+    
+}
 
 final class TestUnauthenticatedTransportSession: UnauthenticatedTransportSessionProtocol {
 
@@ -34,26 +104,23 @@ final class TestUnauthenticatedTransportSession: UnauthenticatedTransportSession
 }
 
 
-final class TestAuthenticationObserver: NSObject, ZMAuthenticationObserver {
+final class TestAuthenticationObserver: NSObject, PreLoginAuthenticationObserver {
     public var authenticationDidSucceedEvents: Int = 0
     public var authenticationDidFailEvents: [Error] = []
     
-    private var observationToken: ZMAuthenticationObserverToken! = nil
+    private var preLoginAuthenticationToken : Any?
     
-    override init() {
+    init(unauthenticatedSession : UnauthenticatedSession) {
         super.init()
-        observationToken = ZMUserSessionAuthenticationNotification.addObserver(self)
-    }
-    
-    deinit {
-        ZMUserSessionAuthenticationNotification.removeObserver(for: observationToken)
+        
+        preLoginAuthenticationToken = unauthenticatedSession.addAuthenticationObserver(self)
     }
     
     func authenticationDidSucceed() {
         authenticationDidSucceedEvents += 1
     }
     
-    func authenticationDidFail(_ error: Error) {
+    func authenticationDidFail(_ error: NSError) {
         authenticationDidFailEvents.append(error)
     }
 }
@@ -118,7 +185,7 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
     }
     
     func testThatDuringLoginItThrowsErrorWhenNoCredentials() {
-        let observer = TestAuthenticationObserver()
+        let observer = TestAuthenticationObserver(unauthenticatedSession: sut)
         // given
         reachability.mayBeReachable = false
         // when
@@ -132,7 +199,7 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
     }
     
     func testThatDuringLoginItThrowsErrorWhenOffline() {
-        let observer = TestAuthenticationObserver()
+        let observer = TestAuthenticationObserver(unauthenticatedSession: sut)
         // given
         reachability.mayBeReachable = false
         // when

@@ -20,6 +20,8 @@
 
 #import "MessagingTest.h"
 #import "ZMTypingUsers.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 
 @interface ZMTypingUsersTests : MessagingTest
@@ -80,10 +82,9 @@
 {
     // given
     NSSet *users = [NSSet setWithObjects:self.user1, self.user2, nil];
-    ZMTypingChangeNotification *note = [ZMTypingChangeNotification notificationWithConversation:self.conversation1 typingUser:users];
     
     // when
-    [self.sut updateTypingUsersWithNotification:note];
+    [self.sut updateTypingUsers:users inConversation:self.conversation1];
     
     // then
     XCTAssertEqualObjects([self.sut typingUsersInConversation:self.conversation1], users);
@@ -95,12 +96,10 @@
     // given
     NSSet *usersA = [NSSet setWithObjects:self.user1, self.user2, nil];
     NSSet *usersB = [NSSet setWithObjects:self.user1, nil];
-    ZMTypingChangeNotification *noteA = [ZMTypingChangeNotification notificationWithConversation:self.conversation1 typingUser:usersA];
-    ZMTypingChangeNotification *noteB = [ZMTypingChangeNotification notificationWithConversation:self.conversation1 typingUser:usersB];
     
     // when
-    [self.sut updateTypingUsersWithNotification:noteA];
-    [self.sut updateTypingUsersWithNotification:noteB];
+    [self.sut updateTypingUsers:usersA inConversation:self.conversation1];
+    [self.sut updateTypingUsers:usersB inConversation:self.conversation1];
     
     // then
     XCTAssertEqualObjects([self.sut typingUsersInConversation:self.conversation1], usersB);
@@ -112,12 +111,10 @@
     // given
     NSSet *usersA = [NSSet setWithObjects:self.user1, nil];
     NSSet *usersB = [NSSet setWithObjects:self.user2, nil];
-    ZMTypingChangeNotification *noteA = [ZMTypingChangeNotification notificationWithConversation:self.conversation1 typingUser:usersA];
-    ZMTypingChangeNotification *noteB = [ZMTypingChangeNotification notificationWithConversation:self.conversation2 typingUser:usersB];
     
     // when
-    [self.sut updateTypingUsersWithNotification:noteA];
-    [self.sut updateTypingUsersWithNotification:noteB];
+    [self.sut updateTypingUsers:usersA inConversation:self.conversation1];
+    [self.sut updateTypingUsers:usersB inConversation:self.conversation2];
     
     // then
     XCTAssertEqualObjects([self.sut typingUsersInConversation:self.conversation1], usersA);
@@ -154,11 +151,15 @@
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
 
     // then
-    [self expectationForNotification:@"ZMTypingNotification" object:nil handler:^BOOL(NSNotification * notification) {
-        XCTAssertEqual(notification.object, conversation);
-        XCTAssertEqual(notification.userInfo[@"isTyping"], @(YES));
-        return  YES;
-    }];
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Notification"];
+    id token = [NotificationInContext addObserverWithName:ZMConversation.typingNotificationName
+                                                  context:self.uiMOC.notificationContext
+                                                   object:nil
+                                                    queue:nil using:^(NotificationInContext * notification) {
+                                                        XCTAssertEqual(notification.object, conversation);
+                                                        XCTAssertEqual(notification.userInfo[@"isTyping"], @(YES));
+                                                        [expectation fulfill];
+                                                    }];
     
     // when
     [conversation setIsTyping:YES];
@@ -166,7 +167,7 @@
     
     // teardown
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    token = nil;
 }
 
 @end

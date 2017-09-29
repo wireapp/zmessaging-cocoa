@@ -43,7 +43,6 @@
 @property (nonatomic, nullable) ZMAPNSEnvironment *apnsEnvironment;
 @property (nonatomic, nullable) ApplicationMock *application;
 @property (nonatomic, nullable) ZMUserSession *userSession;
-@property (nonatomic, nullable) UnauthenticatedSession *unauthenticatedSession;
 @property (nonatomic, null_unspecified) NSURL *sharedContainerDirectory;
 @property (nonatomic, readonly) BOOL useInMemoryStore;
 @property (nonatomic, readonly) BOOL useRealKeychain;

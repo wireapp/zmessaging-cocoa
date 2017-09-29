@@ -65,6 +65,7 @@ extern NSString *_Null_unspecified const ZMPushStringNewConnection;
 @interface ZMLocalNotification : NSObject
 
 - (nonnull instancetype)initWithConversationID:(nullable NSUUID *)conversationID;
+- (nullable NSString *)titleToDisplayForManagedObjectContext:(nullable NSManagedObjectContext *)managedObjectContext;
 
 @property (nonatomic, readonly, nullable) NSUUID *conversationID;
 @property (nonatomic, readonly, nonnull) NSArray<UILocalNotification*> *uiNotifications;

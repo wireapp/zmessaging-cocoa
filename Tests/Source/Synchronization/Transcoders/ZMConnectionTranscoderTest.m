@@ -51,7 +51,7 @@
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
     
     
-    self.mockClientRegistrationDelegate = [[ZMMockClientRegistrationStatus alloc] init];
+    self.mockClientRegistrationDelegate = [[ZMMockClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC];
     self.sut = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -59,6 +59,7 @@
 - (void)tearDown
 {
     [self.mockClientRegistrationDelegate tearDown];
+    self.mockClientRegistrationDelegate = nil;
     self.sut = nil;
     [super tearDown];
 }

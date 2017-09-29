@@ -24,7 +24,6 @@
 #import "ZMCredentials.h"
 #import "ZMAuthenticationStatus.h"
 #import "NSError+ZMUserSession.h"
-#import "ZMUserSessionAuthenticationNotification.h"
 #import "ZMUserSessionRegistrationNotification.h"
 #import "ZMClientRegistrationStatus.h"
 #import "ZMAuthenticationStatus.h"
@@ -146,9 +145,10 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 {
     //expect
     __block BOOL notified = NO;
-    id<ZMAuthenticationObserverToken> token = [ZMUserSessionAuthenticationNotification addObserverOnGroupQueue:self.uiMOC block:^(ZMUserSessionAuthenticationNotification *note) {
-        XCTAssertNotNil(note.error);
-        XCTAssertEqual((ZMUserSessionErrorCode)note.error.code, code);
+    id token = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        XCTAssertEqual(event, PreLoginAuthenticationEventObjcAuthenticationDidFail);
+        XCTAssertNotNil(error);
+        XCTAssertEqual((ZMUserSessionErrorCode)error.code, code);
         notified = YES;
     }];
     
@@ -158,15 +158,17 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     //then
     XCTAssert(notified);
-    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
+    token = nil;
+//    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
 - (void)expectRegistrationSucceedAfter:(void(^)())block;
 {
     //expect
     __block BOOL notified = NO;
-    id<ZMRegistrationObserverToken> token = [ZMUserSessionRegistrationNotification addObserverWithBlock:^(ZMUserSessionRegistrationNotification *note) {
-        XCTAssertNil(note.error);
+    id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
+        NOT_USED(event);
+        XCTAssertNil(error);
         notified = YES;
     }];
     
@@ -175,16 +177,17 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     //then
     XCTAssert(notified);
-    [ZMUserSessionRegistrationNotification removeObserver:token];
+    token = nil;
 }
 
 - (void)expectRegistrationFailedWithError:(ZMUserSessionErrorCode)code after:(void(^)())block;
 {
     //expect
     __block BOOL notified = NO;
-    id<ZMRegistrationObserverToken> token = [ZMUserSessionRegistrationNotification addObserverWithBlock:^(ZMUserSessionRegistrationNotification *note) {
-        XCTAssertNotNil(note.error);
-        XCTAssertEqual((ZMUserSessionErrorCode)note.error.code, code);
+    id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
+        NOT_USED(event);
+        XCTAssertNotNil(error);
+        XCTAssertEqual((ZMUserSessionErrorCode)error.code, code);
         notified = YES;
     }];
     
@@ -193,7 +196,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     //then
     XCTAssert(notified);
-    [ZMUserSessionRegistrationNotification removeObserver:token];
+    token = nil;
 }
 
 @end
@@ -273,7 +276,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     ZMTransportRequest *expectedRequest = [[ZMTransportRequest alloc] initWithPath:ZMResendVerificationURL method:ZMMethodPOST payload:payload authentication:ZMTransportRequestAuthNone];
     [self.authenticationStatus prepareForLoginWithCredentials:self.testEmailCredentials];
     [self.authenticationStatus didFailLoginWithEmailBecausePendingValidation];
-    [ZMUserSessionRegistrationNotification resendValidationForRegistrationEmail];
+    [ZMUserSessionRegistrationNotification resendValidationForRegistrationEmailInContext:self.authenticationStatus];
     
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -420,6 +423,39 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     
     // when
     [self expectAuthenticationFailedWithError:ZMUserSessionAccountIsPendingActivation after:^{
+        [[self.sut nextRequest] completeWithResponse:response];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
+}
+
+- (void)testThatItCallsAuthenticationFailOnPhoneLoginWithSuspendedAccount
+{
+    // given
+    NSDictionary *content = @{@"code":@403,
+                              @"message":@"Account suspended.",
+                              @"label":@"suspended"};
+    [self.authenticationStatus prepareForLoginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:@"+4912345678" verificationCode:@"123456"]];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:content HTTPStatus:403 transportSessionError:nil];
+    
+    // when
+    [self expectAuthenticationFailedWithError:ZMUserSessionAccountSuspended after:^{
+        [[self.sut nextRequest] completeWithResponse:response];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
+}
+
+
+- (void)testThatItCallsAuthenticationFailOnEmailLoginWithSuspendedAccount
+{
+    // given
+    NSDictionary *content = @{@"code":@403,
+                              @"message":@"Account suspended.",
+                              @"label":@"suspended"};
+    [self.authenticationStatus prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:@"foo@example.com" password:@"12345678"]];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:content HTTPStatus:403 transportSessionError:nil];
+    
+    // when
+    [self expectAuthenticationFailedWithError:ZMUserSessionAccountSuspended after:^{
         [[self.sut nextRequest] completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
@@ -603,7 +639,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
                                       @"locale" : [NSLocale formattedLocaleIdentifier]};
     [self.authenticationStatus prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:self.testEmailCredentials.email password:@"12345678"]];
     [self.authenticationStatus didFailLoginWithEmailBecausePendingValidation];
-    [ZMUserSessionRegistrationNotification resendValidationForRegistrationEmail];
+    [ZMUserSessionRegistrationNotification resendValidationForRegistrationEmailInContext:self.authenticationStatus];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
@@ -628,7 +664,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [self.authenticationStatus didFailLoginWithEmailBecausePendingValidation];
     [self.authenticationStatus setLoginCredentials:credentials];
     
-    [ZMUserSessionRegistrationNotification resendValidationForRegistrationEmail];
+    [ZMUserSessionRegistrationNotification resendValidationForRegistrationEmailInContext:self.authenticationStatus];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
