@@ -78,7 +78,6 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func checkThatItPostsNotification(expectedCallState: CallState, userIsNil: Bool = false, expectedUserId: UUID? = nil, line: UInt = #line, file : StaticString = #file, actionBlock: ((UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void)){
         // given
-//        let conversationId = UUID()
         let userId = UUID()
         let conversationIdRef = conversationID.transportString().cString(using: .utf8)
         let userIdRef = userId.transportString().cString(using: .utf8)
