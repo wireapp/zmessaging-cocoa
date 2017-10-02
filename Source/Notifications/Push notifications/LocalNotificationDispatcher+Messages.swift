@@ -47,6 +47,8 @@ extension LocalNotificationDispatcher: PushMessageHandler {
         if application.applicationState == .active {
             localNotificationBuffer.append(note)
         } else {
+            // HOTFIX: update icon badge when in background
+            self.foregroundNotificationDelegate?.updateAppIconBadge()
             application.scheduleLocalNotification(note)
         }
     }
