@@ -118,6 +118,11 @@ extension ZMUserSession: PushDispatcherOptionalClient {
 
 extension ZMUserSession: ForegroundNotificationsDelegate {
     
+    // HOTFIX: update icon badge when in background
+    public func updateAppIconBadge() {
+        self.sessionManager?.updateAppIconBadge()
+    }
+    
     public func didReceieveLocalMessage(notification: UILocalNotification, application: ZMApplication) {
         DispatchQueue.main.performAsync {
             self.sessionManager?.localMessageNotificationResponder?.processLocalMessage(notification, forSession: self)
