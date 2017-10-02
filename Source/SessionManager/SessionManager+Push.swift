@@ -150,8 +150,13 @@ extension SessionManager: PushDispatcherClient {
                                          from source: ZMPushNotficationType,
                                          completion: ZMPushNotificationCompletionHandler?) {
         
+        let completionHandler: ZMPushNotificationCompletionHandler = { result in
+            completion?(result)
+            self.updateAppIconBadge()
+        }
+        
         guard !payload.isPayloadMissingUserInformation() else {
-            self.wakeAllAccounts(for: payload, from: source, completion: completion)
+            self.wakeAllAccounts(for: payload, from: source, completion: completionHandler)
             return
         }
         
@@ -169,11 +174,11 @@ extension SessionManager: PushDispatcherClient {
             let account = self.accountManager.account(with: userId) {
             
             self.withSession(for: account, perform: { userSession in
-                userSession.receivedPushNotification(with: payload, from: source, completion: completion)
+                userSession.receivedPushNotification(with: payload, from: source, completion: completionHandler)
             })
         }
         else {
-            self.wakeAllAccounts(for: payload, from: source, completion: completion)
+            self.wakeAllAccounts(for: payload, from: source, completion: completionHandler)
         }
     }
 }
