@@ -737,9 +737,12 @@ extension SessionManager: ZMConversationListObserver {
     }
     
     func updateAppIconBadge() {
-        // wait 2 seconds so the contexes are in sync
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            self.updateAllUnreadCounts()
+            for (accountID, session) in self.backgroundUserSessions {
+                let account = self.accountManager.account(with: accountID)
+                account?.unreadConversationCount = Int(ZMConversation.unreadConversationCount(in: session.managedObjectContext))
+            }
             self.application.applicationIconBadgeNumber = self.accountManager.totalUnreadCount
         }
     }
