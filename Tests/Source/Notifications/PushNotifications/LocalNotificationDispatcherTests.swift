@@ -299,6 +299,47 @@ extension LocalNotificationDispatcherTests {
         XCTAssertEqual(self.sut.messageNotifications.notifications.count, 1)
         XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
     }
+    
+    func testThatItCreatesNotificationForSelfGroupParticipation() {
+        
+        // GIVEN
+        let message = ZMSystemMessage.insertNewObject(in: self.syncMOC)
+        message.visibleInConversation = self.conversation1
+        message.sender = self.user1
+        message.systemMessageType = .participantsAdded
+        message.users = [self.selfUser]
+        
+        // notification content
+        let text = (ZMPushStringMemberJoin as NSString).localizedString(with: message.sender, conversation: message.conversation, otherUser: self.selfUser)!
+        
+        // WHEN
+        self.sut.process(message)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
+        XCTAssertEqual(self.notificationDelegate.receivedLocalNotifications.count, 0)
+        guard let notification = self.application.scheduledLocalNotifications.first else { return XCTFail() }
+        XCTAssertTrue(notification.alertBody!.contains(text))
+    }
+    
+    func testThatItDoesNotCreateNotificationForOtherGroupParticipation() {
+        
+        // GIVEN
+        let message = ZMSystemMessage.insertNewObject(in: self.syncMOC)
+        message.visibleInConversation = self.conversation1
+        message.sender = self.user1
+        message.systemMessageType = .participantsAdded
+        message.users = [self.user2]
+        
+        // WHEN
+        self.sut.process(message)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0)
+        XCTAssertEqual(self.notificationDelegate.receivedLocalNotifications.count, 0)
+    }
 }
 
 

@@ -18,6 +18,10 @@
 
 import Foundation
 
+// whitelisted files, so the FileRelocator doesn't consider to check these system files.
+// - com.apple.nsurlsessiond is used by the system as cache while sharing an item.
+// - .DS_Store is the hidden file for folder preferences used in macOS (only for simulator)
+private let whitelistedFiles = ["com.apple.nsurlsessiond", ".DS_Store"]
 private let zmLog = ZMSLog(tag: "ZMUserSession")
 
 extension ZMUserSession {
@@ -40,7 +44,7 @@ extension ZMUserSession {
         
         // FIXME: Use dictionary grouping in Swift4
         // see https://developer.apple.com/documentation/swift/dictionary/2893436-init
-        let result = group(fileNames: files)
+        let result = group(fileNames: files.filter { !whitelistedFiles.contains($0) })
         if result.assigned.count == 0 {
             result.unassigned.forEach{
                 let newLocation = newCacheLocation.appendingPathComponent($0)

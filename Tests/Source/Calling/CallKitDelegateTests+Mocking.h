@@ -16,13 +16,17 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@interface CXProvider (TypeConformance) <CallKitProviderType>
+@import Foundation;
+@import WireSyncEngine;
+@import CallKit;
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface CallKitDelegateTestsMocking: NSObject
++ (void)mockUserSession:(id)userSession callKitDelegate:(id)callKitDelegate;
++ (CXCall *)mockCallWithUUID:(NSUUID *)uuid outgoing:(BOOL)outgoing;
++ (void)stopMockingMock:(NSObject *)Mock;
+
 @end
 
-@interface CXCallController (TypeConformance) <CallKitCallController>
-@end
-
-@interface CXCallAction (Conversation)
-/// Fetches the conversation associated by @c callUUID with the call action.
-- (nullable ZMConversation *)conversationInContext:(nonnull NSManagedObjectContext *)context;
-@end
+NS_ASSUME_NONNULL_END

@@ -21,38 +21,27 @@ import Foundation
 import WireDataModel
 @testable import WireSyncEngine
 
-struct V2CallStateChange {
-    let conversation : ZMConversation
-    let state : VoiceChannelV2State
-}
-
-class VoiceChannelStateTestObserver : VoiceChannelStateObserver {
-
-    var changes : [V2CallStateChange] = []
+class CallStateTestObserver : WireCallCenterCallStateObserver {
+    
+    var changes : [CallState] = []
     var token : Any?
     
     func observe(conversation: ZMConversation, context: NSManagedObjectContext) {
-        token = WireCallCenter.addVoiceChannelStateObserver(observer: self, context: context)
-    }
-
-    func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation, callingProtocol: CallingProtocol) {
-        //
+        token = WireCallCenterV3.addCallStateObserver(observer: self, for: conversation, context: context)
     }
     
-    func callCenterDidFailToJoinVoiceChannel(error: Error?, conversation: ZMConversation) {
-        //
+    func callCenterDidChange(callState: CallState, conversation: ZMConversation, user: ZMUser?, timeStamp: Date?) {
+        changes.append(callState)
     }
     
-    func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
-        changes.append(V2CallStateChange(conversation: conversation, state: voiceChannelState))
-    }
-    
-    func checkLastNotificationHasCallState(_ callState: VoiceChannelV2State, line: UInt = #line, file : StaticString = #file) {
-        guard let change = changes.last else {
+    func checkLastNotificationHasCallState(_ callState: CallState, line: UInt = #line, file: StaticString = #file) {
+        guard let lastCallState = changes.last else {
             return XCTFail("Did not receive a notification", file: file, line: line)
         }
-        XCTAssertEqual(change.state.rawValue, callState.rawValue, file: file, line: line)
+        
+        XCTAssertEqual(lastCallState, callState, file: file, line: line)
     }
+    
 }
 
 class VoiceChannelParticipantTestObserver : VoiceChannelParticipantObserver {
@@ -61,7 +50,7 @@ class VoiceChannelParticipantTestObserver : VoiceChannelParticipantObserver {
     var token : Any?
     
     func observe(conversation: ZMConversation, context: NSManagedObjectContext) {
-        token = WireCallCenter.addVoiceChannelParticipantObserver(observer: self, forConversation: conversation, context: context)
+        token = WireCallCenterV3.addVoiceChannelParticipantObserver(observer: self, for: conversation, context: context)
     }
     
     func voiceChannelParticipantsDidChange(_ changeInfo: VoiceChannelParticipantNotification) {
@@ -71,7 +60,7 @@ class VoiceChannelParticipantTestObserver : VoiceChannelParticipantObserver {
 
 class CallingV3Tests : IntegrationTest {
     
-    var stateObserver : VoiceChannelStateTestObserver!
+    var stateObserver : CallStateTestObserver!
     var participantObserver : VoiceChannelParticipantTestObserver!
     
     override func setUp() {
@@ -80,7 +69,7 @@ class CallingV3Tests : IntegrationTest {
         createSelfUserAndConversation()
         createExtraUsersAndConversations()
         
-        stateObserver = VoiceChannelStateTestObserver()
+        stateObserver = CallStateTestObserver()
         participantObserver = VoiceChannelParticipantTestObserver()
     }
     
@@ -164,7 +153,7 @@ class CallingV3Tests : IntegrationTest {
 
     func closeCall(user: ZMUser, reason: CallClosedReason) {
         let userIdRef = user.remoteIdentifier!.transportString().cString(using: .utf8)
-        WireSyncEngine.closedCallHandler(reason: reason.rawValue, conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, contextRef: wireCallCenterRef)
+        WireSyncEngine.closedCallHandler(reason: reason.wcall_reason, conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, contextRef: wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
@@ -199,7 +188,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
-        stateObserver.checkLastNotificationHasCallState(.outgoingCall)
+        stateObserver.checkLastNotificationHasCallState(.outgoing(degraded: false))
         
         // when
         selfDropCall()
@@ -207,7 +196,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 3)
-        stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
+        stateObserver.checkLastNotificationHasCallState(.terminating(reason: .canceled))
     }
     
     func testJoiningAndLeavingAnVoiceChannel_Group_2ParticipantsLeft(){
@@ -221,7 +210,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
-        stateObserver.checkLastNotificationHasCallState(.outgoingCall)
+        stateObserver.checkLastNotificationHasCallState(.outgoing(degraded: false))
         
         // when
         participantsChanged(members: [(user: conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser, establishedFlow: false),
@@ -233,13 +222,13 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
-        stateObserver.checkLastNotificationHasCallState(.incomingCallInactive)
+        stateObserver.checkLastNotificationHasCallState(.incoming(video: false, shouldRing: false, degraded: false))
 
         // and when
         closeCall(user: self.localSelfUser, reason: .canceled)
 
         XCTAssertEqual(stateObserver.changes.count, 2)
-        stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
+        stateObserver.checkLastNotificationHasCallState(.terminating(reason: .canceled))
     }
     
     func testJoiningAndLeavingAnEmptyVoiceChannel_Group(){
@@ -253,7 +242,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
-        stateObserver.checkLastNotificationHasCallState(.outgoingCall)
+        stateObserver.checkLastNotificationHasCallState(.outgoing(degraded: false))
         stateObserver.changes = []
         
         // when
@@ -261,13 +250,13 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
-        stateObserver.checkLastNotificationHasCallState(.incomingCallInactive)
+        stateObserver.checkLastNotificationHasCallState(.incoming(video: false, shouldRing: false, degraded: false))
 
         // and when
         closeCall(user: self.localSelfUser, reason: .canceled)
         
         XCTAssertEqual(stateObserver.changes.count, 2)
-        stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
+        stateObserver.checkLastNotificationHasCallState(.terminating(reason: .canceled))
     }
     
     
@@ -284,7 +273,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
-        stateObserver.checkLastNotificationHasCallState(.outgoingCall)
+        stateObserver.checkLastNotificationHasCallState(.outgoing(degraded: false))
         
         // (2) other party joins
         //
@@ -294,7 +283,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 2)
-        stateObserver.checkLastNotificationHasCallState(.selfIsJoiningActiveChannel)
+        stateObserver.checkLastNotificationHasCallState(.answered(degraded: false))
 
         // (3) flow aquired
         //
@@ -303,7 +292,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 3)
-        stateObserver.checkLastNotificationHasCallState(.selfConnectedToActiveChannel)
+        stateObserver.checkLastNotificationHasCallState(.established)
         
         // (4) self user leaves
         //
@@ -313,7 +302,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 5)
-        stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
+        stateObserver.checkLastNotificationHasCallState(.terminating(reason: .canceled))
     }
     
     func testThatItSendsOutAllExpectedNotificationsWhenSelfUserCalls_Group() {
@@ -334,7 +323,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
-        stateObserver.checkLastNotificationHasCallState(.outgoingCall)
+        stateObserver.checkLastNotificationHasCallState(.outgoing(degraded: false))
         XCTAssertEqual(participantObserver.changes.count, 0)
         
         // (2) other party joins
@@ -367,7 +356,7 @@ class CallingV3Tests : IntegrationTest {
         closeCall(user: self.localSelfUser, reason: .canceled)
         
         // then
-        stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
+        stateObserver.checkLastNotificationHasCallState(.terminating(reason: .canceled))
     }
     
 
@@ -385,7 +374,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
-        stateObserver.checkLastNotificationHasCallState(.incomingCall)
+        stateObserver.checkLastNotificationHasCallState(.incoming(video: false, shouldRing: true, degraded: false))
         
         // (2) we join
         // when
@@ -393,7 +382,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 2)
-        stateObserver.checkLastNotificationHasCallState(.selfIsJoiningActiveChannel)
+        stateObserver.checkLastNotificationHasCallState(.answered(degraded: false))
         
         // (3) flow aquired
         // when
@@ -401,7 +390,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 3)
-        stateObserver.checkLastNotificationHasCallState(.selfConnectedToActiveChannel)
+        stateObserver.checkLastNotificationHasCallState(.established)
         
         // (4) the other user leaves
         // when
@@ -409,7 +398,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 4)
-        stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
+        stateObserver.checkLastNotificationHasCallState(.terminating(reason: .canceled))
     }
 
     func testThatItSendsOutAllExpectedNotificationsWhenOtherUserCalls_Group() {
@@ -427,7 +416,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
-        stateObserver.checkLastNotificationHasCallState(.incomingCall)
+        stateObserver.checkLastNotificationHasCallState(.incoming(video: false, shouldRing: true, degraded: false))
         
         // (2) we join
         // when
@@ -435,7 +424,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 2)
-        stateObserver.checkLastNotificationHasCallState(.selfIsJoiningActiveChannel)
+        stateObserver.checkLastNotificationHasCallState(.answered(degraded: false))
         
         participantObserver.changes.removeAll()
         
@@ -446,7 +435,7 @@ class CallingV3Tests : IntegrationTest {
 
         // then
         XCTAssertEqual(stateObserver.changes.count, 3)
-        stateObserver.checkLastNotificationHasCallState(.selfConnectedToActiveChannel)
+        stateObserver.checkLastNotificationHasCallState(.established)
         XCTAssertEqual(participantObserver.changes.count, 1) // we notify that user connected
         
         // (4) the other user leaves
@@ -455,7 +444,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 4)
-        stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
+        stateObserver.checkLastNotificationHasCallState(.terminating(reason: .canceled))
     }
     
     func testThatItSendsANotificationWhenWeIgnoreACall() {
@@ -470,7 +459,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
-        stateObserver.checkLastNotificationHasCallState(.incomingCall)
+        stateObserver.checkLastNotificationHasCallState(.incoming(video: false, shouldRing: true, degraded: false))
         
         // (2) we ignore
         // when
@@ -478,7 +467,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 2)
-        stateObserver.checkLastNotificationHasCallState(.incomingCallInactive)
+        stateObserver.checkLastNotificationHasCallState(.incoming(video: false, shouldRing: false, degraded: false))
 
         // (3) the call is closed
         // when
@@ -486,7 +475,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 3)
-        stateObserver.checkLastNotificationHasCallState(.noActiveUsers)
+        stateObserver.checkLastNotificationHasCallState(.terminating(reason: .canceled))
     }
     
     func testThatItSendsANotificationIfIgnoringACallAndImmediatelyAcceptingIt() {
@@ -503,7 +492,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 2)
-        stateObserver.checkLastNotificationHasCallState(.incomingCallInactive)
+        stateObserver.checkLastNotificationHasCallState(.incoming(video: false, shouldRing: false, degraded: false))
 
         // (2) we join
         // when
@@ -511,7 +500,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 3)
-        stateObserver.checkLastNotificationHasCallState(.selfIsJoiningActiveChannel)
+        stateObserver.checkLastNotificationHasCallState(.answered(degraded: false))
     }
     
 
@@ -605,7 +594,7 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(convObserver!.notifications.count, 3)
-        if let change = convObserver!.notifications.lastObject as? ConversationChangeInfo {
+        if let change = convObserver!.notifications[2] as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }
         XCTAssertEqual(conversationUnderTest.conversationListIndicator, .none)
@@ -625,14 +614,14 @@ class CallingV3Tests : IntegrationTest {
         
         // Other user ends call
         closeCall(user: user, reason: .canceled)
-        XCTAssertEqual(conversationUnderTest.voiceChannel?.state, .noActiveUsers)
+        XCTAssertEqual(conversationUnderTest.voiceChannel?.state, CallState.none)
 
         // SelfUser calls
         // when
         selfJoinCall(isStart: true)
         
         // then
-        XCTAssertEqual(conversationUnderTest.voiceChannel?.state, .outgoingCall)
+        XCTAssertEqual(conversationUnderTest.voiceChannel?.state, .outgoing(degraded: false))
     }
     
     func testThatItCanIgnoreACallAndSeeNewCallWhenCallEnded(){
@@ -649,14 +638,14 @@ class CallingV3Tests : IntegrationTest {
         
         // Other user ends call
         closeCall(user: user, reason: .canceled)
-        XCTAssertEqual(conversationUnderTest.voiceChannel?.state, .noActiveUsers)
+        XCTAssertEqual(conversationUnderTest.voiceChannel?.state, CallState.none)
         
         // Other user calls
         // when
         otherStartCall(user: user)
         
         // then
-        XCTAssertEqual(conversationUnderTest.voiceChannel?.state, .incomingCall)
+        XCTAssertEqual(conversationUnderTest.voiceChannel?.state, .incoming(video: false, shouldRing: true, degraded: false))
     }
     
 }

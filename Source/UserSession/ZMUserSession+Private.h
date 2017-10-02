@@ -21,6 +21,9 @@
 @import WireTransport;
 @import WireDataModel;
 
+@class OperationStatus;
+@class ManagedObjectContextChangeObserver;
+@class LocalNotificationDispatcher;
 @class ZMStoredLocalNotification;
 
 #import "ZMUserSession.h"
@@ -43,10 +46,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) ZMTransportSession *transportSession;
 @property (nonatomic, readonly) NSManagedObjectContext *searchManagedObjectContext;
+@property (nonatomic, readonly) OperationStatus *operationStatus;
+@property (nonatomic, readonly) LocalNotificationDispatcher *localNotificationDispatcher;
+@property (nonatomic, nullable) ManagedObjectContextChangeObserver *messageReplyObserver;
+@property (nonatomic, nullable) ManagedObjectContextChangeObserver *likeMesssageObserver;
 
 - (void)tearDown;
-
-// Notifications-related
 
 // Notification that was received during the time when the sync engine is not ready to process it.
 @property (nonatomic, nullable) ZMStoredLocalNotification *pendingLocalNotification;
@@ -54,17 +59,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// When starting the app due to a push notification action, we store the notification information and wait until sync completed before processing pending local notifications.
 /// This is important for possibly outdated calling notifications for which we need to fetch the call state before joining the call.
 - (void)processPendingNotificationActions;
-
-@end
-
-
-@interface ZMUserSession (NotificationProcessing)
-
-- (void)ignoreCallForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
-- (void)replyToNotification:(UILocalNotification *)notification withReply:(NSString*)reply completionHandler:(void (^)())completionHandler;
-- (void)muteConversationForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
-- (void)likeMessageForNotification:(UILocalNotification *)note withCompletionHandler:(void (^)(void))completionHandler;
-- (void)openConversation:(nullable ZMConversation *)conversation atMessage:(nullable ZMMessage *)message;
 
 @end
 

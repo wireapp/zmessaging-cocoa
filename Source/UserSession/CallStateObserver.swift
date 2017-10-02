@@ -32,7 +32,6 @@ public final class CallStateObserver : NSObject {
     fileprivate var callStateToken : Any? = nil
     fileprivate var missedCalltoken : Any? = nil
     fileprivate let systemMessageGenerator = CallSystemMessageGenerator()
-    fileprivate var voiceChannelStatetoken : Any? = nil
     
     public init(localNotificationDispatcher : LocalNotificationDispatcher, userSession: ZMUserSession) {
         self.userSession = userSession
@@ -43,7 +42,6 @@ public final class CallStateObserver : NSObject {
         
         self.callStateToken = WireCallCenterV3.addCallStateObserver(observer: self, context: userSession.managedObjectContext)
         self.missedCalltoken = WireCallCenterV3.addMissedCallObserver(observer: self, context: userSession.managedObjectContext)
-        self.voiceChannelStatetoken = WireCallCenter.addVoiceChannelStateObserver(observer: self, context: userSession.managedObjectContext)
     }
     
     fileprivate var callInProgress : Bool = false {
@@ -62,15 +60,23 @@ public final class CallStateObserver : NSObject {
 
 extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
-    public func callCenterDidChange(callState: CallState, conversationId: UUID, userId: UUID?, timeStamp: Date?) {
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, user: ZMUser?, timeStamp: Date?) {
         
         syncManagedObjectContext.performGroupedBlock {
             guard
-                let userId = userId,
+                let userId = user?.remoteIdentifier,
+                let conversationId = conversation.remoteIdentifier,
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncManagedObjectContext),
                 let user = ZMUser(remoteID: userId, createIfNeeded: false, in: self.syncManagedObjectContext)
             else {
                 return
+            }
+            
+            let uiManagedObjectContext = self.syncManagedObjectContext.zm_userInterface
+            uiManagedObjectContext?.performGroupedBlock {
+                if let noneIdleCallCount = uiManagedObjectContext?.zm_callCenter?.nonIdleCalls.count {
+                    self.callInProgress = noneIdleCallCount > 0
+                }
             }
             
             if (self.userSession?.callNotificationStyle ?? .callKit) == .pushNotifications {
@@ -79,13 +85,18 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             self.updateConversationListIndicator(convObjectID: conversation.objectID, callState: callState)
             
-            let systemMessage = self.systemMessageGenerator.appendSystemMessageIfNeeded(callState: callState, conversation: conversation, user: user, timeStamp: timeStamp)
-            if systemMessage?.systemMessageType == .missedCall
-                && (callState == .terminating(reason: .canceled) || callState == .terminating(reason: .normal) && conversation.conversationType == .group)
-            {
-                // group calls we didn't join, end with reason .normal. We should still insert a missed call in this case.
-                // since the systemMessageGenerator keeps track whether we joined or not, we can use it to decide whether we should show a missed call APNS
-                self.localNotificationDispatcher.processMissedCall(in: conversation, sender: user)
+            if let systemMessage = self.systemMessageGenerator.appendSystemMessageIfNeeded(callState: callState, conversation: conversation, user: user, timeStamp: timeStamp) {
+                switch (systemMessage.systemMessageType, callState, conversation.conversationType) {
+                case (.missedCall, .terminating(reason: .canceled), _ ):
+                    // the caller canceled the call
+                    fallthrough
+                case (.missedCall, .terminating(reason: .normal), .group):
+                    // group calls we didn't join, end with reason .normal. We should still insert a missed call in this case.
+                    // since the systemMessageGenerator keeps track whether we joined or not, we can use it to decide whether we should show a missed call APNS
+                    self.localNotificationDispatcher.processMissedCall(in: conversation, sender: user)
+                default:
+                    break
+                }
             }
             
             if let timeStamp = timeStamp {
@@ -104,7 +115,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             guard let uiConv = (try? uiMOC.existingObject(with: convObjectID)) as? ZMConversation else { return }
             
             switch callState {
-            case .incoming(video: _, shouldRing: let shouldRing):
+            case .incoming(video: _, shouldRing: let shouldRing, degraded: _):
                 uiConv.isIgnoringCall = uiConv.isSilenced || !shouldRing
                 uiConv.isCallDeviceActive = false
             case .terminating, .none:
@@ -124,9 +135,11 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
         }
     }
     
-    public func callCenterMissedCall(conversationId: UUID, userId: UUID, timestamp: Date, video: Bool) {
+    public func callCenterMissedCall(conversation: ZMConversation, user: ZMUser, timestamp: Date, video: Bool) {
         syncManagedObjectContext.performGroupedBlock {
             guard
+                let userId = user.remoteIdentifier,
+                let conversationId = conversation.remoteIdentifier,
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncManagedObjectContext),
                 let user = ZMUser(remoteID: userId, createIfNeeded: false, in: self.syncManagedObjectContext)
                 else {
@@ -144,21 +157,3 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
     }
 
 }
-
-extension CallStateObserver : VoiceChannelStateObserver {
-    
-    public func callCenterDidChange(voiceChannelState: VoiceChannelV2State, conversation: ZMConversation, callingProtocol: CallingProtocol) {
-        guard let userSession = userSession else { return }
-        callInProgress = WireCallCenter.nonIdleCallConversations(inUserSession: userSession).count > 0
-    }
-    
-    public func callCenterDidFailToJoinVoiceChannel(error: Error?, conversation: ZMConversation) {
-        // no-op
-    }
-    
-    public func callCenterDidEndCall(reason: VoiceChannelV2CallEndReason, conversation: ZMConversation, callingProtocol: CallingProtocol) {
-        // no-op
-    }
-    
-}
-

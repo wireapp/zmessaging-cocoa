@@ -38,12 +38,9 @@
 #import "NSURL+LaunchOptions.h"
 #import "WireSyncEngineLogs.h"
 #import "ZMCallFlowRequestStrategy.h"
-#import "ZMCallKitDelegate.h"
 #import "ZMOperationLoop+Private.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
-
 #import "ZMClientRegistrationStatus.h"
-#import "ZMCallKitDelegate+TypeConformance.h"
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSNotificationName const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
@@ -510,7 +507,7 @@ ZM_EMPTY_ASSERTING_INIT()
     }
 }
 
-- (ZMOperationStatus *)operationStatus
+- (OperationStatus *)operationStatus
 {
     return self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus;
 }
@@ -525,14 +522,14 @@ ZM_EMPTY_ASSERTING_INIT()
             break;
         case ZMCallNotificationStyleCallKit:
         {
-            CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[ZMCallKitDelegate providerConfiguration]];
+            CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[CallKitDelegate providerConfiguration]];
             CXCallController *callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
             
-            self.callKitDelegate = [[ZMCallKitDelegate alloc] initWithCallKitProvider:provider
-                                                                       callController:callController
-                                                                          flowManager:self.flowManager
-                                                                          userSession:self
-                                                                         mediaManager:(AVSMediaManager *)self.mediaManager];
+            self.callKitDelegate = [[CallKitDelegate alloc] initWithProvider:provider
+                                                              callController:callController
+                                                                 userSession:self
+                                                                 flowManager:self.flowManager
+                                                                mediaManager:self.mediaManager];
         }
             break;
     }

@@ -24,7 +24,6 @@
 #import "ZMOperationLoop+Background.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMPushToken.h"
-#import "ZMCallKitDelegate.h"
 #import "ZMSyncStrategy.h"
 #import "ZMLocalNotification.h"
 #import "ZMUserSession+UserNotificationCategories.h"
@@ -33,13 +32,6 @@
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *ZMLogTag = @"Push";
-
-@implementation ZMUserSession (PushReceivers)
-
-@end
-
-
-
 
 @implementation ZMUserSession (ZMBackground)
 
@@ -90,11 +82,7 @@ static NSString *ZMLogTag = @"Push";
     [self didReceiveLocalWithNotification:notification application:application];
 }
 
-- (void)application:(id<ZMApplication>)application
-handleActionWithIdentifier:(NSString *)identifier
-forLocalNotification:(UILocalNotification *)notification
-       responseInfo:(NSDictionary *)responseInfo
-  completionHandler:(void(^)())completionHandler;
+- (void)application:(id<ZMApplication>)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo completionHandler:(void(^)())completionHandler;
 {
     [self handleActionWithApplication:application
                                  with:identifier
@@ -162,15 +150,6 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     }];
 }
 
-@end
-
-
-
-
-
-
-@implementation ZMUserSession (NotificationProcessing)
-
 - (void)processPendingNotificationActions
 {
     if (self.pendingLocalNotification == nil) {
@@ -187,193 +166,15 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
             [self handleCallCategoryNotification:note];
         }
         else {
-            [self openConversation:note.conversation atMessage:note.message];
+            [self handleDefaultCategoryNotification:note];
         }
         self.pendingLocalNotification = nil;
     }];
     
 }
 
-// Foreground Actions
-
-- (void)handleConnectionRequestCategoryNotification:(ZMStoredLocalNotification *)note
-{
-    ZMConversation *conversation = note.conversation;
-    
-    ZMUser *sender = [ZMUser fetchObjectWithRemoteIdentifier:note.senderUUID inManagedObjectContext:self.managedObjectContext];
-    if (sender != nil) {
-        conversation = sender.connection.conversation;
-        if ([note.actionIdentifier isEqualToString:ZMConnectAcceptAction]) {
-            [sender accept];
-            [self.managedObjectContext saveOrRollback];
-        }
-    }
-    
-    [self openConversation:conversation atMessage:nil];
-}
-
-- (void)handleCallCategoryNotification:(ZMStoredLocalNotification *)note
-{
-    if (note.actionIdentifier == nil || [note.actionIdentifier isEqualToString:ZMCallAcceptAction]) {
-        BOOL callIsStillOngoing = note.conversation.voiceChannel.state == VoiceChannelV2StateIncomingCall;
-        
-        if ([WireCallCenter activeCallConversationsInUserSession:self].count == 0 && callIsStillOngoing) {
-            NOT_USED([note.conversation.voiceChannel joinWithVideo:NO userSession:self]);
-            [note.conversation.managedObjectContext saveOrRollback];
-        }
-    }
-    
-    [self openConversation:note.conversation atMessage:nil];
-}
-
-- (void)openConversation:(ZMConversation *)conversation atMessage:(ZMMessage *)message
-{
-    id<ZMRequestsToOpenViewsDelegate> strongDelegate = self.requestToOpenViewDelegate;
-    if (conversation == nil) {
-        [strongDelegate showConversationListForUserSession:self];
-    }
-    else if (message == nil) {
-        [strongDelegate userSession:self showConversation:conversation];
-    }
-    else {
-        [strongDelegate userSession:self showMessage:message inConversation:conversation];
-    }
-}
-
-// Background Actions
-
-- (void)ignoreCallForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
-{
-    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"IgnoreCall Action Handler"];
-    ZMConversation *conversation = [notification conversationInManagedObjectContext:self.managedObjectContext];
-    [self.managedObjectContext performBlock:^{
-        [conversation.voiceChannel ignoreWithUserSession:self];
-        [self.managedObjectContext saveOrRollback];
-        
-        [activity endActivity];
-        if (completionHandler != nil) {
-            completionHandler();
-        }
-    }];
-}
-
-- (void)muteConversationForNotification:(UILocalNotification *)notification withCompletionHandler:(void (^)())completionHandler;
-{
-    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"Mute Conversation Action Handler"];
-    ZMConversation *conversation = [notification conversationInManagedObjectContext:self.managedObjectContext];
-    [self.managedObjectContext performBlock:^{
-        conversation.isSilenced = YES;
-        [self.managedObjectContext saveOrRollback];
-        
-        [activity endActivity];
-        if (completionHandler != nil) {
-            completionHandler();
-        }
-    }];
-}
-
-- (void)replyToNotification:(UILocalNotification *)notification withReply:(NSString *)reply completionHandler:(void (^)())completionHandler;
-{
-    if (reply.length == 0) {
-        if (completionHandler != nil) {
-            completionHandler();
-        }
-        return;
-    }
-    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"DirectReply Action Handler"];
-    ZMConversation *conversation = [notification conversationInManagedObjectContext:self.managedObjectContext];
-
-    if (conversation != nil) {
-        ZM_WEAK(self);
-        [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
-            ZM_STRONG(self);
-            self.messageReplyObserver = nil;
-            [self.syncManagedObjectContext performGroupedBlock: ^{
-                if (result == ZMBackgroundTaskResultFailed) {
-                    ZMConversation *syncConversation = [notification conversationInManagedObjectContext:self.syncManagedObjectContext];
-                    [self.localNotificationDispatcher didFailToSendMessageIn:syncConversation];
-                }
-                
-                [activity endActivity];
-                if (completionHandler != nil) {
-                    completionHandler();
-                }
-            }];
-        }];
-
-        [self enqueueChanges:^{
-            ZM_STRONG(self);
-            id <ZMConversationMessage> message = [conversation appendMessageWithText:reply];
-            self.messageReplyObserver = [[ManagedObjectContextChangeObserver alloc] initWithContext:self.managedObjectContext
-                                                                                     callback:^{
-                                                                                         [self updateBackgroundTaskWithMessage:message];
-                                                                                     }];
-        }];
-    }
-    else {
-        [activity endActivity];
-        if (completionHandler != nil) {
-            completionHandler();
-        }
-    }
-}
-
-- (void)likeMessageForNotification:(UILocalNotification *)note withCompletionHandler:(void (^)(void))completionHandler
-{
-    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"Like Message Activity"];
-    ZMConversation *conversation = [note conversationInManagedObjectContext:self.managedObjectContext];
-    ZMMessage *message = [note messageInConversation:conversation inManagedObjectContext:self.managedObjectContext];
-
-    if (message == nil) {
-        [activity endActivity];
-        if (completionHandler != nil) {
-            completionHandler();
-        }
-        return;
-    }
-    
-    ZM_WEAK(self);
-    [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundTaskWithCompletionHandler:^(ZMBackgroundTaskResult result) {
-        ZM_STRONG(self);
-        self.likeMesssageObserver = nil;
-        if (result == ZMBackgroundTaskResultFailed) {
-            ZMLogDebug(@"Failed to send reaction via notification");
-        }
-        
-        [activity endActivity];
-        if (completionHandler != nil) {
-            completionHandler();
-        }
-    }];
-
-    [self enqueueChanges:^{
-        id <ZMConversationMessage> reactionMessage = [ZMMessage addReaction:MessageReactionLike toMessage:message];
-        self.likeMesssageObserver = [[ManagedObjectContextChangeObserver alloc] initWithContext:self.managedObjectContext
-                                                                                       callback:^{
-                                                                                           ZM_STRONG(self);
-                                                                                           [self updateBackgroundTaskWithMessage:reactionMessage];
-                                                                                       }];
-    }];
-}
-
-
-- (void)updateBackgroundTaskWithMessage:(id<ZMConversationMessage>)message
-{
-    switch (message.deliveryState) {
-        case ZMDeliveryStateSent:
-        case ZMDeliveryStateDelivered:
-            [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus finishBackgroundTaskWithTaskResult:ZMBackgroundTaskResultFinished];
-            break;
-        case ZMDeliveryStateFailedToSend:
-            [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus finishBackgroundTaskWithTaskResult:ZMBackgroundTaskResultFailed];
-            break;
-        default:
-            break;
-    }
-}
 
 @end
-
 
 
 @implementation ZMUserSession (ZMBackgroundFetch)

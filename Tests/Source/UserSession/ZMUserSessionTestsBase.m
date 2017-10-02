@@ -52,7 +52,7 @@
 
 @interface ZMUserSessionTestsBase ()
 
-@property (nonatomic) ZMOperationStatus *operationStatus;
+@property (nonatomic) OperationStatus *operationStatus;
 
 @end
 
@@ -91,7 +91,7 @@
     
     self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:self.cookieStorage registrationStatusDelegate:nil];
     self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
-    self.operationStatus = [[ZMOperationStatus alloc] init];
+    self.operationStatus = [[OperationStatus alloc] init];
     
     id applicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];
     [(ZMApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.clientRegistrationStatus] clientRegistrationStatus];

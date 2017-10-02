@@ -27,12 +27,12 @@ extension SessionManager {
             self.pushDispatcher.lastKnownPushTokens.forEach { type, actualToken in
                 switch type {
                 case .voip:
-                    if actualToken != session.managedObjectContext.pushKitToken.deviceToken {
+                    if actualToken != session.managedObjectContext.pushKitToken?.deviceToken {
                         session.managedObjectContext.pushKitToken = nil
                         session.setPushKitToken(actualToken)
                     }
                 case .regular:
-                    if actualToken != session.managedObjectContext.pushToken.deviceToken {
+                    if actualToken != session.managedObjectContext.pushToken?.deviceToken {
                         session.managedObjectContext.pushToken = nil
                         session.setPushToken(actualToken)
                     }

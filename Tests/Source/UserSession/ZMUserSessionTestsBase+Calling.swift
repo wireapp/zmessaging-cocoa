@@ -32,7 +32,7 @@ extension ZMUserSessionTestsBase {
     @objc
     public func simulateIncomingCall(fromUser user: ZMUser, conversation: ZMConversation) {
         guard let callCenter = user.managedObjectContext?.zm_callCenter as? WireCallCenterV3Mock else { XCTFail(); return }
-        callCenter.mockCallState = .incoming(video: false, shouldRing: true)
+        callCenter.mockCallState = .incoming(video: false, shouldRing: true, degraded: false)
     }
     
 }

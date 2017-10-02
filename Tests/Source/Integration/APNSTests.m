@@ -91,7 +91,7 @@
 }
 
 
-- (BOOL)registerForNotifications:(NSData*)token
+- (BOOL)registerForPushNotificationsWithToken:(NSData *)token
 {
     [self.sessionManager didRegisteredForRemoteNotificationsWith:token];
     [self.mockTransportSession resetReceivedRequests];
@@ -127,13 +127,12 @@
 - (void)testThatItUpdatesNewTokensIfNeeded
 {
     XCTAssertTrue([self login]);
-    [self.mockTransportSession resetReceivedRequests];
     
     // given
     NSData *token = [NSData dataWithBytes:@"abc" length:3];
     NSData *newToken = [NSData dataWithBytes:@"def" length:6];
     
-    XCTAssertTrue([self registerForNotifications:token]);
+    XCTAssertTrue([self registerForPushNotificationsWithToken:token]);
     [self.mockTransportSession resetReceivedRequests];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -159,14 +158,6 @@
     // when
     [self recreateSessionManager];
     WaitForAllGroupsToBeEmpty(0.5);
-
-    XCTAssertNotNil(self.userSession, @"No user session available");
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session simulatePushChannelOpened];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertTrue([self lastRequestsContainedTokenRequests], @"Did receive: %@", self.mockTransportSession.receivedRequests);
@@ -183,7 +174,7 @@
     NSData *newToken = [NSData dataWithBytes:@"def" length:6];
     
     // when
-    XCTAssertTrue([self registerForNotifications:token]);
+    XCTAssertTrue([self registerForPushNotificationsWithToken:token]);
     
     // then
     ZMTransportRequest *request = self.mockTransportSession.receivedRequests.lastObject;
@@ -224,7 +215,7 @@
     // given
     NSData *token = [NSData dataWithBytes:@"abc" length:3];
     
-    [self registerForNotifications:token];
+    [self registerForPushNotificationsWithToken:token];
     XCTAssertTrue([self lastRequestsContainedTokenRequests]);
     [self.mockTransportSession resetReceivedRequests];
     

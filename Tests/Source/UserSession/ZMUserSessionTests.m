@@ -625,7 +625,6 @@
     XCTAssertTrue([self waitForOfflineStatus]);
 }
 
-
 - (void)testThatWeSetUserSessionToSynchronizingWhenSyncIsStarted
 {
     // when
@@ -1182,8 +1181,9 @@
     // expect
     [self.application setInactive];
 
-    [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:nil withBlock:^(id mockDelegate) {
+    [self checkThatItCallsTheDelegateForNotification:note responseInfo:nil actionIdentifier:ZMCallAcceptAction withBlock:^(id mockDelegate) {
         [[mockDelegate expect] userSession:self.sut showConversation:conversation];
+
     }];
     
     // then

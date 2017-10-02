@@ -775,14 +775,14 @@ class SessionManagerTests_Push: IntegrationTest {
         
         // THEN
         XCTAssertNotNil(session.managedObjectContext.pushKitToken)
-        XCTAssertFalse(session.managedObjectContext.pushKitToken.isMarkedForDeletion)
+        XCTAssertFalse(session.managedObjectContext.pushKitToken!.isMarkedForDeletion)
         
         // AND WHEN
         self.sessionManager?.pushDispatcher.pushRegistrant.pushRegistry(PKPushRegistry.init(queue: nil), didInvalidatePushTokenForType:.voIP)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
-        XCTAssertTrue(session.managedObjectContext.pushKitToken.isMarkedForDeletion)
+        XCTAssertTrue(session.managedObjectContext.pushKitToken!.isMarkedForDeletion)
         
         // CLEANUP
         self.sessionManager!.tearDownAllBackgroundSessions()
@@ -810,8 +810,8 @@ class SessionManagerTests_Push: IntegrationTest {
         
         // THEN
         XCTAssertNotNil(session.managedObjectContext.pushKitToken)
-        XCTAssertEqual(session.managedObjectContext.pushKitToken.deviceToken, credentials.token)
-        XCTAssertFalse(session.managedObjectContext.pushKitToken.isMarkedForDeletion)
+        XCTAssertEqual(session.managedObjectContext.pushKitToken!.deviceToken, credentials.token)
+        XCTAssertFalse(session.managedObjectContext.pushKitToken!.isMarkedForDeletion)
         
         // CLEANUP
         self.sessionManager!.tearDownAllBackgroundSessions()

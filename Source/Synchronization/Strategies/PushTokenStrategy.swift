@@ -81,11 +81,6 @@ public class PushTokenStrategy : AbstractRequestStrategy, ZMSingleRequestTransco
             sync.resetCompletionState()
             return nil
         }
-        if ((token.deviceToken == nil) || (token.appIdentifier == nil) || (token.transportType == nil)) {
-            storePushToken(token: nil, forSingleRequestSync:sync)
-            sync.resetCompletionState()
-            return nil;
-        }
         
         // hex encode the token:
         let encodedToken = token.deviceToken.reduce(""){$0 + String(format: "%02hhx", $1)}
@@ -152,6 +147,7 @@ public class PushTokenStrategy : AbstractRequestStrategy, ZMSingleRequestTransco
               let identifier = payloadDictionary["app"] as? String,
               let transportType = payloadDictionary["transport"] as? String
         else { return nil }
+        
         let fallback = payloadDictionary["fallback"] as? String
 
         return ZMPushToken(deviceToken:deviceToken, identifier:identifier, transportType:transportType, fallback:fallback, isRegistered:true)
@@ -219,8 +215,8 @@ extension PushTokenStrategy : ZMEventConsumer {
         //    }
         // }
         // we ignore the payload and reregister both tokens whenever we receive a user.push-remove event
-        managedObjectContext.pushToken = managedObjectContext.pushToken.unregisteredCopy()
-        managedObjectContext.pushKitToken = managedObjectContext.pushKitToken.unregisteredCopy()
+        managedObjectContext.pushToken = managedObjectContext.pushToken?.unregisteredCopy()
+        managedObjectContext.pushKitToken = managedObjectContext.pushKitToken?.unregisteredCopy()
     }
 }
 

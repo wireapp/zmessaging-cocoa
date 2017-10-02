@@ -41,7 +41,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 @property (nonatomic, readonly) id mockPingbackStatus;
 @property (nonatomic) id requestSync;
 @property (nonatomic) MockSyncStatus *mockSyncStatus;
-@property (nonatomic) ZMOperationStatus *mockOperationStatus;
+@property (nonatomic) OperationStatus *mockOperationStatus;
 @property (nonatomic) id syncStateDelegate;
 @property (nonatomic) id mockApplicationDirectory;
 
@@ -56,7 +56,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
-    self.mockOperationStatus = [[ZMOperationStatus alloc] init];
+    self.mockOperationStatus = [[OperationStatus alloc] init];
     self.mockOperationStatus.isInBackground = NO;
     
     self.mockApplicationDirectory = [OCMockObject niceMockForClass:ZMApplicationStatusDirectory.class];

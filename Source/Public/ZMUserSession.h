@@ -30,7 +30,7 @@
 @class ZMConversation;
 @class UserClient;
 @class ZMProxyRequest;
-@class ZMCallKitDelegate;
+@class CallKitDelegate;
 @class CallingRequestStrategy;
 @class AVSMediaManager;
 @class ZMAPNSEnvironment;
@@ -117,7 +117,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 @property (nonatomic, readonly) TopConversationsDirectory *topConversationsDirectory;
 
 /// CallKit delegate
-@property (nonatomic, readonly) ZMCallKitDelegate *callKitDelegate;
+@property (nonatomic, readonly) CallKitDelegate *callKitDelegate;
 
 /// The URL of the shared container that has been determinned using the passed in application group identifier
 //@property (nonatomic, readonly) NSURL *sharedContainerURL;
@@ -195,7 +195,7 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 @end
 
 
-typedef NS_ENUM (NSInteger, ProxiedRequestType){
+typedef NS_ENUM (NSInteger, ProxiedRequestType) {
     ProxiedRequestTypeGiphy,
     ProxiedRequestTypeSoundcloud
 };

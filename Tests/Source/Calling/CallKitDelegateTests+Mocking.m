@@ -16,12 +16,12 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-#import "ZMCallKitDelegateTests+Mocking.h"
-@import WireSyncEngine;
+#import "CallKitDelegateTests+Mocking.h"
 #import "ZMUserSession+Internal.h"
+@import WireSyncEngine;
 @import OCMock;
 
-@implementation ZMCallKitDelegateTestsMocking
+@implementation CallKitDelegateTestsMocking
 
 + (void)mockUserSession:(id)userSession callKitDelegate:(id)callKitDelegate
 {
@@ -32,6 +32,21 @@
         passedBlock();
         return YES;
     }]];
+}
+
++ (CXCall *)mockCallWithUUID:(NSUUID *)uuid outgoing:(BOOL)outgoing
+{
+    id mockCall = [OCMockObject niceMockForClass:CXCall.class];
+    
+    [(CXCall *)[[mockCall stub] andReturn:uuid] UUID];
+    [(CXCall *)[[mockCall stub] andReturnValue:@(outgoing)] isOutgoing];
+    
+    return mockCall;
+}
+
++ (void)stopMockingMock:(NSObject *)mock
+{
+    [(OCMockObject* )mock stopMocking];
 }
 
 @end

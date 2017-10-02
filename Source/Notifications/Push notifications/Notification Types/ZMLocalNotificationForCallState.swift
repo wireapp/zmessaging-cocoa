@@ -62,7 +62,7 @@ final public class ZMLocalNotificationForCallState : ZMLocalNotification {
     
     func textToDisplay() -> String {
         switch (callState) {
-        case .incoming(video: let video, shouldRing: _):
+        case .incoming(video: let video, shouldRing: _, degraded: _):
             let baseString = video ? ZMPushStringVideoCallStarts : ZMPushStringCallStarts
             return baseString.localizedString(with: sender, conversation: conversation, count: nil)
         case .terminating,
@@ -97,7 +97,7 @@ final public class ZMLocalNotificationForCallState : ZMLocalNotification {
         switch callState {
         case .terminating(reason: .anweredElsewhere), .terminating(reason: .normal):
             return false
-        case .incoming(video: _, shouldRing: let shouldRing):
+        case .incoming(video: _, shouldRing: let shouldRing, degraded: _):
             return shouldRing
         case .terminating,
              .none where numberOfMissedCalls > 0:

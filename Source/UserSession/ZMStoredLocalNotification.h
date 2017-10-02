@@ -24,18 +24,18 @@
 
 @interface ZMStoredLocalNotification : NSObject
 
-@property (nonatomic, readonly) ZMConversation *conversation;
-@property (nonatomic, readonly) ZMMessage *message;
-@property (nonatomic, readonly) NSUUID *senderUUID;
+@property (nonatomic, readonly, nonnull) ZMConversation *conversation;
+@property (nonatomic, readonly, nonnull) ZMMessage *message;
+@property (nonatomic, readonly, nonnull) NSUUID *senderUUID;
 
-@property (nonatomic, readonly) NSString *category;
-@property (nonatomic, readonly) NSString *actionIdentifier;
-@property (nonatomic, readonly) NSString *textInput;
+@property (nonatomic, readonly, nullable) NSString *category;
+@property (nonatomic, readonly, nullable) NSString *actionIdentifier;
+@property (nonatomic, readonly, nullable) NSString *textInput;
 
-- (instancetype)initWithNotification:(UILocalNotification *)notification
-                managedObjectContext:(NSManagedObjectContext *)managedObjectContext
-                    actionIdentifier:(NSString *)identifier
-                           textInput:(NSString*)textInput;
+- (instancetype _Nonnull)initWithNotification:(UILocalNotification * _Nonnull)notification
+                managedObjectContext:(NSManagedObjectContext * _Nonnull)managedObjectContext
+                    actionIdentifier:(NSString * _Nullable)identifier
+                           textInput:(NSString * _Nullable)textInput;
 
 
 @end

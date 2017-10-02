@@ -48,12 +48,10 @@
 #import <WireSyncEngine/ZMUserSessionRegistrationNotification.h>
 #import <WireSyncEngine/UILocalNotification+UserInfo.h>
 #import <WireSyncEngine/ZMUserSession+UserNotificationCategories.h>
-#import <WireSyncEngine/ZMCallKitDelegate.h>
-#import <WireSyncEngine/ZMCallKitDelegate+Internal.h>
+#import <WireSyncEngine/ZMStoredLocalNotification.h>
 #import <WireSyncEngine/ZMPushToken.h>
 #import <WireSyncEngine/ZMTyping.h>
 #import <WireSyncEngine/ZMSyncStateDelegate.h>
-#import <WireSyncEngine/VoiceChannelV2+Internal.h>
 #import <WireSyncEngine/ZMUserSession+OperationLoop.h>
 #import <WireSyncEngine/ZMOperationLoop+Background.h>
 #import <WireSyncEngine/ZMSimpleListRequestPaginator.h>

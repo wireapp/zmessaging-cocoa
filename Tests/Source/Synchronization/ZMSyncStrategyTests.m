@@ -116,7 +116,7 @@
     self.syncStateDelegate = [[MockSyncStateDelegate alloc] init];
     
     self.syncStatusMock = [OCMockObject mockForClass:SyncStatus.class];
-    self.operationStatusMock = [OCMockObject mockForClass:ZMOperationStatus.class];
+    self.operationStatusMock = [OCMockObject mockForClass:OperationStatus.class];
     self.userProfileImageUpdateStatus = [OCMockObject mockForClass:UserProfileImageUpdateStatus.class];
     (void)[(UserProfileImageUpdateStatus *)[[self.userProfileImageUpdateStatus stub] andReturn:nil] fetchRequestForTrackedObjects];
     [(UserProfileImageUpdateStatus *)[self.userProfileImageUpdateStatus stub] objectsDidChange:OCMOCK_ANY];
