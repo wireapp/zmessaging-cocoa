@@ -27,12 +27,12 @@ class PushTokenStrategyTests: MessagingTest {
     var mockApplicationStatus : MockApplicationStatus!
     let deviceTokenString = "c5e24e41e4d4329037928449349487547ef14f162c77aee3aa8e12a39c8db1d5"
     var deviceToken : Data {
-        return deviceTokenString.zmDeviceTokenData()
+        return deviceTokenString.zmDeviceTokenData()!
     }
 
     let deviceTokenBString = "0c11633011485c4558615009045b022d565e0c380a5330444d3a0f4b185a014a"
     var deviceTokenB : Data {
-        return deviceTokenBString.zmDeviceTokenData()
+        return deviceTokenBString.zmDeviceTokenData()!
     }
 
     let identifier = "com.wire.zclient"
@@ -133,12 +133,12 @@ extension PushTokenStrategyTests {
         
         // then
         XCTAssertNotNil(uiMOC.pushToken);
-        XCTAssertEqual(uiMOC.pushToken.deviceToken, deviceToken);
-        XCTAssertFalse(uiMOC.pushToken.isRegistered);
+        XCTAssertEqual(uiMOC.pushToken!.deviceToken, deviceToken);
+        XCTAssertFalse(uiMOC.pushToken!.isRegistered);
         
         XCTAssertNotNil(uiMOC.pushKitToken);
-        XCTAssertEqual(uiMOC.pushKitToken.deviceToken, deviceTokenB);
-        XCTAssertFalse(uiMOC.pushKitToken.isRegistered);
+        XCTAssertEqual(uiMOC.pushKitToken!.deviceToken, deviceTokenB);
+        XCTAssertFalse(uiMOC.pushKitToken!.isRegistered);
     }
     
     func testThatItMarksATokenAsNotRegisteredWhenReceivingAPushRemoveEvent_ApplicationToken() {
@@ -210,10 +210,10 @@ extension PushTokenStrategyTests {
         
         // then
         XCTAssertNotNil(uiMOC.pushToken)
-        XCTAssertTrue(uiMOC.pushToken.isRegistered)
-        XCTAssertEqual(uiMOC.pushToken.appIdentifier, "foo.bar")
+        XCTAssertTrue(uiMOC.pushToken!.isRegistered)
+        XCTAssertEqual(uiMOC.pushToken!.appIdentifier, "foo.bar")
         let newDeviceToken = Data(bytes: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])
-        XCTAssertEqual(uiMOC.pushToken.deviceToken, newDeviceToken)
+        XCTAssertEqual(uiMOC.pushToken!.deviceToken, newDeviceToken)
     }
     
     func testThatItDoesNotRegisterThePushTokenAgainAfterTheRequestCompletes() {
@@ -321,10 +321,10 @@ extension PushTokenStrategyTests {
         
         // then
         XCTAssertNotNil(uiMOC.pushKitToken)
-        XCTAssertTrue(uiMOC.pushKitToken.isRegistered)
-        XCTAssertEqual(uiMOC.pushKitToken.appIdentifier, "foo.bar")
+        XCTAssertTrue(uiMOC.pushKitToken!.isRegistered)
+        XCTAssertEqual(uiMOC.pushKitToken!.appIdentifier, "foo.bar")
         let newDeviceToken = Data(bytes: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])
-        XCTAssertEqual(uiMOC.pushKitToken.deviceToken, newDeviceToken)
+        XCTAssertEqual(uiMOC.pushKitToken!.deviceToken, newDeviceToken)
     }
     
     func testThatItDoesNotRegisterThePushKitTokenAgainAfterTheRequestCompletes() {
@@ -356,10 +356,10 @@ extension PushTokenStrategyTests {
     func insertTokenMarkedForDeletion(transport: String) {
         if transport == transportTypeVOIP {
             uiMOC.pushKitToken = ZMPushToken(deviceToken:deviceToken, identifier:identifier, transportType:transport, fallback:nil, isRegistered:true)
-            uiMOC.pushKitToken = uiMOC.pushKitToken.forDeletionMarkedCopy()
+            uiMOC.pushKitToken = uiMOC.pushKitToken?.forDeletionMarkedCopy()
         } else {
             uiMOC.pushToken = ZMPushToken(deviceToken:deviceToken, identifier:identifier, transportType:transport, fallback:nil, isRegistered:true)
-            uiMOC.pushToken = uiMOC.pushToken.forDeletionMarkedCopy()
+            uiMOC.pushToken = uiMOC.pushToken?.forDeletionMarkedCopy()
         }
         try! uiMOC.save()
     }
