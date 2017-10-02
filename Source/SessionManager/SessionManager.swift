@@ -757,7 +757,7 @@ extension SessionManager: ZMConversationListObserver {
     }
     
     func updateAppIconBadge() {
-        
+        // wait 2 seconds so that the contexes are synced & counts can be fetched
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             for (accountID, session) in self.backgroundUserSessions {
                 let account = self.accountManager.account(with: accountID)
