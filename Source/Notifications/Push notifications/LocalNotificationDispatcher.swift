@@ -21,7 +21,6 @@ import Foundation
 @objc public protocol ForegroundNotificationsDelegate: NSObjectProtocol {
     
     func didReceieveLocalMessage(notification: UILocalNotification, application: ZMApplication)
-    @objc optional func updateAppIconBadge() // HOTFIX: update icon badge when in background
 }
 
 /// Creates and cancels local notifications
