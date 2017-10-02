@@ -108,6 +108,7 @@ extension ZMUserSession: PushDispatcherOptionalClient {
                 return
             }
             
+            // once notification processing is finished, it's safe to update the badge
             let completionHandler: ZMPushNotificationCompletionHandler = { result in
                 completion?(result)
                 self.sessionManager?.updateAppIconBadge()
