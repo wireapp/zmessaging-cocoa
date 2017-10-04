@@ -24,24 +24,17 @@ public extension ZMConversation {
     
     /// NOTE: this object is transient, and will be re-created periodically. Do not hold on to this object, hold on to the owning conversation instead.
     var voiceChannel : VoiceChannel? {
-        return voiceChannelInternal
-    }
-    
-    /// NOTE: this object is transient, and will be re-created periodically. Do not hold on to this object, hold on to the owning conversation instead.
-    var voiceChannelInternal : VoiceChannelV3? {
-        
         get {
             guard conversationType == .oneOnOne || conversationType == .group else { return nil }
             
-            if let voiceChannel = objc_getAssociatedObject(self, &voiceChannelAssociatedKey) as? VoiceChannelV3 {
+            if let voiceChannel = objc_getAssociatedObject(self, &voiceChannelAssociatedKey) as? VoiceChannel {
                 return voiceChannel
             } else {
-                let voiceChannel = VoiceChannelV3(conversation: self)
+                let voiceChannel = WireCallCenterV3Factory.voiceChannelClass.init(conversation: self)
                 objc_setAssociatedObject(self, &voiceChannelAssociatedKey, voiceChannel, .OBJC_ASSOCIATION_RETAIN)
                 return voiceChannel
             }
         }
-        
     }
     
 }

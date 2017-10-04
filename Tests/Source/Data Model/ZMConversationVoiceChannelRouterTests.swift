@@ -60,10 +60,10 @@ class ZMConversationVoiceChannelTests : MessagingTest {
     
     func testThatItAlwaysReturnsTheSameVoiceChannelForAOneOnOneConversations() {
         // when
-        let voiceChannel = oneToOneconversation.voiceChannelInternal
+        let voiceChannel = oneToOneconversation.voiceChannel
         
         // then
-        XCTAssertEqual(oneToOneconversation.voiceChannelInternal, voiceChannel)
+        XCTAssertTrue(oneToOneconversation.voiceChannel === voiceChannel)
     }
     
 }
