@@ -633,11 +633,8 @@
 {
     
     // given
-    id firstObject = [OCMockObject niceMockForClass:ZMManagedObject.class];
-    id secondObject = [OCMockObject niceMockForClass:ZMManagedObject.class];
-    
-    [[[firstObject stub] andReturn:nil] entity];
-    [[[secondObject stub] andReturn:nil] entity];
+    id firstObject = [[ZMManagedObject alloc] init];
+    id secondObject = [[ZMManagedObject alloc] init];
     
     NSSet *cacheInsertSet = [NSSet setWithObject:firstObject];
     NSSet *cacheUpdateSet = [NSSet setWithObject:secondObject];
@@ -660,8 +657,6 @@
     // when
     [self.sut processSaveWithInsertedObjects:cacheInsertSet updateObjects:cacheUpdateSet];
     WaitForAllGroupsToBeEmpty(0.5);
-    [firstObject stopMocking];
-    [secondObject stopMocking];
 }
 
 
