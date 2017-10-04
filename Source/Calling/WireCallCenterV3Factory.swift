@@ -23,6 +23,7 @@ import WireDataModel
 public class WireCallCenterV3Factory : NSObject {
     
     public static var wireCallCenterClass : WireCallCenterV3.Type = WireCallCenterV3.self
+    public static var voiceChannelClass : VoiceChannel.Type = VoiceChannelV3.self
     
     public class func callCenter(withUserId userId: UUID, clientId: String, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport) -> WireCallCenterV3 {
         if let wireCallCenter = uiMOC.zm_callCenter {

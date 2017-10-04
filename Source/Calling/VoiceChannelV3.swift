@@ -43,7 +43,7 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         return NSOrderedSet(array: users)
     }
     
-    init(conversation: ZMConversation) {
+    public required init(conversation: ZMConversation) {
         self.conversation = conversation
         super.init()
     }
