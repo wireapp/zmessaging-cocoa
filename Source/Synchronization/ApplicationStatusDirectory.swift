@@ -23,8 +23,8 @@ import WireMessageStrategy
 @objc(ZMApplicationStatusDirectory)
 public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
 
-    public let userProfileImageUpdateStatus : UserProfileImageUpdateStatus
     public let apnsConfirmationStatus : BackgroundAPNSConfirmationStatus
+    public let userProfileImageUpdateStatus : UserProfileImageUpdateStatus
     public let userProfileUpdateStatus : UserProfileUpdateStatus
     public let clientRegistrationStatus : ZMClientRegistrationStatus
     public let clientUpdateStatus : ClientUpdateStatus
