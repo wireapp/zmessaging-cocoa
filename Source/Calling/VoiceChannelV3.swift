@@ -18,7 +18,7 @@
 
 import Foundation
 
-public class VoiceChannelV3 : NSObject, CallProperties, VoiceChannel {
+public class VoiceChannelV3 : NSObject, VoiceChannel {
 
     public var callCenter: WireCallCenterV3? {
         return self.conversation?.managedObjectContext?.zm_callCenter
