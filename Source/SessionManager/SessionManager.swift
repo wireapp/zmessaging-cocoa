@@ -104,6 +104,9 @@ public protocol LocalMessageNotificationResponder : class {
 
 @objc public class SessionManager : NSObject {
 
+    /// Maximum number of accounts which can be logged in simultanously
+    public static let maxNumberAccounts = 3
+    
     public let appVersion: String
     var isAppVersionBlacklisted = false
     public weak var delegate: SessionManagerDelegate? = nil
@@ -638,6 +641,11 @@ extension SessionManager: UnauthenticatedSessionDelegate {
     }
     
     public func session(session: UnauthenticatedSession, createdAccount account: Account) {
+        guard !(accountManager.accounts.count == SessionManager.maxNumberAccounts && accountManager.account(with: account.userIdentifier) == nil) else {
+            session.authenticationStatus.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.accountLimitReached, userInfo: nil))
+            return
+        }
+        
         accountManager.addAndSelect(account)
 
         let group = self.dispatchGroup

@@ -69,7 +69,9 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     /// The user account is suspended and may not be logged in
     ZMUserSessionAccountSuspended,
     /// The user account was deleted
-    ZMUserSessionAccountDeleted
+    ZMUserSessionAccountDeleted,
+    /// The account can't be created because the account limit has been reached
+    ZMUserSessionAccountLimitReached
 };
 
 FOUNDATION_EXPORT NSString * const ZMUserSessionErrorDomain;
