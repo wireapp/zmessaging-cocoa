@@ -370,7 +370,7 @@ ZM_EMPTY_ASSERTING_INIT()
         return nil;
     }
     
-    return [self.requestStrategies firstNonNilReturnedFromSelector:@selector(nextRequest)];;
+    return [self.requestStrategies firstNonNilReturnedFromSelector:@selector(nextRequest)];
 }
 
 - (ZMFetchRequestBatch *)fetchRequestBatchForEvents:(NSArray<ZMUpdateEvent *> *)events
