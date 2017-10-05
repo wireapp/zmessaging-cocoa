@@ -43,6 +43,7 @@ class WireCallCenterV3Tests: MessagingTest {
     var sut : WireCallCenterV3!
     var selfUserID : UUID!
     var conversationID : UUID!
+    var otherConversationID : UUID!
     var clientID: String!
     var mockTransport : WireCallCenterTransportMock!
     
@@ -56,6 +57,10 @@ class WireCallCenterV3Tests: MessagingTest {
         let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
         conversation.remoteIdentifier = UUID.create()
         conversationID = conversation.remoteIdentifier!
+        
+        let otherConversation = ZMConversation.insertNewObject(in: self.uiMOC)
+        otherConversation.remoteIdentifier = UUID.create()
+        otherConversationID = otherConversation.remoteIdentifier!
         
         clientID = "foo"
         flowManager = FlowManagerMock()
@@ -210,6 +215,60 @@ class WireCallCenterV3Tests: MessagingTest {
         checkThatItPostsNotification(expectedCallState: .terminating(reason: .canceled)) { (conversationIdRef, userIdRef, context) in
             WireSyncEngine.closedCallHandler(reason: WCALL_REASON_CANCELED, conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, contextRef: context)
         }
+    }
+    
+    func testThatOtherIncomingCallsAreRejectedWhenWeAnswerCall() {
+        // given
+        let userId = UUID()
+        let conversationIdRef = conversationID.transportString().cString(using: .utf8)
+        let otherConversationIdRef = otherConversationID.transportString().cString(using: .utf8)
+        let userIdRef = userId.transportString().cString(using: .utf8)
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        
+        WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        WireSyncEngine.incomingCallHandler(conversationId: otherConversationIdRef, messageTime: 0, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        XCTAssertTrue(sut.answerCall(conversationId: conversationID))
+        
+        // then
+        XCTAssertTrue(mockAVSWrapper.didCallRejectCall)
+    }
+    
+    func testThatOtherOutgoingCallsAreCanceledWhenWeAnswerCall() {
+        // given
+        let userId = UUID()
+        let conversationIdRef = conversationID.transportString().cString(using: .utf8)
+        let userIdRef = userId.transportString().cString(using: .utf8)
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        
+        XCTAssertTrue(sut.startCall(conversationId: otherConversationID, video: false, isGroup: false))
+        WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        XCTAssertTrue(sut.answerCall(conversationId: conversationID))
+        
+        // then
+        XCTAssertTrue(mockAVSWrapper.didCallEndCall)
+    }
+    
+    func testThatOtherIncomingCallsAreRejectedWhenWeStartCall() {
+        // given
+        let userId = UUID()
+        let conversationIdRef = conversationID.transportString().cString(using: .utf8)
+        let userIdRef = userId.transportString().cString(using: .utf8)
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        
+        WireSyncEngine.incomingCallHandler(conversationId: conversationIdRef, messageTime: 0, userId: userIdRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        XCTAssertTrue(sut.startCall(conversationId: otherConversationID, video: false, isGroup: false))
+        
+        // then
+        XCTAssertTrue(mockAVSWrapper.didCallRejectCall)
     }
     
     func testThatItRejectsACall_Group(){

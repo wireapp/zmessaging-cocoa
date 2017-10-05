@@ -62,10 +62,13 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
     
     public func callCenterDidChange(callState: CallState, conversation: ZMConversation, user: ZMUser?, timeStamp: Date?) {
         
+        let userId = user?.remoteIdentifier
+        let conversationId = conversation.remoteIdentifier
+        
         syncManagedObjectContext.performGroupedBlock {
             guard
-                let userId = user?.remoteIdentifier,
-                let conversationId = conversation.remoteIdentifier,
+                let userId = userId,
+                let conversationId = conversationId,
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncManagedObjectContext),
                 let user = ZMUser(remoteID: userId, createIfNeeded: false, in: self.syncManagedObjectContext)
             else {
@@ -136,10 +139,13 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
     }
     
     public func callCenterMissedCall(conversation: ZMConversation, user: ZMUser, timestamp: Date, video: Bool) {
+        let userId = user.remoteIdentifier
+        let conversationId = conversation.remoteIdentifier
+        
         syncManagedObjectContext.performGroupedBlock {
             guard
-                let userId = user.remoteIdentifier,
-                let conversationId = conversation.remoteIdentifier,
+                let userId = userId,
+                let conversationId = conversationId,
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncManagedObjectContext),
                 let user = ZMUser(remoteID: userId, createIfNeeded: false, in: self.syncManagedObjectContext)
                 else {
