@@ -21,9 +21,9 @@ import WireTesting
 import WireMockTransport
 
 class FakeBackgroundActivityFactory : BackgroundActivityFactory {
-    var nameToHandler : [String : ((Void) -> Void)] = [:]
+    var nameToHandler : [String : (() -> Void)] = [:]
     
-    override func backgroundActivity(withName name: String, expirationHandler handler: @escaping ((Void) -> Void)) -> ZMBackgroundActivity? {
+    override func backgroundActivity(withName name: String, expirationHandler handler: @escaping (() -> Void)) -> ZMBackgroundActivity? {
         nameToHandler[name] = handler
         return ZMBackgroundActivity()
     }

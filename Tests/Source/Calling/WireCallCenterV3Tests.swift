@@ -173,7 +173,7 @@ class WireCallCenterV3Tests: MessagingTest {
             guard let note = wrappedNote.userInfo?[WireCallCenterMissedCallNotification.userInfoKey] as? WireCallCenterMissedCallNotification else { return false }
             XCTAssertEqual(note.conversationId, conversationId)
             XCTAssertEqual(note.userId, userId)
-            XCTAssertEqualWithAccuracy(note.timestamp.timeIntervalSince1970, timestamp.timeIntervalSince1970, accuracy: 1)
+            XCTAssertEqual(note.timestamp.timeIntervalSince1970, timestamp.timeIntervalSince1970, accuracy: 1)
             XCTAssertEqual(note.video, isVideo)
             return true
         }
