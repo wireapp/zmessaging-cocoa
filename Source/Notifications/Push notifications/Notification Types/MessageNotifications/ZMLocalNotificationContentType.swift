@@ -55,7 +55,7 @@ public enum ZMLocalNotificationContentType : Equatable {
     
     var localizationString : String? {
         switch self {
-        case .text:
+        case .text(_):
             return ZMPushStringMessageAdd
         case .image:
             return ZMPushStringImageAdd
@@ -69,7 +69,9 @@ public enum ZMLocalNotificationContentType : Equatable {
             return ZMPushStringFileAdd
         case .knock:
             return ZMPushStringKnock
-        default:
+        case .undefined:
+            return ZMPushStringUnknownAdd
+        case .system(_):
             return nil
         }
     }
