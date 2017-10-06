@@ -45,7 +45,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         self.requestCancellation = requestCancellation
         self.apnsConfirmationStatus = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: managedObjectContext, backgroundActivityFactory: BackgroundActivityFactory.sharedInstance())
         self.operationStatus = OperationStatus()
-        self.operationStatus.isInBackground = application.applicationState == .background;
+        self.operationStatus.isInBackground = application.applicationState == .background
         self.syncStatus = SyncStatus(managedObjectContext: managedObjectContext, syncStateDelegate: syncStateDelegate)
         self.userProfileUpdateStatus = UserProfileUpdateStatus(managedObjectContext: managedObjectContext)
         self.clientUpdateStatus = ClientUpdateStatus(syncManagedObjectContext: managedObjectContext)

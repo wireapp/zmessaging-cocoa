@@ -1073,7 +1073,6 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)testThatItReportsWhenItIsFetchingFromAPushNotification
 {
     // given
-    self.application.applicationState = UIApplicationStateBackground;
     [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(BackgroundNotificationFetchStatusInProgress)] status];
 
     // then

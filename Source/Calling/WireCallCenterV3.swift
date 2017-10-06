@@ -672,6 +672,8 @@ public struct CallEvent {
 
     @objc(answerCallForConversationID:)
     public func answerCall(conversationId: UUID) -> Bool {
+        endAllCalls(exluding: conversationId)
+        
         let answered = avsWrapper.answerCall(conversationId: conversationId)
         if answered {
             let callState : CallState = .answered(degraded: isDegraded(conversationId: conversationId))
@@ -689,6 +691,8 @@ public struct CallEvent {
 
     @objc(startCallForConversationID:video:isGroup:)
     public func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool {
+        endAllCalls(exluding: conversationId)
+        
         clearSnapshot(conversationId: conversationId) // make sure we don't have an old state for this conversation
         
         let started = avsWrapper.startCall(conversationId: conversationId, video: video, isGroup: isGroup)
@@ -720,6 +724,19 @@ public struct CallEvent {
         if let previousSnapshot = callSnapshots[conversationId] {
             let callState : CallState = .incoming(video: previousSnapshot.isVideo, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
             callSnapshots[conversationId] = previousSnapshot.update(with: callState)
+        }
+    }
+    
+    fileprivate func endAllCalls(exluding: UUID) {
+        nonIdleCalls.forEach { (key: UUID, callState: CallState) in
+            guard key != exluding else { return }
+            
+            switch callState {
+            case .incoming:
+                rejectCall(conversationId: key)
+            default:
+                closeCall(conversationId: key, isGroup: false)
+            }
         }
     }
     

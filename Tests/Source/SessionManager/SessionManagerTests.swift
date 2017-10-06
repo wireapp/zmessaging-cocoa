@@ -319,6 +319,25 @@ class SessionManagerTests_Teams: IntegrationTest {
         // then
         XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
     }
+    
+    func testThatItSendsAuthenticationErrorWhenAccountLimitIsReached() throws {
+        // given
+        let account1 = Account(userName: "Account 1", userIdentifier: UUID.create())
+        let account2 = Account(userName: "Account 2", userIdentifier: UUID.create())
+        let account3 = Account(userName: "Account 3", userIdentifier: UUID.create())
+        
+        sessionManager?.accountManager.addOrUpdate(account1)
+        sessionManager?.accountManager.addOrUpdate(account2)
+        sessionManager?.accountManager.addOrUpdate(account3)
+        
+        let recorder = PreLoginAuthenticationNotificationRecorder(authenticationStatus: sessionManager!.unauthenticatedSession!.authenticationStatus)
+        
+        // when
+        XCTAssert(login(ignoreAuthenticationFailures: true))
+
+        // then
+        XCTAssertEqual(NSError.userSessionErrorWith(.accountLimitReached, userInfo: nil), recorder.notifications.last!.error)
+    }
 }
 
 class SessionManagerPayloadCheckerTests: MessagingTest {
