@@ -78,10 +78,4 @@ open class ZMLocalNotification: NSObject {
         return UILocalNotification()
     }()
     
-    /// Returns a configured concrete UNNotification object.
-    ///
-    public lazy var unNotification: UNNotification = {
-        // TODO: configure (including user info)
-        return UNNotification()
-    }()
 }
