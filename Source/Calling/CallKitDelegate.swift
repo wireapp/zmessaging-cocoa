@@ -410,7 +410,7 @@ extension ZMConversation {
         
         switch conversationType {
         case .group:
-            return ("callkit.call.started" as NSString).localizedString(with: self, count: 0)
+            return ("callkit.call.started" as NSString).localizedString(with: user, conversation: self, count: 0)
         case .oneOnOne:
             return connectedUser?.displayName
         default:
