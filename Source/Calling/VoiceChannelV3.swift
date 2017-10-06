@@ -76,6 +76,10 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         return self.callCenter?.isVideoCall(conversationId: remoteIdentifier) ?? false
     }
     
+    public var isConstantBitRateAudioActive: Bool {
+        return self.callCenter?.isConstantBitRateAudioActive ?? false
+    }
+    
     public var initiator : ZMUser? {
         guard let context = conversation?.managedObjectContext,
               let convId = conversation?.remoteIdentifier,
@@ -206,6 +210,11 @@ extension VoiceChannelV3 : CallObservers {
     /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.
     public func addReceivedVideoObserver(_ observer: ReceivedVideoObserver) -> Any {
         return WireCallCenterV3.addReceivedVideoObserver(observer: observer, context: conversation!.managedObjectContext!)
+    }
+    
+    /// Add observer of constant bit rate audio. Returns a token which needs to be retained as long as the observer should be active.
+    public func addConstantBitRateObserver(_ observer: ConstantBitRateAudioObserver) -> Any {
+        return WireCallCenterV3.addConstantBitRateObserver(observer: observer, context: conversation!.managedObjectContext!)
     }
     
     /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.

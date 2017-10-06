@@ -535,11 +535,6 @@ ZM_EMPTY_ASSERTING_INIT()
     }
 }
 
-- (WireCallCenterV3* )callCenter
-{
-    return self.managedObjectContext.zm_callCenter;
-}
-
 @end
 
 

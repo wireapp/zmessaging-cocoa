@@ -464,14 +464,16 @@ internal func videoStateChangeHandler(state: Int32, contextRef: UnsafeMutableRaw
 
 /// Handles audio CBR mode enabling
 /// In order to be passed to C, this function needs to be global
-internal func audioCBREnabledHandler(contextRef: UnsafeMutableRawPointer?) {
+internal func constantBitRateChangeHandler(enabled: Int32, contextRef: UnsafeMutableRawPointer?) {
     guard let contextRef = contextRef else { return }
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
     if let context = callCenter.uiMOC {
         context.performGroupedBlock {
-            WireCallCenterCBRCallNotification().post(in: context.notificationContext)
+            let enabled = enabled == 1 ? true : false
+            callCenter.isConstantBitRateAudioActive = enabled
+            WireCallCenterCBRNotification(enabled: enabled).post(in: context.notificationContext)
         }
     } else {
         zmLog.error("Couldn't send CBR notification")
@@ -509,8 +511,6 @@ public struct CallEvent {
     
     /// The selfUser remoteIdentifier
     fileprivate let selfUserId : UUID
-
-    @objc public static let cbrNotificationName = WireCallCenterCBRCallNotification.notificationName
 
     /// establishedDate - Date of when the call was established (Participants can talk to each other). This property is only valid when the call state is .established.
     public private(set) var establishedDate : Date?
@@ -550,16 +550,13 @@ public struct CallEvent {
         callSnapshots[conversationId] = CallSnapshot(callState: callState, isVideo: video, conversationObserverToken: token)
     }
     
+    public fileprivate(set) var isConstantBitRateAudioActive : Bool = false
+    public var useConstantBitRateAudio: Bool = false
+    
     var avsWrapper : AVSWrapperType!
     weak var uiMOC : NSManagedObjectContext?
     let analytics: AnalyticsType?
     let flowManager : FlowManagerType
-    
-    public var useAudioConstantBitRate: Bool = false {
-        didSet {
-            avsWrapper.enableAudioCbr(shouldUseCbr: useAudioConstantBitRate)
-        }
-    }
     
     deinit {
         avsWrapper.close()
@@ -674,7 +671,7 @@ public struct CallEvent {
     public func answerCall(conversationId: UUID) -> Bool {
         endAllCalls(exluding: conversationId)
         
-        let answered = avsWrapper.answerCall(conversationId: conversationId)
+        let answered = avsWrapper.answerCall(conversationId: conversationId, useCBR: useConstantBitRateAudio)
         if answered {
             let callState : CallState = .answered(degraded: isDegraded(conversationId: conversationId))
             if let previousSnapshot = callSnapshots[conversationId] {
@@ -695,7 +692,7 @@ public struct CallEvent {
         
         clearSnapshot(conversationId: conversationId) // make sure we don't have an old state for this conversation
         
-        let started = avsWrapper.startCall(conversationId: conversationId, video: video, isGroup: isGroup)
+        let started = avsWrapper.startCall(conversationId: conversationId, video: video, isGroup: isGroup, useCBR: useConstantBitRateAudio)
         if started {
             let callState : CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
             createSnapshot(callState: callState, video: video, for: conversationId)

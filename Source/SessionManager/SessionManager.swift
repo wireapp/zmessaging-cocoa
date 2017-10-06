@@ -486,7 +486,8 @@ public protocol LocalMessageNotificationResponder : class {
         userSession.sessionManager = self
         self.backgroundUserSessions[account.userIdentifier] = userSession
         pushDispatcher.add(client: userSession)
-        userSession.callNotificationStyle = self.callNotificationStyle
+        userSession.callNotificationStyle = callNotificationStyle
+        userSession.useConstantBitRateAudio = useConstantBitRateAudio
     }
     
     // Loads user session for @c account given and executes the @c action block.
@@ -570,6 +571,12 @@ public protocol LocalMessageNotificationResponder : class {
     public var callNotificationStyle: ZMCallNotificationStyle = .callKit {
         didSet {
             activeUserSession?.callNotificationStyle = callNotificationStyle
+        }
+    }
+    
+    public var useConstantBitRateAudio : Bool = false {
+        didSet {
+            activeUserSession?.useConstantBitRateAudio = useConstantBitRateAudio
         }
     }
 }

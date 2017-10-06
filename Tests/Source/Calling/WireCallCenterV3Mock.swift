@@ -44,12 +44,12 @@ public class MockAVSWrapper : AVSWrapperType {
         // do nothing
     }
     
-    public func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool {
+    public func startCall(conversationId: UUID, video: Bool, isGroup: Bool, useCBR: Bool) -> Bool {
         didCallStartCall = true
         return !startCallShouldFail
     }
     
-    public func answerCall(conversationId: UUID) -> Bool {
+    public func answerCall(conversationId: UUID, useCBR: Bool) -> Bool {
         didCallAnswerCall = true
         return !answerCallShouldFail
     }
@@ -75,10 +75,6 @@ public class MockAVSWrapper : AVSWrapperType {
     }
     
     public func setVideoSendActive(userId: UUID, active: Bool) {
-        // do nothing
-    }
-    
-    public func enableAudioCbr(shouldUseCbr: Bool) {
         // do nothing
     }
     

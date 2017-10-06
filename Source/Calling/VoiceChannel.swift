@@ -51,6 +51,8 @@ public protocol CallProperties : NSObjectProtocol {
     /// Voice channel participants. May be a subset of conversation participants.
     var participants : NSOrderedSet { get }
     
+    /// Voice channel is sending audio using a contant bit rate
+    var isConstantBitRateAudioActive : Bool { get }
     var isVideoCall : Bool { get }
     var initiator : ZMUser? { get }
     
@@ -91,6 +93,9 @@ public protocol CallObservers : NSObjectProtocol {
     
     /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.
     func addReceivedVideoObserver(_ observer: ReceivedVideoObserver) -> Any
+    
+    /// Add observer of constant bit rate audio. Returns a token which needs to be retained as long as the observer should be active.
+    func addConstantBitRateObserver(_ observer: ConstantBitRateAudioObserver) -> Any
     
     /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.
     static func addCallStateObserver(_ observer: WireCallCenterCallStateObserver, userSession: ZMUserSession) -> Any
