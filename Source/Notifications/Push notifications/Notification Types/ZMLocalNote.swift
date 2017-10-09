@@ -51,7 +51,7 @@ protocol NotificationConstructor {
 ///
 open class ZMLocalNote: NSObject {
     
-    public var title: String = ""
+    public var title: String?
     public var body: String?
     public var category: String?
     public var soundName: String?
@@ -59,32 +59,34 @@ open class ZMLocalNote: NSObject {
     public let conversationID: UUID?
     public let type: LocalNotificationType
     
-    init(conversationID: UUID?, type: LocalNotificationType) {
-        self.conversationID = conversationID
+    init(conversation: ZMConversation?, type: LocalNotificationType) {
+        self.conversationID = conversation?.remoteIdentifier
         self.type = type
         super.init()
     }
     
-    convenience init?(conversationID: UUID?, type: LocalNotificationType, constructor: NotificationConstructor) {
-        self.init(conversationID: conversationID, type: type)
+    convenience init?(conversation: ZMConversation?, type: LocalNotificationType, constructor: NotificationConstructor) {
+        self.init(conversation: conversation, type: type)
         guard constructor.shouldCreateNotification() else { return nil }
         self.body = constructor.bodyText().escapingPercentageSymbols()
         self.category = constructor.category()
         self.soundName = constructor.soundName()
-        configureTitle(for: <#T##ZMConversation#>)
+        self.title = title(for: conversation)
     }
     
     /// Sets the title for the notification using the name of the given conversation
     /// and if possible, the team name of the self user.
     ///
-    func configureTitle(for conversation: ZMConversation) {
-
-        title = conversation.displayName
+    func title(for conversation: ZMConversation?) -> String? {
+        guard let conversation = conversation else { return nil }
+        var title = conversation.displayName
 
         if let moc = conversation.managedObjectContext,
             let teamName = ZMUser.selfUser(in: moc).team?.name {
             title += " in \(teamName)"
         }
+        
+        return title
     }
     
     /// Returns a configured concrete UILocalNotification object.

@@ -22,9 +22,9 @@
 extension ZMLocalNote {
     
     convenience init?(callState: CallState, conversation: ZMConversation, sender: ZMUser) {
-        guard let conversationID = conversation.remoteIdentifier else { return nil }
+        guard conversation.remoteIdentifier != nil else { return nil }
         let constructor = CallNotificationConstructor(callState: callState, sender: sender, conversation: conversation)
-        self.init(conversationID: conversationID, type: .calling(callState), constructor: constructor)
+        self.init(conversation: conversation, type: .calling(callState), constructor: constructor)
     }
     
     private class CallNotificationConstructor: NotificationConstructor {

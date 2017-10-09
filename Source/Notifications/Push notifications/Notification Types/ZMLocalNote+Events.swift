@@ -45,8 +45,7 @@ extension ZMLocalNote {
             return nil
         }
         
-        let conversationID = conversation?.remoteIdentifier
-        self.init(conversationID: conversationID, type: .event(event.type), constructor: constructor!)
+        self.init(conversation: conversation, type: .event(event.type), constructor: constructor!)
     }
     
 }

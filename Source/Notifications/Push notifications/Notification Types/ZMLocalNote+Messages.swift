@@ -22,8 +22,8 @@
 extension ZMLocalNote {
     
     convenience init?(expiredMessage: ZMMessage) {
-        guard let conversationID = expiredMessage.conversation?.remoteIdentifier else { return nil }
-        self.init(conversationID: conversationID, type: .failedMessage)
+        guard expiredMessage.conversation?.remoteIdentifier != nil else { return nil }
+        self.init(conversation: expiredMessage.conversation!, type: .failedMessage)
         configureforExpiredMessage(in: expiredMessage.conversation)
     }
     
@@ -35,8 +35,6 @@ extension ZMLocalNote {
         default:
             body = FailedMessageInOneOnOneConversationText.localizedString(with: conversation.connectedUser, count: nil)
         }
-        
-        configureTitle(for: conversation)
     }
 }
 
@@ -46,10 +44,10 @@ extension ZMLocalNote {
 extension ZMLocalNote {
     
     convenience init?(message: ZMMessage) {
-        guard let conversationID = message.conversation?.remoteIdentifier else { return nil }
+        guard message.conversation?.remoteIdentifier  != nil else { return nil }
         let contentType = ZMLocalNotificationContentType.typeForMessage(message)
         let constructor = MessageNotificationConstructor(message: message, contentType: contentType)
-        self.init(conversationID: conversationID, type: .message(contentType), constructor: constructor)
+        self.init(conversation: message.conversation, type: .message(contentType), constructor: constructor)
     }
     
     fileprivate class MessageNotificationConstructor: NotificationConstructor {
@@ -149,10 +147,10 @@ extension ZMLocalNote {
 extension ZMLocalNote {
     
     convenience init?(systemMessage: ZMSystemMessage) {
-        guard let conversationID = systemMessage.conversation?.remoteIdentifier else { return nil }
+        guard systemMessage.conversation?.remoteIdentifier != nil else { return nil }
         let contentType = ZMLocalNotificationContentType.typeForMessage(systemMessage)
         let constructor = SystemMessageNotificationConstructor(message: systemMessage)
-        self.init(conversationID: conversationID, type: .message(contentType), constructor: constructor)
+        self.init(conversation: systemMessage.conversation, type: .message(contentType), constructor: constructor)
     }
     
     private class SystemMessageNotificationConstructor : MessageNotificationConstructor {
