@@ -148,12 +148,12 @@ extension ZMLocalNote {
                 let eventTime = message.serverTimestamp
                 else { return nil }
             
-            var userInfo = [ZMLocalNoteUserInfoKey: Any]()
-            userInfo[.selfUserID] = selfUserID.transportString()
-            userInfo[.senderID] = senderID.transportString()
-            userInfo[.messageNonce] = message.nonce.transportString()
-            userInfo[.conversationID] = conversationID.transportString()
-            userInfo[.eventTime] = eventTime
+            var userInfo = [AnyHashable: Any]()
+            userInfo[SelfUserIDStringKey] = selfUserID.transportString()
+            userInfo[SenderIDStringKey] = senderID.transportString()
+            userInfo[MessageNonceIDStringKey] = message.nonce.transportString()
+            userInfo[ConversationIDStringKey] = conversationID.transportString()
+            userInfo[EventTimeKey] = eventTime
             return userInfo
         }
     }

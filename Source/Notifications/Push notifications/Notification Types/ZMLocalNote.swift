@@ -46,15 +46,15 @@ protocol NotificationConstructor {
     func userInfo() -> [AnyHashable: Any]?
 }
 
+// TODO: define these keys in only one place (currently defined in UILocalNotification)
+
 /// The keys used in the local notification user info dictionary.
 ///
-public enum ZMLocalNoteUserInfoKey: String {
-    case selfUserID = "selfUserID"
-    case senderID = "senderID"
-    case messageNonce = "messageNonce"
-    case conversationID = "conversationID"
-    case eventTime = "eventTime"
-}
+let SelfUserIDStringKey = "selfUserIDString "
+let SenderIDStringKey = "senderIDString"
+let MessageNonceIDStringKey = "messageNonceString"
+let ConversationIDStringKey = "conversationIDString"
+let EventTimeKey = "eventTime"
 
 /// This class encapsulates all the data necessary to produce a local
 /// notification. It configures and formats the textual content for

@@ -101,10 +101,10 @@ extension ZMLocalNote {
                 let conversationID = conversation.remoteIdentifier
                 else { return nil }
             
-            var userInfo = [ZMLocalNoteUserInfoKey: Any]()
-            userInfo[.selfUserID] = selfUserID.transportString()
-            userInfo[.senderID] = senderID.transportString()
-            userInfo[.conversationID] = conversationID.transportString()
+            var userInfo = [AnyHashable: Any]()
+            userInfo[SelfUserIDStringKey] = selfUserID.transportString()
+            userInfo[SenderIDStringKey] = senderID.transportString()
+            userInfo[ConversationIDStringKey] = conversationID.transportString()
             return userInfo
         }
     }

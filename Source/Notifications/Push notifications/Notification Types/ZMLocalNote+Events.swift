@@ -116,23 +116,23 @@ fileprivate class EventNotificationConstructor: NotificationConstructor {
         
         guard let selfUserID = ZMUser.selfUser(in: moc).remoteIdentifier else { return nil }
         
-        var userInfo = [ZMLocalNoteUserInfoKey: Any]()
-        userInfo[.selfUserID] = selfUserID.transportString()
+        var userInfo = [AnyHashable: Any]()
+        userInfo[SelfUserIDStringKey] = selfUserID.transportString()
         
         if let senderID = sender?.remoteIdentifier {
-            userInfo[.senderID] = senderID.transportString()
+            userInfo[SenderIDStringKey] = senderID.transportString()
         }
         
         if let conversationID = conversation?.remoteIdentifier {
-            userInfo[.conversationID] = conversationID.transportString()
+            userInfo[ConversationIDStringKey] = conversationID.transportString()
         }
         
         if let messageNonce = event.messageNonce() {
-            userInfo[.messageNonce] = messageNonce.transportString()
+            userInfo[MessageNonceIDStringKey] = messageNonce.transportString()
         }
         
         if let eventTime = event.timeStamp() {
-            userInfo[.eventTime] = eventTime
+            userInfo[EventTimeKey] = eventTime
         }
         
         return userInfo
