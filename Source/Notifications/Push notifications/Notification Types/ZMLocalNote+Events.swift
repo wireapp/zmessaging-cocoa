@@ -111,6 +111,32 @@ fileprivate class EventNotificationConstructor: NotificationConstructor {
     func soundName() -> String {
         return ZMCustomSound.notificationNewMessageSoundName()
     }
+    
+    func userInfo() -> [AnyHashable : Any]? {
+        
+        guard let selfUserID = ZMUser.selfUser(in: moc).remoteIdentifier else { return nil }
+        
+        var userInfo = [ZMLocalNoteUserInfoKey: Any]()
+        userInfo[.selfUserID] = selfUserID.transportString()
+        
+        if let senderID = sender?.remoteIdentifier {
+            userInfo[.senderID] = senderID.transportString()
+        }
+        
+        if let conversationID = conversation?.remoteIdentifier {
+            userInfo[.conversationID] = conversationID.transportString()
+        }
+        
+        if let messageNonce = event.messageNonce() {
+            userInfo[.messageNonce] = messageNonce.transportString()
+        }
+        
+        if let eventTime = event.timeStamp() {
+            userInfo[.eventTime] = eventTime
+        }
+        
+        return userInfo
+    }
 }
 
 

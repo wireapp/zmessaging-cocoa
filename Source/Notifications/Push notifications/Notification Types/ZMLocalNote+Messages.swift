@@ -137,6 +137,25 @@ extension ZMLocalNote {
                 return contentType == .knock ? ZMCustomSound.notificationPingSoundName() : ZMCustomSound.notificationNewMessageSoundName()
             }
         }
+        
+        func userInfo() -> [AnyHashable: Any]? {
+            
+            guard
+                let moc = message.managedObjectContext,
+                let selfUserID = ZMUser.selfUser(in: moc).remoteIdentifier,
+                let senderID = sender.remoteIdentifier,
+                let conversationID = conversation.remoteIdentifier,
+                let eventTime = message.serverTimestamp
+                else { return nil }
+            
+            var userInfo = [ZMLocalNoteUserInfoKey: Any]()
+            userInfo[.selfUserID] = selfUserID.transportString()
+            userInfo[.senderID] = senderID.transportString()
+            userInfo[.messageNonce] = message.nonce.transportString()
+            userInfo[.conversationID] = conversationID.transportString()
+            userInfo[.eventTime] = eventTime
+            return userInfo
+        }
     }
     
 }

@@ -35,14 +35,21 @@ public enum LocalNotificationType {
     case failedMessage
 }
 
-
 protocol NotificationConstructor {
     func shouldCreateNotification() -> Bool
     func bodyText() -> String
     func soundName() -> String
     func category() -> String
+    func userInfo() -> [AnyHashable: Any]?
 }
 
+public enum ZMLocalNoteUserInfoKey: String {
+    case selfUserID = "selfUserID"
+    case senderID = "senderID"
+    case messageNonce = "messageNonce"
+    case conversationID = "conversationID"
+    case eventTime = "eventTime"
+}
 
 /// This class encapsulates all the data necessary to produce a local
 /// notification. It configures and formats the textual content for
@@ -51,10 +58,18 @@ protocol NotificationConstructor {
 ///
 open class ZMLocalNote: NSObject {
     
+    // User Info Keys
+    static let SelfUserIDStringKey = "selfUserIDString"
+    static let SenderIDStringKey = "senderIDString"
+    static let MessageNonceIDStringKey = "messageNonceString"
+    static let ConversationIDStringKey = "conversationIDString"
+    static let EventTimeKey = "eventTime"
+    
     public var title: String?
     public var body: String?
     public var category: String?
     public var soundName: String?
+    public var userInfo: [AnyHashable: Any]?
     
     public let conversationID: UUID?
     public let type: LocalNotificationType
@@ -71,6 +86,7 @@ open class ZMLocalNote: NSObject {
         self.body = constructor.bodyText().escapingPercentageSymbols()
         self.category = constructor.category()
         self.soundName = constructor.soundName()
+        self.userInfo = constructor.userInfo()
         self.title = title(for: conversation)
     }
     
@@ -92,7 +108,14 @@ open class ZMLocalNote: NSObject {
     /// Returns a configured concrete UILocalNotification object.
     ///
     public lazy var uiLocalNotification: UILocalNotification = {
-        // TODO: configure (including user info)
-        return UILocalNotification()
+        
+        let note = UILocalNotification()
+        note.alertTitle = self.title
+        note.alertBody = self.body
+        note.category = self.category
+        note.soundName = self.soundName
+        note.userInfo = self.userInfo
+        return note
     }()
+    
 }

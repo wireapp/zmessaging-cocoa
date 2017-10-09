@@ -91,5 +91,21 @@ extension ZMLocalNote {
                 return ZMCustomSound.notificationNewMessageSoundName()
             }
         }
+        
+        func userInfo() -> [AnyHashable: Any]? {
+            
+            guard
+                let moc = conversation.managedObjectContext,
+                let selfUserID = ZMUser.selfUser(in: moc).remoteIdentifier,
+                let senderID = sender.remoteIdentifier,
+                let conversationID = conversation.remoteIdentifier
+                else { return nil }
+            
+            var userInfo = [ZMLocalNoteUserInfoKey: Any]()
+            userInfo[.selfUserID] = selfUserID.transportString()
+            userInfo[.senderID] = senderID.transportString()
+            userInfo[.conversationID] = conversationID.transportString()
+            return userInfo
+        }
     }
 }
