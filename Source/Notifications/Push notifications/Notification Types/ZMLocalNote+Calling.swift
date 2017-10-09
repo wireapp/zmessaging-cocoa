@@ -45,7 +45,7 @@ extension ZMLocalNote {
                 return false
             case .incoming(video: _, shouldRing: let shouldRing, degraded: _):
                 return shouldRing
-            case .terminating, .none:       // TODO: missed call count
+            case .terminating, .none:
                 return true
             default:
                 return false
@@ -77,7 +77,7 @@ extension ZMLocalNote {
             switch (callState) {
             case .incoming:
                 return ZMIncomingCallCategory
-            case .terminating(reason: .timeout):    // TODO: missed call count
+            case .terminating(reason: .timeout):
                 return ZMMissedCallCategory
             default :
                 return ZMConversationCategory
