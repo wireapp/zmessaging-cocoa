@@ -20,36 +20,6 @@ import Foundation
 import WireMessageStrategy
 
 extension LocalNotificationDispatcher: PushMessageHandler {
-    
-    @objc
-    public func processBuffer() {
-        
-        guard !localNotificationBuffer.isEmpty else { return }
-        
-        // we want to process the notifications only after saving the sync context, so that
-        // the UI will have the objects availble to display.
-        syncMOC.saveOrRollback()
-        
-        // for now we just display the latest notification in the buffer to avoid
-        // an unreadable stream of notifications (since one note replaces the other)
-        if let lastNote = localNotificationBuffer.last {
-            self.foregroundNotificationDelegate?.didReceieveLocalMessage(notification: lastNote, application: application)
-        }
-        
-        localNotificationBuffer.removeAll()
-    }
-    
-    /// Dispatches the given message notification depending on the current application
-    /// state. If the app is active, then the notification is directed to the user
-    /// session, otherwise it is directed to the system via UIApplication.
-    ///
-    func scheduleUILocalNotification(_ note: UILocalNotification) {
-        if application.applicationState == .active {
-            localNotificationBuffer.append(note)
-        } else {
-            application.scheduleLocalNotification(note)
-        }
-    }
 
     // Processes ZMOTRMessages and ZMSystemMessages
     @objc(processMessage:) public func process(_ message: ZMMessage) {
