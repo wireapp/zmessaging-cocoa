@@ -50,7 +50,7 @@ protocol NotificationConstructor {
 
 /// The keys used in the local notification user info dictionary.
 ///
-let SelfUserIDStringKey = "selfUserIDString "
+let SelfUserIDStringKey = "selfUserIDString"
 let SenderIDStringKey = "senderIDString"
 let MessageNonceIDStringKey = "messageNonceString"
 let ConversationIDStringKey = "conversationIDString"
