@@ -99,7 +99,7 @@ public class LocalNotificationDispatcher: NSObject {
     /// state. If the app is active, then the notification is directed to the user
     /// session, otherwise it is directed to the system via UIApplication.
     ///
-    func scheduleUILocalNotification(_ note: ZMLocalNote) {
+    func scheduleLocalNotification(_ note: ZMLocalNote) {
         if application.applicationState == .active {
             localNotificationBuffer.append(note)
         } else {

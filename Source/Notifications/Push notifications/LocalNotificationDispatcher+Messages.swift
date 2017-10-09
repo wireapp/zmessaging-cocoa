@@ -24,14 +24,12 @@ extension LocalNotificationDispatcher: PushMessageHandler {
     // Processes ZMOTRMessages and ZMSystemMessages
     @objc(processMessage:) public func process(_ message: ZMMessage) {
         if let message = message as? ZMOTRMessage {
-            if let note = ZMLocalNote(message: message) {
-                scheduleUILocalNotification(note)
-            }
+            let note = ZMLocalNote(message: message)
+            note.apply(scheduleLocalNotification)
         }
-        if let message = message as? ZMSystemMessage {
-            if let note = ZMLocalNote(systemMessage: message) {
-                scheduleUILocalNotification(note)
-            }
+        else if let message = message as? ZMSystemMessage {
+            let note = ZMLocalNote(systemMessage: message)
+            note.apply(scheduleLocalNotification)
         }
     }
     
