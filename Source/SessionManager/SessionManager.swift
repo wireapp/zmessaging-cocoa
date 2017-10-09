@@ -35,8 +35,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     func sessionManagerDidBlacklistCurrentVersion()
 }
 
-public protocol LocalMessageNotificationResponder : class {
-    func processLocalMessage(_ notification: UILocalNotification, forSession session: ZMUserSession)
+public protocol LocalNotificationResponder : class {
+    func processLocal(_ notification: ZMLocalNote, forSession session: ZMUserSession)
 }
 
 /// The `SessionManager` class handles the creation of `ZMUserSession` and `UnauthenticatedSession`
@@ -110,7 +110,7 @@ public protocol LocalMessageNotificationResponder : class {
     public let appVersion: String
     var isAppVersionBlacklisted = false
     public weak var delegate: SessionManagerDelegate? = nil
-    public weak var localMessageNotificationResponder: LocalMessageNotificationResponder?
+    public weak var localNotificationResponder: LocalNotificationResponder?
     public let accountManager: AccountManager
     public fileprivate(set) var activeUserSession: ZMUserSession?
 

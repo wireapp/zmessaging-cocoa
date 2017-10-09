@@ -124,9 +124,9 @@ extension ZMUserSession: PushDispatcherOptionalClient {
 
 extension ZMUserSession: ForegroundNotificationsDelegate {
     
-    public func didReceieveLocalMessage(notification: UILocalNotification, application: ZMApplication) {
+    public func didReceieveLocal(notification: ZMLocalNote, application: ZMApplication) {
         DispatchQueue.main.performAsync {
-            self.sessionManager?.localMessageNotificationResponder?.processLocalMessage(notification, forSession: self)
+            self.sessionManager?.localNotificationResponder?.processLocal(notification, forSession: self)
         }
     }
 

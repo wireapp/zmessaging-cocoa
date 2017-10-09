@@ -20,7 +20,7 @@ import Foundation
 
 @objc public protocol ForegroundNotificationsDelegate: NSObjectProtocol {
     
-    func didReceieveLocalMessage(notification: ZMLocalNote, application: ZMApplication)
+    func didReceieveLocal(notification: ZMLocalNote, application: ZMApplication)
 }
 
 /// Creates and cancels local notifications
@@ -89,7 +89,7 @@ public class LocalNotificationDispatcher: NSObject {
         // for now we just display the latest notification in the buffer to avoid
         // an unreadable stream of notifications (since one note replaces the other)
         if let lastNote = localNotificationBuffer.last {
-            self.foregroundNotificationDelegate?.didReceieveLocalMessage(notification: lastNote, application: application)
+            self.foregroundNotificationDelegate?.didReceieveLocal(notification: lastNote, application: application)
         }
         
         localNotificationBuffer.removeAll()
