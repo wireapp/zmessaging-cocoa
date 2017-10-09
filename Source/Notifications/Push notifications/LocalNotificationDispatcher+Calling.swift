@@ -22,12 +22,17 @@ public extension LocalNotificationDispatcher {
     
     public func process(callState: CallState, in conversation: ZMConversation, sender: ZMUser) {
         
-        let note =  notification(for: conversation, sender: sender)
+        let note = ZMLocalNote(callState: callState, conversation: conversation, sender: sender)
+        note.apply(scheduleLocalNotification)
         
-        callingNotifications.cancelNotifications(conversation)
+        // TODO: cancelling?
         
-        note.update(forCallState: callState)
-        scheduleNotification(note)
+//        let note =  notification(for: conversation, sender: sender)
+//        
+//        callingNotifications.cancelNotifications(conversation)
+//        
+//        note.update(forCallState: callState)
+//        scheduleNotification(note)
     }
     
     public func processMissedCall(in conversation: ZMConversation, sender: ZMUser) {
@@ -40,10 +45,10 @@ public extension LocalNotificationDispatcher {
     }
     
     private func scheduleNotification(_ note: ZMLocalNotification) {
-        if let uiNote = note.uiNotifications.first {
-            callingNotifications.addObject(note)
-            self.scheduleUILocalNotification(uiNote)
-        }
+//        if let uiNote = note.uiNotifications.first {
+//            callingNotifications.addObject(note)
+//            self.scheduleUILocalNotification(uiNote)
+//        }
     }
     
     private func notification(for conversation: ZMConversation, sender: ZMUser) -> ZMLocalNotificationForCallState {
