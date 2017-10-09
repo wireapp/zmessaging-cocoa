@@ -35,6 +35,9 @@ public enum LocalNotificationType {
     case failedMessage
 }
 
+/// A notification constructor provides the main components used to configure
+/// a local notification. 
+///
 protocol NotificationConstructor {
     func shouldCreateNotification() -> Bool
     func bodyText() -> String
@@ -43,6 +46,8 @@ protocol NotificationConstructor {
     func userInfo() -> [AnyHashable: Any]?
 }
 
+/// The keys used in the local notification user info dictionary.
+///
 public enum ZMLocalNoteUserInfoKey: String {
     case selfUserID = "selfUserID"
     case senderID = "senderID"
@@ -57,7 +62,7 @@ public enum ZMLocalNoteUserInfoKey: String {
 /// information regarding the conversation, sender, and team name.
 ///
 open class ZMLocalNote: NSObject {
-        
+    
     public var title: String?
     public var body: String?
     public var category: String?
