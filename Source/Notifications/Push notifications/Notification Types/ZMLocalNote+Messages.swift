@@ -169,14 +169,15 @@ extension ZMLocalNote {
         override func shouldCreateNotification() -> Bool {
             guard supportedMessageTypes.contains(systemMessageType) else { return false }
             
-            // we don't want to create notifications when another user leaves the conversation
-            if systemMessageType == .participantsRemoved,
-                let removedUser = (message as! ZMSystemMessage).users.first,
-                removedUser != ZMUser.selfUser(in: message.managedObjectContext!)
-            {
+            let message = self.message as! ZMSystemMessage
+            
+            // we don't want to create notifications when other people join or leave conversation
+            let addOrRemove = [.participantsAdded, .participantsRemoved].contains(systemMessageType)
+            let forSelf = message.users.count == 1 && message.users.first!.isSelfUser
+            if addOrRemove && !forSelf {
                 return false
             }
-            
+                        
             return super.shouldCreateNotification()
         }
         

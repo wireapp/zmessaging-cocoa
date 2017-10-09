@@ -24,16 +24,18 @@ extension LocalNotificationDispatcher: PushMessageHandler {
     // Processes ZMOTRMessages and ZMSystemMessages
     @objc(processMessage:) public func process(_ message: ZMMessage) {
         if let message = message as? ZMOTRMessage {
-            if let note = localNotificationForMessage(message), let uiNote = note.uiNotifications.last {
-                scheduleUILocalNotification(uiNote)
+            if let note = ZMLocalNote(message: message) {
+                scheduleUILocalNotification(note)
             }
         }
         if let message = message as? ZMSystemMessage {
-            if let note = localNotificationForSystemMessage(message), let uiNote = note.uiNotifications.last {
-                scheduleUILocalNotification(uiNote)
+            if let note = ZMLocalNote(systemMessage: message) {
+                scheduleUILocalNotification(note)
             }
         }
     }
+    
+    // TODO: Cancelling
     
     // Process ZMGenericMessage that have "invisible" as in they don't create a message themselves
     @objc(processGenericMessage:) public func process(_ genericMessage: ZMGenericMessage) {
@@ -47,25 +49,6 @@ extension LocalNotificationDispatcher: PushMessageHandler {
 
 // MARK: ZMOTRMessage
 extension LocalNotificationDispatcher {
-
-    fileprivate func localNotificationForMessage(_ message : ZMOTRMessage) -> ZMLocalNotificationForMessage? {
-        // We don't want to create duplicate notifications (e.g. for images)
-        for note in messageNotifications.notifications where note is ZMLocalNotificationForMessage {
-            if (note as! ZMLocalNotificationForMessage).isNotificationFor(message.nonce) {
-                return nil;
-            }
-        }
-        // We might want to "bundle" notifications, e.g. Pings from the same user
-        if let newNote : ZMLocalNotificationForMessage = messageNotifications.copyExistingMessageNotification(message) {
-            return newNote;
-        }
-        
-        if let newNote = ZMLocalNotificationForMessage(message: message, application:self.application) {
-            messageNotifications.addObject(newNote)
-            return newNote;
-        }
-        return nil
-    }
     
     fileprivate func cancelMessageForEditingMessage(_ genericMessage: ZMGenericMessage) {
         var idToDelete : UUID?
@@ -94,35 +77,3 @@ extension LocalNotificationDispatcher {
         }
     }
 }
-
-
-// MARK: ZMSystemMessage
-extension LocalNotificationDispatcher {
-    
-    fileprivate func localNotificationForSystemMessage(_ message : ZMSystemMessage) -> ZMLocalNotificationForSystemMessage? {
-        
-        // we only want participation messages concerning only the self user
-        if message.isGroupParticipationMessageNotForSelf {
-            return nil
-        }
-        
-        if let newNote = ZMLocalNotificationForSystemMessage(message: message, application:self.application) {
-            messageNotifications.addObject(newNote)
-            return newNote;
-        }
-        return nil
-    }
-}
-
-private extension ZMSystemMessage {
-    
-    /// Returns true if the system message notifies that a user(s) that is not the self user
-    /// was added or removed from a conversation.
-    ///
-    var isGroupParticipationMessageNotForSelf: Bool {
-        let addOrRemove = systemMessageType == .participantsAdded || systemMessageType == .participantsRemoved
-        let forSelf = users.count == 1 && users.first!.isSelfUser
-        return addOrRemove && !forSelf
-    }
-}
-
