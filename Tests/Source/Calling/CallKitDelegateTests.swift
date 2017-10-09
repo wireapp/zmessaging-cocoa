@@ -464,7 +464,7 @@ class CallKitDelegateTest: MessagingTest {
         
         // when
         self.sut.provider(provider, perform: action)
-        mockWireCallCenterV3.update(callState: .established, conversationId: conversation.remoteIdentifier!)
+        mockWireCallCenterV3.update(callState: .establishedDataChannel, conversationId: conversation.remoteIdentifier!)
         
         // then
         XCTAssertTrue(provider.isConnected)
