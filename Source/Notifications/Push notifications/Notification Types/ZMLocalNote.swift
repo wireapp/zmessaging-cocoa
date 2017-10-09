@@ -57,14 +57,7 @@ public enum ZMLocalNoteUserInfoKey: String {
 /// information regarding the conversation, sender, and team name.
 ///
 open class ZMLocalNote: NSObject {
-    
-    // User Info Keys
-    static let SelfUserIDStringKey = "selfUserIDString"
-    static let SenderIDStringKey = "senderIDString"
-    static let MessageNonceIDStringKey = "messageNonceString"
-    static let ConversationIDStringKey = "conversationIDString"
-    static let EventTimeKey = "eventTime"
-    
+        
     public var title: String?
     public var body: String?
     public var category: String?
