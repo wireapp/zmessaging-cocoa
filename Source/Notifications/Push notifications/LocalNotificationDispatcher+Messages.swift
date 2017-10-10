@@ -23,17 +23,22 @@ extension LocalNotificationDispatcher: PushMessageHandler {
 
     // Processes ZMOTRMessages and ZMSystemMessages
     @objc(processMessage:) public func process(_ message: ZMMessage) {
+        // we don't want to create duplicate notifications
+        if messageNotifications.notifications.contains(where: { note in
+            return (note.userInfo?[MessageNonceIDStringKey] as? String) ==  message.nonce.transportString()
+        }) { return }
         
-        // FIXME: getting double notifications
+        var note: ZMLocalNote?
         
         if let message = message as? ZMOTRMessage {
-            let note = ZMLocalNote(message: message)
-            note.apply(scheduleLocalNotification)
+            note = ZMLocalNote(message: message)
         }
         else if let message = message as? ZMSystemMessage {
-            let note = ZMLocalNote(systemMessage: message)
-            note.apply(scheduleLocalNotification)
+            note = ZMLocalNote(systemMessage: message)
         }
+        
+        note.apply(scheduleLocalNotification)
+        note.apply(messageNotifications.addObject)
     }
     
     // TODO: Cancelling
