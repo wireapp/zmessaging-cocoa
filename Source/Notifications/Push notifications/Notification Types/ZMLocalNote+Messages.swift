@@ -109,6 +109,8 @@ extension ZMLocalNote {
                 switch contentType {
                 case .text(let content):
                     text = ZMPushStringMessageAdd.localizedString(with: sender, conversation: conversation, text: content)
+                case .knock:
+                    text = ZMPushStringKnock.localizedString(with: sender, conversation: conversation, count: 1)
                 default:
                     text = contentType.localizationString?.localizedString(with: sender, conversation: conversation)
                 }
