@@ -50,7 +50,7 @@ public class LocalNotificationDispatcher: NSObject {
         self.syncMOC = managedObjectContext
         self.foregroundNotificationDelegate = foregroundNotificationDelegate
         self.eventNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherEventNotificationsKey", keyValueStore: managedObjectContext)
-        self.failedMessageNotification = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherFailedNotificationsKey", keyValueStore: managedObjectContext)
+        self.failedMessageNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherFailedNotificationsKey", keyValueStore: managedObjectContext)
         self.callingNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherCallingNotificationsKey", keyValueStore: managedObjectContext)
         self.messageNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherMessageNotificationsKey", keyValueStore: managedObjectContext)
         self.application = application
@@ -207,7 +207,7 @@ extension LocalNotificationDispatcher {
     
     private var allNotificationSets: [ZMLocalNotificationSet] {
         return [self.eventNotifications,
-                self.failedMessageNotification,
+                self.failedMessageNotifications,
                 self.messageNotifications,
                 self.callingNotifications]
     }
