@@ -27,7 +27,7 @@ import WireTransport
 
 @objc public final class ZMLocalNotificationSet : NSObject  {
     
-    public fileprivate(set) var notifications : Set<ZMLocalNotification> = Set() {
+    public fileprivate(set) var notifications : Set<ZMLocalNote> = Set() {
         didSet {
             updateArchive()
         }
@@ -60,7 +60,7 @@ import WireTransport
     func updateArchive(){
         var uiNotifications : [UILocalNotification] = notifications.reduce([]) { (uiNotes, localNote) in
             var newUINotes = uiNotes
-            newUINotes.append(contentsOf: localNote.uiNotifications)
+            newUINotes.append(localNote.uiLocalNotification)
             return newUINotes
         }
         uiNotifications = uiNotifications + oldNotifications
@@ -69,22 +69,22 @@ import WireTransport
         keyValueStore.enqueueDelayedSave() // we need to save otherwiese changes might not be stored
     }
     
-    public func remove(_ notification: ZMLocalNotification) -> ZMLocalNotification? {
+    public func remove(_ notification: ZMLocalNote) -> ZMLocalNote? {
         return notifications.remove(notification)
     }
     
-    public func addObject(_ notification: ZMLocalNotification) {
+    public func addObject(_ notification: ZMLocalNote) {
         notifications.insert(notification)
     }
     
-    public func replaceObject(_ toReplace: ZMLocalNotification, newObject: ZMLocalNotification) {
+    public func replaceObject(_ toReplace: ZMLocalNote, newObject: ZMLocalNote) {
         notifications.remove(toReplace)
         notifications.insert(newObject)
     }
     
     /// Cancels all notifications
     public func cancelAllNotifications() {
-        notifications.forEach{ $0.uiNotifications.forEach{ application?.cancelLocalNotification($0) } }
+        notifications.forEach { application?.cancelLocalNotification($0.uiLocalNotification) }
         notifications = Set()
         
         oldNotifications.forEach{application?.cancelLocalNotification($0)}
@@ -100,11 +100,11 @@ import WireTransport
     /// Cancel all notifications created in this run
     internal func cancelCurrentNotifications(_ conversation: ZMConversation) {
         guard self.notifications.count > 0 else { return }
-        var toRemove = Set<ZMLocalNotification>()
+        var toRemove = Set<ZMLocalNote>()
         notifications.forEach{
             if($0.conversationID == conversation.remoteIdentifier) {
                 toRemove.insert($0)
-                $0.uiNotifications.forEach{ application?.cancelLocalNotification($0) }
+                application?.cancelLocalNotification($0.uiLocalNotification)
             }
         }
         notifications.subtract(toRemove)
@@ -129,50 +129,30 @@ import WireTransport
 public extension ZMLocalNotificationSet {
 
     public func copyExistingEventNotification(_ event: ZMUpdateEvent, conversation: ZMConversation) -> ZMLocalNotificationForEvent? {        
-        let notificationsCopy = notifications
-        for note in notificationsCopy {
-            if let note = note as? ZMLocalNotificationForEvent , note is CopyableEventNotification {
-                if let copied = (note as! CopyableEventNotification).copyByAddingEvent(event, conversation: conversation) as? ZMLocalNotificationForEvent {
-                    if note.shouldBeDiscarded {
-                        _ = remove(note)
-                    }
-                    else {
-                        replaceObject(note, newObject: copied)
-                    }
-                    return copied
-                }
-            }
-        }
+//        let notificationsCopy = notifications
+//        for note in notificationsCopy {
+//            if let note = note as? ZMLocalNotificationForEvent , note is CopyableEventNotification {
+//                if let copied = (note as! CopyableEventNotification).copyByAddingEvent(event, conversation: conversation) as? ZMLocalNotificationForEvent {
+//                    if note.shouldBeDiscarded {
+//                        _ = remove(note)
+//                    }
+//                    else {
+//                        replaceObject(note, newObject: copied)
+//                    }
+//                    return copied
+//                }
+//            }
+//        }
         return nil
     }
     
     public func cancelNotificationForIncomingCall(_ conversation: ZMConversation) {
-        var toRemove = Set<ZMLocalNotification>()
-        self.notifications.forEach{
-            guard ($0.conversationID == conversation.remoteIdentifier),
-                  let note = $0 as? EventNotification , note.eventType == .callState
-            else { return }
-            toRemove.insert($0)
-            $0.uiNotifications.forEach{ application?.cancelLocalNotification($0) }
+        var toRemove = Set<ZMLocalNote>()
+        self.notifications.forEach{ note in
+            guard note.conversationID == conversation.remoteIdentifier, note.isCallingNotification else { return }
+            toRemove.insert(note)
+            application?.cancelLocalNotification(note.uiLocalNotification)
         }
         self.notifications.subtract(toRemove)
-    }
-}
-
-// Message Notifications
-
-public extension ZMLocalNotificationSet {
-    
-    public func copyExistingMessageNotification<T : ZMLocalNotification>(_ message: T.MessageType) -> T? where T : NotificationForMessage {
-        let notificationsCopy = notifications
-        for note in notificationsCopy {
-            if let note = note as? T {
-                if let copied = note.copyByAddingMessage(message) {
-                    replaceObject(note, newObject: copied)
-                    return copied
-                }
-            }
-        }
-        return nil
     }
 }
