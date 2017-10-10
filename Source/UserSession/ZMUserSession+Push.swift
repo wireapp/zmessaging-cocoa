@@ -25,7 +25,7 @@ let PushChannelDataKey = "data"
 
 private let log = ZMSLog(tag: "Push")
 
-extension Dictionary where Key: Hashable, Value: Any {
+extension Dictionary {
     internal func isPayload(for user: ZMUser) -> Bool {
         if self.isPayloadMissingUserInformation() {
             return true

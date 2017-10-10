@@ -166,7 +166,6 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = ZMUser(context: moc)
         otherUser.remoteIdentifier = UUID()
         otherUser.name = "Other Test User"
-        otherUser.emailAddress = "other@user.com"
         
         return otherUser
     }
@@ -200,7 +199,6 @@ class CallKitDelegateTest: MessagingTest {
         super.setUp()
         
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        selfUser.emailAddress = "self@user.mail"
         selfUser.remoteIdentifier = UUID()
         
         let flowManager = FlowManagerMock()
@@ -466,7 +464,7 @@ class CallKitDelegateTest: MessagingTest {
         
         // when
         self.sut.provider(provider, perform: action)
-        mockWireCallCenterV3.update(callState: .established, conversationId: conversation.remoteIdentifier!)
+        mockWireCallCenterV3.update(callState: .establishedDataChannel, conversationId: conversation.remoteIdentifier!)
         
         // then
         XCTAssertTrue(provider.isConnected)
@@ -588,8 +586,6 @@ class CallKitDelegateTest: MessagingTest {
     func testThatItIgnoresActivityWithContactUnknown() {
         // given
         let otherUser = self.otherUser(moc: self.uiMOC)
-        otherUser.emailAddress = nil
-        otherUser.phoneNumber = "+123456789"
         createOneOnOneConversation(user: otherUser)
         
         let handle = INPersonHandle(value: "+987654321", type: .phoneNumber)

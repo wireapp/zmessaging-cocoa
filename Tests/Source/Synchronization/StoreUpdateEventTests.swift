@@ -32,7 +32,7 @@ class UpdateEventsStoreMigrationTests: MessagingTest {
     var previousEventStoreLocations : [URL] {
         return [
             sharedContainerURL,
-            sharedContainerURL.appendingPathComponent(userIdentifier.transportString())
+            sharedContainerURL.appendingPathComponent(userIdentifier.uuidString)
             ].map({ $0.appendingPathComponent("ZMEventModel.sqlite")})
     }
     
@@ -42,7 +42,7 @@ class UpdateEventsStoreMigrationTests: MessagingTest {
             
             // given
             StorageStack.shared.createStorageAsInMemory = false
-            try! FileManager.default.createDirectory(at: oldEventStoreLocation.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: oldEventStoreLocation.deletingLastPathComponent(), withIntermediateDirectories: true)
             let eventMOC_oldLocation = NSManagedObjectContext.createEventContext(at: oldEventStoreLocation)
             eventMOC_oldLocation.add(self.dispatchGroup)
             

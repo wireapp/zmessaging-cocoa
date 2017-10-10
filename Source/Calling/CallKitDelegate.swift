@@ -410,7 +410,7 @@ extension ZMConversation {
         
         switch conversationType {
         case .group:
-            return ("callkit.call.started" as NSString).localizedString(with: self, count: 0)
+            return ("callkit.call.started" as NSString).localizedString(with: user, conversation: self, count: 0)
         case .oneOnOne:
             return connectedUser?.displayName
         default:
@@ -479,7 +479,7 @@ class CallObserver : WireCallCenterCallStateObserver {
         switch callState {
         case .answered(degraded: false):
             onAnswered?()
-        case .established:
+        case .establishedDataChannel:
             onEstablished?()
         case .terminating(reason: let reason):
             switch reason {
