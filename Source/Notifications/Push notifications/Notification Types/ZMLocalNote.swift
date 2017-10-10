@@ -84,8 +84,9 @@ let EventTimeKey = "eventTime"
 ///
 open class ZMLocalNote: NSObject {
     
+    public let type: LocalNotificationType
     public var title: String?
-    public var body: String?
+    public var body: String
     public var category: String?
     public var soundName: String?
     public var userInfo: [AnyHashable: Any]?
@@ -95,19 +96,11 @@ open class ZMLocalNote: NSObject {
     public var messageNonce: UUID? { return uuid(for: MessageNonceIDStringKey) }
     public var conversationID: UUID? { return uuid(for: ConversationIDStringKey) }
     
-    public let conversationID: UUID?
-    public let type: LocalNotificationType
-    
-    init(conversation: ZMConversation?, type: LocalNotificationType) {
-        self.conversationID = conversation?.remoteIdentifier
-        self.type = type
-        super.init()
-    }
     public var isEphemeral: Bool = false
     
-    convenience init?(conversation: ZMConversation?, type: LocalNotificationType, constructor: NotificationConstructor) {
-        self.init(conversation: conversation, type: type)
+    init?(conversation: ZMConversation?, type: LocalNotificationType, constructor: NotificationConstructor) {
         guard constructor.shouldCreateNotification() else { return nil }
+        self.type = type
         self.title = constructor.titleText()
         self.body = constructor.bodyText().escapingPercentageSymbols()
         self.category = constructor.category()
@@ -118,7 +111,6 @@ open class ZMLocalNote: NSObject {
     /// Returns a configured concrete UILocalNotification object.
     ///
     public lazy var uiLocalNotification: UILocalNotification = {
-        
         let note = UILocalNotification()
         note.alertTitle = self.title
         note.alertBody = self.body
