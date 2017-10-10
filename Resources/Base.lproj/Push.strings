@@ -59,7 +59,7 @@
 "push.notification.add.image.oneonone" = "shared a picture";
 "push.notification.add.image.oneonone.nousername" = "New picture in a conversation";
 
-// 1 Component: Sender
+// VIDEO
 "push.notification.add.video.group" = "%1$@ shared a video";
 "push.notification.add.video.group.nousername" = "New video";
 "push.notification.add.video.group.nousername.noconversationname" = "New video in a conversation";

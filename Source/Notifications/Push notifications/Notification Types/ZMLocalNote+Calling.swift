@@ -60,7 +60,7 @@ extension ZMLocalNote {
             case .incoming(video: let video, shouldRing: _, degraded: _):
                 let baseString = video ? ZMPushStringVideoCallStarts : ZMPushStringCallStarts
                 text = baseString.localizedString(with: sender, conversation: conversation, count: nil)
-            case .terminating, .none:   // TODO: missed call count
+            case .terminating, .none:
                 text = ZMPushStringCallMissed.localizedString(with: sender, conversation: conversation, count: 1)
             default :
                 break

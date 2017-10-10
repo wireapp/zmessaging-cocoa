@@ -216,15 +216,10 @@ extension ZMLocalNote {
             let isLeaveEvent = systemMessageType == .participantsRemoved
             let message = self.message as! ZMSystemMessage
             
-            // many join/leave?
-            
-            var user: ZMUser?
-            var key : NSString = (isLeaveEvent ? ZMPushStringMemberLeaveMany : ZMPushStringMemberJoinMany) as NSString
-            if message.users.count == 1 {
-                user = message.users.first
-                key = (isLeaveEvent ? ZMPushStringMemberLeave : ZMPushStringMemberJoin) as NSString
-            }
-            return key.localizedString(with: message.sender, conversation: message.conversation, otherUser: user)
+            // we already checked there is only one user and it is the self user
+            let selfUser = message.users.first!
+            let key = isLeaveEvent ? ZMPushStringMemberLeave : ZMPushStringMemberJoin
+            return key.localizedString(with: message.sender, conversation: message.conversation, otherUser: selfUser)
         }
 
     }
