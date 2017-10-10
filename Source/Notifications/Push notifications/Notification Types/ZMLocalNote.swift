@@ -39,11 +39,32 @@ public enum LocalNotificationType {
 /// a local notification. 
 ///
 protocol NotificationConstructor {
+    var conversation: ZMConversation? { get set }
     func shouldCreateNotification() -> Bool
+    func titleText() -> String?
     func bodyText() -> String
     func soundName() -> String
     func category() -> String
     func userInfo() -> [AnyHashable: Any]?
+}
+
+extension NotificationConstructor {
+    
+    /// Sets the title for the notification using the name of the given conversation
+    /// and if possible, the team name of the self user. Returns nil if there is
+    /// no conversation.
+    ///
+    func titleText() -> String? {
+        guard let conversation = conversation else { return nil }
+        var title = conversation.displayName
+        
+        if let moc = conversation.managedObjectContext,
+            let teamName = ZMUser.selfUser(in: moc).team?.name {
+            title += " in \(teamName)"
+        }
+        
+        return title
+    }
 }
 
 // TODO: define these keys in only one place (currently defined in UILocalNotification)
@@ -81,27 +102,11 @@ open class ZMLocalNote: NSObject {
     convenience init?(conversation: ZMConversation?, type: LocalNotificationType, constructor: NotificationConstructor) {
         self.init(conversation: conversation, type: type)
         guard constructor.shouldCreateNotification() else { return nil }
+        self.title = constructor.titleText()
         self.body = constructor.bodyText().escapingPercentageSymbols()
         self.category = constructor.category()
         self.soundName = constructor.soundName()
         self.userInfo = constructor.userInfo()
-        self.title = title(for: conversation)
-    }
-    
-    /// Sets the title for the notification using the name of the given conversation
-    /// and if possible, the team name of the self user. Returns nil if there is
-    /// no conversation.
-    ///
-    func title(for conversation: ZMConversation?) -> String? {
-        guard let conversation = conversation else { return nil }
-        var title = conversation.displayName
-
-        if let moc = conversation.managedObjectContext,
-            let teamName = ZMUser.selfUser(in: moc).team?.name {
-            title += " in \(teamName)"
-        }
-        
-        return title
     }
     
     /// Returns a configured concrete UILocalNotification object.

@@ -31,7 +31,7 @@ extension ZMLocalNote {
         
         let callState: CallState
         let sender: ZMUser
-        let conversation: ZMConversation
+        var conversation: ZMConversation?
         
         init(callState: CallState, sender: ZMUser, conversation: ZMConversation) {
             self.callState = callState
@@ -95,10 +95,10 @@ extension ZMLocalNote {
         func userInfo() -> [AnyHashable: Any]? {
             
             guard
-                let moc = conversation.managedObjectContext,
+                let moc = conversation?.managedObjectContext,
                 let selfUserID = ZMUser.selfUser(in: moc).remoteIdentifier,
                 let senderID = sender.remoteIdentifier,
-                let conversationID = conversation.remoteIdentifier
+                let conversationID = conversation?.remoteIdentifier
                 else { return nil }
             
             var userInfo = [AnyHashable: Any]()

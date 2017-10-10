@@ -56,7 +56,7 @@ extension ZMLocalNote {
         fileprivate let contentType: ZMLocalNotificationContentType
         
         private var sender: ZMUser!
-        private var conversation: ZMConversation!
+        var conversation: ZMConversation?
         
         /// Determines if the notification content should be hidden for the given message.
         ///
@@ -144,7 +144,7 @@ extension ZMLocalNote {
                 let moc = message.managedObjectContext,
                 let selfUserID = ZMUser.selfUser(in: moc).remoteIdentifier,
                 let senderID = sender.remoteIdentifier,
-                let conversationID = conversation.remoteIdentifier,
+                let conversationID = conversation?.remoteIdentifier,
                 let eventTime = message.serverTimestamp
                 else { return nil }
             

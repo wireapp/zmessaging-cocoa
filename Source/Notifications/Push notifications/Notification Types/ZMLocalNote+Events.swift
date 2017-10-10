@@ -59,7 +59,7 @@ fileprivate class EventNotificationConstructor: NotificationConstructor {
     let moc: NSManagedObjectContext
     
     var sender: ZMUser?
-    let conversation: ZMConversation?
+    var conversation: ZMConversation?
     
     /// set to true if notification depends / refers to a specific conversation
     var requiresConversation : Bool { return false }
@@ -219,6 +219,10 @@ private class UserConnectionEventNotificationConstructor: EventNotificationConst
         return false
     }
     
+    func titleText() -> String? {
+        return nil
+    }
+    
     override func bodyText() -> String {
         let name = sender?.name ?? (event.payload["user"] as? [String : Any])?["name"] as? String
         if connectionType == .requested {
@@ -237,6 +241,10 @@ private class UserConnectionEventNotificationConstructor: EventNotificationConst
 // MARK: - New User Event
 
 private class NewUserEventNotificationConstructor: EventNotificationConstructor {
+    
+    func titleText() -> String? {
+        return nil
+    }
     
     override func bodyText() -> String {
         let name = (event.payload["user"] as? [String : Any])?["name"] as? String
