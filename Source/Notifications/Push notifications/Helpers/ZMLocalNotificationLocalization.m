@@ -63,12 +63,6 @@ static NSString *const NoOtherUserNameKey = @"nootherusername";
     
     if (conversationName == nil) {
         [keyComponents addObject:NoConversationNameKey];
-    } else {
-        [arguments addObject:conversationName];
-    }
-    
-    if (otherUserName != nil && !otherUser.isSelfUser){
-        [arguments addObject:otherUserName];
     }
     
     NSString *key = self;

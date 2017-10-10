@@ -60,9 +60,6 @@ public extension NSString {
             if convName == nil || convName!.isEmpty {
                 keyComponents.append(NoConversationNameKey)
             }
-            else {
-                arguments.append(convName!)
-            }
         }
         let localizationString = (self as String) + "." + keyComponents.joined(separator: ".")
         return LocalizationInfo(localizationString: localizationString as String, arguments: arguments)
