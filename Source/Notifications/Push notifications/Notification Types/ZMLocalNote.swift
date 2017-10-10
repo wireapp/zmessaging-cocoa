@@ -98,6 +98,7 @@ open class ZMLocalNote: NSObject {
         self.type = type
         super.init()
     }
+    public var isEphemeral: Bool = false
     
     convenience init?(conversation: ZMConversation?, type: LocalNotificationType, constructor: NotificationConstructor) {
         self.init(conversation: conversation, type: type)

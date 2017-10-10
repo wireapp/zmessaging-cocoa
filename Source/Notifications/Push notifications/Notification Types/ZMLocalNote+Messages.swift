@@ -48,6 +48,7 @@ extension ZMLocalNote {
         let contentType = ZMLocalNotificationContentType.typeForMessage(message)
         let constructor = MessageNotificationConstructor(message: message, contentType: contentType)
         self.init(conversation: message.conversation, type: .message(contentType), constructor: constructor)
+        self.isEphemeral = message.isEphemeral
     }
     
     fileprivate class MessageNotificationConstructor: NotificationConstructor {
