@@ -17,28 +17,6 @@
 //
 
 
-// MARK: - Failed Messages
-
-extension ZMLocalNote {
-    
-    convenience init?(expiredMessage: ZMMessage) {
-        guard expiredMessage.conversation?.remoteIdentifier != nil else { return nil }
-        self.init(conversation: expiredMessage.conversation!, type: .failedMessage)
-        configureforExpiredMessage(in: expiredMessage.conversation)
-    }
-    
-    private func configureforExpiredMessage(in conversation: ZMConversation!) {
-        
-        switch conversation.conversationType {
-        case .group:
-            body = FailedMessageInGroupConversationText.localizedString(with: conversation, count: nil)
-        default:
-            body = FailedMessageInOneOnOneConversationText.localizedString(with: conversation.connectedUser, count: nil)
-        }
-    }
-}
-
-
 // MARK: - Message
 
 extension ZMLocalNote {
@@ -227,4 +205,74 @@ extension ZMLocalNote {
 
     }
 
+}
+
+
+// MARK: - Failed Messages
+
+extension ZMLocalNote {
+    
+    convenience init?(expiredMessage: ZMMessage) {
+        guard let conversation = expiredMessage.conversation else { return nil }
+        self.init(expiredMessageIn: conversation)
+    }
+    
+    convenience init?(expiredMessageIn conversation: ZMConversation) {
+        let constructor = FailedMessageNotificationConstructor(conversation: conversation)
+        self.init(conversation: conversation, type: .failedMessage, constructor: constructor)
+    }
+    
+    private func configureforExpiredMessage(in conversation: ZMConversation!) {
+        
+        switch conversation.conversationType {
+        case .group:
+            body = FailedMessageInGroupConversationText.localizedString(with: conversation, count: nil)
+        default:
+            body = FailedMessageInOneOnOneConversationText.localizedString(with: conversation.connectedUser, count: nil)
+        }
+    }
+    
+    private class FailedMessageNotificationConstructor: NotificationConstructor {
+        
+        var conversation: ZMConversation?
+        
+        init(conversation: ZMConversation?) {
+            self.conversation = conversation
+        }
+        
+        func shouldCreateNotification() -> Bool {
+            return conversation != nil
+        }
+        
+        func bodyText() -> String {
+            switch conversation!.conversationType {
+            case .group:
+                return FailedMessageInGroupConversationText.localizedString(with: conversation, count: nil)
+            default:
+                return FailedMessageInOneOnOneConversationText.localizedString(with: conversation?.connectedUser, count: nil)
+            }
+        }
+        
+        func soundName() -> String {
+            return ZMCustomSound.notificationNewMessageSoundName()
+        }
+        
+        func category() -> String {
+            return ZMConversationCategory
+        }
+        
+        func userInfo() -> [AnyHashable : Any]? {
+            
+            guard
+                let moc = conversation?.managedObjectContext,
+                let selfUserID = ZMUser.selfUser(in: moc).remoteIdentifier,
+                let conversationID = conversation?.remoteIdentifier
+                else { return nil }
+            
+            var userInfo = [AnyHashable: Any]()
+            userInfo[SelfUserIDStringKey] = selfUserID.transportString()
+            userInfo[ConversationIDStringKey] = conversationID.transportString()
+            return userInfo
+        }
+    }
 }

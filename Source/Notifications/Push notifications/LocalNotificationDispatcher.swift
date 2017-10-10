@@ -33,7 +33,7 @@ public class LocalNotificationDispatcher: NSObject {
     let eventNotifications: ZMLocalNotificationSet
     let messageNotifications: ZMLocalNotificationSet
     let callingNotifications: ZMLocalNotificationSet
-    let failedMessageNotification: ZMLocalNotificationSet
+    let failedMessageNotifications: ZMLocalNotificationSet
     
     let application: ZMApplication
     let sessionTracker: SessionTracker
@@ -189,16 +189,16 @@ extension LocalNotificationDispatcher {
         if message.visibleInConversation == nil || message.conversation?.conversationType == .self {
             return
         }
-        let note = ZMLocalNotificationForExpiredMessage(expiredMessage: message)
-        self.application.scheduleLocalNotification(note.uiNotification)
-        self.failedMessageNotification.addObject(note)
+        let note = ZMLocalNote(expiredMessage: message)
+        note.apply(scheduleLocalNotification)
+        note.apply(failedMessageNotifications.addObject)
     }
     
     /// Informs the user that a message in a conversation failed to send
     public func didFailToSendMessage(in conversation: ZMConversation) {
-        let note = ZMLocalNotificationForExpiredMessage(conversation: conversation)
-        self.application.scheduleLocalNotification(note.uiNotification)
-        self.failedMessageNotification.addObject(note)
+        let note = ZMLocalNote(expiredMessageIn: conversation)
+        note.apply(scheduleLocalNotification)
+        note.apply(failedMessageNotifications.addObject)
     }
 }
 
