@@ -23,6 +23,9 @@ extension LocalNotificationDispatcher: PushMessageHandler {
 
     // Processes ZMOTRMessages and ZMSystemMessages
     @objc(processMessage:) public func process(_ message: ZMMessage) {
+        
+        // FIXME: getting double notifications
+        
         if let message = message as? ZMOTRMessage {
             let note = ZMLocalNote(message: message)
             note.apply(scheduleLocalNotification)

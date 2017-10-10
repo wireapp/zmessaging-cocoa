@@ -25,30 +25,17 @@ public extension LocalNotificationDispatcher {
         let note = ZMLocalNote(callState: callState, conversation: conversation, sender: sender)
         note.apply(scheduleLocalNotification)
         
-        // TODO: cancelling?
-        
-//        let note =  notification(for: conversation, sender: sender)
-//        
+        // TODO: cancelling other call notes for this conversation?
 //        callingNotifications.cancelNotifications(conversation)
-//        
-//        note.update(forCallState: callState)
-//        scheduleNotification(note)
     }
     
     public func processMissedCall(in conversation: ZMConversation, sender: ZMUser) {
-        let note =  notification(for: conversation, sender: sender)
         
-        callingNotifications.cancelNotifications(conversation)
+        let note = ZMLocalNote(callState: .terminating(reason: .canceled), conversation: conversation, sender: sender)
+        note.apply(scheduleLocalNotification)
         
-        note.updateForMissedCall()
-        scheduleNotification(note)
-    }
-    
-    private func scheduleNotification(_ note: ZMLocalNotification) {
-//        if let uiNote = note.uiNotifications.first {
-//            callingNotifications.addObject(note)
-//            self.scheduleUILocalNotification(uiNote)
-//        }
+        // cancel all other call notifications for this conversation?
+//        callingNotifications.cancelNotifications(conversation)
     }
     
     private func notification(for conversation: ZMConversation, sender: ZMUser) -> ZMLocalNotificationForCallState {
