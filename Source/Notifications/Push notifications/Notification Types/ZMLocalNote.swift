@@ -89,6 +89,11 @@ open class ZMLocalNote: NSObject {
     public var category: String?
     public var soundName: String?
     public var userInfo: [AnyHashable: Any]?
+        
+    public var selfUserID: UUID? { return uuid(for: SelfUserIDStringKey) }
+    public var senderID: UUID? { return uuid(for: SenderIDStringKey) }
+    public var messageNonce: UUID? { return uuid(for: MessageNonceIDStringKey) }
+    public var conversationID: UUID? { return uuid(for: ConversationIDStringKey) }
     
     public let conversationID: UUID?
     public let type: LocalNotificationType
@@ -122,4 +127,31 @@ open class ZMLocalNote: NSObject {
         note.userInfo = self.userInfo
         return note
     }()
+    
+    /// Returns true if it is a calling notification, else false.
+    ///
+    public var isCallingNotification: Bool {
+        switch type {
+        case .calling(_): return true
+        default: return false
+        }
+    }
+    
+    /// Returns the UUID for the given key from the user info if it exists, else
+    /// nil.
+    ///
+    private func uuid(for key: String) -> UUID? {
+        guard let uuidString = userInfo?[key] as? String else { return nil }
+        return UUID(uuidString: uuidString)
+    }
+    
+    public func conversation(in moc: NSManagedObjectContext) -> ZMConversation? {
+        guard let uuid = conversationID else { return nil }
+        return ZMConversation(remoteID: uuid, createIfNeeded: false, in: moc)
+    }
+    
+    public func sender(in moc: NSManagedObjectContext) -> ZMUser? {
+        guard let uuid = senderID else { return nil }
+        return ZMUser(remoteID: uuid, createIfNeeded: false, in: moc)
+    }
 }
