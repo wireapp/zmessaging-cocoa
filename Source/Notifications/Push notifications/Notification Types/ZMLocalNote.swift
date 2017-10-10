@@ -89,7 +89,8 @@ open class ZMLocalNote: NSObject {
     }
     
     /// Sets the title for the notification using the name of the given conversation
-    /// and if possible, the team name of the self user.
+    /// and if possible, the team name of the self user. Returns nil if there is
+    /// no conversation.
     ///
     func title(for conversation: ZMConversation?) -> String? {
         guard let conversation = conversation else { return nil }
@@ -115,5 +116,4 @@ open class ZMLocalNote: NSObject {
         note.userInfo = self.userInfo
         return note
     }()
-    
 }
