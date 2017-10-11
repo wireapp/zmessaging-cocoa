@@ -36,7 +36,9 @@ extension ZMUserSession {
     }
     
     public func handleCallCategoryNotification(_ note : ZMStoredLocalNotification) {
-        guard let callState = note.conversation.voiceChannel?.state else { return }
+        guard let actionIdentifier = note.actionIdentifier, actionIdentifier == ZMCallAcceptAction,
+              let callState = note.conversation.voiceChannel?.state
+        else { return }
         
         if case let .incoming(video: video, shouldRing: _, degraded: _) = callState, callCenter.activeCallConversations(in: self).count == 0 {
             _ = note.conversation.voiceChannel?.join(video: video, userSession: self)
