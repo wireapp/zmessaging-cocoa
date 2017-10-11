@@ -111,77 +111,31 @@ public class LocalNotificationDispatcher: NSObject {
 extension LocalNotificationDispatcher: ZMEventConsumer {
     
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
-        if self.application.applicationState != .background {
-            return
-        }
-        
-        let eventsToForward = events.filter { (event) -> Bool in
-            // we only want to process events we received through Push
-            if event.source != .pushNotification {
-                return false
-            }
-            // TODO Sabine : Can we maybe filter message events here already for Reactions?
-            return true
-        }
-        
+        let eventsToForward = events.filter { return [.pushNotification, .webSocket].contains($0.source) }
         self.didReceive(events: eventsToForward, conversationMap: prefetchResult?.conversationsByRemoteIdentifier ?? [:], id: events.first?.uuid)
     }
     
     func didReceive(events: [ZMUpdateEvent], conversationMap: [UUID : ZMConversation], id: UUID?) {
-        events.forEach {
+        events.forEach { event in
             // Forward events to the session tracker which keeps track if the selfUser joined or not
-            self.sessionTracker.addEvent($0)
+            self.sessionTracker.addEvent(event)
             
-            // Then create the notification
-            guard let note = self.notification(event: $0, conversationMap: conversationMap),
-                let localNote = note.uiNotifications.last
-            else {
-                return
+            var conversation: ZMConversation?
+            if let conversationID = event.conversationUUID() {
+                // Fetch the conversation here to avoid refetching every time we try to create a notification
+                conversation = conversationMap[conversationID] ?? ZMConversation.fetch(withRemoteIdentifier: conversationID, in: self.syncMOC)
             }
-            self.application.scheduleLocalNotification(localNote)
+            
+            let note = ZMLocalNote(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
+            note.apply(eventNotifications.addObject)
+            note.apply(scheduleLocalNotification)
         }
-    }
-    
-    func notification(event: ZMUpdateEvent, conversationMap: [UUID : ZMConversation]) -> ZMLocalNotificationForEvent? {
-        switch event.type {
-        case .conversationCreate, .userConnection, .conversationOtrMessageAdd, // only for reaction
-        .userContactJoin, .callState:
-            return self.localNotification(event: event, conversationMap: conversationMap)
-        default:
-            return nil
-        }
-    }
-    
-    func localNotification(event: ZMUpdateEvent, conversationMap: [UUID: ZMConversation]) -> ZMLocalNotificationForEvent? {
-        for note in self.eventNotifications.notifications.flatMap({ $0 as? ZMLocalNotificationForEvent }) {
-            if note.containsIdenticalEvent(event) {
-                return nil
-            }
-        }
-        
-        var conversation: ZMConversation?
-        if let conversationID = event.conversationUUID() {
-            // Fetch the conversation here to avoid refetching every time we try to create a notification
-            conversation = conversationMap[conversationID] ?? ZMConversation.fetch(withRemoteIdentifier: conversationID, in: self.syncMOC)
-            if let conversation = conversation,
-                let note = self.eventNotifications.copyExistingEventNotification(event, conversation: conversation) {
-                return note
-            }
-        }
-        
-        if let newNote = ZMLocalNotificationForEvent.notification(forEvent: event,
-                                                               conversation: conversation,
-                                                               managedObjectContext: self.syncMOC,
-                                                               application: self.application,
-                                                               sessionTracker: self.sessionTracker) {
-            self.eventNotifications.addObject(newNote)
-            return newNote
-        }
-        return nil
     }
 }
 
+
 // MARK: - Failed messages
+
 extension LocalNotificationDispatcher {
     
     /// Informs the user that the message failed to send
@@ -241,7 +195,5 @@ extension LocalNotificationDispatcher {
             }
         }
     }
-
-
 }
 
