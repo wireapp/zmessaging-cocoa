@@ -66,23 +66,23 @@ extension ZMLocalNote {
         
         func bodyText() -> String {
             
-            var text: String?
+            var text = ""
+            var key: String?
             
             switch (callState) {
             case .incoming(video: let video, shouldRing: _, degraded: _):
-                let baseString = video ? ZMPushStringVideoCallStarts : ZMPushStringCallStarts
-                text = baseString.localizedString(with: sender, conversation: conversation, count: nil)
+                key = video ? ZMPushStringVideoCallStarts : ZMPushStringCallStarts
             case .terminating, .none:
-                text = ZMPushStringCallMissed.localizedString(with: sender, conversation: conversation, count: 1)
+                key = ZMPushStringCallMissed
             default :
                 break
             }
             
-            if nil != text {
-                text = text!.escapingPercentageSymbols()
+            if nil != key {
+                text = key!.localizedString(with: sender, conversation: conversation) ?? ""
             }
-
-            return text ?? ""
+            
+            return text.escapingPercentageSymbols()
         }
         
         func category() -> String {
