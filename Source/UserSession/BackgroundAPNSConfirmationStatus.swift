@@ -31,8 +31,23 @@ import UIKit
     private unowned var managedObjectContext : NSManagedObjectContext
     private unowned var backgroundActivityFactory : BackgroundActivityFactory
 
+    private var applicationState : UIApplicationState {
+        let group = DispatchGroup()
+        var applicationState :UIApplicationState?
+
+        group.enter()
+        DispatchQueue.main.async {
+            applicationState = self.application.applicationState
+            group.leave()
+        }
+
+        let _ = group.wait()
+        
+        return applicationState! ///FIXME: !!
+    }
+    
     open var needsToSyncMessages : Bool {
-        return messageNonces.count > 0 && application.applicationState == .background
+        return messageNonces.count > 0 && applicationState == .background
     }
     
     @objc public init(application: ZMApplication,

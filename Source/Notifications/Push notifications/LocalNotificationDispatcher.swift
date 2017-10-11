@@ -81,8 +81,10 @@ public class LocalNotificationDispatcher: NSObject {
 extension LocalNotificationDispatcher: ZMEventConsumer {
     
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
-        if self.application.applicationState != .background {
-            return
+        DispatchQueue.main.async {
+            if self.application.applicationState != .background {
+                return
+            }
         }
         
         let eventsToForward = events.filter { (event) -> Bool in

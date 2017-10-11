@@ -44,10 +44,12 @@ extension LocalNotificationDispatcher: PushMessageHandler {
     /// session, otherwise it is directed to the system via UIApplication.
     ///
     func scheduleUILocalNotification(_ note: UILocalNotification) {
-        if application.applicationState == .active {
-            localNotificationBuffer.append(note)
-        } else {
-            application.scheduleLocalNotification(note)
+        DispatchQueue.main.async {
+            if self.application.applicationState == .active {
+                self.localNotificationBuffer.append(note)
+            } else {
+                self.application.scheduleLocalNotification(note)
+            }
         }
     }
 

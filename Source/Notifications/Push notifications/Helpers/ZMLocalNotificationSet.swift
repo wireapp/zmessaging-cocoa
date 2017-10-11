@@ -104,7 +104,11 @@ import WireTransport
         notifications.forEach{
             if($0.conversationID == conversation.remoteIdentifier) {
                 toRemove.insert($0)
-                $0.uiNotifications.forEach{ application?.cancelLocalNotification($0) }
+                $0.uiNotifications.forEach{ notification in
+                    DispatchQueue.main.async {
+                        self.application?.cancelLocalNotification(notification)
+                    }
+                }
             }
         }
         notifications.subtract(toRemove)
@@ -114,9 +118,11 @@ import WireTransport
     internal func cancelOldNotifications(_ conversation: ZMConversation) {
         guard oldNotifications.count > 0 else { return }
 
-        oldNotifications = oldNotifications.filter{
-            if($0.zm_conversationRemoteID == conversation.remoteIdentifier) {
-                application?.cancelLocalNotification($0)
+        oldNotifications = oldNotifications.filter{ notification in
+            if(notification.zm_conversationRemoteID == conversation.remoteIdentifier) {
+                DispatchQueue.main.async {
+                    self.application?.cancelLocalNotification(notification)
+                }
                 return false
             }
             return true
