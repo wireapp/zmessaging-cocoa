@@ -124,6 +124,21 @@
 "push.notification.call.started.group.noconversationname" = "%1$@ is calling in a conversation";
 "push.notification.call.started.group.nousername.noconversationname" = "Someone is calling in a conversation";
 
+// MISSED CALLS
+"push.notification.call.missed.group" = "%1$@ called";
+"push.notification.call.missed.group.nousername" = "Someone called";
+"push.notification.call.missed.group.nousername.noconversationname" = "Someone called in a conversation";
+"push.notification.call.missed.group.noconversationname" = "%1$@ called in a conversation";
+
+"push.notification.call.missed.oneonone" = "called";
+"push.notification.call.missed.oneonone.nousername" = "Someone called";
+
+// CALLKIT
+"push.notification.callkit.call.started.group" = "%1$@ in %2$@";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Someone calling in a conversation";
+"push.notification.callkit.call.started.group.nousername" = "Someone calling in %1$@";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ calling in a conversation";
+
 // CONVERSATION CREATE
 "push.notification.conversation.create" = "%1$@ created a group conversation with you";
 "push.notification.conversation.create.nousername" = "Someone created a group conversation with you";
@@ -167,22 +182,12 @@
 "push.notification.action.call.callback" = "Call Back";
 "push.notification.action.connection.accept" = "Accept";
 
-"push.notification.callkit.call.started.group" = "%1$@ in %2$@";
-"push.notification.callkit.call.started.group.nousername.noconversationname" = "Someone calling in a conversation";
-"push.notification.callkit.call.started.group.nousername" = "Someone calling in %1$@";
-"push.notification.callkit.call.started.group.noconversationname" = "%@ calling in a conversation";
+
 
 //////////////
 // The following keys are handled in the Push.stringsdict file. Please make the according changes there.
 /////////////
 
-//"push.notification.call.missed.oneonone" = "%1$@ called";
-//"push.notification.call.missed.oneonone.nousername" = "Someone called";
-
-//"push.notification.call.missed.group" = "%1$@ called";
-//"push.notification.call.missed.group.nousername" = "Someone called";
-//"push.notification.call.missed.group.noconversationname" = "%1$@ called in a conversation";
-//"push.notification.call.missed.group.nousername.noconversationname" = "Someone called in a conversation";
 
 //"push.notification.knock.group" = "%1$@ pinged %2$@ times";
 //"push.notification.knock.group.nousername" = "%1$@ pings";
