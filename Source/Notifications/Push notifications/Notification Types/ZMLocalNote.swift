@@ -48,25 +48,6 @@ protocol NotificationConstructor {
     func userInfo() -> [AnyHashable: Any]?
 }
 
-extension NotificationConstructor {
-    
-    /// Sets the title for the notification using the name of the given conversation
-    /// and if possible, the team name of the self user. Returns nil if there is
-    /// no conversation.
-    ///
-    func titleText() -> String? {
-        guard let conversation = conversation else { return nil }
-        var title = conversation.displayName
-        
-        if let moc = conversation.managedObjectContext,
-            let teamName = ZMUser.selfUser(in: moc).team?.name {
-            title += " in \(teamName)"
-        }
-        
-        return title
-    }
-}
-
 // TODO: define these keys in only one place (currently defined in UILocalNotification)
 
 /// The keys used in the local notification user info dictionary.

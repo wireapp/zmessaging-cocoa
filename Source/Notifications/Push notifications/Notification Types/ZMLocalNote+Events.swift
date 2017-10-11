@@ -100,6 +100,19 @@ fileprivate class EventNotificationConstructor: NotificationConstructor {
         return true
     }
     
+    func titleText() -> String? {
+        var title = ""
+        if let teamName = ZMUser.selfUser(in: moc).team?.name {
+            title = "in \(teamName)"
+            
+        }
+        if let conversationName = conversation?.displayName {
+            title = "\(conversationName) \(title)"
+        }
+        
+        return title.isEmpty ? nil : title.trimmingCharacters(in: .whitespaces)
+    }
+    
     func bodyText() -> String {
         return ZMPushStringDefault.localizedStringForPushNotification()
     }
@@ -185,6 +198,12 @@ private class ReactionEventNotificationConstructor: EventNotificationConstructor
 
 private class ConversationCreateEventNotificationConstructor: EventNotificationConstructor {
     
+    override func titleText() -> String? {
+        // the title should not contain the conversation name "Empty Conversation"
+        if let teamName = ZMUser.selfUser(in: moc).team?.name { return " in \(teamName)" }
+        else { return nil }
+    }
+    
     override func bodyText() -> String {
         return ZMPushStringConversationCreate.localizedString(with: sender, count: nil)
     }
@@ -219,7 +238,7 @@ private class UserConnectionEventNotificationConstructor: EventNotificationConst
         return false
     }
     
-    func titleText() -> String? {
+    override func titleText() -> String? {
         return nil
     }
     
@@ -242,7 +261,7 @@ private class UserConnectionEventNotificationConstructor: EventNotificationConst
 
 private class NewUserEventNotificationConstructor: EventNotificationConstructor {
     
-    func titleText() -> String? {
+    override func titleText() -> String? {
         return nil
     }
     

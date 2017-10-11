@@ -78,6 +78,18 @@ extension ZMLocalNote {
             return true
         }
         
+        func titleText() -> String? {
+            guard let conversation = conversation else { return nil }
+            var title = conversation.displayName
+            
+            if let moc = conversation.managedObjectContext,
+                let teamName = ZMUser.selfUser(in: moc).team?.name {
+                title += " in \(teamName)"
+            }
+            
+            return title
+        }
+        
         func bodyText() -> String {
             if shouldHideContent {
                 return (message.isEphemeral ? ZMPushStringEphemeral : ZMPushStringDefault).localizedStringForPushNotification()
@@ -242,6 +254,18 @@ extension ZMLocalNote {
         
         func shouldCreateNotification() -> Bool {
             return conversation != nil
+        }
+        
+        func titleText() -> String? {
+            guard let conversation = conversation else { return nil }
+            var title = conversation.displayName
+            
+            if let moc = conversation.managedObjectContext,
+                let teamName = ZMUser.selfUser(in: moc).team?.name {
+                title += " in \(teamName)"
+            }
+            
+            return title
         }
         
         func bodyText() -> String {

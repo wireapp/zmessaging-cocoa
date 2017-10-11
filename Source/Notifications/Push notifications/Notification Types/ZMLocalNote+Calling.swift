@@ -52,6 +52,18 @@ extension ZMLocalNote {
             }
         }
         
+        func titleText() -> String? {
+            guard let conversation = conversation else { return nil }
+            var title = conversation.displayName
+            
+            if let moc = conversation.managedObjectContext,
+                let teamName = ZMUser.selfUser(in: moc).team?.name {
+                title += " in \(teamName)"
+            }
+            
+            return title
+        }
+        
         func bodyText() -> String {
             
             var text: String?
