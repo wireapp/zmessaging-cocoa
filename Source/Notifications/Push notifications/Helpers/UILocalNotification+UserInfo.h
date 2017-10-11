@@ -23,6 +23,14 @@
 @class ZMUpdateEvent;
 @class ZMOTRMessage;
 
+NS_ASSUME_NONNULL_BEGIN
+extern NSString * const ConversationIDStringKey;
+extern NSString * const MessageNonceIDStringKey;
+extern NSString * const SenderIDStringKey;
+extern NSString * const EventTimeKey;
+extern NSString * const SelfUserIDStringKey;
+NS_ASSUME_NONNULL_END
+
 @interface UILocalNotification (UserInfo)
 
 @property (readonly, copy, nullable) NSUUID *zm_conversationRemoteID;
