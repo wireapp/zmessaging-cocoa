@@ -128,24 +128,6 @@ import WireTransport
 // Event Notifications
 public extension ZMLocalNotificationSet {
 
-    public func copyExistingEventNotification(_ event: ZMUpdateEvent, conversation: ZMConversation) -> ZMLocalNotificationForEvent? {        
-//        let notificationsCopy = notifications
-//        for note in notificationsCopy {
-//            if let note = note as? ZMLocalNotificationForEvent , note is CopyableEventNotification {
-//                if let copied = (note as! CopyableEventNotification).copyByAddingEvent(event, conversation: conversation) as? ZMLocalNotificationForEvent {
-//                    if note.shouldBeDiscarded {
-//                        _ = remove(note)
-//                    }
-//                    else {
-//                        replaceObject(note, newObject: copied)
-//                    }
-//                    return copied
-//                }
-//            }
-//        }
-        return nil
-    }
-    
     public func cancelNotificationForIncomingCall(_ conversation: ZMConversation) {
         var toRemove = Set<ZMLocalNote>()
         self.notifications.forEach{ note in
