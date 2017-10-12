@@ -39,18 +39,33 @@ extension LocalNotificationDispatcher: PushMessageHandler {
         localNotificationBuffer.removeAll()
     }
     
+    private var applicationState : UIApplicationState {
+        let group = DispatchGroup()
+        var applicationState :UIApplicationState?
+        
+        group.enter()
+        DispatchQueue.main.async {
+            applicationState = self.application.applicationState
+            group.leave()
+        }
+        
+        let _ = group.wait()
+        
+        return applicationState! ///FIXME: !!
+    }
+    
     /// Dispatches the given message notification depending on the current application
     /// state. If the app is active, then the notification is directed to the user
     /// session, otherwise it is directed to the system via UIApplication.
     ///
     func scheduleUILocalNotification(_ note: UILocalNotification) {
-        if application.applicationState == .active {
-            localNotificationBuffer.append(note)
+        if self.applicationState == .active {
+            self.localNotificationBuffer.append(note)
         } else {
-            application.scheduleLocalNotification(note)
+            self.application.scheduleLocalNotification(note)
         }
     }
-
+    
     // Processes ZMOTRMessages and ZMSystemMessages
     @objc(processMessage:) public func process(_ message: ZMMessage) {
         if let message = message as? ZMOTRMessage {
@@ -77,7 +92,7 @@ extension LocalNotificationDispatcher: PushMessageHandler {
 
 // MARK: ZMOTRMessage
 extension LocalNotificationDispatcher {
-
+    
     fileprivate func localNotificationForMessage(_ message : ZMOTRMessage) -> ZMLocalNotificationForMessage? {
         // We don't want to create duplicate notifications (e.g. for images)
         for note in messageNotifications.notifications where note is ZMLocalNotificationForMessage {

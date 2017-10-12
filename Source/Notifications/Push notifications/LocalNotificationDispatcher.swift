@@ -72,16 +72,31 @@ public class LocalNotificationDispatcher: NSObject {
             self?.cancelAllNotifications()
         }
     }
-
+    
     deinit {
-         precondition(self.isTornDown)
+        precondition(self.isTornDown)
     }
 }
 
 extension LocalNotificationDispatcher: ZMEventConsumer {
     
+    private var applicationState : UIApplicationState {
+        let group = DispatchGroup()
+        var applicationState :UIApplicationState?
+        
+        group.enter()
+        DispatchQueue.main.async {
+            applicationState = self.application.applicationState
+            group.leave()
+        }
+        
+        let _ = group.wait()
+        
+        return applicationState! ///FIXME: !!
+    }
+    
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
-        if self.application.applicationState != .background {
+        if self.applicationState != .background {
             return
         }
         
@@ -105,8 +120,8 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
             // Then create the notification
             guard let note = self.notification(event: $0, conversationMap: conversationMap),
                 let localNote = note.uiNotifications.last
-            else {
-                return
+                else {
+                    return
             }
             self.application.scheduleLocalNotification(localNote)
         }
@@ -140,10 +155,10 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
         }
         
         if let newNote = ZMLocalNotificationForEvent.notification(forEvent: event,
-                                                               conversation: conversation,
-                                                               managedObjectContext: self.syncMOC,
-                                                               application: self.application,
-                                                               sessionTracker: self.sessionTracker) {
+                                                                  conversation: conversation,
+                                                                  managedObjectContext: self.syncMOC,
+                                                                  application: self.application,
+                                                                  sessionTracker: self.sessionTracker) {
             self.eventNotifications.addObject(newNote)
             return newNote
         }
@@ -211,7 +226,7 @@ extension LocalNotificationDispatcher {
             }
         }
     }
-
-
+    
+    
 }
 
