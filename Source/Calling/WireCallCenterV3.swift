@@ -817,10 +817,12 @@ public struct CallEvent {
         if let snapshot = participantSnapshots[conversationId] {
             snapshot.callParticipantsChanged(newParticipants: participants)
         } else if participants.count > 0 {
-            participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
-                                                                                     selfUserID: selfUserId,
-                                                                                     members: participants,
-                                                                                     callCenter: self)
+            let snaphot = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
+                                                            selfUserID: selfUserId,
+                                                            members: [],
+                                                            callCenter: self)
+            participantSnapshots[conversationId] = snaphot
+            snaphot.callParticipantsChanged(newParticipants: participants)
         }
     }
     
