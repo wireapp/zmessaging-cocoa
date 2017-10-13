@@ -282,11 +282,11 @@ extension CallKitDelegate : CXProviderDelegate {
         calls[action.callUUID] = callObserver
         
         callObserver.onAnswered = {
-            provider.reportOutgoingCall(with: action.uuid, startedConnectingAt: Date())
+            provider.reportOutgoingCall(with: action.callUUID, startedConnectingAt: Date())
         }
         
         callObserver.onEstablished = {
-            provider.reportOutgoingCall(with: action.uuid, connectedAt: Date())
+            provider.reportOutgoingCall(with: action.callUUID, connectedAt: Date())
         }
         
         mediaManager?.setupAudioDevice()
