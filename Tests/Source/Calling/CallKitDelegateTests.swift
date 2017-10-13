@@ -137,20 +137,19 @@ class MockStartCallAction : CXStartCallAction {
 @available(iOS 10.0, *)
 class MockProvider : CXProvider {
     
-    var isConnected : Bool = false
-    var hasStartedConnecting = false
-    
+    var connectingCalls : Set<UUID> = Set()
+    var connectedCalls : Set<UUID> = Set()
     
     convenience init(foo: Bool) {
         self.init(configuration: CXProviderConfiguration(localizedName: "test"))
     }
     
     override func reportOutgoingCall(with UUID: UUID, startedConnectingAt dateStartedConnecting: Date?) {
-        hasStartedConnecting = true
+        connectingCalls.insert(UUID)
     }
     
     override func reportOutgoingCall(with UUID: UUID, connectedAt dateConnected: Date?) {
-        isConnected = true
+        connectedCalls.insert(UUID)
     }
     
 }
@@ -453,7 +452,7 @@ class CallKitDelegateTest: MessagingTest {
         mockWireCallCenterV3.update(callState: .answered(degraded: false), conversationId: conversation.remoteIdentifier!)
         
         // then
-        XCTAssertTrue(provider.hasStartedConnecting)
+        XCTAssertTrue(provider.connectingCalls.contains(conversation.remoteIdentifier!))
     }
     
     func testThatStartCallActionUpdatesWhenTheCallHasConnected() {
@@ -467,7 +466,7 @@ class CallKitDelegateTest: MessagingTest {
         mockWireCallCenterV3.update(callState: .establishedDataChannel, conversationId: conversation.remoteIdentifier!)
         
         // then
-        XCTAssertTrue(provider.isConnected)
+        XCTAssertTrue(provider.connectedCalls.contains(conversation.remoteIdentifier!))
     }
     
     // Public API - report end on outgoing call
