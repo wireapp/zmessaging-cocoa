@@ -333,7 +333,7 @@ class CallingV3Tests : IntegrationTest {
         participantsChanged(members: [(user: otherUser, establishedFlow: false)])
         
         // then
-        XCTAssertEqual(participantObserver.changes.count, 0)
+        XCTAssertEqual(participantObserver.changes.count, 1)
         
         // (3) flow aquired
         //
@@ -341,7 +341,7 @@ class CallingV3Tests : IntegrationTest {
         participantsChanged(members: [(user: otherUser, establishedFlow: true)])
         
         // then
-        XCTAssertEqual(participantObserver.changes.count, 1)
+        XCTAssertEqual(participantObserver.changes.count, 2)
         if let partInfo =  participantObserver.changes.last {
             XCTAssertEqual(partInfo.insertedIndexes, [])
             XCTAssertEqual(partInfo.updatedIndexes, [0])
