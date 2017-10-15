@@ -87,7 +87,8 @@ extension ZMLocalNote {
                 title += " in \(teamName)"
             }
             
-            return title
+            let trimmed = title.trimmingCharacters(in: CharacterSet(charactersIn: " …"))
+            return trimmed.isEmpty ? nil : trimmed
         }
         
         func bodyText() -> String {
@@ -265,7 +266,8 @@ extension ZMLocalNote {
                 title += " in \(teamName)"
             }
             
-            return title
+            let trimmed = title.trimmingCharacters(in: CharacterSet(charactersIn: " …"))
+            return trimmed.isEmpty ? nil : trimmed
         }
         
         func bodyText() -> String {

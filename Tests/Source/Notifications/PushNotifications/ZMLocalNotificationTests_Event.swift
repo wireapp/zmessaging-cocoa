@@ -1,0 +1,423 @@
+//
+// Wire
+// Copyright (C) 2017 Wire Swiss GmbH
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
+//
+
+import XCTest
+@testable import WireSyncEngine
+
+class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
+    
+    // MARK: - Conversation Create
+    
+    func testThatItCreatesConversationCreateNotification() {
+        
+        // "push.notification.conversation.create" = "%1$@ created a group conversation with you"
+        
+        // when
+        let note = noteWithPayload(nil, from: sender, in: groupConversation, type: EventConversationCreate)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.body, "Super User created a group conversation with you")
+    }
+    
+    func testThatItCreatesConversationCreateNotification_NoUsername() {
+        
+        // "push.notification.conversation.create.nousername" = "Someone created a group conversation with you"
+        
+        // when
+        let note = noteWithPayload(nil, fromUserID: nil, in: groupConversation, type: EventConversationCreate)
+        
+         // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.body, "Someone created a group conversation with you")
+    }
+    
+    // MARK: - Connection
+    
+    // MARK: Helpers
+    
+    func payloadForConnectionRequest(to remoteID: UUID, status: String) -> [AnyHashable: Any] {
+        return [
+            "connection": [
+                "conversation": oneOnOneConversation.remoteIdentifier!.transportString(),
+                "message": "Please add me",
+                "from": UUID.create().transportString(),
+                "status": status,
+                "to": remoteID.transportString()
+            ],
+            "type": "user.connection",
+            "user": ["name": "Special User"]
+        ]
+    }
+    
+    func noteForConnectionRequestEvent(to user: ZMUser?, status: String) -> ZMLocalNote? {
+        let remoteID = user?.remoteIdentifier ?? UUID.create()
+        var note: ZMLocalNote?
+        let payload = payloadForConnectionRequest(to: remoteID, status: status)
+        
+        syncMOC.performGroupedBlockAndWait {
+            if let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil) {
+                note = ZMLocalNote(event: event, conversation: self.oneOnOneConversation, managedObjectContext: self.syncMOC)
+            }
+        }
+        return note
+    }
+    
+    // MARK: Tests
+    
+    func testThatItCreatesNewConnectionNotification() {
+        
+        // given
+        let senderID = UUID.create()
+        let payload = [
+            "user": ["id": senderID.transportString(), "name": "Stimpy"],
+            "type": EventNewConnection,
+            "time": Date().transportString()
+        ] as ZMTransportData
+        
+        let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil)
+        var note: ZMLocalNote?
+        
+        // when
+        syncMOC.performGroupedBlockAndWait {
+            if let event = event {
+                note = ZMLocalNote(event: event, conversation: self.oneOnOneConversation, managedObjectContext: self.syncMOC)
+            }
+        }
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.body, "Stimpy just joined Wire")
+        XCTAssertEqual(note!.senderID, senderID)
+    }
+    
+    func testThatItCreatesConnectionRequestNotificationsCorrectly() {
+        //    "push.notification.connection.request" = "%@ wants to connect"
+        //    "push.notification.connection.request.nousername" = "Someone wants to connect"
+        //
+        //    "push.notification.connection.accepted" = "%@ accepted your connection request"
+        //    "push.notification.connection.accepted.nousername" = "Your connection request was accepted"
+        
+        // given
+        let accepted = "accepted"
+        let pending = "pending"
+        
+        let cases = [
+            "You and Super User are now connected": [sender, accepted],
+            "You and Special User are now connected": [accepted],
+            "Super User wants to connect": [sender, pending],
+            "Special User wants to connect": [pending]
+        ]
+        
+        for (expectedBody, arguments) in cases {
+            // when
+            var note: ZMLocalNote?
+            if arguments.count == 2 {
+                note = noteForConnectionRequestEvent(to: arguments[0] as? ZMUser, status: arguments[1] as! String)
+            } else {
+                note = noteForConnectionRequestEvent(to: nil, status: arguments[0] as! String)
+            }
+            
+            // then
+            XCTAssertNotNil(note)
+            XCTAssertEqual(note!.body, expectedBody)
+        }
+    }
+    
+    func testThatItDoesNotCreateAConnectionAcceptedNotificationForAWrongStatus() {
+        
+        // given
+        let status = "blablabla"
+        
+        // when
+        let note = noteForConnectionRequestEvent(to: nil, status: status)
+        
+        // then
+        XCTAssertNil(note)
+    }
+    
+    // MARK: - Reactions
+    
+    // MARK: Helpers
+    
+    func createUpdateEvent(_ nonce: UUID, conversationID: UUID, genericMessage: ZMGenericMessage, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+        let payload : [String : Any] = [
+            "id": UUID.create().transportString(),
+            "conversation": conversationID.transportString(),
+            "from": senderID.transportString(),
+            "time": Date().transportString(),
+            "data": ["text": genericMessage.data().base64String()],
+            "type": "conversation.otr-message-add"
+        ]
+        
+        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
+    }
+    
+    func reactionEventInOneOnOneConversation() -> ZMUpdateEvent {
+        let message = oneOnOneConversation.appendMessage(withText: "text") as! ZMClientMessage
+        let reaction = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let event = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction, senderID: sender.remoteIdentifier!)
+        return event
+    }
+    
+    func alertBody(_ conversation: ZMConversation, aSender: ZMUser) -> String? {
+        
+        // given
+        let message = conversation.appendMessage(withText: "text") as! ZMClientMessage
+        let reaction = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let event = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction, senderID: aSender.remoteIdentifier!)
+        
+        // when
+        let note = ZMLocalNote(event: event, conversation: conversation, managedObjectContext: syncMOC)
+        
+        // then
+        XCTAssertNotNil(note)
+        return note!.body
+    }
+    
+    func note(_ conversation: ZMConversation, aSender: ZMUser) -> ZMLocalNote? {
+        
+        // given
+        let message = conversation.appendMessage(withText: "text") as! ZMClientMessage
+        let reaction = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let event = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction, senderID: aSender.remoteIdentifier!)
+        
+        // when
+        let note = ZMLocalNote(event: event, conversation: conversation, managedObjectContext: syncMOC)
+        
+        return note
+    }
+    
+    // MARK: Tests
+    
+    func testThatItCreatesANotifcationForAReaction_SelfUserIsSenderOfOriginalMessage_OtherUserSendsLike(){
+        
+        // given
+        let event = reactionEventInOneOnOneConversation()
+        
+        // when
+        let note = ZMLocalNote(event: event, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.body, "❤️ your message")
+    }
+    
+    func testThatItDoesNotCreateANotifcationWhenTheConversationIsSilenced(){
+        
+        // given
+        oneOnOneConversation.isSilenced = true
+        let event = reactionEventInOneOnOneConversation()
+        
+        // when
+        let note = ZMLocalNote(event: event, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
+        
+        // then
+        XCTAssertNil(note)
+    }
+    
+    func testThatItSavesTheSenderOfANotification() {
+        
+        // given
+        let event = reactionEventInOneOnOneConversation()
+        
+        // when
+        let note = ZMLocalNote(event: event, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.senderID, sender.remoteIdentifier)
+    }
+    
+    func testThatItSavesTheConversationOfANotification() {
+        
+        // given
+        let event = reactionEventInOneOnOneConversation()
+        
+        // when
+        let note = ZMLocalNote(event: event, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.conversationID, oneOnOneConversation.remoteIdentifier)
+    }
+    
+    func testThatItSavesTheMessageNonce() {
+        
+        // given
+        let message = oneOnOneConversation.appendMessage(withText: "text") as! ZMClientMessage
+        let genericNonce = UUID.create().transportString()
+        let reaction = ZMGenericMessage(emojiString: "liked", messageID: message.nonce.transportString(), nonce: genericNonce)
+        let eventNonce = UUID.create()
+        let event = createUpdateEvent(eventNonce, conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction, senderID: sender.remoteIdentifier!)
+        
+        // when
+        let note = ZMLocalNote(event: event, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.messageNonce, message.nonce)
+    }
+    
+    func testThatItCreatesTheCorrectAlertBody_ConvWithoutName(){
+        guard let alertBody = alertBody(groupConversationWithoutName, aSender: otherUser1) else { return XCTFail()}
+        XCTAssertEqual(alertBody, "Other User1 ❤️ your message in a conversation")
+    }
+    
+    func testThatItCreatesTheCorrectAlertBody(){
+        guard let alertBody = alertBody(groupConversation, aSender: otherUser1) else { return XCTFail()}
+        XCTAssertEqual(alertBody, "Other User1 ❤️ your message")
+    }
+    
+    func testThatItCreatesTheCorrectAlertBody_UnknownUser(){
+        otherUser1.name = ""
+        guard let alertBody = alertBody(groupConversation, aSender: otherUser1) else { return XCTFail()}
+        XCTAssertEqual(alertBody, "Someone ❤️ your message")
+    }
+    
+    func testThatItCreatesTheCorrectAlertBody_UnknownUser_UnknownConversationName(){
+        otherUser1.name = ""
+        guard let alertBody = alertBody(groupConversationWithoutName, aSender: otherUser1) else { return XCTFail()}
+        XCTAssertEqual(alertBody, "Someone ❤️ your message in a conversation")
+    }
+    
+    func testThatItCreatesTheCorrectAlertBody_UnknownUser_OneOnOneConv(){
+        otherUser1.name = ""
+        guard let alertBody = alertBody(oneOnOneConversation, aSender: otherUser1) else { return XCTFail()}
+        XCTAssertEqual(alertBody, "Someone ❤️ your message")
+    }
+    
+    func testThatItDoesNotCreateANotifcationForAnUnlikeReaction(){
+        
+        // given
+        let message = oneOnOneConversation.appendMessage(withText: "text") as! ZMClientMessage
+        let reaction = ZMGenericMessage(emojiString: "", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let event = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction, senderID: sender.remoteIdentifier!)
+        
+        // when
+        let note = ZMLocalNote(event: event, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
+        
+        // then
+        XCTAssertNil(note)
+    }
+    
+    func testThatItDoesNotCreateANotificationForAReaction_SelfUserIsSenderOfOriginalMessage_SelfUserSendsLike(){
+
+        // given
+        let message = oneOnOneConversation.appendMessage(withText: "text") as! ZMClientMessage
+        let reaction = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let event = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction, senderID: selfUser.remoteIdentifier!)
+        
+        // when
+        let note = ZMLocalNote(event: event, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
+        
+        // then
+        XCTAssertNil(note)
+    }
+    
+    func testThatItDoesNotCreateANotificationForAReaction_OtherUserIsSenderOfOriginalMessage_OtherUserSendsLike(){
+        
+        // given
+        let message = oneOnOneConversation.appendMessage(withText: "text") as! ZMClientMessage
+        message.sender = otherUser1
+        
+        let reaction = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let event = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction, senderID: sender.remoteIdentifier!)
+        
+        // when
+        let note = ZMLocalNote(event: event, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
+        
+        // then
+        XCTAssertNil(note)
+    }
+    
+    // TODO: Test this in NotificationDispatcher
+    func testThatItCancelsNotificationWhenUserDeletesLike(){
+        
+        // given
+        let message = oneOnOneConversation.appendMessage(withText: "text") as! ZMClientMessage
+        let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
+        
+        let event1 = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction1, senderID: sender.remoteIdentifier!)
+        let event2 = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction2, senderID: sender.remoteIdentifier!)
+        
+        // when
+        let note1 = ZMLocalNote(event: event1, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
+        XCTAssertNotNil(note1)
+        application.scheduleLocalNotification(note1!.uiLocalNotification)
+        
+        let note2 = ZMLocalNote(event: event2, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
+        
+        // then
+        XCTAssertNotNil(note1)
+        XCTAssertNil(note2)
+        XCTAssertTrue(application.cancelledLocalNotifications.contains(note1!.uiLocalNotification))
+    }
+    
+    // TODO: Test this in NotificationDispatcher
+    func testThatItDoesNotCancelNotificationWhenADifferentUserDeletesLike(){
+        
+        // given
+        let message = oneOnOneConversation.appendMessage(withText: "text") as! ZMClientMessage
+        let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
+        
+        let event1 = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction1, senderID: sender.remoteIdentifier!)
+        let event2 = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction2, senderID: otherUser1.remoteIdentifier!)
+        
+        // when
+        let note1 = ZMLocalNote(event: event1, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
+        let note2 = ZMLocalNote(event: event2, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
+        
+        // then
+        XCTAssertNotNil(note1)
+        XCTAssertFalse(self.application.cancelledLocalNotifications.contains(note1!.uiLocalNotification))
+        XCTAssertNil(note2)
+    }
+    
+    func testThatItAddsATitleIfTheUserIsPartOfATeam() {
+        self.syncMOC.performGroupedBlockAndWait {
+            
+            // given
+            let team = Team.insertNewObject(in: self.syncMOC)
+            team.name = "Wire Amazing Team"
+            let user = ZMUser.selfUser(in: self.syncMOC)
+            _ = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
+            self.syncMOC.saveOrRollback()
+            XCTAssertNotNil(user.team)
+            
+            // when
+            let note = self.note(self.oneOnOneConversation, aSender: self.sender)
+            
+            // then
+            XCTAssertNotNil(note)
+            XCTAssertEqual(note!.title, "Super User in \(team.name!)")
+        }
+    }
+    
+    func testThatItDoesNotAddATitleIfTheUserIsNotPartOfATeam() {
+        
+        // when
+        let note = self.note(oneOnOneConversation, aSender: sender)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.title, "Super User")
+    }
+}

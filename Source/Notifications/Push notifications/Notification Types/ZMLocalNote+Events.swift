@@ -110,7 +110,8 @@ fileprivate class EventNotificationConstructor: NotificationConstructor {
             title = "\(conversationName) \(title)"
         }
         
-        return title.isEmpty ? nil : title.trimmingCharacters(in: .whitespaces)
+        let trimmed = title.trimmingCharacters(in: CharacterSet(charactersIn: " …"))
+        return trimmed.isEmpty ? nil : trimmed
     }
     
     func bodyText() -> String {
