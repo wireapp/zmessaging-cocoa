@@ -33,6 +33,10 @@ extension ZMLocalNote {
         let sender: ZMUser
         var conversation: ZMConversation?
         
+        let ignoredCallStates : [CallState] = [
+            .established, .answered(degraded: false), .outgoing(degraded: false), .none, .unknown
+        ]
+        
         init(callState: CallState, sender: ZMUser, conversation: ZMConversation) {
             self.callState = callState
             self.sender = sender
@@ -45,7 +49,7 @@ extension ZMLocalNote {
                 return false
             case .incoming(video: _, shouldRing: let shouldRing, degraded: _):
                 return shouldRing
-            case .terminating, .none:
+            case .terminating:
                 return true
             default:
                 return false
