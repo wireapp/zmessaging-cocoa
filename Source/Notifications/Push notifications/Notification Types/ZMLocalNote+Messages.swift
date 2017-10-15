@@ -106,12 +106,8 @@ extension ZMLocalNote {
                 default:
                     text = contentType.localizationString?.localizedString(with: sender, conversation: conversation)
                 }
-                
-                if nil != text {
-                    text = text!.escapingPercentageSymbols()
-                }
-                
-                return text ?? ""
+                                
+                return text?.trimmingCharacters(in: .whitespaces) ?? ""
             }
         }
         
