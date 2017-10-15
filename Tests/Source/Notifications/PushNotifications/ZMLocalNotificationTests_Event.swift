@@ -345,52 +345,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         // then
         XCTAssertNil(note)
     }
-    
-    // TODO: Test this in NotificationDispatcher
-    func testThatItCancelsNotificationWhenUserDeletesLike(){
         
-        // given
-        let message = oneOnOneConversation.appendMessage(withText: "text") as! ZMClientMessage
-        let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
-        let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
-        
-        let event1 = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction1, senderID: sender.remoteIdentifier!)
-        let event2 = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction2, senderID: sender.remoteIdentifier!)
-        
-        // when
-        let note1 = ZMLocalNote(event: event1, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
-        XCTAssertNotNil(note1)
-        application.scheduleLocalNotification(note1!.uiLocalNotification)
-        
-        let note2 = ZMLocalNote(event: event2, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
-        
-        // then
-        XCTAssertNotNil(note1)
-        XCTAssertNil(note2)
-        XCTAssertTrue(application.cancelledLocalNotifications.contains(note1!.uiLocalNotification))
-    }
-    
-    // TODO: Test this in NotificationDispatcher
-    func testThatItDoesNotCancelNotificationWhenADifferentUserDeletesLike(){
-        
-        // given
-        let message = oneOnOneConversation.appendMessage(withText: "text") as! ZMClientMessage
-        let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
-        let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
-        
-        let event1 = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction1, senderID: sender.remoteIdentifier!)
-        let event2 = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction2, senderID: otherUser1.remoteIdentifier!)
-        
-        // when
-        let note1 = ZMLocalNote(event: event1, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
-        let note2 = ZMLocalNote(event: event2, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
-        
-        // then
-        XCTAssertNotNil(note1)
-        XCTAssertFalse(self.application.cancelledLocalNotifications.contains(note1!.uiLocalNotification))
-        XCTAssertNil(note2)
-    }
-    
     func testThatItAddsATitleIfTheUserIsPartOfATeam() {
         self.syncMOC.performGroupedBlockAndWait {
             

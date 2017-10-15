@@ -98,7 +98,7 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
         let incomingCallNotification = application.scheduledLocalNotifications.first!
         
         // when
-        sut.process(callState: .terminating(reason: .canceled), in: conversation, sender: sender)
+        sut.processMissedCall(in: conversation, sender: sender)
         
         // then
         XCTAssertEqual(sut.callingNotifications.notifications.count, 1)

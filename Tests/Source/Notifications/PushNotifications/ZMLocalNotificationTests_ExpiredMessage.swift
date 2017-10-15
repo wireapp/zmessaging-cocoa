@@ -23,6 +23,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
     
     var userWithNoName: ZMUser!
     var userWithName: ZMUser!
+    var otherUser: ZMUser!
     var oneOnOneConversation: ZMConversation!
     var groupConversation: ZMConversation!
     var groupConversationWithoutName: ZMConversation!
@@ -38,6 +39,9 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             
             self.userWithNoName = ZMUser.insertNewObject(in: self.syncMOC)
             
+            self.otherUser = ZMUser.insertNewObject(in: self.syncMOC)
+            self.otherUser.name = "Bob"
+            
             self.oneOnOneConversation = ZMConversation.insertNewObject(in: self.syncMOC)
             self.oneOnOneConversation.remoteIdentifier = UUID.create()
             self.oneOnOneConversation.conversationType = .oneOnOne
@@ -50,6 +54,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             self.groupConversationWithoutName = ZMConversation.insertNewObject(in: self.syncMOC)
             self.groupConversationWithoutName.remoteIdentifier = UUID.create()
             self.groupConversationWithoutName.conversationType = .group
+            self.groupConversationWithoutName.addParticipants([self.userWithName, self.otherUser])
             
             self.syncMOC.saveOrRollback()
         }
@@ -127,7 +132,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             
             // then
             XCTAssertNotNil(note)
-            XCTAssertNil(note!.title)
+            XCTAssertTrue(note!.title == "Karl, Bob" || note!.title == "Bob, Karl")
             XCTAssertEqual(note!.body, "Unable to send a message")
         }
     }
