@@ -55,22 +55,15 @@ public enum ZMLocalNotificationContentType : Equatable {
     
     var localizationString : String? {
         switch self {
-        case .text:
-            return ZMPushStringMessageAdd
-        case .image:
-            return ZMPushStringImageAdd
-        case .video:
-            return ZMPushStringVideoAdd
-        case .audio:
-            return ZMPushStringAudioAdd
-        case .location:
-            return ZMPushStringLocationAdd
-        case .fileUpload:
-            return ZMPushStringFileAdd
-        case .knock:
-            return ZMPushStringKnock
-        default:
-            return nil
+        case .text:         return ZMPushStringMessageAdd
+        case .image:        return ZMPushStringImageAdd
+        case .video:        return ZMPushStringVideoAdd
+        case .audio:        return ZMPushStringAudioAdd
+        case .location:     return ZMPushStringLocationAdd
+        case .fileUpload:   return ZMPushStringFileAdd
+        case .knock:        return ZMPushStringKnock
+        case .undefined:    return ZMPushStringUnknownAdd
+        default:            return nil
         }
     }
 }
