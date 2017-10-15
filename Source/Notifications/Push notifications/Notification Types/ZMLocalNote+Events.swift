@@ -133,7 +133,7 @@ fileprivate class EventNotificationConstructor: NotificationConstructor {
         var userInfo = [AnyHashable: Any]()
         userInfo[SelfUserIDStringKey] = selfUserID.transportString()
         
-        if let senderID = sender?.remoteIdentifier {
+        if let senderID = event.senderUUID() {
             userInfo[SenderIDStringKey] = senderID.transportString()
         }
         
@@ -191,6 +191,13 @@ private class ReactionEventNotificationConstructor: EventNotificationConstructor
         else {
             return ZMPushStringReaction.localizedString(with: sender, conversation: conversation, emoji: emoji!)
         }
+    }
+    
+    override func userInfo() -> [AnyHashable : Any]? {
+        // we want to store the nonce of the message being reacted to, not the event nonce
+        var info = super.userInfo()
+        info?[MessageNonceIDStringKey] = nonce
+        return info
     }
 }
 
