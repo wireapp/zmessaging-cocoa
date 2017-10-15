@@ -171,7 +171,7 @@ extension ZMLocalNote {
         let systemMessageType: ZMSystemMessageType
         
         private var supportedMessageTypes: [ZMSystemMessageType] {
-            return [.participantsRemoved, .participantsAdded, .connectionRequest]
+            return [.participantsRemoved, .participantsAdded]
         }
         
         init(message: ZMSystemMessage) {
@@ -185,11 +185,8 @@ extension ZMLocalNote {
             let message = self.message as! ZMSystemMessage
             
             // we don't want to create notifications when other people join or leave conversation
-            let addOrRemove = [.participantsAdded, .participantsRemoved].contains(systemMessageType)
             let forSelf = message.users.count == 1 && message.users.first!.isSelfUser
-            if addOrRemove && !forSelf {
-                return false
-            }
+            if !forSelf { return false }
                         
             return super.shouldCreateNotification()
         }
@@ -198,8 +195,6 @@ extension ZMLocalNote {
             switch systemMessageType {
             case .participantsAdded, .participantsRemoved:
                 return alertBodyForParticipantEvents()
-            case .connectionRequest:
-                return (ZMPushStringConnectionRequest as NSString).localizedString(withUserName: (message as! ZMSystemMessage).text!)
             default:
                 // this will never be returned
                 return ""
@@ -215,7 +210,6 @@ extension ZMLocalNote {
             let key = isLeaveEvent ? ZMPushStringMemberLeave : ZMPushStringMemberJoin
             return key.localizedString(with: message.sender, conversation: message.conversation, otherUser: selfUser)
         }
-
     }
 
 }
