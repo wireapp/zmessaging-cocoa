@@ -42,25 +42,25 @@ public extension NSString {
     public func localizationInfo(forUser user: ZMUser, conversation: ZMConversation) -> LocalizationInfo {
         
         let userName = user.name
-        let convName = conversation.displayName
+        let convName = conversation.userDefinedName
         var arguments = [String]()
         var keyComponents = [String]()
         
         let convTypeKey = (conversation.conversationType != .oneOnOne) ? GroupKey : OneOnOneKey
         keyComponents.append(convTypeKey)
         
-        // we only want the user name if we're in a group conversation, since
-        // otherwise the sender name will be displayed in the notification title
-        if conversation.conversationType == .group {
-            if let userName = userName, !userName.isEmpty {
+        if let userName = userName, !userName.isEmpty {
+            if conversation.conversationType == .group {
+                // we only want the user name if we're in a group conversation, since
+                // otherwise the sender name will be displayed in the notification title
                 arguments.append(userName)
-            } else {
-                keyComponents.append(NoUserNameKey)
             }
+        } else {
+            keyComponents.append(NoUserNameKey)
         }
         
-        if conversation.conversationType != .oneOnOne {
-            if convName.isEmpty {
+        if conversation.conversationType == .group {
+            if convName?.isEmpty ?? true {
                 keyComponents.append(NoConversationNameKey)
             }
         }
