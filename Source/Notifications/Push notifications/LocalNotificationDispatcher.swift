@@ -112,10 +112,10 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
     
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
         let eventsToForward = events.filter { return [.pushNotification, .webSocket].contains($0.source) }
-        self.didReceive(events: eventsToForward, conversationMap: prefetchResult?.conversationsByRemoteIdentifier ?? [:], id: events.first?.uuid)
+        self.didReceive(events: eventsToForward, conversationMap: prefetchResult?.conversationsByRemoteIdentifier ?? [:])
     }
     
-    func didReceive(events: [ZMUpdateEvent], conversationMap: [UUID : ZMConversation], id: UUID?) {
+    func didReceive(events: [ZMUpdateEvent], conversationMap: [UUID : ZMConversation]) {
         events.forEach { event in
             // Forward events to the session tracker which keeps track if the selfUser joined or not
             self.sessionTracker.addEvent(event)
@@ -124,6 +124,11 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
             if let conversationID = event.conversationUUID() {
                 // Fetch the conversation here to avoid refetching every time we try to create a notification
                 conversation = conversationMap[conversationID] ?? ZMConversation.fetch(withRemoteIdentifier: conversationID, in: self.syncMOC)
+            }
+            
+            // if it's an "unlike" reaction event, cancel the previous "like" notification for this message
+            if let receivedMessage = ZMGenericMessage(from: event), receivedMessage.hasReaction(), receivedMessage.reaction.emoji.isEmpty {
+                UUID(uuidString: receivedMessage.reaction.messageId).apply(eventNotifications.cancelCurrentNotifications(messageNonce:))
             }
             
             let note = ZMLocalNote(event: event, conversation: conversation, managedObjectContext: self.syncMOC)

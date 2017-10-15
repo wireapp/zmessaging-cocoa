@@ -99,10 +99,10 @@ import WireTransport
     
     /// Cancel all notifications created in this run
     internal func cancelCurrentNotifications(_ conversation: ZMConversation) {
-        guard self.notifications.count > 0 else { return }
+        guard notifications.count > 0 else { return }
         var toRemove = Set<ZMLocalNote>()
-        notifications.forEach{
-            if($0.conversationID == conversation.remoteIdentifier) {
+        notifications.forEach {
+            if ($0.conversationID == conversation.remoteIdentifier) {
                 toRemove.insert($0)
                 application?.cancelLocalNotification($0.uiLocalNotification)
             }
@@ -114,13 +114,26 @@ import WireTransport
     internal func cancelOldNotifications(_ conversation: ZMConversation) {
         guard oldNotifications.count > 0 else { return }
 
-        oldNotifications = oldNotifications.filter{
-            if($0.zm_conversationRemoteID == conversation.remoteIdentifier) {
+        oldNotifications = oldNotifications.filter {
+            if ($0.zm_conversationRemoteID == conversation.remoteIdentifier) {
                 application?.cancelLocalNotification($0)
                 return false
             }
             return true
         }
+    }
+    
+    /// Cancels all current notifications for the given message, if they exist
+    public func cancelCurrentNotifications(messageNonce: UUID) {
+        guard notifications.count > 0 else { return }
+        var toRemove = Set<ZMLocalNote>()
+        notifications.forEach {
+            if ($0.messageNonce == messageNonce) {
+                toRemove.insert($0)
+                application?.cancelLocalNotification($0.uiLocalNotification)
+            }
+        }
+        notifications.subtract(toRemove)
     }
 }
 
@@ -130,11 +143,11 @@ public extension ZMLocalNotificationSet {
 
     public func cancelNotificationForIncomingCall(_ conversation: ZMConversation) {
         var toRemove = Set<ZMLocalNote>()
-        self.notifications.forEach{ note in
+        notifications.forEach{ note in
             guard note.conversationID == conversation.remoteIdentifier, note.isCallingNotification else { return }
             toRemove.insert(note)
             application?.cancelLocalNotification(note.uiLocalNotification)
         }
-        self.notifications.subtract(toRemove)
+        notifications.subtract(toRemove)
     }
 }
