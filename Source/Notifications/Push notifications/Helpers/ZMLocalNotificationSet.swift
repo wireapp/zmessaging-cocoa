@@ -27,7 +27,7 @@ import WireTransport
 
 @objc public final class ZMLocalNotificationSet : NSObject  {
     
-    public fileprivate(set) var notifications : Set<ZMLocalNote> = Set() {
+    public fileprivate(set) var notifications : Set<ZMLocalNotification> = Set() {
         didSet {
             updateArchive()
         }
@@ -69,15 +69,15 @@ import WireTransport
         keyValueStore.enqueueDelayedSave() // we need to save otherwiese changes might not be stored
     }
     
-    public func remove(_ notification: ZMLocalNote) -> ZMLocalNote? {
+    public func remove(_ notification: ZMLocalNotification) -> ZMLocalNotification? {
         return notifications.remove(notification)
     }
     
-    public func addObject(_ notification: ZMLocalNote) {
+    public func addObject(_ notification: ZMLocalNotification) {
         notifications.insert(notification)
     }
     
-    public func replaceObject(_ toReplace: ZMLocalNote, newObject: ZMLocalNote) {
+    public func replaceObject(_ toReplace: ZMLocalNotification, newObject: ZMLocalNotification) {
         notifications.remove(toReplace)
         notifications.insert(newObject)
     }
@@ -100,7 +100,7 @@ import WireTransport
     /// Cancel all notifications created in this run
     internal func cancelCurrentNotifications(_ conversation: ZMConversation) {
         guard notifications.count > 0 else { return }
-        var toRemove = Set<ZMLocalNote>()
+        var toRemove = Set<ZMLocalNotification>()
         notifications.forEach {
             if ($0.conversationID == conversation.remoteIdentifier) {
                 toRemove.insert($0)
@@ -126,7 +126,7 @@ import WireTransport
     /// Cancels all current notifications for the given message, if they exist
     public func cancelCurrentNotifications(messageNonce: UUID) {
         guard notifications.count > 0 else { return }
-        var toRemove = Set<ZMLocalNote>()
+        var toRemove = Set<ZMLocalNotification>()
         notifications.forEach {
             if ($0.messageNonce == messageNonce) {
                 toRemove.insert($0)
@@ -142,7 +142,7 @@ import WireTransport
 public extension ZMLocalNotificationSet {
 
     public func cancelNotificationForIncomingCall(_ conversation: ZMConversation) {
-        var toRemove = Set<ZMLocalNote>()
+        var toRemove = Set<ZMLocalNotification>()
         notifications.forEach{ note in
             guard note.conversationID == conversation.remoteIdentifier, note.isCallingNotification else { return }
             toRemove.insert(note)

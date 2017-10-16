@@ -48,7 +48,7 @@ class ZMStoredLocalNotificationTests: MessagingTest {
         message.visibleInConversation = conversation
         uiMOC.saveOrRollback()
         
-        let note = ZMLocalNote(message: message)
+        let note = ZMLocalNotification(message: message)
         XCTAssertNotNil(note)
         
         // when

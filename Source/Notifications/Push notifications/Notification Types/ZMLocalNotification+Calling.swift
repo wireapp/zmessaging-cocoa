@@ -19,7 +19,7 @@
 
 // MARK: - Calling
 
-extension ZMLocalNote {
+extension ZMLocalNotification {
     
     convenience init?(callState: CallState, conversation: ZMConversation, sender: ZMUser) {
         guard conversation.remoteIdentifier != nil else { return nil }

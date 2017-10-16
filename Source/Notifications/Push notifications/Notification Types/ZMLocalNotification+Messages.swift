@@ -19,7 +19,7 @@
 
 // MARK: - Message
 
-extension ZMLocalNote {
+extension ZMLocalNotification {
     
     convenience init?(message: ZMMessage) {
         guard message.conversation?.remoteIdentifier  != nil else { return nil }
@@ -153,7 +153,7 @@ extension ZMLocalNote {
 
 // MARK: - System Message
 
-extension ZMLocalNote {
+extension ZMLocalNotification {
     
     convenience init?(systemMessage: ZMSystemMessage) {
         guard systemMessage.conversation?.remoteIdentifier != nil else { return nil }
@@ -213,7 +213,7 @@ extension ZMLocalNote {
 
 // MARK: - Failed Messages
 
-extension ZMLocalNote {
+extension ZMLocalNotification {
     
     convenience init?(expiredMessage: ZMMessage) {
         guard let conversation = expiredMessage.conversation else { return nil }

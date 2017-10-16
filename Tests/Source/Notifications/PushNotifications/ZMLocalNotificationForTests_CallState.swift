@@ -45,8 +45,8 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         }
     }
     
-    func note(for callState: CallState) -> ZMLocalNote? {
-        return ZMLocalNote(callState: callState, conversation: conversation, sender: sender)
+    func note(for callState: CallState) -> ZMLocalNotification? {
+        return ZMLocalNotification(callState: callState, conversation: conversation, sender: sender)
     }
     
     func testIncomingAudioCall() {

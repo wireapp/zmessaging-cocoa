@@ -40,32 +40,6 @@ public final class MockKVStore : NSObject, ZMSynchonizableKeyValueStore {
     
 }
 
-//class MockLocalNotification : ZMLocalNotification {
-//
-//    internal var notifications = [UILocalNotification]()
-//
-//    func add(_ notification: UILocalNotification){
-//        notifications.append(notification)
-//    }
-//
-//    override var uiNotifications : [UILocalNotification] {
-//        return notifications
-//    }
-//}
-//
-//class MockEventNotification : MockLocalNotification, EventNotification {
-//    var eventTypeUnderTest : ZMUpdateEventType?
-//    var ignoresSilencedState : Bool { return false }
-//    var eventType : ZMUpdateEventType { return eventTypeUnderTest ?? .unknown }
-//    unowned var application: ZMApplication
-//    unowned var managedObjectContext: NSManagedObjectContext
-//    required init?(events: [ZMUpdateEvent], conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: ZMApplication?) {
-//        self.managedObjectContext = managedObjectContext
-//        self.application = application!
-//        super.init(conversationID: conversation?.remoteIdentifier)
-//    }
-//}
-
 class ZMLocalNotificationSetTests : MessagingTest {
 
     var sut : ZMLocalNotificationSet!
@@ -110,7 +84,7 @@ class ZMLocalNotificationSetTests : MessagingTest {
     func testThatYouCanAddNAndRemoveNotifications(){
         
         // given
-        let note = ZMLocalNote(message: createMessage(with: "Hello Hello", in: conversation1))!
+        let note = ZMLocalNotification(message: createMessage(with: "Hello Hello", in: conversation1))!
 
         // when
         sut.addObject(note)
@@ -128,8 +102,8 @@ class ZMLocalNotificationSetTests : MessagingTest {
     func testThatItCancelsNotificationsOnlyForSpecificConversations(){
         
         // given
-        let note1 = ZMLocalNote(message: createMessage(with: "Hello Hello", in: conversation1))!
-        let note2 = ZMLocalNote(message: createMessage(with: "Bye BYe", in: conversation2))!
+        let note1 = ZMLocalNotification(message: createMessage(with: "Hello Hello", in: conversation1))!
+        let note2 = ZMLocalNotification(message: createMessage(with: "Bye BYe", in: conversation2))!
         
         // when
         sut.addObject(note1)
@@ -147,10 +121,10 @@ class ZMLocalNotificationSetTests : MessagingTest {
     func testThatItOnlyCancelsCallNotificationsIfSpecified(){
         
         // given
-        let note1 = ZMLocalNote(callState: .terminating(reason: .canceled), conversation: conversation1, sender: sender)!
+        let note1 = ZMLocalNotification(callState: .terminating(reason: .canceled), conversation: conversation1, sender: sender)!
         XCTAssertEqual(note1.conversationID, conversation1.remoteIdentifier)
 
-        let note2 = ZMLocalNote(message: createMessage(with: "Not A Call!", in: conversation1))!
+        let note2 = ZMLocalNotification(message: createMessage(with: "Not A Call!", in: conversation1))!
         XCTAssertEqual(note2.conversationID, conversation1.remoteIdentifier)
 
         sut.addObject(note1)
@@ -170,7 +144,7 @@ class ZMLocalNotificationSetTests : MessagingTest {
     func testThatItPersistsNotifications() {
         
         // given
-        let note = ZMLocalNote(message: createMessage(with: "Hello", in: conversation1))!
+        let note = ZMLocalNotification(message: createMessage(with: "Hello", in: conversation1))!
         sut.addObject(note)
 
         // when recreate sut to release non-persisted objects
@@ -183,7 +157,7 @@ class ZMLocalNotificationSetTests : MessagingTest {
     func testThatItResetsTheNotificationSetWhenCancellingAllNotifications(){
         
         // given
-        let note = ZMLocalNote(message: createMessage(with: "Hello", in: conversation1))!
+        let note = ZMLocalNotification(message: createMessage(with: "Hello", in: conversation1))!
         sut.addObject(note)
         
         // when

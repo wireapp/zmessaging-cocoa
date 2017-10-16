@@ -23,23 +23,23 @@ class ZMLocalNotificationTests_SystemMessage : ZMLocalNotificationTests {
     
     // MARK: - Helpers
     
-    func noteForParticipantAdded(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> ZMLocalNote? {
+    func noteForParticipantAdded(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> ZMLocalNotification? {
         let systemMessage = ZMSystemMessage.insertNewObject(in: syncMOC)
         systemMessage.systemMessageType = .participantsAdded
         systemMessage.users = otherUsers
         systemMessage.sender = aSender
         systemMessage.visibleInConversation = conversation
         
-        return ZMLocalNote(systemMessage: systemMessage)
+        return ZMLocalNotification(systemMessage: systemMessage)
     }
     
-    func noteForParticipantsRemoved(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> ZMLocalNote? {
+    func noteForParticipantsRemoved(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> ZMLocalNotification? {
         let systemMessage = ZMSystemMessage.insertNewObject(in: syncMOC)
         systemMessage.systemMessageType = .participantsRemoved
         systemMessage.users = otherUsers
         systemMessage.sender = aSender
         systemMessage.visibleInConversation = conversation
-        return ZMLocalNote(systemMessage: systemMessage)
+        return ZMLocalNotification(systemMessage: systemMessage)
     }
     
     // MARK: - Tests
@@ -54,7 +54,7 @@ class ZMLocalNotificationTests_SystemMessage : ZMLocalNotificationTests {
         systemMessage.visibleInConversation = groupConversation
 
         // when
-        let note = ZMLocalNote(systemMessage: systemMessage)
+        let note = ZMLocalNotification(systemMessage: systemMessage)
 
         // then
         XCTAssertNil(note)
@@ -94,7 +94,7 @@ class ZMLocalNotificationTests_SystemMessage : ZMLocalNotificationTests {
         systemMessage.visibleInConversation = groupConversation
 
         // when
-        let note = ZMLocalNote(systemMessage: systemMessage)
+        let note = ZMLocalNotification(systemMessage: systemMessage)
 
         // then
         XCTAssertNil(note)

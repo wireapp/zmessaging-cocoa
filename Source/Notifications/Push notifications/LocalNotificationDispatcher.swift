@@ -20,7 +20,7 @@ import Foundation
 
 @objc public protocol ForegroundNotificationsDelegate: NSObjectProtocol {
     
-    func didReceieveLocal(notification: ZMLocalNote, application: ZMApplication)
+    func didReceieveLocal(notification: ZMLocalNotification, application: ZMApplication)
 }
 
 /// Creates and cancels local notifications
@@ -41,7 +41,7 @@ public class LocalNotificationDispatcher: NSObject {
     private(set) var isTornDown: Bool
     private var observers: [Any] = []
     
-    var localNotificationBuffer = [ZMLocalNote]()
+    var localNotificationBuffer = [ZMLocalNotification]()
     
     @objc(initWithManagedObjectContext:foregroundNotificationDelegate:application:)
     public init(in managedObjectContext: NSManagedObjectContext,
@@ -99,7 +99,7 @@ public class LocalNotificationDispatcher: NSObject {
     /// state. If the app is active, then the notification is directed to the user
     /// session, otherwise it is directed to the system via UIApplication.
     ///
-    func scheduleLocalNotification(_ note: ZMLocalNote) {
+    func scheduleLocalNotification(_ note: ZMLocalNotification) {
         if application.applicationState == .active {
             localNotificationBuffer.append(note)
         } else {
@@ -131,7 +131,7 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
                 UUID(uuidString: receivedMessage.reaction.messageId).apply(eventNotifications.cancelCurrentNotifications(messageNonce:))
             }
             
-            let note = ZMLocalNote(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
+            let note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
             note.apply(eventNotifications.addObject)
             note.apply(scheduleLocalNotification)
         }
@@ -148,14 +148,14 @@ extension LocalNotificationDispatcher {
         if message.visibleInConversation == nil || message.conversation?.conversationType == .self {
             return
         }
-        let note = ZMLocalNote(expiredMessage: message)
+        let note = ZMLocalNotification(expiredMessage: message)
         note.apply(scheduleLocalNotification)
         note.apply(failedMessageNotifications.addObject)
     }
     
     /// Informs the user that a message in a conversation failed to send
     public func didFailToSendMessage(in conversation: ZMConversation) {
-        let note = ZMLocalNote(expiredMessageIn: conversation)
+        let note = ZMLocalNotification(expiredMessageIn: conversation)
         note.apply(scheduleLocalNotification)
         note.apply(failedMessageNotifications.addObject)
     }

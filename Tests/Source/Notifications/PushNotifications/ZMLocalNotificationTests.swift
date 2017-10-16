@@ -88,18 +88,18 @@ class ZMLocalNotificationTests: MessagingTest {
         return conversation
     }
     
-    func noteWithPayload(_ data: NSDictionary?, fromUserID: UUID?, in conversation: ZMConversation, type: String) -> ZMLocalNote? {
-        var note: ZMLocalNote?
+    func noteWithPayload(_ data: NSDictionary?, fromUserID: UUID?, in conversation: ZMConversation, type: String) -> ZMLocalNotification? {
+        var note: ZMLocalNotification?
         syncMOC.performGroupedBlockAndWait {
             let payload = self.payloadForEvent(in: conversation, type: type, data: data, from: fromUserID)
             if let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
-                note = ZMLocalNote(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
+                note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
             }
         }
         return note
     }
     
-    func noteWithPayload(_ data: NSDictionary?, from user: ZMUser, in conversation: ZMConversation, type: String) -> ZMLocalNote? {
+    func noteWithPayload(_ data: NSDictionary?, from user: ZMUser, in conversation: ZMConversation, type: String) -> ZMLocalNotification? {
         return noteWithPayload(data, fromUserID: user.remoteIdentifier, in: conversation, type: type)
     }
     

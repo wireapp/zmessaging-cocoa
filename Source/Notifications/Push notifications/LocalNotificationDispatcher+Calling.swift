@@ -22,7 +22,7 @@ public extension LocalNotificationDispatcher {
     
     public func process(callState: CallState, in conversation: ZMConversation, sender: ZMUser) {
         // missed call notification are handled separately
-        // but if call was answered else where proceed
+        // but if call was answered elsewhere then proceed
         switch callState {
         case .terminating(reason: let reason):
             switch reason {
@@ -32,14 +32,14 @@ public extension LocalNotificationDispatcher {
         default: break
         }
         
-        let note = ZMLocalNote(callState: callState, conversation: conversation, sender: sender)
+        let note = ZMLocalNotification(callState: callState, conversation: conversation, sender: sender)
         callingNotifications.cancelNotifications(conversation)
         note.apply(scheduleLocalNotification)
         note.apply(callingNotifications.addObject)
     }
     
     public func processMissedCall(in conversation: ZMConversation, sender: ZMUser) {
-        let note = ZMLocalNote(callState: .terminating(reason: .canceled), conversation: conversation, sender: sender)
+        let note = ZMLocalNotification(callState: .terminating(reason: .canceled), conversation: conversation, sender: sender)
         callingNotifications.cancelNotifications(conversation)
         note.apply(scheduleLocalNotification)
         note.apply(callingNotifications.addObject)

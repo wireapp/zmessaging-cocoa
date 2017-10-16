@@ -36,7 +36,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 }
 
 public protocol LocalNotificationResponder : class {
-    func processLocal(_ notification: ZMLocalNote, forSession session: ZMUserSession)
+    func processLocal(_ notification: ZMLocalNotification, forSession session: ZMUserSession)
 }
 
 /// The `SessionManager` class handles the creation of `ZMUserSession` and `UnauthenticatedSession`

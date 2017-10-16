@@ -181,8 +181,8 @@ extension LocalNotificationDispatcherTests {
     func testThatItCancelsAllNotificationsForFailingMessagesWhenCancelingAllNotifications() {
         
         // GIVEN
-        let note1 = ZMLocalNote(expiredMessageIn: self.conversation1)!
-        let note2 = ZMLocalNote(expiredMessageIn: self.conversation1)!
+        let note1 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
+        let note2 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
         self.sut.eventNotifications.addObject(note1)
         self.sut.failedMessageNotifications.addObject(note2)
         
@@ -196,10 +196,10 @@ extension LocalNotificationDispatcherTests {
     func testThatItCancelsNotificationsForFailingMessagesWhenCancelingNotificationsForASpecificConversation() {
         
         // GIVEN
-        let note1 = ZMLocalNote(expiredMessageIn: self.conversation1)!
-        let note2 = ZMLocalNote(expiredMessageIn: self.conversation2)!
-        let note3 = ZMLocalNote(expiredMessageIn: self.conversation1)!
-        let note4 = ZMLocalNote(expiredMessageIn: self.conversation2)!
+        let note1 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
+        let note2 = ZMLocalNotification(expiredMessageIn: self.conversation2)!
+        let note3 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
+        let note4 = ZMLocalNotification(expiredMessageIn: self.conversation2)!
         self.sut.eventNotifications.addObject(note1)
         self.sut.eventNotifications.addObject(note2)
         self.sut.failedMessageNotifications.addObject(note3)
@@ -217,8 +217,8 @@ extension LocalNotificationDispatcherTests {
         // GIVEN
         let message = self.conversation1.appendMessage(withText: "foo") as! ZMClientMessage
         message.sender = self.user1
-        let note1 = ZMLocalNote(expiredMessage: message)!
-        let note2 = ZMLocalNote(expiredMessageIn: self.conversation1)!
+        let note1 = ZMLocalNotification(expiredMessage: message)!
+        let note2 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
         self.sut.eventNotifications.addObject(note1)
         self.sut.eventNotifications.addObject(note2)
         
@@ -417,7 +417,7 @@ class MockForegroundNotificationDelegate: NSObject, ForegroundNotificationsDeleg
     
     var receivedLocalNotifications: [UILocalNotification] = []
 
-    func didReceieveLocal(notification: ZMLocalNote, application: ZMApplication) {
+    func didReceieveLocal(notification: ZMLocalNotification, application: ZMApplication) {
         self.receivedLocalNotifications.append(notification.uiLocalNotification)
     }
 }

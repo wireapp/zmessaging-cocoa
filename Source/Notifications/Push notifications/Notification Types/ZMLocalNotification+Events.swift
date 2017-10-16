@@ -17,7 +17,7 @@
 //
 
 
-extension ZMLocalNote {
+extension ZMLocalNotification {
     
     // for each supported event type, use the corresponding notification constructor.
     //

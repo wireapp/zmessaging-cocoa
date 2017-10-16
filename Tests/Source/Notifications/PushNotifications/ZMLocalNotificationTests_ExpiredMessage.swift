@@ -77,7 +77,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             self.oneOnOneConversation.mutableMessages.add(message)
             
             // when
-            let note = ZMLocalNote(expiredMessage: message)
+            let note = ZMLocalNotification(expiredMessage: message)
             
             // then
             XCTAssertNotNil(note)
@@ -94,7 +94,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             self.oneOnOneConversation.mutableMessages.add(message)
             
             // when
-            let note = ZMLocalNote(expiredMessageIn: message.conversation!)
+            let note = ZMLocalNotification(expiredMessageIn: message.conversation!)
             
             // then
             XCTAssertNotNil(note)
@@ -111,7 +111,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             self.groupConversation.mutableMessages.add(message)
             
             // when
-            let note = ZMLocalNote(expiredMessage: message)
+            let note = ZMLocalNotification(expiredMessage: message)
             
             // then
             XCTAssertNotNil(note)
@@ -128,7 +128,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             self.groupConversationWithoutName.mutableMessages.add(message)
             
             // when
-            let note = ZMLocalNote(expiredMessage: message)
+            let note = ZMLocalNotification(expiredMessage: message)
             
             // then
             XCTAssertNotNil(note)
@@ -148,7 +148,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             connection.to = self.userWithName
             
             // when
-            let note = ZMLocalNote(expiredMessage: message)
+            let note = ZMLocalNotification(expiredMessage: message)
             
             // then
             XCTAssertNotNil(note)
@@ -168,7 +168,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             connection.to = self.userWithNoName
             
             // when
-            let note = ZMLocalNote(expiredMessage: message)
+            let note = ZMLocalNotification(expiredMessage: message)
             
             // then
             XCTAssertNotNil(note)

@@ -28,13 +28,13 @@ extension LocalNotificationDispatcher: PushMessageHandler {
             return (note.userInfo?[MessageNonceIDStringKey] as? String) ==  message.nonce.transportString()
         }) { return }
         
-        var note: ZMLocalNote?
+        var note: ZMLocalNotification?
         
         if let message = message as? ZMOTRMessage {
-            note = ZMLocalNote(message: message)
+            note = ZMLocalNotification(message: message)
         }
         else if let message = message as? ZMSystemMessage {
-            note = ZMLocalNote(systemMessage: message)
+            note = ZMLocalNotification(systemMessage: message)
         }
         
         note.apply(scheduleLocalNotification)

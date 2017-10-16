@@ -54,7 +54,7 @@ protocol NotificationBuilder {
 /// various notification types (message, calling, etc.) and includes
 /// information regarding the conversation, sender, and team name.
 ///
-open class ZMLocalNote: NSObject {
+open class ZMLocalNotification: NSObject {
     
     public let type: LocalNotificationType
     public var title: String?
