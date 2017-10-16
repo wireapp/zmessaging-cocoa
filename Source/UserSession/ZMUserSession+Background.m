@@ -25,7 +25,6 @@
 #import "ZMOperationLoop+Private.h"
 #import "ZMPushToken.h"
 #import "ZMSyncStrategy.h"
-#import "ZMLocalNotification.h"
 #import "ZMUserSession+UserNotificationCategories.h"
 #import "ZMStoredLocalNotification.h"
 #import "ZMMissingUpdateEventsTranscoder.h"

@@ -21,7 +21,6 @@
 @import WireDataModel;
 
 #import "ZMStoredLocalNotification.h"
-#import "ZMLocalNotification.h"
 #import "ZMUserSession+UserNotificationCategories.h"
 #import "ZMOperationLoop+Background.h"
 #import "UILocalNotification+UserInfo.h"
