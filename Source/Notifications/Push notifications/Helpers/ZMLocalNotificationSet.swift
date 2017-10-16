@@ -146,17 +146,6 @@ public extension ZMLocalNotificationSet {
         return nil
     }
     
-    public func cancelNotificationForIncomingCall(_ conversation: ZMConversation) {
-        var toRemove = Set<ZMLocalNotification>()
-        self.notifications.forEach{
-            guard ($0.conversationID == conversation.remoteIdentifier),
-                  let note = $0 as? EventNotification , note.eventType == .callState
-            else { return }
-            toRemove.insert($0)
-            $0.uiNotifications.forEach{ application?.cancelLocalNotification($0) }
-        }
-        self.notifications.subtract(toRemove)
-    }
 }
 
 // Message Notifications

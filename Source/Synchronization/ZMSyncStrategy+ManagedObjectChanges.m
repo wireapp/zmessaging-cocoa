@@ -115,17 +115,6 @@
     return changedObjectsIDs;
 }
 
-- (BOOL)shouldForwardCallStateChangeDirectlyForNote:(NSNotification *)note
-{
-    if ([(NSSet *)note.userInfo[NSInsertedObjectsKey] count] == 0 &&
-        [(NSSet *)note.userInfo[NSDeletedObjectsKey] count] == 0 &&
-        [(NSSet *)note.userInfo[NSUpdatedObjectsKey] count] == 0 &&
-        [(NSSet *)note.userInfo[NSRefreshedObjectsKey] count] == 0) {
-        return YES;
-    }
-    return NO;
-}
-
 - (BOOL)processSaveWithInsertedObjects:(NSSet *)insertedObjects updateObjects:(NSSet *)updatedObjects
 {
     NSSet *allObjects = [NSSet zmSetByCompiningSets:insertedObjects, updatedObjects, nil];

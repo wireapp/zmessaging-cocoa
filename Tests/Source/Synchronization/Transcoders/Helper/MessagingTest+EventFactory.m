@@ -31,9 +31,6 @@ NSString * const EventConversationAddAsset = @"conversation.asset-add";
 NSString * const EventConversationAddOTRAsset = @"conversation.otr-asset-add";
 NSString * const EventConversationKnock = @"conversation.knock";
 NSString * const EventConversationTyping = @"conversation.typing";
-
-NSString * const EventCallState = @"call.state";
-
 NSString * const EventConversationMemberJoin = @"conversation.member-join";
 NSString * const EventConversationMemberLeave = @"conversation.member-leave";
 NSString * const EventConversationRename = @"conversation.rename";
@@ -43,155 +40,6 @@ NSString * const EventConversationConnectionRequest = @"conversation.connect-req
 NSString * const EventNewConnection = @"user.contact-join";
 
 @implementation MessagingTest (EventFactory)
-
-
-- (NSDictionary *)payloadForCallStateEventInConversation:(ZMConversation *)conversation
-                                         othersAreJoined:(BOOL)othersAreJoined
-                                            selfIsJoined:(BOOL)selfIsJoined
-                                                sequence:(NSNumber *)sequence
-{
-    return [self payloadForCallStateEventInConversation:conversation
-                                                othersAreJoined:othersAreJoined
-                                                   selfIsJoined:selfIsJoined
-                                            otherIsSendingVideo:NO
-                                             selfIsSendingVideo:NO
-                                                       sequence:sequence];
-}
-
-- (NSDictionary *)payloadForCallStateEventInConversation:(ZMConversation *)conversation
-                                         othersAreJoined:(BOOL)othersAreJoined
-                                            selfIsJoined:(BOOL)selfIsJoined
-                                     otherIsSendingVideo:(BOOL)otherIsSendingVideo
-                                      selfIsSendingVideo:(BOOL)selfIsSendingVideo
-                                                sequence:(NSNumber *)sequence
-{
-    ZMUser *selfUser = [ZMUser selfUserInContext:conversation.managedObjectContext];
-    NSMutableArray *joinedUsers = [NSMutableArray array];
-    if (othersAreJoined) {
-        if (conversation.conversationType == ZMConversationTypeGroup) {
-            [joinedUsers addObjectsFromArray:conversation.otherActiveParticipants.array];
-        } else {
-            [joinedUsers addObject:conversation.connectedUser];
-        }
-    }
-    if (selfIsJoined) {
-        [joinedUsers addObject:selfUser];
-    }
-    NSMutableArray *usersSendingVideo = [NSMutableArray array];
-    if (otherIsSendingVideo) {
-        if (conversation.conversationType == ZMConversationTypeGroup) {
-            [usersSendingVideo addObjectsFromArray:conversation.otherActiveParticipants.array];
-        } else {
-            [usersSendingVideo addObject:conversation.connectedUser];
-        }
-    }
-    if (selfIsSendingVideo) {
-        [usersSendingVideo addObject:selfUser];
-    }
-    
-    return [self payloadForCallStateEventInConversation:conversation joinedUsers:joinedUsers videoSendingUsers:usersSendingVideo sequence:sequence];
-}
-
-- (NSDictionary *)userDictionaryState:(BOOL)isJoined isSendingVideo:(BOOL)isSendingVideo
-{
-    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-    dict[@"state"] = isJoined ? @"joined" : @"idle";
-    if (isSendingVideo) {
-        dict[@"videod"] = @YES;
-    }
-    return dict;
-}
-
-- (NSDictionary *)payloadForCallStateEventInConversation:(ZMConversation *)conversation
-                                             joinedUsers:(NSArray *)joinedUsers
-                                       videoSendingUsers:(NSArray *)videoSendingUsers
-                                                sequence:(NSNumber *)sequence
-{
-    return [self payloadForCallStateEventInConversation:conversation joinedUsers:joinedUsers videoSendingUsers:videoSendingUsers sequence:sequence session:nil];
-}
-
-
-- (NSDictionary *)payloadForCallStateEventInConversation:(ZMConversation *)conversation
-                                             joinedUsers:(NSArray *)joinedUsers
-                                       videoSendingUsers:(NSArray *)videoSendingUsers
-                                                sequence:(NSNumber *)sequence
-                                                 session:(NSString *)sessionID
-{
-    ZMUser *selfUser = [ZMUser selfUserInContext:conversation.managedObjectContext];
-    NSDictionary *selfStateDict = [self userDictionaryState:[joinedUsers containsObject:selfUser] isSendingVideo:[videoSendingUsers containsObject:selfUser]];
-    
-    NSMutableArray *otherStates = [NSMutableArray array];
-    NSOrderedSet *otherUUIDs = [conversation.activeParticipants mapWithBlock:^id(ZMUser *user) {
-        if (user.remoteIdentifier != nil) {
-            NSDictionary *otherStateDict = [self userDictionaryState:[joinedUsers containsObject:user] isSendingVideo:[videoSendingUsers containsObject:user]];
-            [otherStates addObject:otherStateDict];
-        } else {
-            NSLog(@"WARNING: did not set remoteID for otherActiveUser %@", user);
-        }
-        return user.remoteIdentifier.transportString;
-    }];
-    
-    NSMutableDictionary *participantsDict = [NSMutableDictionary dictionaryWithObjects:otherStates forKeys:otherUUIDs.array];
-    participantsDict[selfUser.remoteIdentifier.transportString] = selfStateDict;
-    
-    NSMutableDictionary *payload = [NSMutableDictionary dictionary];
-    payload[@"self"] = selfStateDict;
-    payload[@"participants"] = participantsDict;
-    payload[@"cause"] = @"requested";
-    payload[@"type"] = @"call.state";
-    payload[@"conversation"] = conversation.remoteIdentifier.transportString;
-    if (sequence != nil) {
-        payload[@"sequence"] = sequence;
-    }
-    if (sessionID != nil) {
-        payload[@"session"] = sessionID;
-    }
-    
-    return [payload copy];
-}
-
-- (ZMUpdateEvent *)callStateEventInConversation:(ZMConversation *)conversation
-                              othersAreJoined:(BOOL)othersAreJoined
-                                 selfIsJoined:(BOOL)selfIsJoined
-                          otherIsSendingVideo:(BOOL)otherIsSendingVideo
-                           selfIsSendingVideo:(BOOL)selfIsSendingVideo
-                                     sequence:(NSNumber *)sequence
-{
-    NSDictionary *payload = [self payloadForCallStateEventInConversation:conversation
-                                                         othersAreJoined:othersAreJoined
-                                                            selfIsJoined:selfIsJoined
-                                                     otherIsSendingVideo:otherIsSendingVideo
-                                                      selfIsSendingVideo:selfIsSendingVideo
-                                                                sequence:sequence];
-    ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-    XCTAssertNotNil(event, @"The event could not be created");
-    return event;
-}
-
-- (ZMUpdateEvent *)callStateEventInConversation:(ZMConversation *)conversation
-                                    joinedUsers:(NSArray *)joinedUsers
-                              videoSendingUsers:(NSArray *)videoSendingUsers
-                                       sequence:(NSNumber *)sequence;
-{
-    return [self callStateEventInConversation:conversation joinedUsers:joinedUsers videoSendingUsers:videoSendingUsers sequence:sequence session:nil];
-}
-
-- (ZMUpdateEvent *)callStateEventInConversation:(ZMConversation *)conversation
-                                    joinedUsers:(NSArray *)joinedUsers
-                              videoSendingUsers:(NSArray *)videoSendingUsers
-                                       sequence:(NSNumber *)sequence
-                                        session:(NSString *)session;
-{
-    NSDictionary *payload = [self payloadForCallStateEventInConversation:conversation
-                                                             joinedUsers:joinedUsers
-                                                       videoSendingUsers:videoSendingUsers
-                                                                sequence:sequence
-                                                                 session:session];
-    ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-    XCTAssertNotNil(event, @"The event could not be created");
-    return event;
-
-}
 
 - (ZMUpdateEvent *)eventWithPayload:(NSDictionary *)data inConversation:(ZMConversation *)conversation type:(NSString *)type
 {
@@ -254,6 +102,5 @@ NSString * const EventNewConnection = @"user.contact-join";
               @"type" : type
               } mutableCopy];
 }
-
 
 @end

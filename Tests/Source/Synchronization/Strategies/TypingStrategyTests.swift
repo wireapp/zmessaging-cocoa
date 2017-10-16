@@ -213,7 +213,7 @@ extension TypingStrategyTests {
                        "data": [],
                        "from": userA.remoteIdentifier!.transportString(),
                        "time": Date().transportString(),
-                       "type": "conversation.voice-channel-activate",
+                       "type": "conversation.rename",
                        ] as [String : Any]
         let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
 

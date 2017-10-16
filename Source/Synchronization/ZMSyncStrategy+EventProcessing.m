@@ -26,28 +26,13 @@
 
 - (void)processUpdateEvents:(NSArray *)events ignoreBuffer:(BOOL)ignoreBuffer;
 {
-    if (ignoreBuffer) {
+    if (ignoreBuffer || !self.applicationStatusDirectory.syncStatus.isSyncing) {
         [self consumeUpdateEvents:events];
         return;
     }
     
-    NSArray *flowEvents = [events filterWithBlock:^BOOL(ZMUpdateEvent* event) {
-        return event.isFlowEvent;
-    }];
-    if(flowEvents.count > 0) {
-        [self consumeUpdateEvents:flowEvents];
-    }
-    NSArray *notFlowEvents = [events filterWithBlock:^BOOL(ZMUpdateEvent* event) {
-        return !event.isFlowEvent;
-    }];
-    
-    if (self.applicationStatusDirectory.syncStatus.isSyncing) {
-        for(ZMUpdateEvent *event in notFlowEvents) {
-            [self.eventsBuffer addUpdateEvent:event];
-        }
-    }
-    else {
-        [self consumeUpdateEvents:notFlowEvents];
+    for (ZMUpdateEvent *event in events) {
+        [self.eventsBuffer addUpdateEvent:event];
     }
 }
 
@@ -94,16 +79,6 @@
                 [tp warnIfLongerThanInterval];
             }
         }
-    }];
-}
-
-- (NSArray *)conversationIdsThatHaveBufferedUpdatesForCallState;
-{
-    return [[self.eventsBuffer updateEvents] mapWithBlock:^id(ZMUpdateEvent *event) {
-        if (event.type == ZMUpdateEventCallState) {
-            return event.conversationUUID;
-        }
-        return nil;
     }];
 }
 

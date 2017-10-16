@@ -21,13 +21,10 @@
 
 @interface ZMSyncStrategy (EventProcessing) <ZMUpdateEventConsumer>
 
-/// Process events that are recevied through the notification stream or the websocket
+/// Process events that are received through the notification stream or the websocket
 - (void)processUpdateEvents:(NSArray <ZMUpdateEvent *>*)events ignoreBuffer:(BOOL)ignoreBuffer;
 
-/// Process events that were downloaded as part of the clinet history
+/// Process events that were downloaded as part of the client history
 - (void)processDownloadedEvents:(NSArray <ZMUpdateEvent *>*)events;
-
-
-- (NSArray *)conversationIdsThatHaveBufferedUpdatesForCallState;
 
 @end

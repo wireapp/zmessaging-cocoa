@@ -43,7 +43,7 @@ public protocol EventNotification : LocalNotification {
 
 
 public extension ZMLocalNotificationForEvent {
-    public static func notification(forEvent event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: ZMApplication?, sessionTracker: SessionTracker) -> ZMLocalNotificationForEvent? {
+    public static func notification(forEvent event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext, application: ZMApplication?) -> ZMLocalNotificationForEvent? {
         switch event.type {
         case .conversationOtrMessageAdd:
             if let note = ZMLocalNotificationForReaction(events: [event], conversation: conversation, managedObjectContext: managedObjectContext, application: application) {
@@ -161,8 +161,8 @@ open class ZMLocalNotificationForEvent : ZMLocalNotification, EventNotification 
         // The eventType is the same as the expected eventType
         guard eventType == lastEvent.type && eventType != .unknown else {return false}
         
-        // The sender is not the selfUser or it is a call event (we want to keep track of which calls we joined and cancel notifications if we joined)
-        if let sender = sender , (sender.isSelfUser && lastEvent.type != .callState) { return false }
+        // The sender is not the selfUser
+        if let sender = sender , sender.isSelfUser { return false }
 
         if let conversation = conversation {
             if conversation.isSilenced && !ignoresSilencedState {

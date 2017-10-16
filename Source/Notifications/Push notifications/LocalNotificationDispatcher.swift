@@ -36,7 +36,6 @@ public class LocalNotificationDispatcher: NSObject {
     let failedMessageNotification: ZMLocalNotificationSet
     
     let application: ZMApplication
-    let sessionTracker: SessionTracker
     let syncMOC: NSManagedObjectContext
     private(set) var isTornDown: Bool
     private var observers: [Any] = []
@@ -54,7 +53,6 @@ public class LocalNotificationDispatcher: NSObject {
         self.callingNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherCallingNotificationsKey", keyValueStore: managedObjectContext)
         self.messageNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherMessageNotificationsKey", keyValueStore: managedObjectContext)
         self.application = application
-        self.sessionTracker = SessionTracker(managedObjectContext: managedObjectContext)
         self.isTornDown = false
         super.init()
         observers.append(
@@ -66,7 +64,6 @@ public class LocalNotificationDispatcher: NSObject {
  
     public func tearDown() {
         self.isTornDown = true
-        self.sessionTracker.tearDown()
         self.observers = []
         syncMOC.performGroupedBlock { [weak self] in
             self?.cancelAllNotifications()
@@ -99,10 +96,6 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
     
     func didReceive(events: [ZMUpdateEvent], conversationMap: [UUID : ZMConversation], id: UUID?) {
         events.forEach {
-            // Forward events to the session tracker which keeps track if the selfUser joined or not
-            self.sessionTracker.addEvent($0)
-            
-            // Then create the notification
             guard let note = self.notification(event: $0, conversationMap: conversationMap),
                 let localNote = note.uiNotifications.last
             else {
@@ -115,7 +108,7 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
     func notification(event: ZMUpdateEvent, conversationMap: [UUID : ZMConversation]) -> ZMLocalNotificationForEvent? {
         switch event.type {
         case .conversationCreate, .userConnection, .conversationOtrMessageAdd, // only for reaction
-        .userContactJoin, .callState:
+        .userContactJoin:
             return self.localNotification(event: event, conversationMap: conversationMap)
         default:
             return nil
@@ -142,8 +135,7 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
         if let newNote = ZMLocalNotificationForEvent.notification(forEvent: event,
                                                                conversation: conversation,
                                                                managedObjectContext: self.syncMOC,
-                                                               application: self.application,
-                                                               sessionTracker: self.sessionTracker) {
+                                                               application: self.application) {
             self.eventNotifications.addObject(newNote)
             return newNote
         }
@@ -191,7 +183,6 @@ extension LocalNotificationDispatcher {
     /// - note: Notifications for a specific conversation are otherwise deleted automatically when the message window changes and
     /// ZMConversationDidChangeVisibleWindowNotification is called
     public func cancelNotification(for conversation: ZMConversation) {
-        self.sessionTracker.clearSessions(conversation)
         self.allNotificationSets.forEach { $0.cancelNotifications(conversation) }
     }
     

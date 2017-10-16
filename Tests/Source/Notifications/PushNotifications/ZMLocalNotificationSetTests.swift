@@ -129,38 +129,7 @@ class ZMLocalNotificationSetTests : MessagingTest {
         XCTAssertTrue(sut.notifications.contains(note2))
         XCTAssertFalse(self.application.cancelledLocalNotifications.contains(localNote2))
     }
-    
-    func testThatItOnlyCancelsCallNotificationsIfSpecified(){
-        // given
-        let conversation1 = ZMConversation.insertNewObject(in: self.uiMOC)
-        conversation1.remoteIdentifier = UUID()
-        let localNote1 = UILocalNotification()
-        localNote1.alertBody = "note1"
-        let note1 = MockEventNotification(events: [], conversation: conversation1, managedObjectContext: uiMOC, application: application)!
-        note1.add(localNote1)
-        note1.eventTypeUnderTest = .callState
-        XCTAssertEqual(note1.conversationID, conversation1.remoteIdentifier)
-
-        let localNote2 = UILocalNotification()
-        localNote1.alertBody = "note2"
-        let note2 = MockEventNotification(events: [], conversation: conversation1, managedObjectContext: uiMOC, application: application)!
-        note2.add(localNote2)
-        XCTAssertEqual(note2.conversationID, conversation1.remoteIdentifier)
         
-        sut.addObject(note1)
-        sut.addObject(note2)
-        
-        // when
-        sut.cancelNotificationForIncomingCall(conversation1)
-        
-        // then
-        XCTAssertFalse(sut.notifications.contains(note1))
-        XCTAssertTrue(self.application.cancelledLocalNotifications.contains(localNote1))
-        
-        XCTAssertTrue(sut.notifications.contains(note2))
-        XCTAssertFalse(self.application.cancelledLocalNotifications.contains(localNote2))
-    }
-    
     func testThatItPersistsNotifications() {
         // given
         let localNote1 = UILocalNotification()

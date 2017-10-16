@@ -312,12 +312,8 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         case ZMUpdateEventConversationMemberLeave:
         case ZMUpdateEventConversationRename:
         case ZMUpdateEventConversationMemberUpdate:
-        case ZMUpdateEventConversationVoiceChannelActivate:
-        case ZMUpdateEventConversationVoiceChannelDeactivate:
-        case ZMUpdateEventConversationVoiceChannel:
         case ZMUpdateEventConversationCreate:
         case ZMUpdateEventConversationConnectRequest:
-        case ZMUpdateEventCallState:
             return YES;
         default:
             return NO;
@@ -347,8 +343,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
 - (void)updatePropertiesOfConversation:(ZMConversation *)conversation fromEvent:(ZMUpdateEvent *)event
 {
-    // Update last event-id
-    NSDate *oldLastTimeStamp = conversation.lastServerTimeStamp;
     NSDate *timeStamp = event.timeStamp;
     
     BOOL isMessageEvent = (event.type == ZMUpdateEventConversationOtrMessageAdd) ||
@@ -360,18 +354,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         if ([self shouldUnarchiveOrUpdateLastModifiedWithEvent:event]) {
             conversation.lastModifiedDate = [NSDate lastestOfDate:conversation.lastModifiedDate and:timeStamp];
         }
-    }
-    
-    BOOL eventIsCompletedVoiceCall = NO;
-    if (event.type == ZMUpdateEventConversationVoiceChannelDeactivate) {
-        NSString *reason = [[event.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"reason"];
-        eventIsCompletedVoiceCall = ![reason isEqualToString:@"missed"];
-    }
-    
-    if (eventIsCompletedVoiceCall) {
-        [self updateLastReadForInvisibleEventInConversation:conversation
-                                                  timeStamp:timeStamp
-                                           oldLastTimeStamp:oldLastTimeStamp];
     }
     
     // Unarchive conversations when applicable
@@ -391,16 +373,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
         default:
             return YES;
-    }
-}
-
-- (void)updateLastReadForInvisibleEventInConversation:(ZMConversation *)conversation
-                                            timeStamp:(NSDate *)timeStamp
-                                     oldLastTimeStamp:(NSDate *)oldLastTimeStamp
-{
-
-    if (timeStamp != nil && oldLastTimeStamp != nil && [oldLastTimeStamp isEqualToDate:conversation.lastReadServerTimeStamp]) {
-        [conversation updateLastReadServerTimeStampIfNeededWithTimeStamp:timeStamp andSync:NO];
     }
 }
 
@@ -486,9 +458,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         case ZMUpdateEventConversationTyping:
         case ZMUpdateEventConversationAssetAdd:
         case ZMUpdateEventConversationClientMessageAdd:
-        case ZMUpdateEventCallState:
-        case ZMUpdateEventConversationVoiceChannelActivate:
-        case ZMUpdateEventConversationVoiceChannelDeactivate:
             break;
         default:
             return;
@@ -498,7 +467,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         || conversation.connection.status == ZMConnectionStatusSent
         || conversation.conversationType == ZMConversationTypeConnection; // the last OR should be covered by the
                                                                       // previous cases already, but just in case..
-    if(isConnection || conversation.conversationType == ZMConversationTypeInvalid) {
+    if (isConnection || conversation.conversationType == ZMConversationTypeInvalid) {
         conversation.needsToBeUpdatedFromBackend = YES;
         conversation.connection.needsToBeUpdatedFromBackend = YES;
     }

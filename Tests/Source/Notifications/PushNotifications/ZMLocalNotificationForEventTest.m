@@ -28,7 +28,6 @@
 
 - (void)setUp {
     [super setUp];
-    self.mockSessionTracker = [OCMockObject niceMockForClass:[SessionTracker class]];
     
     self.sender = [self insertUserWithRemoteID:[NSUUID createUUID] name:@"Super User"];
     
@@ -99,7 +98,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         NSDictionary *payload = [self payloadForEventInConversation:conversation type:type data:data fromUserID:fromUserID];
         ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-        note = [ZMLocalNotificationForEvent notificationForEvent:event conversation:conversation managedObjectContext:self.syncMOC application:application sessionTracker:self.mockSessionTracker];
+        note = [ZMLocalNotificationForEvent notificationForEvent:event conversation:conversation managedObjectContext:self.syncMOC application:application];
     }];
     
     return note;
@@ -156,7 +155,7 @@
     
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-        note = [ZMLocalNotificationForEvent notificationForEvent:event conversation:self.oneOnOneConversation managedObjectContext:self.syncMOC application:self.application sessionTracker:self.mockSessionTracker];
+        note = [ZMLocalNotificationForEvent notificationForEvent:event conversation:self.oneOnOneConversation managedObjectContext:self.syncMOC application:self.application];
     }];
     
     return note;
@@ -191,7 +190,7 @@
     // when
     __block ZMLocalNotificationForEvent *note;
     [self.syncMOC performGroupedBlockAndWait:^{
-        note = [ZMLocalNotificationForEvent notificationForEvent:event conversation:self.oneOnOneConversation managedObjectContext:self.syncMOC application:self.application sessionTracker:self.mockSessionTracker];
+        note = [ZMLocalNotificationForEvent notificationForEvent:event conversation:self.oneOnOneConversation managedObjectContext:self.syncMOC application:self.application];
         XCTAssertNotNil(note);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
