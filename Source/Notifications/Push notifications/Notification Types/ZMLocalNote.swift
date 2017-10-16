@@ -38,7 +38,7 @@ public enum LocalNotificationType {
 /// A notification constructor provides the main components used to configure
 /// a local notification. 
 ///
-protocol NotificationConstructor {
+protocol NotificationBuilder {
     var conversation: ZMConversation? { get set }
     func shouldCreateNotification() -> Bool
     func titleText() -> String?
@@ -70,7 +70,7 @@ open class ZMLocalNote: NSObject {
     
     public var isEphemeral: Bool = false
     
-    init?(conversation: ZMConversation?, type: LocalNotificationType, constructor: NotificationConstructor) {
+    init?(conversation: ZMConversation?, type: LocalNotificationType, constructor: NotificationBuilder) {
         guard constructor.shouldCreateNotification() else { return nil }
         self.type = type
         self.title = constructor.titleText()

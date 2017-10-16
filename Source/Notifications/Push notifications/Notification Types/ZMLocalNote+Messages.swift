@@ -24,12 +24,12 @@ extension ZMLocalNote {
     convenience init?(message: ZMMessage) {
         guard message.conversation?.remoteIdentifier  != nil else { return nil }
         let contentType = ZMLocalNotificationContentType.typeForMessage(message)
-        let constructor = MessageNotificationConstructor(message: message, contentType: contentType)
+        let constructor = MessageNotificationBuilder(message: message, contentType: contentType)
         self.init(conversation: message.conversation, type: .message(contentType), constructor: constructor)
         self.isEphemeral = message.isEphemeral
     }
     
-    fileprivate class MessageNotificationConstructor: NotificationConstructor {
+    fileprivate class MessageNotificationBuilder: NotificationBuilder {
         
         fileprivate let message: ZMMessage
         fileprivate let contentType: ZMLocalNotificationContentType
@@ -158,11 +158,11 @@ extension ZMLocalNote {
     convenience init?(systemMessage: ZMSystemMessage) {
         guard systemMessage.conversation?.remoteIdentifier != nil else { return nil }
         let contentType = ZMLocalNotificationContentType.typeForMessage(systemMessage)
-        let constructor = SystemMessageNotificationConstructor(message: systemMessage)
+        let constructor = SystemMessageNotificationBuilder(message: systemMessage)
         self.init(conversation: systemMessage.conversation, type: .message(contentType), constructor: constructor)
     }
     
-    private class SystemMessageNotificationConstructor : MessageNotificationConstructor {
+    private class SystemMessageNotificationBuilder : MessageNotificationBuilder {
         
         let systemMessageType: ZMSystemMessageType
         
@@ -221,7 +221,7 @@ extension ZMLocalNote {
     }
     
     convenience init?(expiredMessageIn conversation: ZMConversation) {
-        let constructor = FailedMessageNotificationConstructor(conversation: conversation)
+        let constructor = FailedMessageNotificationBuilder(conversation: conversation)
         self.init(conversation: conversation, type: .failedMessage, constructor: constructor)
     }
     
@@ -235,7 +235,7 @@ extension ZMLocalNote {
         }
     }
     
-    private class FailedMessageNotificationConstructor: NotificationConstructor {
+    private class FailedMessageNotificationBuilder: NotificationBuilder {
         
         var conversation: ZMConversation?
         

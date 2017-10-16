@@ -22,23 +22,23 @@ extension ZMLocalNote {
     // for each supported event type, use the corresponding notification constructor.
     //
     convenience init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext moc: NSManagedObjectContext) {
-        var constructor: NotificationConstructor?
+        var constructor: NotificationBuilder?
         
         switch event.type {
         case .conversationOtrMessageAdd:
-            constructor = ReactionEventNotificationConstructor(
+            constructor = ReactionEventNotificationBuilder(
                 event: event, conversation: conversation, managedObjectContext: moc)
             
         case .conversationCreate:
-            constructor = ConversationCreateEventNotificationConstructor(
+            constructor = ConversationCreateEventNotificationBuilder(
                 event: event, conversation: conversation, managedObjectContext: moc)
             
         case .userConnection:
-            constructor = UserConnectionEventNotificationConstructor(
+            constructor = UserConnectionEventNotificationBuilder(
                 event: event, conversation: conversation, managedObjectContext: moc)
             
         case .userContactJoin:
-            constructor = NewUserEventNotificationConstructor(
+            constructor = NewUserEventNotificationBuilder(
                 event: event, conversation: conversation, managedObjectContext: moc)
             
         default:
@@ -53,7 +53,7 @@ extension ZMLocalNote {
 // Base class for event notification constructors. Subclass this for each
 // event type, and override the components specific for that type.
 ///
-fileprivate class EventNotificationConstructor: NotificationConstructor {
+fileprivate class EventNotificationBuilder: NotificationBuilder {
     
     let event: ZMUpdateEvent
     let moc: NSManagedObjectContext
@@ -156,7 +156,7 @@ fileprivate class EventNotificationConstructor: NotificationConstructor {
 
 // MARK: - Reaction Event
 
-private class ReactionEventNotificationConstructor: EventNotificationConstructor {
+private class ReactionEventNotificationBuilder: EventNotificationBuilder {
     
     override var requiresConversation: Bool { return true }
     
@@ -204,7 +204,7 @@ private class ReactionEventNotificationConstructor: EventNotificationConstructor
 
 // MARK: - Conversation Create Event
 
-private class ConversationCreateEventNotificationConstructor: EventNotificationConstructor {
+private class ConversationCreateEventNotificationBuilder: EventNotificationBuilder {
     
     override func titleText() -> String? {
         // the title should not contain the conversation name "Empty Conversation"
@@ -224,7 +224,7 @@ private class ConversationCreateEventNotificationConstructor: EventNotificationC
 
 // MARK: - User Connection Event
 
-private class UserConnectionEventNotificationConstructor: EventNotificationConstructor {
+private class UserConnectionEventNotificationBuilder: EventNotificationBuilder {
     
     enum ConnectionType { case accepted, requested }
     
@@ -267,7 +267,7 @@ private class UserConnectionEventNotificationConstructor: EventNotificationConst
 
 // MARK: - New User Event
 
-private class NewUserEventNotificationConstructor: EventNotificationConstructor {
+private class NewUserEventNotificationBuilder: EventNotificationBuilder {
     
     override func titleText() -> String? {
         return nil
