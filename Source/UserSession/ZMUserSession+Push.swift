@@ -131,12 +131,12 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
     }
 
     public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
-        if application.applicationState == .inactive || application.applicationState == .background {
-            self.pendingLocalNotification = ZMStoredLocalNotification(notification: notification,
-                                                                      managedObjectContext: self.managedObjectContext,
-                                                                      actionIdentifier: nil,
-                                                                      textInput: nil)
-        }
+        
+        self.pendingLocalNotification = ZMStoredLocalNotification(notification: notification,
+                                                                  managedObjectContext: self.managedObjectContext,
+                                                                  actionIdentifier: nil,
+                                                                  textInput: nil)
+
         if self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen {
             self.processPendingNotificationActions()
         }
