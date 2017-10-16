@@ -42,13 +42,12 @@ public let ZMPushStringAudioAdd            = "add.audio"           // "[senderNa
 public let ZMPushStringFileAdd             = "add.file"            // "[senderName] shared a file"
 public let ZMPushStringLocationAdd         = "add.location"        // "[senderName] shared a location"
 public let ZMPushStringUnknownAdd          = "add.unknown"         // "[senderName] sent a message"
+
+// currently disabled
 //public let ZMPushStringMessageAddMany      = "add.message.many"    // "x new messages in [conversationName] / from [senderName]"
 
 public let ZMPushStringMemberJoin          = "member.join"         // "[senderName] added you"
 public let ZMPushStringMemberLeave         = "member.leave"        // "[senderName] removed you"
-
-//public let ZMPushStringMemberJoinMany      = "member.join.many"    // "[senderName] added people to [conversationName]"
-//public let ZMPushStringMemberLeaveMany     = "member.leave.many"   // "[senderName] removed people from [conversationName]"
 
 public let ZMPushStringKnock               = "knock"               // "pinged"
 public let ZMPushStringReaction            = "reaction"            // "[emoji] your message"
@@ -56,6 +55,8 @@ public let ZMPushStringReaction            = "reaction"            // "[emoji] y
 public let ZMPushStringVideoCallStarts     = "call.started.video"  // "is video calling"
 public let ZMPushStringCallStarts          = "call.started"        // "is calling"
 public let ZMPushStringCallMissed          = "call.missed"         // "called"
+
+// currently disabled
 //public let ZMPushStringCallMissedMany      = "call.missed.many"    // "You have x missed calls in a conversation"
 
 public let ZMPushStringConnectionRequest   = "connection.request"  // "[senderName] wants to connect"
