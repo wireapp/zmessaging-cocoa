@@ -124,7 +124,7 @@ public protocol LocalMessageNotificationResponder : class {
     var preLoginAuthenticationToken: Any?
     var blacklistVerificator: ZMBlacklistVerificator?
     let reachability: ReachabilityProvider & ReachabilityTearDown
-    let pushDispatcher = PushDispatcher()
+    let pushDispatcher: PushDispatcher
     
     internal var authenticatedSessionFactory: AuthenticatedSessionFactory
     internal let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
@@ -208,6 +208,7 @@ public protocol LocalMessageNotificationResponder : class {
             application: application,
             launchOptions: launchOptions
         )
+        
         self.blacklistVerificator = ZMBlacklistVerificator(checkInterval: blacklistDownloadInterval,
                                                            version: appVersion,
                                                            working: nil,
@@ -279,12 +280,19 @@ public protocol LocalMessageNotificationResponder : class {
         self.authenticatedSessionFactory = authenticatedSessionFactory
         self.unauthenticatedSessionFactory = unauthenticatedSessionFactory
         self.reachability = reachability
-        super.init()
-        self.pushDispatcher.fallbackClient = self
+        
+        // we must set these before initializing the PushDispatcher b/c if the app
+        // received a push from terminated state, it requires these properties to be
+        // non nil in order to process the notification
+        BackgroundActivityFactory.sharedInstance().application = UIApplication.shared
+        BackgroundActivityFactory.sharedInstance().mainGroupQueue = groupQueue
+        self.pushDispatcher = PushDispatcher()
 
-        postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(
-            self,
-            queue: self.groupQueue)
+        super.init()
+        
+        self.pushDispatcher.fallbackClient = self
+        
+        postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
         
         if let account = accountManager.selectedAccount {
             selectInitialAccount(account, launchOptions: launchOptions)
@@ -298,6 +306,7 @@ public protocol LocalMessageNotificationResponder : class {
                 completion: { [weak self] identifier in
                     guard let `self` = self else { return }
                     identifier.apply(self.migrateAccount)
+                    
                     self.selectInitialAccount(self.accountManager.selectedAccount, launchOptions: launchOptions)
             })
         }
@@ -312,7 +321,6 @@ public protocol LocalMessageNotificationResponder : class {
     }
 
     private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
-        
         loadSession(for: account) { [weak self] session in
             guard let `self` = self else { return }
             self.updateCurrentAccount(in: session.managedObjectContext)
