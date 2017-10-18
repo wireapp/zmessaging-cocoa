@@ -97,23 +97,6 @@ extension LocalNotificationDispatcherTests {
         XCTAssertTrue(notification.alertBody!.contains(text))
     }
     
-    func testThatItDoesNotCreateNotificationFromMessagesIfActive() {
-        // GIVEN
-        let text = UUID.create().transportString()
-        let message = self.conversation1.appendMessage(withText: text) as! ZMClientMessage
-        message.sender = self.user1
-        self.application.applicationState = .active
-
-        
-        // WHEN
-        self.sut.process(message)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // THEN
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0)
-        XCTAssertEqual(self.notificationDelegate.receivedLocalNotifications.count, 0)
-    }
-    
     func testThatItForwardsNotificationFromMessagesIfActive() {
         // GIVEN
         let text = UUID.create().transportString()
