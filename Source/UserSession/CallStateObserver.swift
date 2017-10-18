@@ -106,8 +106,6 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                 conversation.updateLastModifiedDateIfNeeded(timeStamp)
             }
             self.syncManagedObjectContext.enqueueDelayedSave()
-            
-            self.localNotificationDispatcher.processBuffer()
         }
     }
     
@@ -158,7 +156,6 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             conversation.appendMissedCallMessage(fromUser: user, at: timestamp)
             self.syncManagedObjectContext.enqueueDelayedSave()
-            self.localNotificationDispatcher.processBuffer()
         }
     }
 
