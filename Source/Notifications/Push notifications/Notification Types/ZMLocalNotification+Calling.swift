@@ -58,14 +58,14 @@ extension ZMLocalNotification {
         
         func titleText() -> String? {
             guard let conversation = conversation else { return nil }
-            var title = conversation.displayName
+            var title = conversation.meaningfulDisplayName ?? ""
             
             if let moc = conversation.managedObjectContext,
                 let teamName = ZMUser.selfUser(in: moc).team?.name {
                 title += " in \(teamName)"
             }
             
-            let trimmed = title.trimmingCharacters(in: CharacterSet(charactersIn: " …"))
+            let trimmed = title.trimmingCharacters(in: .whitespaces)
             return trimmed.isEmpty ? nil : trimmed
         }
         

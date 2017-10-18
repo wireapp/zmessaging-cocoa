@@ -101,16 +101,13 @@ fileprivate class EventNotificationBuilder: NotificationBuilder {
     }
     
     func titleText() -> String? {
-        var title = ""
-        if let teamName = ZMUser.selfUser(in: moc).team?.name {
-            title = "in \(teamName)"
-            
-        }
-        if let conversationName = conversation?.displayName {
-            title = "\(conversationName) \(title)"
-        }
+        var title = conversation?.meaningfulDisplayName ?? ""
         
-        let trimmed = title.trimmingCharacters(in: CharacterSet(charactersIn: " …"))
+        if let teamName = ZMUser.selfUser(in: moc).team?.name {
+            title.append(" in \(teamName)")
+        }
+
+        let trimmed = title.trimmingCharacters(in: .whitespaces)
         return trimmed.isEmpty ? nil : trimmed
     }
     
@@ -207,8 +204,7 @@ private class ReactionEventNotificationBuilder: EventNotificationBuilder {
 private class ConversationCreateEventNotificationBuilder: EventNotificationBuilder {
     
     override func titleText() -> String? {
-        // the title should not contain the conversation name "Empty Conversation"
-        if let teamName = ZMUser.selfUser(in: moc).team?.name { return " in \(teamName)" }
+        if let teamName = ZMUser.selfUser(in: moc).team?.name { return "in \(teamName)" }
         else { return nil }
     }
     
