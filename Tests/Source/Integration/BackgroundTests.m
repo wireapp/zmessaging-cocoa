@@ -73,6 +73,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
     
     // background
     [self.application simulateApplicationDidEnterBackground];
+    [self.application setBackground];
     
     [self.mockTransportSession expireAllBlockedRequests];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -97,6 +98,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
     
     // background
     [self.application simulateApplicationDidEnterBackground];
+    [self.application setBackground];
     [self spinMainQueueWithTimeout:zmMessageExpirationTimer + 0.1];
     
     WaitForAllGroupsToBeEmpty(0.5);
