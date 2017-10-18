@@ -50,6 +50,19 @@ extension Dictionary {
         
         return false
     }
+    
+    internal func accountId() -> UUID? {
+        guard let userInfoData = self[PushChannelDataKey as! Key] as? [String: Any] else {
+            log.debug("No data dictionary in notification userInfo payload");
+            return nil
+        }
+    
+        guard let userIdString = userInfoData[PushChannelUserIDKey] as? String else {
+            return nil
+        }
+    
+        return UUID(uuidString: userIdString)
+    }
 }
 
 extension NSDictionary {
@@ -131,12 +144,12 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
     }
 
     public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
-        if application.applicationState == .inactive || application.applicationState == .background {
-            self.pendingLocalNotification = ZMStoredLocalNotification(notification: notification,
-                                                                      managedObjectContext: self.managedObjectContext,
-                                                                      actionIdentifier: nil,
-                                                                      textInput: nil)
-        }
+        
+        self.pendingLocalNotification = ZMStoredLocalNotification(notification: notification,
+                                                                  managedObjectContext: self.managedObjectContext,
+                                                                  actionIdentifier: nil,
+                                                                  textInput: nil)
+
         if self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen {
             self.processPendingNotificationActions()
         }

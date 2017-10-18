@@ -155,17 +155,7 @@ extension SessionManager: PushDispatcherClient {
             return
         }
         
-        guard let userInfoData = payload[PushChannelDataKey] as? [String: Any] else {
-            log.debug("No data dictionary in notification userInfo payload");
-            return
-        }
-        
-        guard let userIdString = userInfoData[PushChannelUserIDKey] as? String else {
-            return
-        }
-        
-        
-        if let userId = UUID(uuidString: userIdString),
+        if let userId = payload.accountId(),
             let account = self.accountManager.account(with: userId) {
             
             self.withSession(for: account, perform: { userSession in
