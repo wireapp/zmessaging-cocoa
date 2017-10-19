@@ -220,18 +220,24 @@ public final class HotFixDuplicatesTests_DiskDatabase: DiskDatabaseTest {
         super.tearDown()
     }
     
-    func client() -> UserClient {
+    func createClient() -> UserClient {
         let client = UserClient.insertNewObject(in: self.moc)
         client.remoteIdentifier = UUID().transportString()
         client.user = user
         return client
     }
     
+    func createUser() -> ZMUser {
+        let user = ZMUser.insertNewObject(in: self.moc)
+        user.remoteIdentifier = UUID()
+        return user
+    }
+    
     public func testThatItRemovesDuplicatedClients() {
         // GIVEN
-        let client1 = client()
+        let client1 = createClient()
         let duplicates: [UserClient] = (0..<5).map { _ in
-            let otherClient = client()
+            let otherClient = createClient()
             otherClient.remoteIdentifier = client1.remoteIdentifier
             return otherClient
         }
@@ -246,6 +252,29 @@ public final class HotFixDuplicatesTests_DiskDatabase: DiskDatabaseTest {
         let totalDeleted = (duplicates + [client1]).filter {
             $0.managedObjectContext == nil
         }.count
+        
+        XCTAssertEqual(totalDeleted, 5)
+    }
+    
+    public func testThatItRemovesDuplicatedUsers() {
+        // GIVEN
+        let user1 = createUser()
+        let duplicates: [ZMUser] = (0..<5).map { _ in
+            let otherUser = createUser()
+            otherUser.remoteIdentifier = user1.remoteIdentifier
+            return otherUser
+        }
+        
+        self.moc.saveOrRollback()
+        
+        // WHEN
+        ZMHotFixDirectory.deleteDuplicatedUsers(in: self.moc)
+        self.moc.saveOrRollback()
+        
+        // THEN
+        let totalDeleted = (duplicates + [user1]).filter {
+            $0.managedObjectContext == nil
+            }.count
         
         XCTAssertEqual(totalDeleted, 5)
     }
