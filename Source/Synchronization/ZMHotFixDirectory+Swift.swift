@@ -42,6 +42,53 @@ extension UserClient {
     }
 }
 
+extension ZMUser {
+    // Migration method for merging two duplicated @c ZMUser entities
+    public func merge(with user: ZMUser) {
+        precondition(user.remoteIdentifier == self.remoteIdentifier, "ZMUser's remoteIdentifier should be equal to merge")
+        
+        // NOTE:
+        // we are not merging clients since they are re-created on demand
+        
+        self.connection = self.connection ?? user.connection
+        self.addressBookEntry = self.addressBookEntry ?? user.addressBookEntry
+        
+        let mutableLastServerSyncedActiveConversations = self.mutableOrderedSetValue(forKey: "lastServerSyncedActiveConversations")
+        mutableLastServerSyncedActiveConversations.union(user.value(forKey: "lastServerSyncedActiveConversations") as! NSOrderedSet)
+        
+        let mutableConversationsCreated = self.mutableSetValue(forKey: "conversationsCreated")
+        mutableConversationsCreated.union(user.value(forKey: "conversationsCreated") as! Set<NSManagedObject>)
+        
+        let mutableActiveConversations = self.mutableOrderedSetValue(forKey: "activeConversations")
+        mutableActiveConversations.removeAllObjects()
+        mutableActiveConversations.union(mutableLastServerSyncedActiveConversations)
+        
+        self.createdTeams.formUnion(user.createdTeams)
+        self.setValue(self.value(forKey: "membership") ?? user.value(forKey: "membership"), forKey: "membership")
+        self.mutableSetValue(forKey: "reactions").union(user.value(forKey: "reactions") as! Set<NSManagedObject>)
+        self.mutableSetValue(forKey: "showingUserAdded").union(user.value(forKey: "showingUserAdded") as! Set<NSManagedObject>)
+        self.mutableSetValue(forKey: "showingUserRemoved").union(user.value(forKey: "showingUserRemoved") as! Set<NSManagedObject>)
+        self.mutableSetValue(forKey: "systemMessages").union(user.value(forKey: "systemMessages") as! Set<NSManagedObject>)
+    }
+}
+
+extension ZMConversation {
+    // Migration method for merging two duplicated @c ZMConversation entities
+    public func merge(with conversation: ZMConversation) {
+        precondition(conversation.remoteIdentifier == self.remoteIdentifier, "ZMConversation's remoteIdentifier should be equal to merge")
+        
+        // NOTE:
+        // connection will be fixed when merging the users
+        // creator will be fixed when merging the users
+        // lastServerSyncedActiveParticipants will be fixed when merging the users
+        // otherActiveParticpants will be fixed when merging the users
+        let mutableHiddenMessages = self.mutableOrderedSetValue(forKey: ZMConversationHiddenMessagesKey)
+        mutableHiddenMessages.union(conversation.hiddenMessages)
+        self.mutableMessages.union(conversation.messages)
+        self.team = self.team ?? conversation.team
+    }
+}
+
 extension ZMHotFixDirectory {
 
     public static func moveOrUpdateSignalingKeysInContext(_ context: NSManagedObjectContext) {
@@ -149,6 +196,43 @@ extension ZMHotFixDirectory {
                     firstClient.merge(with: $0)
                     context.delete($0)
                 }
+            }
+        }
+    }
+    
+    public static func deleteDuplicatedUsers(in context: NSManagedObjectContext) {
+        // Fetch users having the same remote identifiers
+        
+        context.findDuplicated(by: "remoteIdentifier_data").forEach { (remoteId: Data, users: [ZMUser]) in
+            // Group users having the same remote identifiers
+            guard let firstUser = users.first, users.count > 1 else {
+                return
+            }
+            
+            let tail = users.dropFirst()
+            // Merge users having the same remote identifier
+            
+            tail.forEach {
+                firstUser.merge(with: $0)
+                context.delete($0)
+            }
+        }
+    }
+    
+    public static func deleteDuplicatedConversations(in context: NSManagedObjectContext) {
+        // Fetch conversations having the same remote identifiers
+        context.findDuplicated(by: "remoteIdentifier_data").forEach { (remoteId: Data, conversations: [ZMConversation]) in
+            // Group conversations having the same remote identifiers
+            guard let firstConversation = conversations.first, conversations.count > 1 else {
+                return
+            }
+            
+            let tail = conversations.dropFirst()
+            // Merge conversations having the same remote identifier
+            
+            tail.forEach {
+                firstConversation.merge(with: $0)
+                context.delete($0)
             }
         }
     }

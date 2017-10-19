@@ -51,6 +51,29 @@ public final class HotFixDuplicatesTests: MessagingTest {
         return client
     }
     
+    func createUser() -> ZMUser {
+        let user = ZMUser.insertNewObject(in: self.uiMOC)
+        user.remoteIdentifier = UUID()
+        return user
+    }
+    
+    func createConversation() -> ZMConversation {
+        let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
+        conversation.remoteIdentifier = UUID()
+        return conversation
+    }
+    
+    func createTeam() -> Team {
+        let team = Team.insertNewObject(in: self.uiMOC)
+        team.remoteIdentifier = UUID()
+        return team
+    }
+    
+    func createMembership() -> Member {
+        let member = Member.insertNewObject(in: self.uiMOC)
+        return member
+    }
+    
     
     func appendSystemMessage(type: ZMSystemMessageType,
                                       sender: ZMUser,
@@ -139,6 +162,81 @@ public final class HotFixDuplicatesTests: MessagingTest {
             XCTAssertFalse($0.clients.contains(client2))
         }
     }
+    
+    public func testThatItMergesTwoUsers() {
+        // GIVEN
+        let user1 = createUser()
+        let user2 = createUser()
+        user2.remoteIdentifier = user1.remoteIdentifier
+        
+        let team = createTeam()
+        let membership = createMembership()
+        let reaction = Reaction.insertNewObject(in: self.uiMOC)
+        let systemMessage = ZMSystemMessage.insertNewObject(in: self.uiMOC)
+        
+        let lastServerSyncedActiveConversations = NSOrderedSet(object: conversation)
+        let conversationsCreated = Set<ZMConversation>([conversation])
+        let createdTeams = Set<Team>([team])
+        let reactions = Set<Reaction>([reaction])
+        let showingUserAdded = Set<ZMSystemMessage>([systemMessage])
+        let showingUserRemoved = Set<ZMSystemMessage>([systemMessage])
+        let systemMessages = Set<ZMSystemMessage>([systemMessage])
+        let connection = ZMConnection.insertNewObject(in: self.uiMOC)
+        let addressBoookEntry = AddressBookEntry.insertNewObject(in: self.uiMOC)
+        
+        user2.setValue(lastServerSyncedActiveConversations, forKey: "lastServerSyncedActiveConversations")
+        user2.setValue(conversationsCreated, forKey: "conversationsCreated")
+        user2.createdTeams = createdTeams
+        user2.connection = connection
+        user2.addressBookEntry = addressBoookEntry
+        user2.setValue(membership, forKey: "membership")
+        user2.setValue(reactions, forKey: "reactions")
+        user2.setValue(showingUserAdded, forKey: "showingUserAdded")
+        user2.setValue(showingUserRemoved, forKey: "showingUserRemoved")
+        user2.setValue(systemMessages, forKey: "systemMessages")
+        
+        // WHEN
+        user1.merge(with: user2)
+        uiMOC.delete(user2)
+        uiMOC.saveOrRollback()
+        
+        // THEN
+        XCTAssertEqual(user1.activeConversations, lastServerSyncedActiveConversations)
+        XCTAssertEqual(user1.value(forKey: "conversationsCreated") as! Set<NSManagedObject>, conversationsCreated)
+        XCTAssertEqual(user1.createdTeams, createdTeams)
+        XCTAssertEqual(user1.membership, membership)
+        XCTAssertEqual(user1.connection, connection)
+        XCTAssertEqual(user1.addressBookEntry, addressBoookEntry)
+        XCTAssertEqual(user1.value(forKey: "reactions") as! Set<NSManagedObject>, reactions)
+        XCTAssertEqual(user1.value(forKey: "showingUserAdded") as! Set<NSManagedObject>, showingUserAdded)
+        XCTAssertEqual(user1.value(forKey: "showingUserRemoved") as! Set<NSManagedObject>, showingUserRemoved)
+        XCTAssertEqual(user1.value(forKey: "systemMessages") as! Set<NSManagedObject>, systemMessages)
+    }
+    
+    public func testThatItMergesTwoConversations() {
+        // GIVEN
+        let conversation1 = createConversation()
+        let conversation2 = createConversation()
+        conversation1.remoteIdentifier = conversation2.remoteIdentifier
+        
+        let message1 = ZMClientMessage.insertNewObject(in: self.uiMOC)
+        let message2 = ZMClientMessage.insertNewObject(in: self.uiMOC)
+        
+        let messages = NSOrderedSet(arrayLiteral: message1)
+        let hiddenMessages = NSOrderedSet(arrayLiteral: message2)
+        
+        conversation2.setValue(messages, forKey: "messages")
+        conversation2.setValue(hiddenMessages, forKey: "hiddenMessages")
+        
+        // WHEN
+        conversation1.merge(with: conversation2)
+        uiMOC.delete(conversation2)
+        uiMOC.saveOrRollback()
+        
+        // THEN
+        XCTAssertEqual(conversation1.messages, messages)
+        XCTAssertEqual(conversation1.hiddenMessages, hiddenMessages)
+    }
 
 }
 
@@ -159,18 +257,30 @@ public final class HotFixDuplicatesTests_DiskDatabase: DiskDatabaseTest {
         super.tearDown()
     }
     
-    func client() -> UserClient {
+    func createClient() -> UserClient {
         let client = UserClient.insertNewObject(in: self.moc)
         client.remoteIdentifier = UUID().transportString()
         client.user = user
         return client
     }
     
+    func createUser() -> ZMUser {
+        let user = ZMUser.insertNewObject(in: self.moc)
+        user.remoteIdentifier = UUID()
+        return user
+    }
+    
+    func createConversation() -> ZMConversation {
+        let conversation = ZMConversation.insertNewObject(in: self.moc)
+        conversation.remoteIdentifier = UUID()
+        return conversation
+    }
+    
     public func testThatItRemovesDuplicatedClients() {
         // GIVEN
-        let client1 = client()
+        let client1 = createClient()
         let duplicates: [UserClient] = (0..<5).map { _ in
-            let otherClient = client()
+            let otherClient = createClient()
             otherClient.remoteIdentifier = client1.remoteIdentifier
             return otherClient
         }
@@ -185,6 +295,52 @@ public final class HotFixDuplicatesTests_DiskDatabase: DiskDatabaseTest {
         let totalDeleted = (duplicates + [client1]).filter {
             $0.managedObjectContext == nil
         }.count
+        
+        XCTAssertEqual(totalDeleted, 5)
+    }
+    
+    public func testThatItRemovesDuplicatedUsers() {
+        // GIVEN
+        let user1 = createUser()
+        let duplicates: [ZMUser] = (0..<5).map { _ in
+            let otherUser = createUser()
+            otherUser.remoteIdentifier = user1.remoteIdentifier
+            return otherUser
+        }
+        
+        self.moc.saveOrRollback()
+        
+        // WHEN
+        ZMHotFixDirectory.deleteDuplicatedUsers(in: self.moc)
+        self.moc.saveOrRollback()
+        
+        // THEN
+        let totalDeleted = (duplicates + [user1]).filter {
+            $0.managedObjectContext == nil
+            }.count
+        
+        XCTAssertEqual(totalDeleted, 5)
+    }
+    
+    public func testThatItRemovesDuplicatedConversations() {
+        // GIVEN
+        let conversation1 = createConversation()
+        let duplicates: [ZMConversation] = (0..<5).map { _ in
+            let otherConversation = createConversation()
+            otherConversation.remoteIdentifier = conversation1.remoteIdentifier
+            return otherConversation
+        }
+        
+        self.moc.saveOrRollback()
+        
+        // WHEN
+        ZMHotFixDirectory.deleteDuplicatedConversations(in: self.moc)
+        self.moc.saveOrRollback()
+        
+        // THEN
+        let totalDeleted = (duplicates + [conversation1]).filter {
+            $0.managedObjectContext == nil
+            }.count
         
         XCTAssertEqual(totalDeleted, 5)
     }
