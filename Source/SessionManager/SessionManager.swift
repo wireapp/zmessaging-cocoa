@@ -485,13 +485,15 @@ public protocol LocalMessageNotificationResponder : class {
     // Loads user session for @c account given and executes the @c action block.
     public func withSession(for account: Account, perform completion: @escaping (ZMUserSession)->()) {
         log.debug("Request to load session for \(account)")
-        
+        let group = self.dispatchGroup
+        group?.enter()
         self.sessionLoadingQueue.serialAsync(do: { onWorkDone in
 
             if let session = self.backgroundUserSessions[account.userIdentifier] {
                 log.debug("Session for \(account) is already loaded")
                 completion(session)
                 onWorkDone()
+                group?.leave()
             }
             else {
                 LocalStoreProvider.createStack(
@@ -503,6 +505,7 @@ public protocol LocalMessageNotificationResponder : class {
                         let userSession = self.startBackgroundSession(for: account, with: provider)
                         completion(userSession)
                         onWorkDone()
+                        group?.leave()
                     }
                 )
             }
@@ -646,8 +649,6 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         
         accountManager.addAndSelect(account)
 
-        let group = self.dispatchGroup
-        group?.enter()
         self.activateSession(for: account) { userSession in
             self.registerSessionForRemoteNotificationsIfNeeded(userSession)
             self.updateCurrentAccount(in: userSession.managedObjectContext)
@@ -655,8 +656,6 @@ extension SessionManager: UnauthenticatedSessionDelegate {
             if let profileImageData = session.authenticationStatus.profileImageData {
                 self.updateProfileImage(imageData: profileImageData)
             }
-            
-            group?.leave()
         }
     }
 }
