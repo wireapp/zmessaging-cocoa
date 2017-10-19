@@ -396,17 +396,10 @@ public protocol LocalMessageNotificationResponder : class {
             return
         }
 
-        LocalStoreProvider.createStack(
-            applicationContainer: sharedContainerURL,
-            userIdentifier: account.userIdentifier,
-            dispatchGroup: dispatchGroup,
-            migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
-            completion: { [weak self] provider in
-                self?.activateSession(for: account, with: provider) { session in
-                    self?.registerSessionForRemoteNotificationsIfNeeded(session)
-                    completion(session)
-                }}
-        )
+        self.activateSession(for: account) { session in
+            self.registerSessionForRemoteNotificationsIfNeeded(session)
+            completion(session)
+        }
     }
 
     public func deleteAccountData(for account: Account) {
@@ -425,40 +418,25 @@ public protocol LocalMessageNotificationResponder : class {
         }
     }
     
-    fileprivate func activateSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession) -> Void) {
-        let session: ZMUserSession
-
-        if let backgroundSession = self.backgroundUserSessions[account.userIdentifier] {
-            session = backgroundSession
-        }
-        else {
-            guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
-                preconditionFailure("Unable to create session for \(account)")
-            }
-            session = newSession
-
-            self.configure(session: session, for: account)
-        }
-        
-        self.registerObservers(account: account, session: session)
-
-        self.activeUserSession = session
-
-        
-        log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
-        let authenticationStatus = unauthenticatedSession?.authenticationStatus
-
-        session.syncManagedObjectContext.performGroupedBlock {
-            session.setEmailCredentials(authenticationStatus?.emailCredentials())
-            if let registered = authenticationStatus?.completedRegistration {
-                session.syncManagedObjectContext.registeredOnThisDevice = registered
-                session.syncManagedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = registered
-            }
-
-            session.managedObjectContext.performGroupedBlock { [weak self] in
-                completion(session)
-                self?.notifyNewUserSessionCreated(session)
-                self?.delegate?.sessionManagerCreated(userSession: session)
+    fileprivate func activateSession(for account: Account, completion: @escaping (ZMUserSession) -> Void) {
+        self.withSession(for: account) { session in
+            self.activeUserSession = session
+            
+            log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
+            let authenticationStatus = self.unauthenticatedSession?.authenticationStatus
+            
+            session.syncManagedObjectContext.performGroupedBlock {
+                session.setEmailCredentials(authenticationStatus?.emailCredentials())
+                if let registered = authenticationStatus?.completedRegistration {
+                    session.syncManagedObjectContext.registeredOnThisDevice = registered
+                    session.syncManagedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = registered
+                }
+                
+                session.managedObjectContext.performGroupedBlock { [weak self] in
+                    completion(session)
+                    self?.notifyNewUserSessionCreated(session)
+                    self?.delegate?.sessionManagerCreated(userSession: session)
+                }
             }
         }
     }
@@ -495,17 +473,23 @@ public protocol LocalMessageNotificationResponder : class {
     fileprivate func configure(session userSession: ZMUserSession, for account: Account) {
         userSession.requestToOpenViewDelegate = self
         userSession.sessionManager = self
+        require(self.backgroundUserSessions[account.userIdentifier] == nil, "User session is already loaded")
         self.backgroundUserSessions[account.userIdentifier] = userSession
         pushDispatcher.add(client: userSession)
         userSession.callNotificationStyle = callNotificationStyle
         userSession.useConstantBitRateAudio = useConstantBitRateAudio
+
+        registerObservers(account: account, session: userSession)
     }
     
     // Loads user session for @c account given and executes the @c action block.
     public func withSession(for account: Account, perform completion: @escaping (ZMUserSession)->()) {
+        log.debug("Request to load session for \(account)")
+        
         self.sessionLoadingQueue.serialAsync(do: { onWorkDone in
 
             if let session = self.backgroundUserSessions[account.userIdentifier] {
+                log.debug("Session for \(account) is already loaded")
                 completion(session)
                 onWorkDone()
             }
@@ -516,7 +500,7 @@ public protocol LocalMessageNotificationResponder : class {
                     dispatchGroup: self.dispatchGroup,
                     migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
                     completion: { provider in
-                        let userSession = self.activateBackgroundSession(for: account, with: provider)
+                        let userSession = self.startBackgroundSession(for: account, with: provider)
                         completion(userSession)
                         onWorkDone()
                     }
@@ -526,11 +510,10 @@ public protocol LocalMessageNotificationResponder : class {
     }
 
     // Creates the user session for @c account given, calls @c completion when done.
-    private func activateBackgroundSession(for account: Account, with provider: LocalStoreProviderProtocol) -> ZMUserSession {
+    private func startBackgroundSession(for account: Account, with provider: LocalStoreProviderProtocol) -> ZMUserSession {
         guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
             preconditionFailure("Unable to create session for \(account)")
         }
-        self.registerObservers(account: account, session: newSession)
         
         self.configure(session: newSession, for: account)
 
@@ -665,20 +648,17 @@ extension SessionManager: UnauthenticatedSessionDelegate {
 
         let group = self.dispatchGroup
         group?.enter()
-        LocalStoreProvider.createStack(applicationContainer: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup) { [weak self] provider in
-            self?.activateSession(for: account, with: provider) { userSession in
-                self?.registerSessionForRemoteNotificationsIfNeeded(userSession)
-                self?.updateCurrentAccount(in: userSession.managedObjectContext)
-                
-                if let profileImageData = session.authenticationStatus.profileImageData {
-                    self?.updateProfileImage(imageData: profileImageData)
-                }
-                
-                group?.leave()
+        self.activateSession(for: account) { userSession in
+            self.registerSessionForRemoteNotificationsIfNeeded(userSession)
+            self.updateCurrentAccount(in: userSession.managedObjectContext)
+            
+            if let profileImageData = session.authenticationStatus.profileImageData {
+                self.updateProfileImage(imageData: profileImageData)
             }
+            
+            group?.leave()
         }
     }
-
 }
 
 // MARK: - ZMAuthenticationObserver
