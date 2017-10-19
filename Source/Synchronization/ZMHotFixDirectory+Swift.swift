@@ -202,6 +202,7 @@ extension ZMHotFixDirectory {
     
     public static func deleteDuplicatedUsers(in context: NSManagedObjectContext) {
         // Fetch users having the same remote identifiers
+        
         context.findDuplicated(by: "remoteIdentifier_data").forEach { (remoteId: Data, users: [ZMUser]) in
             // Group users having the same remote identifiers
             guard let firstUser = users.first, users.count > 1 else {
