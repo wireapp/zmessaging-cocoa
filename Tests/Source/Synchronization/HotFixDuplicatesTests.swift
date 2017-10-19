@@ -181,10 +181,14 @@ public final class HotFixDuplicatesTests: MessagingTest {
         let showingUserAdded = Set<ZMSystemMessage>([systemMessage])
         let showingUserRemoved = Set<ZMSystemMessage>([systemMessage])
         let systemMessages = Set<ZMSystemMessage>([systemMessage])
+        let connection = ZMConnection.insertNewObject(in: self.uiMOC)
+        let addressBoookEntry = AddressBookEntry.insertNewObject(in: self.uiMOC)
         
         user2.setValue(lastServerSyncedActiveConversations, forKey: "lastServerSyncedActiveConversations")
         user2.setValue(conversationsCreated, forKey: "conversationsCreated")
         user2.createdTeams = createdTeams
+        user2.connection = connection
+        user2.addressBookEntry = addressBoookEntry
         user2.setValue(membership, forKey: "membership")
         user2.setValue(reactions, forKey: "reactions")
         user2.setValue(showingUserAdded, forKey: "showingUserAdded")
@@ -201,6 +205,8 @@ public final class HotFixDuplicatesTests: MessagingTest {
         XCTAssertEqual(user1.value(forKey: "conversationsCreated") as! Set<NSManagedObject>, conversationsCreated)
         XCTAssertEqual(user1.createdTeams, createdTeams)
         XCTAssertEqual(user1.membership, membership)
+        XCTAssertEqual(user1.connection, connection)
+        XCTAssertEqual(user1.addressBookEntry, addressBoookEntry)
         XCTAssertEqual(user1.value(forKey: "reactions") as! Set<NSManagedObject>, reactions)
         XCTAssertEqual(user1.value(forKey: "showingUserAdded") as! Set<NSManagedObject>, showingUserAdded)
         XCTAssertEqual(user1.value(forKey: "showingUserRemoved") as! Set<NSManagedObject>, showingUserRemoved)
