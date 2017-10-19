@@ -42,6 +42,14 @@ extension UserClient {
     }
 }
 
+extension ZMUser {
+    public func merge(with user: ZMUser) {
+        precondition(user.remoteIdentifier == self.remoteIdentifier, "ZMUser's remoteIdentifier should be equal to merge")
+        
+        // TODO
+    }
+}
+
 extension ZMHotFixDirectory {
 
     public static func moveOrUpdateSignalingKeysInContext(_ context: NSManagedObjectContext) {
@@ -149,6 +157,24 @@ extension ZMHotFixDirectory {
                     firstClient.merge(with: $0)
                     context.delete($0)
                 }
+            }
+        }
+    }
+    
+    public static func deleteDuplicatedUsers(in context: NSManagedObjectContext) {
+        // Fetch clients having the same remote identifiers
+        context.findDuplicated(by: "remoteIdentifier_data").forEach { (remoteId: Data, users: [ZMUser]) in
+            // Group users having the same remote identifiers
+            guard let firstUser = users.first, users.count > 1 else {
+                return
+            }
+            
+            let tail = users.dropFirst()
+            // Merge clients having the same remote identifier and same user
+            
+            tail.forEach {
+                firstUser.merge(with: $0)
+                context.delete($0)
             }
         }
     }
