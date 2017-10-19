@@ -66,8 +66,8 @@ extension ZMUser {
         self.createdTeams.formUnion(user.createdTeams)
         self.setValue(self.value(forKey: "membership") ?? user.value(forKey: "membership"), forKey: "membership")
         self.mutableSetValue(forKey: "reactions").union(user.value(forKey: "reactions") as! Set<NSManagedObject>)
-        self.mutableOrderedSetValue(forKey: "showingUsersAdded").union(user.showingUserAdded)
-        self.mutableOrderedSetValue(forKey: "showingUserRemoved").union(user.showingUserRemoved)
+        self.mutableSetValue(forKey: "showingUserAdded").union(user.value(forKey: "showingUserAdded") as! Set<NSManagedObject>)
+        self.mutableSetValue(forKey: "showingUserRemoved").union(user.value(forKey: "showingUserRemoved") as! Set<NSManagedObject>)
         self.mutableSetValue(forKey: "systemMessages").union(user.value(forKey: "systemMessages") as! Set<NSManagedObject>)
     }
 }

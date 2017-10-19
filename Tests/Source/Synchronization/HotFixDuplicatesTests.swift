@@ -51,6 +51,23 @@ public final class HotFixDuplicatesTests: MessagingTest {
         return client
     }
     
+    func createUser() -> ZMUser {
+        let user = ZMUser.insertNewObject(in: self.uiMOC)
+        user.remoteIdentifier = UUID()
+        return user
+    }
+    
+    func createTeam() -> Team {
+        let team = Team.insertNewObject(in: self.uiMOC)
+        team.remoteIdentifier = UUID()
+        return team
+    }
+    
+    func createMembership() -> Member {
+        let member = Member.insertNewObject(in: self.uiMOC)
+        return member
+    }
+    
     
     func appendSystemMessage(type: ZMSystemMessageType,
                                       sender: ZMUser,
@@ -138,6 +155,50 @@ public final class HotFixDuplicatesTests: MessagingTest {
             XCTAssertTrue($0.clients.contains(client1))
             XCTAssertFalse($0.clients.contains(client2))
         }
+    }
+    
+    public func testThatItMergesTwoUsers() {
+        // GIVEN
+        let user1 = createUser()
+        let user2 = createUser()
+        user2.remoteIdentifier = user1.remoteIdentifier
+        
+        let team = createTeam()
+        let membership = createMembership()
+        let reaction = Reaction.insertNewObject(in: self.uiMOC)
+        let systemMessage = ZMSystemMessage.insertNewObject(in: self.uiMOC)
+        
+        let lastServerSyncedActiveConversations = NSOrderedSet(object: conversation)
+        let conversationsCreated = Set<ZMConversation>([conversation])
+        let createdTeams = Set<Team>([team])
+        let reactions = Set<Reaction>([reaction])
+        let showingUserAdded = Set<ZMSystemMessage>([systemMessage])
+        let showingUserRemoved = Set<ZMSystemMessage>([systemMessage])
+        let systemMessages = Set<ZMSystemMessage>([systemMessage])
+        
+        user2.setValue(lastServerSyncedActiveConversations, forKey: "lastServerSyncedActiveConversations")
+        user2.setValue(conversationsCreated, forKey: "conversationsCreated")
+        user2.createdTeams = createdTeams
+        user2.setValue(membership, forKey: "membership")
+        user2.setValue(reactions, forKey: "reactions")
+        user2.setValue(showingUserAdded, forKey: "showingUserAdded")
+        user2.setValue(showingUserRemoved, forKey: "showingUserRemoved")
+        user2.setValue(systemMessages, forKey: "systemMessages")
+        
+        // WHEN
+        user1.merge(with: user2)
+        uiMOC.delete(user2)
+        uiMOC.saveOrRollback()
+        
+        // THEN
+        XCTAssertEqual(user1.activeConversations, lastServerSyncedActiveConversations)
+        XCTAssertEqual(user1.value(forKey: "conversationsCreated") as! Set<NSManagedObject>, conversationsCreated)
+        XCTAssertEqual(user1.createdTeams, createdTeams)
+        XCTAssertEqual(user1.membership, membership)
+        XCTAssertEqual(user1.value(forKey: "reactions") as! Set<NSManagedObject>, reactions)
+        XCTAssertEqual(user1.value(forKey: "showingUserAdded") as! Set<NSManagedObject>, showingUserAdded)
+        XCTAssertEqual(user1.value(forKey: "showingUserRemoved") as! Set<NSManagedObject>, showingUserRemoved)
+        XCTAssertEqual(user1.value(forKey: "systemMessages") as! Set<NSManagedObject>, systemMessages)
     }
 
 }
