@@ -228,7 +228,6 @@ extension TypingStrategy : ZMEventConsumer {
     func processIsTypingUpdateEvent(for user: ZMUser, in conversation: ZMConversation, with status: String) {
         let startedTyping = (status == StartedKey)
         let stoppedTyping = (status == StoppedKey)
-
         if (startedTyping || stoppedTyping) {
             typing.setIs(startedTyping, for: user, in: conversation)
         }
