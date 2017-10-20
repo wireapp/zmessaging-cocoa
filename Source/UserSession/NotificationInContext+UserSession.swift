@@ -95,7 +95,7 @@ public extension ZMConversation {
             guard let `self` = self else { return }
             
             let users = note.userInfo[typingNotificationUsersKey] as? Set<ZMUser> ?? Set()
-            let local = note.userInfo["isLocal"] as? Bool ?? false
+            let local = note.userInfo[IsLocalKey] as? Bool ?? false
             observer?.typingDidChange(conversation: self, typingUsers: users, isLocal: local)
         }
     }

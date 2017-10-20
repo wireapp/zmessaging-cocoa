@@ -20,6 +20,7 @@ import WireDataModel
 
 let IsTypingKey = "isTyping"
 let ClearIsTypingKey = "clearIsTyping"
+let IsLocalKey = "isLocal"
 
 let StatusKey = "status"
 let StoppedKey = "stopped"
@@ -244,7 +245,7 @@ extension TypingStrategy {
     
     public static func notifyTranscoderThatUser(isTyping: Bool, in conversation: ZMConversation) {
         let userInfo = [IsTypingKey : NSNumber(value:isTyping),
-                        "isLocal":true]
+                        IsLocalKey:true]
         NotificationInContext(
             name: ZMConversation.typingNotificationName,
             context: conversation.managedObjectContext!.notificationContext,
