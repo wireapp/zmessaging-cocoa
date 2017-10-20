@@ -52,7 +52,7 @@
     [super tearDown];
 }
 
-- (void)typingDidChangeWithConversation:(ZMConversation *)conversation typingUsers:(NSSet<ZMUser *> *)typingUsers isLocal:(BOOL)isLocal
+- (void)typingDidChangeWithConversation:(ZMConversation *)conversation typingUsers:(NSSet<ZMUser *> *)typingUsers
 {
     [self.notifications addObject:[[TypingChange alloc] initWithConversation:conversation typingUsers:typingUsers]];
 }
