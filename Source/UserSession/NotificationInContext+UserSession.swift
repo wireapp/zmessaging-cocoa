@@ -94,7 +94,9 @@ public extension ZMConversation {
             [weak observer, weak self] note in
             guard let `self` = self else { return }
             
-            observer?.typingDidChange(conversation: self, typingUsers: note.userInfo[typingNotificationUsersKey] as? Set<ZMUser> ?? Set())
+            let users = note.userInfo[typingNotificationUsersKey] as? Set<ZMUser> ?? Set()
+            let local = note.userInfo["isLocal"] as? Bool ?? false
+            observer?.typingDidChange(conversation: self, typingUsers: users, isLocal: local)
         }
     }
     
@@ -109,7 +111,7 @@ public extension ZMConversation {
 
 @objc public protocol ZMTypingChangeObserver: NSObjectProtocol {
     
-    func typingDidChange(conversation: ZMConversation, typingUsers: Set<ZMUser>)
+    func typingDidChange(conversation: ZMConversation, typingUsers: Set<ZMUser>, isLocal: Bool)
 }
 
 // MARK: - Connection limit reached
