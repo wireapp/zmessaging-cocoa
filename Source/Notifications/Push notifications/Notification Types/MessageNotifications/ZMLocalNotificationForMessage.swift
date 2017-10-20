@@ -24,7 +24,7 @@ public protocol NotificationForMessage : LocalNotification {
     associatedtype MessageType : ZMMessage
     
     var contentType : ZMLocalNotificationContentType { get }
-    init?(message: MessageType, application: ZMApplication?)
+    init?(message: MessageType, application: ZMApplication?, userSession: ZMUserSession)
     func copyByAddingMessage(_ message: MessageType) -> Self?
     func textToDisplay(_ message: MessageType) -> String
     func titleToDisplay(for managedObjectContext: NSManagedObjectContext?) -> String?
@@ -108,8 +108,9 @@ final public class ZMLocalNotificationForMessage : ZMLocalNotification, Notifica
     
     var eventCount : Int = 1
     unowned public var application : ZMApplication
-    
-    public required init?(message: ZMOTRMessage, application: ZMApplication?) {
+    unowned public let userSession : ZMUserSession
+
+    public required init?(message: ZMOTRMessage, application: ZMApplication?, userSession: ZMUserSession) {
         self.contentType = ZMLocalNotificationContentType.typeForMessage(message)
         guard type(of: self).canCreateNotification(message, contentType: contentType),
               let conversation = message.conversation,
@@ -119,6 +120,7 @@ final public class ZMLocalNotificationForMessage : ZMLocalNotification, Notifica
         self.messageNonce = message.nonce
         self.senderUUID = sender.remoteIdentifier!
         self.application = application ?? UIApplication.shared
+        self.userSession = userSession
         super.init(conversationID: conversation.remoteIdentifier)
         
         let notification = configureNotification(message, isEphemeral: message.isEphemeral)
@@ -170,7 +172,7 @@ final public class ZMLocalNotificationForMessage : ZMLocalNotification, Notifica
         switch (otherContentType) {
         case (.knock):
             eventCount = eventCount+1
-            cancelNotifications()
+            cancelNotifications(userSession: userSession)
             let note = configureNotification(message)
             notifications.append(note)
             return self

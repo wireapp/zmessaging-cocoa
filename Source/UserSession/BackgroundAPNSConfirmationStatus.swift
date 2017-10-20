@@ -28,19 +28,22 @@ import UIKit
     private var tornDown = false
     private var messageNonces : [UUID : ZMBackgroundActivity] = [:]
     private unowned var application : ZMApplication
+    private unowned let applicationStatus: ApplicationStatus
     private unowned var managedObjectContext : NSManagedObjectContext
     private unowned var backgroundActivityFactory : BackgroundActivityFactory
 
     open var needsToSyncMessages : Bool {
-        return messageNonces.count > 0 && application.applicationState == .background
+        return messageNonces.count > 0 && applicationStatus.operationState == .background
     }
     
     @objc public init(application: ZMApplication,
                       managedObjectContext: NSManagedObjectContext,
-                      backgroundActivityFactory: BackgroundActivityFactory) {
+                      backgroundActivityFactory: BackgroundActivityFactory,
+                      applicationStatus: ApplicationStatus) {
         self.application = application
         self.managedObjectContext = managedObjectContext
         self.backgroundActivityFactory = backgroundActivityFactory
+        self.applicationStatus = applicationStatus
         
         super.init()
     }

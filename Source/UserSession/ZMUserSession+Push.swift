@@ -137,6 +137,29 @@ extension ZMUserSession: PushDispatcherOptionalClient {
 
 extension ZMUserSession: ForegroundNotificationsDelegate {
     
+    /// Cancel local notification in main thread
+    ///
+    /// - Parameters:
+    ///   - notification: notification to cancel
+    ///   - application: application which cancels the notification
+    func cancelLocalNotificationInMainThread(notification: UILocalNotification, application: ZMApplication) {
+        DispatchQueue.main.performAsync {
+            application.cancelLocalNotification(notification)
+        }
+    }
+
+    
+    /// Schdule local notification in main thread
+    ///
+    /// - Parameters:
+    ///   - notification: notification to cancel
+    ///   - application: application which cancels the notification
+    public func scheduleLocalNotificationInMainThread(notification: UILocalNotification, application: ZMApplication) {
+        DispatchQueue.main.performAsync {
+            application.scheduleLocalNotification(notification)
+        }
+    }
+
     public func didReceieveLocalMessage(notification: UILocalNotification, application: ZMApplication) {
         DispatchQueue.main.performAsync {
             self.sessionManager?.localMessageNotificationResponder?.processLocalMessage(notification, forSession: self)

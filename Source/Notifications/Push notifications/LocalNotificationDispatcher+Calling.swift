@@ -24,7 +24,7 @@ public extension LocalNotificationDispatcher {
         
         let note =  notification(for: conversation, sender: sender)
         
-        callingNotifications.cancelNotifications(conversation)
+        callingNotifications.cancelNotifications(conversation, userSession: userSession)
         
         note.update(forCallState: callState)
         scheduleNotification(note)
@@ -33,7 +33,7 @@ public extension LocalNotificationDispatcher {
     public func processMissedCall(in conversation: ZMConversation, sender: ZMUser) {
         let note =  notification(for: conversation, sender: sender)
         
-        callingNotifications.cancelNotifications(conversation)
+        callingNotifications.cancelNotifications(conversation, userSession: userSession)
         
         note.updateForMissedCall()
         scheduleNotification(note)

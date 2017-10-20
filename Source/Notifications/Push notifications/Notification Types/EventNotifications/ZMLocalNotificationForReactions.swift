@@ -19,7 +19,15 @@
 import Foundation
 
 public protocol CopyableEventNotification : EventNotification {
-    func copyByAddingEvent(_ event: ZMUpdateEvent, conversation: ZMConversation) -> Self?
+
+    ///
+    ///
+    /// - Parameters:
+    ///   - event:
+    ///   - conversation: 
+    ///   - userSession: userSession for cancelLocalNotification (in main thread)
+    /// - Returns: 
+    func copyByAddingEvent(_ event: ZMUpdateEvent, conversation: ZMConversation, userSession: ZMUserSession) -> Self?
     func canAddEvent(_ event: ZMUpdateEvent, conversation: ZMConversation) -> Bool
 }
 
@@ -75,7 +83,7 @@ final public class ZMLocalNotificationForReaction : ZMLocalNotificationForEvent,
         return notification
     }
     
-    public func copyByAddingEvent(_ event: ZMUpdateEvent, conversation: ZMConversation) -> ZMLocalNotificationForReaction? {
+    public func copyByAddingEvent(_ event: ZMUpdateEvent, conversation: ZMConversation, userSession: ZMUserSession) -> ZMLocalNotificationForReaction? {
         guard canAddEvent(event, conversation: conversation),
               let otherMessage = ZMGenericMessage(from:event) , otherMessage.hasReaction()
         else { return nil }
@@ -85,7 +93,10 @@ final public class ZMLocalNotificationForReaction : ZMLocalNotificationForEvent,
             otherMessage.reaction.emoji == "" &&
             event.senderUUID() == sender?.remoteIdentifier
         {
-            cancelNotifications()
+            self.managedObjectContext.zm_userInterface.performGroupedBlock {
+                self.cancelNotifications(userSession: userSession)
+            }
+            
             shouldBeDiscarded = true
             return nil
         }

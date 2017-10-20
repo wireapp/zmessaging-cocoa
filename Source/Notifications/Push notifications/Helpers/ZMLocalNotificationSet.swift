@@ -35,7 +35,7 @@ import WireTransport
     
     var oldNotifications = [UILocalNotification]()
     
-    weak var application: ZMApplication?
+    unowned let application: ZMApplication
     let archivingKey : String
     let keyValueStore : ZMSynchonizableKeyValueStore
     
@@ -83,40 +83,60 @@ import WireTransport
     }
     
     /// Cancels all notifications
-    public func cancelAllNotifications() {
-        notifications.forEach{ $0.uiNotifications.forEach{ application?.cancelLocalNotification($0) } }
+    ///
+    /// - Parameter userSession: userSession for cancelLocalNotification (in main thread)
+    public func cancelAllNotifications(userSession: ZMUserSession) {
+        notifications.forEach{ $0.uiNotifications.forEach {
+            userSession.cancelLocalNotificationInMainThread(notification:$0, application: application)
+            } }
         notifications = Set()
         
-        oldNotifications.forEach{application?.cancelLocalNotification($0)}
+        oldNotifications.forEach{
+            userSession.cancelLocalNotificationInMainThread(notification:$0, application: application)
+        }
         oldNotifications = []
     }
     
     /// This cancels all notifications of a specific conversation
-    public func cancelNotifications(_ conversation: ZMConversation) {
-        cancelOldNotifications(conversation)
-        cancelCurrentNotifications(conversation)
+    ///
+    /// - Parameters:
+    ///   - conversation:
+    ///   - userSession: userSession for cancelLocalNotification (in main thread)
+    public func cancelNotifications(_ conversation: ZMConversation, userSession: ZMUserSession) {
+        cancelOldNotifications(conversation, userSession: userSession)
+        cancelCurrentNotifications(conversation, userSession: userSession)
     }
     
     /// Cancel all notifications created in this run
-    internal func cancelCurrentNotifications(_ conversation: ZMConversation) {
+    ///
+    /// - Parameters:
+    ///   - conversation:
+    ///   - userSession: userSession for cancelLocalNotification (in main thread)
+    internal func cancelCurrentNotifications(_ conversation: ZMConversation, userSession: ZMUserSession) {
         guard self.notifications.count > 0 else { return }
         var toRemove = Set<ZMLocalNotification>()
         notifications.forEach{
             if($0.conversationID == conversation.remoteIdentifier) {
                 toRemove.insert($0)
-                $0.uiNotifications.forEach{ application?.cancelLocalNotification($0) }
+                $0.uiNotifications.forEach{
+                    userSession.cancelLocalNotificationInMainThread(notification:$0, application: application)
+                }
             }
         }
         notifications.subtract(toRemove)
     }
     
     /// Cancels all notifications created in previous runs
-    internal func cancelOldNotifications(_ conversation: ZMConversation) {
+    ///
+    /// - Parameters:
+    ///   - conversation:
+    ///   - userSession: userSession for cancelLocalNotification (in main thread)
+    internal func cancelOldNotifications(_ conversation: ZMConversation, userSession: ZMUserSession) {
         guard oldNotifications.count > 0 else { return }
 
         oldNotifications = oldNotifications.filter{
             if($0.zm_conversationRemoteID == conversation.remoteIdentifier) {
-                application?.cancelLocalNotification($0)
+                userSession.cancelLocalNotificationInMainThread(notification:$0, application: application)
                 return false
             }
             return true
@@ -128,11 +148,18 @@ import WireTransport
 // Event Notifications
 public extension ZMLocalNotificationSet {
 
-    public func copyExistingEventNotification(_ event: ZMUpdateEvent, conversation: ZMConversation) -> ZMLocalNotificationForEvent? {        
+    ///
+    ///
+    /// - Parameters:
+    ///   - event:
+    ///   - conversation:
+    ///   - userSession: userSession for cancelLocalNotification (in main thread)
+    /// - Returns:
+    public func copyExistingEventNotification(_ event: ZMUpdateEvent, conversation: ZMConversation, userSession: ZMUserSession) -> ZMLocalNotificationForEvent? {
         let notificationsCopy = notifications
         for note in notificationsCopy {
             if let note = note as? ZMLocalNotificationForEvent , note is CopyableEventNotification {
-                if let copied = (note as! CopyableEventNotification).copyByAddingEvent(event, conversation: conversation) as? ZMLocalNotificationForEvent {
+                if let copied = (note as! CopyableEventNotification).copyByAddingEvent(event, conversation: conversation, userSession: userSession) as? ZMLocalNotificationForEvent {
                     if note.shouldBeDiscarded {
                         _ = remove(note)
                     }
@@ -146,14 +173,21 @@ public extension ZMLocalNotificationSet {
         return nil
     }
     
-    public func cancelNotificationForIncomingCall(_ conversation: ZMConversation) {
+    ///
+    ///
+    /// - Parameters:
+    ///   - conversation:
+    /// - Parameter userSession: userSession for cancelLocalNotification (in main thread)
+    public func cancelNotificationForIncomingCall(_ conversation: ZMConversation, userSession: ZMUserSession) {
         var toRemove = Set<ZMLocalNotification>()
         self.notifications.forEach{
             guard ($0.conversationID == conversation.remoteIdentifier),
                   let note = $0 as? EventNotification , note.eventType == .callState
             else { return }
             toRemove.insert($0)
-            $0.uiNotifications.forEach{ application?.cancelLocalNotification($0) }
+            $0.uiNotifications.forEach{
+                userSession.cancelLocalNotificationInMainThread(notification:$0, application: application)
+            }
         }
         self.notifications.subtract(toRemove)
     }

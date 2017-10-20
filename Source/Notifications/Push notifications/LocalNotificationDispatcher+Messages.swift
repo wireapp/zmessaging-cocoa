@@ -43,14 +43,15 @@ extension LocalNotificationDispatcher: PushMessageHandler {
     /// state. If the app is active, then the notification is directed to the user
     /// session, otherwise it is directed to the system via UIApplication.
     ///
+    /// - Parameter note: notification to dispatch
     func scheduleUILocalNotification(_ note: UILocalNotification) {
-        if application.applicationState == .active {
+        if userSession.operationStatus.operationState == .foreground {
             localNotificationBuffer.append(note)
         } else {
-            application.scheduleLocalNotification(note)
+            userSession.scheduleLocalNotificationInMainThread(notification: note, application: application)
         }
     }
-
+    
     // Processes ZMOTRMessages and ZMSystemMessages
     @objc(processMessage:) public func process(_ message: ZMMessage) {
         if let message = message as? ZMOTRMessage {
@@ -77,7 +78,7 @@ extension LocalNotificationDispatcher: PushMessageHandler {
 
 // MARK: ZMOTRMessage
 extension LocalNotificationDispatcher {
-
+    
     fileprivate func localNotificationForMessage(_ message : ZMOTRMessage) -> ZMLocalNotificationForMessage? {
         // We don't want to create duplicate notifications (e.g. for images)
         for note in messageNotifications.notifications where note is ZMLocalNotificationForMessage {
@@ -90,7 +91,7 @@ extension LocalNotificationDispatcher {
             return newNote;
         }
         
-        if let newNote = ZMLocalNotificationForMessage(message: message, application:self.application) {
+        if let newNote = ZMLocalNotificationForMessage(message: message, application: self.application, userSession: userSession) {
             messageNotifications.addObject(newNote)
             return newNote;
         }
@@ -118,7 +119,9 @@ extension LocalNotificationDispatcher {
     fileprivate func cancelNotificationForMessageID(_ messageID: UUID) {
         for note in messageNotifications.notifications where note is ZMLocalNotificationForMessage {
             if (note as! ZMLocalNotificationForMessage).isNotificationFor(messageID) {
-                note.uiNotifications.forEach{self.application.cancelLocalNotification($0)}
+                note.uiNotifications.forEach{ notification in
+                    userSession.cancelLocalNotificationInMainThread(notification:notification, application: application)
+                    }
                 _ = messageNotifications.remove(note);
             }
         }
@@ -136,7 +139,7 @@ extension LocalNotificationDispatcher {
             return nil
         }
         
-        if let newNote = ZMLocalNotificationForSystemMessage(message: message, application:self.application) {
+        if let newNote = ZMLocalNotificationForSystemMessage(message: message, application:self.application, userSession: userSession) {
             messageNotifications.addObject(newNote)
             return newNote;
         }

@@ -34,8 +34,9 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
     }
     
     unowned public var application : ZMApplication
-    
-    public required init?(message: ZMSystemMessage, application: ZMApplication?) {
+    unowned public let userSession : ZMUserSession
+
+    public required init?(message: ZMSystemMessage, application: ZMApplication?, userSession: ZMUserSession) {
         self.contentType = ZMLocalNotificationContentType.typeForMessage(message)
         guard type(of: self).canCreateNotification(message), let sender = message.sender else { return nil }
 
@@ -48,6 +49,7 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
 
         self.senderUUID = sender.remoteIdentifier!
         self.application = application ?? UIApplication.shared
+        self.userSession = userSession
         super.init(conversationID: message.conversation?.remoteIdentifier)
         
         let notification = configureNotification(message)
@@ -99,7 +101,7 @@ final public class ZMLocalNotificationForSystemMessage : ZMLocalNotification, No
         
         switch (contentType, otherContentType){
         case (.system(let type), .system) where type == .participantsAdded || type == .participantsRemoved:
-            cancelNotifications()
+            cancelNotifications(userSession: userSession)
             let note = configureNotification(message)
             notifications.append(note)
             return self

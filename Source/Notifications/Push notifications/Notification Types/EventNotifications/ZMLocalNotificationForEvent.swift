@@ -23,13 +23,22 @@ public protocol LocalNotification {
     var conversationID : UUID? { get }
     var application : ZMApplication {get}
     var notifications : [UILocalNotification] {get set}
-    func cancelNotifications()
+    
+    /// cancel notifications
+    ///
+    /// - Parameter userSession: userSession for cancelLocalNotification (in main thread)
+    func cancelNotifications(userSession: ZMUserSession)
 }
 
 public extension LocalNotification {
-    public func cancelNotifications() {
+    
+    /// Cancel notifications with the userSession in main thread.
+    /// (Directly calling application.cancelLocalNotification() may produce run time warnings for "Main Thread Checker: UIApplication API called on a background thread")
+    ///
+    /// - Parameter userSession: userSession for cancelLocalNotification (in main thread)
+    public func cancelNotifications(userSession: ZMUserSession) {
         notifications.forEach{
-            application.cancelLocalNotification($0)
+            userSession.cancelLocalNotificationInMainThread(notification:$0, application: application)
         }
     }
 }
