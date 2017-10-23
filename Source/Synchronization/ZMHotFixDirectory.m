@@ -115,11 +115,6 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(__unused NSManagedObjectContext *context) {
                          [ZMHotFixDirectory restartSlowSync:context];
                      }],
-                    
-                    [ZMHotFixPatch
-                     patchWithVersion:@"97.2.0" patchCode:^(NSManagedObjectContext *moc) {
-                         [ZMHotFixDirectory deleteDuplicatedClientsIn:moc];
-                     }],
                     ];
     });
     return patches;

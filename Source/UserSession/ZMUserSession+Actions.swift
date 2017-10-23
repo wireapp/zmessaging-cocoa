@@ -43,7 +43,7 @@ extension ZMUserSession {
             return
         }
         
-        if case let .incoming(video: video, shouldRing: _, degraded: _) = callState, callCenter.activeCallConversations(in: self).count == 0 {
+        if case let .incoming(video: video, shouldRing: _, degraded: _) = callState, callCenter?.activeCallConversations(in: self).count == 0 {
             _ = note.conversation.voiceChannel?.join(video: video, userSession: self)
         }
         
