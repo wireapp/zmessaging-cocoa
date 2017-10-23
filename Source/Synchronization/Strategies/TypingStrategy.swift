@@ -159,11 +159,9 @@ public class TypingStrategy : AbstractRequestStrategy {
     fileprivate dynamic func addConversationForNextRequest(note : NotificationInContext) {
         guard let conversation = note.object as? ZMConversation, conversation.remoteIdentifier != nil
         else { return }
-        
-        let isTyping = (note.userInfo[IsTypingKey] as? NSNumber)?.boolValue
-        
-        if isTyping != nil {
-            add(conversation:conversation, isTyping: isTyping!, clearIsTyping: false)
+
+        if let isTyping = (note.userInfo[IsTypingKey] as? NSNumber)?.boolValue {
+            add(conversation:conversation, isTyping: isTyping, clearIsTyping: false)
         }
     }
     

@@ -554,6 +554,80 @@ extension TypingStrategyTests {
         XCTAssertTrue(isExpected(request: request1, for: conversation, isTyping: true))
         XCTAssertTrue(isExpected(request: request2, for: conversation, isTyping: true))
     }
+    
+    func testThatLocalTypingNotificationDoesNotInterferesWithRemoteNotifications() {
+        // given
+        let conversation = insertUIConversation()
+        
+        // expect
+        let expectation = self.expectation(description: "Notified")
+        let token = NotificationInContext.addObserver(name: ZMConversation.typingChangeNotificationName,
+                                                      context: self.uiMOC.notificationContext,
+                                                      using: { note in
+                                                        expectation.fulfill()
+        })
+        _ = NotificationInContext.addObserver(name: ZMConversation.typingNotificationName,
+                                              context: self.uiMOC.notificationContext,
+                                              using: { note in
+                                                assertionFailure()
+        })
+        
+        // when
+        TypingStrategy.notifyTranscoderThatUser(isTyping: true, in: conversation)
+        
+        // then
+        withExtendedLifetime(token) {
+            XCTAssert(waitForCustomExpectations(withTimeout:0.1))
+        }
+    }
+    
+    func testThatRemoteTypingNotificationDoesNotInterferesWithLocalNotifications() {
+        // given
+        let conversation = insertUIConversation()
+        
+        // expect
+        let expectation = self.expectation(description: "Notified")
+        let token = NotificationInContext.addObserver(name: ZMConversation.typingNotificationName,
+                                                      context: self.uiMOC.notificationContext,
+                                                      using: { note in
+                                                        expectation.fulfill()
+        })
+        _ = NotificationInContext.addObserver(name: ZMConversation.typingChangeNotificationName,
+                                              context: self.uiMOC.notificationContext,
+                                              using: { note in
+                                                assertionFailure()
+        })
+        
+        // when
+        simulateTyping()
+        conversation.notifyTyping(typingUsers: Set())
+        
+        // then
+        withExtendedLifetime(token) {
+            XCTAssert(waitForCustomExpectations(withTimeout:0.1))
+        }
+    }
+    
+    func testThatClearTypingNotificationIsFired() {
+        // given
+        let conversation = insertUIConversation()
+        
+        // expect
+        let expectation = self.expectation(description: "Notified")
+        let token = NotificationInContext.addObserver(name: ZMConversation.clearTypingNotificationName,
+                                                      context: self.uiMOC.notificationContext,
+                                                      using: { note in
+                                                        expectation.fulfill()
+        })
+        
+        // when
+        TypingStrategy.clearTranscoderStateForTyping(in: conversation)
+        
+        // then
+        withExtendedLifetime(token) {
+            XCTAssert(waitForCustomExpectations(withTimeout:0.1))
+        }
+    }
 }
 
 
