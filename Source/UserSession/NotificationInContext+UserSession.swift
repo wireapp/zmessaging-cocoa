@@ -81,7 +81,6 @@ extension ZMUserSession {
 
 
 // MARK: - Typing
-private let typingNotificationName = Notification.Name(rawValue: "ZMTypingChangeNotification")
 private let typingNotificationUsersKey = "typingUsers"
 
 public extension ZMConversation {
@@ -95,10 +94,7 @@ public extension ZMConversation {
             guard let `self` = self else { return }
             
             let users = note.userInfo[typingNotificationUsersKey] as? Set<ZMUser> ?? Set()
-            let local = note.userInfo[IsLocalKey] as? Bool ?? false
-            if !local {
-                observer?.typingDidChange(conversation: self, typingUsers: users)
-            }
+            observer?.typingDidChange(conversation: self, typingUsers: users)
         }
     }
     
