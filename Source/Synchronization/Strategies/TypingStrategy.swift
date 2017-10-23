@@ -19,7 +19,6 @@
 import WireDataModel
 
 let IsTypingKey = "isTyping"
-let ClearIsTypingKey = "clearIsTyping"
 
 let StatusKey = "status"
 let StoppedKey = "stopped"
@@ -162,10 +161,9 @@ public class TypingStrategy : AbstractRequestStrategy {
         else { return }
         
         let isTyping = (note.userInfo[IsTypingKey] as? NSNumber)?.boolValue
-        let clearIsTyping = (note.userInfo[ClearIsTypingKey] as? NSNumber)?.boolValue
         
-        if isTyping != nil || clearIsTyping != nil {
-            add(conversation:conversation, isTyping:isTyping ?? false, clearIsTyping:clearIsTyping ?? false)
+        if isTyping != nil {
+            add(conversation:conversation, isTyping: isTyping!, clearIsTyping: false)
         }
     }
     
@@ -260,12 +258,11 @@ extension TypingStrategy {
     }
     
     public static func clearTranscoderStateForTyping(in conversation: ZMConversation) {
-        let userInfo = [ClearIsTypingKey : NSNumber(value: 1)]
         NotificationInContext(
-            name: ZMConversation.typingChangeNotificationName,
+            name: ZMConversation.clearTypingNotificationName,
             context: conversation.managedObjectContext!.notificationContext,
             object: conversation,
-            userInfo: userInfo)
+            userInfo: nil)
             .post()
     }
 }
