@@ -174,7 +174,7 @@ class ziphyTests: ZiphyTestCase {
     func testThatPaginationWorks() {
         
         let expectation = self.expectation(description: "did download an image")
-        let imageFetcher = ZiphyImageFetcher(term: "funny cat",
+        let imageFetcher = ZiphyImageFetcher(term: "cat",
             sizeLimit: 1024*1024,
             resultslimit:2,
             imageType:ZiphyImageType.downsized,
