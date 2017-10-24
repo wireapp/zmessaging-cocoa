@@ -136,7 +136,7 @@
     
     self.conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [[[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] classMethod] alloc];
-    (void) [[[self.conversationTranscoder stub] andReturn:self.conversationTranscoder] initWithSyncStrategy:OCMOCK_ANY applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
+    (void) [[[self.conversationTranscoder stub] andReturn:self.conversationTranscoder] initWithManagedObjectContext:OCMOCK_ANY applicationStatus:OCMOCK_ANY localNotificationDispatcher:OCMOCK_ANY syncStatus:OCMOCK_ANY];
 
     id clientMessageTranscoder = [OCMockObject mockForClass:ClientMessageTranscoder.class];
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
@@ -262,29 +262,6 @@
     self.sut = nil;
     self.syncObjects = nil;
     [super tearDown];
-}
-
-- (void)testThatDownloadedEventsAreForwardedToAllIndividualObjects
-{
-    // given
-    ZMConversation *conv = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    conv.remoteIdentifier = [NSUUID createUUID];
-    NSDictionary *payload = [self payloadForMessageInConversation:conv type:EventConversationAdd data:@{@"foo" : @"bar"}];
-    ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:[NSUUID createUUID]];
-    NSArray *eventsArray = @[event];
-    
-    
-    // expect
-    [self expectSyncObjectsToProcessEvents:YES
-                                liveEvents:NO
-                             decryptEvents:YES
-                   returnIDsForPrefetching:YES
-                                withEvents:eventsArray];
-    
-    // when
-    [self.sut processDownloadedEvents:eventsArray];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
 }
 
 - (void)testThatPushEventsAreProcessedForConversationEventSyncBeforeConversationSync

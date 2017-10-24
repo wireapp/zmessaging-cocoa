@@ -374,7 +374,6 @@
             [self addConnectionRequestInMockTransportsession:session forUser:mockUser1];
             [self addConnectionRequestInMockTransportsession:session forUser:mockUser2];
         }];
-//        WaitForEverythingToBeDone();
         WaitForAllGroupsToBeEmpty(0.5);
     }
     
@@ -412,7 +411,6 @@
             [realUser1 accept];
             [realUser2 accept];
         }];
-//        WaitForEverythingToBeDone();
         WaitForAllGroupsToBeEmpty(0.5);
         [self.mockTransportSession waitForAllRequestsToCompleteWithTimeout:0.5];
     }
@@ -453,11 +451,13 @@
         }
         XCTAssertTrue(conv1StateChanged);
         XCTAssertEqual(conv1.conversationType, ZMConversationTypeOneOnOne);
-        XCTAssertEqual(conv1.messages.count, 2u); // accepting connection request produces a new conversation system message
+        XCTAssertEqual(conv1.messages.count, 1u); // accepting connection request produces a new conversation system message
+        XCTAssertEqual(((ZMSystemMessage *)conv1.messages.firstObject).systemMessageType, ZMSystemMessageTypeNewConversation);
 
         XCTAssertTrue(conv2StateChanged);
         XCTAssertEqual(conv2.conversationType, ZMConversationTypeOneOnOne);
-        XCTAssertEqual(conv2.messages.count, 2u); // accepting connection request produces a new conversation system message
+        XCTAssertEqual(conv2.messages.count, 1u); // accepting connection request produces a new conversation system message
+        XCTAssertEqual(((ZMSystemMessage *)conv2.messages.firstObject).systemMessageType, ZMSystemMessageTypeNewConversation);
     }
     
     (void)token1;

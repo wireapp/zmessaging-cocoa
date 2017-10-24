@@ -491,7 +491,7 @@
     // then
     XCTAssertNotNil(conversation.lastReadServerTimeStamp);
     XCTAssertTrue(didSendFirstArchivedMessage);
-    XCTAssertFalse(didSendLastReadMessage); // we update the last read locally but don't sync it
+    XCTAssertTrue(didSendLastReadMessage);
     XCTAssertTrue(didSendMemberLeaveRequest);
     XCTAssertTrue(didSendSecondArchivedMessage);
     XCTAssertTrue(firstIsArchived);

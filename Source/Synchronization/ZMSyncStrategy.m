@@ -54,7 +54,6 @@
 @property (nonatomic) ZMUserTranscoder *userTranscoder;
 @property (nonatomic) ZMSelfStrategy *selfStrategy;
 @property (nonatomic) ZMConversationTranscoder *conversationTranscoder;
-@property (nonatomic) SystemMessageEventsConsumer *systemMessageEventConsumer;
 @property (nonatomic) ClientMessageTranscoder *clientMessageTranscoder;
 @property (nonatomic) ZMMissingUpdateEventsTranscoder *missingUpdateEventsTranscoder;
 @property (nonatomic) ZMLastUpdateEventIDTranscoder *lastUpdateEventIDTranscoder;
@@ -212,8 +211,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self.connectionTranscoder = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory syncStatus:self.applicationStatusDirectory.syncStatus];
     self.userTranscoder = [[ZMUserTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory syncStatus:self.applicationStatusDirectory.syncStatus];
     self.selfStrategy = [[ZMSelfStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory clientRegistrationStatus:self.applicationStatusDirectory.clientRegistrationStatus syncStatus:self.applicationStatusDirectory.syncStatus];
-    self.conversationTranscoder = [[ZMConversationTranscoder alloc] initWithSyncStrategy:self applicationStatus:self.applicationStatusDirectory syncStatus:self.applicationStatusDirectory.syncStatus];
-    self.systemMessageEventConsumer = [[SystemMessageEventsConsumer alloc] initWithMoc:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher];
+    self.conversationTranscoder = [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory localNotificationDispatcher:self.localNotificationDispatcher syncStatus:self.applicationStatusDirectory.syncStatus];
     self.clientMessageTranscoder = [[ClientMessageTranscoder alloc] initIn:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher applicationStatus:self.applicationStatusDirectory];
     self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self previouslyReceivedEventIDsCollection:self.eventDecoder application:self.application backgroundAPNSPingbackStatus:self.applicationStatusDirectory.pingBackStatus syncStatus:self.applicationStatusDirectory.syncStatus];
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory syncStatus:self.applicationStatusDirectory.syncStatus objectDirectory:self];
@@ -288,7 +286,6 @@ ZM_EMPTY_ASSERTING_INIT()
     self.selfStrategy = nil;
     self.clientMessageTranscoder = nil;
     self.lastUpdateEventIDTranscoder = nil;
-    self.systemMessageEventConsumer = nil;
     self.allChangeTrackers = nil;
     self.eventDecoder = nil;
     [self.eventMOC performGroupedBlockAndWait:^{
@@ -352,7 +349,6 @@ ZM_EMPTY_ASSERTING_INIT()
             }
         }
         
-        [eventConsumers addObject:self.systemMessageEventConsumer];
         _eventConsumers = eventConsumers;
     }
     

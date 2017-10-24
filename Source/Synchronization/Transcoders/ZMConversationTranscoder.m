@@ -25,7 +25,6 @@
 
 #import "ZMConversationTranscoder.h"
 #import "ZMAuthenticationStatus.h"
-#import "ZMSyncStrategy+EventProcessing.h"
 #import "ZMSimpleListRequestPaginator.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
@@ -52,11 +51,11 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 @property (nonatomic) ZMUpstreamInsertedObjectSync *insertedSync;
 
 @property (nonatomic) ZMDownstreamObjectSync *downstreamSync;
-@property (nonatomic, weak) ZMSyncStrategy *syncStrategy;
 @property (nonatomic) ZMRemoteIdentifierObjectSync *remoteIDSync;
 @property (nonatomic) ZMSimpleListRequestPaginator *listPaginator;
 
 @property (nonatomic, weak) SyncStatus *syncStatus;
+@property (nonatomic, weak) id<PushMessageHandler> localNotificationDispatcher;
 
 @end
 
@@ -84,12 +83,14 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     return self;
 }
 
-- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)syncStrategy
-                   applicationStatus:(id<ZMApplicationStatus>)applicationStatus
-                          syncStatus:(SyncStatus *)syncStatus;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
+                 localNotificationDispatcher:(id<PushMessageHandler>)localNotificationDispatcher
+                                  syncStatus:(SyncStatus *)syncStatus;
 {
-    self = [super initWithManagedObjectContext:syncStrategy.moc applicationStatus:applicationStatus];
+    self = [super initWithManagedObjectContext:managedObjectContext applicationStatus:applicationStatus];
     if (self) {
+        self.localNotificationDispatcher = localNotificationDispatcher;
         self.syncStatus = syncStatus;
         self.modifiedSync = [[ZMUpstreamModifiedObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName updatePredicate:nil filter:nil keysToSync:self.keysToSync managedObjectContext:self.managedObjectContext];
         self.insertedSync = [[ZMUpstreamInsertedObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName managedObjectContext:self.managedObjectContext];
@@ -106,7 +107,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
                                                                managedObjectContext:self.managedObjectContext
                                                                     includeClientID:NO
                                                                          transcoder:self];
-        self.syncStrategy = syncStrategy;
         self.conversationPageSize = ZMConversationTranscoderDefaultConversationPageSize;
         self.remoteIDSync = [[ZMRemoteIdentifierObjectSync alloc] initWithTranscoder:self managedObjectContext:self.managedObjectContext];
     }
@@ -421,12 +421,12 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         
         ZMConversation *conversation = [self conversationFromEventPayload:event
                                                           conversationMap:prefetchResult.conversationsByRemoteIdentifier];
-        if(conversation == nil) {
+        if (conversation == nil) {
             continue;
         }
         [self markConversationForDownloadIfNeeded:conversation afterEvent:event];
         
-        if(![self shouldProcessUpdateEvent:event]) {
+        if (![self shouldProcessUpdateEvent:event]) {
             continue;
         }
         NSDate * const currentLastTimestamp = conversation.lastServerTimeStamp;
@@ -477,9 +477,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 {
     switch (event.type) {
         case ZMUpdateEventConversationRename: {
-            NSDictionary *data = [event.payload dictionaryForKey:@"data"];
-            NSString *newName = [data stringForKey:@"name"];
-            conversation.userDefinedName = newName;
+            [self processConversationRenameEvent:event forConversation:conversation];
             break;
         }
         case ZMUpdateEventConversationMemberJoin:
@@ -497,15 +495,37 @@ static NSString *const ConversationTeamManagedKey = @"managed";
             [self processMemberUpdateEvent:event forConversation:conversation previousLastServerTimeStamp:previousLastServerTimestamp];
             break;
         }
+        case ZMUpdateEventConversationConnectRequest:
+        {
+            [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
+            break;
+        }
         default: {
             break;
         }
     }
 }
 
+- (void)processConversationRenameEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation
+{
+    NSDictionary *data = [event.payload dictionaryForKey:@"data"];
+    NSString *newName = [data stringForKey:@"name"];
+    
+    if (![conversation.userDefinedName isEqualToString:newName] || [conversation.modifiedKeys containsObject:ZMConversationUserDefinedNameKey]) {
+        [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
+    }
+    
+    conversation.userDefinedName = newName;
+}
+
 - (void)processMemberJoinEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation
 {
     NSSet *users = [event usersFromUserIDsInManagedObjectContext:self.managedObjectContext createIfNeeded:YES];
+    
+    if (![users isSubsetOfSet:conversation.mutableLastServerSyncedActiveParticipants.set]) {
+        [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
+    }
+    
     for (ZMUser *user in users) {
         [conversation internalAddParticipants:[NSSet setWithObject:user] isAuthoritative:YES];
         [conversation synchronizeAddedUser:user];
@@ -516,8 +536,12 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 {
     NSUUID *senderUUID = event.senderUUID;
     ZMUser *sender = [ZMUser userWithRemoteID:senderUUID createIfNeeded:YES inContext:self.managedObjectContext];
-    
     NSSet *users = [event usersFromUserIDsInManagedObjectContext:self.managedObjectContext createIfNeeded:YES];
+    
+    if ([users intersectsSet:conversation.mutableLastServerSyncedActiveParticipants.set]) {
+        [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
+    }
+
     for (ZMUser *user in users) {
         [conversation internalRemoveParticipants:[NSSet setWithObject:user] sender:sender];
         [conversation synchronizeRemovedUser:user];
@@ -532,6 +556,16 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         [conversation updateSelfStatusFromDictionary:dataPayload
                                            timeStamp:event.timeStamp
                          previousLastServerTimeStamp:previousLastServerTimestamp];
+    }
+}
+
+- (void)appendSystemMessageForUpdateEvent:(ZMUpdateEvent *)event inConversation:(ZMConversation *)conversation
+{
+    ZMSystemMessage *systemMessage = [ZMSystemMessage createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.managedObjectContext];
+    
+    if (systemMessage != nil) {
+        [self.localNotificationDispatcher processMessage:systemMessage];
+        [conversation resortMessagesWithUpdatedMessage:systemMessage];
     }
 }
 
@@ -742,8 +776,8 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 {
     ZMUpdateEvent *event = [self conversationEventWithKeys:keysToParse responsePayload:response.payload];
     if (event != nil) {
-        [self.syncStrategy processDownloadedEvents:@[event]];
         [self updatePropertiesOfConversation:conversation withPostPayloadEvent:event];
+        [self processEvents:@[event] liveEvents:YES prefetchResult:nil];        
     }
     
     if ([keysToParse isEqualToSet:[NSSet setWithObject:ZMConversationUserDefinedNameKey]]) {
