@@ -122,6 +122,19 @@ import WireTransport
             return true
         }
     }
+    
+    /// Cancal all notifications with the given message nonce
+    internal func cancelCurrentNotifications(messageNonce: UUID) {
+        guard notifications.count > 0 else { return }
+        var toRemove = Set<ZMLocalNotification>()
+        notifications.forEach {
+            if ($0.messageNonce == messageNonce) {
+                toRemove.insert($0)
+                application?.cancelLocalNotification($0.uiLocalNotification)
+            }
+        }
+        notifications.subtract(toRemove)
+    }
 }
 
 
