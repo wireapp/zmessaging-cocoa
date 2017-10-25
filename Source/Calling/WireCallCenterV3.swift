@@ -543,10 +543,11 @@ public struct CallEvent {
     }
     
     fileprivate func createSnapshot(callState : CallState, video: Bool, for conversationId: UUID) {
-        guard let moc = uiMOC else { return }
+        guard let moc = uiMOC,
+              let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: moc)
+        else { return }
         
-        let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: moc)
-        let token = ConversationChangeInfo.add(observer: self, for: conversation!)
+        let token = ConversationChangeInfo.add(observer: self, for: conversation)
         callSnapshots[conversationId] = CallSnapshot(callState: callState, isVideo: video, conversationObserverToken: token)
     }
     
