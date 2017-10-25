@@ -55,10 +55,6 @@ extension ZMLocalNotification {
             self.contentType = contentType
         }
         
-        /// Determines if the notification should be created for the given message.
-        /// If true is returned, then this guarantees that the message has a conversation
-        /// and sender.
-        ///
         func shouldCreateNotification() -> Bool {
             guard let sender = message.sender, let conversation = message.conversation else { return false }
             
