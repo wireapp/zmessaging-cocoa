@@ -262,7 +262,7 @@ public class MockSyncStatus : SyncStatus {
     }
 }
 
-class MockPushMessageHandler: NSObject, PushMessageHandler {
+@objc public class MockPushMessageHandler: NSObject, PushMessageHandler {
     
     public func didFailToSend(_ message: ZMMessage) {
         failedToSend.append(message)

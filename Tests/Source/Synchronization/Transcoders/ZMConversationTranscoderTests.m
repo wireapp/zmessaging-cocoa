@@ -43,8 +43,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 @property (nonatomic) ZMConversationTranscoder<ZMUpstreamTranscoder, ZMDownstreamTranscoder> *sut;
 @property (nonatomic) NSUUID *selfUserID;
 @property (nonatomic) MockSyncStatus *mockSyncStatus;
-@property (nonatomic) ZMMockClientRegistrationStatus *mockClientRegistrationDelegate;
-@property (nonatomic) id mockLocalNotificationDispatcher;
+@property (nonatomic) MockPushMessageHandler *mockLocalNotificationDispatcher;
 @property (nonatomic) id syncStateDelegate;
 
 @end
@@ -63,7 +62,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
     self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateEventProcessing;
-    self.mockLocalNotificationDispatcher = [OCMockObject niceMockForProtocol:@protocol(PushMessageHandler)];
+    self.mockLocalNotificationDispatcher = [[MockPushMessageHandler alloc] init];
 
     self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus localNotificationDispatcher:self.mockLocalNotificationDispatcher syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -77,8 +76,13 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)tearDown
 {
     WaitForAllGroupsToBeEmpty(0.5);
-    [self.mockClientRegistrationDelegate tearDown];
+    
+    [self.syncStateDelegate stopMocking];
+    self.syncStateDelegate = nil;
     self.sut = nil;
+    self.mockLocalNotificationDispatcher = nil;
+    self.mockSyncStatus = nil;
+    
     [super tearDown];
 }
 
@@ -3523,10 +3527,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)testThatItMergesConversationsWhenItProcessesAConversationCreateEventForAOneOnOneConversationAndTheConnectionAlreadyHasAConversation
 {
     // given
-    id accountStatus = [OCMockObject niceMockForClass:[ZMAccountStatus class]];
-    [[[accountStatus stub]
-      andReturnValue: OCMOCK_VALUE((AccountState){AccountStateOldDeviceActiveAccount})] currentAccountState];
-    
     self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus localNotificationDispatcher:self.mockLocalNotificationDispatcher syncStatus:self.mockSyncStatus];
 
     

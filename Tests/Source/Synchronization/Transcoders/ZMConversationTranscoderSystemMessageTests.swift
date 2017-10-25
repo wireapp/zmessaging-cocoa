@@ -53,6 +53,9 @@ class ZMConversationTranscoderSystemMessageTests: ObjectTranscoderTests {
         self.sut = nil
         self.localNotificationDispatcher = nil
         self.conversation = nil
+        self.user = nil
+        self.mockSyncStatus = nil
+        
         super.tearDown()
     }
     
