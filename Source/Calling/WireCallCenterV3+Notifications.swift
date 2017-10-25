@@ -48,7 +48,17 @@ extension SelfPostingNotification {
     }
 }
 
+/// MARK - CBR observer
 
+public protocol ConstantBitRateAudioObserver : class {
+    func callCenterDidChange(constantAudioBitRateAudioEnabled: Bool)
+}
+
+struct WireCallCenterCBRNotification : SelfPostingNotification {
+    static let notificationName = Notification.Name("WireCallCenterCBRNotification")
+    
+    public let enabled: Bool
+}
 
 /// MARK - Video call observer
 
@@ -186,17 +196,6 @@ public class VoiceGainNotification : NSObject  {
     }
 }
 
-/// MARK - CBR observer
-
-public protocol WireCallCenterCBRCallObserver : class {
-    func callCenterCallIsCBR()
-}
-
-struct WireCallCenterCBRCallNotification : SelfPostingNotification {
-    static let notificationName = Notification.Name("WireCallCenterCBRCallNotification")
-}
-
-
 extension WireCallCenterV3 {
     
     // MARK - Observer
@@ -271,6 +270,22 @@ extension WireCallCenterV3 {
         return NotificationInContext.addObserver(name: WireCallCenterV3VideoNotification.notificationName, context: context.notificationContext, queue: .main) { [weak observer] note in
             if let note = note.userInfo[WireCallCenterV3VideoNotification.userInfoKey] as? WireCallCenterV3VideoNotification {
                 observer?.callCenterDidChange(receivedVideoState: note.receivedVideoState)
+            }
+        }
+    }
+    
+    /// Register observer when constant audio bit rate is enabled/disabled
+    /// Returns a token which needs to be retained as long as the observer should be active.
+    public class func addConstantBitRateObserver(observer: ConstantBitRateAudioObserver, userSession: ZMUserSession) -> Any {
+        return addConstantBitRateObserver(observer: observer, context: userSession.managedObjectContext)
+    }
+    
+    /// Register observer when constant audio bit rate is enabled/disabled
+    /// Returns a token which needs to be retained as long as the observer should be active.
+    internal class func addConstantBitRateObserver(observer: ConstantBitRateAudioObserver, context: NSManagedObjectContext) -> Any {
+        return NotificationInContext.addObserver(name: WireCallCenterCBRNotification.notificationName, context: context.notificationContext, queue: .main) { [weak observer] note in
+            if let note = note.userInfo[WireCallCenterCBRNotification.userInfoKey] as? WireCallCenterCBRNotification {
+                observer?.callCenterDidChange(constantAudioBitRateAudioEnabled: note.enabled)
             }
         }
     }

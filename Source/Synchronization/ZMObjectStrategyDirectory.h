@@ -40,7 +40,6 @@
 @property (nonatomic, readonly) ZMUserTranscoder *userTranscoder;
 @property (nonatomic, readonly) ZMSelfStrategy *selfStrategy;
 @property (nonatomic, readonly) ZMConversationTranscoder *conversationTranscoder;
-@property (nonatomic, readonly) SystemMessageEventsConsumer *systemMessageEventConsumer;
 @property (nonatomic, readonly) ClientMessageTranscoder *clientMessageTranscoder;
 @property (nonatomic, readonly) ZMMissingUpdateEventsTranscoder *missingUpdateEventsTranscoder;
 @property (nonatomic, readonly) ZMLastUpdateEventIDTranscoder *lastUpdateEventIDTranscoder;

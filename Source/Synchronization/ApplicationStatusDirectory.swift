@@ -29,7 +29,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let clientRegistrationStatus : ZMClientRegistrationStatus
     public let clientUpdateStatus : ClientUpdateStatus
     public let pingBackStatus : BackgroundAPNSPingBackStatus
-    public let accountStatus : ZMAccountStatus
+    public let accountStatus : AccountStatus
     public let proxiedRequestStatus : ProxiedRequestsStatus
     public let syncStatus : SyncStatus
     public let operationStatus : OperationStatus
@@ -52,7 +52,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         self.clientRegistrationStatus = ZMClientRegistrationStatus(managedObjectContext: managedObjectContext,
                                                                    cookieStorage: cookieStorage,
                                                                    registrationStatusDelegate: syncStateDelegate)
-        self.accountStatus = ZMAccountStatus(managedObjectContext: managedObjectContext, cookieStorage: cookieStorage)
+        self.accountStatus = AccountStatus(managedObjectContext: managedObjectContext)
         self.pingBackStatus = BackgroundAPNSPingBackStatus(syncManagedObjectContext: managedObjectContext, authenticationProvider: cookieStorage)
         self.proxiedRequestStatus = ProxiedRequestsStatus(requestCancellation: requestCancellation)
         self.userProfileImageUpdateStatus = UserProfileImageUpdateStatus(managedObjectContext: managedObjectContext)

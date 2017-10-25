@@ -22,15 +22,14 @@ import avs
 
 public protocol AVSWrapperType {
     init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?)
-    func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool
-    func answerCall(conversationId: UUID) -> Bool
+    func startCall(conversationId: UUID, video: Bool, isGroup: Bool, useCBR: Bool) -> Bool
+    func answerCall(conversationId: UUID, useCBR: Bool) -> Bool
     func endCall(conversationId: UUID)
     func rejectCall(conversationId: UUID)
     func close()
     func received(callEvent: CallEvent)
     func toggleVideo(conversationID: UUID, active: Bool)
     func setVideoSendActive(userId: UUID, active: Bool)
-    func enableAudioCbr(shouldUseCbr: Bool)
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
     func members(in conversationId: UUID) -> [CallMember]
     func update(callConfig: String?, httpStatusCode: Int)
@@ -62,21 +61,21 @@ public class AVSWrapper : AVSWrapperType {
                               closedCallHandler,
                               callMetricsHandler,
                               requestCallConfigHandler,
+                              constantBitRateChangeHandler,
+                              videoStateChangeHandler,
                               observer)
         
-        wcall_set_video_state_handler(handle, videoStateChangeHandler)
         wcall_set_data_chan_estab_handler(handle, dataChannelEstablishedHandler)
         wcall_set_group_changed_handler(handle, groupMemberHandler, observer)
-        wcall_set_audio_cbr_enabled_handler(handle, audioCBREnabledHandler)
     }
     
-    public func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool {
-        let didStart = wcall_start(handle, conversationId.transportString(), video ? 1 : 0, isGroup ? 1 : 0)
+    public func startCall(conversationId: UUID, video: Bool, isGroup: Bool, useCBR: Bool) -> Bool {
+        let didStart = wcall_start(handle, conversationId.transportString(), video ? 1 : 0, isGroup ? 1 : 0, useCBR ? 1 : 0)
         return didStart == 0
     }
     
-    public func answerCall(conversationId: UUID) -> Bool {
-        let didAnswer = wcall_answer(handle, conversationId.transportString())
+    public func answerCall(conversationId: UUID, useCBR: Bool) -> Bool {
+        let didAnswer = wcall_answer(handle, conversationId.transportString(), useCBR ? 1 : 0)
         return didAnswer == 0
     }
     
@@ -96,10 +95,6 @@ public class AVSWrapper : AVSWrapperType {
         wcall_set_video_send_active(handle, userId.transportString(), active ? 1 : 0)
     }
     
-    public func enableAudioCbr(shouldUseCbr: Bool) {
-        wcall_enable_audio_cbr(handle, shouldUseCbr ? 1 : 0)
-    }
-
     public func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {
         wcall_resp(handle, Int32(httpStatus), "", context)
     }

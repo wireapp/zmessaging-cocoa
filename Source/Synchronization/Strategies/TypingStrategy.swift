@@ -19,7 +19,6 @@
 import WireDataModel
 
 let IsTypingKey = "isTyping"
-let ClearIsTypingKey = "clearIsTyping"
 
 let StatusKey = "status"
 let StoppedKey = "stopped"
@@ -28,6 +27,7 @@ let StartedKey = "started"
 extension ZMConversation {
     
     public static let typingNotificationName = Notification.Name(rawValue: "ZMTypingNotification")
+    public static let typingChangeNotificationName = Notification.Name(rawValue: "ZMTypingChangeNotification")
     
 }
 
@@ -131,6 +131,13 @@ public class TypingStrategy : AbstractRequestStrategy {
                                               context: self.managedObjectContext.notificationContext,
                                               using: { [weak self] in self?.addConversationForNextRequest(note: $0)} )
             )
+        
+        observers.append(
+            NotificationInContext.addObserver(name: ZMConversation.typingChangeNotificationName,
+                                              context: self.managedObjectContext.notificationContext,
+                                              using: { [weak self] in self?.addConversationForNextRequest(note: $0)} )
+        )
+        
         observers.append(
             NotificationInContext.addObserver(name: ZMConversation.clearTypingNotificationName,
                                               context: self.managedObjectContext.notificationContext,
@@ -152,11 +159,10 @@ public class TypingStrategy : AbstractRequestStrategy {
     fileprivate dynamic func addConversationForNextRequest(note : NotificationInContext) {
         guard let conversation = note.object as? ZMConversation, conversation.remoteIdentifier != nil
         else { return }
-        
-        let isTyping = (note.userInfo[IsTypingKey] as? NSNumber)?.boolValue ?? false
-        let clearIsTyping = (note.userInfo[ClearIsTypingKey] as? NSNumber)?.boolValue ?? false
-        
-        add(conversation:conversation, isTyping:isTyping, clearIsTyping:clearIsTyping)
+
+        if let isTyping = (note.userInfo[IsTypingKey] as? NSNumber)?.boolValue {
+            add(conversation:conversation, isTyping: isTyping, clearIsTyping: false)
+        }
     }
     
     fileprivate dynamic func shouldClearTypingForConversation(note: NotificationInContext) {
@@ -242,7 +248,7 @@ extension TypingStrategy {
     public static func notifyTranscoderThatUser(isTyping: Bool, in conversation: ZMConversation) {
         let userInfo = [IsTypingKey : NSNumber(value:isTyping)]
         NotificationInContext(
-            name: ZMConversation.typingNotificationName,
+            name: ZMConversation.typingChangeNotificationName,
             context: conversation.managedObjectContext!.notificationContext,
             object: conversation,
             userInfo: userInfo)
@@ -250,12 +256,11 @@ extension TypingStrategy {
     }
     
     public static func clearTranscoderStateForTyping(in conversation: ZMConversation) {
-        let userInfo = [ClearIsTypingKey : NSNumber(value: 1)]
         NotificationInContext(
-            name: ZMConversation.typingNotificationName,
+            name: ZMConversation.clearTypingNotificationName,
             context: conversation.managedObjectContext!.notificationContext,
             object: conversation,
-            userInfo: userInfo)
+            userInfo: nil)
             .post()
     }
 }

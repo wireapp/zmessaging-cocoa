@@ -24,7 +24,7 @@ import avs
 @testable import WireSyncEngine
 
 
-@objc(ZMMockApplicationStatus)
+@objc(MockApplicationStatus)
 public class MockApplicationStatus : NSObject, ApplicationStatus, DeliveryConfirmationDelegate, ClientRegistrationDelegate, ZMRequestCancellation {
 
 
@@ -260,4 +260,23 @@ public class MockSyncStatus : SyncStatus {
     public func didRegister(_ userClient: UserClient!) {
         registeredUserClient = userClient
     }
+}
+
+@objc public class MockPushMessageHandler: NSObject, PushMessageHandler {
+    
+    public func didFailToSend(_ message: ZMMessage) {
+        failedToSend.append(message)
+    }
+    
+    public func process(_ message: ZMMessage) {
+        processedMessages.append(message)
+    }
+    
+    public func process(_ genericMessage: ZMGenericMessage) {
+        processedGenericMessages.append(genericMessage)
+    }
+    
+    fileprivate(set) var failedToSend: [ZMMessage] = []
+    fileprivate(set) var processedMessages: [ZMMessage] = []
+    fileprivate(set) var processedGenericMessages: [ZMGenericMessage] = []
 }

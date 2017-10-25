@@ -30,6 +30,7 @@ public class WireCallCenterV3Factory : NSObject {
             return wireCallCenter
         } else {
             let newInstance = WireCallCenterV3Factory.wireCallCenterClass.init(userId: userId, clientId: clientId, uiMOC: uiMOC, flowManager: flowManager, analytics: analytics, transport: transport)
+            newInstance.useConstantBitRateAudio = uiMOC.zm_useConstantBitRateAudio
             uiMOC.zm_callCenter = newInstance
             return newInstance
         }

@@ -1017,21 +1017,6 @@
     }];
 }
 
-- (void)testThat_OnLaunch_ItDoesNotCall_DelegateShowConversationList_WhenNotLoggedIn
-{
-    // given
-    UILocalNotification *note = [[UILocalNotification alloc] init];
-    note.category = ZMConversationCategory;
-    
-    // expect
-    [self checkThatItCallsOnLaunchTheDelegateForNotification:note withBlock:^(id mockDelegate) {
-        [[mockDelegate reject] showConversationListForUserSession:self.sut];
-        [[mockDelegate reject] userSession:self.sut showMessage:OCMOCK_ANY inConversation:OCMOCK_ANY];
-        [[mockDelegate reject] userSession:self.sut showConversation:OCMOCK_ANY];
-    }];
-}
-
-
 - (void)testThatItCalls_DelegateShowConversation_ForZMConversationCategory
 {
     //given

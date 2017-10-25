@@ -835,6 +835,16 @@ class SessionManagerTests_Push: IntegrationTest {
         // CLEANUP
         self.sessionManager!.tearDownAllBackgroundSessions()
     }
+    
+    // the purpose of this test is to ensure push payloads can be processed in
+    // the background as soon as the SessionManager is created
+    func testThatABackgroundTaskCanBeCreatedAfterCreatingSessionManager() {
+        // WHEN
+        let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "PushActivity")
+        
+        // THEN
+        XCTAssertNotNil(activity)
+    }
 }
 
 // MARK: - Mocks

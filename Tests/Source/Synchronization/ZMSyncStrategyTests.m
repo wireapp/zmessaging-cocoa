@@ -135,7 +135,7 @@
     
     self.conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [[[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] classMethod] alloc];
-    (void) [[[self.conversationTranscoder stub] andReturn:self.conversationTranscoder] initWithSyncStrategy:OCMOCK_ANY applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
+    (void) [[[self.conversationTranscoder stub] andReturn:self.conversationTranscoder] initWithManagedObjectContext:OCMOCK_ANY applicationStatus:OCMOCK_ANY localNotificationDispatcher:OCMOCK_ANY syncStatus:OCMOCK_ANY];
 
     id clientMessageTranscoder = [OCMockObject mockForClass:ClientMessageTranscoder.class];
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
@@ -261,29 +261,6 @@
     self.sut = nil;
     self.syncObjects = nil;
     [super tearDown];
-}
-
-- (void)testThatDownloadedEventsAreForwardedToAllIndividualObjects
-{
-    // given
-    ZMConversation *conv = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    conv.remoteIdentifier = [NSUUID createUUID];
-    NSDictionary *payload = [self payloadForMessageInConversation:conv type:EventConversationAdd data:@{@"foo" : @"bar"}];
-    ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:[NSUUID createUUID]];
-    NSArray *eventsArray = @[event];
-    
-    
-    // expect
-    [self expectSyncObjectsToProcessEvents:YES
-                                liveEvents:NO
-                             decryptEvents:YES
-                   returnIDsForPrefetching:YES
-                                withEvents:eventsArray];
-    
-    // when
-    [self.sut processDownloadedEvents:eventsArray];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
 }
 
 - (void)testThatPushEventsAreProcessedForConversationEventSyncBeforeConversationSync
@@ -811,99 +788,6 @@
     
     // finally
     [[NSNotificationCenter defaultCenter] removeObserver:token1];
-}
-
-
-- (void)testThatItReturnsTrueForCoversationsThatHasBufferedCallStateEvents
-{
-    // given
-    NSUUID *remoteId = NSUUID.createUUID;
-    [self.syncMOC performGroupedBlockAndWait:^{
-        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        conversation.remoteIdentifier = remoteId;
-        [self.syncMOC saveOrRollback];
-    }];
-
-    NSDictionary *eventData = @{
-                                @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
-                                @"payload" : @[
-                                        @{
-                                            @"type" : @"call.state",
-                                            @"conversation" : remoteId.transportString
-                                            }
-                                        ]
-                                };
-
-    NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventData];
-    
-    [[[self.syncStatusMock stub] andReturnValue:@(YES)] isSyncing];
-
-    // expect
-    for(id obj in events) {
-        [[self.updateEventsBuffer expect] addUpdateEvent:obj];
-    }
-    
-    [self expectSyncObjectsToProcessEvents:NO
-                                liveEvents:YES
-                             decryptEvents:NO
-                   returnIDsForPrefetching:NO
-                                withEvents:events];
-    
-    [[[self.updateEventsBuffer expect] andReturn:events] updateEvents];
-    
-    [self.sut processUpdateEvents:events ignoreBuffer:NO];
-    
-    // when
-    NSArray *ids = [self.sut conversationIdsThatHaveBufferedUpdatesForCallState];
-    
-    // then
-    XCTAssertTrue([ids containsObject:remoteId]);
-}
-
-- (void)testThatItReturnsFalseForConversationsThatHasNoBufferedCallStateEvents
-{
-    // given
-    NSUUID *remoteId = NSUUID.createUUID;
-    [self.syncMOC performGroupedBlockAndWait:^{
-        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        conversation.remoteIdentifier = remoteId;
-        [self.syncMOC saveOrRollback];
-    }];
-    
-    NSDictionary *eventData = @{
-                                @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
-                                @"payload" : @[
-                                        @{
-                                            @"type" : @"call.state",
-                                            @"conversation" : NSUUID.createUUID.transportString
-                                            }
-                                        ]
-                                };
-    
-    NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventData];
-    
-    [[[self.syncStatusMock stub] andReturnValue:@(YES)] isSyncing];
-
-    // expect
-    for(id obj in events) {
-        [[self.updateEventsBuffer expect] addUpdateEvent:obj];
-    }
-    
-    [self expectSyncObjectsToProcessEvents:NO
-                                liveEvents:YES
-                             decryptEvents:NO
-                   returnIDsForPrefetching:NO
-                                withEvents:events];
-    
-    [[[self.updateEventsBuffer expect] andReturn:events] updateEvents];
-
-    [self.sut processUpdateEvents:events ignoreBuffer:NO];
-    
-    // when
-    NSArray *ids = [self.sut conversationIdsThatHaveBufferedUpdatesForCallState];
-    
-    // then
-    XCTAssertFalse([ids containsObject:remoteId]);
 }
 
 - (void)testThatItMergesTheUserInfoOfContexts {

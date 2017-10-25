@@ -535,11 +535,6 @@ ZM_EMPTY_ASSERTING_INIT()
     }
 }
 
-- (WireCallCenterV3* )callCenter
-{
-    return self.managedObjectContext.zm_callCenter;
-}
-
 @end
 
 
@@ -835,7 +830,7 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
     return self.operationLoop.syncStrategy.applicationStatusDirectory.clientUpdateStatus;
 }
 
-- (ZMAccountStatus *)accountStatus;
+- (AccountStatus *)accountStatus;
 {
     return self.operationLoop.syncStrategy.applicationStatusDirectory.accountStatus;
 }

@@ -398,6 +398,33 @@ class WireCallCenterV3Tests: MessagingTest {
         }
     }
     
+    func testThatCBRIsEnabledOnAudioCBRChangeHandler() {
+        // given
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        
+        // when
+        WireSyncEngine.constantBitRateChangeHandler(enabled: 1, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertTrue(sut.isConstantBitRateAudioActive)
+    }
+    
+    func testThatCBRIsDisabledOnAudioCBRChangeHandler() {
+        // given
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        WireSyncEngine.constantBitRateChangeHandler(enabled: 1, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertTrue(sut.isConstantBitRateAudioActive)
+        
+        // when
+        WireSyncEngine.constantBitRateChangeHandler(enabled: 0, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertFalse(sut.isConstantBitRateAudioActive)
+    }
+    
 }
 
 // MARK: - Ignoring Calls

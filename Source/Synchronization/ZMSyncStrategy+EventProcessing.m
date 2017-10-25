@@ -26,28 +26,13 @@
 
 - (void)processUpdateEvents:(NSArray *)events ignoreBuffer:(BOOL)ignoreBuffer;
 {
-    if (ignoreBuffer) {
+    if (ignoreBuffer || !self.applicationStatusDirectory.syncStatus.isSyncing) {
         [self consumeUpdateEvents:events];
         return;
     }
     
-    NSArray *flowEvents = [events filterWithBlock:^BOOL(ZMUpdateEvent* event) {
-        return event.isFlowEvent;
-    }];
-    if(flowEvents.count > 0) {
-        [self consumeUpdateEvents:flowEvents];
-    }
-    NSArray *notFlowEvents = [events filterWithBlock:^BOOL(ZMUpdateEvent* event) {
-        return !event.isFlowEvent;
-    }];
-    
-    if (self.applicationStatusDirectory.syncStatus.isSyncing) {
-        for(ZMUpdateEvent *event in notFlowEvents) {
-            [self.eventsBuffer addUpdateEvent:event];
-        }
-    }
-    else {
-        [self consumeUpdateEvents:notFlowEvents];
+    for (ZMUpdateEvent *event in events) {
+        [self.eventsBuffer addUpdateEvent:event];
     }
 }
 
@@ -71,38 +56,6 @@
         LocalNotificationDispatcher *dispatcher = self.localNotificationDispatcher;
         [dispatcher processEvents:decryptedEvents liveEvents:YES prefetchResult:nil];
         [self.syncMOC enqueueDelayedSave];
-    }];
-}
-
-- (void)processDownloadedEvents:(NSArray <ZMUpdateEvent *>*)events;
-{
-    ZM_WEAK(self);
-    [self.eventDecoder processEvents:events block:^(NSArray<ZMUpdateEvent *> * decryptedEvents) {
-        ZM_STRONG(self);
-        if (self  == nil){
-            return;
-        }
-        
-        ZMFetchRequestBatch *fetchRequest = [self fetchRequestBatchForEvents:decryptedEvents];
-        ZMFetchRequestBatchResult *prefetchResult = [self.moc executeFetchRequestBatchOrAssert:fetchRequest];
-        
-        for(id<ZMEventConsumer> eventConsumer in self.eventConsumers) {
-            @autoreleasepool {
-                ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:5 label:[NSString stringWithFormat:@"Processing downloaded events in %@", [eventConsumer class]]];
-                [eventConsumer processEvents:decryptedEvents liveEvents:NO prefetchResult:prefetchResult];
-                [tp warnIfLongerThanInterval];
-            }
-        }
-    }];
-}
-
-- (NSArray *)conversationIdsThatHaveBufferedUpdatesForCallState;
-{
-    return [[self.eventsBuffer updateEvents] mapWithBlock:^id(ZMUpdateEvent *event) {
-        if (event.type == ZMUpdateEventCallState) {
-            return event.conversationUUID;
-        }
-        return nil;
     }];
 }
 

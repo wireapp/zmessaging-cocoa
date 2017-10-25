@@ -225,37 +225,20 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
                                        ]
                                };
     
-    NSUUID *callEventID = [NSUUID createUUID];
-    NSDictionary *callStatePayload = @{
-                                       @"id" : callEventID.transportString,
-                                       @"payload" : @[
-                                               @{
-                                                   @"conversation" : NSUUID.createUUID.transportString,
-                                                   @"type" : @"call.state",
-                                                   },
-                                               ]
-                                       };
-
-    NSDictionary *payload = @{@"notifications" : @[payload1, payload2, callStatePayload]};
+    NSDictionary *payload = @{@"notifications" : @[payload1, payload2]};
     
     NSMutableArray *expectedEvents = [NSMutableArray array];
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:payload1]];
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:payload2]];
 
-    NSArray *callStateEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:callStatePayload];
-
     // expect
     [[(id)self.syncStrategy expect] processUpdateEvents:expectedEvents ignoreBuffer:YES];
-    [[(id)self.syncStrategy expect] processUpdateEvents:callStateEvents ignoreBuffer:NO];
     
     // when
     [(id)self.sut.listPaginator didReceiveResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil] forSingleRequest:self.requestSync];
-    
-    //then
-    XCTAssertEqualObjects(self.sut.lastUpdateEventID, callEventID);
 }
 
-- (void)testThatItPassesTheDownloadedEventsExceptCallStateEventsToTheSyncStrategyOn404
+- (void)testThatItPassesTheDownloadedEventsToTheSyncStrategyOn404
 {
     // when
     NSDictionary *payload1 = @{
@@ -277,94 +260,18 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
                                        ]
                                };
     
-    NSUUID *callEventID = [NSUUID createUUID];
-    NSDictionary *callStatePayload = @{
-                                       @"id" : callEventID.transportString,
-                                       @"payload" : @[
-                                               @{
-                                                   @"conversation" : NSUUID.createUUID.transportString,
-                                                   @"type" : @"call.state",
-                                                   @"time" : [NSDate date].transportString
-                                                   },
-                                               ]
-                                       };
-    
-    NSDictionary *payload = @{@"notifications" : @[payload1, payload2, callStatePayload]};
+    NSDictionary *payload = @{@"notifications" : @[payload1, payload2]};
     
     NSMutableArray *expectedEvents = [NSMutableArray array];
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:payload1]];
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:payload2]];
     
-    NSArray *callStateEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:callStatePayload];
-    
     // expect
     [[(id)self.syncStrategy expect] processUpdateEvents:expectedEvents ignoreBuffer:YES];
     
-    //in second pass we process call state events with buffer
-    [[(id)self.syncStrategy expect] processUpdateEvents:callStateEvents ignoreBuffer:NO];
-
     // when
     [(id)self.sut.listPaginator didReceiveResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:404 transportSessionError:nil] forSingleRequest:self.requestSync];
-
-    // then
-    XCTAssertEqualObjects(self.sut.lastUpdateEventID, callEventID);
 }
-
-- (void)testThatItOnlyPassesTheLastCallStateEventToTheSyncStrategy
-{
-    // when
-    NSUUID *callEventID1 = NSUUID.createUUID;
-    NSUUID *callEventID2 = NSUUID.createUUID;
-    NSUUID *callEventID3 = NSUUID.createUUID;
-    NSUUID *convUUID1 = NSUUID.createUUID;
-    NSUUID *convUUID2 = NSUUID.createUUID;
-
-    NSDictionary *payload1 = @{
-                                       @"id" : callEventID1.transportString,
-                                       @"payload" : @[
-                                               @{
-                                                   @"conversation" : convUUID1.transportString,
-                                                   @"type" : @"call.state",
-                                                   },
-                                               ]
-                                       };
-    NSDictionary *payload2 = @{
-                                       @"id" : callEventID2.transportString,
-                                       @"payload" : @[
-                                               @{
-                                                   @"conversation" : convUUID1.transportString,
-                                                   @"type" : @"call.state",
-                                                   },
-                                               ]
-                                       };
-    NSDictionary *payload3 = @{
-                                       @"id" : callEventID3.transportString,
-                                       @"payload" : @[
-                                               @{
-                                                   @"conversation" : convUUID2.transportString,
-                                                   @"type" : @"call.state",
-                                                   },
-                                               ]
-                                       };
-    
-    NSDictionary *payload = @{@"notifications" : @[payload1, payload2, payload3]};
-    
-    NSMutableArray *expectedEvents = [NSMutableArray array];
-    [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:payload2]];
-    [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:payload3]];
-    
-    NSArray *rejectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload1];
-
-    //in second pass we process call state events with buffer
-    [[(id)self.syncStrategy expect] processUpdateEvents:expectedEvents ignoreBuffer:NO];
-    [[(id)self.syncStrategy reject] processUpdateEvents:rejectedEvents ignoreBuffer:NO];
-
-    // when
-    [(id)self.sut.listPaginator didReceiveResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:404 transportSessionError:nil] forSingleRequest:self.requestSync];
-
-    [(id)self.syncStrategy verify];
-}
-
 
 - (void)testThatHasNoLastUpdateEventIDOnStartup
 {

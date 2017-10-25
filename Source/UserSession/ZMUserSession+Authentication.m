@@ -56,7 +56,7 @@ static NSString *const HasHistoryKey = @"hasHistory";
 
 - (BOOL)hadHistoryAtLastLogin
 {
-    return self.accountStatus.hadHistoryBeforeLogin;
+    return self.accountStatus.hadHistoryBeforeSync;
 }
 
 - (void)deleteUserKeychainItems;

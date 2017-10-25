@@ -69,25 +69,7 @@
 
 - (void)injectLastUpdateEventID:(NSString *)updateEventID
 {
-    NSDictionary *payload =
-    @{
-      @"id" : updateEventID,
-      @"payload" :
-          @[
-              @{
-                  @"conversation" : @"34d6f5d2-56aa-4f2b-99b7-b130efdf724c",
-                  @"participants" : @{
-                          @"1f7481fc-61ca-45f5-8dfb-5a27627a3539" :
-                              @{
-                                  @"state" : @"joined"
-                                  },
-                          },
-                  @"self" : [NSNull null],
-                  @"type" : @"call.state"
-                  }
-              ],
-      @"time" : @"1437654971",
-      };
+    NSDictionary *payload = @{ @"id" : updateEventID };
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil];
     [self.sut didReceiveResponse:response forSingleRequest:self.downstreamSync];
 }

@@ -162,7 +162,6 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     NSArray *eventsDictionaries = [self.class eventDictionariesFromPayload:payload];
     
     NSMutableArray *parsedEvents = [NSMutableArray array];
-    NSMutableDictionary *lastCallStateEvents = [NSMutableDictionary dictionary];
     NSUUID *latestEventId = nil;
     
     for(NSDictionary *eventDict in eventsDictionaries) {
@@ -171,13 +170,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
         for (ZMUpdateEvent *event in events) {
             [event appendDebugInformation:@"From missing update events transcoder, processUpdateEventsAndReturnLastNotificationIDFromPayload"];
-
-            if (event.type == ZMUpdateEventCallState) {
-                lastCallStateEvents[event.conversationUUID] = event;
-            }
-            else {
-                [parsedEvents addObject:event];
-            }
+            [parsedEvents addObject:event];
             
             if (!event.isTransient) {
                 latestEventId = event.uuid;
@@ -188,14 +181,12 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     if (nil != self.notificationEventsToCancel) {
         // In case we are fetching the stream because we have received a push notification we need to forward them to the pingback status
         // The status will forward them to the operationloop and check if the received notification was contained in this batch.
-        NSArray <ZMUpdateEvent *> *events = [parsedEvents arrayByAddingObjectsFromArray:lastCallStateEvents.allValues];
-        [self.pingbackStatus didReceiveEncryptedEvents:events originalEvents:self.notificationEventsToCancel hasMore:self.listPaginator.hasMoreToFetch];
+        [self.pingbackStatus didReceiveEncryptedEvents:parsedEvents originalEvents:self.notificationEventsToCancel hasMore:self.listPaginator.hasMoreToFetch];
         if (!self.listPaginator.hasMoreToFetch) {
             self.notificationEventsToCancel = nil;
         }
     } else {
         [syncStrategy processUpdateEvents:parsedEvents ignoreBuffer:YES];
-        [syncStrategy processUpdateEvents:lastCallStateEvents.allValues ignoreBuffer:NO];
     }
 
     [tp warnIfLongerThanInterval];

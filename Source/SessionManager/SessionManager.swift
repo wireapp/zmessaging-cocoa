@@ -124,7 +124,7 @@ public protocol LocalNotificationResponder : class {
     var preLoginAuthenticationToken: Any?
     var blacklistVerificator: ZMBlacklistVerificator?
     let reachability: ReachabilityProvider & ReachabilityTearDown
-    let pushDispatcher = PushDispatcher()
+    let pushDispatcher: PushDispatcher
     
     internal var authenticatedSessionFactory: AuthenticatedSessionFactory
     internal let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
@@ -208,6 +208,7 @@ public protocol LocalNotificationResponder : class {
             application: application,
             launchOptions: launchOptions
         )
+        
         self.blacklistVerificator = ZMBlacklistVerificator(checkInterval: blacklistDownloadInterval,
                                                            version: appVersion,
                                                            working: nil,
@@ -279,12 +280,19 @@ public protocol LocalNotificationResponder : class {
         self.authenticatedSessionFactory = authenticatedSessionFactory
         self.unauthenticatedSessionFactory = unauthenticatedSessionFactory
         self.reachability = reachability
-        super.init()
-        self.pushDispatcher.fallbackClient = self
+        
+        // we must set these before initializing the PushDispatcher b/c if the app
+        // received a push from terminated state, it requires these properties to be
+        // non nil in order to process the notification
+        BackgroundActivityFactory.sharedInstance().application = UIApplication.shared
+        BackgroundActivityFactory.sharedInstance().mainGroupQueue = groupQueue
+        self.pushDispatcher = PushDispatcher()
 
-        postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(
-            self,
-            queue: self.groupQueue)
+        super.init()
+        
+        self.pushDispatcher.fallbackClient = self
+        
+        postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
         
         if let account = accountManager.selectedAccount {
             selectInitialAccount(account, launchOptions: launchOptions)
@@ -298,6 +306,7 @@ public protocol LocalNotificationResponder : class {
                 completion: { [weak self] identifier in
                     guard let `self` = self else { return }
                     identifier.apply(self.migrateAccount)
+                    
                     self.selectInitialAccount(self.accountManager.selectedAccount, launchOptions: launchOptions)
             })
         }
@@ -312,7 +321,6 @@ public protocol LocalNotificationResponder : class {
     }
 
     private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
-        
         loadSession(for: account) { [weak self] session in
             guard let `self` = self else { return }
             self.updateCurrentAccount(in: session.managedObjectContext)
@@ -388,17 +396,10 @@ public protocol LocalNotificationResponder : class {
             return
         }
 
-        LocalStoreProvider.createStack(
-            applicationContainer: sharedContainerURL,
-            userIdentifier: account.userIdentifier,
-            dispatchGroup: dispatchGroup,
-            migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
-            completion: { [weak self] provider in
-                self?.activateSession(for: account, with: provider) { session in
-                    self?.registerSessionForRemoteNotificationsIfNeeded(session)
-                    completion(session)
-                }}
-        )
+        self.activateSession(for: account) { session in
+            self.registerSessionForRemoteNotificationsIfNeeded(session)
+            completion(session)
+        }
     }
 
     public func deleteAccountData(for account: Account) {
@@ -417,41 +418,14 @@ public protocol LocalNotificationResponder : class {
         }
     }
     
-    fileprivate func activateSession(for account: Account, with provider: LocalStoreProviderProtocol, completion: @escaping (ZMUserSession) -> Void) {
-        let session: ZMUserSession
-
-        if let backgroundSession = self.backgroundUserSessions[account.userIdentifier] {
-            session = backgroundSession
-        }
-        else {
-            guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
-                preconditionFailure("Unable to create session for \(account)")
-            }
-            session = newSession
-
-            self.configure(session: session, for: account)
-        }
-        
-        self.registerObservers(account: account, session: session)
-
-        self.activeUserSession = session
-
-        
-        log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
-        let authenticationStatus = unauthenticatedSession?.authenticationStatus
-
-        session.syncManagedObjectContext.performGroupedBlock {
-            session.setEmailCredentials(authenticationStatus?.emailCredentials())
-            if let registered = authenticationStatus?.completedRegistration {
-                session.syncManagedObjectContext.registeredOnThisDevice = registered
-                session.syncManagedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = registered
-            }
-
-            session.managedObjectContext.performGroupedBlock { [weak self] in
-                completion(session)
-                self?.notifyNewUserSessionCreated(session)
-                self?.delegate?.sessionManagerCreated(userSession: session)
-            }
+    fileprivate func activateSession(for account: Account, completion: @escaping (ZMUserSession) -> Void) {
+        self.withSession(for: account) { session in
+            self.activeUserSession = session
+            
+            log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
+            completion(session)
+            self.notifyNewUserSessionCreated(session)
+            self.delegate?.sessionManagerCreated(userSession: session)
         }
     }
 
@@ -487,18 +461,27 @@ public protocol LocalNotificationResponder : class {
     fileprivate func configure(session userSession: ZMUserSession, for account: Account) {
         userSession.requestToOpenViewDelegate = self
         userSession.sessionManager = self
+        require(self.backgroundUserSessions[account.userIdentifier] == nil, "User session is already loaded")
         self.backgroundUserSessions[account.userIdentifier] = userSession
         pushDispatcher.add(client: userSession)
-        userSession.callNotificationStyle = self.callNotificationStyle
+        userSession.callNotificationStyle = callNotificationStyle
+        userSession.useConstantBitRateAudio = useConstantBitRateAudio
+
+        registerObservers(account: account, session: userSession)
     }
     
     // Loads user session for @c account given and executes the @c action block.
     public func withSession(for account: Account, perform completion: @escaping (ZMUserSession)->()) {
+        log.debug("Request to load session for \(account)")
+        let group = self.dispatchGroup
+        group?.enter()
         self.sessionLoadingQueue.serialAsync(do: { onWorkDone in
 
             if let session = self.backgroundUserSessions[account.userIdentifier] {
+                log.debug("Session for \(account) is already loaded")
                 completion(session)
                 onWorkDone()
+                group?.leave()
             }
             else {
                 LocalStoreProvider.createStack(
@@ -507,9 +490,10 @@ public protocol LocalNotificationResponder : class {
                     dispatchGroup: self.dispatchGroup,
                     migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
                     completion: { provider in
-                        let userSession = self.activateBackgroundSession(for: account, with: provider)
+                        let userSession = self.startBackgroundSession(for: account, with: provider)
                         completion(userSession)
                         onWorkDone()
+                        group?.leave()
                     }
                 )
             }
@@ -517,11 +501,10 @@ public protocol LocalNotificationResponder : class {
     }
 
     // Creates the user session for @c account given, calls @c completion when done.
-    private func activateBackgroundSession(for account: Account, with provider: LocalStoreProviderProtocol) -> ZMUserSession {
+    private func startBackgroundSession(for account: Account, with provider: LocalStoreProviderProtocol) -> ZMUserSession {
         guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
             preconditionFailure("Unable to create session for \(account)")
         }
-        self.registerObservers(account: account, session: newSession)
         
         self.configure(session: newSession, for: account)
 
@@ -573,6 +556,12 @@ public protocol LocalNotificationResponder : class {
     public var callNotificationStyle: ZMCallNotificationStyle = .callKit {
         didSet {
             activeUserSession?.callNotificationStyle = callNotificationStyle
+        }
+    }
+    
+    public var useConstantBitRateAudio : Bool = false {
+        didSet {
+            activeUserSession?.useConstantBitRateAudio = useConstantBitRateAudio
         }
     }
 }
@@ -647,23 +636,26 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         }
         
         accountManager.addAndSelect(account)
-
-        let group = self.dispatchGroup
-        group?.enter()
-        LocalStoreProvider.createStack(applicationContainer: sharedContainerURL, userIdentifier: account.userIdentifier, dispatchGroup: dispatchGroup) { [weak self] provider in
-            self?.activateSession(for: account, with: provider) { userSession in
-                self?.registerSessionForRemoteNotificationsIfNeeded(userSession)
-                self?.updateCurrentAccount(in: userSession.managedObjectContext)
-                
-                if let profileImageData = session.authenticationStatus.profileImageData {
-                    self?.updateProfileImage(imageData: profileImageData)
-                }
-                
-                group?.leave()
+        
+        self.activateSession(for: account) { userSession in
+            self.registerSessionForRemoteNotificationsIfNeeded(userSession)
+            self.updateCurrentAccount(in: userSession.managedObjectContext)
+            
+            if let profileImageData = session.authenticationStatus.profileImageData {
+                self.updateProfileImage(imageData: profileImageData)
+            }
+            
+            let registered = session.authenticationStatus.completedRegistration
+            let emailCredentials = session.authenticationStatus.emailCredentials()
+            
+            userSession.syncManagedObjectContext.performGroupedBlock {
+                userSession.setEmailCredentials(emailCredentials)
+                userSession.syncManagedObjectContext.registeredOnThisDevice = registered
+                userSession.syncManagedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = registered
+                userSession.accountStatus.didCompleteLogin()
             }
         }
     }
-
 }
 
 // MARK: - ZMAuthenticationObserver
@@ -675,13 +667,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
         unauthenticatedSession?.tearDown()
         unauthenticatedSession = nil
     }
-
-    @objc public func authenticationDidSucceed() {
-        if nil != activeUserSession {
-            return RequestAvailableNotification.notifyNewRequestsAvailable(self)
-        }
-    }
-        
+    
     public func accountDeleted(accountId: UUID) {
         log.debug("\(accountId): Account was deleted")
         
@@ -776,6 +762,12 @@ extension SessionManager: ZMConversationListObserver {
 }
 
 extension SessionManager : PreLoginAuthenticationObserver {
+    
+    @objc public func authenticationDidSucceed() {
+        if nil != activeUserSession {
+            return RequestAvailableNotification.notifyNewRequestsAvailable(self)
+        }
+    }
     
     public func authenticationDidFail(_ error: NSError) {
         if unauthenticatedSession == nil {

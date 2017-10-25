@@ -94,11 +94,7 @@ static NSString * const PushNotificationTypeNotice = @"notice";
         return;
     }
     
-    NSArray *nonFlowEvents = [events filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(ZMUpdateEvent *event, NSDictionary<NSString *,id> * _Nullable ZM_UNUSED bindings) {
-        return !event.isFlowEvent;
-    }]];
-                              
-    [self.syncStrategy consumeUpdateEvents:nonFlowEvents];
+    [self.syncStrategy consumeUpdateEvents:events];
     [self.syncMOC saveOrRollback];
     [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }

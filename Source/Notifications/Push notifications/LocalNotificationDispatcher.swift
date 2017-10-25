@@ -36,7 +36,6 @@ public class LocalNotificationDispatcher: NSObject {
     let failedMessageNotifications: ZMLocalNotificationSet
     
     let application: ZMApplication
-    let sessionTracker: SessionTracker
     let syncMOC: NSManagedObjectContext
     private(set) var isTornDown: Bool
     private var observers: [Any] = []
@@ -54,7 +53,6 @@ public class LocalNotificationDispatcher: NSObject {
         self.callingNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherCallingNotificationsKey", keyValueStore: managedObjectContext)
         self.messageNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherMessageNotificationsKey", keyValueStore: managedObjectContext)
         self.application = application
-        self.sessionTracker = SessionTracker(managedObjectContext: managedObjectContext)
         self.isTornDown = false
         super.init()
         observers.append(
@@ -66,7 +64,6 @@ public class LocalNotificationDispatcher: NSObject {
  
     public func tearDown() {
         self.isTornDown = true
-        self.sessionTracker.tearDown()
         self.observers = []
         syncMOC.performGroupedBlock { [weak self] in
             self?.cancelAllNotifications()
@@ -96,12 +93,10 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
         let eventsToForward = events.filter { return [.pushNotification, .webSocket].contains($0.source) }
         self.didReceive(events: eventsToForward, conversationMap: prefetchResult?.conversationsByRemoteIdentifier ?? [:])
     }
-    
+
     func didReceive(events: [ZMUpdateEvent], conversationMap: [UUID : ZMConversation]) {
         events.forEach { event in
-            // Forward events to the session tracker which keeps track if the selfUser joined or not
-            self.sessionTracker.addEvent(event)
-            
+
             var conversation: ZMConversation?
             if let conversationID = event.conversationUUID() {
                 // Fetch the conversation here to avoid refetching every time we try to create a notification
@@ -162,7 +157,6 @@ extension LocalNotificationDispatcher {
     /// - note: Notifications for a specific conversation are otherwise deleted automatically when the message window changes and
     /// ZMConversationDidChangeVisibleWindowNotification is called
     public func cancelNotification(for conversation: ZMConversation) {
-        self.sessionTracker.clearSessions(conversation)
         self.allNotificationSets.forEach { $0.cancelNotifications(conversation) }
     }
     

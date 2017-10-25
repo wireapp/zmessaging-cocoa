@@ -152,7 +152,7 @@
 
     // then
     XCTestExpectation *expectation = [self expectationWithDescription:@"Notification"];
-    id token = [NotificationInContext addObserverWithName:ZMConversation.typingNotificationName
+    id token = [NotificationInContext addObserverWithName:ZMConversation.typingChangeNotificationName
                                                   context:self.uiMOC.notificationContext
                                                    object:nil
                                                     queue:nil using:^(NotificationInContext * notification) {

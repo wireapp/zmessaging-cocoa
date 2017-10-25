@@ -605,7 +605,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         guard let lastMessage = conversation.messages.lastObject as? ZMSystemMessage else { XCTFail("Last message is not system message", file: file, line: line); return }
         guard lastMessage.systemMessageType == .teamMemberLeave else { XCTFail("System message is not teamMemberLeave: but '\(lastMessage.systemMessageType.rawValue)'", file: file, line: line); return }
         guard let serverTimestamp = lastMessage.serverTimestamp else { XCTFail("System message should have timestamp", file: file, line: line); return }
-        XCTAssertEqualWithAccuracy(serverTimestamp.timeIntervalSince1970, timestamp.timeIntervalSince1970, accuracy: 0.1, file: file, line: line)
+        XCTAssertEqual(serverTimestamp.timeIntervalSince1970, timestamp.timeIntervalSince1970, accuracy: 0.1, file: file, line:line)
         return
     }
 
