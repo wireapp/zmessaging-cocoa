@@ -49,7 +49,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic, readonly) UserProfileUpdateStatus *userProfileUpdateStatus;
 @property (nonatomic, readonly) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic, readonly) ClientUpdateStatus *clientUpdateStatus;
-@property (nonatomic, readonly) ZMAccountStatus *accountStatus;
 @property (nonatomic, readonly) ProxiedRequestsStatus *proxiedRequestStatus;
 @property (nonatomic, readonly) id<AuthenticationStatusProvider> authenticationStatus;
 

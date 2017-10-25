@@ -830,7 +830,7 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
     return self.operationLoop.syncStrategy.applicationStatusDirectory.clientUpdateStatus;
 }
 
-- (ZMAccountStatus *)accountStatus;
+- (AccountStatus *)accountStatus;
 {
     return self.operationLoop.syncStrategy.applicationStatusDirectory.accountStatus;
 }

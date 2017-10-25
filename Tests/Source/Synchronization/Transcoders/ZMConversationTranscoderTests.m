@@ -3548,12 +3548,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)testThatItMergesConversationsWhenItProcessesAConversationCreateEventForAOneOnOneConversationAndTheConnectionAlreadyHasAConversation
 {
     // given
-    id accountStatus = [OCMockObject niceMockForClass:[ZMAccountStatus class]];
-    [[[accountStatus stub]
-      andReturnValue: OCMOCK_VALUE((AccountState){AccountStateOldDeviceActiveAccount})] currentAccountState];
-    
     self.sut = (id) [[ZMConversationTranscoder alloc]  initWithSyncStrategy:self.syncStrategy applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
-
     
     NSUUID *otherUserID = [NSUUID createUUID];
     NSUUID *conversationID = [NSUUID createUUID];

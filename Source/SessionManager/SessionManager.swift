@@ -423,21 +423,9 @@ public protocol LocalMessageNotificationResponder : class {
             self.activeUserSession = session
             
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
-            let authenticationStatus = self.unauthenticatedSession?.authenticationStatus
-            
-            session.syncManagedObjectContext.performGroupedBlock {
-                session.setEmailCredentials(authenticationStatus?.emailCredentials())
-                if let registered = authenticationStatus?.completedRegistration {
-                    session.syncManagedObjectContext.registeredOnThisDevice = registered
-                    session.syncManagedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = registered
-                }
-                
-                session.managedObjectContext.performGroupedBlock { [weak self] in
-                    completion(session)
-                    self?.notifyNewUserSessionCreated(session)
-                    self?.delegate?.sessionManagerCreated(userSession: session)
-                }
-            }
+            completion(session)
+            self.notifyNewUserSessionCreated(session)
+            self.delegate?.sessionManagerCreated(userSession: session)
         }
     }
 
@@ -648,13 +636,23 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         }
         
         accountManager.addAndSelect(account)
-
+        
         self.activateSession(for: account) { userSession in
             self.registerSessionForRemoteNotificationsIfNeeded(userSession)
             self.updateCurrentAccount(in: userSession.managedObjectContext)
             
             if let profileImageData = session.authenticationStatus.profileImageData {
                 self.updateProfileImage(imageData: profileImageData)
+            }
+            
+            let registered = session.authenticationStatus.completedRegistration
+            let emailCredentials = session.authenticationStatus.emailCredentials()
+            
+            userSession.syncManagedObjectContext.performGroupedBlock {
+                userSession.setEmailCredentials(emailCredentials)
+                userSession.syncManagedObjectContext.registeredOnThisDevice = registered
+                userSession.syncManagedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = registered
+                userSession.accountStatus.didCompleteLogin()
             }
         }
     }
@@ -669,13 +667,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
         unauthenticatedSession?.tearDown()
         unauthenticatedSession = nil
     }
-
-    @objc public func authenticationDidSucceed() {
-        if nil != activeUserSession {
-            return RequestAvailableNotification.notifyNewRequestsAvailable(self)
-        }
-    }
-        
+    
     public func accountDeleted(accountId: UUID) {
         log.debug("\(accountId): Account was deleted")
         
@@ -770,6 +762,12 @@ extension SessionManager: ZMConversationListObserver {
 }
 
 extension SessionManager : PreLoginAuthenticationObserver {
+    
+    @objc public func authenticationDidSucceed() {
+        if nil != activeUserSession {
+            return RequestAvailableNotification.notifyNewRequestsAvailable(self)
+        }
+    }
     
     public func authenticationDidFail(_ error: NSError) {
         if unauthenticatedSession == nil {
