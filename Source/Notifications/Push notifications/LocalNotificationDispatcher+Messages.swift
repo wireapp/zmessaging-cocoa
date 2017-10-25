@@ -41,8 +41,6 @@ extension LocalNotificationDispatcher: PushMessageHandler {
         note.apply(messageNotifications.addObject)
     }
     
-    // TODO: Cancelling
-    
     // Process ZMGenericMessage that have "invisible" as in they don't create a message themselves
     @objc(processGenericMessage:) public func process(_ genericMessage: ZMGenericMessage) {
         // hidden, deleted and reaction do not create messages on their own
