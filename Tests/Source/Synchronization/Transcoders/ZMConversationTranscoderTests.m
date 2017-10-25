@@ -40,11 +40,10 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (ZMConversation *)setupConversation;
 - (ZMTransportRequest *)requestToSyncConversation:(ZMConversation *)conversation andCompleteWithResponse:(ZMTransportResponse*)response;
 
-@property (nonatomic) NSMutableArray *downloadedEvents;
 @property (nonatomic) ZMConversationTranscoder<ZMUpstreamTranscoder, ZMDownstreamTranscoder> *sut;
 @property (nonatomic) NSUUID *selfUserID;
 @property (nonatomic) MockSyncStatus *mockSyncStatus;
-@property (nonatomic) ZMMockClientRegistrationStatus *mockClientRegistrationDelegate;
+@property (nonatomic) MockPushMessageHandler *mockLocalNotificationDispatcher;
 @property (nonatomic) id syncStateDelegate;
 
 @end
@@ -59,23 +58,13 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     self.selfUserID = NSUUID.createUUID;
     [self setupSelfConversation]; // when updating lastRead we are posting to the selfConversation
 
-    [[[(id)self.syncStrategy stub] andReturn:self.syncMOC] moc];
-    [self verifyMockLater:self.syncStrategy];
-    
-    NSMutableArray *downloadedEvents = [NSMutableArray array];
-    ZMSyncStrategy* syncStrategyMock = [(id)self.syncStrategy stub];
-    [syncStrategyMock processDownloadedEvents:[OCMArg checkWithBlock:^BOOL(NSArray* events) {
-        [downloadedEvents addObjectsFromArray:events];
-        return YES;
-    }]];
-    
-    self.downloadedEvents = downloadedEvents;
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
     self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateEventProcessing;
+    self.mockLocalNotificationDispatcher = [[MockPushMessageHandler alloc] init];
 
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
+    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus localNotificationDispatcher:self.mockLocalNotificationDispatcher syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -87,8 +76,13 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)tearDown
 {
     WaitForAllGroupsToBeEmpty(0.5);
-    [self.mockClientRegistrationDelegate tearDown];
+    
+    [self.syncStateDelegate stopMocking];
+    self.syncStateDelegate = nil;
     self.sut = nil;
+    self.mockLocalNotificationDispatcher = nil;
+    self.mockSyncStatus = nil;
+    
     [super tearDown];
 }
 
@@ -645,10 +639,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [self.syncMOC performGroupedBlockAndWait:^{
         // then
         XCTAssertFalse([conversation.keysThatHaveLocalModifications containsObject:ZMConversationUserDefinedNameKey]);
-        
-        XCTAssertEqual(self.downloadedEvents.count, 1u);
-        ZMUpdateEvent *downloadedEvent = self.downloadedEvents.firstObject;
-        XCTAssertEqualObjects(downloadedEvent.payload, responsePayload);
     }];
 }
 
@@ -1944,7 +1934,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertTrue([self.syncMOC saveOrRollback]);
     }];
     
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
+    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus localNotificationDispatcher:self.mockLocalNotificationDispatcher syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
     
     [ZMChangeTrackerBootstrap bootStrapChangeTrackers:self.sut.contextChangeTrackers onContext:self.syncMOC];
@@ -2135,7 +2125,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)testThatItDoesAppendsNewConversationSystemMessage
 {
     // given
-    self.sut = (id) [[ZMConversationTranscoder alloc] initWithSyncStrategy:self.syncStrategy applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
+    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus localNotificationDispatcher:self.mockLocalNotificationDispatcher syncStatus:self.mockSyncStatus];
     
     __block NSDictionary *rawConversation;
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -2312,14 +2302,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertEqual(request.method, ZMMethodDELETE);
     NSString *expectedPath = [NSString pathWithComponents:@[ @"/", @"conversations", conversationID.transportString, @"members", user3ID.transportString ]];
     XCTAssertEqualObjects(request.path, expectedPath);
-    
     XCTAssertFalse([conversation.keysThatHaveLocalModifications containsObject:modifiedKey]);
-    
-    XCTAssertEqual(self.downloadedEvents.count, 1u);
-    ZMUpdateEvent *downloadedEvent = self.downloadedEvents.firstObject;
-    XCTAssertEqualObjects(downloadedEvent.payload, responsePayload);
-    
-    
 }
 
 - (void)testThatItCreatesSeveralRequestsForRemovingSeveralParticipants
@@ -2654,10 +2637,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertEqualObjects(request.payload, @{ @"users": @[ user3ID.transportString ] });
         
         XCTAssertFalse([conversation.keysThatHaveLocalModifications containsObject:modifiedKey]);
-        
-        XCTAssertEqual(self.downloadedEvents.count, 1u);
-        ZMUpdateEvent *downloadedEvent = self.downloadedEvents.firstObject;
-        XCTAssertEqualObjects(downloadedEvent.payload, responsePayload);
     }];
 }
 
@@ -3548,7 +3527,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)testThatItMergesConversationsWhenItProcessesAConversationCreateEventForAOneOnOneConversationAndTheConnectionAlreadyHasAConversation
 {
     // given
-    self.sut = (id) [[ZMConversationTranscoder alloc]  initWithSyncStrategy:self.syncStrategy applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
+    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus localNotificationDispatcher:self.mockLocalNotificationDispatcher syncStatus:self.mockSyncStatus];
     
     NSUUID *otherUserID = [NSUUID createUUID];
     NSUUID *conversationID = [NSUUID createUUID];

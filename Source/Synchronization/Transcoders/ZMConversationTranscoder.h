@@ -30,9 +30,10 @@
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc applicationStatus:(id<ZMApplicationStatus>)applicationStatus NS_UNAVAILABLE;
 
-- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)syncStrategy
-                   applicationStatus:(id<ZMApplicationStatus>)applicationStatus
-                          syncStatus:(SyncStatus *)syncStatus;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
+                 localNotificationDispatcher:(id<PushMessageHandler>)localNotificationDispatcher
+                                  syncStatus:(SyncStatus *)syncStatus;
 
 @property (nonatomic) NSUInteger conversationPageSize;
 

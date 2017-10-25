@@ -24,7 +24,4 @@
 /// Process events that are received through the notification stream or the websocket
 - (void)processUpdateEvents:(NSArray <ZMUpdateEvent *>*)events ignoreBuffer:(BOOL)ignoreBuffer;
 
-/// Process events that were downloaded as part of the client history
-- (void)processDownloadedEvents:(NSArray <ZMUpdateEvent *>*)events;
-
 @end

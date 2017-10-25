@@ -60,26 +60,4 @@
     }];
 }
 
-- (void)processDownloadedEvents:(NSArray <ZMUpdateEvent *>*)events;
-{
-    ZM_WEAK(self);
-    [self.eventDecoder processEvents:events block:^(NSArray<ZMUpdateEvent *> * decryptedEvents) {
-        ZM_STRONG(self);
-        if (self  == nil){
-            return;
-        }
-        
-        ZMFetchRequestBatch *fetchRequest = [self fetchRequestBatchForEvents:decryptedEvents];
-        ZMFetchRequestBatchResult *prefetchResult = [self.moc executeFetchRequestBatchOrAssert:fetchRequest];
-        
-        for(id<ZMEventConsumer> eventConsumer in self.eventConsumers) {
-            @autoreleasepool {
-                ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:5 label:[NSString stringWithFormat:@"Processing downloaded events in %@", [eventConsumer class]]];
-                [eventConsumer processEvents:decryptedEvents liveEvents:NO prefetchResult:prefetchResult];
-                [tp warnIfLongerThanInterval];
-            }
-        }
-    }];
-}
-
 @end

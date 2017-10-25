@@ -26,7 +26,7 @@
 {
     [super setUp];
     self.syncStrategy = [OCMockObject niceMockForClass:[ZMSyncStrategy class]];
-    self.mockApplicationStatus = [[ZMMockApplicationStatus alloc] init];
+    self.mockApplicationStatus = [[MockApplicationStatus alloc] init];
 }
 
 - (void)tearDown
