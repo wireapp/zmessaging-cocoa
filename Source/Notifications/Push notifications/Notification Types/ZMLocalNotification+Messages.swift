@@ -24,8 +24,8 @@ extension ZMLocalNotification {
     convenience init?(message: ZMMessage) {
         guard message.conversation?.remoteIdentifier  != nil else { return nil }
         let contentType = ZMLocalNotificationContentType.typeForMessage(message)
-        let constructor = MessageNotificationBuilder(message: message, contentType: contentType)
-        self.init(conversation: message.conversation, type: .message(contentType), constructor: constructor)
+        let builder = MessageNotificationBuilder(message: message, contentType: contentType)
+        self.init(conversation: message.conversation, type: .message(contentType), builder: builder)
         self.isEphemeral = message.isEphemeral
     }
     
@@ -152,8 +152,8 @@ extension ZMLocalNotification {
     convenience init?(systemMessage: ZMSystemMessage) {
         guard systemMessage.conversation?.remoteIdentifier != nil else { return nil }
         let contentType = ZMLocalNotificationContentType.typeForMessage(systemMessage)
-        let constructor = SystemMessageNotificationBuilder(message: systemMessage)
-        self.init(conversation: systemMessage.conversation, type: .message(contentType), constructor: constructor)
+        let builder = SystemMessageNotificationBuilder(message: systemMessage)
+        self.init(conversation: systemMessage.conversation, type: .message(contentType), builder: builder)
     }
     
     private class SystemMessageNotificationBuilder : MessageNotificationBuilder {
@@ -215,8 +215,8 @@ extension ZMLocalNotification {
     }
     
     convenience init?(expiredMessageIn conversation: ZMConversation) {
-        let constructor = FailedMessageNotificationBuilder(conversation: conversation)
-        self.init(conversation: conversation, type: .failedMessage, constructor: constructor)
+        let builder = FailedMessageNotificationBuilder(conversation: conversation)
+        self.init(conversation: conversation, type: .failedMessage, builder: builder)
     }
     
     private func configureforExpiredMessage(in conversation: ZMConversation!) {

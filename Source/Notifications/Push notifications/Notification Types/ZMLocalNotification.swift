@@ -35,7 +35,7 @@ public enum LocalNotificationType {
     case failedMessage
 }
 
-/// A notification constructor provides the main components used to configure
+/// A notification builder provides the main components used to configure
 /// a local notification. 
 ///
 protocol NotificationBuilder {
@@ -70,14 +70,14 @@ open class ZMLocalNotification: NSObject {
     
     public var isEphemeral: Bool = false
     
-    init?(conversation: ZMConversation?, type: LocalNotificationType, constructor: NotificationBuilder) {
-        guard constructor.shouldCreateNotification() else { return nil }
+    init?(conversation: ZMConversation?, type: LocalNotificationType, builder: NotificationBuilder) {
+        guard builder.shouldCreateNotification() else { return nil }
         self.type = type
-        self.title = constructor.titleText()
-        self.body = constructor.bodyText().escapingPercentageSymbols()
-        self.category = constructor.category()
-        self.soundName = constructor.soundName()
-        self.userInfo = constructor.userInfo()
+        self.title = builder.titleText()
+        self.body = builder.bodyText().escapingPercentageSymbols()
+        self.category = builder.category()
+        self.soundName = builder.soundName()
+        self.userInfo = builder.userInfo()
     }
     
     /// Returns a configured concrete UILocalNotification object.
