@@ -22,11 +22,13 @@
 @import WireDataModel;
 @import WireSystem;
 
-NSString * const ConversationIDStringKey = @"conversationIDString";
-NSString * const MessageNonceIDStringKey = @"messageNonceString";
-NSString * const SenderIDStringKey       = @"senderIDString";
-NSString * const EventTimeKey            = @"eventTime";
-NSString * const SelfUserIDStringKey     = @"selfUserIDString";
+NSString * const ConversationIDStringKey    = @"conversationIDString";
+NSString * const MessageNonceIDStringKey    = @"messageNonceString";
+NSString * const SenderIDStringKey          = @"senderIDString";
+NSString * const EventTimeKey               = @"eventTime";
+NSString * const SelfUserIDStringKey        = @"selfUserIDString";
+NSString * const ConversationNameStringKey  = @"conversationNameString";
+NSString * const TeamNameStringKey          = @"teamNameString";
 
 @implementation UILocalNotification (UserInfo)
 

@@ -32,6 +32,9 @@ public let FailedMessageInOneOnOneConversationText: NSString = "failed.message.o
 public let ZMPushStringDefault             = "default"
 public let ZMPushStringEphemeral           = "ephemeral"
 
+// Title with team name
+public let ZMPushStringTitle               = "title"          // "[conversationName] in [teamName]
+
 // 1 user, 1 conversation, 1 string
 // %1$@    %2$@            %3$@
 //

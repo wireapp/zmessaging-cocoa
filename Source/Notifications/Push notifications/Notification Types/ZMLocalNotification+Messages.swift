@@ -33,6 +33,7 @@ extension ZMLocalNotification {
         
         fileprivate let message: ZMMessage
         fileprivate let contentType: ZMLocalNotificationContentType
+        fileprivate var teamName: String?
         
         private var sender: ZMUser!
         var conversation: ZMConversation?
@@ -75,16 +76,11 @@ extension ZMLocalNotification {
         }
         
         func titleText() -> String? {
-            guard let conversation = conversation else { return nil }
-            var title = conversation.displayName
-            
-            if let moc = conversation.managedObjectContext,
-                let teamName = ZMUser.selfUser(in: moc).team?.name {
-                title += " in \(teamName)"
+            if let moc = conversation?.managedObjectContext {
+                teamName = ZMUser.selfUser(in: moc).team?.name
             }
             
-            let trimmed = title.trimmingCharacters(in: CharacterSet(charactersIn: " …"))
-            return trimmed.isEmpty ? nil : trimmed
+            return ZMPushStringTitle.localizedString(withConversationName: conversation?.meaningfulDisplayName, teamName: teamName)
         }
         
         func bodyText() -> String {
@@ -140,6 +136,8 @@ extension ZMLocalNotification {
             userInfo[MessageNonceIDStringKey] = message.nonce.transportString()
             userInfo[ConversationIDStringKey] = conversationID.transportString()
             userInfo[EventTimeKey] = eventTime
+            userInfo[ConversationNameStringKey] = conversation?.meaningfulDisplayName
+            userInfo[TeamNameStringKey] = teamName
             return userInfo
         }
     }
@@ -234,6 +232,7 @@ extension ZMLocalNotification {
     private class FailedMessageNotificationBuilder: NotificationBuilder {
         
         var conversation: ZMConversation?
+        private var teamName: String?
         
         init(conversation: ZMConversation?) {
             self.conversation = conversation
@@ -244,16 +243,11 @@ extension ZMLocalNotification {
         }
         
         func titleText() -> String? {
-            guard let conversation = conversation else { return nil }
-            var title = conversation.meaningfulDisplayName ?? ""
-            
-            if let moc = conversation.managedObjectContext,
-                let teamName = ZMUser.selfUser(in: moc).team?.name {
-                title += " in \(teamName)"
+            if let moc = conversation?.managedObjectContext {
+                teamName = ZMUser.selfUser(in: moc).team?.name
             }
             
-            let trimmed = title.trimmingCharacters(in: .whitespaces)
-            return trimmed.isEmpty ? nil : trimmed
+            return ZMPushStringTitle.localizedString(withConversationName: conversation?.meaningfulDisplayName, teamName: teamName)
         }
         
         func bodyText() -> String {
@@ -284,6 +278,8 @@ extension ZMLocalNotification {
             var userInfo = [AnyHashable: Any]()
             userInfo[SelfUserIDStringKey] = selfUserID.transportString()
             userInfo[ConversationIDStringKey] = conversationID.transportString()
+            userInfo[ConversationNameStringKey] = conversation?.meaningfulDisplayName
+            userInfo[TeamNameStringKey] = teamName
             return userInfo
         }
     }

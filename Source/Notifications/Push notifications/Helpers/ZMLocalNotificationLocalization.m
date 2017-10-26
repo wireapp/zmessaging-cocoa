@@ -24,8 +24,6 @@
 static NSString *localizedStringWithKeyAndArguments(NSString *key, NSArray *arguments);
 static NSString * ZMPushLocalizedString(NSString *key);
 
-
-
 static NSString *const OneOnOneKey = @"oneonone";
 static NSString *const GroupKey = @"group";
 
@@ -33,6 +31,7 @@ static NSString *const SelfKey = @"self";
 static NSString *const NoConversationNameKey = @"noconversationname";
 static NSString *const NoUserNameKey = @"nousername";
 static NSString *const NoOtherUserNameKey = @"nootherusername";
+static NSString *const NoTeamNameKey = @"noteamname";
 
 
 
@@ -225,6 +224,32 @@ static NSString *const NoOtherUserNameKey = @"nootherusername";
 - (NSString *)localizedStringForPushNotification;
 {
     return localizedStringWithKeyAndArguments(ZMPushLocalizedString(self), nil);
+}
+
+- (NSString *)localizedStringWithConversationName:(NSString *)conversationName teamName:(NSString *)teamName
+{
+    NSMutableArray *arguments = [NSMutableArray array];
+    NSString *key = self;
+    
+    if (conversationName == nil) {
+        key = [key stringByAppendingPathExtension:NoConversationNameKey];
+    }
+    else {
+        [arguments addObject:conversationName];
+    }
+    
+    if (teamName == nil) {
+        key = [key stringByAppendingPathExtension:NoTeamNameKey];
+    }
+    else {
+        [arguments addObject:teamName];
+    }
+    
+    if (arguments.count == 0) {
+        return nil;
+    }
+    
+    return localizedStringWithKeyAndArguments(ZMPushLocalizedString(key), arguments);
 }
 
 

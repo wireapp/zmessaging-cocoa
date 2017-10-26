@@ -29,6 +29,8 @@ extern NSString * const MessageNonceIDStringKey;
 extern NSString * const SenderIDStringKey;
 extern NSString * const EventTimeKey;
 extern NSString * const SelfUserIDStringKey;
+extern NSString * const ConversationNameStringKey;
+extern NSString * const TeamNameStringKey;
 NS_ASSUME_NONNULL_END
 
 @interface UILocalNotification (UserInfo)

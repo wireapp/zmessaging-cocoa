@@ -45,4 +45,6 @@
 
 - (NSString *)localizedStringForPushNotification;
 
+- (NSString *)localizedStringWithConversationName:(NSString *)conversationName teamName:(NSString *)teamName;
+
 @end
