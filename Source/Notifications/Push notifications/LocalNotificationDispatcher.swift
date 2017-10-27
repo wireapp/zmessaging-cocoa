@@ -35,17 +35,19 @@ public class LocalNotificationDispatcher: NSObject {
     let callingNotifications: ZMLocalNotificationSet
     let failedMessageNotifications: ZMLocalNotificationSet
     
-    let application: ZMApplication
+    unowned let application: ZMApplication
+    unowned let userSession: ZMUserSession
     let syncMOC: NSManagedObjectContext
     private(set) var isTornDown: Bool
     private var observers: [Any] = []
     
     var localNotificationBuffer = [ZMLocalNotification]()
     
-    @objc(initWithManagedObjectContext:foregroundNotificationDelegate:application:)
+    @objc(initWithManagedObjectContext:foregroundNotificationDelegate:application:userSession:)
     public init(in managedObjectContext: NSManagedObjectContext,
                 foregroundNotificationDelegate: ForegroundNotificationsDelegate,
-                application: ZMApplication) {
+                application: ZMApplication,
+                userSession: ZMUserSession) {
         self.syncMOC = managedObjectContext
         self.foregroundNotificationDelegate = foregroundNotificationDelegate
         self.eventNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherEventNotificationsKey", keyValueStore: managedObjectContext)
@@ -53,6 +55,7 @@ public class LocalNotificationDispatcher: NSObject {
         self.callingNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherCallingNotificationsKey", keyValueStore: managedObjectContext)
         self.messageNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherMessageNotificationsKey", keyValueStore: managedObjectContext)
         self.application = application
+        self.userSession = userSession
         self.isTornDown = false
         super.init()
         observers.append(
@@ -79,7 +82,7 @@ public class LocalNotificationDispatcher: NSObject {
     /// session, otherwise it is directed to the system via UIApplication.
     ///
     func scheduleLocalNotification(_ note: ZMLocalNotification) {        
-        if application.applicationState == .active {
+        if userSession.operationStatus.operationState == .foreground {
             self.foregroundNotificationDelegate?.didReceieveLocal(notification: note, application: application)
         } else {
             application.scheduleLocalNotification(note.uiLocalNotification)
