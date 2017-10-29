@@ -32,7 +32,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         
         // then
         XCTAssertNotNil(note)
-        XCTAssertEqual(note!.body, "Super User created a group conversation with you")
+        XCTAssertEqual(note!.body, "Super User created a group")
     }
     
     func testThatItCreatesConversationCreateNotification_NoUsername() {
@@ -44,7 +44,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         
          // then
         XCTAssertNotNil(note)
-        XCTAssertEqual(note!.body, "Someone created a group conversation with you")
+        XCTAssertEqual(note!.body, "Someone created a group")
     }
     
     // MARK: - Connection
@@ -276,7 +276,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     
     func testThatItCreatesTheCorrectAlertBody_ConvWithoutName(){
         guard let alertBody = alertBody(groupConversationWithoutName, aSender: otherUser1) else { return XCTFail()}
-        XCTAssertEqual(alertBody, "Other User1 ❤️ your message in a conversation")
+        XCTAssertEqual(alertBody, "Other User1 ❤️ your message")
     }
     
     func testThatItCreatesTheCorrectAlertBody(){
@@ -293,7 +293,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     func testThatItCreatesTheCorrectAlertBody_UnknownUser_UnknownConversationName(){
         otherUser1.name = ""
         guard let alertBody = alertBody(groupConversationWithoutName, aSender: otherUser1) else { return XCTFail()}
-        XCTAssertEqual(alertBody, "Someone ❤️ your message in a conversation")
+        XCTAssertEqual(alertBody, "Someone ❤️ your message")
     }
     
     func testThatItCreatesTheCorrectAlertBody_UnknownUser_OneOnOneConv(){

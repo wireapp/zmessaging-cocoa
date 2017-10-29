@@ -62,17 +62,17 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         
         //    "push.notification.add.message.oneonone" = "%1$@";
         //    "push.notification.add.message.group" = "%1$@: %2$@";
-        //    "push.notification.add.message.group.noconversationname" = "%1$@ in a conversation: %2$@";
+        //    "push.notification.add.message.group.noconversationname" = "%1$@: %2$@";
         
         XCTAssertEqual(bodyForNote(oneOnOneConversation, sender: sender), "Hello Hello!")
         XCTAssertEqual(bodyForNote(groupConversation, sender: sender), "Super User: Hello Hello!")
-        XCTAssertEqual(bodyForNote(groupConversationWithoutName, sender: sender), "Super User in a conversation: Hello Hello!")
+        XCTAssertEqual(bodyForNote(groupConversationWithoutName, sender: sender), "Super User: Hello Hello!")
     }
     
     func testThatObfuscatesNotificationsForEphemeralMessages(){
-        XCTAssertEqual(bodyForNote(oneOnOneConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
-        XCTAssertEqual(bodyForNote(groupConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
-        XCTAssertEqual(bodyForNote(groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForNote(oneOnOneConversation, sender: sender, isEphemeral: true), "sent you a message")
+        XCTAssertEqual(bodyForNote(groupConversation, sender: sender, isEphemeral: true), "Someone sent a message")
+        XCTAssertEqual(bodyForNote(groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent a message")
     }
     
     func testThatItDuplicatesPercentageSignsInTextAndConversationName() {
@@ -126,7 +126,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     func testThatItCreatesPushNotificationForMessageOfUnknownType() {
         XCTAssertEqual(bodyForUnknownNote(oneOnOneConversation, sender: sender), "New message")
         XCTAssertEqual(bodyForUnknownNote(groupConversation, sender: sender), "Super User: new message")
-        XCTAssertEqual(bodyForUnknownNote(groupConversationWithoutName, sender: sender), "Super User sent a message")
+        XCTAssertEqual(bodyForUnknownNote(groupConversationWithoutName, sender: sender), "Super User: new message")
     }
 
     func testThatItAddsATitleIfTheUserIsPartOfATeam() {
@@ -184,18 +184,18 @@ extension ZMLocalNotificationTests_Message {
     
     func testItCreatesImageNotificationsCorrectly(){
         //    "push.notification.add.image.oneonone" = "%1$@ shared a picture";
-        //    "push.notification.add.image.group" = "%1$@ shared a picture in %2$@";
+        //    "push.notification.add.image.group" = "%1$@ shared a picture";
         //    "push.notification.add.image.group.noconversationname" = "%1$@ shared a picture";
 
         XCTAssertEqual(bodyForImageNote(oneOnOneConversation, sender: sender), "shared a picture")
         XCTAssertEqual(bodyForImageNote(groupConversation, sender: sender), "Super User shared a picture")
-        XCTAssertEqual(bodyForImageNote(groupConversationWithoutName, sender: sender), "Super User shared a picture in a conversation")
+        XCTAssertEqual(bodyForImageNote(groupConversationWithoutName, sender: sender), "Super User shared a picture")
     }
 
     func testThatObfuscatesNotificationsForEphemeralImageMessages(){
-        XCTAssertEqual(bodyForImageNote(oneOnOneConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
-        XCTAssertEqual(bodyForImageNote(groupConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
-        XCTAssertEqual(bodyForImageNote(groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForImageNote(oneOnOneConversation, sender: sender, isEphemeral: true), "sent you a message")
+        XCTAssertEqual(bodyForImageNote(groupConversation, sender: sender, isEphemeral: true), "Someone sent a message")
+        XCTAssertEqual(bodyForImageNote(groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent a message")
     }
 }
 
@@ -270,46 +270,46 @@ extension ZMLocalNotificationTests_Message {
     
     func testThatItCreatesFileAddNotificationsCorrectly() {
         //    "push.notification.add.file.group" = "%1$@ shared a file"
-        //    "push.notification.add.file.group.noconversationname" = "%1$@ shared a file in a conversation"
+        //    "push.notification.add.file.group.noconversationname" = "%1$@ shared a file"
         //    "push.notification.add.file.oneonone" = "%1$@ shared a file"
         //
 
         XCTAssertEqual(bodyForAssetNote(.txt, conversation: oneOnOneConversation, sender: sender), "shared a file")
         XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversation, sender: sender), "Super User shared a file")
-        XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversationWithoutName, sender: sender), "Super User shared a file in a conversation")
+        XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversationWithoutName, sender: sender), "Super User shared a file")
     }
 
     func testThatItCreatesVideoAddNotificationsCorrectly() {
-        //    "push.notification.add.file.group" = "%1$@ shared a file
-        //    "push.notification.add.file.group.noconversationname" = "%1$@ shared a file in a conversation"
-        //    "push.notification.add.file.oneonone" = "%1$@ shared a file"
+        //    "push.notification.add.video.group" = "%1$@ shared a video
+        //    "push.notification.add.video.group.noconversationname" = "%1$@ shared a video"
+        //    "push.notification.add.video.oneonone" = "%1$@ shared a video"
         //
 
         XCTAssertEqual(bodyForAssetNote(.video, conversation: oneOnOneConversation, sender: sender), "shared a video")
         XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversation, sender: sender), "Super User shared a video")
-        XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversationWithoutName, sender: sender), "Super User shared a video in a conversation")
+        XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversationWithoutName, sender: sender), "Super User shared a video")
     }
 
     func testThatItCreatesEphemeralFileAddNotificationsCorrectly() {
-        XCTAssertEqual(bodyForAssetNote(.txt, conversation: oneOnOneConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
-        XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
-        XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForAssetNote(.txt, conversation: oneOnOneConversation, sender: sender, isEphemeral: true), "sent you a message")
+        XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversation, sender: sender, isEphemeral: true), "Someone sent a message")
+        XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent a message")
     }
 
     func testThatItCreatesEphemeralVideoAddNotificationsCorrectly() {
-        XCTAssertEqual(bodyForAssetNote(.video, conversation: oneOnOneConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
-        XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
-        XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForAssetNote(.video, conversation: oneOnOneConversation, sender: sender, isEphemeral: true), "sent you a message")
+        XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversation, sender: sender, isEphemeral: true), "Someone sent a message")
+        XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent a message")
     }
 
     func testThatItCreatesAudioNotificationsCorrectly() {
         //    "push.notification.add.audio.group" = "%1$@ shared an audio message";
-        //    "push.notification.add.audio.group.noconversationname" = "%1$@ shared an audio message in a conversation";
+        //    "push.notification.add.audio.group.noconversationname" = "%1$@ shared an audio message";
         //    "push.notification.add.audio.oneonone" = "%1$@ shared an audio message";
 
         XCTAssertEqual(bodyForAssetNote(.audio, conversation: oneOnOneConversation, sender: sender), "shared an audio message")
         XCTAssertEqual(bodyForAssetNote(.audio, conversation: groupConversation, sender: sender), "Super User shared an audio message")
-        XCTAssertEqual(bodyForAssetNote(.audio, conversation: groupConversationWithoutName, sender: sender), "Super User shared an audio message in a conversation")
+        XCTAssertEqual(bodyForAssetNote(.audio, conversation: groupConversationWithoutName, sender: sender), "Super User shared an audio message")
     }
 }
 
@@ -335,19 +335,15 @@ extension ZMLocalNotificationTests_Message {
     // MARK: Tests
     
     func testThatItCreatesKnockNotificationsCorrectly() {
-        //"push.notification.knock.group" = "%1$@ pinged %3$@ times in %2$@";
-        //"push.notification.knock.group.noconversationname" = "%1$@ pinged %2$@ times in a conversation";
-        //"push.notification.knock.oneonone" = "%1$@ pinged you %2$@ times";
-
         XCTAssertEqual(bodyForKnockNote(oneOnOneConversation, sender: sender), "pinged")
         XCTAssertEqual(bodyForKnockNote(groupConversation, sender: sender), "Super User pinged")
-        XCTAssertEqual(bodyForKnockNote(groupConversationWithoutName, sender: sender), "Super User pinged in a conversation")
+        XCTAssertEqual(bodyForKnockNote(groupConversationWithoutName, sender: sender), "Super User pinged")
     }
 
     func testThatItCreatesEphemeralKnockNotificationsCorrectly() {
-        XCTAssertEqual(bodyForKnockNote(oneOnOneConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
-        XCTAssertEqual(bodyForKnockNote(groupConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
-        XCTAssertEqual(bodyForKnockNote(groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForKnockNote(oneOnOneConversation, sender: sender, isEphemeral: true), "sent you a message")
+        XCTAssertEqual(bodyForKnockNote(groupConversation, sender: sender, isEphemeral: true), "Someone sent a message")
+        XCTAssertEqual(bodyForKnockNote(groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent a message")
     }
 }
 
@@ -372,10 +368,10 @@ extension ZMLocalNotificationTests_Message {
     func testThatItCreatesANotificationForAnEditMessage(){
         //    "push.notification.add.message.oneonone" = "%1$@";
         //    "push.notification.add.message.group" = "%1$@: %2$@";
-        //    "push.notification.add.message.group.noconversationname" = "%1$@ in a conversation: %2$@";
+        //    "push.notification.add.message.group.noconversationname" = "%1$@: %2$@";
 
         XCTAssertEqual(bodyForEditNote(oneOnOneConversation, sender: sender, text: "Edited Text"), "Edited Text")
         XCTAssertEqual(bodyForEditNote(groupConversation, sender: sender, text: "Edited Text"), "Super User: Edited Text")
-        XCTAssertEqual(bodyForEditNote(groupConversationWithoutName, sender: sender, text: "Edited Text"), "Super User in a conversation: Edited Text")
+        XCTAssertEqual(bodyForEditNote(groupConversationWithoutName, sender: sender, text: "Edited Text"), "Super User: Edited Text")
     }
 }
