@@ -29,7 +29,8 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
         
         sut = LocalNotificationDispatcher(in: syncMOC,
                                           foregroundNotificationDelegate: MockForegroundNotificationDelegate(),
-                                          application: application)
+                                          application: application,
+                                          userSession: mockUserSession)
         
         self.application.applicationState = .background
         syncMOC.performGroupedBlockAndWait {

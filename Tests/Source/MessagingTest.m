@@ -79,6 +79,7 @@ static ZMReachability *sharedReachabilityMock = nil;
 @property (nonatomic) NSString *groupIdentifier;
 @property (nonatomic) NSUUID *userIdentifier;
 @property (nonatomic) NSURL *sharedContainerURL;
+@property (nonatomic) OperationStatus *operationStatus;
 
 @property (nonatomic) MockTransportSession *mockTransportSession;
 
@@ -143,6 +144,7 @@ static ZMReachability *sharedReachabilityMock = nil;
     self.groupIdentifier = [@"group." stringByAppendingString:bundleIdentifier];
     self.userIdentifier = [NSUUID UUID];
     self.sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
+    self.operationStatus = [OperationStatus new];
     
     NSURL *otrFolder = [NSFileManager keyStoreURLForAccountInDirectory:self.accountDirectory createParentIfNeeded:NO];
     [fm removeItemAtURL:otrFolder error: nil];
@@ -221,6 +223,7 @@ static ZMReachability *sharedReachabilityMock = nil;
     _application = nil;
     self.groupIdentifier = nil;
     self.sharedContainerURL = nil;
+    self.operationStatus = nil;
 
     [super tearDown];
     Require([self waitForAllGroupsToBeEmptyWithTimeout:5]);
@@ -415,6 +418,8 @@ static ZMReachability *sharedReachabilityMock = nil;
         [[[mockUserSession stub] andReturn:self.syncMOC] syncManagedObjectContext];
         [[[mockUserSession stub] andReturn:self.searchMOC] searchManagedObjectContext];
         [[[mockUserSession stub] andReturn:self.sharedContainerURL] sharedContainerURL];
+        [[[mockUserSession stub] andReturn:self.operationStatus] operationStatus];
+
         [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockTransportSession] transportSession];
         _mockUserSession = mockUserSession;
     }
