@@ -777,7 +777,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     ZMUpdateEvent *event = [self conversationEventWithKeys:keysToParse responsePayload:response.payload];
     if (event != nil) {
         [self updatePropertiesOfConversation:conversation withPostPayloadEvent:event];
-        [self processEvents:@[event] liveEvents:YES prefetchResult:nil];        
+        [self processEvents:@[event] liveEvents:YES prefetchResult:nil];
     }
     
     if ([keysToParse isEqualToSet:[NSSet setWithObject:ZMConversationUserDefinedNameKey]]) {
