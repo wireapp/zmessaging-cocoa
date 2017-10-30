@@ -70,7 +70,7 @@ static ZMReachability *sharedReachabilityMock = nil;
 
 @end
 
-@interface MessagingTest () 
+@interface MessagingTest ()
 
 @property (nonatomic) NSManagedObjectContext *testMOC;
 @property (nonatomic) NSManagedObjectContext *alternativeTestMOC;
@@ -79,6 +79,8 @@ static ZMReachability *sharedReachabilityMock = nil;
 @property (nonatomic) NSString *groupIdentifier;
 @property (nonatomic) NSUUID *userIdentifier;
 @property (nonatomic) NSURL *sharedContainerURL;
+//@property (nonatomic) SyncEngineOperationState operationState;
+@property (nonatomic) OperationStatus *mockOperationStatus;
 
 @property (nonatomic) MockTransportSession *mockTransportSession;
 
@@ -143,7 +145,9 @@ static ZMReachability *sharedReachabilityMock = nil;
     self.groupIdentifier = [@"group." stringByAppendingString:bundleIdentifier];
     self.userIdentifier = [NSUUID UUID];
     self.sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
-    
+    self.mockOperationStatus = [[OperationStatus alloc] init];
+    self.mockOperationStatus.isInBackground = NO;
+
     NSURL *otrFolder = [NSFileManager keyStoreURLForAccountInDirectory:self.accountDirectory createParentIfNeeded:NO];
     [fm removeItemAtURL:otrFolder error: nil];
     
@@ -211,6 +215,7 @@ static ZMReachability *sharedReachabilityMock = nil;
 {
     [(id)_mockUserSession stopMocking];
     _mockUserSession = nil;
+    _mockOperationStatus = nil;
 
     ZMConversationDefaultLastReadTimestampSaveDelay = self.originalConversationLastReadTimestampTimerValue;
 
@@ -415,6 +420,13 @@ static ZMReachability *sharedReachabilityMock = nil;
         [[[mockUserSession stub] andReturn:self.syncMOC] syncManagedObjectContext];
         [[[mockUserSession stub] andReturn:self.searchMOC] searchManagedObjectContext];
         [[[mockUserSession stub] andReturn:self.sharedContainerURL] sharedContainerURL];
+        
+//        [[[mockUserSession stub] andReturn:(id)self.operationState] operationState];
+//        [[[(id)mockUserSession stub] andReturnValue:[NSNumber numberWithInt:SyncEngineOperationStateForeground]] self.operationState];
+
+//        [[[mockUserSession stub] andReturnValue:@(SyncEngineOperationStateForeground)] operationState];
+        [[[mockUserSession stub] andReturn:self.mockOperationStatus] operationStatus];
+
         [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockTransportSession] transportSession];
         _mockUserSession = mockUserSession;
     }

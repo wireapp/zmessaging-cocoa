@@ -29,7 +29,8 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
         
         sut = LocalNotificationDispatcher(in: syncMOC,
                                           foregroundNotificationDelegate: MockForegroundNotificationDelegate(),
-                                          application: application)
+                                          application: application,
+                                          userSession: mockUserSession)
         
         self.application.applicationState = .background
         syncMOC.performGroupedBlockAndWait {
@@ -111,7 +112,7 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
         sut.process(callState: .incoming(video: false, shouldRing: true, degraded: false), in: conversation, sender: sender)
         XCTAssertEqual(sut.callingNotifications.notifications.count, 1)
         XCTAssertEqual(application.scheduledLocalNotifications.count, 1)
-        let incomingCallNotification = application.scheduledLocalNotifications.first!
+        let incomingCallNotification = application.scheduledLocalNotifications.first
         
         // when
         sut.process(callState: .terminating(reason: .anweredElsewhere), in: conversation, sender: sender)
@@ -119,7 +120,7 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
         // then
         XCTAssertEqual(sut.callingNotifications.notifications.count, 0)
         XCTAssertEqual(application.scheduledLocalNotifications.count, 1)
-        XCTAssertEqual(application.cancelledLocalNotifications, [incomingCallNotification])
+        XCTAssertEqual(application.cancelledLocalNotifications, (incomingCallNotification != nil) ? [incomingCallNotification!] : [UILocalNotification]())
     }
     
 }

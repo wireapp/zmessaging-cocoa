@@ -47,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) ZMTransportSession *transportSession;
 @property (nonatomic, readonly) NSManagedObjectContext *searchManagedObjectContext;
-@property (nonatomic, readonly) OperationStatus *operationStatus;
+@property (nonatomic, readonly, nullable) OperationStatus *operationStatus;
 @property (nonatomic, readonly) AccountStatus *accountStatus;
 @property (nonatomic, readonly) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic, nullable) ManagedObjectContextChangeObserver *messageReplyObserver;

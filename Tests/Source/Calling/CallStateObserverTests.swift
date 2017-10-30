@@ -60,7 +60,8 @@ class CallStateObserverTests : MessagingTest {
             self.localNotificationDispatcher = LocalNotificationDispatcher(
                 in: self.syncMOC,
                 foregroundNotificationDelegate: MockForegroundNotificationDelegate(),
-                application: self.application)
+                application: self.application,
+                userSession: self.mockUserSession)
         }
 
         sut = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
