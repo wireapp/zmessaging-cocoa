@@ -38,11 +38,13 @@ public protocol FlowManagerType {
 
 @objc
 public class FlowManager : NSObject, FlowManagerType {
+    public static let AVSFlowManagerCreatedNotification = Notification.Name("AVSFlowManagerCreatedNotification")
     
     public weak var delegate: FlowManagerDelegate? {
         didSet {
             guard avsFlowManager == nil else { return }
             avsFlowManager = AVSFlowManager(delegate: self, mediaManager: mediaManager)
+            NotificationCenter.default.post(name: type(of: self).AVSFlowManagerCreatedNotification, object: self)
         }
     }
     fileprivate var mediaManager : AVSMediaManager?
