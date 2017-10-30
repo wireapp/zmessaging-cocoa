@@ -104,7 +104,7 @@ extension LocalNotificationDispatcherTests {
         let text = UUID.create().transportString()
         let message = self.conversation1.appendMessage(withText: text) as! ZMClientMessage
         message.sender = self.user1
-        self.mockUserSession.operationStatus?.isInBackground = true
+        self.mockUserSession.operationStatus?.isInBackground = false
         
         // WHEN
         self.sut.process(message)
