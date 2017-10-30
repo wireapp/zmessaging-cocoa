@@ -30,8 +30,7 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
         sut = LocalNotificationDispatcher(in: syncMOC,
                                           foregroundNotificationDelegate: MockForegroundNotificationDelegate(),
                                           application: application,
-                                          userSession: mockUserSession)
-        
+                                          operationStatus: self.mockUserSession.operationStatus!)
         self.application.applicationState = .background
         syncMOC.performGroupedBlockAndWait {
             let sender = ZMUser.insertNewObject(in: self.syncMOC)
