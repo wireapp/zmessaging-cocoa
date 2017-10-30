@@ -521,6 +521,7 @@ public protocol LocalNotificationResponder : class {
         userSession.closeAndDeleteCookie(false)
         self.tearDownObservers(account: accountId)
         self.backgroundUserSessions[accountId] = nil
+        notifyUserSessionDestroyed(accountId)
     }
     
     // Tears down and releases all background user sessions.
@@ -781,21 +782,34 @@ extension SessionManager : PreLoginAuthenticationObserver {
 // MARK: - Session manager observer
 @objc public protocol SessionManagerObserver: class {
     func sessionManagerCreated(userSession : ZMUserSession)
+    @objc optional func sessionManagerDestroyedUserSession(for accountId : UUID)
 }
 
 private let sessionManagerObserverNotificationName = Notification.Name(rawValue: "ZMSessionManagerObserverNotification")
 
 extension SessionManager: NotificationContext {
     
+    private var createdKey: String { return "created" }
+    private var destroyedKey: String { return "destroyed" }
+    
     @objc public func addSessionManagerObserver(_ observer: SessionManagerObserver) -> Any {
         return NotificationInContext.addObserver(
             name: sessionManagerObserverNotificationName,
             context: self) { [weak observer] note in
-                observer?.sessionManagerCreated(userSession: note.object as! ZMUserSession)
+                if note.changedKeys?.first == self.createdKey {
+                    observer?.sessionManagerCreated(userSession: note.object as! ZMUserSession)
+                }
+                else if note.changedKeys?.first == self.destroyedKey {
+                    observer?.sessionManagerDestroyedUserSession?(for: note.object as! UUID)
+                }
         }
     }
     
     fileprivate func notifyNewUserSessionCreated(_ userSession: ZMUserSession) {
-        NotificationInContext(name: sessionManagerObserverNotificationName, context: self, object: userSession).post()
+        NotificationInContext(name: sessionManagerObserverNotificationName, context: self, object: userSession, changedKeys: [createdKey]).post()
+    }
+    
+    fileprivate func notifyUserSessionDestroyed(_ accountId: UUID) {
+        NotificationInContext(name: sessionManagerObserverNotificationName, context: self, object: accountId as AnyObject, changedKeys: [destroyedKey]).post()
     }
 }
