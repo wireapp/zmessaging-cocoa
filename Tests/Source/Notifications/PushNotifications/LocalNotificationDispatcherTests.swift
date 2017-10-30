@@ -41,7 +41,6 @@ class LocalNotificationDispatcherTests: MessagingTest {
                                                foregroundNotificationDelegate: self.notificationDelegate,
                                                application: self.application,
                                                operationStatus: self.mockUserSession.operationStatus!)
-        self.application.applicationState = .background
         self.mockUserSession.operationStatus?.isInBackground = true
         
         syncMOC.performGroupedBlockAndWait {
