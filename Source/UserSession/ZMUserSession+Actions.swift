@@ -102,7 +102,7 @@ extension ZMUserSession {
         
         let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "DirectReply Action Handler")
         
-        operationStatus.startBackgroundTask { [weak self] (result) in
+        operationStatus?.startBackgroundTask { [weak self] (result) in
             guard let `self` = self else { return }
             
             self.messageReplyObserver = nil
@@ -137,7 +137,7 @@ extension ZMUserSession {
         
         let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Like Message Activity")
         
-        operationStatus.startBackgroundTask { [weak self] (result) in
+        operationStatus?.startBackgroundTask { [weak self] (result) in
             guard let `self` =  self else { return }
             
             self.likeMesssageObserver = nil
@@ -161,9 +161,9 @@ extension ZMUserSession {
     func updateBackgroundTask(with message : ZMConversationMessage) {
         switch message.deliveryState {
         case .sent, .delivered:
-            operationStatus.finishBackgroundTask(withTaskResult: .finished)
+            operationStatus?.finishBackgroundTask(withTaskResult: .finished)
         case .failedToSend:
-            operationStatus.finishBackgroundTask(withTaskResult: .failed)
+            operationStatus?.finishBackgroundTask(withTaskResult: .failed)
         default:
             break
         }
