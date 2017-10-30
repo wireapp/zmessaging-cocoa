@@ -42,7 +42,7 @@ public extension NSString {
     public func localizationInfo(forUser user: ZMUser, conversation: ZMConversation) -> LocalizationInfo {
         
         let userName = user.name
-        let convName = conversation.userDefinedName
+        let convName = conversation.meaningfulDisplayName
         var arguments = [String]()
         var keyComponents = [String]()
         

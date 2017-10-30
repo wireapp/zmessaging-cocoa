@@ -32,7 +32,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         
         // then
         XCTAssertNotNil(note)
-        XCTAssertEqual(note!.body, "Super User created a group conversation with you")
+        XCTAssertEqual(note!.body, "Super User created a group")
     }
     
     func testThatItCreatesConversationCreateNotification_NoUsername() {
@@ -44,7 +44,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         
          // then
         XCTAssertNotNil(note)
-        XCTAssertEqual(note!.body, "Someone created a group conversation with you")
+        XCTAssertEqual(note!.body, "Someone created a group")
     }
     
     // MARK: - Connection

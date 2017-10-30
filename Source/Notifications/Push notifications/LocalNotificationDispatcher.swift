@@ -82,7 +82,7 @@ public class LocalNotificationDispatcher: NSObject {
     /// session, otherwise it is directed to the system via UIApplication.
     ///
     func scheduleLocalNotification(_ note: ZMLocalNotification) {        
-        if userSession.operationStatus.operationState == .foreground {
+        if userSession.operationStatus?.operationState == .foreground {
             self.foregroundNotificationDelegate?.didReceieveLocal(notification: note, application: application)
         } else {
             application.scheduleLocalNotification(note.uiLocalNotification)

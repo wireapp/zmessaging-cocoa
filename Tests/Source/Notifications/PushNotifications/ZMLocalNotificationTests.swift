@@ -28,6 +28,7 @@ class ZMLocalNotificationTests: MessagingTest {
     var userWithNoName: ZMUser!
     var oneOnOneConversation: ZMConversation!
     var groupConversation: ZMConversation!
+    var groupConversationWithoutUserDefinedName: ZMConversation!
     var groupConversationWithoutName: ZMConversation!
     
     override func setUp() {
@@ -38,8 +39,11 @@ class ZMLocalNotificationTests: MessagingTest {
         userWithNoName = insertUser(with: UUID.create(), name: nil)
         oneOnOneConversation = insertConversation(with: UUID.create(), name: "Super Conversation", type: .oneOnOne, isSilenced: false)
         groupConversation = insertConversation(with: UUID.create(), name: "Super Conversation", type: .group, isSilenced: false)
-        groupConversationWithoutName = insertConversation(with: UUID.create(), name: nil, type: .group, isSilenced: false)
         
+        // an empty conversation will have no meaninful display name
+        groupConversationWithoutName = insertConversation(with: UUID.create(), name: nil, type: .group, isSilenced: false, isEmpty: true)
+        groupConversationWithoutUserDefinedName = insertConversation(with: UUID.create(), name: nil, type: .group, isSilenced: false)
+
         syncMOC.performGroupedBlockAndWait {
             self.selfUser = ZMUser.selfUser(in: self.syncMOC)
             self.selfUser.remoteIdentifier = UUID.create()
@@ -55,6 +59,7 @@ class ZMLocalNotificationTests: MessagingTest {
         oneOnOneConversation = nil
         groupConversation = nil
         groupConversationWithoutName = nil
+        groupConversationWithoutUserDefinedName = nil
         selfUser.remoteIdentifier = nil
         super.tearDown()
     }
@@ -72,7 +77,7 @@ class ZMLocalNotificationTests: MessagingTest {
         return user
     }
     
-    func insertConversation(with remoteID: UUID, name: String?, type: ZMConversationType, isSilenced: Bool) -> ZMConversation {
+    func insertConversation(with remoteID: UUID, name: String?, type: ZMConversationType, isSilenced: Bool, isEmpty: Bool = false) -> ZMConversation {
         var conversation: ZMConversation!
         syncMOC.performGroupedBlockAndWait {
             conversation = ZMConversation.insertNewObject(in: self.syncMOC)
@@ -82,7 +87,7 @@ class ZMLocalNotificationTests: MessagingTest {
             conversation.isSilenced = isSilenced
             conversation.lastServerTimeStamp = Date()
             conversation.lastReadServerTimeStamp = conversation.lastServerTimeStamp
-            conversation.mutableOtherActiveParticipants.addObjects(from: [self.sender, self.otherUser1])
+            if !isEmpty { conversation.mutableOtherActiveParticipants.addObjects(from: [self.sender, self.otherUser1]) }
             self.syncMOC.saveOrRollback()
         }
         return conversation
