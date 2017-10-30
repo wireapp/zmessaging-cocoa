@@ -276,7 +276,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     
     func testThatItCreatesTheCorrectAlertBody_ConvWithoutName(){
         guard let alertBody = alertBody(groupConversationWithoutName, aSender: otherUser1) else { return XCTFail()}
-        XCTAssertEqual(alertBody, "Other User1 ❤️ your message")
+        XCTAssertEqual(alertBody, "Other User1 ❤️ your message in a conversation")
     }
     
     func testThatItCreatesTheCorrectAlertBody(){
@@ -293,7 +293,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     func testThatItCreatesTheCorrectAlertBody_UnknownUser_UnknownConversationName(){
         otherUser1.name = ""
         guard let alertBody = alertBody(groupConversationWithoutName, aSender: otherUser1) else { return XCTFail()}
-        XCTAssertEqual(alertBody, "Someone ❤️ your message")
+        XCTAssertEqual(alertBody, "Someone ❤️ your message in a conversation")
     }
     
     func testThatItCreatesTheCorrectAlertBody_UnknownUser_OneOnOneConv(){
