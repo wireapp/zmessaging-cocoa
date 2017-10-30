@@ -203,7 +203,7 @@ ZM_EMPTY_ASSERTING_INIT()
             self.localNotificationDispatcher = [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:self.syncManagedObjectContext
                                                                                   foregroundNotificationDelegate:self
                                                                                                      application:application
-                                                                                                     userSession:self];
+                                                                                                 operationStatus:self.operationStatus];
 
             
             

@@ -30,8 +30,8 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
         sut = LocalNotificationDispatcher(in: syncMOC,
                                           foregroundNotificationDelegate: MockForegroundNotificationDelegate(),
                                           application: application,
-                                          userSession: mockUserSession)
-        
+                                          operationStatus: self.mockUserSession.operationStatus!)
+
         self.application.applicationState = .background
         syncMOC.performGroupedBlockAndWait {
             let sender = ZMUser.insertNewObject(in: self.syncMOC)
@@ -96,7 +96,7 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
         sut.process(callState: .incoming(video: false, shouldRing: true, degraded: false), in: conversation, sender: sender)
         XCTAssertEqual(sut.callingNotifications.notifications.count, 1)
         XCTAssertEqual(application.scheduledLocalNotifications.count, 1)
-        let incomingCallNotification = application.scheduledLocalNotifications.first!
+        let incomingCallNotification = application.scheduledLocalNotifications.first
         
         // when
         sut.processMissedCall(in: conversation, sender: sender)
@@ -104,7 +104,7 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
         // then
         XCTAssertEqual(sut.callingNotifications.notifications.count, 1)
         XCTAssertEqual(application.scheduledLocalNotifications.count, 2)
-        XCTAssertEqual(application.cancelledLocalNotifications, [incomingCallNotification])
+        XCTAssertEqual(application.cancelledLocalNotifications, (incomingCallNotification != nil) ? [incomingCallNotification!] : [UILocalNotification]())
     }
     
     func testThatIncomingCallIsClearedWhenCallIsAnsweredElsewhere() {
