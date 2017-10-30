@@ -85,7 +85,12 @@ extension ZMLocalNotification {
         
         func bodyText() -> String {
             if shouldHideContent {
-                return (message.isEphemeral ? ZMPushStringEphemeral : ZMPushStringDefault).localizedStringForPushNotification()
+                if message.isEphemeral {
+                    return ZMPushStringEphemeral.localizedString(with: sender, conversation: conversation)
+                }
+                else {
+                    return ZMPushStringDefault.localizedStringForPushNotification()
+                }
             } else {
                 
                 var text: String?
