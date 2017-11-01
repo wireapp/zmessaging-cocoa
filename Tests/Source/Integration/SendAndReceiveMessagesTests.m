@@ -490,7 +490,6 @@
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
 }
 
-///FIXME: retest
 - (void)testThatItSendsMessagesFromDifferentConversationsInParallel
 {
     //given
