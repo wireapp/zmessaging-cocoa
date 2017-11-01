@@ -507,7 +507,7 @@ extension IntegrationTest {
 
 extension IntegrationTest : SessionManagerDelegate {
     
-    public func sessionManagerDidFailToLogin(error: Error) {
+    public func sessionManagerDidFailToLogin(account: Account?, error: Error) {
         // no-op
     }
     
