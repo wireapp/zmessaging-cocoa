@@ -144,7 +144,10 @@ fileprivate class EventNotificationBuilder: NotificationBuilder {
             userInfo[EventTimeKey] = eventTime
         }
         
-        userInfo[ConversationNameStringKey] = conversation?.meaningfulDisplayName
+        if requiresConversation {
+            userInfo[ConversationNameStringKey] = conversation?.meaningfulDisplayName
+        }
+        
         userInfo[TeamNameStringKey] = teamName
         
         return userInfo
