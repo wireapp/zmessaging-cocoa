@@ -14,149 +14,167 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
-//
+// 
+// These strings form the alert body of a local notification. The alert title
+// be in the form "[Group Name]" or "[Sender Name]". If there is a team name available
+// then " in [Team Name]" will be appended to the title. If there is no information
+// available to construct the title (no conversation name, no team) then there will be
+// no title and the notification will only show the alert body.
+// Group Names are a shown in the title for group conversations with the sender name
+// and message content in the alert body.
+// Sender names are shown in the title for one to one conversations, with the message
+// content in the alert body.
+
+
 
 
 "push.notification.default" = "Ny besked";
 "push.notification.ephemeral" = "Nogen har sendt dig en besked";
 
-"push.notification.add.message.group" = "%1$@ i %2$@: %3$@";
-"push.notification.add.message.group.nousername" = "Ny besked i %1$@: %2$@";
+// Push Title: [Conversation Name] in [Team Name]
+"push.notification.title" = "%1$@ i %2$@";
+"push.notification.title.noconversationname" = "in %1$@";
+"push.notification.title.noteamname" = "%1$@";
+
+// 2 Components: Sender, Message
+"push.notification.add.message.group" = "%1$@: %2$@";
+"push.notification.add.message.group.nousername" = "Ny besked: %1$@";
 "push.notification.add.message.group.nousername.noconversationname" = "Ny besked: %1$@";
 "push.notification.add.message.group.noconversationname" = "%1$@ i en samtale: %2$@";
 
-"push.notification.add.message.oneonone" = "%1$@: %2$@";
+// 1 Component: Message
+"push.notification.add.message.oneonone" = "%1$@";
 "push.notification.add.message.oneonone.nousername" = "Ny besked: %1$@";
 
-"push.notification.add.unknown.group" = "%1$@ sendte en besked til %2$@";
-"push.notification.add.unknown.group.nousername" = "Ny besked i %1$@";
+// UNKNOWN MESSAGE
+"push.notification.add.unknown.group" = "%1$@: new message";
+"push.notification.add.unknown.group.nousername" = "Ny besked";
 "push.notification.add.unknown.group.nousername.noconversationname" = "Ny besked";
 "push.notification.add.unknown.group.noconversationname" = "%1$@ sendte en besked";
 
-"push.notification.add.unknown.oneonone" = "%1$@ sendte en besked";
+"push.notification.add.unknown.oneonone" = "Ny besked";
 "push.notification.add.unknown.oneonone.nousername" = "Ny besked";
 
-"push.notification.add.image.group" = "%1$@ delte et billede i %2$@";
-"push.notification.add.image.group.nousername" = "Nyt billede i %1$@";
+// IMAGE
+"push.notification.add.image.group" = "%1$@ shared a picture";
+"push.notification.add.image.group.nousername" = "New picture";
 "push.notification.add.image.group.nousername.noconversationname" = "Nyt billede i en samtale";
 "push.notification.add.image.group.noconversationname" = "%1$@ delte et billede i en chatsamtale";
 
-"push.notification.add.image.oneonone" = "%1$@ delte et billede";
+"push.notification.add.image.oneonone" = "delte et billede";
 "push.notification.add.image.oneonone.nousername" = "Nyt billede i en chatsamtale";
 
-"push.notification.add.video.group" = "%1$@ delte en video i %2$@";
-"push.notification.add.video.group.nousername" = "Ny video i %1$@";
+// VIDEO
+"push.notification.add.video.group" = "%1$@ shared a video";
+"push.notification.add.video.group.nousername" = "New video";
 "push.notification.add.video.group.nousername.noconversationname" = "Ny video i en samtale";
 "push.notification.add.video.group.noconversationname" = "%1$@ delte en video i en samtale";
 
-"push.notification.add.video.oneonone" = "%1$@ delte en video";
+"push.notification.add.video.oneonone" = "delte en video";
 "push.notification.add.video.oneonone.nousername" = "Ny video i en samtale";
 
-"push.notification.add.audio.group" = "%1$@ delte en lydbesked i %2$@";
-"push.notification.add.audio.group.nousername" = "Ny lydbesked i %1$@";
+// AUDIO
+"push.notification.add.audio.group" = "%1$@ shared an audio message";
+"push.notification.add.audio.group.nousername" = "New audio message";
 "push.notification.add.audio.group.nousername.noconversationname" = "Ny lydbesked i en samtale";
 "push.notification.add.audio.group.noconversationname" = "%1$@ delte en lydbesked i en samtale";
 
-"push.notification.add.audio.oneonone" = "%1$@ delte en lydbesked";
+"push.notification.add.audio.oneonone" = "shared an audio message";
 "push.notification.add.audio.oneonone.nousername" = "Ny lydbesked i en samtale";
 
-"push.notification.add.file.group" = "%1$@ delte en fil i %2$@";
-"push.notification.add.file.group.nousername" = "Ny fil i %1$@";
+// FILE
+"push.notification.add.file.group" = "%1$@ shared a file";
+"push.notification.add.file.group.nousername" = "New file";
 "push.notification.add.file.group.nousername.noconversationname" = "Ny fil i en samtale";
 "push.notification.add.file.group.noconversationname" = "%1$@ delte en fil i en samtale";
 
-"push.notification.add.file.oneonone" = "%1$@ delte en fil";
+"push.notification.add.file.oneonone" = "delte en fil";
 "push.notification.add.file.oneonone.nousername" = "Ny fil i en samtale";
 
-"push.notification.add.location.group" = "%1$@ delte en placering i %2$@";
-"push.notification.add.location.group.nousername" = "Ny placering i %1$@";
+// LOCATION
+"push.notification.add.location.group" = "%1$@ shared a location";
+"push.notification.add.location.group.nousername" = "New location";
 "push.notification.add.location.group.nousername.noconversationname" = "Ny placering i en samtale";
 "push.notification.add.location.group.noconversationname" = "%1$@ delte en placering i en samtale";
 
-"push.notification.add.location.oneonone" = "%1$@ delte en placering";
+"push.notification.add.location.oneonone" = "delte en placering";
 "push.notification.add.location.oneonone.nousername" = "Ny placering i en samtale";
 
-"push.notification.member.join" = "%1$@ tilføjet %3$@ til %2$@";
-"push.notification.member.join.noconversationname" = "%1$@ tilføjet %2$@ til en samtale";
-"push.notification.member.join.nousername.noconversationname" = "%1$@ blev tilføjet til en samtale";
-"push.notification.member.join.nousername" = "%2$@ blev tilføjet til %1$@";
-
-"push.notification.member.join.many.nootherusername" = "%1$@ har tilføjet personer til %2$@";
-"push.notification.member.join.many.nootherusername.noconversationname" = "%1$@ har tilføjet personer til en samtale";
-"push.notification.member.join.many.nootherusername.nousername" = "Brugere blev tilføjet til %1$@";
-"push.notification.member.join.many.nootherusername.nousername.noconversationname" = "Brugere blev tilføjet til en samtale";
-
-"push.notification.member.join.self" = "%1$@ har tilføjet dig til %2$@";
+// SELF ADDED/REMOVED TO GROUP
+"push.notification.member.join.self" = "%1$@ added you";
 "push.notification.member.join.self.noconversationname" = "%1$@ har tilføjet dig til en samtale";
 "push.notification.member.join.self.nousername.noconversationname" = "Du er blevet tilføjet til en samtale";
-"push.notification.member.join.self.nousername" = "Du er blevet tilføjet til %1$@";
+"push.notification.member.join.self.nousername" = "You were added";
 
-"push.notification.member.join.nootherusername" = "%1$@ har tilføjet personer til %2$@";
-"push.notification.member.join.nootherusername.noconversationname" = "%1$@ har tilføjet personer til en samtale";
-"push.notification.member.join.nootherusername.nousername.noconversationname" = "Brugere blev tilføjet til en samtale";
-"push.notification.member.join.nootherusername.nousername" = "Brugere blev tilføjet til %1$@";
-
-"push.notification.member.leave" = "%1$@ fjernede %3$@ fra %2$@";
-"push.notification.member.leave.noconversationname" = "%1$@ fjernet %2$@ fra en samtale";
-"push.notification.member.leave.nousername.noconversationname" = "%1$@ blev fjernet fra en samtale";
-"push.notification.member.leave.nousername" = "%2$@ blev fjernet fra %1$@";
-
-"push.notification.member.leave.many.nootherusername" = "%1$@ fjernede brugere fra %2$@";
-"push.notification.member.leave.many.nootherusername.noconversationname" = "%1$@ fjernede brugere fra en samtale";
-"push.notification.member.leave.many.nootherusername.nousername" = "Brugere er blevet fjernet fra %1$@";
-"push.notification.member.leave.many.nootherusername.nousername.noconversationname" = "Brugere er blevet fjernet fra en samtale";
-
-"push.notification.member.leave.self" = "%1$@ har fjernet dig fra %2$@";
+"push.notification.member.leave.self" = "%1$@ removed you";
 "push.notification.member.leave.self.noconversationname" = "%1$@ har fjernet dig fra en samtale";
 "push.notification.member.leave.self.nousername.noconversationname" = "Du er blevet fjernet fra en samtale";
-"push.notification.member.leave.self.nousername" = "Du blev fjernet fra %1$@";
+"push.notification.member.leave.self.nousername" = "You were removed";
 
-"push.notification.member.leave.nootherusername" = "%1$@ fjernede brugere fra %2$@";
-"push.notification.member.leave.nootherusername.noconversationname" = "%1$@ fjernede brugere fra en samtale";
-"push.notification.member.leave.nootherusername.nousername.noconversationname" = "Brugere er blevet fjernet fra en samtale";
-"push.notification.member.leave.nootherusername.nousername" = "Brugere er blevet fjernet fra %1$@";
-
-"push.notification.call.started.video.oneonone" = "%1$@ anmoder om videoopkald";
+// VIDEO CALLS
+"push.notification.call.started.video.oneonone" = "is video calling";
 "push.notification.call.started.video.oneonone.nousername" = "Nogen anmoder om videoopkald";
 
-"push.notification.call.started.video.group" = "%1$@ anmoder om videoopkald i %2$@";
-"push.notification.call.started.video.group.nousername" = "Nogen anmoder om videoopkald i %1$@";
+"push.notification.call.started.video.group" = "%1$@ is video calling";
+"push.notification.call.started.video.group.nousername" = "Nogen anmoder om videoopkald";
 "push.notification.call.started.video.group.noconversationname" = "%1$@ har videoopkald i en samtale";
 "push.notification.call.started.video.group.nousername.noconversationname" = "Nogen har videoopkald i en samtale";
 
-"push.notification.call.started.oneonone" = "%1$@ ringer";
+// VOICE CALLS
+"push.notification.call.started.oneonone" = "is calling";
 "push.notification.call.started.oneonone.nousername" = "Nogen ringer";
 
-"push.notification.call.started.group" = "%1$@ ringer i %2$@";
-"push.notification.call.started.group.nousername" = "Nogen ringer i %1$@";
+"push.notification.call.started.group" = "%1$@ is calling";
+"push.notification.call.started.group.nousername" = "Nogen ringer";
 "push.notification.call.started.group.noconversationname" = "%1$@ ringer i en samtale";
 "push.notification.call.started.group.nousername.noconversationname" = "Nogen ringer i en samtale";
 
+// MISSED CALLS
+"push.notification.call.missed.group" = "%1$@ called";
+"push.notification.call.missed.group.nousername" = "Someone called";
+"push.notification.call.missed.group.nousername.noconversationname" = "Someone called in a conversation";
+"push.notification.call.missed.group.noconversationname" = "%1$@ called in a conversation";
+
+"push.notification.call.missed.oneonone" = "called";
+"push.notification.call.missed.oneonone.nousername" = "Someone called";
+
+// CALLKIT
+"push.notification.callkit.call.started.group" = "%1$@ i %2$@";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Nogen ringer i en samtale";
+"push.notification.callkit.call.started.group.nousername" = "Nogen ringer i %1$@";
+"push.notification.callkit.call.started.group.noconversationname" = "%@ ringer i en samtale";
+
+// CONVERSATION CREATE
 "push.notification.conversation.create" = "%1$@ har oprettet en gruppechat med dig";
 "push.notification.conversation.create.nousername" = "Nogen har oprettet en gruppechat med dig";
 
+// CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ ønsker at forbinde sig";
 "push.notification.connection.request.nousername" = "Nogen ønsker at forbinde sig";
 
 "push.notification.connection.accepted" = "Du og %@ er nu forbundet";
 "push.notification.connection.accepted.nousername" = "Du har en ny forbindelse";
 
-"push.notification.failed.message.oneonone" = "Kunne ikke sende besked til %1$@";
+// FAILED MESSAGE
+"push.notification.failed.message.oneonone" = "Kunne ikke sende besked";
 "push.notification.failed.message.oneonone.nousername" = "Kunne ikke sende besked";
 
-"push.notification.failed.message.group" = "Kunne ikke sende besked i %1$@";
+"push.notification.failed.message.group" = "Kunne ikke sende besked";
 "push.notification.failed.message.group.noconversationname" = "Kunne ikke sende besked";
 
-"push.notification.reaction.group" = "%1$@ %3$@ dine beskeder i %2$@";
+// REACTIONS
+"push.notification.reaction.group" = "%1$@ %2$@ your message";
 "push.notification.reaction.group.nousername.noconversationname" = "Nogen %@ din besked i en samtale";
-"push.notification.reaction.group.nousername" = "Nogen %2$@ din besked i %1$@";
-"push.notification.reaction.group.noconversationname" = "%@ %@ din besked i en samtale";
+"push.notification.reaction.group.nousername" = "Nogen %@ din besked";
+"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ your message in a conversation";
 
-"push.notification.reaction.oneonone" = "%@ %@ din besked";
+"push.notification.reaction.oneonone" = "%1$@ your message";
 "push.notification.reaction.oneonone.nousername" = "Nogen %@ din besked";
 
+// NEW USER (no alert title for this)
 "push.notification.new_user" = "%@ sluttede sig til Wire";
 
+// OTHER
 "push.notification.action.message.open" = "Åbn";
 "push.notification.action.message.reply" = "Svar";
 "push.notification.action.message.reply.button.title" = "Send";
@@ -168,8 +186,3 @@
 "push.notification.action.call.message" = "Besked";
 "push.notification.action.call.callback" = "Ring tilbage";
 "push.notification.action.connection.accept" = "Besvar";
-
-"push.notification.callkit.call.started.group" = "%1$@ i %2$@";
-"push.notification.callkit.call.started.group.nousername.noconversationname" = "Nogen ringer i en samtale";
-"push.notification.callkit.call.started.group.nousername" = "Nogen ringer i %1$@";
-"push.notification.callkit.call.started.group.noconversationname" = "%@ ringer i en samtale";

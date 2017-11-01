@@ -1,294 +1,198 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-    <dict>
-        <key>push.notification.add.message.many.group</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>%2$#@new_messages@ 在%1$@</string>
-            <key>new_messages</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string>新信息</string>
-                <key>other</key>
-                <string>%2$@ 条信息</string>
-            </dict>
-        </dict>
-        <key>push.notification.add.message.many.group.noconversationname</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>在对话中 %1$#@new_messages@</string>
-            <key>new_messages</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string>新信息</string>
-                <key>other</key>
-                <string>%1$@ 条信息</string>
-            </dict>
-        </dict>
-        <key>push.notification.add.message.many.oneonone</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>%2$#@new_messages@ 来自%1$@</string>
-            <key>new_messages</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string>新信息</string>
-                <key>other</key>
-                <string>%2$@ 条信息</string>
-            </dict>
-        </dict>
-        <key>push.notification.add.message.many.oneonone.nousername</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>在对话中 %1$#@new_messages@</string>
-            <key>new_messages</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string>新信息</string>
-                <key>other</key>
-                <string>%1$@ 条信息</string>
-            </dict>
-        </dict>
-        <key>push.notification.call.missed.oneonone</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ 曾经来电%2$#@new_calls@</string>
-            <key>new_calls</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string></string>
-                <key>other</key>
-                <string> %2$@次</string>
-            </dict>
-        </dict>
-        <key>push.notification.call.missed.oneonone.nousername</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>有人曾来电%1$#@new_calls@</string>
-            <key>new_calls</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string></string>
-                <key>other</key>
-                <string> %1$@次</string>
-            </dict>
-        </dict>
-        <key>push.notification.call.missed.group</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>在%2$@中%1$@曾来电%3$#@new_calls@</string>
-            <key>new_calls</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string></string>
-                <key>other</key>
-                <string> %3$@次</string>
-            </dict>
-        </dict>
-        <key>push.notification.call.missed.group.nousername</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>在%1$@中有人曾来电%2$#@new_calls@</string>
-            <key>new_calls</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string></string>
-                <key>other</key>
-                <string> %2$@次</string>
-            </dict>
-        </dict>
-        <key>push.notification.call.missed.group.nousername.noconversationname</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>在对话中有人曾来电%1$#@new_calls@</string>
-            <key>new_calls</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string></string>
-                <key>other</key>
-                <string> %1$@次</string>
-            </dict>
-        </dict>
-        <key>push.notification.call.missed.group.noconversationname</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>在对话中%1$@ 曾呼叫%2$#@new_calls@</string>
-            <key>new_calls</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string></string>
-                <key>other</key>
-                <string> %2$@次</string>
-            </dict>
-        </dict>
-        <key>push.notification.call.missed.many</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>在%1@中您有%2$#@new_calls@</string>
-            <key>new_calls</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string>一个未接来电</string>
-                <key>other</key>
-                <string>%2@个未接来电</string>
-            </dict>
-        </dict>
-        <key>push.notification.call.missed.many.noconversationname</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>在对话中您有%1$#@new_calls@</string>
-            <key>new_calls</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string>一个未接来电</string>
-                <key>other</key>
-                <string>%1$@个未接来电</string>
-            </dict>
-        </dict>
-        <key>push.notification.knock.group</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>在%2$@中%1$@曾打招呼%3$#@new_knocks@</string>
-            <key>new_knocks</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string> </string>
-                <key>other</key>
-                <string> %3$@次 </string>
-            </dict>
-        </dict>
-        <key>push.notification.knock.group.noconversationname</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>在对话%1$@中曾打招呼%2$#@new_knocks@</string>
-            <key>new_knocks</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string> </string>
-                <key>other</key>
-                <string> %2$@次 </string>
-            </dict>
-        </dict>
-        <key>push.notification.knock.group.nousername</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>%2$#@new_knocks@ 在 %1$@</string>
-            <key>new_knocks</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string>打招呼</string>
-                <key>other</key>
-                <string>%2$@ 打招呼</string>
-            </dict>
-        </dict>
-        <key>push.notification.knock.group.nousername.noconversationname</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>在对话中%1$#@new_knocks@</string>
-            <key>new_knocks</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string>打招呼</string>
-                <key>other</key>
-                <string>%1$@ 打招呼</string>
-            </dict>
-        </dict>
-        <key>push.notification.knock.oneonone</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>%1$@ 曾打招呼%3$#@new_knocks@</string>
-            <key>new_knocks</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string> </string>
-                <key>other</key>
-                <string> %3$@次</string>
-            </dict>
-        </dict>
-        <key>push.notification.knock.oneonone.nousername</key>
-        <dict>
-            <key>NSStringLocalizedFormatKey</key>
-            <string>%2$#@new_knocks@</string>
-            <key>new_knocks</key>
-            <dict>
-                <key>NSStringFormatSpecTypeKey</key>
-                <string>NSStringPluralRuleType</string>
-                <key>NSStringFormatValueTypeKey</key>
-                <string>@</string>
-                <key>one</key>
-                <string>打招呼</string>
-                <key>other</key>
-                <string>%2$@ 打招呼</string>
-            </dict>
-        </dict>
-    </dict>
+<dict>
+	<key>push.notification.add.message.many.group</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%2$#@new_messages@ 在%1$@</string>
+		<key>new_messages</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>@</string>
+			<key>one</key>
+			<string>新信息</string>
+			<key>other</key>
+			<string>%2$@ 条信息</string>
+		</dict>
+	</dict>
+	<key>push.notification.add.message.many.group.noconversationname</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>在对话中 %1$#@new_messages@</string>
+		<key>new_messages</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>@</string>
+			<key>one</key>
+			<string>新信息</string>
+			<key>other</key>
+			<string>%1$@ 条信息</string>
+		</dict>
+	</dict>
+	<key>push.notification.add.message.many.oneonone</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%2$#@new_messages@ 来自%1$@</string>
+		<key>new_messages</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>@</string>
+			<key>one</key>
+			<string>新信息</string>
+			<key>other</key>
+			<string>%2$@ 条信息</string>
+		</dict>
+	</dict>
+	<key>push.notification.add.message.many.oneonone.nousername</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>在对话中 %1$#@new_messages@</string>
+		<key>new_messages</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>@</string>
+			<key>one</key>
+			<string>新信息</string>
+			<key>other</key>
+			<string>%1$@ 条信息</string>
+		</dict>
+	</dict>
+	<key>push.notification.call.missed.many</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>You have %2$#@new_calls@ in %1@</string>
+		<key>new_calls</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>@</string>
+			<key>one</key>
+			<string>one missed call</string>
+			<key>other</key>
+			<string>%2@ missed calls</string>
+		</dict>
+	</dict>
+	<key>push.notification.call.missed.many.noconversationname</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>You have %1$#@new_calls@ in a conversation</string>
+		<key>new_calls</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>@</string>
+			<key>one</key>
+			<string>one missed call</string>
+			<key>other</key>
+			<string>%1$@ missed calls</string>
+		</dict>
+	</dict>
+	<key>push.notification.knock.group</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%1$@ pinged%2$#@new_knocks@</string>
+		<key>new_knocks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>@</string>
+			<key>one</key>
+			<string> </string>
+			<key>other</key>
+			<string> %2$@次 </string>
+		</dict>
+	</dict>
+	<key>push.notification.knock.group.noconversationname</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%1$@ pinged%2$#@new_knocks@in a conversation</string>
+		<key>new_knocks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>@</string>
+			<key>one</key>
+			<string> </string>
+			<key>other</key>
+			<string> %2$@次 </string>
+		</dict>
+	</dict>
+	<key>push.notification.knock.group.nousername</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%1$#@new_knocks@</string>
+		<key>new_knocks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>@</string>
+			<key>one</key>
+			<string>打招呼</string>
+			<key>other</key>
+			<string>%1$@ pings</string>
+		</dict>
+	</dict>
+	<key>push.notification.knock.group.nousername.noconversationname</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%1$#@new_knocks@ in a conversation</string>
+		<key>new_knocks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>@</string>
+			<key>one</key>
+			<string>打招呼</string>
+			<key>other</key>
+			<string>%1$@ pings</string>
+		</dict>
+	</dict>
+	<key>push.notification.knock.oneonone</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>pinged%1$#@new_knocks@</string>
+		<key>new_knocks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>@</string>
+			<key>one</key>
+			<string> </string>
+			<key>other</key>
+			<string> %1$@ times</string>
+		</dict>
+	</dict>
+	<key>push.notification.knock.oneonone.nousername</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%2$#@new_knocks@</string>
+		<key>new_knocks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>@</string>
+			<key>one</key>
+			<string>打招呼</string>
+			<key>other</key>
+			<string>%2$@ pings</string>
+		</dict>
+	</dict>
+</dict>
 </plist>
