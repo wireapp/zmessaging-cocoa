@@ -509,7 +509,7 @@ public protocol LocalNotificationResponder : class {
         self.configure(session: newSession, for: account)
 
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
-        
+        notifyNewUserSessionCreated(newSession)
         return newSession
     }
     
