@@ -3565,12 +3565,9 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertNotNil(createdConversation);
         XCTAssertNotEqual(createdConversation, existingConnection.conversation);
         
-        ZMSystemMessage *memberJoinEvent = [ZMSystemMessage insertNewObjectInManagedObjectContext:self.syncMOC];
-        memberJoinEvent.systemMessageType = ZMSystemMessageTypeParticipantsAdded;
-        [createdConversation.mutableMessages addObject:memberJoinEvent];
-        
-        // forcing an event here - in real code it will be created in another syncObject, not tested here
+        // this is the member join system message
         XCTAssertEqual(createdConversation.messages.count, 1u);
+        
         NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:[ZMConversation entityName]];
         NSArray *allConversations = [self.syncMOC executeFetchRequestOrAssert:request];
         
