@@ -738,20 +738,14 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 {
     ZMConversation *insertedConversation = (ZMConversation *)managedObject;
     NSUUID *remoteID = [response.payload.asDictionary uuidForKey:@"id"];
-    NSString *lastTimestampString = [response.payload.asDictionary stringForKey:@"last_event_time"];
     
     // check if there is another with the same conversation ID
-    if(remoteID != nil)
-    {
+    if (remoteID != nil) {
         ZMConversation *existingConversation = [ZMConversation conversationWithRemoteID:remoteID createIfNeeded:NO inContext:self.managedObjectContext];
         
-        if( existingConversation != nil )
-        {
+        if (existingConversation != nil) {
             [self.managedObjectContext deleteObject:existingConversation];
-            if( ! [existingConversation.lastServerTimeStamp.transportString isEqualToString:lastTimestampString] )
-            {
-                insertedConversation.needsToBeUpdatedFromBackend = YES;
-            }
+            insertedConversation.needsToBeUpdatedFromBackend = YES;
         }
     }
     insertedConversation.remoteIdentifier = remoteID;
