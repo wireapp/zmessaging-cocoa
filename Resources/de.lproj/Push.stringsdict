@@ -69,7 +69,7 @@
 	<key>push.notification.call.missed.many</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>You have %2$#@new_calls@ in %1@</string>
+		<string>Du hast %2$#@new_calls@ in %1@</string>
 		<key>new_calls</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -77,15 +77,15 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>one missed call</string>
+			<string>ein verpasster Anruf</string>
 			<key>other</key>
-			<string>%2@ missed calls</string>
+			<string>%2@ verpasste Anrufe</string>
 		</dict>
 	</dict>
 	<key>push.notification.call.missed.many.noconversationname</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>You have %1$#@new_calls@ in a conversation</string>
+		<string>Du hast %1$#@new_calls@ in einer Unterhaltung</string>
 		<key>new_calls</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -93,15 +93,15 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>one missed call</string>
+			<string>ein verpasster Anruf</string>
 			<key>other</key>
-			<string>%1$@ missed calls</string>
+			<string>%1$@ verpasste Anrufe</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.group</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$@ pinged%2$#@new_knocks@</string>
+		<string>%1$@ hat%2$#@new_knocks@ gepingt</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -117,7 +117,7 @@
 	<key>push.notification.knock.group.noconversationname</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$@ pinged%2$#@new_knocks@in a conversation</string>
+		<string>%1$@ hat%2$#@new_knocks@in einer Unterhaltung gepingt</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -143,13 +143,13 @@
 			<key>one</key>
 			<string>Ping</string>
 			<key>other</key>
-			<string>%1$@ pings</string>
+			<string>%1$@ Pings</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.group.nousername.noconversationname</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$#@new_knocks@ in a conversation</string>
+		<string>%1$#@new_knocks@ in einer Unterhaltung</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -159,13 +159,13 @@
 			<key>one</key>
 			<string>Ping</string>
 			<key>other</key>
-			<string>%1$@ pings</string>
+			<string>%1$@ Pings</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.oneonone</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>pinged%1$#@new_knocks@</string>
+		<string>hat%1$#@new_knocks@ gepingt</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -175,7 +175,7 @@
 			<key>one</key>
 			<string> </string>
 			<key>other</key>
-			<string> %1$@ times</string>
+			<string> %1$@ mal</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.oneonone.nousername</key>
@@ -191,7 +191,7 @@
 			<key>one</key>
 			<string>Ping</string>
 			<key>other</key>
-			<string>%2$@ pings</string>
+			<string>%2$@ Pings</string>
 		</dict>
 	</dict>
 </dict>

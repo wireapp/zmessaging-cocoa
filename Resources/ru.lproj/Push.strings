@@ -29,7 +29,10 @@
 
 
 "push.notification.default" = "Новое сообщение";
-"push.notification.ephemeral" = "Вам отправлено сообщение";
+
+"push.notification.ephemeral.oneonone" = "отправил(а) вам сообщение";
+"push.notification.ephemeral.group" = "Кто-то прислал сообщение";
+"push.notification.ephemeral.group.noconversationname" = "Кто-то прислал сообщение";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ в %2$@";
@@ -145,8 +148,8 @@
 "push.notification.callkit.call.started.group.noconversationname" = "%1$@ звонит";
 
 // CONVERSATION CREATE
-"push.notification.conversation.create" = "%1$@ создал группу с вами";
-"push.notification.conversation.create.nousername" = "Создана группа с вами";
+"push.notification.conversation.create" = "%1$@ создал группу";
+"push.notification.conversation.create.nousername" = "Кто-то создал группу";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ хочет подключиться";

@@ -29,7 +29,10 @@
 
 
 "push.notification.default" = "新しいメッセージ";
-"push.notification.ephemeral" = "メッセージを受信しました";
+
+"push.notification.ephemeral.oneonone" = "sent you a message";
+"push.notification.ephemeral.group" = "Someone sent a message";
+"push.notification.ephemeral.group.noconversationname" = "Someone sent a message";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%2$@ に%1$@ 人";
@@ -145,8 +148,8 @@
 "push.notification.callkit.call.started.group.noconversationname" = "%@ からの着信中";
 
 // CONVERSATION CREATE
-"push.notification.conversation.create" = "%1$@があなたとグループ会話を作成しました";
-"push.notification.conversation.create.nousername" = "あなたとのグループ会話を作成されました";
+"push.notification.conversation.create" = "%1$@ created a group";
+"push.notification.conversation.create.nousername" = "Someone created a group";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@がつながりをリクエストしています";

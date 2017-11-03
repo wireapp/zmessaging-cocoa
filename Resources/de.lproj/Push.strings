@@ -29,7 +29,10 @@
 
 
 "push.notification.default" = "Neue Nachricht";
-"push.notification.ephemeral" = "Jemand hat dir eine Nachricht gesendet";
+
+"push.notification.ephemeral.oneonone" = "hat dir eine Nachricht geschickt";
+"push.notification.ephemeral.group" = "Jemand hat dir eine Nachricht gesendet";
+"push.notification.ephemeral.group.noconversationname" = "Jemand hat dir eine Nachricht gesendet";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ in %2$@";
@@ -47,7 +50,7 @@
 "push.notification.add.message.oneonone.nousername" = "Neue Nachricht: %1$@";
 
 // UNKNOWN MESSAGE
-"push.notification.add.unknown.group" = "%1$@: new message";
+"push.notification.add.unknown.group" = "%1$@: neue Nachricht";
 "push.notification.add.unknown.group.nousername" = "Neue Nachricht";
 "push.notification.add.unknown.group.nousername.noconversationname" = "Neue Nachricht";
 "push.notification.add.unknown.group.noconversationname" = "%1$@ hat eine Nachricht geschrieben";
@@ -56,8 +59,8 @@
 "push.notification.add.unknown.oneonone.nousername" = "Neue Nachricht";
 
 // IMAGE
-"push.notification.add.image.group" = "%1$@ shared a picture";
-"push.notification.add.image.group.nousername" = "New picture";
+"push.notification.add.image.group" = "%1$@ hat ein Bild geteilt";
+"push.notification.add.image.group.nousername" = "Neues Bild";
 "push.notification.add.image.group.nousername.noconversationname" = "Jemand hat ein Bild in einer Unterhaltung geteilt";
 "push.notification.add.image.group.noconversationname" = "%1$@ hat ein Bild in einer Unterhaltung geteilt";
 
@@ -65,8 +68,8 @@
 "push.notification.add.image.oneonone.nousername" = "Jemand hat ein Bild in einer Unterhaltung geteilt";
 
 // VIDEO
-"push.notification.add.video.group" = "%1$@ shared a video";
-"push.notification.add.video.group.nousername" = "New video";
+"push.notification.add.video.group" = "%1$@ hat ein Video geteilt";
+"push.notification.add.video.group.nousername" = "Neues Video";
 "push.notification.add.video.group.nousername.noconversationname" = "Jemand hat ein Video in einer Unterhaltung geteilt";
 "push.notification.add.video.group.noconversationname" = "%1$@ hat ein Video in einer Unterhaltung geteilt";
 
@@ -74,17 +77,17 @@
 "push.notification.add.video.oneonone.nousername" = "Jemand hat ein Video in einer Unterhaltung geteilt";
 
 // AUDIO
-"push.notification.add.audio.group" = "%1$@ shared an audio message";
-"push.notification.add.audio.group.nousername" = "New audio message";
+"push.notification.add.audio.group" = "%1$@ hat eine Audio-Nachricht geteilt";
+"push.notification.add.audio.group.nousername" = "Neue Audio-Nachricht";
 "push.notification.add.audio.group.nousername.noconversationname" = "Neue Audio-Nachricht in einer Unterhaltung";
 "push.notification.add.audio.group.noconversationname" = "%1$@ hat eine Audio-Nachricht in einer Unterhaltung geteilt";
 
-"push.notification.add.audio.oneonone" = "shared an audio message";
+"push.notification.add.audio.oneonone" = "hat eine Audio-Nachricht geteilt";
 "push.notification.add.audio.oneonone.nousername" = "Neue Audio-Nachricht in einer Unterhaltung";
 
 // FILE
-"push.notification.add.file.group" = "%1$@ shared a file";
-"push.notification.add.file.group.nousername" = "New file";
+"push.notification.add.file.group" = "%1$@ hat eine Datei geteilt";
+"push.notification.add.file.group.nousername" = "Neue Datei";
 "push.notification.add.file.group.nousername.noconversationname" = "Jemand hat eine Datei in einer Unterhaltung geteilt";
 "push.notification.add.file.group.noconversationname" = "%1$@ hat eine Datei in einer Unterhaltung geteilt";
 
@@ -92,8 +95,8 @@
 "push.notification.add.file.oneonone.nousername" = "Jemand hat eine Datei in einer Unterhaltung geteilt";
 
 // LOCATION
-"push.notification.add.location.group" = "%1$@ shared a location";
-"push.notification.add.location.group.nousername" = "New location";
+"push.notification.add.location.group" = "%1$@ hat einen Standort geteilt";
+"push.notification.add.location.group.nousername" = "Neuer Standort";
 "push.notification.add.location.group.nousername.noconversationname" = "Jemand hat einen Standort in einer Unterhaltung geteilt";
 "push.notification.add.location.group.noconversationname" = "%1$@ hat einen Standort in einer Unterhaltung geteilt";
 
@@ -101,42 +104,42 @@
 "push.notification.add.location.oneonone.nousername" = "Jemand hat einen Standort in einer Unterhaltung geteilt";
 
 // SELF ADDED/REMOVED TO GROUP
-"push.notification.member.join.self" = "%1$@ added you";
+"push.notification.member.join.self" = "%1$@ hat dich hinzugefügt";
 "push.notification.member.join.self.noconversationname" = "%1$@ hat dich zu einer Unterhaltung hinzugefügt";
 "push.notification.member.join.self.nousername.noconversationname" = "Du wurdest zu einer Unterhaltung hinzugefügt";
-"push.notification.member.join.self.nousername" = "You were added";
+"push.notification.member.join.self.nousername" = "Du wurdest hinzugefügt";
 
-"push.notification.member.leave.self" = "%1$@ removed you";
+"push.notification.member.leave.self" = "%1$@ hat dich entfernt";
 "push.notification.member.leave.self.noconversationname" = "%1$@ hat dich aus einer Unterhaltung entfernt";
 "push.notification.member.leave.self.nousername.noconversationname" = "Du wurdest aus einer Unterhaltung entfernt";
 "push.notification.member.leave.self.nousername" = "Du wurdest entfernt";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "is video calling";
+"push.notification.call.started.video.oneonone" = "ruft mit Video an";
 "push.notification.call.started.video.oneonone.nousername" = "Jemand ruft mit Video an";
 
-"push.notification.call.started.video.group" = "%1$@ is video calling";
+"push.notification.call.started.video.group" = "%1$@ ruft mit Video an";
 "push.notification.call.started.video.group.nousername" = "Jemand ruft mit Video an";
 "push.notification.call.started.video.group.noconversationname" = "%1$@ ruft mit Video in einer Unterhaltung an";
 "push.notification.call.started.video.group.nousername.noconversationname" = "Jemand ruft mit Video in einer Unterhaltung an";
 
 // VOICE CALLS
-"push.notification.call.started.oneonone" = "is calling";
+"push.notification.call.started.oneonone" = "ruft an";
 "push.notification.call.started.oneonone.nousername" = "Jemand ruft an";
 
-"push.notification.call.started.group" = "%1$@ is calling";
+"push.notification.call.started.group" = "%1$@ ruft an";
 "push.notification.call.started.group.nousername" = "Jemand ruft an";
 "push.notification.call.started.group.noconversationname" = "%1$@ ruft in einer Unterhaltung an";
 "push.notification.call.started.group.nousername.noconversationname" = "Jemand ruft in einer Unterhaltung an";
 
 // MISSED CALLS
-"push.notification.call.missed.group" = "%1$@ called";
-"push.notification.call.missed.group.nousername" = "Someone called";
-"push.notification.call.missed.group.nousername.noconversationname" = "Someone called in a conversation";
-"push.notification.call.missed.group.noconversationname" = "%1$@ called in a conversation";
+"push.notification.call.missed.group" = "%1$@ hat versucht dich anzurufen";
+"push.notification.call.missed.group.nousername" = "Jemand hat versucht dich anzurufen";
+"push.notification.call.missed.group.nousername.noconversationname" = "Jemand hat versucht in einer Unterhaltung anzurufen";
+"push.notification.call.missed.group.noconversationname" = "%1$@ hat versucht in einer Unterhaltung anzurufen";
 
-"push.notification.call.missed.oneonone" = "called";
-"push.notification.call.missed.oneonone.nousername" = "Someone called";
+"push.notification.call.missed.oneonone" = "hat versucht anzurufen";
+"push.notification.call.missed.oneonone.nousername" = "Jemand hat versucht dich anzurufen";
 
 // CALLKIT
 "push.notification.callkit.call.started.group" = "%1$@ in %2$@";
@@ -145,8 +148,8 @@
 "push.notification.callkit.call.started.group.noconversationname" = "%@ ruft in einer Unterhaltung an";
 
 // CONVERSATION CREATE
-"push.notification.conversation.create" = "%1$@ hat eine Gruppenunterhaltung mit dir begonnen";
-"push.notification.conversation.create.nousername" = "Jemand hat eine Gruppenunterhaltung mit dir erstellt";
+"push.notification.conversation.create" = "%1$@ hat eine Gruppe erstellt";
+"push.notification.conversation.create.nousername" = "Jemand hat eine Gruppe erstellt";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ möchte sich mit dir verbinden";
@@ -163,12 +166,12 @@
 "push.notification.failed.message.group.noconversationname" = "Kann keine Nachricht senden";
 
 // REACTIONS
-"push.notification.reaction.group" = "%1$@ %2$@ your message";
+"push.notification.reaction.group" = "%1$@ %2$@ deine Nachricht";
 "push.notification.reaction.group.nousername.noconversationname" = "Jemand %@ deine Nachricht in einer Unterhaltung";
 "push.notification.reaction.group.nousername" = "Jemand %@ deine Nachricht";
-"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ your message in a conversation";
+"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ deine Nachricht in einer Unterhaltung";
 
-"push.notification.reaction.oneonone" = "%1$@ your message";
+"push.notification.reaction.oneonone" = "%1$@ deine Nachricht";
 "push.notification.reaction.oneonone.nousername" = "Jemand %@ deine Nachricht";
 
 // NEW USER (no alert title for this)

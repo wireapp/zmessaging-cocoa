@@ -69,7 +69,7 @@
 	<key>push.notification.call.missed.many</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>You have %2$#@new_calls@ in %1@</string>
+		<string>Je hebt %2$#@new_calls@ in %1@</string>
 		<key>new_calls</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -77,15 +77,15 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>one missed call</string>
+			<string>een gemiste oproep</string>
 			<key>other</key>
-			<string>%2@ missed calls</string>
+			<string>%2@ gemiste oproepen</string>
 		</dict>
 	</dict>
 	<key>push.notification.call.missed.many.noconversationname</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>You have %1$#@new_calls@ in a conversation</string>
+		<string>Je hebt %1$#@new_calls@ in een gesprek</string>
 		<key>new_calls</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -93,9 +93,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>one missed call</string>
+			<string>een gemiste oproep</string>
 			<key>other</key>
-			<string>%1$@ missed calls</string>
+			<string>%1$@ gemiste oproepen</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.group</key>
@@ -117,7 +117,7 @@
 	<key>push.notification.knock.group.noconversationname</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$@ pinged%2$#@new_knocks@in a conversation</string>
+		<string>%1$@ pinged%2$#@new_knocks@in een gesprek</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -149,7 +149,7 @@
 	<key>push.notification.knock.group.nousername.noconversationname</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$#@new_knocks@ in a conversation</string>
+		<string>%1$#@new_knocks@ in een gesprek</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -175,7 +175,7 @@
 			<key>one</key>
 			<string> </string>
 			<key>other</key>
-			<string> %1$@ times</string>
+			<string> %1$@ keer</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.oneonone.nousername</key>

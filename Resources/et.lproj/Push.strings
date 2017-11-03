@@ -29,7 +29,10 @@
 
 
 "push.notification.default" = "Uus sõnum";
-"push.notification.ephemeral" = "Keegi saatis sulle sõnumi";
+
+"push.notification.ephemeral.oneonone" = "saatis sulle sõnumi";
+"push.notification.ephemeral.group" = "Keegi saatis sulle sõnumi";
+"push.notification.ephemeral.group.noconversationname" = "Keegi saatis sulle sõnumi";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ vestluses %2$@";
@@ -47,7 +50,7 @@
 "push.notification.add.message.oneonone.nousername" = "Uus sõnum: %1$@";
 
 // UNKNOWN MESSAGE
-"push.notification.add.unknown.group" = "%1$@: new message";
+"push.notification.add.unknown.group" = "%1$@: uus sõnum";
 "push.notification.add.unknown.group.nousername" = "Uus sõnum";
 "push.notification.add.unknown.group.nousername.noconversationname" = "Uus sõnum";
 "push.notification.add.unknown.group.noconversationname" = "%1$@ saatis sõnumi";
@@ -56,8 +59,8 @@
 "push.notification.add.unknown.oneonone.nousername" = "Uus sõnum";
 
 // IMAGE
-"push.notification.add.image.group" = "%1$@ shared a picture";
-"push.notification.add.image.group.nousername" = "New picture";
+"push.notification.add.image.group" = "%1$@ jagas pildi";
+"push.notification.add.image.group.nousername" = "Uus pilt";
 "push.notification.add.image.group.nousername.noconversationname" = "Uus pilt vestluses";
 "push.notification.add.image.group.noconversationname" = "%1$@ jagas vestluses ühe pildi";
 
@@ -65,8 +68,8 @@
 "push.notification.add.image.oneonone.nousername" = "Uus pilt vestluses";
 
 // VIDEO
-"push.notification.add.video.group" = "%1$@ shared a video";
-"push.notification.add.video.group.nousername" = "New video";
+"push.notification.add.video.group" = "%1$@ jagas video";
+"push.notification.add.video.group.nousername" = "Uus video";
 "push.notification.add.video.group.nousername.noconversationname" = "Uus videoklipp vestluses";
 "push.notification.add.video.group.noconversationname" = "%1$@ jagas vestluses ühe videoklipi";
 
@@ -74,17 +77,17 @@
 "push.notification.add.video.oneonone.nousername" = "Uus videoklipp vestluses";
 
 // AUDIO
-"push.notification.add.audio.group" = "%1$@ shared an audio message";
-"push.notification.add.audio.group.nousername" = "New audio message";
+"push.notification.add.audio.group" = "%1$@ jagas häälsõnumi";
+"push.notification.add.audio.group.nousername" = "Uus häälsõnum";
 "push.notification.add.audio.group.nousername.noconversationname" = "Vestluses uus häälsõnum";
 "push.notification.add.audio.group.noconversationname" = "%1$@ saatis vestlusesse häälsõnumi";
 
-"push.notification.add.audio.oneonone" = "shared an audio message";
+"push.notification.add.audio.oneonone" = "jagas häälsõnumi";
 "push.notification.add.audio.oneonone.nousername" = "Vestluses uus häälsõnum";
 
 // FILE
-"push.notification.add.file.group" = "%1$@ shared a file";
-"push.notification.add.file.group.nousername" = "New file";
+"push.notification.add.file.group" = "%1$@ jagas faili";
+"push.notification.add.file.group.nousername" = "Uus fail";
 "push.notification.add.file.group.nousername.noconversationname" = "Vestluses uus fail";
 "push.notification.add.file.group.noconversationname" = "%1$@ saatis vestlusesse faili";
 
@@ -92,8 +95,8 @@
 "push.notification.add.file.oneonone.nousername" = "Vestluses uus fail";
 
 // LOCATION
-"push.notification.add.location.group" = "%1$@ shared a location";
-"push.notification.add.location.group.nousername" = "New location";
+"push.notification.add.location.group" = "%1$@ jagas asukohta";
+"push.notification.add.location.group.nousername" = "Uus asukoht";
 "push.notification.add.location.group.nousername.noconversationname" = "Uus asukoht vestluses";
 "push.notification.add.location.group.noconversationname" = "%1$@ jagas vestluses oma asukohta";
 
@@ -101,42 +104,42 @@
 "push.notification.add.location.oneonone.nousername" = "Uus asukoht vestluses";
 
 // SELF ADDED/REMOVED TO GROUP
-"push.notification.member.join.self" = "%1$@ added you";
+"push.notification.member.join.self" = "%1$@ lisas sind";
 "push.notification.member.join.self.noconversationname" = "%1$@ lisas sind vestlusse";
 "push.notification.member.join.self.nousername.noconversationname" = "Sind lisati vestlusse";
-"push.notification.member.join.self.nousername" = "You were added";
+"push.notification.member.join.self.nousername" = "Sind lisati";
 
-"push.notification.member.leave.self" = "%1$@ removed you";
+"push.notification.member.leave.self" = "%1$@ eemaldas sind";
 "push.notification.member.leave.self.noconversationname" = "%1$@ eemaldas sind vestlusest";
 "push.notification.member.leave.self.nousername.noconversationname" = "Sind eemaldati vestlusest";
 "push.notification.member.leave.self.nousername" = "Sind eemaldati vestlusest";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "is video calling";
+"push.notification.call.started.video.oneonone" = "helistab videoga";
 "push.notification.call.started.video.oneonone.nousername" = "Keegi helistab videoga";
 
-"push.notification.call.started.video.group" = "%1$@ is video calling";
+"push.notification.call.started.video.group" = "%1$@ helistab videoga";
 "push.notification.call.started.video.group.nousername" = "Keegi helistab videoga";
 "push.notification.call.started.video.group.noconversationname" = "%1$@ helistab videoga vestluses";
 "push.notification.call.started.video.group.nousername.noconversationname" = "Keegi helistab videoga vestluses";
 
 // VOICE CALLS
-"push.notification.call.started.oneonone" = "is calling";
+"push.notification.call.started.oneonone" = "helistab";
 "push.notification.call.started.oneonone.nousername" = "Keegi helistab";
 
-"push.notification.call.started.group" = "%1$@ is calling";
+"push.notification.call.started.group" = "%1$@ helistab";
 "push.notification.call.started.group.nousername" = "Keegi helistab";
 "push.notification.call.started.group.noconversationname" = "%1$@ helistab vestluses";
 "push.notification.call.started.group.nousername.noconversationname" = "Keegi helistab vestluses";
 
 // MISSED CALLS
-"push.notification.call.missed.group" = "%1$@ called";
-"push.notification.call.missed.group.nousername" = "Someone called";
-"push.notification.call.missed.group.nousername.noconversationname" = "Someone called in a conversation";
-"push.notification.call.missed.group.noconversationname" = "%1$@ called in a conversation";
+"push.notification.call.missed.group" = "%1$@ helistas";
+"push.notification.call.missed.group.nousername" = "Keegi helistas";
+"push.notification.call.missed.group.nousername.noconversationname" = "Keegi helistas vestluses";
+"push.notification.call.missed.group.noconversationname" = "%1$@ helistas vestluses";
 
-"push.notification.call.missed.oneonone" = "called";
-"push.notification.call.missed.oneonone.nousername" = "Someone called";
+"push.notification.call.missed.oneonone" = "helistas";
+"push.notification.call.missed.oneonone.nousername" = "Keegi helistas";
 
 // CALLKIT
 "push.notification.callkit.call.started.group" = "%1$@ vestluses %2$@";
@@ -145,8 +148,8 @@
 "push.notification.callkit.call.started.group.noconversationname" = "%@ helistab vestluses";
 
 // CONVERSATION CREATE
-"push.notification.conversation.create" = "%1$@ alustas sinuga grupivestlust";
-"push.notification.conversation.create.nousername" = "Keegi alustas sinuga grupivestlust";
+"push.notification.conversation.create" = "%1$@ lõi grupi";
+"push.notification.conversation.create.nousername" = "Keegi lõi grupi";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ soovib sind kontaktiks lisada";
