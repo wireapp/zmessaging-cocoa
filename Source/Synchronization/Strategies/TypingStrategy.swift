@@ -26,9 +26,14 @@ let StartedKey = "started"
 
 extension ZMConversation {
     
+    // Used for handling remote notifications
     public static let typingNotificationName = Notification.Name(rawValue: "ZMTypingNotification")
+    
+    // Used for handling local notifications
     public static let typingChangeNotificationName = Notification.Name(rawValue: "ZMTypingChangeNotification")
     
+    // Used for handling remote notifications
+    //public static let clearTypingChangeNotificationName = Notification.Name(rawValue: "ZMClearTypingChangeNotification")
 }
 
 public struct TypingEvent {
@@ -129,19 +134,29 @@ public class TypingStrategy : AbstractRequestStrategy {
         observers.append(
             NotificationInContext.addObserver(name: ZMConversation.typingNotificationName,
                                               context: self.managedObjectContext.notificationContext,
-                                              using: { [weak self] in self?.addConversationForNextRequest(note: $0)} )
+                                              using: { [weak self] in self?.addConversationForNextRequest(note: $0)
+                                                print("TYPINGSTRATEGY:133 / Typing did change from remote notification")
+                                                
+                }
+                )
             )
         
         observers.append(
             NotificationInContext.addObserver(name: ZMConversation.typingChangeNotificationName,
                                               context: self.managedObjectContext.notificationContext,
-                                              using: { [weak self] in self?.addConversationForNextRequest(note: $0)} )
+                                              using: { [weak self] in self?.addConversationForNextRequest(note: $0)
+                                                print("TYPINGSTRATEGY:139 / Typing did change from local notification")
+                }
+                 )
         )
         
         observers.append(
             NotificationInContext.addObserver(name: ZMConversation.clearTypingNotificationName,
                                               context: self.managedObjectContext.notificationContext,
-                                              using: { [weak self] in self?.shouldClearTypingForConversation(note: $0)})
+                                              using: { [weak self] in self?.shouldClearTypingForConversation(note: $0)
+                                                
+                                                print("TYPINGSTRATEGY:150 / Clear typing notification")
+            })
         )
     }
     
@@ -157,6 +172,7 @@ public class TypingStrategy : AbstractRequestStrategy {
     }
     
     fileprivate dynamic func addConversationForNextRequest(note : NotificationInContext) {
+        print("Add conversation for next request")
         guard let conversation = note.object as? ZMConversation, conversation.remoteIdentifier != nil
         else { return }
 
@@ -253,6 +269,7 @@ extension TypingStrategy {
             object: conversation,
             userInfo: userInfo)
         .post()
+        print("TYPINGSTRATEGY:256 / Typing did change from local notification")
     }
     
     public static func clearTranscoderStateForTyping(in conversation: ZMConversation) {
@@ -262,6 +279,7 @@ extension TypingStrategy {
             object: conversation,
             userInfo: nil)
             .post()
+        print("TYPINGSTRATEGY:270 / Clear typing notification (local)")
     }
 }
 

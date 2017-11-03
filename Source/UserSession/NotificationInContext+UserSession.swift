@@ -91,6 +91,7 @@ public extension ZMConversation {
                                                  object: self)
         {
             [weak observer, weak self] note in
+            print("NOTIFICATIONINCONTEXT+US:94 / Add Typing Observer")
             guard let `self` = self else { return }
             
             let users = note.userInfo[typingNotificationUsersKey] as? Set<ZMUser> ?? Set()
@@ -103,6 +104,7 @@ public extension ZMConversation {
                               context: self.managedObjectContext!.notificationContext,
                               object: self,
                               userInfo: [typingNotificationUsersKey: typingUsers]).post()
+        print("NOTIFICATIONINCONTEXT+US:106 / Typing did change from remote notification. Users: \(typingUsers)")
     }
 }
 

@@ -103,7 +103,11 @@ static NSString * const ZMTypingUsersKey = @"ZMTypingUsers";
 
 - (void)setIsTyping:(BOOL)isTyping;
 {
-    [TypingStrategy notifyTranscoderThatUserWithIsTyping:isTyping in:self];
+    NSLog(@"is Typing: %d", isTyping);
+    
+    //if(isTyping) {
+        [TypingStrategy notifyTranscoderThatUserWithIsTyping:isTyping in:self];
+    //}
 }
 
 - (NSSet *)typingUsers
