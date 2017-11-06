@@ -252,6 +252,26 @@ static NSString *const NoTeamNameKey = @"noteamname";
     return localizedStringWithKeyAndArguments(ZMPushLocalizedString(key), arguments);
 }
 
+- (NSString *)localizedCallKitStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation;
+{
+    NSString *key = self;
+    NSMutableArray *arguments = [NSMutableArray array];
+    
+    if (user.name == nil) {
+        key = [key stringByAppendingPathExtension:NoUserNameKey];
+    } else {
+        [arguments addObject:user.name];
+    }
+    
+    if (conversation.meaningfulDisplayName == nil) {
+        key = [key stringByAppendingPathExtension:NoConversationNameKey];
+    } else {
+        [arguments addObject:conversation.meaningfulDisplayName];
+    }
+    
+    return localizedStringWithKeyAndArguments(ZMPushLocalizedString(key), arguments);
+}
+
 
 @end
 
