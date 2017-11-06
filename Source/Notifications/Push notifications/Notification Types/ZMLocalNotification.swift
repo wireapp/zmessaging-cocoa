@@ -84,7 +84,7 @@ open class ZMLocalNotification: NSObject {
     ///
     public lazy var uiLocalNotification: UILocalNotification = {
         let note = UILocalNotification()
-        note.alertTitle = self.title
+        if !self.isEphemeral { note.alertTitle = self.title }
         note.alertBody = self.body
         note.category = self.category
         note.soundName = self.soundName
