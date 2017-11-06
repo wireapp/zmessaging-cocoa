@@ -522,7 +522,12 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 {
     NSSet *users = [event usersFromUserIDsInManagedObjectContext:self.managedObjectContext createIfNeeded:YES];
     
-    if (![users isSubsetOfSet:conversation.activeParticipants.set] || [conversation.modifiedKeys intersectsSet:[NSSet setWithObjects:ZMConversationIsSelfAnActiveMemberKey, ZMConversationUnsyncedActiveParticipantsKey, nil]]) {
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+    
+    if (![users isSubsetOfSet:conversation.activeParticipants.set]
+        || (selfUser && [users intersectsSet:[NSSet setWithObject:selfUser]])
+        || [conversation.modifiedKeys intersectsSet:[NSSet setWithObjects:ZMConversationIsSelfAnActiveMemberKey, ZMConversationUnsyncedActiveParticipantsKey, nil]])
+    {
         [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
     }
     
