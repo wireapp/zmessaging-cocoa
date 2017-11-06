@@ -17,11 +17,12 @@
 //
 
 import XCTest
+@testable import WireSyncEngine
 
-class ZMLocalNotificationLocalizationTests: XCTestCase {
+class ZMLocalNotificationLocalizationTests: ZMLocalNotificationTests {
     
     func testThatItLocalizesTitle() {
-        
+        // given
         let conversationName = "iOS Team"
         let teamName = "Wire"
         
@@ -29,9 +30,27 @@ class ZMLocalNotificationLocalizationTests: XCTestCase {
             ZMPushStringTitle.localizedString(withConversationName: $0, teamName: $1)
         }
         
+        // then
         XCTAssertEqual(result(conversationName, teamName), "iOS Team in Wire")
         XCTAssertEqual(result(conversationName, nil), "iOS Team")
         XCTAssertEqual(result(nil, teamName), "in Wire")
         XCTAssertNil(result(nil, nil))
+    }
+    
+    func testThatItLocalizesCallkitPushString() {
+        // "push.notification.callkit.call.started.group" = "%1$@ in %2$@";
+        // "push.notification.callkit.call.started.group.nousername.noconversationname" = "Someone calling in a conversation";
+        // "push.notification.callkit.call.started.group.nousername" = "Someone calling in %1$@";
+        // "push.notification.callkit.call.started.group.noconversationname" = "%@ calling in a conversation";
+        
+        let result: (ZMUser, ZMConversation) -> String = {
+            ("callkit.call.started.group" as NSString).localizedCallKitString(with: $0, conversation: $1)
+        }
+        
+        // then
+        XCTAssertEqual(result(sender, groupConversation), "Super User in Super Conversation")
+        XCTAssertEqual(result(userWithNoName, groupConversationWithoutName), "Someone calling in a conversation")
+        XCTAssertEqual(result(userWithNoName, groupConversation), "Someone calling in Super Conversation")
+        XCTAssertEqual(result(sender, groupConversationWithoutName), "Super User calling in a conversation")
     }
 }
