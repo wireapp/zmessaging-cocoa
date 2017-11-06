@@ -716,8 +716,6 @@
             [self.groupConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
             [NSThread sleepForTimeInterval:0.002]; // SE has milisecond precision
         }
-        
-//        self.groupConversation.lastRead = ((MockEvent *)self.groupConversation.events.lastObject).identifier;
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

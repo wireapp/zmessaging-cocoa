@@ -39,8 +39,6 @@ static NSString *const UserInfoUserKey = @"user";
 static NSString *const UserInfoAddedValueKey = @"added";
 static NSString *const UserInfoRemovedValueKey = @"removed";
 
-static NSString *const ConversationInfoArchivedValueKey = @"archived";
-
 static NSString *const ConversationTeamKey = @"team";
 static NSString *const ConversationTeamIdKey = @"teamid";
 static NSString *const ConversationTeamManagedKey = @"managed";

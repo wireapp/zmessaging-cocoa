@@ -181,9 +181,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                      @"self" : @{
                              @"otr_archived" : @(isArchived),
                              @"otr_archived_ref" : (isArchived ? @"2014-06-30T09:09:14.738Z" : [NSNull null]),
-                             @"id": selfID.transportString,
-                             @"muted" : [NSNull null],
-                             @"muted_time" : [NSNull null],
+                             @"id": selfID.transportString
                              }
                      },
              @"name" : [NSNull null],
@@ -430,10 +428,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     NSDictionary *payload = @{@"creator": @"08316f5e-3c0a-4847-a235-2b4d93f291a4",
                               @"members": @{
                                       @"self": @{
-                                              @"muted_time": [NSNull null],
-                                              @"muted": [NSNull null],
-                                              @"id": @"08316f5e-3c0a-4847-a235-2b4d93f291a4",
-                                              @"archived": [NSNull null]
+                                              @"id": @"08316f5e-3c0a-4847-a235-2b4d93f291a4"
                                               },
                                       @"others": @[]
                                       },
@@ -494,9 +489,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     
     id <ZMTransportData> firstPayload = @{
                               @"conversation" : firstRemoteID,
-                              @"data" : @{
-                                      @"last_read" : @"3.800122000a5efe70"
-                                      },
+                              @"data" : @{},
                               @"from": NSUUID.createUUID,
                               @"time" : NSDate.date.transportString,
                               @"type" : @"conversation.member-update"
@@ -899,10 +892,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
              @"creator" : @"3bc5750a-b965-40f8-aff2-831e9b5ac2e9",
              @"members" : @{
                      @"self" : @{
-                             @"muted_time" : [NSNull null],
-                             @"last_read" : @"5.800112314308490f",
-                             @"muted" : [NSNull null],
-                             @"archived" : [NSNull null],
                              @"id" : @"3bc5750a-b965-40f8-aff2-831e9b5ac2e9",
                              ZMConversationInfoOTRArchivedReferenceKey : [NSNull null],
                              ZMConversationInfoOTRArchivedValueKey : [NSNull null],
@@ -3178,10 +3167,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                    @"creator" : @"3bc5750a-b965-40f8-aff2-831e9b5ac2e9",
                                    @"members" : @{
                                            @"self" : @{
-                                                   @"muted_time" : [NSNull null],
-                                                   @"last_read" : @"5.800112314308490f",
-                                                   @"muted" : [NSNull null],
-                                                   @"archived" : [NSNull null],
                                                    @"id" : @"3bc5750a-b965-40f8-aff2-831e9b5ac2e9",
                                                    },
                                            @"others" : @[]
@@ -3236,10 +3221,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                    @"creator": selfID.transportString,
                                    @"members": @{
                                        @"self": @{
-                                           @"muted_time": [NSNull null],
-                                           @"muted": [NSNull null],
-                                           @"id": selfID.transportString,
-                                           @"archived": [NSNull null]
+                                           @"id": selfID.transportString
                                        },
                                        @"others": @[]
                                    },
@@ -3283,11 +3265,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                    @"members": @{
                                            @"others": @[],
                                            @"self": @{
-                                                   @"archived": [NSNull null],
                                                    @"id": @"08316f5e-3c0a-4847-a235-2b4d93f291a4",
-                                                   @"last_read": @"2.800112314202039b",
-                                                   @"muted": [NSNull null],
-                                                   @"muted_time": [NSNull null]
                                                    },
                                            },
                                    @"name": @"Jonathan",
@@ -3650,12 +3628,10 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                               @"creator": userID.transportString,
                                               @"members": @{
                                                       @"self": @{
-                                                              @"last_read": @"2f.800122000a5281dc",
                                                               @"id": @"39562cc3-717d-4395-979c-5387ae17f5c3",
                                                               },
                                                       @"others": @[
                                                               @{
-                                                                  @"status": @0,
                                                                   @"id": userID.transportString,
                                                                   }
                                                               ]
