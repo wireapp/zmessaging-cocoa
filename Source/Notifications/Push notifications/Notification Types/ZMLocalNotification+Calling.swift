@@ -44,8 +44,6 @@ extension ZMLocalNotification {
             self.conversation = conversation
         }
         
-        var shouldHideContent: Bool { return false }
-        
         func shouldCreateNotification() -> Bool {
             switch callState {
             case .terminating(reason: .anweredElsewhere), .terminating(reason: .normal):
