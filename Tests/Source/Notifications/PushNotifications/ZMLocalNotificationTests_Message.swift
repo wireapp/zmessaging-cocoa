@@ -58,6 +58,25 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     
     // MARK: Tests
     
+    func testThatItShowsDefaultAlertBodyWhenHidePreviewSettingIsTrue() {
+        // given
+        let note1 = textNotification(oneOnOneConversation, sender: sender)
+        XCTAssertEqual(note1?.uiLocalNotification.alertTitle, "Super User")
+        XCTAssertEqual(note1?.uiLocalNotification.alertBody, "Hello Hello!")
+        
+        // when
+        let moc = oneOnOneConversation.managedObjectContext!
+        let key = LocalNotificationDispatcher.ZMShouldHideNotificationContentKey
+        moc.setPersistentStoreMetadata(true as NSNumber, key: key)
+        let setting = moc.persistentStoreMetadata(forKey: key) as? NSNumber
+        XCTAssertEqual(setting?.boolValue, true)
+        let note2 = textNotification(oneOnOneConversation, sender: sender)
+        
+        // then
+        XCTAssertNil(note2?.uiLocalNotification.alertTitle)
+        XCTAssertEqual(note2?.uiLocalNotification.alertBody, "New message")
+    }
+    
     func testItCreatesMessageNotificationsCorrectly(){
         
         //    "push.notification.add.message.oneonone" = "%1$@";
