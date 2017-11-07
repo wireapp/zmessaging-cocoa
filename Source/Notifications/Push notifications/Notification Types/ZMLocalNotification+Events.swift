@@ -46,6 +46,7 @@ extension ZMLocalNotification {
         }
         
         self.init(conversation: conversation, type: .event(event.type), builder: builder!)
+        self.shouldHideContent = (builder as? EventNotificationBuilder)?.shouldHideContent ?? false
     }
     
 }
@@ -65,11 +66,7 @@ fileprivate class EventNotificationBuilder: NotificationBuilder {
     /// set to true if notification depends / refers to a specific conversation
     var requiresConversation : Bool { return false }
     
-    fileprivate lazy var shouldHideContent: Bool = {
-        let shouldHideKey = LocalNotificationDispatcher.ZMShouldHideNotificationContentKey
-        let shouldHide = self.moc.persistentStoreMetadata(forKey: shouldHideKey) as? NSNumber
-        return shouldHide?.boolValue ?? false
-    }()
+    var shouldHideContent: Bool { return false }
     
     init(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
         self.event = event
@@ -164,6 +161,10 @@ private class ReactionEventNotificationBuilder: EventNotificationBuilder {
     private var emoji : String!
     private var nonce : String!
     
+    override var shouldHideContent: Bool {
+        return LocalNotificationDispatcher.shouldHideNotificationContent(moc: self.moc)
+    }
+    
     override func shouldCreateNotification() -> Bool {
         guard super.shouldCreateNotification() else { return false }
         
@@ -186,12 +187,7 @@ private class ReactionEventNotificationBuilder: EventNotificationBuilder {
     }
     
     override func bodyText() -> String {
-        if shouldHideContent {
-            return super.bodyText()
-        }
-        else {
-            return ZMPushStringReaction.localizedString(with: sender, conversation: conversation, emoji: emoji!)
-        }
+        return ZMPushStringReaction.localizedString(with: sender, conversation: conversation, emoji: emoji!)
     }
     
     override func userInfo() -> [AnyHashable : Any]? {

@@ -69,6 +69,7 @@ open class ZMLocalNotification: NSObject {
     public var conversationID: UUID? { return uuid(for: ConversationIDStringKey) }
     
     public var isEphemeral: Bool = false
+    var shouldHideContent: Bool = false
     
     init?(conversation: ZMConversation?, type: LocalNotificationType, builder: NotificationBuilder) {
         guard builder.shouldCreateNotification() else { return nil }
@@ -84,10 +85,10 @@ open class ZMLocalNotification: NSObject {
     ///
     public lazy var uiLocalNotification: UILocalNotification = {
         let note = UILocalNotification()
-        if !self.isEphemeral { note.alertTitle = self.title }
-        note.alertBody = self.body
+        note.alertTitle = (self.isEphemeral || self.shouldHideContent) ? nil : self.title
+        note.alertBody = self.shouldHideContent ? ZMPushStringDefault.localizedStringForPushNotification() : self.body
         note.category = self.category
-        note.soundName = self.soundName
+        note.soundName = self.shouldHideContent ? ZMCustomSound.notificationNewMessageSoundName() : self.soundName
         note.userInfo = self.userInfo
         return note
     }()

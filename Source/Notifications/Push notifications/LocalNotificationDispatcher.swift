@@ -85,6 +85,14 @@ public class LocalNotificationDispatcher: NSObject {
             application.scheduleLocalNotification(note.uiLocalNotification)
         }
     }
+    
+    /// Determines if the notification content should be hidden as reflected in the store
+    /// metatdata for the given managed object context.
+    ///
+    static func shouldHideNotificationContent(moc: NSManagedObjectContext?) -> Bool {
+        let value = moc?.persistentStoreMetadata(forKey: ZMShouldHideNotificationContentKey) as? NSNumber
+        return value?.boolValue ?? false
+    }
 }
 
 extension LocalNotificationDispatcher: ZMEventConsumer {
