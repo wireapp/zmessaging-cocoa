@@ -77,6 +77,25 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         XCTAssertEqual(note2?.uiLocalNotification.alertBody, "New message")
     }
     
+    func testThatItShowsShowsEphemeralStringEvenWhenHidePreviewSettingIsTrue() {
+        // given
+        let note1 = textNotification(oneOnOneConversation, sender: sender, isEphemeral: true)
+        XCTAssertNil(note1?.uiLocalNotification.alertTitle)
+        XCTAssertEqual(note1?.uiLocalNotification.alertBody, "Someone sent you a message")
+        
+        // when
+        let moc = oneOnOneConversation.managedObjectContext!
+        let key = LocalNotificationDispatcher.ZMShouldHideNotificationContentKey
+        moc.setPersistentStoreMetadata(true as NSNumber, key: key)
+        let setting = moc.persistentStoreMetadata(forKey: key) as? NSNumber
+        XCTAssertEqual(setting?.boolValue, true)
+        let note2 = textNotification(oneOnOneConversation, sender: sender, isEphemeral: true)
+        
+        // then
+        XCTAssertNil(note2?.uiLocalNotification.alertTitle)
+        XCTAssertEqual(note2?.uiLocalNotification.alertBody, "Someone sent you a message")
+    }
+    
     func testItCreatesMessageNotificationsCorrectly(){
         
         //    "push.notification.add.message.oneonone" = "%1$@";
