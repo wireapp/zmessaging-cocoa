@@ -86,7 +86,7 @@ open class ZMLocalNotification: NSObject {
     public lazy var uiLocalNotification: UILocalNotification = {
         let note = UILocalNotification()
         note.alertTitle = (self.isEphemeral || self.shouldHideContent) ? nil : self.title
-        note.alertBody = self.shouldHideContent ? ZMPushStringDefault.localizedStringForPushNotification() : self.body
+        note.alertBody = (!self.isEphemeral && self.shouldHideContent) ? ZMPushStringDefault.localizedStringForPushNotification() : self.body
         note.category = self.category
         note.soundName = self.shouldHideContent ? ZMCustomSound.notificationNewMessageSoundName() : self.soundName
         note.userInfo = self.userInfo

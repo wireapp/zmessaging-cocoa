@@ -27,8 +27,7 @@ extension ZMLocalNotification {
         let builder = MessageNotificationBuilder(message: message, contentType: contentType)
         self.init(conversation: message.conversation, type: .message(contentType), builder: builder)
         self.isEphemeral = message.isEphemeral
-        let shouldHideSetting = LocalNotificationDispatcher.shouldHideNotificationContent(moc: message.managedObjectContext)
-        self.shouldHideContent = shouldHideSetting || message.isEphemeral
+        self.shouldHideContent = LocalNotificationDispatcher.shouldHideNotificationContent(moc: message.managedObjectContext)
     }
     
     fileprivate class MessageNotificationBuilder: NotificationBuilder {
@@ -101,7 +100,11 @@ extension ZMLocalNotification {
         }
         
         func soundName() -> String {
-            return contentType == .knock ? ZMCustomSound.notificationPingSoundName() : ZMCustomSound.notificationNewMessageSoundName()
+            if message.isEphemeral {
+                return ZMCustomSound.notificationNewMessageSoundName()
+            } else {
+                return contentType == .knock ? ZMCustomSound.notificationPingSoundName() : ZMCustomSound.notificationNewMessageSoundName()
+            }
         }
         
         func userInfo() -> [AnyHashable: Any]? {
