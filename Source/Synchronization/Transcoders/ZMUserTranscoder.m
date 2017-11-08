@@ -198,7 +198,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
         return;
     }
     
-    ZMUser *user = [ZMUser userWithRemoteID:userId createIfNeeded:YES inContext:self.managedObjectContext];
+    ZMUser *user = [ZMUser fetchAndMergeWith:userId createIfNeeded:YES in:self.managedObjectContext];
     [user updateWithTransportData:userData authoritative:NO];
     
     return;
