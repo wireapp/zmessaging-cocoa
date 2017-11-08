@@ -2893,6 +2893,36 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }];
 }
 
+- (void)testThatItProcessesMemberJoinEventForSelfUser
+{
+    self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus localNotificationDispatcher:self.mockLocalNotificationDispatcher syncStatus:self.mockSyncStatus];
+    
+    NSUUID *conversationID = [NSUUID createUUID];
+    
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [ZMUser selfUserInContext:self.syncMOC].remoteIdentifier = self.selfUserID;
+        [ZMUser selfUserInContext:self.syncMOC].name = @"Me, myself";
+    
+        // when
+        NSDictionary *eventPayload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[self.selfUserID] eventType:@"conversation.member-join"];
+        ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:eventPayload uuid:nil];
+        [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        ZMConversation *createdConversation = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:NO inContext:self.syncMOC];
+        XCTAssertNotNil(createdConversation);
+        XCTAssertTrue(createdConversation.isSelfAnActiveMember);
+        
+        // this is the member join system message
+        XCTAssertEqual(createdConversation.messages.count, 1u);
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+}
+
 @end
 
 
@@ -3565,12 +3595,9 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertNotNil(createdConversation);
         XCTAssertNotEqual(createdConversation, existingConnection.conversation);
         
-        ZMSystemMessage *memberJoinEvent = [ZMSystemMessage insertNewObjectInManagedObjectContext:self.syncMOC];
-        memberJoinEvent.systemMessageType = ZMSystemMessageTypeParticipantsAdded;
-        [createdConversation.mutableMessages addObject:memberJoinEvent];
-        
-        // forcing an event here - in real code it will be created in another syncObject, not tested here
+        // this is the member join system message
         XCTAssertEqual(createdConversation.messages.count, 1u);
+        
         NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:[ZMConversation entityName]];
         NSArray *allConversations = [self.syncMOC executeFetchRequestOrAssert:request];
         

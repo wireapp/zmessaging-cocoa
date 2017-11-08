@@ -27,6 +27,7 @@ extension ZMLocalNotification {
         let builder = MessageNotificationBuilder(message: message, contentType: contentType)
         self.init(conversation: message.conversation, type: .message(contentType), builder: builder)
         self.isEphemeral = message.isEphemeral
+        self.shouldHideContent = LocalNotificationDispatcher.shouldHideNotificationContent(moc: message.managedObjectContext)
     }
     
     fileprivate class MessageNotificationBuilder: NotificationBuilder {
@@ -37,19 +38,6 @@ extension ZMLocalNotification {
         
         private var sender: ZMUser!
         var conversation: ZMConversation?
-        
-        /// Determines if the notification content should be hidden for the given message.
-        ///
-        private lazy var shouldHideContent: Bool = {
-            let shouldHideKey = LocalNotificationDispatcher.ZMShouldHideNotificationContentKey
-            if let hide = self.message.managedObjectContext!.persistentStoreMetadata(forKey: shouldHideKey) as? NSNumber,
-                hide.boolValue == true {
-                return true
-            }
-            else {
-                return self.message.isEphemeral
-            }
-        }()
         
         init(message: ZMMessage, contentType: ZMLocalNotificationContentType) {
             self.message = message
@@ -84,13 +72,8 @@ extension ZMLocalNotification {
         }
         
         func bodyText() -> String {
-            if shouldHideContent {
-                if message.isEphemeral {
-                    return ZMPushStringEphemeral.localizedString(with: sender, conversation: conversation)
-                }
-                else {
-                    return ZMPushStringDefault.localizedStringForPushNotification()
-                }
+            if message.isEphemeral {
+                return ZMPushStringEphemeral.localizedStringForPushNotification()
             } else {
                 
                 var text: String?
@@ -117,10 +100,9 @@ extension ZMLocalNotification {
         }
         
         func soundName() -> String {
-            if shouldHideContent {
+            if message.isEphemeral {
                 return ZMCustomSound.notificationNewMessageSoundName()
-            }
-            else {
+            } else {
                 return contentType == .knock ? ZMCustomSound.notificationPingSoundName() : ZMCustomSound.notificationNewMessageSoundName()
             }
         }

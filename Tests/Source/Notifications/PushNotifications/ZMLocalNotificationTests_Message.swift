@@ -58,6 +58,44 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     
     // MARK: Tests
     
+    func testThatItShowsDefaultAlertBodyWhenHidePreviewSettingIsTrue() {
+        // given
+        let note1 = textNotification(oneOnOneConversation, sender: sender)
+        XCTAssertEqual(note1?.uiLocalNotification.alertTitle, "Super User")
+        XCTAssertEqual(note1?.uiLocalNotification.alertBody, "Hello Hello!")
+        
+        // when
+        let moc = oneOnOneConversation.managedObjectContext!
+        let key = LocalNotificationDispatcher.ZMShouldHideNotificationContentKey
+        moc.setPersistentStoreMetadata(true as NSNumber, key: key)
+        let setting = moc.persistentStoreMetadata(forKey: key) as? NSNumber
+        XCTAssertEqual(setting?.boolValue, true)
+        let note2 = textNotification(oneOnOneConversation, sender: sender)
+        
+        // then
+        XCTAssertNil(note2?.uiLocalNotification.alertTitle)
+        XCTAssertEqual(note2?.uiLocalNotification.alertBody, "New message")
+    }
+    
+    func testThatItShowsShowsEphemeralStringEvenWhenHidePreviewSettingIsTrue() {
+        // given
+        let note1 = textNotification(oneOnOneConversation, sender: sender, isEphemeral: true)
+        XCTAssertNil(note1?.uiLocalNotification.alertTitle)
+        XCTAssertEqual(note1?.uiLocalNotification.alertBody, "Someone sent you a message")
+        
+        // when
+        let moc = oneOnOneConversation.managedObjectContext!
+        let key = LocalNotificationDispatcher.ZMShouldHideNotificationContentKey
+        moc.setPersistentStoreMetadata(true as NSNumber, key: key)
+        let setting = moc.persistentStoreMetadata(forKey: key) as? NSNumber
+        XCTAssertEqual(setting?.boolValue, true)
+        let note2 = textNotification(oneOnOneConversation, sender: sender, isEphemeral: true)
+        
+        // then
+        XCTAssertNil(note2?.uiLocalNotification.alertTitle)
+        XCTAssertEqual(note2?.uiLocalNotification.alertBody, "Someone sent you a message")
+    }
+    
     func testItCreatesMessageNotificationsCorrectly(){
         
         //    "push.notification.add.message.oneonone" = "%1$@";
@@ -71,10 +109,10 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     }
     
     func testThatObfuscatesNotificationsForEphemeralMessages(){
-        XCTAssertEqual(bodyForNote(oneOnOneConversation, sender: sender, isEphemeral: true), "sent you a message")
-        XCTAssertEqual(bodyForNote(groupConversation, sender: sender, isEphemeral: true), "Someone sent a message")
-        XCTAssertEqual(bodyForNote(groupConversationWithoutUserDefinedName, sender: sender, isEphemeral: true), "Someone sent a message")
-        XCTAssertEqual(bodyForNote(groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent a message")
+        XCTAssertEqual(bodyForNote(oneOnOneConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForNote(groupConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForNote(groupConversationWithoutUserDefinedName, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForNote(groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent you a message")
     }
     
     func testThatItDuplicatesPercentageSignsInTextAndConversationName() {
@@ -197,10 +235,10 @@ extension ZMLocalNotificationTests_Message {
     }
 
     func testThatObfuscatesNotificationsForEphemeralImageMessages(){
-        XCTAssertEqual(bodyForImageNote(oneOnOneConversation, sender: sender, isEphemeral: true), "sent you a message")
-        XCTAssertEqual(bodyForImageNote(groupConversation, sender: sender, isEphemeral: true), "Someone sent a message")
-        XCTAssertEqual(bodyForImageNote(groupConversationWithoutUserDefinedName, sender: sender, isEphemeral: true), "Someone sent a message")
-        XCTAssertEqual(bodyForImageNote(groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent a message")
+        XCTAssertEqual(bodyForImageNote(oneOnOneConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForImageNote(groupConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForImageNote(groupConversationWithoutUserDefinedName, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForImageNote(groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent you a message")
     }
 }
 
@@ -298,17 +336,17 @@ extension ZMLocalNotificationTests_Message {
     }
 
     func testThatItCreatesEphemeralFileAddNotificationsCorrectly() {
-        XCTAssertEqual(bodyForAssetNote(.txt, conversation: oneOnOneConversation, sender: sender, isEphemeral: true), "sent you a message")
-        XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversation, sender: sender, isEphemeral: true), "Someone sent a message")
-        XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversationWithoutUserDefinedName, sender: sender, isEphemeral: true), "Someone sent a message")
-        XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent a message")
+        XCTAssertEqual(bodyForAssetNote(.txt, conversation: oneOnOneConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversationWithoutUserDefinedName, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent you a message")
     }
 
     func testThatItCreatesEphemeralVideoAddNotificationsCorrectly() {
-        XCTAssertEqual(bodyForAssetNote(.video, conversation: oneOnOneConversation, sender: sender, isEphemeral: true), "sent you a message")
-        XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversation, sender: sender, isEphemeral: true), "Someone sent a message")
-        XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversationWithoutUserDefinedName, sender: sender, isEphemeral: true), "Someone sent a message")
-        XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent a message")
+        XCTAssertEqual(bodyForAssetNote(.video, conversation: oneOnOneConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversationWithoutUserDefinedName, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent you a message")
     }
 
     func testThatItCreatesAudioNotificationsCorrectly() {
@@ -351,10 +389,10 @@ extension ZMLocalNotificationTests_Message {
     }
 
     func testThatItCreatesEphemeralKnockNotificationsCorrectly() {
-        XCTAssertEqual(bodyForKnockNote(oneOnOneConversation, sender: sender, isEphemeral: true), "sent you a message")
-        XCTAssertEqual(bodyForKnockNote(groupConversation, sender: sender, isEphemeral: true), "Someone sent a message")
-        XCTAssertEqual(bodyForKnockNote(groupConversationWithoutUserDefinedName, sender: sender, isEphemeral: true), "Someone sent a message")
-        XCTAssertEqual(bodyForKnockNote(groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent a message")
+        XCTAssertEqual(bodyForKnockNote(oneOnOneConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForKnockNote(groupConversation, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForKnockNote(groupConversationWithoutUserDefinedName, sender: sender, isEphemeral: true), "Someone sent you a message")
+        XCTAssertEqual(bodyForKnockNote(groupConversationWithoutName, sender: sender, isEphemeral: true), "Someone sent you a message")
     }
 }
 
