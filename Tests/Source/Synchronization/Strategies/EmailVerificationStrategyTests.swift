@@ -17,6 +17,29 @@
 //
 
 import Foundation
+@testable import WireSyncEngine
+
 class EmailVerificationStrategyTests : MessagingTest {
-    
+
+    var registrationStatus : WireSyncEngine.RegistrationStatus!
+    var sut : WireSyncEngine.EmailVerificationStrategy!
+
+    override func setUp() {
+        super.setUp()
+        registrationStatus = WireSyncEngine.RegistrationStatus()
+        sut = WireSyncEngine.EmailVerificationStrategy(status : registrationStatus, groupQueue: self.syncMOC)
+    }
+
+    override func tearDown() {
+        sut = nil
+        registrationStatus = nil
+
+        super.tearDown()
+    }
+
+    func testThatItDoesNotReturnRequestIfThePhaseIsNone(){
+        let request = sut.nextRequest()
+        XCTAssertNil(request);
+    }
+
 }
