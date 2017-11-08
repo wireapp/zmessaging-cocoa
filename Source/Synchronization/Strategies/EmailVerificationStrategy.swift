@@ -24,9 +24,9 @@ class RegistrationStatus {
 
     /// for UI to verity the email
     ///
-    /// - Parameter email: <#email description#>
+    /// - Parameter email: email to verify
     func verify(email: String) {
-        ///TODO: set the phrase to verifyEmail
+        phase = .verify(email: email)
     }
 
     ///TODO: imp. equalable?
@@ -76,7 +76,7 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
             return nil
         }
 
-        return ZMTransportRequest(path: path, method: .methodPOST, payload: payload  as ZMTransportData)
+        return ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
     }
 
     func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
@@ -90,7 +90,8 @@ extension EmailVerificationStrategy : RequestStrategy {
         let currentStatus = registrationStatus
 
         switch (currentStatus.phase) {
-        case let .verify(email: email):
+        case .verify(email: _):
+            singleRequestSync.readyForNextRequestIfNotBusy()
             return singleRequestSync.nextRequest()
         default:
             return nil

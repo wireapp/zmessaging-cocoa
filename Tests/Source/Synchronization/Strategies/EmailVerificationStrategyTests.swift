@@ -42,4 +42,22 @@ class EmailVerificationStrategyTests : MessagingTest {
         XCTAssertNil(request);
     }
 
+    func testThatItReturnARequestWhenVerifyEmail(){
+        //given
+        let email = "john@smith.com"
+        let path = "/activate/send"
+        let payload = ["email": email,
+                       "locale": NSLocale.formattedLocaleIdentifier()!]
+
+        let transportRequest = ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
+
+        //when
+        registrationStatus.verify(email: email)
+        let request = sut.nextRequest()
+
+        //then
+        XCTAssertNotNil(request);
+        XCTAssertEqual(request, transportRequest)
+    }
+
 }

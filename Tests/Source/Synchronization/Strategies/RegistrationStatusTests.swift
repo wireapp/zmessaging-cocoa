@@ -14,6 +14,7 @@ class RegistrationStatusTests : MessagingTest{
 
     override func setUp() {
         super.setUp()
+        
         sut = WireSyncEngine.RegistrationStatus()
     }
 
