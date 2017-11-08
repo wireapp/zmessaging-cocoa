@@ -24,7 +24,7 @@ class RegistrationStatusTests : MessagingTest{
     }
 
     func testStartWithPhaseNone(){
-
+        XCTAssertEqual(sut.phase, .none)
     }
 }
 

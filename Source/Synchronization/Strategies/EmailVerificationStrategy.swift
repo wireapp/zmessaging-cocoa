@@ -29,7 +29,18 @@ class RegistrationStatus {
         ///TODO: set the phrase to verifyEmail
     }
 
-    enum Phase {
+    ///TODO: imp. equalable?
+    enum Phase : Equatable {
+        static func ==(lhs: RegistrationStatus.Phase, rhs: RegistrationStatus.Phase) -> Bool {
+            switch (lhs, rhs) {
+            case let (.verify(l), .verify(r)): return l == r
+            case (.none, .none):
+                return true
+
+            default: return false
+            }
+        }
+
         case verify(email: String)
         case none
     }
