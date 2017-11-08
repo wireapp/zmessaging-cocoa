@@ -53,13 +53,7 @@
          [[activeUsersUUID.allObjects valueForKey:@"transportString"] componentsJoinedByString:@", "],
          [[mockActiveUsersUUID.allObjects valueForKey:@"transportString"] componentsJoinedByString:@", "]];
     }
-
-    if (!((self.lastModifiedDate == conversation.lastEventTime
-          || fabs([self.lastModifiedDate timeIntervalSinceDate:conversation.lastEventTime]) < 1))) {
-        [failureRecorder recordFailure:@"Last modified date doesn't match '%@' != '%@'",
-         self.lastModifiedDate, conversation.lastEventTime];
-    }
-
+    
     if (![self.remoteIdentifier isEqual:[conversation.identifier UUID]]) {
         [failureRecorder recordFailure:@"Remote ID doesn't match '%@' != '%@'",
          self.remoteIdentifier.transportString, conversation.identifier];
