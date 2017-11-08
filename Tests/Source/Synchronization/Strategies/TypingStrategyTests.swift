@@ -192,12 +192,7 @@ extension TypingStrategyTests {
         
         //edit message is an allowed type that can fire a otr-message-add notification
         let message = ZMGenericMessage(editMessage: "test", newText: "demo", nonce: "")
-        let payload = ["conversation": conversationA.remoteIdentifier!.transportString(),
-                       "data": ["text":message.data().base64String()],
-                       "from": userA.remoteIdentifier!.transportString(),
-                       "time": Date().transportString(),
-                       "type": "conversation.otr-message-add",
-                       ] as [String : Any]
+        let payload = payloadForOTRMessageAdd(with: message) as ZMTransportData
         let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
         
         simulateTyping()
@@ -208,6 +203,44 @@ extension TypingStrategyTests {
         // then
         XCTAssertTrue(typing.didSetTypingUsers)
         XCTAssertFalse(typing.isUserTyping(user: userA, in: conversationA))
+    }
+    
+    func testThatDoesntForwardOTRMessageAddEventsForNonTextTypes() {
+        // given
+        //delete-message should not fire an Add Events notification
+        let message = ZMGenericMessage(deleteMessage: "delete", nonce: "")
+        tryToForwardOTRMessageWithoutReply(with: message)
+    }
+    
+    func testThatDoesntForwardOTRMessageAddEventsForConfirmations() {
+        
+        // given
+        //confirmations should not fire an Add Events notification
+        let message = ZMGenericMessage(confirmation: "test", type: .DELIVERED, nonce: "")
+        tryToForwardOTRMessageWithoutReply(with: message)
+    }
+    
+    func tryToForwardOTRMessageWithoutReply(with message: ZMGenericMessage) {
+        let payload = payloadForOTRMessageAdd(with: message) as ZMTransportData
+        let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil)!
+        
+        simulateTyping()
+        
+        // when
+        sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+        
+        // then
+        XCTAssertFalse(typing.didSetTypingUsers)
+        XCTAssertTrue(typing.isUserTyping(user: userA, in: conversationA)) //user is still typing
+    }
+    
+    func payloadForOTRMessageAdd(with message: ZMGenericMessage) -> [String:Any] {
+        return ["conversation": conversationA.remoteIdentifier!.transportString(),
+                       "data": ["text":message.data().base64String()],
+                       "from": userA.remoteIdentifier!.transportString(),
+                       "time": Date().transportString(),
+                       "type": "conversation.otr-message-add",
+                       ] as [String : Any]
     }
     
     func testThatItDoesNotForwardOtherEventTypes() {
