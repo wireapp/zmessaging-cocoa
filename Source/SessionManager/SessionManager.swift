@@ -789,27 +789,27 @@ private let sessionManagerObserverNotificationName = Notification.Name(rawValue:
 
 extension SessionManager: NotificationContext {
     
-    private var createdKey: String { return "created" }
-    private var destroyedKey: String { return "destroyed" }
+    static private let createdKey = "created"
+    static private let destroyedKey = "destroyed"
     
     @objc public func addSessionManagerObserver(_ observer: SessionManagerObserver) -> Any {
         return NotificationInContext.addObserver(
             name: sessionManagerObserverNotificationName,
             context: self) { [weak observer] note in
-                if note.changedKeys?.first == self.createdKey {
+                if note.changedKeys?.first == type(of: self).createdKey {
                     observer?.sessionManagerCreated(userSession: note.object as! ZMUserSession)
                 }
-                else if note.changedKeys?.first == self.destroyedKey {
+                else if note.changedKeys?.first == type(of: self).destroyedKey {
                     observer?.sessionManagerDestroyedUserSession?(for: note.object as! UUID)
                 }
         }
     }
     
     fileprivate func notifyNewUserSessionCreated(_ userSession: ZMUserSession) {
-        NotificationInContext(name: sessionManagerObserverNotificationName, context: self, object: userSession, changedKeys: [createdKey]).post()
+        NotificationInContext(name: sessionManagerObserverNotificationName, context: self, object: userSession, changedKeys: [type(of: self).createdKey]).post()
     }
     
     fileprivate func notifyUserSessionDestroyed(_ accountId: UUID) {
-        NotificationInContext(name: sessionManagerObserverNotificationName, context: self, object: accountId as AnyObject, changedKeys: [destroyedKey]).post()
+        NotificationInContext(name: sessionManagerObserverNotificationName, context: self, object: accountId as AnyObject, changedKeys: [type(of: self).destroyedKey]).post()
     }
 }
