@@ -141,6 +141,11 @@ public class TypingStrategy : AbstractRequestStrategy {
                                               using: { [weak self] in self?.addConversationForNextRequest(note: $0)} )
         )
         
+        observers.append(
+            NotificationInContext.addObserver(name: ZMConversation.clearTypingNotificationName,
+                                              context: self.managedObjectContext.notificationContext,
+                                              using: { [weak self] in self?.shouldClearTypingForConversation(note: $0)})
+        )
     }
     
     public func tearDown() {
@@ -161,6 +166,13 @@ public class TypingStrategy : AbstractRequestStrategy {
         if let isTyping = (note.userInfo[IsTypingKey] as? NSNumber)?.boolValue {
             add(conversation:conversation, isTyping: isTyping, clearIsTyping: false)
         }
+    }
+    
+    fileprivate dynamic func shouldClearTypingForConversation(note: NotificationInContext) {
+        guard let conversation = note.object as? ZMConversation, conversation.remoteIdentifier != nil
+        else { return }
+        
+        add(conversation:conversation, isTyping: false, clearIsTyping: true)
     }
     
     fileprivate func add(conversation: ZMConversation, isTyping: Bool, clearIsTyping: Bool) {
@@ -248,6 +260,15 @@ extension TypingStrategy {
             object: conversation,
             userInfo: userInfo)
         .post()
+    }
+    
+    public static func clearTranscoderStateForTyping(in conversation: ZMConversation) {
+        NotificationInContext(
+            name: ZMConversation.clearTypingNotificationName,
+            context: conversation.managedObjectContext!.notificationContext,
+            object: conversation,
+            userInfo: nil)
+            .post()
     }
 }
 

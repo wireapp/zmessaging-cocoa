@@ -189,8 +189,11 @@ extension TypingStrategyTests {
     
     func testThatItForwardsOTRMessageAddEventsAndSetsIsTypingToNo() {
         // given
+        
+        //edit message is an allowed type that can fire a otr-message-add notification
+        let message = ZMGenericMessage(editMessage: "test", newText: "demo", nonce: "")
         let payload = ["conversation": conversationA.remoteIdentifier!.transportString(),
-                       "data": [],
+                       "data": ["text":message.data().base64String()],
                        "from": userA.remoteIdentifier!.transportString(),
                        "time": Date().transportString(),
                        "type": "conversation.otr-message-add",
