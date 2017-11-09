@@ -262,7 +262,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
     }
     
     public func errorFromFailedInsertResponse(_ response: ZMTransportResponse!) -> NSError {
-        var errorCode: ZMUserSessionErrorCode = .unkownError
+        var errorCode: ZMUserSessionErrorCode = .unknownError
         if let moc = self.managedObjectContext, let response = response, response.result == .permanentError {
 
             if let errorLabel = response.payload?.asDictionary()?["label"] as? String {

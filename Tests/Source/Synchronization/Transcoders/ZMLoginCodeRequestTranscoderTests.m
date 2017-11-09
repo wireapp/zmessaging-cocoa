@@ -96,7 +96,7 @@
     
     id token = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
         XCTAssertEqual(event, PreLoginAuthenticationEventObjcLoginCodeRequestDidFail);
-        XCTAssertEqual(error.code, (long) ZMUserSessionUnkownError);
+        XCTAssertEqual(error.code, (long) ZMUserSessionUnknownError);
         XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
         [expectation fulfill];
     }];

@@ -525,7 +525,7 @@
         }
         return nil;
     };
-    [[editiongObserver expect] emailUpdateDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionUnkownError userInfo:nil]];
+    [[editiongObserver expect] emailUpdateDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionUnknownError userInfo:nil]];
     
     // when
     [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil];

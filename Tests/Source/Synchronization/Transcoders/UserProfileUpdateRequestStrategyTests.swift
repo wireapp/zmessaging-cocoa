@@ -366,7 +366,7 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailChangingPhone.count, 1)
         guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneVerificationCodeRequest.first else { return }
-        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.unkownError.rawValue))
+        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.unknownError.rawValue))
     }
     
     // MARK: - Setting email and password
@@ -490,7 +490,7 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailEmailUpdate.count, 1)
         guard let error = self.userProfileUpdateStatus.recordedDidFailEmailUpdate.first else { return }
-        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.unkownError.rawValue))
+        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.unknownError.rawValue))
         
     }
     
@@ -569,7 +569,7 @@ extension UserProfileUpdateRequestStrategyTests {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(self.userProfileUpdateStatus.recordedDidFailPhoneNumberRemoval.count, 1)
         guard let error = self.userProfileUpdateStatus.recordedDidFailPhoneNumberRemoval.first else { return }
-        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.unkownError.rawValue))
+        XCTAssertEqual((error as NSError).code, Int(ZMUserSessionErrorCode.unknownError.rawValue))
     }
     
     // MARK: - Check handle availability

@@ -363,7 +363,7 @@
     //expect
     id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
         XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
-        XCTAssertEqual(error.code, (long) ZMUserSessionUnkownError);
+        XCTAssertEqual(error.code, (long) ZMUserSessionUnknownError);
         XCTAssertEqual(event, ZMRegistrationNotificationPhoneNumberVerificationDidFail);
         notificationCalled = YES;
     }];

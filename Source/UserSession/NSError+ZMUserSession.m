@@ -34,7 +34,7 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
         CFStringRef name;
     } const TypeMapping[] = {
         { ZMUserSessionNoError, CFSTR("User session no error") },
-        { ZMUserSessionUnkownError, CFSTR("User session unkown error") },
+        { ZMUserSessionUnknownError, CFSTR("User session unknown error") },
         { ZMUserSessionNeedsCredentials, CFSTR("User session needs credentials") },
         { ZMUserSessionInvalidCredentials, CFSTR("User session invalid credentials") },
         { ZMUserSessionAccountIsPendingActivation, CFSTR("User session account is pending activation") },

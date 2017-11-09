@@ -23,7 +23,7 @@
 typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     ZMUserSessionNoError = 0,
     /// ???
-    ZMUserSessionUnkownError,
+    ZMUserSessionUnknownError,
     /// Credentials are needed to authenticate
     ZMUserSessionNeedsCredentials,
     /// The credentials provided are not valid

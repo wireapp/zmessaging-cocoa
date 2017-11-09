@@ -410,7 +410,7 @@
     XCTestExpectation *expectation = [self expectationWithDescription:@"error notification"];
     id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
         XCTAssertEqual(event, ZMRegistrationNotificationRegistrationDidFail);
-        XCTAssertEqual(error.code, (long) ZMUserSessionUnkownError);
+        XCTAssertEqual(error.code, (long) ZMUserSessionUnknownError);
         XCTAssertEqual(error.domain, ZMUserSessionErrorDomain);
         [expectation fulfill];
     } ];

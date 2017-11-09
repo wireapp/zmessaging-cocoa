@@ -179,7 +179,7 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
             } else {
                 let error : Error = NSError.phoneNumberIsAlreadyRegisteredError(with: response) ??
                     NSError.invalidPhoneNumber(withReponse: response) ??
-                    NSError.userSessionErrorWith(ZMUserSessionErrorCode.unkownError, userInfo: nil)
+                    NSError.userSessionErrorWith(ZMUserSessionErrorCode.unknownError, userInfo: nil)
                 self.userProfileUpdateStatus.didFailPhoneVerificationCodeRequest(error: error)
             }
             
@@ -188,7 +188,7 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
                 self.userProfileUpdateStatus.didChangePhoneSuccesfully()
             } else {
                 let error : Error = NSError.invalidPhoneVerificationCodeError(with: response) ??
-                    NSError.userSessionErrorWith(ZMUserSessionErrorCode.unkownError, userInfo: nil)
+                    NSError.userSessionErrorWith(ZMUserSessionErrorCode.unknownError, userInfo: nil)
                 self.userProfileUpdateStatus.didFailChangingPhone(error: error)
             }
             
@@ -211,7 +211,7 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
             } else {
                 let error : Error = NSError.invalidEmail(with: response) ??
                     NSError.keyExistsError(with: response) ??
-                    NSError.userSessionErrorWith(ZMUserSessionErrorCode.unkownError, userInfo: nil)
+                    NSError.userSessionErrorWith(ZMUserSessionErrorCode.unknownError, userInfo: nil)
                 self.userProfileUpdateStatus.didFailEmailUpdate(error: error)
             }
             
@@ -221,7 +221,7 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
                 self.userProfileUpdateStatus.didRemovePhoneNumberSuccessfully()
             } else {
                 let error : Error = NSError.lastUserIdentityCantBeRemoved(with: response) ??
-                    NSError.userSessionErrorWith(ZMUserSessionErrorCode.unkownError, userInfo: nil)
+                    NSError.userSessionErrorWith(ZMUserSessionErrorCode.unknownError, userInfo: nil)
                 self.userProfileUpdateStatus.didFailPhoneNumberRemoval(error: error)
             }
             

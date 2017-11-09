@@ -81,7 +81,7 @@
             [NSError pendingLoginErrorWithResponse:response] ?:
             [NSError unauthorizedErrorWithResponse:response] ?:
             [NSError invalidPhoneNumberErrorWithReponse:response] ?:
-            [NSError userSessionErrorWithErrorCode:ZMUserSessionUnkownError userInfo:nil]
+            [NSError userSessionErrorWithErrorCode:ZMUserSessionUnknownError userInfo:nil]
         };
 
         [authStatus didFailRequestForLoginCode:error];
