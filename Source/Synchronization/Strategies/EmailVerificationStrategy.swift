@@ -102,21 +102,21 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
             payload = ["email": email,
                        "locale": NSLocale.formattedLocaleIdentifier()!]
         default:
-            return nil
+            fatal("Generating request for invalid phase: \(currentStatus.phase)")
         }
 
         return ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
     }
 
     func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
-        if response.result == .permanentError {
+        if response.result == .success {
+            registrationStatus.success()
+        } else {
             let error = NSError.blacklistedEmail(with: response) ??
-                NSError.keyExistsError(with: response) ??
+                NSError.emailAddressInUse(with: response) ??
                 NSError.invalidEmail(with: response) ??
                 NSError.userSessionErrorWith(.unknownError, userInfo: [:])
             registrationStatus.handleError(error)
-        } else {
-            registrationStatus.success()
         }
     }
 
@@ -127,7 +127,7 @@ extension EmailVerificationStrategy : RequestStrategy {
         let currentStatus = registrationStatus
 
         switch (currentStatus.phase) {
-        case .verify(email: _):
+        case .verify:
             codeSendingSync.readyForNextRequestIfNotBusy()
             return codeSendingSync.nextRequest()
         default:
