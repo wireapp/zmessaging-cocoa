@@ -58,6 +58,8 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     ZMUserSessionCanNotRegisterMoreClients,
     /// The invitation code provided during registration is invalid
     ZMUserSessionInvalidInvitationCode,
+    /// The Activation code provided during email activation is invalid
+    ZMUserSessionInvalidActivationCode,
     /// The current usert client was deleted remotely
     ZMUserSessionClientDeletedRemotely,
     /// The last user identity (email or phone number) cannot be removed.

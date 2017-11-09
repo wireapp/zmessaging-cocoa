@@ -159,6 +159,14 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
     return nil;
 }
 
++ (instancetype)invalidActivationCodeWithResponse:(ZMTransportResponse *)response
+{
+    if (response.HTTPStatus == 404 && [[response payloadLabel] isEqualToString:@"invalid-code"]) {
+        return [NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidActivationCode userInfo:nil];
+    }
+    return nil;
+}
+
 + (instancetype)lastUserIdentityCantBeRemovedWithResponse:(ZMTransportResponse *)response
 {
     if (response.HTTPStatus == 403 && [[response payloadLabel] isEqualToString:@"last-identity"]) {

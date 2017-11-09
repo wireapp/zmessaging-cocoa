@@ -44,6 +44,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (__nullable instancetype)lastUserIdentityCantBeRemovedWithResponse:(ZMTransportResponse *)response;
 
++ (__nullable instancetype)invalidActivationCodeWithResponse:(ZMTransportResponse *)response;
+
 @end
 
 NS_ASSUME_NONNULL_END
