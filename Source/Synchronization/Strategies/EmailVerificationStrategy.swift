@@ -24,7 +24,7 @@ public protocol RegistrationStatusDelegate: class {
 }
 
 ///FIXME: rename and save to new file
-final class RegistrationStatus {
+final public class RegistrationStatus {
     var phase : Phase = .none
 
     public weak var delegate: RegistrationStatusDelegate?
@@ -73,14 +73,20 @@ extension RegistrationStatus.Phase: Equatable {
     }
 }
 
-class EmailVerificationStrategy : NSObject {
-    let registrationStatus: RegistrationStatus
-    var singleRequestSync: ZMSingleRequestSync!
+protocol RegistrationStatusProtocol: class {
+    func handleError(_ error: Error)
+    func success()
+    var phase: RegistrationStatus.Phase { get }
+}
 
-    init(status : RegistrationStatus, groupQueue: ZMSGroupQueue) {
+final class EmailVerificationStrategy : NSObject {
+    let registrationStatus: RegistrationStatusProtocol
+    var codeSendingSync: ZMSingleRequestSync!
+
+    init(status : RegistrationStatusProtocol, groupQueue: ZMSGroupQueue) {
         registrationStatus = status
         super.init()
-        singleRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: groupQueue)
+        codeSendingSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: groupQueue)
     }
 }
 
@@ -122,8 +128,8 @@ extension EmailVerificationStrategy : RequestStrategy {
 
         switch (currentStatus.phase) {
         case .verify(email: _):
-            singleRequestSync.readyForNextRequestIfNotBusy()
-            return singleRequestSync.nextRequest()
+            codeSendingSync.readyForNextRequestIfNotBusy()
+            return codeSendingSync.nextRequest()
         default:
             return nil
         }

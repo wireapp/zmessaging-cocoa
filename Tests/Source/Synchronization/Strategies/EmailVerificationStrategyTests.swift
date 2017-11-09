@@ -19,14 +19,30 @@
 import Foundation
 @testable import WireSyncEngine
 
+class TestRegistrationStatus: WireSyncEngine.RegistrationStatusProtocol {
+    var handleErrorCalled = 0
+    var handleErrorError: Error?
+    func handleError(_ error: Error) {
+        handleErrorCalled += 1
+        handleErrorError = error
+    }
+
+    var successCalled = 0
+    func success() {
+        successCalled += 1
+    }
+
+    var phase: WireSyncEngine.RegistrationStatus.Phase = .none
+}
+
 class EmailVerificationStrategyTests : MessagingTest {
 
-    var registrationStatus : WireSyncEngine.RegistrationStatus!
+    var registrationStatus : TestRegistrationStatus!
     var sut : WireSyncEngine.EmailVerificationStrategy!
 
     override func setUp() {
         super.setUp()
-        registrationStatus = WireSyncEngine.RegistrationStatus()
+        registrationStatus = TestRegistrationStatus()
         sut = WireSyncEngine.EmailVerificationStrategy(status : registrationStatus, groupQueue: self.syncMOC)
     }
 
@@ -42,7 +58,7 @@ class EmailVerificationStrategyTests : MessagingTest {
         XCTAssertNil(request);
     }
 
-    func testThatItReturnARequestWhenVerifyEmail(){
+    func testThatItReturnsARequestWhenStateIsVerifyEmail(){
         //given
         let email = "john@smith.com"
         let path = "/activate/send"
@@ -50,14 +66,29 @@ class EmailVerificationStrategyTests : MessagingTest {
                        "locale": NSLocale.formattedLocaleIdentifier()!]
 
         let transportRequest = ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
+        registrationStatus.phase = .verify(email: email)
 
         //when
-        registrationStatus.verify(email: email)
+
         let request = sut.nextRequest()
 
         //then
         XCTAssertNotNil(request);
         XCTAssertEqual(request, transportRequest)
+    }
+
+    func testThatItNotifiesStatusAfterSuccessfulResponseToEmailVerify() {
+        // given
+        let email = "john@smith.com"
+        registrationStatus.phase = .verify(email: email)
+        let response = ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
+
+        // when
+        XCTAssertEqual(registrationStatus.successCalled, 0)
+        sut.didReceive(response, forSingleRequest: sut.codeSendingSync)
+
+        // then
+        XCTAssertEqual(registrationStatus.successCalled, 1)
     }
 
 }
