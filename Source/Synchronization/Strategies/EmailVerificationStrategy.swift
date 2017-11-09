@@ -22,27 +22,37 @@ import Foundation
 class RegistrationStatus {
     var phase : Phase = .none
 
-    /// for UI to verity the email
+    /// for UI to verify the email
     ///
     /// - Parameter email: email to verify
     func verify(email: String) {
         phase = .verify(email: email)
     }
 
-    ///TODO: imp. equalable?
-    enum Phase : Equatable {
-        static func ==(lhs: RegistrationStatus.Phase, rhs: RegistrationStatus.Phase) -> Bool {
-            switch (lhs, rhs) {
-            case let (.verify(l), .verify(r)): return l == r
-            case (.none, .none):
-                return true
+    func handleError(_ error: NSError) {
+        phase = .error(error)
+    }
 
-            default: return false
-            }
-        }
+    func success() {
+        phase = .none
+    }
 
+    enum Phase {
         case verify(email: String)
+        case error(NSError)
         case none
+    }
+}
+
+extension RegistrationStatus.Phase: Equatable {
+    static func ==(lhs: RegistrationStatus.Phase, rhs: RegistrationStatus.Phase) -> Bool {
+        switch (lhs, rhs) {
+        case let (.verify(l), .verify(r)): return l == r
+        case let (.error(l), .error(r)): return l == r
+        case (.none, .none):
+            return true
+        default: return false
+        }
     }
 }
 
@@ -52,13 +62,9 @@ class EmailVerificationStrategy : NSObject {
 
     init(status : RegistrationStatus, groupQueue: ZMSGroupQueue) {
         registrationStatus = status
-
         super.init()
-
         singleRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: groupQueue)
-
     }
-
 }
 
 extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
@@ -80,7 +86,15 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
     }
 
     func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
-        ///TODO: error/success handling
+        if response.result == .permanentError {
+            let error = NSError.blacklistedEmail(with: response) ??
+                NSError.keyExistsError(with: response) ??
+                NSError.invalidEmail(with: response) ??
+                NSError.userSessionErrorWith(.unknownError, userInfo: [:])
+            registrationStatus.handleError(error)
+        } else {
+            registrationStatus.success()
+        }
     }
 
 }
