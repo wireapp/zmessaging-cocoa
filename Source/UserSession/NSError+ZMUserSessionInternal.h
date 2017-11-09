@@ -35,6 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (__nullable instancetype)invalidPhoneVerificationCodeErrorWithResponse:(ZMTransportResponse *)response;
 
++ (__nullable instancetype)blacklistedEmailWithResponse:(ZMTransportResponse *)response;
 + (__nullable instancetype)invalidEmailWithResponse:(ZMTransportResponse *)response;
 + (__nullable instancetype)keyExistsErrorWithResponse:(ZMTransportResponse *)response;
 

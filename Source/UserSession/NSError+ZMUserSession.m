@@ -119,6 +119,14 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
     return nil;
 }
 
++ (instancetype)blacklistedEmailWithResponse:(ZMTransportResponse *)response
+{
+    if (response.HTTPStatus == 403 && [[response payloadLabel] isEqualToString:@"blacklisted-email"]) {
+        return [NSError userSessionErrorWithErrorCode:ZMUserSessionBlacklistedEmail userInfo:nil];
+    }
+    return nil;
+}
+
 + (instancetype)invalidEmailWithResponse:(ZMTransportResponse *)response
 {
     if (response.HTTPStatus == 400 && [[response payloadLabel] isEqualToString:@"invalid-email"]) {

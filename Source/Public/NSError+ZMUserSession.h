@@ -71,7 +71,9 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     /// The user account was deleted
     ZMUserSessionAccountDeleted,
     /// The account can't be created because the account limit has been reached
-    ZMUserSessionAccountLimitReached
+    ZMUserSessionAccountLimitReached,
+    /// The email used in the registration is blacklisted
+    ZMUserSessionBlacklistedEmail
 };
 
 FOUNDATION_EXPORT NSString * const ZMUserSessionErrorDomain;
