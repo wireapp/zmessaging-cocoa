@@ -54,6 +54,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
 @property (nonatomic, weak) SyncStatus *syncStatus;
 @property (nonatomic, weak) id<PushMessageHandler> localNotificationDispatcher;
+@property (nonatomic) NSMutableOrderedSet<ZMConversation *> *lastSyncedActiveConversations;
 
 @end
 
@@ -90,6 +91,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     if (self) {
         self.localNotificationDispatcher = localNotificationDispatcher;
         self.syncStatus = syncStatus;
+        self.lastSyncedActiveConversations = [[NSMutableOrderedSet alloc] init];
         self.modifiedSync = [[ZMUpstreamModifiedObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName updatePredicate:nil filter:nil keysToSync:self.keysToSync managedObjectContext:self.managedObjectContext];
         self.insertedSync = [[ZMUpstreamInsertedObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName managedObjectContext:self.managedObjectContext];
         NSPredicate *conversationPredicate =
@@ -166,7 +168,20 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (void)finishSyncIfCompleted
 {
     if (!self.listPaginator.hasMoreToFetch && self.remoteIDSync.isDone && self.isSyncing) {
+        [self updateSelfUserActiveConversations:self.lastSyncedActiveConversations];
+        [self.lastSyncedActiveConversations removeAllObjects];
         [self.syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
+    }
+}
+
+- (void)updateSelfUserActiveConversations:(NSOrderedSet<ZMConversation *> *)activeConversations
+{
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+    NSMutableOrderedSet *inactiveConversations = [NSMutableOrderedSet orderedSetWithArray:[self.managedObjectContext executeFetchRequestOrAssert:[ZMConversation fetchRequest]]];
+    [inactiveConversations minusOrderedSet:activeConversations];
+    
+    for (ZMConversation *inactiveConversation in inactiveConversations) {
+        [inactiveConversation internalRemoveParticipants:[NSSet setWithObject:selfUser] sender:selfUser];
     }
 }
 
@@ -928,9 +943,16 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
 - (void)deleteObject:(ZMConversation *)conversation withResponse:(ZMTransportResponse *)response downstreamSync:(id<ZMObjectSync>)downstreamSync;
 {
+    // Self user has been removed from the conversation but missed the conversation.member-leave event.
+    if (response.HTTPStatus == 404 && conversation.isSelfAnActiveMember) {
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+        [conversation internalRemoveParticipants:[NSSet setWithObject:selfUser] sender:selfUser];
+    }
+    
     if (response.isPermanentylUnavailableError) {
         conversation.needsToBeUpdatedFromBackend = NO;
     }
+    
     NOT_USED(downstreamSync);
 }
 
@@ -968,6 +990,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     
     for (NSDictionary *rawConversation in [conversations asDictionaries]) {
         ZMConversation *conv = [self createConversationFromTransportData:rawConversation serverTimeStamp:nil];
+        [self.lastSyncedActiveConversations addObject:conv];
         conv.needsToBeUpdatedFromBackend = NO;
     }
     

@@ -787,7 +787,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 
 - (void)testThatItRevertsChangedInactiveParticipantsWhenARequestTimesOut
 {
-    
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // given
@@ -827,10 +826,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                 failureRecorder:NewFailureRecorder()];
         
     }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
 }
-
 
 - (void)createConversation:(ZMConversation **)conversationPointer
                  withUser1:(ZMUser **)user1Pointer
@@ -879,7 +875,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 
 
 @end
-
 
 
 @implementation ZMConversationTranscoderTests (SingleRequestSync)
@@ -1339,17 +1334,51 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }];
 }
 
-
-
-
-
+- (void)testThatItUpdatesActiveConversationsForSelfUserWhenSlowSyncIsDone
+{
+    __block ZMConversation *conversation1;
+    __block ZMConversation *conversation2;
+    
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingConversations;
+        
+        ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user1.remoteIdentifier = [NSUUID createUUID];
+        
+        ZMUser *user2 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user2.remoteIdentifier = [NSUUID createUUID];
+        
+        conversation1 = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2]];
+        conversation1.remoteIdentifier = [NSUUID createUUID];
+        
+        conversation2 = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2]];
+        conversation2.remoteIdentifier = [NSUUID createUUID];
+        
+        [self.syncMOC saveOrRollback];
+        
+        [self setUpSyncWithConversationIDs:@[conversation1.remoteIdentifier.transportString]];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // when
+        ZMTransportRequest *request = [self.sut nextRequest];
+        NSArray *rawConversations = [self createRawConversationsForIds:@[conversation1.remoteIdentifier.transportString]];
+        ZMTransportResponse *response = [self createConversationResponseForRawConversations:rawConversations];
+        [request completeWithResponse:response];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    XCTAssertTrue(conversation1.isSelfAnActiveMember);
+    XCTAssertFalse(conversation2.isSelfAnActiveMember);
+}
 
 @end
 
 
-
 @implementation ZMConversationTranscoderTests (InsertNewConversation)
-
 
 - (void)testThatItGeneratesARequestToGenerateAConversation
 {
@@ -3964,7 +3993,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }];
 }
 
-- (void)testThatItMarkAsSyncedAfterAMissingResourceError
+- (void)testThatItRemovesSelfUserAndMarkAsSyncedAfterAMissingResourceError
 {
     __block ZMConversation *conversation;
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -3976,6 +4005,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.conversationType = ZMConversationTypeGroup;
         conversation.remoteIdentifier = [NSUUID createUUID];
         conversation.needsToBeUpdatedFromBackend = YES;
+        conversation.isSelfAnActiveMember = YES;
         [self.syncMOC saveOrRollback];
         
         for (id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
@@ -3993,6 +4023,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [self.syncMOC performGroupedBlockAndWait:^{
         // then
         XCTAssertFalse(conversation.needsToBeUpdatedFromBackend);
+        XCTAssertFalse(conversation.isSelfAnActiveMember);
         XCTAssertFalse([conversation hasLocalModificationsForKey:ZMConversationIsSelfAnActiveMemberKey]);
         
         // and when
@@ -4130,4 +4161,3 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 }
 
 @end
-
