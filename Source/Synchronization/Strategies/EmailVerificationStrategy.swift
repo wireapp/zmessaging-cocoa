@@ -18,28 +18,46 @@
 
 import Foundation
 
+protocol RegistrationStatusDelegate: class {
+    func emailVerificationCodeSent()
+    func emailVerificationCodeSendingFailed(with error: Error)
+}
+
 ///FIXME: rename and save to new file
-class RegistrationStatus {
+final class RegistrationStatus {
     var phase : Phase = .none
+
+    public weak var delegate: RegistrationStatusDelegate?
 
     /// for UI to verify the email
     ///
     /// - Parameter email: email to verify
-    func verify(email: String) {
+    public func verify(email: String) {
         phase = .verify(email: email)
     }
 
-    func handleError(_ error: NSError) {
-        phase = .error(error)
+    func handleError(_ error: Error) {
+        switch phase {
+        case .verify:
+            delegate?.emailVerificationCodeSendingFailed(with: error)
+        case .none:
+            break
+        }
+        phase = .none
     }
 
     func success() {
+        switch phase {
+        case .verify:
+            delegate?.emailVerificationCodeSent()
+        case .none:
+            break
+        }
         phase = .none
     }
 
     enum Phase {
         case verify(email: String)
-        case error(NSError)
         case none
     }
 }
@@ -48,7 +66,6 @@ extension RegistrationStatus.Phase: Equatable {
     static func ==(lhs: RegistrationStatus.Phase, rhs: RegistrationStatus.Phase) -> Bool {
         switch (lhs, rhs) {
         case let (.verify(l), .verify(r)): return l == r
-        case let (.error(l), .error(r)): return l == r
         case (.none, .none):
             return true
         default: return false
