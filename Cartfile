@@ -1,2 +1,2 @@
-github "wireapp/wire-ios-message-strategy" ~> 67.0
+github "wireapp/wire-ios-message-strategy" ~> 68.0
 github "wireapp/avs-ios-binaries" "3.6.117"

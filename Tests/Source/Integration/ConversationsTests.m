@@ -631,17 +631,10 @@
 {
     // given
     XCTAssertTrue([self login]);
-    
-    ZMConversation *conversation1 = [self conversationForMockConversation:self.selfToUser1Conversation];
-    ZMConversation *conversation2 = [self conversationForMockConversation:self.selfToUser2Conversation];
-    ZMConversation *conversation3 = [self conversationForMockConversation:self.groupConversation];
-    ZMConversation *conversation4 = [self conversationForMockConversation:self.groupConversationWithOnlyConnected];
-    
+        
     // I am faulting conversation, will maintain the "message" relations as faulted
     ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     
-    NSArray *expectedList1 = @[conversation4, conversation3, conversation2, conversation1];
-    XCTAssertEqualObjects(conversationList, expectedList1);
     XCTAssertEqual(conversationList.count, 4u);
     
     ConversationListChangeObserver *observer = [[ConversationListChangeObserver alloc] initWithConversationList:conversationList];
@@ -655,16 +648,10 @@
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
-        NSArray *expectedList2 = @[conversation1, conversation4, conversation3, conversation2];
         NSIndexSet *updatedIndexes2 = [NSIndexSet indexSetWithIndex:0];
-        NSArray *movedIndexes2 = @[[[ZMMovedIndex alloc] initFrom:3 to:0]];
-        
-        XCTAssertEqualObjects(conversationList, expectedList2);
-        
         XCTAssertEqual(observer.notifications.count, 1u);
         ConversationListChangeInfo *note1 = observer.notifications.lastObject;
         XCTAssertEqualObjects(note1.updatedIndexes, updatedIndexes2);
-        XCTAssertEqualObjects([self movedIndexPairsForChangeSet:note1], movedIndexes2);
     }
 }
 
@@ -729,8 +716,6 @@
             [self.groupConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
             [NSThread sleepForTimeInterval:0.002]; // SE has milisecond precision
         }
-        
-        self.groupConversation.lastRead = ((MockEvent *)self.groupConversation.events.lastObject).identifier;
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -931,7 +916,7 @@
     }
     XCTAssertEqual(updatesCount, 1);
     XCTAssertEqual(moves.count, 1u);
-    XCTAssertEqual([(ZMMovedIndex *)moves.firstObject from], 2u);
+    XCTAssertEqual([(ZMMovedIndex *)moves.firstObject from], 1u);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject to], 0u);
 }
 
@@ -959,7 +944,7 @@
 }
 
 
-- (void)testThatLatestConversationIsAlwyaysOnTop
+- (void)testThatLatestConversationIsAlwaysOnTop
 {
     // given
     XCTAssertTrue([self login]);
@@ -969,16 +954,11 @@
     (void) conversation1.messages; // Make sure we've faulted in the messages
     ZMConversation *conversation2 = [self conversationForMockConversation:self.selfToUser2Conversation];
     (void) conversation2.messages; // Make sure we've faulted in the messages
-    ZMConversation *conversation3 = [self conversationForMockConversation:self.groupConversation];
-    ZMConversation *conversation4 = [self conversationForMockConversation:self.groupConversationWithOnlyConnected];
     
     MockUserClient *toClient = self.selfUser.clients.anyObject;
 
     XCTAssertNotNil(conversation1);
     XCTAssertNotNil(conversation2);
-    
-    NSArray *expectedList1 = @[conversation4, conversation3, conversation2, conversation1];
-    XCTAssertEqualObjects(conversationList, expectedList1);
     
     NSString *messageText1 = @"some message";
     NSString *messageText2 = @"some other message";
@@ -1001,10 +981,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    NSArray *expectedList2 = @[conversation1, conversation4, conversation3, conversation2];
     NSIndexSet *expectedIndexes2 = [NSIndexSet indexSetWithIndex:0];
     
-    XCTAssertEqualObjects(conversationList, expectedList2);
     XCTAssertEqual(conversationList[0], conversation1);
     
     XCTAssertGreaterThanOrEqual(observer.notifications.count, 1u);
@@ -1023,10 +1001,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    NSArray *expectedList3 = @[conversation2, conversation1, conversation4, conversation3];
     NSIndexSet *expectedIndexes3 = [NSIndexSet indexSetWithIndex:0];
     
-    XCTAssertEqualObjects(conversationList, expectedList3);
     XCTAssertEqual(conversationList[0], conversation2);
     
     XCTAssertGreaterThanOrEqual(observer.notifications.count, 2u);
@@ -1046,10 +1022,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    NSArray *expectedList4 = @[conversation1, conversation2, conversation4, conversation3];
     NSIndexSet *expectedIndexes4 = [NSIndexSet indexSetWithIndex:0];
     
-    XCTAssertEqualObjects(conversationList, expectedList4);
     XCTAssertEqual(conversationList[0], conversation1);
     XCTAssertGreaterThanOrEqual(observer.notifications.count, 3u);
     
@@ -1068,8 +1042,15 @@
     
     ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     ConversationListChangeObserver *conversationListChangeObserver = [[ConversationListChangeObserver alloc] initWithConversationList:conversationList];
-    
     ZMConversation *oneToOneConversation = [self conversationForMockConversation:self.selfToUser1Conversation];
+    
+    // make sure oneToOneConversation is not on top
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        NOT_USED(session);
+        [self.selfToUser2Conversation insertKnockFromUser:self.user2 nonce:[NSUUID createUUID]];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
     XCTAssertNotEqual(oneToOneConversation, conversationList[0]); // make sure conversation is not on top
     
     NSUInteger oneToOneIndex = [conversationList indexOfObject:oneToOneConversation];
@@ -1208,11 +1189,12 @@
 {
     {
         // given
+        NSDate *previousArchivedDate = [NSDate dateWithTimeIntervalSince1970:-1];
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
             // set last read
             NOT_USED(session);
             self.groupConversation.otrArchived = NO;
-            self.groupConversation.otrArchivedRef = [[self.groupConversation.lastEventTime dateByAddingTimeInterval:-100] transportString];
+            self.groupConversation.otrArchivedRef = previousArchivedDate.transportString;
         }];
         
         XCTAssertTrue([self login]);
@@ -1609,8 +1591,6 @@
         NOT_USED(session);
         ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Will insert this to have a message to read" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
-        MockEvent *lastEvent = self.selfToUser1Conversation.events.lastObject;
-        self.selfToUser1Conversation.lastRead = lastEvent.identifier;
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1895,7 +1875,7 @@
     // when deleting the conversation remotely
     {
         [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-            [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:YES];
+            [self.groupConversation remotelyArchiveFromUser:self.selfUser referenceDate:[NSDate date]];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         [self remotelyAppendSelfConversationWithZMClearedForMockConversation:self.groupConversation atTime:conversation.lastServerTimeStamp];
@@ -1952,7 +1932,7 @@
     NSManagedObjectID *conversationID = conversation.objectID;
     
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:YES];
+        [self.groupConversation remotelyArchiveFromUser:self.selfUser referenceDate:[NSDate date]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1977,7 +1957,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:YES];
+        [self.groupConversation remotelyArchiveFromUser:self.selfUser referenceDate:[NSDate date]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1996,7 +1976,7 @@
     
     // when archiving the conversation remotely
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:YES];
+        [self.groupConversation remotelyArchiveFromUser:self.selfUser referenceDate:[NSDate date]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -2018,7 +1998,7 @@
     // when deleting the conversation remotely, whiping the cache and resyncing
     {
         [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-            [self.groupConversation remotelyArchiveFromUser:self.selfUser includeOTR:YES];
+            [self.groupConversation remotelyArchiveFromUser:self.selfUser referenceDate:[NSDate date]];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         
