@@ -18,7 +18,7 @@
 
 import Foundation
 
-protocol RegistrationStatusDelegate: class {
+public protocol RegistrationStatusDelegate: class {
     func emailVerificationCodeSent()
     func emailVerificationCodeSendingFailed(with error: Error)
 }
