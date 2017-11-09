@@ -91,4 +91,43 @@ class EmailVerificationStrategyTests : MessagingTest {
         XCTAssertEqual(registrationStatus.successCalled, 1)
     }
 
+    func testThatItNotifiesStatusAfterErrorToEmailVerify_BlacklistEmail() {
+        checkResponseError(with: .blacklistedEmail, errorLabel: "blacklisted-email", httpStatus: 403)
+    }
+
+    func testThatItNotifiesStatusAfterErrorToEmailVerify_EmailExists() {
+        checkResponseError(with: .emailIsAlreadyRegistered, errorLabel: "key-exists", httpStatus: 409)
+    }
+
+    func testThatItNotifiesStatusAfterErrorToEmailVerify_InvalidEmail() {
+        checkResponseError(with: .invalidEmail, errorLabel: "invalid-email", httpStatus: 400)
+    }
+
+    func testThatItNotifiesStatusAfterErrorToEmailVerify_OtherError() {
+        checkResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
+    }
+
+    func checkResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
+        // given
+        let email = "john@smith.com"
+        registrationStatus.phase = .verify(email: email)
+
+        let expectedError = NSError.userSessionErrorWith(code, userInfo: [:])
+        let payload = [
+            "label": errorLabel,
+            "message":"some"
+        ]
+        let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: httpStatus, transportSessionError: nil)
+
+        // when
+        XCTAssertEqual(registrationStatus.successCalled, 0, "Success should not be called", file: file, line: line)
+        XCTAssertEqual(registrationStatus.handleErrorCalled, 0, "HandleError should not be called", file: file, line: line)
+        sut.didReceive(response, forSingleRequest: sut.codeSendingSync)
+
+        // then
+        XCTAssertEqual(registrationStatus.successCalled, 0, "Success should not be called", file: file, line: line)
+        XCTAssertEqual(registrationStatus.handleErrorCalled, 1, "HandleError should be called", file: file, line: line)
+        XCTAssertEqual(registrationStatus.handleErrorError as NSError?, expectedError, "HandleError should be called with error: \(expectedError), but was \(registrationStatus.handleErrorError?.localizedDescription ?? "nil")", file: file, line: line)
+    }
+
 }

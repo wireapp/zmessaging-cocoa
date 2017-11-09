@@ -18,66 +18,6 @@
 
 import Foundation
 
-public protocol RegistrationStatusDelegate: class {
-    func emailVerificationCodeSent()
-    func emailVerificationCodeSendingFailed(with error: Error)
-}
-
-///FIXME: rename and save to new file
-final public class RegistrationStatus {
-    var phase : Phase = .none
-
-    public weak var delegate: RegistrationStatusDelegate?
-
-    /// for UI to verify the email
-    ///
-    /// - Parameter email: email to verify
-    public func verify(email: String) {
-        phase = .verify(email: email)
-    }
-
-    func handleError(_ error: Error) {
-        switch phase {
-        case .verify:
-            delegate?.emailVerificationCodeSendingFailed(with: error)
-        case .none:
-            break
-        }
-        phase = .none
-    }
-
-    func success() {
-        switch phase {
-        case .verify:
-            delegate?.emailVerificationCodeSent()
-        case .none:
-            break
-        }
-        phase = .none
-    }
-
-    enum Phase {
-        case verify(email: String)
-        case none
-    }
-}
-
-extension RegistrationStatus.Phase: Equatable {
-    static func ==(lhs: RegistrationStatus.Phase, rhs: RegistrationStatus.Phase) -> Bool {
-        switch (lhs, rhs) {
-        case let (.verify(l), .verify(r)): return l == r
-        case (.none, .none):
-            return true
-        default: return false
-        }
-    }
-}
-
-protocol RegistrationStatusProtocol: class {
-    func handleError(_ error: Error)
-    func success()
-    var phase: RegistrationStatus.Phase { get }
-}
 
 final class EmailVerificationStrategy : NSObject {
     let registrationStatus: RegistrationStatusProtocol
@@ -102,21 +42,21 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
             payload = ["email": email,
                        "locale": NSLocale.formattedLocaleIdentifier()!]
         default:
-            return nil
+            fatal("Generating request for invalid phase: \(currentStatus.phase)")
         }
 
         return ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
     }
 
     func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
-        if response.result == .permanentError {
+        if response.result == .success {
+            registrationStatus.success()
+        } else {
             let error = NSError.blacklistedEmail(with: response) ??
-                NSError.keyExistsError(with: response) ??
+                NSError.emailAddressInUse(with: response) ??
                 NSError.invalidEmail(with: response) ??
                 NSError.userSessionErrorWith(.unknownError, userInfo: [:])
             registrationStatus.handleError(error)
-        } else {
-            registrationStatus.success()
         }
     }
 
@@ -124,17 +64,12 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
 
 extension EmailVerificationStrategy : RequestStrategy {
     func nextRequest() -> ZMTransportRequest? {
-        let currentStatus = registrationStatus
-
-        switch (currentStatus.phase) {
-        case .verify(email: _):
+        switch (registrationStatus.phase) {
+        case .verify:
             codeSendingSync.readyForNextRequestIfNotBusy()
             return codeSendingSync.nextRequest()
         default:
             return nil
         }
-
     }
-
-
 }
