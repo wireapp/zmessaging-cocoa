@@ -112,9 +112,6 @@ ZM_EMPTY_ASSERTING_INIT()
         storeProvider.contextDirectory.syncContext.analytics = analytics;
     }];
 
-    [[BackgroundActivityFactory sharedInstance] setApplication:[UIApplication sharedApplication]]; // TODO make BackgroundActivityFactory work with ZMApplication
-    [[BackgroundActivityFactory sharedInstance] setMainGroupQueue:storeProvider.contextDirectory.uiContext];
-    
     RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];
     
     if ([transportSession respondsToSelector:@selector(setRequestLoopDetectionCallback:)]) {
