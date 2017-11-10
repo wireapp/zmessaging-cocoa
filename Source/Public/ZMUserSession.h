@@ -116,20 +116,11 @@ extern NSString * const ZMTransportRequestLoopNotificationName;
 /// Top conversation directory
 @property (nonatomic, readonly) TopConversationsDirectory *topConversationsDirectory;
 
-/// CallKit delegate
-@property (nonatomic, readonly) CallKitDelegate *callKitDelegate;
-
-/// The URL of the shared container that has been determinned using the passed in application group identifier
-//@property (nonatomic, readonly) NSURL *sharedContainerURL;
-
 /// The sync has been completed as least once
 @property (nonatomic, readonly) BOOL hasCompletedInitialSync;
 
 /// Request the push token from iOS and send it to the backend.
 - (void)registerForRemoteNotifications;
-
-/// Session can notify about the background calls via iOS CallKit or using the push notifications.
-@property (nonatomic) ZMCallNotificationStyle callNotificationStyle;
 
 @end
 

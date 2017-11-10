@@ -621,7 +621,7 @@ public struct CallEvent {
         updateSnapshots(forCallSate: callState, conversationId: conversationId, userId: userId)
         
         if let context = uiMOC {
-            WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId, messageTime: messageTime).post(in: context.notificationContext)
+            WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, userId: userId, messageTime: messageTime).post(in: context.notificationContext)
         }
     }
     
@@ -651,7 +651,7 @@ public struct CallEvent {
         zmLog.debug("missed call")
         
         if let context = uiMOC {
-            WireCallCenterMissedCallNotification(conversationId: conversationId, userId:userId, timestamp: timestamp, video: isVideoCall).post(in: context.notificationContext)
+            WireCallCenterMissedCallNotification(context: context, conversationId: conversationId, userId:userId, timestamp: timestamp, video: isVideoCall).post(in: context.notificationContext)
         }
     }
     
@@ -680,7 +680,7 @@ public struct CallEvent {
             }
             
             if let context = uiMOC {
-                WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: self.selfUserId, messageTime:nil).post(in: context.notificationContext)
+                WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, userId: self.selfUserId, messageTime:nil).post(in: context.notificationContext)
             }
         }
         return answered
@@ -699,7 +699,7 @@ public struct CallEvent {
             createSnapshot(callState: callState, video: video, for: conversationId)
             
             if let context = uiMOC {
-                WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: selfUserId, messageTime:nil).post(in: context.notificationContext)
+                WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, userId: selfUserId, messageTime:nil).post(in: context.notificationContext)
             }
         }
         return started
@@ -850,7 +850,7 @@ extension WireCallCenterV3 : ZMConversationObserver {
             callSnapshots[conversationId] = previousSnapshot.update(with: updatedCallState)
             
             if let context = uiMOC {
-                WireCallCenterCallStateNotification(callState: updatedCallState, conversationId: conversationId, userId: selfUserId, messageTime: Date()).post(in: context.notificationContext)
+                WireCallCenterCallStateNotification(context: context, callState: updatedCallState, conversationId: conversationId, userId: selfUserId, messageTime: Date()).post(in: context.notificationContext)
             }
         }
     }

@@ -111,7 +111,9 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
 {
     NOT_USED(application);
     NOT_USED(restorationHandler);
-    return [self.callKitDelegate continueUserActivity:userActivity];
+    NOT_USED(userActivity);
+    return NO;
+//    return [self.callKitDelegate continueUserActivity:userActivity]; // FIXME jacob, which logic to use here?
 }
 
 - (void)applicationDidEnterBackground:(NSNotification *)note;

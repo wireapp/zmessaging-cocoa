@@ -58,7 +58,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @interface ZMUserSession ()
 
 @property (nonatomic, readonly) id<ZMApplication> application;
-@property (nonatomic) CallKitDelegate *callKitDelegate;
 @property (nonatomic) ZMCallStateObserver *callStateObserver;
 @property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
 @property (nonatomic) ManagedObjectContextChangeObserver *messageReplyObserver;

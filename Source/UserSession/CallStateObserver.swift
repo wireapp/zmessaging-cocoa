@@ -82,7 +82,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                 }
             }
             
-            if (self.userSession?.callNotificationStyle ?? .callKit) == .pushNotifications {
+            if (self.userSession?.sessionManager.callNotificationStyle ?? .callKit) == .pushNotifications {
                 self.localNotificationDispatcher.process(callState: callState, in: conversation, sender: user)
             }
             
@@ -150,7 +150,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                     return
             }
             
-            if (self.userSession?.callNotificationStyle ?? .callKit) == .pushNotifications {
+            if (self.userSession?.sessionManager.callNotificationStyle ?? .callKit) == .pushNotifications {
                 self.localNotificationDispatcher.processMissedCall(in: conversation, sender: user)
             }
             

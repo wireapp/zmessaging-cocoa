@@ -20,6 +20,7 @@ import Foundation
 import avs
 import WireTransport
 import WireUtilities
+import CallKit
 
 
 private let log = ZMSLog(tag: "SessionManager")
@@ -135,8 +136,20 @@ public protocol LocalNotificationResponder : class {
     fileprivate let dispatchGroup: ZMSDispatchGroup?
     fileprivate var accountTokens : [UUID : [Any]] = [:]
     fileprivate var memoryWarningObserver: NSObjectProtocol?
+    fileprivate var isSelectingAccount : Bool = false
     
     private static var token: Any?
+    
+    private var _callKitDelegate : AnyObject?
+    @available(iOS 10.0, *)
+    internal var callKitDelegate : CallKitDelegate? {
+        get {
+            return _callKitDelegate as? CallKitDelegate
+        }
+        set {
+            _callKitDelegate = newValue
+        }
+    }
     
     /// The entry point for SessionManager; call this instead of the initializers.
     ///
@@ -322,7 +335,7 @@ public protocol LocalNotificationResponder : class {
 
     private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
         loadSession(for: account) { [weak self] session in
-            guard let `self` = self else { return }
+            guard let `self` = self, let session = session else { return }
             self.updateCurrentAccount(in: session.managedObjectContext)
             session.application(self.application, didFinishLaunchingWithOptions: launchOptions)
             (launchOptions[.url] as? URL).apply(session.didLaunch)
@@ -333,12 +346,20 @@ public protocol LocalNotificationResponder : class {
     /// - completion: runs when the user session was loaded
     /// - tearDownCompletion: runs when the UI no longer holds any references to the previous user session.
     public func select(_ account: Account, completion: ((ZMUserSession)->())? = nil, tearDownCompletion: (() -> Void)? = nil) {
+        guard !isSelectingAccount else { return }
+        
+        isSelectingAccount = true
+        
         delegate?.sessionManagerWillOpenAccount(account, userSessionCanBeTornDown: { [weak self] in
             self?.activeUserSession = nil
             tearDownCompletion?()
             self?.loadSession(for: account) { [weak self] session in
-                self?.accountManager.select(account)
-                completion?(session)
+                self?.isSelectingAccount = false
+                
+                if let session = session {
+                    self?.accountManager.select(account)
+                    completion?(session)
+                }
             }
         })
     }
@@ -391,10 +412,11 @@ public protocol LocalNotificationResponder : class {
     }
 
     /// Loads a session for a given account.
-    internal func loadSession(for selectedAccount: Account?, completion: @escaping (ZMUserSession) -> Void) {
+    internal func loadSession(for selectedAccount: Account?, completion: @escaping (ZMUserSession?) -> Void) {
         guard let account = selectedAccount, account.isAuthenticated else {
             createUnauthenticatedSession()
             delegate?.sessionManagerDidFailToLogin(account: selectedAccount, error: NSError.userSessionErrorWith(.accessTokenExpired, userInfo: nil))
+            completion(nil)
             return
         }
 
@@ -465,7 +487,6 @@ public protocol LocalNotificationResponder : class {
         require(self.backgroundUserSessions[account.userIdentifier] == nil, "User session is already loaded")
         self.backgroundUserSessions[account.userIdentifier] = userSession
         pushDispatcher.add(client: userSession)
-        userSession.callNotificationStyle = callNotificationStyle
         userSession.useConstantBitRateAudio = useConstantBitRateAudio
 
         registerObservers(account: account, session: userSession)
@@ -557,7 +578,23 @@ public protocol LocalNotificationResponder : class {
 
     public var callNotificationStyle: ZMCallNotificationStyle = .callKit {
         didSet {
-            activeUserSession?.callNotificationStyle = callNotificationStyle
+            if #available(iOS 10.0, *) {
+                updateCallNotificationStyle()
+            }
+        }
+    }
+    
+    @available(iOS 10.0, *)
+    private func updateCallNotificationStyle() {
+        switch callNotificationStyle {
+        case .pushNotifications:
+            authenticatedSessionFactory.mediaManager.setUiStartsAudio(false)
+            callKitDelegate = nil
+        case .callKit:
+            // Should be set to true when CallKit is used. Then AVS will not start
+            // the audio before the audio session is active
+            authenticatedSessionFactory.mediaManager.setUiStartsAudio(true)
+            callKitDelegate = CallKitDelegate(sessionManager: self, flowManager: authenticatedSessionFactory.flowManager, mediaManager: authenticatedSessionFactory.mediaManager)
         }
     }
     
@@ -723,6 +760,7 @@ extension SessionManager: ZMConversationListObserver {
     
     @objc fileprivate func applicationWillEnterForeground(_ note: Notification) {
         updateAllUnreadCounts()
+        switchToActiveCallConversation()
     }
     
     public func conversationListDidChange(_ changeInfo: ConversationListChangeInfo) {
@@ -749,6 +787,15 @@ extension SessionManager: ZMConversationListObserver {
     fileprivate func updateAllUnreadCounts() {
         for accountID in backgroundUserSessions.keys {
             updateUnreadCount(for: accountID)
+        }
+    }
+    
+    fileprivate func switchToActiveCallConversation() {
+        for userSession in backgroundUserSessions.values {
+            if let conversation =  userSession.callCenter?.activeCallConversations(in: userSession).first {
+                self.userSession(userSession, show: conversation)
+                break
+            }
         }
     }
     
