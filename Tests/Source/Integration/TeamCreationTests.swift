@@ -35,6 +35,8 @@ class TeamCreationTests : IntegrationTest {
         super.tearDown()
     }
 
+
+    //MARK:- send activation code tests
     func testThatIsActivationCodeIsSentToSpecifiedEmail(){
         // Given
         let email = "john@smith.com"
@@ -74,5 +76,25 @@ class TeamCreationTests : IntegrationTest {
 
         XCTAssertNotNil(error)
         XCTAssertEqual(error?.code, Int(ZMUserSessionErrorCode.emailIsAlreadyRegistered.rawValue))
+    }
+
+    //MARK:- check activation code tests
+    func testThatIsActivationCodeIsVerifiedToSpecifiedEmail(){
+        // Given
+        let email = "john@smith.com"
+        self.mockTransportSession.performRemoteChanges { (session) in
+            session.whiteListEmail(email)
+        }
+        let code = self.mockTransportSession.emailActivationCode
+        XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 0)
+        XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 0)
+
+        // When
+        sessionManager?.unauthenticatedSession?.registrationStatus.checkActivationCode(email: email, code: code)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // Then
+        XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 1)
+        XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 0)
     }
 }
