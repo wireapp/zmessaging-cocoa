@@ -35,43 +35,58 @@ public protocol RegistrationStatusDelegate: class {
 
 final public class RegistrationStatus {
     var phase : Phase = .none
+    unowned let groupQueue: ZMSGroupQueue
 
     public weak var delegate: RegistrationStatusDelegate?
 
-    /// Used to start email verificiation process by sending an email with verification
+    init(groupQueue: ZMSGroupQueue) {
+        self.groupQueue = groupQueue
+    }
+
+    /// Used for start email verificiation process by sending an email with verification
     /// code to supplied address.
     ///
-    /// - Parameter email: email address to send verification code to
+    /// - Parameter email: email address to send activation code to
     public func sendActivationCode(to email: String) {
         phase = .sendActivationCode(email: email)
     }
 
+
+    /// For checking the activation code (receive form email sent form backend) with email
+    ///
+    /// - Parameters:
+    /// - Parameter email: email address to check activation code of
+    ///   - code: activation code to check
     public func checkActivationCode(email: String, code: String) {
         phase = .checkActivationCode(email: email, code: code)
     }
 
     func handleError(_ error: Error) {
-        switch phase {
-        case .sendActivationCode:
-            delegate?.emailActivationCodeSendingFailed(with: error)
-        case .checkActivationCode:
-            delegate?.emailActivationCodeValidationFailed(with: error)
-        case .none:
-            break
+        groupQueue.performGroupedBlock {
+            switch self.phase {
+            case .sendActivationCode:
+                self.delegate?.emailActivationCodeSendingFailed(with: error)
+            case .checkActivationCode:
+                self.delegate?.emailActivationCodeValidationFailed(with: error)
+            case .none:
+                break
+            }
+            self.phase = .none
         }
-        phase = .none
     }
 
     func success() {
-        switch phase {
-        case .sendActivationCode:
-            delegate?.emailActivationCodeSent()
-        case .checkActivationCode:
-            delegate?.emailActivationCodeValidated()
-        case .none:
-            break
+        groupQueue.performGroupedBlock {
+            switch self.phase {
+            case .sendActivationCode:
+                self.delegate?.emailActivationCodeSent()
+            case .checkActivationCode:
+                self.delegate?.emailActivationCodeValidated()
+            case .none:
+                break
+            }
+            self.phase = .none
         }
-        phase = .none
     }
 
     enum Phase {
@@ -100,4 +115,8 @@ protocol RegistrationStatusProtocol: class {
     func handleError(_ error: Error)
     func success()
     var phase: RegistrationStatus.Phase { get }
+}
+
+extension RegistrationStatus: RegistrationStatusProtocol {
+
 }
