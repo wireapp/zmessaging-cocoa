@@ -43,7 +43,7 @@ class EmailVerificationStrategyTests : MessagingTest {
     override func setUp() {
         super.setUp()
         registrationStatus = TestRegistrationStatus()
-        sut = WireSyncEngine.EmailVerificationStrategy(status : registrationStatus, groupQueue: self.syncMOC)
+        sut = WireSyncEngine.EmailVerificationStrategy(groupQueue: self.syncMOC, status: registrationStatus)
     }
 
     override func tearDown() {

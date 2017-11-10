@@ -23,7 +23,7 @@ final class EmailVerificationStrategy : NSObject {
     let registrationStatus: RegistrationStatusProtocol
     var codeSendingSync: ZMSingleRequestSync!
 
-    init(status : RegistrationStatusProtocol, groupQueue: ZMSGroupQueue) {
+    init(groupQueue: ZMSGroupQueue, status : RegistrationStatusProtocol) {
         registrationStatus = status
         super.init()
         codeSendingSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: groupQueue)
