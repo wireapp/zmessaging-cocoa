@@ -21,16 +21,16 @@ import Foundation
 /// Used to signal changes to the registration state
 public protocol RegistrationStatusDelegate: class {
     /// Verify email should be sent with code
-    func emailVerificationCodeSent()
+    func emailActivationCodeSent()
 
     /// Failed sending email verification code
-    func emailVerificationCodeSendingFailed(with error: Error)
+    func emailActivationCodeSendingFailed(with error: Error)
 
     /// code activated sucessfully
-    func emailActivated()
+    func emailActivationCodeValidated()
 
     /// Failed sending email verification code
-    func emailActivationFailed(with error: Error)
+    func emailActivationCodeValidationFailed(with error: Error)
 }
 
 final public class RegistrationStatus {
@@ -42,20 +42,20 @@ final public class RegistrationStatus {
     /// code to supplied address.
     ///
     /// - Parameter email: email address to send verification code to
-    public func verify(email: String) {
-        phase = .verify(email: email)
+    public func sendActivationCode(to email: String) {
+        phase = .sendActivationCode(email: email)
     }
 
-    public func activate(email: String, code: String) {
-        phase = .activate(email: email, code: code)
+    public func checkActivationCode(email: String, code: String) {
+        phase = .checkActivationCode(email: email, code: code)
     }
 
     func handleError(_ error: Error) {
         switch phase {
-        case .verify:
-            delegate?.emailVerificationCodeSendingFailed(with: error)
-        case .activate:
-            delegate?.emailActivationFailed(with: error)
+        case .sendActivationCode:
+            delegate?.emailActivationCodeSendingFailed(with: error)
+        case .checkActivationCode:
+            delegate?.emailActivationCodeValidationFailed(with: error)
         case .none:
             break
         }
@@ -64,10 +64,10 @@ final public class RegistrationStatus {
 
     func success() {
         switch phase {
-        case .verify:
-            delegate?.emailVerificationCodeSent()
-        case .activate:
-            delegate?.emailActivated()
+        case .sendActivationCode:
+            delegate?.emailActivationCodeSent()
+        case .checkActivationCode:
+            delegate?.emailActivationCodeValidated()
         case .none:
             break
         }
@@ -75,8 +75,8 @@ final public class RegistrationStatus {
     }
 
     enum Phase {
-        case verify(email: String)
-        case activate(email: String, code: String)
+        case sendActivationCode(email: String)
+        case checkActivationCode(email: String, code: String)
         case none
     }
 }
@@ -84,9 +84,9 @@ final public class RegistrationStatus {
 extension RegistrationStatus.Phase: Equatable {
     static func ==(lhs: RegistrationStatus.Phase, rhs: RegistrationStatus.Phase) -> Bool {
         switch (lhs, rhs) {
-        case let (.verify(l), .verify(r)):
+        case let (.sendActivationCode(l), .sendActivationCode(r)):
             return l == r
-        case let (.activate(l, lCode), .activate(r, rCode)):
+        case let (.checkActivationCode(l, lCode), .checkActivationCode(r, rCode)):
             return l == r && lCode == rCode
         case (.none, .none):
             return true

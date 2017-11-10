@@ -60,7 +60,7 @@ class EmailVerificationStrategyTests : MessagingTest {
         XCTAssertNil(request);
     }
 
-    // MARK:- Verification tests
+    // MARK:- Send activation code tests
 
     func testThatItReturnsARequestWhenStateIsVerifyEmail(){
         //given
@@ -70,7 +70,7 @@ class EmailVerificationStrategyTests : MessagingTest {
                        "locale": NSLocale.formattedLocaleIdentifier()!]
 
         let transportRequest = ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
-        registrationStatus.phase = .verify(email: email)
+        registrationStatus.phase = .sendActivationCode(email: email)
 
         //when
 
@@ -84,7 +84,7 @@ class EmailVerificationStrategyTests : MessagingTest {
     func testThatItNotifiesStatusAfterSuccessfulResponseToEmailVerify() {
         // given
         let email = "john@smith.com"
-        registrationStatus.phase = .verify(email: email)
+        registrationStatus.phase = .sendActivationCode(email: email)
         let response = ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
 
         // when
@@ -95,7 +95,7 @@ class EmailVerificationStrategyTests : MessagingTest {
         XCTAssertEqual(registrationStatus.successCalled, 1)
     }
 
-    // MARK:- Activation tests
+    // MARK:- Check activation code tests
 
     func testThatItReturnsARequestWhenStateIsactivateEmail(){
         //given
@@ -107,7 +107,7 @@ class EmailVerificationStrategyTests : MessagingTest {
                        "dryrun": true] as [String : Any]
 
         let transportRequest = ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
-        registrationStatus.phase = .activate(email: email, code: code)
+        registrationStatus.phase = .checkActivationCode(email: email, code: code)
 
         //when
 
@@ -122,7 +122,7 @@ class EmailVerificationStrategyTests : MessagingTest {
         // given
         let email = "john@smith.com"
         let code = "123456"
-        registrationStatus.phase = .activate(email: email, code: code)
+        registrationStatus.phase = .checkActivationCode(email: email, code: code)
         let response = ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
 
         // when
@@ -165,7 +165,7 @@ class EmailVerificationStrategyTests : MessagingTest {
     func checkVerificationResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
         // given
         let email = "john@smith.com"
-        let phase: RegistrationStatus.Phase = .verify(email: email)
+        let phase: RegistrationStatus.Phase = .sendActivationCode(email: email)
 
         // when & then
         checkResponseError(with: phase, code: code, errorLabel: errorLabel, httpStatus: httpStatus)
@@ -175,7 +175,7 @@ class EmailVerificationStrategyTests : MessagingTest {
         // given
         let email = "john@smith.com"
         let activationCode = "123456"
-        let phase: RegistrationStatus.Phase = .activate(email: email, code: activationCode)
+        let phase: RegistrationStatus.Phase = .checkActivationCode(email: email, code: activationCode)
 
         // when & then
         checkResponseError(with: phase, code: code, errorLabel: errorLabel, httpStatus: httpStatus)

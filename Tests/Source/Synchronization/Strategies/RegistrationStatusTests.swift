@@ -10,29 +10,30 @@ import Foundation
 @testable import WireSyncEngine
 
 class TestRegistrationStatusDelegate: RegistrationStatusDelegate {
-    var emailActivatedCalled = 0
-    func emailActivated() {
-        emailActivatedCalled += 1
+
+    var emailActivationCodeSentCalled = 0
+    func emailActivationCodeSent() {
+        emailActivationCodeSentCalled += 1
     }
 
-    var emailActivationFailedCalled = 0
-    var emailActivationFailedError: Error?
-    func emailActivationFailed(with error: Error) {
-        emailActivationFailedCalled += 1
-        emailActivationFailedError = error
+    var emailActivationCodeSendingFailedCalled = 0
+    var emailActivationCodeSendingFailedError: Error?
+    func emailActivationCodeSendingFailed(with error: Error) {
+        emailActivationCodeSendingFailedCalled += 1
+        emailActivationCodeSendingFailedError = error
     }
 
 
-    var codeSentCalled = 0
-    func emailVerificationCodeSent() {
-        codeSentCalled += 1
+    var emailActivationCodeValidatedCalled = 0
+    func emailActivationCodeValidated() {
+        emailActivationCodeValidatedCalled += 1
     }
 
-    var emailVerificationFailedCalled = 0
-    var emailVerificationFailedError: Error?
-    func emailVerificationCodeSendingFailed(with error: Error) {
-        emailVerificationFailedCalled += 1
-        emailVerificationFailedError = error
+    var emailActivationCodeValidationFailedCalled = 0
+    var emailActivationCodeValidationFailedError: Error?
+    func emailActivationCodeValidationFailed(with error: Error) {
+        emailActivationCodeValidationFailedCalled += 1
+        emailActivationCodeValidationFailedError = error
     }
 
 }
@@ -85,83 +86,83 @@ class RegistrationStatusTests : MessagingTest{
         XCTAssertEqual(sut.phase, .none)
     }
 
-// MARK:- Verification tests
+// MARK:- Send activation code tests
 
     func testThatItAdvancesToVerifyEmailStateAfterVerificationStarts() {
         // when
-        sut.verify(email: email)
+        sut.sendActivationCode(to: email)
 
         // then
-        XCTAssertEqual(sut.phase, .verify(email: email))
+        XCTAssertEqual(sut.phase, .sendActivationCode(email: email))
     }
 
     func testThatItInformsTheDelegateAboutVerifyEmailSuccess() {
         // given
-        sut.verify(email: email)
-        XCTAssertEqual(delegate.emailVerificationFailedCalled, 0)
-        XCTAssertEqual(delegate.codeSentCalled, 0)
+        sut.sendActivationCode(to: email)
+        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 0)
+        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 0)
 
         // when
         sut.success()
 
         //then
-        XCTAssertEqual(delegate.emailVerificationFailedCalled, 0)
-        XCTAssertEqual(delegate.codeSentCalled, 1)
+        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 1)
+        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 0)
     }
 
     func testThatItInformsTheDelegateAboutVerifyEmailError() {
         // given
         let error = NSError(domain: "some", code: 2, userInfo: [:])
-        sut.verify(email: email)
-        XCTAssertEqual(delegate.emailVerificationFailedCalled, 0)
-        XCTAssertEqual(delegate.codeSentCalled, 0)
+        sut.sendActivationCode(to: email)
+        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 0)
+        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 0)
 
         // when
         sut.handleError(error)
 
         //then
-        XCTAssertEqual(delegate.codeSentCalled, 0)
-        XCTAssertEqual(delegate.emailVerificationFailedCalled, 1)
-        XCTAssertEqual(delegate.emailVerificationFailedError as NSError?, error)
+        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 0)
+        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 1)
+        XCTAssertEqual(delegate.emailActivationCodeSendingFailedError as NSError?, error)
     }
 
-// MARK:- Activation tests
+// MARK:- Check activation code tests
     func testThatItAdvancesToActivateEmailStateAfterActivationStarts() {
         // when
-        sut.activate(email: email, code: code)
+        sut.checkActivationCode(email: email, code: code)
 
         // then
-        XCTAssertEqual(sut.phase, .activate(email: email, code: code))
+        XCTAssertEqual(sut.phase, .checkActivationCode(email: email, code: code))
     }
 
     func testThatItInformsTheDelegateAboutactivateEmailSuccess() {
         // given
-        sut.activate(email: email, code: code)
-        XCTAssertEqual(delegate.emailActivationFailedCalled, 0)
-        XCTAssertEqual(delegate.emailActivatedCalled, 0)
+        sut.checkActivationCode(email: email, code: code)
+        XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 0)
+        XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 0)
 
         // when
         sut.success()
 
         //then
-        XCTAssertEqual(delegate.emailActivationFailedCalled, 0)
-        XCTAssertEqual(delegate.emailActivatedCalled, 1)
+        XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 1)
+        XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 0)
     }
 
     func testThatItInformsTheDelegateAboutactivateEmailError() {
         // given
         let error = NSError(domain: "some", code: 2, userInfo: [:])
-        sut.activate(email: email, code: code)
-        XCTAssertEqual(delegate.emailActivationFailedCalled, 0)
-        XCTAssertEqual(delegate.emailActivatedCalled, 0)
+        sut.checkActivationCode(email: email, code: code)
+        XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 0)
+        XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 0)
 
         // when
         sut.handleError(error)
 
         //then
-        XCTAssertEqual(delegate.emailActivatedCalled, 0)
-        XCTAssertEqual(delegate.emailActivationFailedCalled, 1)
-        XCTAssertEqual(delegate.emailActivationFailedError as NSError?, error)
+        XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 0)
+        XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 1)
+        XCTAssertEqual(delegate.emailActivationCodeValidationFailedError as NSError?, error)
     }
 
 

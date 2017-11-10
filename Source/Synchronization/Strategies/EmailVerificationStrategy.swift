@@ -37,11 +37,11 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
         var path : String
 
         switch (currentStatus.phase) {
-        case let .verify(email: email):
+        case let .sendActivationCode(email: email):
             path = "/activate/send"
             payload = ["email": email,
                        "locale": NSLocale.formattedLocaleIdentifier()!]
-        case let .activate(email: email, code: code):
+        case let .checkActivationCode(email: email, code: code):
             path = "/activate"
             payload = ["email": email,
                        "code": code,
@@ -61,12 +61,12 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
             let error : NSError
 
             switch (registrationStatus.phase) {
-            case .verify:
+            case .sendActivationCode:
                 error = NSError.blacklistedEmail(with: response) ??
                     NSError.emailAddressInUse(with: response) ??
                     NSError.invalidEmail(with: response) ??
                     NSError.userSessionErrorWith(.unknownError, userInfo: [:])
-            case .activate:
+            case .checkActivationCode:
                 error = NSError.invalidActivationCode(with: response) ??
                     NSError.userSessionErrorWith(.unknownError, userInfo: [:])
             default:
@@ -81,7 +81,7 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
 extension EmailVerificationStrategy : RequestStrategy {
     func nextRequest() -> ZMTransportRequest? {
         switch (registrationStatus.phase) {
-        case .verify, .activate:
+        case .sendActivationCode, .checkActivationCode:
             codeSendingSync.readyForNextRequestIfNotBusy()
             return codeSendingSync.nextRequest()
         default:
