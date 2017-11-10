@@ -134,7 +134,7 @@ class EmailVerificationStrategyTests : MessagingTest {
     }
 
 
-    // MARK:- error tests
+    // MARK:- error tests for verification
 
     func testThatItNotifiesStatusAfterErrorToEmailVerify_BlacklistEmail() {
         checkVerificationResponseError(with: .blacklistedEmail, errorLabel: "blacklisted-email", httpStatus: 403)
@@ -148,34 +148,42 @@ class EmailVerificationStrategyTests : MessagingTest {
         checkVerificationResponseError(with: .invalidEmail, errorLabel: "invalid-email", httpStatus: 400)
     }
 
+    func testThatItNotifiesStatusAfterErrorToEmailVerify_OtherError() {
+        checkVerificationResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
+    }
+
+    // MARK:- error tests for activation
+
     func testThatItNotifiesStatusAfterErrorToEmailactivate_InvalidCode() {
         checkActivationResponseError(with: .invalidActivationCode, errorLabel: "invalid-code", httpStatus: 404)
     }
 
-    func testThatItNotifiesStatusAfterErrorToEmailVerify_OtherError() {
-        checkVerificationResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
+    func testThatItNotifiesStatusAfterErrorToEmailActivation_OtherError() {
+        checkActivationResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
     }
 
     func checkVerificationResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
         // given
         let email = "john@smith.com"
-        registrationStatus.phase = .verify(email: email)
+        let phase: RegistrationStatus.Phase = .verify(email: email)
 
         // when & then
-        checkResponseError(with: code, errorLabel: errorLabel, httpStatus: httpStatus)
+        checkResponseError(with: phase, code: code, errorLabel: errorLabel, httpStatus: httpStatus)
     }
 
     func checkActivationResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
         // given
         let email = "john@smith.com"
         let activationCode = "123456"
-        registrationStatus.phase = .activate(email: email, code: activationCode)
+        let phase: RegistrationStatus.Phase = .activate(email: email, code: activationCode)
 
         // when & then
-        checkResponseError(with: code, errorLabel: errorLabel, httpStatus: httpStatus)
+        checkResponseError(with: phase, code: code, errorLabel: errorLabel, httpStatus: httpStatus)
     }
 
-    func checkResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
+    func checkResponseError(with phase: RegistrationStatus.Phase, code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
+        registrationStatus.phase = phase
+
         let expectedError = NSError.userSessionErrorWith(code, userInfo: [:])
         let payload = [
             "label": errorLabel,
