@@ -181,7 +181,9 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     [inactiveConversations minusOrderedSet:activeConversations];
     
     for (ZMConversation *inactiveConversation in inactiveConversations) {
-        [inactiveConversation internalRemoveParticipants:[NSSet setWithObject:selfUser] sender:selfUser];
+        if (inactiveConversation.conversationType == ZMConversationTypeGroup) {
+            [inactiveConversation internalRemoveParticipants:[NSSet setWithObject:selfUser] sender:selfUser];
+        }
     }
 }
 
@@ -280,7 +282,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         }
         
         // Ignore everything else since we can't find out which connection it belongs to.
-        return nil;
+        return conversation;
     }
     
     VerifyReturnNil(others.count != 0); // No other users? Self conversation?
@@ -943,8 +945,8 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
 - (void)deleteObject:(ZMConversation *)conversation withResponse:(ZMTransportResponse *)response downstreamSync:(id<ZMObjectSync>)downstreamSync;
 {
-    // Self user has been removed from the conversation but missed the conversation.member-leave event.
-    if (response.HTTPStatus == 404 && conversation.isSelfAnActiveMember) {
+    // Self user has been removed from the group conversation but missed the conversation.member-leave event.
+    if (response.HTTPStatus == 404 && conversation.conversationType == ZMConversationTypeGroup && conversation.isSelfAnActiveMember) {
         ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
         [conversation internalRemoveParticipants:[NSSet setWithObject:selfUser] sender:selfUser];
     }
@@ -989,9 +991,12 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     NSArray *conversations = [payload arrayForKey:@"conversations"];
     
     for (NSDictionary *rawConversation in [conversations asDictionaries]) {
-        ZMConversation *conv = [self createConversationFromTransportData:rawConversation serverTimeStamp:nil];
-        [self.lastSyncedActiveConversations addObject:conv];
-        conv.needsToBeUpdatedFromBackend = NO;
+        ZMConversation *conversation = [self createConversationFromTransportData:rawConversation serverTimeStamp:nil];
+        conversation.needsToBeUpdatedFromBackend = NO;
+        
+        if (conversation != nil) {
+            [self.lastSyncedActiveConversations addObject:conversation];
+        }
     }
     
     if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing) {
