@@ -49,6 +49,7 @@ final public class RegistrationStatus {
     /// - Parameter email: email address to send activation code to
     public func sendActivationCode(to email: String) {
         phase = .sendActivationCode(email: email)
+        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
 
 
@@ -59,6 +60,7 @@ final public class RegistrationStatus {
     ///   - code: activation code to check
     public func checkActivationCode(email: String, code: String) {
         phase = .checkActivationCode(email: email, code: code)
+        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
 
     func handleError(_ error: Error) {

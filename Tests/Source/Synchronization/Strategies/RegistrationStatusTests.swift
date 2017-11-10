@@ -47,7 +47,7 @@ class RegistrationStatusTests : MessagingTest{
     override func setUp() {
         super.setUp()
         
-        sut = WireSyncEngine.RegistrationStatus()
+        sut = WireSyncEngine.RegistrationStatus(groupQueue: self.syncMOC)
         delegate = TestRegistrationStatusDelegate()
         sut.delegate = delegate
         email = "some@foo.bar"
@@ -58,6 +58,7 @@ class RegistrationStatusTests : MessagingTest{
         sut = nil
         email = nil
         code = nil
+        delegate = nil
         super.tearDown()
     }
 
