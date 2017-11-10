@@ -885,7 +885,7 @@
     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
 }
 
-- (void)testThatItMarksPushTokenAsNotRegisteredWhenResettingEvenIfItHasSameData
+- (void)testThatItDoesNotForcePushKitTokenUploadIfNotChangedTheData
 {
     // given
     NSData *deviceToken = [NSData dataWithBytes:@"bla" length:3];
@@ -896,17 +896,12 @@
                                                          isRegistered:YES];
     self.uiMOC.pushKitToken = pushToken;
     
-    // when
-    [self performIgnoringZMLogError:^{
-        self.uiMOC.pushKitToken = nil;
-        [self.sut setPushKitToken:deviceToken];
-        [self.sut resetPushTokens];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }];
+    [self.sut updatePushKitTokenTo:deviceToken forType:PushTokenTypeVoip];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
-    XCTAssertFalse(self.uiMOC.pushKitToken.isRegistered);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 0u);
+    XCTAssertTrue(self.uiMOC.pushKitToken.isRegistered);
 }
 
 - (void)testThatItStoresThePushKitToken
