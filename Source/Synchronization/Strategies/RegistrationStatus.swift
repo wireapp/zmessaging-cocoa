@@ -35,13 +35,8 @@ public protocol RegistrationStatusDelegate: class {
 
 final public class RegistrationStatus {
     var phase : Phase = .none
-    unowned let groupQueue: ZMSGroupQueue
 
     public weak var delegate: RegistrationStatusDelegate?
-
-    init(groupQueue: ZMSGroupQueue) {
-        self.groupQueue = groupQueue
-    }
 
     /// Used for start email verificiation process by sending an email with verification
     /// code to supplied address.
@@ -64,31 +59,27 @@ final public class RegistrationStatus {
     }
 
     func handleError(_ error: Error) {
-        groupQueue.performGroupedBlock {
-            switch self.phase {
-            case .sendActivationCode:
-                self.delegate?.emailActivationCodeSendingFailed(with: error)
-            case .checkActivationCode:
-                self.delegate?.emailActivationCodeValidationFailed(with: error)
-            case .none:
-                break
-            }
-            self.phase = .none
+        switch self.phase {
+        case .sendActivationCode:
+            self.delegate?.emailActivationCodeSendingFailed(with: error)
+        case .checkActivationCode:
+            self.delegate?.emailActivationCodeValidationFailed(with: error)
+        case .none:
+            break
         }
+        self.phase = .none
     }
 
     func success() {
-        groupQueue.performGroupedBlock {
-            switch self.phase {
-            case .sendActivationCode:
-                self.delegate?.emailActivationCodeSent()
-            case .checkActivationCode:
-                self.delegate?.emailActivationCodeValidated()
-            case .none:
-                break
-            }
-            self.phase = .none
+        switch self.phase {
+        case .sendActivationCode:
+            self.delegate?.emailActivationCodeSent()
+        case .checkActivationCode:
+            self.delegate?.emailActivationCodeValidated()
+        case .none:
+            break
         }
+        self.phase = .none
     }
 
     enum Phase {

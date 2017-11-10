@@ -49,4 +49,30 @@ class TeamCreationTests : IntegrationTest {
         XCTAssertEqual(delegate.emailActivationCodeSentCalled, 1)
         XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 0)
     }
+
+    func testThatIsActivationCodeSendingFailWhenEmailAlreadyRegistered(){
+        // Given
+        let email = "john@smith.com"
+        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 0)
+        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 0)
+
+        // When
+        self.mockTransportSession.performRemoteChanges { (session) in
+            let user = session.insertUser(withName: "john")
+            user.email = email
+        }
+
+        sessionManager?.unauthenticatedSession?.registrationStatus.sendActivationCode(to: email)
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // Then
+        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 0)
+        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 1)
+
+        let error: NSError? = (delegate.emailActivationCodeSendingFailedError) as NSError?
+
+        XCTAssertNotNil(error)
+        XCTAssertEqual(error?.code, Int(ZMUserSessionErrorCode.emailIsAlreadyRegistered.rawValue))
+    }
 }
