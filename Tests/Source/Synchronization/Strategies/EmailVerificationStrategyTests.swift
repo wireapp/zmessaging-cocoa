@@ -53,10 +53,14 @@ class EmailVerificationStrategyTests : MessagingTest {
         super.tearDown()
     }
 
+    // MARK:- nil request tests
+
     func testThatItDoesNotReturnRequestIfThePhaseIsNone(){
         let request = sut.nextRequest()
         XCTAssertNil(request);
     }
+
+    // MARK:- Verification tests
 
     func testThatItReturnsARequestWhenStateIsVerifyEmail(){
         //given
@@ -91,32 +95,93 @@ class EmailVerificationStrategyTests : MessagingTest {
         XCTAssertEqual(registrationStatus.successCalled, 1)
     }
 
+    // MARK:- Activation tests
+
+    func testThatItReturnsARequestWhenStateIsactivateEmail(){
+        //given
+        let email = "john@smith.com"
+        let code = "123456"
+        let path = "/activate"
+        let payload = ["email": email,
+                       "code": code,
+                       "dryrun": true] as [String : Any]
+
+        let transportRequest = ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
+        registrationStatus.phase = .activate(email: email, code: code)
+
+        //when
+
+        let request = sut.nextRequest()
+
+        //then
+        XCTAssertNotNil(request);
+        XCTAssertEqual(request, transportRequest)
+    }
+
+    func testThatItNotifiesStatusAfterSuccessfulResponseToEmailactivate() {
+        // given
+        let email = "john@smith.com"
+        let code = "123456"
+        registrationStatus.phase = .activate(email: email, code: code)
+        let response = ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
+
+        // when
+        XCTAssertEqual(registrationStatus.successCalled, 0)
+        sut.didReceive(response, forSingleRequest: sut.codeSendingSync)
+
+        // then
+        XCTAssertEqual(registrationStatus.successCalled, 1)
+    }
+
+
+    // MARK:- error tests
+
     func testThatItNotifiesStatusAfterErrorToEmailVerify_BlacklistEmail() {
-        checkResponseError(with: .blacklistedEmail, errorLabel: "blacklisted-email", httpStatus: 403)
+        checkVerificationResponseError(with: .blacklistedEmail, errorLabel: "blacklisted-email", httpStatus: 403)
     }
 
     func testThatItNotifiesStatusAfterErrorToEmailVerify_EmailExists() {
-        checkResponseError(with: .emailIsAlreadyRegistered, errorLabel: "key-exists", httpStatus: 409)
+        checkVerificationResponseError(with: .emailIsAlreadyRegistered, errorLabel: "key-exists", httpStatus: 409)
     }
 
     func testThatItNotifiesStatusAfterErrorToEmailVerify_InvalidEmail() {
-        checkResponseError(with: .invalidEmail, errorLabel: "invalid-email", httpStatus: 400)
+        checkVerificationResponseError(with: .invalidEmail, errorLabel: "invalid-email", httpStatus: 400)
+    }
+
+    func testThatItNotifiesStatusAfterErrorToEmailactivate_InvalidCode() {
+        checkActivationResponseError(with: .invalidActivationCode, errorLabel: "invalid-code", httpStatus: 404)
     }
 
     func testThatItNotifiesStatusAfterErrorToEmailVerify_OtherError() {
-        checkResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
+        checkVerificationResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
     }
 
-    func checkResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
+    func checkVerificationResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
         // given
         let email = "john@smith.com"
         registrationStatus.phase = .verify(email: email)
 
+        // when & then
+        checkResponseError(with: code, errorLabel: errorLabel, httpStatus: httpStatus)
+    }
+
+    func checkActivationResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
+        // given
+        let email = "john@smith.com"
+        let activationCode = "123456"
+        registrationStatus.phase = .activate(email: email, code: activationCode)
+
+        // when & then
+        checkResponseError(with: code, errorLabel: errorLabel, httpStatus: httpStatus)
+    }
+
+    func checkResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
         let expectedError = NSError.userSessionErrorWith(code, userInfo: [:])
         let payload = [
             "label": errorLabel,
             "message":"some"
         ]
+
         let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: httpStatus, transportSessionError: nil)
 
         // when

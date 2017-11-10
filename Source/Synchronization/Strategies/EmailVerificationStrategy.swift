@@ -41,6 +41,11 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
             path = "/activate/send"
             payload = ["email": email,
                        "locale": NSLocale.formattedLocaleIdentifier()!]
+        case let .activate(email: email, code: code):
+            path = "/activate"
+            payload = ["email": email,
+                       "code": code,
+                       "dryrun": true]
         default:
             fatal("Generating request for invalid phase: \(currentStatus.phase)")
         }
@@ -51,11 +56,22 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
     func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         if response.result == .success {
             registrationStatus.success()
-        } else {
-            let error = NSError.blacklistedEmail(with: response) ??
-                NSError.emailAddressInUse(with: response) ??
-                NSError.invalidEmail(with: response) ??
-                NSError.userSessionErrorWith(.unknownError, userInfo: [:])
+        }
+        else {
+            let error : NSError
+
+            switch (registrationStatus.phase) {
+            case .verify:
+                error = NSError.blacklistedEmail(with: response) ??
+                    NSError.emailAddressInUse(with: response) ??
+                    NSError.invalidEmail(with: response) ??
+                    NSError.userSessionErrorWith(.unknownError, userInfo: [:])
+            case .activate:
+                error = NSError.invalidActivationCode(with: response) ??
+                    NSError.userSessionErrorWith(.unknownError, userInfo: [:])
+            default:
+                fatal("Error occurs for invalid phase: \(registrationStatus.phase)")
+            }
             registrationStatus.handleError(error)
         }
     }
@@ -65,7 +81,7 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
 extension EmailVerificationStrategy : RequestStrategy {
     func nextRequest() -> ZMTransportRequest? {
         switch (registrationStatus.phase) {
-        case .verify:
+        case .verify, .activate:
             codeSendingSync.readyForNextRequestIfNotBusy()
             return codeSendingSync.nextRequest()
         default:

@@ -25,6 +25,12 @@ public protocol RegistrationStatusDelegate: class {
 
     /// Failed sending email verification code
     func emailVerificationCodeSendingFailed(with error: Error)
+
+    /// code activated sucessfully
+    func emailActivated()
+
+    /// Failed sending email verification code
+    func emailActivationFailed(with error: Error)
 }
 
 final public class RegistrationStatus {
@@ -40,11 +46,16 @@ final public class RegistrationStatus {
         phase = .verify(email: email)
     }
 
+    public func activate(email: String, code: String) {
+        phase = .activate(email: email, code: code)
+    }
 
     func handleError(_ error: Error) {
         switch phase {
         case .verify:
             delegate?.emailVerificationCodeSendingFailed(with: error)
+        case .activate:
+            delegate?.emailActivationFailed(with: error)
         case .none:
             break
         }
@@ -55,6 +66,8 @@ final public class RegistrationStatus {
         switch phase {
         case .verify:
             delegate?.emailVerificationCodeSent()
+        case .activate:
+            delegate?.emailActivated()
         case .none:
             break
         }
@@ -63,6 +76,7 @@ final public class RegistrationStatus {
 
     enum Phase {
         case verify(email: String)
+        case activate(email: String, code: String)
         case none
     }
 }
@@ -70,7 +84,10 @@ final public class RegistrationStatus {
 extension RegistrationStatus.Phase: Equatable {
     static func ==(lhs: RegistrationStatus.Phase, rhs: RegistrationStatus.Phase) -> Bool {
         switch (lhs, rhs) {
-        case let (.verify(l), .verify(r)): return l == r
+        case let (.verify(l), .verify(r)):
+            return l == r
+        case let (.activate(l, lCode), .activate(r, rCode)):
+            return l == r && lCode == rCode
         case (.none, .none):
             return true
         default: return false
