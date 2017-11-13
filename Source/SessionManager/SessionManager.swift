@@ -376,6 +376,8 @@ public protocol LocalNotificationResponder : class {
     
         backgroundUserSessions[account.userIdentifier] = nil
         tearDownObservers(account: account.userIdentifier)
+        notifyUserSessionDestroyed(account.userIdentifier)
+        
         self.createUnauthenticatedSession()
         
         delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: { [weak self] in
