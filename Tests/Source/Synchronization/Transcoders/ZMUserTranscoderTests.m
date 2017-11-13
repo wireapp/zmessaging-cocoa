@@ -600,6 +600,81 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     }];
 }
 
+- (void)testThatItMergesDuplicateUsersWhenFetchingUsers
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMUser *userOne = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        userOne.remoteIdentifier = uuid;
+        userOne.needsToBeUpdatedFromBackend = YES;
+
+        ZMUser *userTwo = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        userTwo.remoteIdentifier = uuid;
+        userTwo.needsToBeUpdatedFromBackend = YES;
+
+        [self.syncMOC saveOrRollback];
+        [self.sut objectsDidChange:[NSSet setWithArray:@[userOne, userTwo]]];
+
+        // when
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingUsers;
+    }];
+
+    ZMTransportRequest *request = [self.sut nextRequest];
+
+    ZMTransportResponse *response = [self successResponseForUsersRequest:request];
+    [request completeWithResponse:response];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        NSFetchRequest<ZMUser *> *fetch = [[NSFetchRequest alloc] initWithEntityName:[ZMUser entityName]];
+        fetch.predicate = [NSPredicate predicateWithFormat:@"%K = %@", [ZMUser remoteIdentifierDataKey], uuid.data];
+
+        NSArray<ZMUser *> *result = [self.syncMOC executeFetchRequest:fetch error:nil];
+
+        XCTAssertEqual(result.count, 1u);
+        XCTAssertEqualObjects([result.firstObject remoteIdentifier], uuid);
+    }];
+}
+
+- (void)testThatItMergesDuplicateUsersOnEventOfTypeZMUpdateEventUserUpdate
+{
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        NSUUID *uuid = [NSUUID createUUID];
+
+        ZMUser *userOne = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        userOne.name = @"Some";
+        userOne.remoteIdentifier = uuid;
+
+        ZMUser *userTwo = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        userTwo.name = @"Other";
+        userTwo.remoteIdentifier = uuid;
+
+        NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
+        payload[@"user"][@"name"] = @"Name";
+
+        ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
+        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventUserUpdate)] type];
+        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
+
+        // when
+        [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
+
+        // then
+        NSFetchRequest<ZMUser *> *fetch = [[NSFetchRequest alloc] initWithEntityName:[ZMUser entityName]];
+        fetch.predicate = [NSPredicate predicateWithFormat:@"%K = %@", [ZMUser remoteIdentifierDataKey], uuid.data];
+
+        NSArray<ZMUser *> *result = [self.syncMOC executeFetchRequest:fetch error:nil];
+
+        XCTAssertEqual(result.count, 1u);
+        XCTAssertEqualObjects([result.firstObject remoteIdentifier], uuid);
+    }];
+}
+
+
 - (void)testThatItUpdatesTheMediumImageRemoteIdentifierFromAnUpdateEvent;
 {
     // given

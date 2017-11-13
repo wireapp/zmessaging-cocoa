@@ -497,9 +497,7 @@
     // given
     id <ZMTransportData> firstPayload = @{
                                           @"conversation" : NSUUID.createUUID,
-                                          @"data" : @{
-                                                  @"last_read" : @"3.800122000a5efe70"
-                                                  },
+                                          @"data" : @{},
                                           @"from": NSUUID.createUUID.transportString,
                                           @"time" : NSDate.date.transportString,
                                           @"type" : @"conversation.member-update"
@@ -551,7 +549,7 @@
     // given
     id <ZMTransportData> payload = @{
                                      @"conversation" : NSUUID.createUUID,
-                                     @"data" : @{ @"last_read" : @"3.800122000a5efe70" },
+                                     @"data" : @{},
                                      @"time" : NSDate.date.transportString,
                                      @"type" : @"conversation.member-update"
                                      };

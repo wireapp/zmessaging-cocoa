@@ -208,15 +208,14 @@
     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
 }
 
-- (void)testThatItReregistersPushTokensOnDemandEvenIfItDidNotChange
+- (void)testThatItDoesNotReregistersPushTokensOnDemandIfItsNotChanged
 {
     XCTAssertTrue([self login]);
     
     // given
     NSData *token = [NSData dataWithBytes:@"abc" length:3];
     
-    [self registerForPushNotificationsWithToken:token];
-    XCTAssertTrue([self lastRequestsContainedTokenRequests]);
+    XCTAssertTrue([self registerForPushNotificationsWithToken:token]);
     [self.mockTransportSession resetReceivedRequests];
     
     // expect
@@ -225,7 +224,6 @@
         ZM_STRONG(self);
         [self.userSession performChanges:^{
             [self.userSession updatePushKitTokenTo:token forType:PushTokenTypeVoip];
-            [self.userSession updatePushKitTokenTo:token forType:PushTokenTypeRegular];
         }];
     };
     
@@ -237,14 +235,14 @@
     
     // then
     BOOL didContainSignalingKeyRequest = NO;
-    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 3u);
+    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     for (ZMTransportRequest *aRequest in self.mockTransportSession.receivedRequests) {
         if ([aRequest.path containsString:@"/clients/"] && [aRequest.payload asDictionary][@"sigkeys"] != nil) {
             didContainSignalingKeyRequest = YES;
         }
     }
     XCTAssertTrue(didContainSignalingKeyRequest);
-    XCTAssertTrue([self lastRequestsContainedTokenRequests]);
+    XCTAssertFalse([self lastRequestsContainedTokenRequests]);
     XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
 }
 

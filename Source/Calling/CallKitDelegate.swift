@@ -53,11 +53,7 @@ public class CallKitDelegate : NSObject {
         super.init()
         
         provider.setDelegate(self, queue: nil)
-        
-        // Should be set when CallKit is used. Then AVS will not start
-        // the audio before the audio session is active
-        mediaManager?.setUiStartsAudio(true)
-        
+                
         callStateObserverToken = WireCallCenterV3.addCallStateObserver(observer: self, context: userSession.managedObjectContext)
         missedCallObserverToken = WireCallCenterV3.addMissedCallObserver(observer: self, context: userSession.managedObjectContext)
     }

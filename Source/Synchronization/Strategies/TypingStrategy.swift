@@ -26,9 +26,12 @@ let StartedKey = "started"
 
 extension ZMConversation {
     
+    // Used for handling remote notifications
     public static let typingNotificationName = Notification.Name(rawValue: "ZMTypingNotification")
-    public static let typingChangeNotificationName = Notification.Name(rawValue: "ZMTypingChangeNotification")
     
+    // Used for handling local notifications
+    public static let typingChangeNotificationName = Notification.Name(rawValue: "ZMTypingChangeNotification")
+
 }
 
 public struct TypingEvent {
@@ -224,7 +227,11 @@ extension TypingStrategy : ZMEventConsumer {
             else { return }
             processIsTypingUpdateEvent(for: user, in: conversation, with: status)
         } else if event.type == .conversationOtrMessageAdd {
-            processMessageAddEvent(for: user, in: conversation)
+            
+            if let message = ZMGenericMessage(from: event),
+                message.hasText() || message.hasEdited() || (message.hasEphemeral() && message.ephemeral.hasText())  {
+                processMessageAddEvent(for: user, in: conversation)
+            }
         }
     }
     
