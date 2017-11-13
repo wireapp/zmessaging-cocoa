@@ -1,2 +1,2 @@
-github "wireapp/wire-ios-mocktransport" ~> "6dea57641b7ca13e9aa0972b266896cfc1627259"
+github "wireapp/wire-ios-mocktransport" "6dea57641b7ca13e9aa0972b266896cfc1627259"
 github "wireapp/wire-ios-testing" ~> 13.0
