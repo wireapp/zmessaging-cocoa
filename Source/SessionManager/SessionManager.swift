@@ -779,36 +779,44 @@ extension SessionManager : PreLoginAuthenticationObserver {
 }
 
 // MARK: - Session manager observer
-@objc public protocol SessionManagerObserver: class {
+
+@objc public protocol SessionManagerCreatedSessionObserver: class {
+    /// Invoked when the SessionManager creates a user session either by
+    /// activating one or creating one in the background. No assumption should
+    /// be made that the session is active.
     func sessionManagerCreated(userSession : ZMUserSession)
-    @objc optional func sessionManagerDestroyedUserSession(for accountId : UUID)
 }
 
-private let sessionManagerObserverNotificationName = Notification.Name(rawValue: "ZMSessionManagerObserverNotification")
+@objc public protocol SessionManagerDestroyedSessionObserver: class {
+    /// Invoked when the SessionManager tears down the user session associated
+    /// with the accountId.
+    func sessionManagerDestroyedUserSession(for accountId : UUID)
+}
+
+private let sessionManagerCreatedSessionNotificationName = Notification.Name(rawValue: "ZMSessionManagerCreatedSessionNotification")
+private let sessionManagerDestroyedSessionNotificationName = Notification.Name(rawValue: "ZMSessionManagerDestroyedSessionNotification")
 
 extension SessionManager: NotificationContext {
     
-    static private let createdKey = "created"
-    static private let destroyedKey = "destroyed"
-    
-    @objc public func addSessionManagerObserver(_ observer: SessionManagerObserver) -> Any {
+    @objc public func addSessionManagerCreatedSessionObserver(_ observer: SessionManagerCreatedSessionObserver) -> Any {
         return NotificationInContext.addObserver(
-            name: sessionManagerObserverNotificationName,
-            context: self) { [weak observer] note in
-                if note.changedKeys?.first == type(of: self).createdKey {
-                    observer?.sessionManagerCreated(userSession: note.object as! ZMUserSession)
-                }
-                else if note.changedKeys?.first == type(of: self).destroyedKey {
-                    observer?.sessionManagerDestroyedUserSession?(for: note.object as! UUID)
-                }
-        }
+            name: sessionManagerCreatedSessionNotificationName,
+            context: self)
+        { [weak observer] note in observer?.sessionManagerCreated(userSession: note.object as! ZMUserSession) }
+    }
+    
+    @objc public func addSessionManagerDestroyedSessionObserver(_ observer: SessionManagerDestroyedSessionObserver) -> Any {
+        return NotificationInContext.addObserver(
+        name: sessionManagerDestroyedSessionNotificationName,
+        context: self)
+        { [weak observer] note in observer?.sessionManagerDestroyedUserSession(for: note.object as! UUID) }
     }
     
     fileprivate func notifyNewUserSessionCreated(_ userSession: ZMUserSession) {
-        NotificationInContext(name: sessionManagerObserverNotificationName, context: self, object: userSession, changedKeys: [type(of: self).createdKey]).post()
+        NotificationInContext(name: sessionManagerCreatedSessionNotificationName, context: self, object: userSession).post()
     }
     
     fileprivate func notifyUserSessionDestroyed(_ accountId: UUID) {
-        NotificationInContext(name: sessionManagerObserverNotificationName, context: self, object: accountId as AnyObject, changedKeys: [type(of: self).destroyedKey]).post()
+        NotificationInContext(name: sessionManagerDestroyedSessionNotificationName, context: self, object: accountId as AnyObject).post()
     }
 }
