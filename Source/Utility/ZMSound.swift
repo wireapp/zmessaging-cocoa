@@ -19,8 +19,10 @@
 
 import Foundation
 import AudioToolbox
+import avs
 
 public enum ZMSound: String, CustomStringConvertible {
+    case None       = "none"
     case Bell       = "bell"
     case Calipso    = "calipso"
     case Chime      = "chime"
@@ -34,13 +36,15 @@ public enum ZMSound: String, CustomStringConvertible {
     case Synth      = "synth"
     case Telegraph  = "telegraph"
     case TriTone    = "tri-tone"
-    
     case Harp       = "harp"
     case Marimba    = "marimba"
     case OldPhone   = "old-phone"
     case Opening    = "opening"
-    
-    public static let allValues = [
+    case WireCall   = "ringing_from_them"
+    case WirePing   = "ping_from_them"
+    case WireText   = "new_message"
+        
+    public static let soundEffects = [
         Bell,
         Calipso,
         Chime,
@@ -53,11 +57,7 @@ public enum ZMSound: String, CustomStringConvertible {
         Popcorn,
         Synth,
         Telegraph,
-        TriTone,
-        Harp,
-        Marimba,
-        OldPhone,
-        Opening]
+        TriTone]
     
     public static let ringtones = [
         Harp,
@@ -100,8 +100,15 @@ public enum ZMSound: String, CustomStringConvertible {
         }
     }
     
-    public func fileURL() -> URL {
-        return URL(fileURLWithPath: Bundle.main.path(forResource: self.rawValue, ofType: type(of: self).fileExtension)!)
+    public func fileURL() -> URL? {
+        switch self {
+        case .None:
+            return nil
+        case .WireText, .WirePing, .WireCall:
+            return URL(fileURLWithPath: Bundle.main.path(forResource: self.rawValue, ofType: type(of: self).fileExtension, inDirectory: "audio-notifications")!)
+        default:
+            return URL(fileURLWithPath: Bundle.main.path(forResource: self.rawValue, ofType: type(of: self).fileExtension)!)
+        }
     }
     
     fileprivate static let fileExtension = "m4a"
@@ -112,11 +119,26 @@ public enum ZMSound: String, CustomStringConvertible {
     
     public var description: String {
         get {
-            return self.rawValue.capitalized
+            switch self {
+            case .None:
+                return "self.settings.sound_menu.sounds.none"
+            case .WireCall:
+                return "self.settings.sound_menu.sounds.wire_call"
+            case .WireText:
+                return "self.settings.sound_menu.sounds.wire_message"
+            case .WirePing:
+                return "self.settings.sound_menu.sounds.wire_ping"
+            default:
+                return self.rawValue.capitalized
+            }
         }
     }
     
     public func playPreview() {
-        type(of: self).playPreviewForURL(self.fileURL())
+        if let soundFileURL = fileURL() {
+            type(of: self).playPreviewForURL(soundFileURL)
+        } else {
+            type(of: self).stopPlayingPreview()
+        }
     }
 }
