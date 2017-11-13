@@ -118,6 +118,10 @@ public enum ZMSound: String, CustomStringConvertible {
     }
     
     public var description: String {
+        return self.rawValue.capitalized
+    }
+    
+    public var descriptionLocalizationKey: String {
         get {
             switch self {
             case .None:
