@@ -27,7 +27,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 
 
 @objc public protocol SessionManagerDelegate : class {
-    func sessionManagerCreated(userSession : ZMUserSession)
+    func sessionManagerActivated(userSession : ZMUserSession)
     func sessionManagerDidFailToLogin(account: Account?, error : Error)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
@@ -424,8 +424,7 @@ public protocol LocalNotificationResponder : class {
             
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
             completion(session)
-            self.notifyNewUserSessionCreated(session)
-            self.delegate?.sessionManagerCreated(userSession: session)
+            self.delegate?.sessionManagerActivated(userSession: session)
         }
     }
 
