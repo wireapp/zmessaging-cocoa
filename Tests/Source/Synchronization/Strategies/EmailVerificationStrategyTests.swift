@@ -19,22 +19,6 @@
 import Foundation
 @testable import WireSyncEngine
 
-class TestRegistrationStatus: WireSyncEngine.RegistrationStatusProtocol {
-    var handleErrorCalled = 0
-    var handleErrorError: Error?
-    func handleError(_ error: Error) {
-        handleErrorCalled += 1
-        handleErrorError = error
-    }
-
-    var successCalled = 0
-    func success() {
-        successCalled += 1
-    }
-
-    var phase: WireSyncEngine.RegistrationStatus.Phase = .none
-}
-
 class EmailVerificationStrategyTests : MessagingTest {
 
     var registrationStatus : TestRegistrationStatus!
@@ -62,7 +46,7 @@ class EmailVerificationStrategyTests : MessagingTest {
 
     // MARK:- Send activation code tests
 
-    func testThatItReturnsARequestWhenStateIsVerifyEmail(){
+    func testThatItReturnsARequestWhenStateIsSendActivationCode(){
         //given
         let email = "john@smith.com"
         let path = "/activate/send"
@@ -81,7 +65,7 @@ class EmailVerificationStrategyTests : MessagingTest {
         XCTAssertEqual(request, transportRequest)
     }
 
-    func testThatItNotifiesStatusAfterSuccessfulResponseToEmailVerify() {
+    func testThatItNotifiesStatusAfterSuccessfulResponseToSendingActivationCode() {
         // given
         let email = "john@smith.com"
         registrationStatus.phase = .sendActivationCode(email: email)
@@ -97,7 +81,7 @@ class EmailVerificationStrategyTests : MessagingTest {
 
     // MARK:- Check activation code tests
 
-    func testThatItReturnsARequestWhenStateIsactivateEmail(){
+    func testThatItReturnsARequestWhenStateIsCheckActivationCode(){
         //given
         let email = "john@smith.com"
         let code = "123456"
@@ -118,7 +102,7 @@ class EmailVerificationStrategyTests : MessagingTest {
         XCTAssertEqual(request, transportRequest)
     }
 
-    func testThatItNotifiesStatusAfterSuccessfulResponseToEmailactivate() {
+    func testThatItNotifiesStatusAfterSuccessfulResponseToCheckActivationCode() {
         // given
         let email = "john@smith.com"
         let code = "123456"
@@ -134,22 +118,30 @@ class EmailVerificationStrategyTests : MessagingTest {
     }
 
 
+}
+
+extension EmailVerificationStrategyTests: RegistrationStatusStrategyTestHelper {
+
+    func handleResponse(response: ZMTransportResponse) {
+        sut.didReceive(response, forSingleRequest: sut.codeSendingSync)
+    }
+
     // MARK:- error tests for verification
 
     func testThatItNotifiesStatusAfterErrorToEmailVerify_BlacklistEmail() {
-        checkVerificationResponseError(with: .blacklistedEmail, errorLabel: "blacklisted-email", httpStatus: 403)
+        checkSendingCodeResponseError(with: .blacklistedEmail, errorLabel: "blacklisted-email", httpStatus: 403)
     }
 
     func testThatItNotifiesStatusAfterErrorToEmailVerify_EmailExists() {
-        checkVerificationResponseError(with: .emailIsAlreadyRegistered, errorLabel: "key-exists", httpStatus: 409)
+        checkSendingCodeResponseError(with: .emailIsAlreadyRegistered, errorLabel: "key-exists", httpStatus: 409)
     }
 
     func testThatItNotifiesStatusAfterErrorToEmailVerify_InvalidEmail() {
-        checkVerificationResponseError(with: .invalidEmail, errorLabel: "invalid-email", httpStatus: 400)
+        checkSendingCodeResponseError(with: .invalidEmail, errorLabel: "invalid-email", httpStatus: 400)
     }
 
     func testThatItNotifiesStatusAfterErrorToEmailVerify_OtherError() {
-        checkVerificationResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
+        checkSendingCodeResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
     }
 
     // MARK:- error tests for activation
@@ -162,7 +154,7 @@ class EmailVerificationStrategyTests : MessagingTest {
         checkActivationResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
     }
 
-    func checkVerificationResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
+    func checkSendingCodeResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
         // given
         let email = "john@smith.com"
         let phase: RegistrationStatus.Phase = .sendActivationCode(email: email)
@@ -179,28 +171,6 @@ class EmailVerificationStrategyTests : MessagingTest {
 
         // when & then
         checkResponseError(with: phase, code: code, errorLabel: errorLabel, httpStatus: httpStatus)
-    }
-
-    func checkResponseError(with phase: RegistrationStatus.Phase, code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
-        registrationStatus.phase = phase
-
-        let expectedError = NSError.userSessionErrorWith(code, userInfo: [:])
-        let payload = [
-            "label": errorLabel,
-            "message":"some"
-        ]
-
-        let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: httpStatus, transportSessionError: nil)
-
-        // when
-        XCTAssertEqual(registrationStatus.successCalled, 0, "Success should not be called", file: file, line: line)
-        XCTAssertEqual(registrationStatus.handleErrorCalled, 0, "HandleError should not be called", file: file, line: line)
-        sut.didReceive(response, forSingleRequest: sut.codeSendingSync)
-
-        // then
-        XCTAssertEqual(registrationStatus.successCalled, 0, "Success should not be called", file: file, line: line)
-        XCTAssertEqual(registrationStatus.handleErrorCalled, 1, "HandleError should be called", file: file, line: line)
-        XCTAssertEqual(registrationStatus.handleErrorError as NSError?, expectedError, "HandleError should be called with error: \(expectedError), but was \(registrationStatus.handleErrorError?.localizedDescription ?? "nil")", file: file, line: line)
     }
 
 }
