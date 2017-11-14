@@ -319,12 +319,12 @@ internal func answeredCallHandler(conversationId: UnsafePointer<Int8>?, contextR
 /// Handles when data channel gets established
 /// In order to be passed to C, this function needs to be global
 internal func dataChannelEstablishedHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?,contextRef: UnsafeMutableRawPointer?) {
-    guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
+    guard let contextRef = contextRef, let convID = UUID(cString: conversationId) else { return }
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
     callCenter.uiMOC?.performGroupedBlock {
-        callCenter.handleCallState(callState: .establishedDataChannel, conversationId: convID, userId: userID)
+        callCenter.handleCallState(callState: .establishedDataChannel, conversationId: convID, userId: nil)
     }
 }
 
@@ -332,12 +332,12 @@ internal func dataChannelEstablishedHandler(conversationId: UnsafePointer<Int8>?
 /// In order to be passed to C, this function needs to be global
 internal func establishedCallHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?,contextRef: UnsafeMutableRawPointer?)
 {
-    guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
+    guard let contextRef = contextRef, let convID = UUID(cString: conversationId) else { return }
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
     callCenter.uiMOC?.performGroupedBlock {
-        callCenter.handleCallState(callState: .established, conversationId: convID, userId: userID)
+        callCenter.handleCallState(callState: .established, conversationId: convID, userId: nil)
     }
 }
 
