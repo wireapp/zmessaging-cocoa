@@ -177,7 +177,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (void)updateSelfUserActiveConversations:(NSOrderedSet<ZMConversation *> *)activeConversations
 {
     ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-    NSMutableOrderedSet *inactiveConversations = [NSMutableOrderedSet orderedSetWithArray:[self.managedObjectContext executeFetchRequestOrAssert:[ZMConversation fetchRequest]]];
+    NSMutableOrderedSet *inactiveConversations = [NSMutableOrderedSet orderedSetWithArray:[self.managedObjectContext executeFetchRequestOrAssert:[ZMConversation sortedFetchRequest]]];
     [inactiveConversations minusOrderedSet:activeConversations];
     
     for (ZMConversation *inactiveConversation in inactiveConversations) {
