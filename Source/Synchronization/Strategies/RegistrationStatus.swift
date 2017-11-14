@@ -20,6 +20,12 @@ import Foundation
 
 /// Used to signal changes to the registration state
 public protocol RegistrationStatusDelegate: class {
+    /// Team was successfully created
+    func teamRegistered()
+
+    /// Team creation error
+    func teamRegistrationFailed(with error: Error)
+
     /// Verify email should be sent with code
     func emailActivationCodeSent()
 
@@ -33,12 +39,22 @@ public protocol RegistrationStatusDelegate: class {
     func emailActivationCodeValidationFailed(with error: Error)
 }
 
+// Empty default implementations to let users of the protocol implement only subset of methods
+extension RegistrationStatusDelegate {
+    func teamRegistered() {}
+    func teamRegistrationFailed(with error: Error) {}
+    func emailActivationCodeSent() {}
+    func emailActivationCodeSendingFailed(with error: Error) {}
+    func emailActivationCodeValidated() {}
+    func emailActivationCodeValidationFailed(with error: Error) {}
+}
+
 final public class RegistrationStatus {
     var phase : Phase = .none
 
     public weak var delegate: RegistrationStatusDelegate?
 
-    /// Used for start email verificiation process by sending an email with verification
+    /// Used to start email verificiation process by sending an email with verification
     /// code to supplied address.
     ///
     /// - Parameter email: email address to send activation code to
@@ -46,7 +62,6 @@ final public class RegistrationStatus {
         phase = .sendActivationCode(email: email)
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
-
 
     /// For checking the activation code (receive form email sent form backend) with email
     ///
@@ -58,12 +73,21 @@ final public class RegistrationStatus {
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
 
+    /// Used to create a team. Also creates a new administrator account
+    ///
+    /// - Parameter team: team object containing all information needed
+    public func create(team: TeamToRegister) {
+        phase = .createTeam(team: team)
+    }
+
     func handleError(_ error: Error) {
         switch self.phase {
         case .sendActivationCode:
             self.delegate?.emailActivationCodeSendingFailed(with: error)
         case .checkActivationCode:
             self.delegate?.emailActivationCodeValidationFailed(with: error)
+        case .createTeam:
+            delegate?.teamRegistrationFailed(with: error)
         case .none:
             break
         }
@@ -76,6 +100,8 @@ final public class RegistrationStatus {
             self.delegate?.emailActivationCodeSent()
         case .checkActivationCode:
             self.delegate?.emailActivationCodeValidated()
+        case .createTeam:
+            delegate?.teamRegistered()
         case .none:
             break
         }
@@ -85,6 +111,7 @@ final public class RegistrationStatus {
     enum Phase {
         case sendActivationCode(email: String)
         case checkActivationCode(email: String, code: String)
+        case createTeam(team: TeamToRegister)
         case none
     }
 }
@@ -96,8 +123,8 @@ extension RegistrationStatus.Phase: Equatable {
             return l == r
         case let (.checkActivationCode(l, lCode), .checkActivationCode(r, rCode)):
             return l == r && lCode == rCode
-        case (.none, .none):
-            return true
+        case let (.createTeam(l), .createTeam(r)): return l == r
+        case (.none, .none): return true
         default: return false
         }
     }

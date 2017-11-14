@@ -34,7 +34,6 @@ class TestRegistrationStatusDelegate: RegistrationStatusDelegate {
         emailActivationCodeSendingFailedError = error
     }
 
-
     var emailActivationCodeValidatedCalled = 0
     func emailActivationCodeValidated() {
         emailActivationCodeValidatedCalled += 1
@@ -47,6 +46,17 @@ class TestRegistrationStatusDelegate: RegistrationStatusDelegate {
         emailActivationCodeValidationFailedError = error
     }
 
+    var teamRegisteredCalled = 0
+    func teamRegistered() {
+        teamRegisteredCalled += 1
+    }
+
+    var teamRegistrationFailedCalled = 0
+    var teamRegistrationFailedError: Error?
+    func teamRegistrationFailed(with error: Error) {
+        teamRegistrationFailedCalled += 1
+        teamRegistrationFailedError = error
+    }
 }
 
 class RegistrationStatusTests : MessagingTest{
@@ -54,6 +64,7 @@ class RegistrationStatusTests : MessagingTest{
     var delegate: TestRegistrationStatusDelegate!
     var email: String!
     var code: String!
+    var team: TeamToRegister!
 
     override func setUp() {
         super.setUp()
@@ -63,17 +74,19 @@ class RegistrationStatusTests : MessagingTest{
         sut.delegate = delegate
         email = "some@foo.bar"
         code = "123456"
+        team = WireSyncEngine.TeamToRegister(teamName: "Dream Team", email: email, fullName: "M. Jordan", password: "qwerty", accentColor: .brightOrange)
     }
 
     override func tearDown() {
         sut = nil
+        delegate = nil
         email = nil
         code = nil
-        delegate = nil
+        team = nil
         super.tearDown()
     }
 
-// MARK:- .none state tests
+    // MARK: - .none state tests
 
     func testStartWithPhaseNone(){
         XCTAssertEqual(sut.phase, .none)
@@ -98,9 +111,9 @@ class RegistrationStatusTests : MessagingTest{
         XCTAssertEqual(sut.phase, .none)
     }
 
-// MARK:- Send activation code tests
+    // MARK: - Send activation code tests
 
-    func testThatItAdvancesToVerifyEmailStateAfterVerificationStarts() {
+    func testThatItAdvancesToSendActivationCodeStateAfterTrigerringSendingStarts() {
         // when
         sut.sendActivationCode(to: email)
 
@@ -108,7 +121,7 @@ class RegistrationStatusTests : MessagingTest{
         XCTAssertEqual(sut.phase, .sendActivationCode(email: email))
     }
 
-    func testThatItInformsTheDelegateAboutVerifyEmailSuccess() {
+    func testThatItInformsTheDelegateAboutActivationCodeSendingSuccess() {
         // given
         sut.sendActivationCode(to: email)
         XCTAssertEqual(delegate.emailActivationCodeSentCalled, 0)
@@ -122,7 +135,7 @@ class RegistrationStatusTests : MessagingTest{
         XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 0)
     }
 
-    func testThatItInformsTheDelegateAboutVerifyEmailError() {
+    func testThatItInformsTheDelegateAboutActivationCodeSendingError() {
         // given
         let error = NSError(domain: "some", code: 2, userInfo: [:])
         sut.sendActivationCode(to: email)
@@ -138,8 +151,8 @@ class RegistrationStatusTests : MessagingTest{
         XCTAssertEqual(delegate.emailActivationCodeSendingFailedError as NSError?, error)
     }
 
-// MARK:- Check activation code tests
-    func testThatItAdvancesToActivateEmailStateAfterActivationStarts() {
+    // MARK: - Check activation code tests
+    func testThatItAdvancesToCheckActivationCodeStateAfterTriggeringCheck() {
         // when
         sut.checkActivationCode(email: email, code: code)
 
@@ -147,7 +160,7 @@ class RegistrationStatusTests : MessagingTest{
         XCTAssertEqual(sut.phase, .checkActivationCode(email: email, code: code))
     }
 
-    func testThatItInformsTheDelegateAboutactivateEmailSuccess() {
+    func testThatItInformsTheDelegateAboutCheckActivationCodeSuccess() {
         // given
         sut.checkActivationCode(email: email, code: code)
         XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 0)
@@ -161,7 +174,7 @@ class RegistrationStatusTests : MessagingTest{
         XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 0)
     }
 
-    func testThatItInformsTheDelegateAboutactivateEmailError() {
+    func testThatItInformsTheDelegateAboutCheckActivationCodeError() {
         // given
         let error = NSError(domain: "some", code: 2, userInfo: [:])
         sut.checkActivationCode(email: email, code: code)
@@ -177,6 +190,45 @@ class RegistrationStatusTests : MessagingTest{
         XCTAssertEqual(delegate.emailActivationCodeValidationFailedError as NSError?, error)
     }
 
+    // MARK: - Team creation
+
+    func testThatItAdvancesToCreateTeamStateAfterTriggeringCreationStarts() {
+        // when
+        sut.create(team: team)
+
+        // then
+        XCTAssertEqual(sut.phase, .createTeam(team: team))
+    }
+
+    func testThatItInformsTheDelegateAboutCreateTeamSuccess() {
+        // given
+        sut.create(team: team)
+        XCTAssertEqual(delegate.teamRegisteredCalled, 0)
+        XCTAssertEqual(delegate.teamRegistrationFailedCalled, 0)
+
+        // when
+        sut.success()
+
+        //then
+        XCTAssertEqual(delegate.teamRegisteredCalled, 1)
+        XCTAssertEqual(delegate.teamRegistrationFailedCalled, 0)
+    }
+
+    func testThatItInformsTheDelegateAboutCreateTeamError() {
+        // given
+        let error = NSError(domain: "some", code: 2, userInfo: [:])
+        sut.create(team: team)
+        XCTAssertEqual(delegate.teamRegisteredCalled, 0)
+        XCTAssertEqual(delegate.teamRegistrationFailedCalled, 0)
+
+        // when
+        sut.handleError(error)
+
+        //then
+        XCTAssertEqual(delegate.teamRegisteredCalled, 0)
+        XCTAssertEqual(delegate.teamRegistrationFailedCalled, 1)
+        XCTAssertEqual(delegate.teamRegistrationFailedError as NSError?, error)
+    }
 
 }
 
