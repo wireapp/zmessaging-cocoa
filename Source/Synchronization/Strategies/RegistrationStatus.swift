@@ -78,6 +78,7 @@ final public class RegistrationStatus {
     /// - Parameter team: team object containing all information needed
     public func create(team: TeamToRegister) {
         phase = .createTeam(team: team)
+        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
 
     func handleError(_ error: Error) {

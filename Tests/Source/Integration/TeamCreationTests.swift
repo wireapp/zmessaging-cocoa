@@ -23,20 +23,26 @@ import Foundation
 class TeamCreationTests : IntegrationTest {
 
     var delegate: TestRegistrationStatusDelegate!
+    var registrationStatus: WireSyncEngine.RegistrationStatus? {
+        return sessionManager?.unauthenticatedSession?.registrationStatus
+    }
+    var team: TeamToRegister!
 
     override func setUp() {
         super.setUp()
         delegate = TestRegistrationStatusDelegate()
         sessionManager?.unauthenticatedSession?.registrationStatus.delegate = delegate
+        team = TeamToRegister(teamName: "A-Team", email: "ba@a-team.de", fullName: "Bosco B. A. Baracus", password: "BadAttitude", accentColor: .vividRed)
     }
 
     override func tearDown() {
         delegate = nil
+        team = nil
         super.tearDown()
     }
 
 
-    //MARK:- send activation code tests
+    // MARK: - send activation code tests
     func testThatIsActivationCodeIsSentToSpecifiedEmail(){
         // Given
         let email = "john@smith.com"
@@ -44,7 +50,7 @@ class TeamCreationTests : IntegrationTest {
         XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 0)
 
         // When
-        sessionManager?.unauthenticatedSession?.registrationStatus.sendActivationCode(to: email)
+        registrationStatus?.sendActivationCode(to: email)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // Then
@@ -64,7 +70,7 @@ class TeamCreationTests : IntegrationTest {
             user.email = email
         }
 
-        sessionManager?.unauthenticatedSession?.registrationStatus.sendActivationCode(to: email)
+        registrationStatus?.sendActivationCode(to: email)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -78,7 +84,7 @@ class TeamCreationTests : IntegrationTest {
         XCTAssertEqual(error?.code, Int(ZMUserSessionErrorCode.emailIsAlreadyRegistered.rawValue))
     }
 
-    //MARK:- check activation code tests
+    // MARK: - check activation code tests
     func testThatIsActivationCodeIsVerifiedToSpecifiedEmail(){
         // Given
         let email = "john@smith.com"
@@ -90,11 +96,56 @@ class TeamCreationTests : IntegrationTest {
         XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 0)
 
         // When
-        sessionManager?.unauthenticatedSession?.registrationStatus.checkActivationCode(email: email, code: code)
+        registrationStatus?.checkActivationCode(email: email, code: code)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // Then
         XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 1)
         XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 0)
+    }
+
+    // MARK: - create team tests
+
+    func testThatWeCanRegisterAndLogInIfWeHaveAValidCode() {
+        // given
+        XCTAssertEqual(delegate.teamRegisteredCalled, 0)
+        XCTAssertEqual(delegate.teamRegistrationFailedCalled, 0)
+
+        // When
+        registrationStatus?.create(team: team)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // Then
+        XCTAssertEqual(delegate.teamRegisteredCalled, 1)
+        XCTAssertEqual(delegate.teamRegistrationFailedCalled, 0)
+    }
+
+    func testThatAfterRegisteringWeHaveAnAccountAndValidCookie() {
+        // When
+        registrationStatus?.create(team: team)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // Then
+        let selected = sessionManager?.accountManager.selectedAccount
+        XCTAssertNotNil(selected)
+        XCTAssertEqual(selected?.cookieStorage().isAuthenticated, true)
+    }
+
+    func testThatItSignalsAnErrorIfTeamCreationFails() {
+        // Given
+        self.mockTransportSession.performRemoteChanges { (session) in
+            let user = session.insertUser(withName: "john")
+            user.email = self.team.email
+        }
+
+        registrationStatus?.create(team: team)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // Then
+        XCTAssertEqual(delegate.teamRegisteredCalled, 0)
+        XCTAssertEqual(delegate.teamRegistrationFailedCalled, 1)
+        let error = (delegate.teamRegistrationFailedError) as NSError?
+        XCTAssertNotNil(error)
+        XCTAssertEqual(error?.code, Int(ZMUserSessionErrorCode.emailIsAlreadyRegistered.rawValue))
     }
 }

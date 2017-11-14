@@ -64,7 +64,8 @@ public class UnauthenticatedSession: NSObject {
                 ZMLoginCodeRequestTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
                 ZMRegistrationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus, userInfoParser: self)!,
                 ZMPhoneNumberVerificationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
-                EmailVerificationStrategy(groupQueue: groupQueue, status: registrationStatus)
+                EmailVerificationStrategy(groupQueue: groupQueue, status: registrationStatus),
+                TeamRegistrationStrategy(groupQueue: groupQueue, status: registrationStatus, userInfoParser: self)
             ]
         )
     }
