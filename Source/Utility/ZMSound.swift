@@ -105,9 +105,15 @@ public enum ZMSound: String, CustomStringConvertible {
         case .None:
             return nil
         case .WireText, .WirePing, .WireCall:
-            return URL(fileURLWithPath: Bundle.main.path(forResource: self.rawValue, ofType: type(of: self).fileExtension, inDirectory: "audio-notifications")!)
+            guard let path = Bundle.main.path(forResource: self.rawValue, ofType: type(of: self).fileExtension, inDirectory: "audio-notifications") else {
+                return nil
+            }
+            return URL(fileURLWithPath: path)
         default:
-            return URL(fileURLWithPath: Bundle.main.path(forResource: self.rawValue, ofType: type(of: self).fileExtension)!)
+            guard let path = Bundle.main.path(forResource: self.rawValue, ofType: type(of: self).fileExtension) else {
+                return nil
+            }
+            return URL(fileURLWithPath: path)
         }
     }
     
