@@ -22,7 +22,7 @@ import AudioToolbox
 import avs
 
 public enum ZMSound: String, CustomStringConvertible {
-    case None       = "none"
+    case None       = "silence"
     case Bell       = "bell"
     case Calipso    = "calipso"
     case Chime      = "chime"
