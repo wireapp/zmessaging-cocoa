@@ -54,7 +54,7 @@ final public class RegistrationStatus {
 
     public weak var delegate: RegistrationStatusDelegate?
 
-    /// Used to start email verificiation process by sending an email with verification
+    /// Used to start email activation process by sending an email with a
     /// code to supplied address.
     ///
     /// - Parameter email: email address to send activation code to
@@ -63,11 +63,10 @@ final public class RegistrationStatus {
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
 
-    /// For checking the activation code (receive form email sent form backend) with email
+    /// For checking the activation code (received form email sent from backend) with email
     ///
-    /// - Parameters:
     /// - Parameter email: email address to check activation code of
-    ///   - code: activation code to check
+    ///  - Parameter code: activation code to check
     public func checkActivationCode(email: String, code: String) {
         phase = .checkActivationCode(email: email, code: code)
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
