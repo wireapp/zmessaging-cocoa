@@ -612,8 +612,8 @@ public struct CallEvent {
         case .terminating(reason: let reason):
             if reason == .stillOngoing {
                 callState = .incoming(video: false, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
-                userId = initiatorForCall(conversationId: conversationId) ?? selfUserId
             }
+            userId = initiatorForCall(conversationId: conversationId) ?? selfUserId
         default:
             break
         }
