@@ -93,12 +93,12 @@ class WireCallCenterV3Tests: MessagingTest {
             guard let note = wrappedNote.userInfo?[WireCallCenterCallStateNotification.userInfoKey] as? WireCallCenterCallStateNotification else { return false }
             XCTAssertEqual(note.conversationId, self.conversationID, "conversationIds are not the same", file: file, line: line)
             if userIsNil {
-                XCTAssertNil(note.userId)
+                XCTAssertNil(note.callerId)
             } else if let otherId = expectedUserId {
-                XCTAssertEqual(note.userId, otherId, "userIds are not the same", file: file, line: line)
+                XCTAssertEqual(note.callerId, otherId, "userIds are not the same", file: file, line: line)
             }
             else {
-                XCTAssertEqual(note.userId, userId, "userIds are not the same", file: file, line: line)
+                XCTAssertEqual(note.callerId, userId, "userIds are not the same", file: file, line: line)
             }
             XCTAssertEqual(note.callState, expectedCallState, "callStates are not the same", file: file, line: line)
 
@@ -172,7 +172,7 @@ class WireCallCenterV3Tests: MessagingTest {
         expectation(forNotification: WireCallCenterMissedCallNotification.notificationName.rawValue, object: nil) { wrappedNote in
             guard let note = wrappedNote.userInfo?[WireCallCenterMissedCallNotification.userInfoKey] as? WireCallCenterMissedCallNotification else { return false }
             XCTAssertEqual(note.conversationId, conversationId)
-            XCTAssertEqual(note.userId, userId)
+            XCTAssertEqual(note.callerId, userId)
             XCTAssertEqual(note.timestamp.timeIntervalSince1970, timestamp.timeIntervalSince1970, accuracy: 1)
             XCTAssertEqual(note.video, isVideo)
             return true
@@ -285,7 +285,7 @@ class WireCallCenterV3Tests: MessagingTest {
         expectation(forNotification: WireCallCenterCallStateNotification.notificationName.rawValue, object: nil) { wrappedNote in
             guard let note = wrappedNote.userInfo?[WireCallCenterCallStateNotification.userInfoKey] as? WireCallCenterCallStateNotification else { return false }
             XCTAssertEqual(note.conversationId, self.conversationID)
-            XCTAssertEqual(note.userId, userId)
+            XCTAssertEqual(note.callerId, userId)
             XCTAssertEqual(note.callState, .incoming(video: false, shouldRing: false, degraded: false))
             return true
         }
@@ -313,7 +313,7 @@ class WireCallCenterV3Tests: MessagingTest {
         expectation(forNotification: WireCallCenterCallStateNotification.notificationName.rawValue, object: nil) { wrappedNote in
             guard let note = wrappedNote.userInfo?[WireCallCenterCallStateNotification.userInfoKey] as? WireCallCenterCallStateNotification else { return false }
             XCTAssertEqual(note.conversationId, self.conversationID)
-            XCTAssertEqual(note.userId, userId)
+            XCTAssertEqual(note.callerId, userId)
             XCTAssertEqual(note.callState, .incoming(video: false, shouldRing: false, degraded: false))
             return true
         }

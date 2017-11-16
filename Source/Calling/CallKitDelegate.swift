@@ -390,28 +390,26 @@ extension CallKitDelegate : CXProviderDelegate {
 @available(iOS 10.0, *)
 extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
     
-    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, user: ZMUser?, timeStamp: Date?) {
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) {
         
         switch callState {
         case .incoming(video: let video, shouldRing: let shouldRing, degraded: _):
-            guard let user = user else { break }
-            
             if shouldRing {
                 if !conversation.isSilenced {
-                    reportIncomingCall(from: user, in: conversation, video: video)
+                    reportIncomingCall(from: caller, in: conversation, video: video)
                 }
             } else {
-                reportCall(in: conversation, endedAt: timeStamp, reason: .unanswered)
+                reportCall(in: conversation, endedAt: timestamp, reason: .unanswered)
             }
         case let .terminating(reason: reason):
-            reportCall(in: conversation, endedAt: timeStamp, reason: reason.CXCallEndedReason)
+            reportCall(in: conversation, endedAt: timestamp, reason: reason.CXCallEndedReason)
             
         default:
             break
         }
     }
     
-    public func callCenterMissedCall(conversation: ZMConversation, user: ZMUser, timestamp: Date, video: Bool) {
+    public func callCenterMissedCall(conversation: ZMConversation, caller: ZMUser, timestamp: Date, video: Bool) {
         // Since we missed the call we will not have an assigned callUUID and can just create a random one
         provider.reportCall(with: UUID(), endedAt: timestamp, reason: .unanswered)
     }
@@ -498,7 +496,7 @@ class CallObserver : WireCallCenterCallStateObserver {
         token = WireCallCenterV3.addCallStateObserver(observer: self, for: conversation, context: conversation.managedObjectContext!)
     }
     
-    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, user userId: ZMUser?, timeStamp: Date?) {
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) {
         switch callState {
         case .answered(degraded: false):
             onAnswered?()

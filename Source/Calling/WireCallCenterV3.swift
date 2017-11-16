@@ -245,11 +245,12 @@ public struct CallMember : Hashable {
 
 private struct CallSnapshot {
     let callState : CallState
+    let callStarter : UUID
     let isVideo : Bool
     var conversationObserverToken : NSObjectProtocol?
     
     public func update(with callState: CallState) -> CallSnapshot {
-        return CallSnapshot(callState: callState, isVideo: isVideo, conversationObserverToken: conversationObserverToken)
+        return CallSnapshot(callState: callState, callStarter: callStarter, isVideo: isVideo, conversationObserverToken: conversationObserverToken)
     }
 }
 
@@ -542,13 +543,13 @@ public struct CallEvent {
         participantSnapshots.removeValue(forKey: conversationId)
     }
     
-    fileprivate func createSnapshot(callState : CallState, video: Bool, for conversationId: UUID) {
+    fileprivate func createSnapshot(callState : CallState, callStarter: UUID?, video: Bool, for conversationId: UUID) {
         guard let moc = uiMOC,
               let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: moc)
         else { return }
         
         let token = ConversationChangeInfo.add(observer: self, for: conversation)
-        callSnapshots[conversationId] = CallSnapshot(callState: callState, isVideo: video, conversationObserverToken: token)
+        callSnapshots[conversationId] = CallSnapshot(callState: callState, callStarter: callStarter ?? selfUserId, isVideo: video, conversationObserverToken: token)
     }
     
     public fileprivate(set) var isConstantBitRateAudioActive : Bool = false
@@ -596,9 +597,15 @@ public struct CallEvent {
     fileprivate func handleCallState(callState: CallState, conversationId: UUID, userId: UUID?, messageTime: Date? = nil) {
         callState.logState()
         var callState = callState
-        var userId = userId
         
         switch callState {
+        case .incoming(video: let video, shouldRing: _, degraded: _):
+            createSnapshot(callState: callState, callStarter: userId, video: video, for: conversationId)
+            
+            participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
+                                                                                     selfUserID: selfUserId,
+                                                                                     members: [CallMember(userId: userId!, audioEstablished: false)],
+                                                                                     callCenter: self)
         case .established:
             establishedDate = Date()
             
@@ -609,49 +616,30 @@ public struct CallEvent {
             if self.callState(conversationId: conversationId) == .established {
                 return // Ignore if data channel was established after audio
             }
-        case .terminating(reason: let reason):
-            if reason == .stillOngoing {
-                callState = .incoming(video: false, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
-                userId = initiatorForCall(conversationId: conversationId) ?? selfUserId
-            }
+        case .terminating(reason: let reason) where reason == .stillOngoing:
+            callState = .incoming(video: false, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
         default:
             break
         }
         
-        updateSnapshots(forCallSate: callState, conversationId: conversationId, userId: userId)
+        let callerId = initiatorForCall(conversationId: conversationId)
         
-        if let context = uiMOC {
-            WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId, messageTime: messageTime).post(in: context.notificationContext)
-        }
-    }
-    
-    fileprivate func updateSnapshots(forCallSate callState: CallState, conversationId: UUID, userId: UUID?) {
-        
-        switch callState {
-        case .incoming(video: let video, shouldRing: _, degraded: _):
-            createSnapshot(callState: callState, video: video, for: conversationId)
-            
-            participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
-                                                                                     selfUserID: selfUserId,
-                                                                                     members: [CallMember(userId: userId!, audioEstablished: false)],
-                                                                                     initiator: userId,
-                                                                                     callCenter: self)
-        case .terminating:
+        if case .terminating = callState {
             clearSnapshot(conversationId: conversationId)
-            
-        default:
-            if let previousSnapshot = callSnapshots[conversationId] {
-                callSnapshots[conversationId] = previousSnapshot.update(with: callState)
-            }
+        } else if let previousSnapshot = callSnapshots[conversationId] {
+            callSnapshots[conversationId] = previousSnapshot.update(with: callState)
         }
         
+        if let context = uiMOC, let callerId = callerId  {
+            WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, callerId: callerId, messageTime: messageTime).post(in: context.notificationContext)
+        }
     }
     
     fileprivate func missed(conversationId: UUID, userId: UUID, timestamp: Date, isVideoCall: Bool) {
         zmLog.debug("missed call")
         
         if let context = uiMOC {
-            WireCallCenterMissedCallNotification(conversationId: conversationId, userId:userId, timestamp: timestamp, video: isVideoCall).post(in: context.notificationContext)
+            WireCallCenterMissedCallNotification(conversationId: conversationId, callerId: userId, timestamp: timestamp, video: isVideoCall).post(in: context.notificationContext)
         }
     }
     
@@ -679,14 +667,13 @@ public struct CallEvent {
                 callSnapshots[conversationId] = previousSnapshot.update(with: callState)
             }
             
-            if let context = uiMOC {
-                WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: self.selfUserId, messageTime:nil).post(in: context.notificationContext)
+            if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId) {
+                WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, callerId: callerId, messageTime:nil).post(in: context.notificationContext)
             }
         }
         return answered
     }
     
-
     @objc(startCallForConversationID:video:isGroup:)
     public func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool {
         endAllCalls(exluding: conversationId)
@@ -696,16 +683,15 @@ public struct CallEvent {
         let started = avsWrapper.startCall(conversationId: conversationId, video: video, isGroup: isGroup, useCBR: useConstantBitRateAudio)
         if started {
             let callState : CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
-            createSnapshot(callState: callState, video: video, for: conversationId)
+            createSnapshot(callState: callState, callStarter: selfUserId,  video: video, for: conversationId)
             
             if let context = uiMOC {
-                WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: selfUserId, messageTime:nil).post(in: context.notificationContext)
+                WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime:nil).post(in: context.notificationContext)
             }
         }
         return started
     }
     
-
     @objc(closeCallForConversationID:isGroup:)
     public func closeCall(conversationId: UUID, isGroup: Bool) {
         avsWrapper.endCall(conversationId: conversationId)
@@ -806,8 +792,7 @@ public struct CallEvent {
     }
     
     func initiatorForCall(conversationId: UUID) -> UUID? {
-        let snapshot = participantSnapshots[conversationId]
-        return snapshot?.initiator
+        return callSnapshots[conversationId]?.callStarter
     }
     
     /// Call this method when the callParticipants changed and avs calls the handler `wcall_group_changed_h`
@@ -849,8 +834,8 @@ extension WireCallCenterV3 : ZMConversationObserver {
         if updatedCallState != previousSnapshot.callState {
             callSnapshots[conversationId] = previousSnapshot.update(with: updatedCallState)
             
-            if let context = uiMOC {
-                WireCallCenterCallStateNotification(callState: updatedCallState, conversationId: conversationId, userId: selfUserId, messageTime: Date()).post(in: context.notificationContext)
+            if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId) {
+                WireCallCenterCallStateNotification(callState: updatedCallState, conversationId: conversationId, callerId: callerId, messageTime: Date()).post(in: context.notificationContext)
             }
         }
     }
