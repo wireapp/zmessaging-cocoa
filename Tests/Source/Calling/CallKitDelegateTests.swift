@@ -288,8 +288,8 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
         XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
-
-        XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
+        
+        XCTAssertEqual(action.callUUID, sut.callUUID(for: conversation))
         XCTAssertEqual(action.handle.type, .generic)
         XCTAssertEqual(action.handle.value, conversation.remoteIdentifier?.transportString())
     }
@@ -307,7 +307,7 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
         
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
-        XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
+        XCTAssertEqual(action.callUUID, sut.callUUID(for: conversation))
         XCTAssertEqual(action.handle.type, .generic)
         XCTAssertEqual(action.handle.value, conversation.remoteIdentifier?.transportString())
         XCTAssertFalse(action.isVideo)
@@ -328,7 +328,7 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
         
-        XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
+        XCTAssertEqual(action.callUUID, sut.callUUID(for: conversation))
         XCTAssertEqual(action.handle.type, .generic)
         XCTAssertEqual(action.handle.value, conversation.remoteIdentifier?.transportString())
         XCTAssertTrue(action.isVideo)
@@ -354,7 +354,7 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertTrue(self.callKitController.requestedTransactions.last!.actions.first! is CXAnswerCallAction)
 
         let action = self.callKitController.requestedTransactions.last!.actions.last! as! CXAnswerCallAction
-        XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
+        XCTAssertEqual(action.callUUID, sut.callUUID(for: conversation))
     }
     
     func testThatItReportsTheAnswerCallRequest_IfThereExistingIncomingCall() {
@@ -364,10 +364,11 @@ class CallKitDelegateTest: MessagingTest {
         let conversation = otherUser.oneToOneConversation!
         self.uiMOC.saveOrRollback()
         
-        let call = CallKitDelegateTestsMocking.mockCall(with: conversation.remoteIdentifier!, outgoing: false)
-        self.callKitController.mockCallObserver.mockCalls = [call]
-        
         mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, user: otherUser, timeStamp: Date())
+        
+        let call = CallKitDelegateTestsMocking.mockCall(with: sut.callUUID(for: conversation)!, outgoing: false)
+        self.callKitController.mockCallObserver.mockCalls = [call]
         
         // when
         self.sut.requestJoinCall(in: conversation, video: true)
@@ -376,7 +377,7 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
         
         let action = self.callKitController.requestedTransactions.last!.actions.last! as! CXAnswerCallAction
-        XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
+        XCTAssertEqual(action.callUUID, sut.callUUID(for: conversation))
         
         // teardown
         CallKitDelegateTestsMocking.stopMock(call)
@@ -418,7 +419,8 @@ class CallKitDelegateTest: MessagingTest {
         // given
         let provider = MockProvider(foo: true)
         let conversation = self.conversation(type: .oneOnOne)
-        let action = MockStartCallAction(call: conversation.remoteIdentifier!, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
+        sut.requestStartCall(in: conversation, video: false)
+        let action = MockStartCallAction(call: sut.callUUID(for: conversation)!, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
         
         // when
         self.sut.provider(provider, perform: action)
@@ -431,7 +433,9 @@ class CallKitDelegateTest: MessagingTest {
         // given
         let provider = MockProvider(foo: true)
         let conversation = self.conversation(type: .oneOnOne)
-        let action = MockStartCallAction(call: conversation.remoteIdentifier!, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
+        
+        sut.requestStartCall(in: conversation, video: false)
+        let action = MockStartCallAction(call: sut.callUUID(for: conversation)!, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
         mockWireCallCenterV3.startCallShouldFail = true
         
         // when
@@ -445,28 +449,34 @@ class CallKitDelegateTest: MessagingTest {
         // given
         let provider = MockProvider(foo: true)
         let conversation = self.conversation(type: .oneOnOne)
-        let action = MockStartCallAction(call: conversation.remoteIdentifier!, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
+        
+        sut.requestStartCall(in: conversation, video: false)
+        let callUUID = sut.callUUID(for: conversation)!
+        let action = MockStartCallAction(call: callUUID, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
         
         // when
         self.sut.provider(provider, perform: action)
         mockWireCallCenterV3.update(callState: .answered(degraded: false), conversationId: conversation.remoteIdentifier!)
         
         // then
-        XCTAssertTrue(provider.connectingCalls.contains(conversation.remoteIdentifier!))
+        XCTAssertTrue(provider.connectingCalls.contains(callUUID))
     }
     
     func testThatStartCallActionUpdatesWhenTheCallHasConnected() {
         // given
         let provider = MockProvider(foo: true)
         let conversation = self.conversation(type: .oneOnOne)
-        let action = MockStartCallAction(call: conversation.remoteIdentifier!, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
+        
+        sut.requestStartCall(in: conversation, video: false)
+        let callUUID = sut.callUUID(for: conversation)!
+        let action = MockStartCallAction(call: callUUID, handle: CXHandle(type: CXHandle.HandleType.generic, value: conversation.remoteIdentifier!.transportString()))
         
         // when
         self.sut.provider(provider, perform: action)
         mockWireCallCenterV3.update(callState: .establishedDataChannel, conversationId: conversation.remoteIdentifier!)
         
         // then
-        XCTAssertTrue(provider.connectedCalls.contains(conversation.remoteIdentifier!))
+        XCTAssertTrue(provider.connectedCalls.contains(callUUID))
     }
     
     // Public API - report end on outgoing call
@@ -474,6 +484,11 @@ class CallKitDelegateTest: MessagingTest {
     func testThatItReportsTheEndOfCall() {
         // given
         let conversation = self.conversation(type: .oneOnOne)
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        
+        mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, user: otherUser, timeStamp: Date())
+        let callUUID = sut.callUUID(for: conversation)!
         
         // when
         self.sut.requestEndCall(in: conversation)
@@ -483,12 +498,17 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXEndCallAction)
         
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXEndCallAction
-        XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
+        XCTAssertEqual(action.callUUID, callUUID)
     }
     
     func testThatItReportsTheEndOfCall_groupConversation() {
         // given
         let conversation = self.conversation(type: .group)
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        
+        mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, user: otherUser, timeStamp: Date())
+        let callUUID = sut.callUUID(for: conversation)
         
         // when
         self.sut.requestEndCall(in: conversation)
@@ -498,7 +518,7 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXEndCallAction)
         
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXEndCallAction
-        XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
+        XCTAssertEqual(action.callUUID, callUUID)
     }
     
     // Public API - activity & intents
@@ -538,7 +558,7 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXStartCallAction)
         
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
-        XCTAssertEqual(action.callUUID, conversation.remoteIdentifier)
+        XCTAssertEqual(action.callUUID, sut.callUUID(for: conversation))
         XCTAssertFalse(action.isVideo)
     }
     
@@ -638,6 +658,7 @@ class CallKitDelegateTest: MessagingTest {
         // given
         let conversation = self.conversation()
         let otherUser = self.otherUser(moc: self.uiMOC)
+        sut.requestStartCall(in: conversation, video: false)
         
         // when
         sut.callCenterDidChange(callState: .terminating(reason: .normal), conversation: conversation, user: otherUser, timeStamp: nil)
@@ -655,6 +676,9 @@ class CallKitDelegateTest: MessagingTest {
         let conversation = self.conversation()
         let otherUser = self.otherUser(moc: self.uiMOC)
         
+        mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, user: otherUser, timeStamp: Date())
+        
         // when
         sut.callCenterDidChange(callState: .terminating(reason: .lostMedia), conversation: conversation, user: otherUser, timeStamp: nil)
         
@@ -666,6 +690,9 @@ class CallKitDelegateTest: MessagingTest {
         // given
         let conversation = self.conversation()
         let otherUser = self.otherUser(moc: self.uiMOC)
+        
+        mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, user: otherUser, timeStamp: Date())
         
         // when
         sut.callCenterDidChange(callState: .terminating(reason: .timeout), conversation: conversation, user: otherUser, timeStamp: nil)
@@ -679,23 +706,14 @@ class CallKitDelegateTest: MessagingTest {
         let conversation = self.conversation()
         let otherUser = self.otherUser(moc: self.uiMOC)
         
+        mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, user: otherUser, timeStamp: Date())
+        
         // when
         sut.callCenterDidChange(callState: .terminating(reason: .anweredElsewhere), conversation: conversation, user: otherUser, timeStamp: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.lastEndedReason, .answeredElsewhere)
-    }
-    
-    func testThatItDoesntReportCallEndedAt_v3_Terminating_normalSelf() {
-        // given
-        let conversation = self.conversation()
-        let selfUser = ZMUser.selfUser(in: self.uiMOC)
-        
-        // when
-        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversation: conversation, user: selfUser, timeStamp: nil)
-        
-        // then
-        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
     
 }

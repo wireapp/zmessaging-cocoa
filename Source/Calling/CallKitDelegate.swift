@@ -23,6 +23,16 @@ import avs
 
 private let zmLog = ZMSLog(tag: "calling")
 
+private struct CallKitCall {
+    let conversation : ZMConversation
+    let observer : CallObserver
+    
+    init(conversation : ZMConversation) {
+        self.conversation = conversation
+        self.observer = CallObserver(conversation: conversation)
+    }
+}
+
 @objc
 @available(iOS 10.0, *)
 public class CallKitDelegate : NSObject {
@@ -35,7 +45,7 @@ public class CallKitDelegate : NSObject {
     fileprivate var callStateObserverToken : Any?
     fileprivate var missedCallObserverToken : Any?
     fileprivate var connectedCallConversation : ZMConversation?
-    fileprivate var calls : [UUID : CallObserver]
+    fileprivate var calls : [UUID : CallKitCall]
     
     public init(provider : CXProvider,
          callController: CXCallController,
@@ -90,9 +100,8 @@ public class CallKitDelegate : NSObject {
     
     fileprivate func endAllOngoingCallKitCalls(exceptIn conversation: ZMConversation) {
         
-        for call in callController.callObserver.calls where call.uuid != conversation.remoteIdentifier {
-            
-            let endCallAction = CXEndCallAction(call: call.uuid)
+        for call in calls where call.value.conversation != conversation {
+            let endCallAction = CXEndCallAction(call: call.key)
             let transaction = CXTransaction(action: endCallAction)
             
             callController.request(transaction, completion: { (error) in
@@ -101,6 +110,10 @@ public class CallKitDelegate : NSObject {
                 }
             })
         }
+    }
+    
+    internal func callUUID(for conversation: ZMConversation) -> UUID? {
+        return calls.first(where: { $0.value.conversation == conversation })?.key
     }
 }
 
@@ -150,7 +163,8 @@ extension CallKitDelegate {
     
     func requestJoinCall(in conversation: ZMConversation, video: Bool) {
         
-        let existingCall = callController.callObserver.calls.first(where: { $0.uuid == conversation.remoteIdentifier })
+        let existingCallUUID = callUUID(for: conversation)
+        let existingCall = callController.callObserver.calls.first(where: { $0.uuid == existingCallUUID })
         
         if let call = existingCall, !call.isOutgoing {
             requestAnswerCall(in: conversation, video: video)
@@ -164,16 +178,19 @@ extension CallKitDelegate {
         endAllOngoingCallKitCalls(exceptIn: conversation)
         
         guard
-            let remoteIdentifier = conversation.remoteIdentifier,
+            let managedObjectContext = conversation.managedObjectContext,
             let handle = conversation.callKitHandle
         else {
             zmLog.warn("Ignore request to start call since remoteIdentifier or handle is nil")
             return
         }
         
-        let action = CXStartCallAction(call: remoteIdentifier, handle: handle)
+        let callUUID = UUID()
+        calls[callUUID] = CallKitCall(conversation: conversation)
+        
+        let action = CXStartCallAction(call: callUUID, handle: handle)
         action.isVideo = video
-        action.contactIdentifier = conversation.localizedCallerName(with: ZMUser.selfUser(inUserSession: userSession))
+        action.contactIdentifier = conversation.localizedCallerName(with: ZMUser.selfUser(in: managedObjectContext))
         let transaction = CXTransaction(action: action)
         
         
@@ -191,9 +208,9 @@ extension CallKitDelegate {
         
         endAllOngoingCallKitCalls(exceptIn: conversation)
         
-        guard let remoteIdentifier = conversation.remoteIdentifier else { return }
+        guard let callUUID = callUUID(for: conversation) else { return }
         
-        let action = CXAnswerCallAction(call: remoteIdentifier)
+        let action = CXAnswerCallAction(call: callUUID)
         let transaction = CXTransaction(action: action)
         
         callController.request(transaction) { [weak self] (error) in
@@ -204,9 +221,9 @@ extension CallKitDelegate {
     }
     
     func requestEndCall(in conversation: ZMConversation) {
-        guard let remoteIdentifier = conversation.remoteIdentifier else { return }
+        guard let callUUID = callUUID(for: conversation) else { return }
         
-        let action = CXEndCallAction(call: remoteIdentifier)
+        let action = CXEndCallAction(call: callUUID)
         let transaction = CXTransaction(action: action)
         
         callController.request(transaction) { [weak self] (error) in
@@ -218,11 +235,8 @@ extension CallKitDelegate {
     }
     
     func reportIncomingCall(from user: ZMUser, in conversation: ZMConversation, video: Bool) {
-        guard
-            let remoteIdentifier = conversation.remoteIdentifier,
-            let handle = conversation.callKitHandle
-        else {
-            return log(for: conversation, format: "Cannot report incoming call: conversation is missing handle or remoteIdentifier")
+        guard let handle = conversation.callKitHandle else {
+            return log(for: conversation, format: "Cannot report incoming call: conversation is missing a handle")
         }
         
         let update = CXCallUpdate()
@@ -234,13 +248,32 @@ extension CallKitDelegate {
         update.remoteHandle = handle
         update.hasVideo = video
         
-        provider.reportNewIncomingCall(with: remoteIdentifier, update: update) { [weak self] (error) in
+        let callUUID = UUID()
+        calls[callUUID] = CallKitCall(conversation: conversation)
+        
+        provider.reportNewIncomingCall(with: callUUID, update: update) { [weak self] (error) in
             if let error = error {
                 self?.log(for: conversation, format: "Cannot report incoming call: \(error)")
+                self?.calls.removeValue(forKey: callUUID)
                 conversation.voiceChannel?.leave()
             } else {
                 self?.mediaManager?.setupAudioDevice()
             }
+        }
+    }
+    
+    func reportCall(in conversation: ZMConversation, endedAt timestamp: Date?, reason: CXCallEndedReason) {
+        
+        var associatedCallUUIDs : [UUID] = []
+        for call in calls {
+            if call.value.conversation == conversation {
+                associatedCallUUIDs.append(call.key)
+            }
+        }
+        
+        associatedCallUUIDs.forEach { (callUUID) in
+            calls.removeValue(forKey: callUUID)
+            provider.reportCall(with: callUUID, endedAt: timestamp, reason: reason)
         }
     }
 }
@@ -266,61 +299,53 @@ extension CallKitDelegate : CXProviderDelegate {
     public func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
         log(for: nil, format: "perform CXStartCallAction: \(action)")
         
-        guard let conversation = action.conversation(in: userSession.managedObjectContext),
-              let remoteIdentifier = conversation.remoteIdentifier
-        else {
-            log(for: nil, format: "fail CXStartCallAction because conversation did not exist")
+        guard let call = calls[action.callUUID] else {
+            log(for: nil, format: "fail CXStartCallAction because call did not exist")
             action.fail()
             return
         }
         
-        let callObserver = CallObserver(conversation: conversation)
-        calls[action.callUUID] = callObserver
-        
-        callObserver.onAnswered = {
+        call.observer.onAnswered = {
             provider.reportOutgoingCall(with: action.callUUID, startedConnectingAt: Date())
         }
         
-        callObserver.onEstablished = {
+        call.observer.onEstablished = {
             provider.reportOutgoingCall(with: action.callUUID, connectedAt: Date())
         }
         
         mediaManager?.setupAudioDevice()
         
-        if conversation.voiceChannel?.join(video: action.isVideo) == true {
+        if call.conversation.voiceChannel?.join(video: action.isVideo) == true {
             action.fulfill()
         } else {
             action.fail()
         }
         
         let update = CXCallUpdate()
-        update.remoteHandle = conversation.callKitHandle
-        update.localizedCallerName = conversation.localizedCallerName(with: ZMUser.selfUser(inUserSession: userSession))
+        update.remoteHandle = call.conversation.callKitHandle
+        update.localizedCallerName = call.conversation.localizedCallerName(with: ZMUser.selfUser(inUserSession: userSession))
         
-        provider.reportCall(with: remoteIdentifier, updated: update)
+        provider.reportCall(with: action.callUUID, updated: update)
     }
     
     public func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
         log(for: nil, format: "perform CXAnswerCallAction: \(action)")
         
-        guard let conversation = action.conversation(in: userSession.managedObjectContext) else {
-            log(for: nil, format: "fail CXAnswerCallAction because conversation did not exist")
+        guard let call = calls[action.callUUID] else {
+            log(for: nil, format: "fail CXAnswerCallAction because call did not exist")
             action.fail()
             return
         }
         
-        let callObserver = CallObserver(conversation: conversation)
-        calls[action.callUUID] = callObserver
-        
-        callObserver.onEstablished = {
+        call.observer.onEstablished = {
             action.fulfill()
         }
         
-        callObserver.onFailedToJoin = {
+        call.observer.onFailedToJoin = {
             action.fail()
         }
         
-        if conversation.voiceChannel?.join(video: false) != true {
+        if call.conversation.voiceChannel?.join(video: false) != true {
             action.fail()
         }
     }
@@ -328,14 +353,14 @@ extension CallKitDelegate : CXProviderDelegate {
     public func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
         log(for: nil, format: "perform CXEndCallAction: \(action)")
         
-        guard let conversation = action.conversation(in: userSession.managedObjectContext) else {
-            log(for: nil, format: "fail CXEndCallAction because conversation did not exist")
+        guard let call = calls[action.callUUID] else {
+            log(for: nil, format: "fail CXEndCallAction because call did not exist")
             action.fail()
             return
         }
         
-        conversation.voiceChannel?.endCall()
         calls.removeValue(forKey: action.callUUID)
+        call.conversation.voiceChannel?.endCall()
         action.fulfill()
     }
     
@@ -376,17 +401,19 @@ extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMisse
                     reportIncomingCall(from: user, in: conversation, video: video)
                 }
             } else {
-                provider.reportCall(with: conversation.remoteIdentifier!, endedAt: timeStamp, reason: .unanswered)
+                reportCall(in: conversation, endedAt: timeStamp, reason: .unanswered)
             }
-        case let .terminating(reason: reason) where !(reason == .normal && user == ZMUser.selfUser(inUserSession: userSession)):
-            provider.reportCall(with: conversation.remoteIdentifier!, endedAt: timeStamp, reason: reason.CXCallEndedReason)
+        case let .terminating(reason: reason):
+            reportCall(in: conversation, endedAt: timeStamp, reason: reason.CXCallEndedReason)
+            
         default:
             break
         }
     }
     
     public func callCenterMissedCall(conversation: ZMConversation, user: ZMUser, timestamp: Date, video: Bool) {
-        provider.reportCall(with: conversation.remoteIdentifier!, endedAt: timestamp, reason: .unanswered)
+        // Since we missed the call we will not have an assigned callUUID and can just create a random one
+        provider.reportCall(with: UUID(), endedAt: timestamp, reason: .unanswered)
     }
     
 }
