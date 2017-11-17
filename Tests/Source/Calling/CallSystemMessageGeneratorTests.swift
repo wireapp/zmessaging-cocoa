@@ -67,7 +67,7 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         // when
         let msg1 = sut.appendSystemMessageIfNeeded(callState: .outgoing(degraded: false), conversation: conversation, caller: selfUser, timestamp: nil)
         let msg2 = sut.appendSystemMessageIfNeeded(callState: .established, conversation: conversation, caller: selfUser, timestamp: nil)
-        let msg3 = sut.appendSystemMessageIfNeeded(callState: .terminating(reason: .canceled), conversation: conversation, caller: user, timestamp: nil)
+        let msg3 = sut.appendSystemMessageIfNeeded(callState: .terminating(reason: .canceled), conversation: conversation, caller: selfUser, timestamp: nil)
         
         // then
         XCTAssertEqual(conversation.messages.count, messageCount+1)

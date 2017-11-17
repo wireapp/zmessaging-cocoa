@@ -90,7 +90,7 @@ class CallStateObserverTests : MessagingTest {
 
         // when
         sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversation: conversation, caller: sender, timestamp: nil)
-        sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversation: conversation, caller: receiver, timestamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .canceled), conversation: conversation, caller: sender, timestamp: nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -124,7 +124,6 @@ class CallStateObserverTests : MessagingTest {
         
         // given
         let ignoredCallStates : [CallState] = [.terminating(reason: .anweredElsewhere),
-                                               .terminating(reason: .normal),
                                                .terminating(reason: .lostMedia),
                                                .terminating(reason: .internalError),
                                                .terminating(reason: .unknown),
