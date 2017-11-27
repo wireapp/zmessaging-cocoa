@@ -42,7 +42,7 @@ public struct TeamToRegister {
             "email" : email,
             "team" : [
                 "name" : teamName,
-                "icon" : ""
+                "icon" : "abc"
             ],
             "accent_id" : accentColor.rawValue,
             "locale" : locale,
