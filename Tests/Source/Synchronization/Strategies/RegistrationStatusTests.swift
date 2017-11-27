@@ -74,7 +74,7 @@ class RegistrationStatusTests : MessagingTest{
         sut.delegate = delegate
         email = "some@foo.bar"
         code = "123456"
-        team = WireSyncEngine.TeamToRegister(teamName: "Dream Team", email: email, fullName: "M. Jordan", password: "qwerty", accentColor: .brightOrange)
+        team = WireSyncEngine.TeamToRegister(teamName: "Dream Team", email: email, emailCode: "23", fullName: "M. Jordan", password: "qwerty", accentColor: .brightOrange)
     }
 
     override func tearDown() {
