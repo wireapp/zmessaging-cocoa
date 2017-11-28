@@ -210,6 +210,7 @@ class RegistrationStatusTests : MessagingTest{
         sut.success()
 
         //then
+        XCTAssertTrue(sut.completedRegistration)
         XCTAssertEqual(delegate.teamRegisteredCalled, 1)
         XCTAssertEqual(delegate.teamRegistrationFailedCalled, 0)
     }

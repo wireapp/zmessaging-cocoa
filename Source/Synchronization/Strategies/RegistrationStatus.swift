@@ -52,6 +52,8 @@ extension RegistrationStatusDelegate {
 final public class RegistrationStatus {
     var phase : Phase = .none
 
+    public internal(set) var completedRegistration: Bool = false
+
     public weak var delegate: RegistrationStatusDelegate?
 
     /// Used to start email activation process by sending an email with a
@@ -101,6 +103,7 @@ final public class RegistrationStatus {
         case .checkActivationCode:
             self.delegate?.emailActivationCodeValidated()
         case .createTeam:
+            self.completedRegistration = true
             delegate?.teamRegistered()
         case .none:
             break
