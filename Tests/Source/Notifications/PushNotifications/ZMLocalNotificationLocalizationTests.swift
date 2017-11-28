@@ -52,5 +52,6 @@ class ZMLocalNotificationLocalizationTests: ZMLocalNotificationTests {
         XCTAssertEqual(result(userWithNoName, groupConversationWithoutName), "Someone calling in a conversation")
         XCTAssertEqual(result(userWithNoName, groupConversation), "Someone calling in Super Conversation")
         XCTAssertEqual(result(sender, groupConversationWithoutName), "Super User calling in a conversation")
+        XCTAssertEqual(result(sender, invalidConversation), "Super User calling in a conversation")
     }
 }
