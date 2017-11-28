@@ -29,10 +29,7 @@
 
 
 "push.notification.default" = "Uus sõnum";
-
-"push.notification.ephemeral.oneonone" = "saatis sulle sõnumi";
-"push.notification.ephemeral.group" = "Keegi saatis sulle sõnumi";
-"push.notification.ephemeral.group.noconversationname" = "Keegi saatis sulle sõnumi";
+"push.notification.ephemeral" = "Someone sent you a message";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ vestluses %2$@";

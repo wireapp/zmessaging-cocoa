@@ -29,14 +29,11 @@
 
 
 "push.notification.default" = "رسالة جديدة";
-
-"push.notification.ephemeral.oneonone" = "sent you a message";
-"push.notification.ephemeral.group" = "Someone sent a message";
-"push.notification.ephemeral.group.noconversationname" = "Someone sent a message";
+"push.notification.ephemeral" = "أرسل أحدهم رسالة لك";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ في %2$@";
-"push.notification.title.noconversationname" = "in %1$@";
+"push.notification.title.noconversationname" = "في %1$@";
 "push.notification.title.noteamname" = "%1$@";
 
 // 2 Components: Sender, Message
@@ -50,7 +47,7 @@
 "push.notification.add.message.oneonone.nousername" = "رسالة جديدة: %1$@";
 
 // UNKNOWN MESSAGE
-"push.notification.add.unknown.group" = "%1$@: new message";
+"push.notification.add.unknown.group" = "%1$@: رسالة جديدة";
 "push.notification.add.unknown.group.nousername" = "رسالة جديدة";
 "push.notification.add.unknown.group.nousername.noconversationname" = "رسالة جديدة";
 "push.notification.add.unknown.group.noconversationname" = "أرسل %1$@ رسالة";
@@ -59,8 +56,8 @@
 "push.notification.add.unknown.oneonone.nousername" = "رسالة جديدة";
 
 // IMAGE
-"push.notification.add.image.group" = "%1$@ shared a picture";
-"push.notification.add.image.group.nousername" = "New picture";
+"push.notification.add.image.group" = "شارك %1$@ صورة";
+"push.notification.add.image.group.nousername" = "صورة جديدة";
 "push.notification.add.image.group.nousername.noconversationname" = "صورة جديدة في مُحادثة";
 "push.notification.add.image.group.noconversationname" = "شارك %1$@ صورة جديدة في مُحادثة";
 
@@ -68,8 +65,8 @@
 "push.notification.add.image.oneonone.nousername" = "صورة جديدة في المُحادثة";
 
 // VIDEO
-"push.notification.add.video.group" = "%1$@ shared a video";
-"push.notification.add.video.group.nousername" = "New video";
+"push.notification.add.video.group" = "شارك %1$@ فيديو";
+"push.notification.add.video.group.nousername" = "فيديو جديد";
 "push.notification.add.video.group.nousername.noconversationname" = "فيديو جديد في مُحادثة";
 "push.notification.add.video.group.noconversationname" = "شارك %1$@ فيديو في مُحادثة";
 
@@ -77,17 +74,17 @@
 "push.notification.add.video.oneonone.nousername" = "فيديو جديد في مُحادثة";
 
 // AUDIO
-"push.notification.add.audio.group" = "%1$@ shared an audio message";
-"push.notification.add.audio.group.nousername" = "New audio message";
+"push.notification.add.audio.group" = "شارك %1$@ رسالة صوتية";
+"push.notification.add.audio.group.nousername" = "رسالة صوتية جديدة";
 "push.notification.add.audio.group.nousername.noconversationname" = "رسالة صوتية جديدة في مُحادثة";
 "push.notification.add.audio.group.noconversationname" = "شارك %1$@ رسالة صوتية في مُحادثة";
 
-"push.notification.add.audio.oneonone" = "shared an audio message";
+"push.notification.add.audio.oneonone" = "شارك رسالة صوتية";
 "push.notification.add.audio.oneonone.nousername" = "رسالة صوتية جديدة في مُحادثة";
 
 // FILE
-"push.notification.add.file.group" = "%1$@ shared a file";
-"push.notification.add.file.group.nousername" = "New file";
+"push.notification.add.file.group" = "شارك %1$@ ملف";
+"push.notification.add.file.group.nousername" = "ملف جديد";
 "push.notification.add.file.group.nousername.noconversationname" = "ملف جديد في مُحادثة";
 "push.notification.add.file.group.noconversationname" = "شارك %1$@ ملف في مُحادثة";
 
@@ -95,8 +92,8 @@
 "push.notification.add.file.oneonone.nousername" = "ملف جديد في مُحادثة";
 
 // LOCATION
-"push.notification.add.location.group" = "%1$@ shared a location";
-"push.notification.add.location.group.nousername" = "New location";
+"push.notification.add.location.group" = "شارك %1$@ موقع";
+"push.notification.add.location.group.nousername" = "موقع جديد";
 "push.notification.add.location.group.nousername.noconversationname" = "موقع جديد في مُحادثة";
 "push.notification.add.location.group.noconversationname" = "شارك %1$@ موقع في مُحادثة";
 
@@ -104,42 +101,42 @@
 "push.notification.add.location.oneonone.nousername" = "موقع جديد في مُحادثة";
 
 // SELF ADDED/REMOVED TO GROUP
-"push.notification.member.join.self" = "%1$@ added you";
+"push.notification.member.join.self" = "أضافك %1$@";
 "push.notification.member.join.self.noconversationname" = "أضافك %1$@ لمُحادثة";
 "push.notification.member.join.self.nousername.noconversationname" = "تم إضافتك لمُحادثة";
-"push.notification.member.join.self.nousername" = "You were added";
+"push.notification.member.join.self.nousername" = "تمت إضافتك";
 
-"push.notification.member.leave.self" = "%1$@ removed you";
+"push.notification.member.leave.self" = "أزالك %1$@";
 "push.notification.member.leave.self.noconversationname" = "أزالك %1$@ من مُحادثة";
 "push.notification.member.leave.self.nousername.noconversationname" = "تم حذفك من مُحادثة";
 "push.notification.member.leave.self.nousername" = "تمت إزالتك";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "is video calling";
+"push.notification.call.started.video.oneonone" = "يتصل بمكالمة فيديو";
 "push.notification.call.started.video.oneonone.nousername" = "اتصال فيديو من شخص ما";
 
-"push.notification.call.started.video.group" = "%1$@ is video calling";
+"push.notification.call.started.video.group" = "مكالمة فيديو من %1$@";
 "push.notification.call.started.video.group.nousername" = "اتصال فيديو من شخص ما";
 "push.notification.call.started.video.group.noconversationname" = "%1$@ يتصل بالفيديو في مُحادثة";
 "push.notification.call.started.video.group.nousername.noconversationname" = "شخص يتصل فيديو في مُحادثة";
 
 // VOICE CALLS
-"push.notification.call.started.oneonone" = "is calling";
+"push.notification.call.started.oneonone" = "يتصل بك";
 "push.notification.call.started.oneonone.nousername" = "شخص يتصل";
 
-"push.notification.call.started.group" = "%1$@ is calling";
+"push.notification.call.started.group" = "%1$@ يتصل";
 "push.notification.call.started.group.nousername" = "شخص يتصل";
 "push.notification.call.started.group.noconversationname" = "%1$@ يتصل في مُحادثة";
 "push.notification.call.started.group.nousername.noconversationname" = "شخص يتصل في مُحادثة";
 
 // MISSED CALLS
-"push.notification.call.missed.group" = "%1$@ called";
-"push.notification.call.missed.group.nousername" = "Someone called";
-"push.notification.call.missed.group.nousername.noconversationname" = "Someone called in a conversation";
-"push.notification.call.missed.group.noconversationname" = "%1$@ called in a conversation";
+"push.notification.call.missed.group" = "اتصل %1$@";
+"push.notification.call.missed.group.nousername" = "اتّصل شخص ما";
+"push.notification.call.missed.group.nousername.noconversationname" = "اتصل شخص ما في محادثة";
+"push.notification.call.missed.group.noconversationname" = "اتصل %1$@ في محادثة";
 
-"push.notification.call.missed.oneonone" = "called";
-"push.notification.call.missed.oneonone.nousername" = "Someone called";
+"push.notification.call.missed.oneonone" = "اتّصل بك";
+"push.notification.call.missed.oneonone.nousername" = "اتّصل شخص ما";
 
 // CALLKIT
 "push.notification.callkit.call.started.group" = "%1$@ في %2$@";
@@ -148,8 +145,8 @@
 "push.notification.callkit.call.started.group.noconversationname" = "%@ يتصل في مُحادثة";
 
 // CONVERSATION CREATE
-"push.notification.conversation.create" = "%1$@ created a group";
-"push.notification.conversation.create.nousername" = "Someone created a group";
+"push.notification.conversation.create" = "أنشأ %1$@ مجموعة";
+"push.notification.conversation.create.nousername" = "أنشأ أحدهم مجموعة";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "يريد %@ التواصل معك";
@@ -166,12 +163,12 @@
 "push.notification.failed.message.group.noconversationname" = "تعذَّر إرسال الرسالة";
 
 // REACTIONS
-"push.notification.reaction.group" = "%1$@ %2$@ your message";
+"push.notification.reaction.group" = "%1$@ %2$@ رسالتك";
 "push.notification.reaction.group.nousername.noconversationname" = "شخص %@ برسالتك في مُحادثة";
 "push.notification.reaction.group.nousername" = "شخص %@ رسالتك";
-"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ your message in a conversation";
+"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ رسالتك في محادثة";
 
-"push.notification.reaction.oneonone" = "%1$@ your message";
+"push.notification.reaction.oneonone" = "%1$@ رسالتك";
 "push.notification.reaction.oneonone.nousername" = "شخص %@ رسالتك";
 
 // NEW USER (no alert title for this)

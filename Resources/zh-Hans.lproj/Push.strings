@@ -29,18 +29,15 @@
 
 
 "push.notification.default" = "新信息";
-
-"push.notification.ephemeral.oneonone" = "sent you a message";
-"push.notification.ephemeral.group" = "Someone sent a message";
-"push.notification.ephemeral.group.noconversationname" = "Someone sent a message";
+"push.notification.ephemeral" = "有好友发送给您一条信息";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ 在 %2$@";
-"push.notification.title.noconversationname" = "in %1$@";
+"push.notification.title.noconversationname" = "于 %1$@";
 "push.notification.title.noteamname" = "%1$@";
 
 // 2 Components: Sender, Message
-"push.notification.add.message.group" = "%1$@: %2$@";
+"push.notification.add.message.group" = "%1$@：%2$@";
 "push.notification.add.message.group.nousername" = "新信息：%1$@";
 "push.notification.add.message.group.nousername.noconversationname" = "新信息：%1$@";
 "push.notification.add.message.group.noconversationname" = "%1$@在聊天中：%2$@";
@@ -50,7 +47,7 @@
 "push.notification.add.message.oneonone.nousername" = "新信息：%1$@";
 
 // UNKNOWN MESSAGE
-"push.notification.add.unknown.group" = "%1$@: new message";
+"push.notification.add.unknown.group" = "%1$@：新消息";
 "push.notification.add.unknown.group.nousername" = "新信息";
 "push.notification.add.unknown.group.nousername.noconversationname" = "新信息";
 "push.notification.add.unknown.group.noconversationname" = "%1$@发送了一条消息";
@@ -59,8 +56,8 @@
 "push.notification.add.unknown.oneonone.nousername" = "新信息";
 
 // IMAGE
-"push.notification.add.image.group" = "%1$@ shared a picture";
-"push.notification.add.image.group.nousername" = "New picture";
+"push.notification.add.image.group" = "%1$@ 分享了一张图片";
+"push.notification.add.image.group.nousername" = "新图片";
 "push.notification.add.image.group.nousername.noconversationname" = "收到新图片";
 "push.notification.add.image.group.noconversationname" = "%1$@ 在对话中分享了一张图片";
 
@@ -68,8 +65,8 @@
 "push.notification.add.image.oneonone.nousername" = "收到新图片";
 
 // VIDEO
-"push.notification.add.video.group" = "%1$@ shared a video";
-"push.notification.add.video.group.nousername" = "New video";
+"push.notification.add.video.group" = "%1$@ 分享了视频";
+"push.notification.add.video.group.nousername" = "新的视频";
 "push.notification.add.video.group.nousername.noconversationname" = "新视频";
 "push.notification.add.video.group.noconversationname" = "%1$@ 在聊天当中分享了一段视频";
 
@@ -77,17 +74,17 @@
 "push.notification.add.video.oneonone.nousername" = "新视频";
 
 // AUDIO
-"push.notification.add.audio.group" = "%1$@ shared an audio message";
-"push.notification.add.audio.group.nousername" = "New audio message";
+"push.notification.add.audio.group" = "%1$@ 分享了一条语音消息";
+"push.notification.add.audio.group.nousername" = "新的录音消息";
 "push.notification.add.audio.group.nousername.noconversationname" = "在对话中有一条新的语音信息";
 "push.notification.add.audio.group.noconversationname" = "%1$@ 在对话中分享了一条新语音信息";
 
-"push.notification.add.audio.oneonone" = "shared an audio message";
+"push.notification.add.audio.oneonone" = "分享了语音信息";
 "push.notification.add.audio.oneonone.nousername" = "在对话中有一条新的语音信息";
 
 // FILE
-"push.notification.add.file.group" = "%1$@ shared a file";
-"push.notification.add.file.group.nousername" = "New file";
+"push.notification.add.file.group" = "%1$@ 分享了一个文件";
+"push.notification.add.file.group.nousername" = "新文件";
 "push.notification.add.file.group.nousername.noconversationname" = "对话中有一个新文件";
 "push.notification.add.file.group.noconversationname" = "%1$@ 在聊天当中分享了一个文件";
 
@@ -95,8 +92,8 @@
 "push.notification.add.file.oneonone.nousername" = "对话中有一个新文件";
 
 // LOCATION
-"push.notification.add.location.group" = "%1$@ shared a location";
-"push.notification.add.location.group.nousername" = "New location";
+"push.notification.add.location.group" = "%1$@ 分享了位置";
+"push.notification.add.location.group.nousername" = "新位置";
 "push.notification.add.location.group.nousername.noconversationname" = "对话中有一个新的位置分享";
 "push.notification.add.location.group.noconversationname" = "%1$@ 在聊天当中分享了一个位置";
 
@@ -104,42 +101,42 @@
 "push.notification.add.location.oneonone.nousername" = "对话中有一个新的位置分享";
 
 // SELF ADDED/REMOVED TO GROUP
-"push.notification.member.join.self" = "%1$@ added you";
+"push.notification.member.join.self" = "%1$@ 将您加为好友";
 "push.notification.member.join.self.noconversationname" = "%1$@ 添加您到对话中";
 "push.notification.member.join.self.nousername.noconversationname" = "您被添加到一个对话中";
-"push.notification.member.join.self.nousername" = "You were added";
+"push.notification.member.join.self.nousername" = "您已被加为好友";
 
-"push.notification.member.leave.self" = "%1$@ removed you";
+"push.notification.member.leave.self" = "%1$@ 已将您从好友列表中删除";
 "push.notification.member.leave.self.noconversationname" = "您被%1$@从对话中移出";
 "push.notification.member.leave.self.nousername.noconversationname" = "您从一个对话中被移出";
 "push.notification.member.leave.self.nousername" = "你被删除";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "is video calling";
+"push.notification.call.started.video.oneonone" = "视频来电";
 "push.notification.call.started.video.oneonone.nousername" = "您接到一个视频来电";
 
-"push.notification.call.started.video.group" = "%1$@ is video calling";
+"push.notification.call.started.video.group" = "%1$@视频来电";
 "push.notification.call.started.video.group.nousername" = "您接到一个视频来电";
 "push.notification.call.started.video.group.noconversationname" = "%1$@在通话中视频来电";
 "push.notification.call.started.video.group.nousername.noconversationname" = "有人在通话中视频来电";
 
 // VOICE CALLS
-"push.notification.call.started.oneonone" = "is calling";
+"push.notification.call.started.oneonone" = "来电";
 "push.notification.call.started.oneonone.nousername" = "您接到一個来电";
 
-"push.notification.call.started.group" = "%1$@ is calling";
+"push.notification.call.started.group" = "%1$@来电";
 "push.notification.call.started.group.nousername" = "您接到一個来电";
 "push.notification.call.started.group.noconversationname" = "%1$@在对话中来电";
 "push.notification.call.started.group.nousername.noconversationname" = "有参与者在对话中来电";
 
 // MISSED CALLS
-"push.notification.call.missed.group" = "%1$@ called";
-"push.notification.call.missed.group.nousername" = "Someone called";
-"push.notification.call.missed.group.nousername.noconversationname" = "Someone called in a conversation";
-"push.notification.call.missed.group.noconversationname" = "%1$@ called in a conversation";
+"push.notification.call.missed.group" = "%1$@ 呼叫了您";
+"push.notification.call.missed.group.nousername" = "有人呼叫了您";
+"push.notification.call.missed.group.nousername.noconversationname" = "会话中的某个人呼叫了您";
+"push.notification.call.missed.group.noconversationname" = "会话中的 %1$@ 呼叫了您";
 
-"push.notification.call.missed.oneonone" = "called";
-"push.notification.call.missed.oneonone.nousername" = "Someone called";
+"push.notification.call.missed.oneonone" = "曾来电";
+"push.notification.call.missed.oneonone.nousername" = "有人呼叫了您";
 
 // CALLKIT
 "push.notification.callkit.call.started.group" = "%1$@ 在 %2$@";
@@ -148,8 +145,8 @@
 "push.notification.callkit.call.started.group.noconversationname" = "在对话中%@来电";
 
 // CONVERSATION CREATE
-"push.notification.conversation.create" = "%1$@ created a group";
-"push.notification.conversation.create.nousername" = "Someone created a group";
+"push.notification.conversation.create" = "%1$@ 创建了一个群组";
+"push.notification.conversation.create.nousername" = "有人创建了一个群组";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@想添加您为好友";
@@ -166,12 +163,12 @@
 "push.notification.failed.message.group.noconversationname" = "无法发送信息";
 
 // REACTIONS
-"push.notification.reaction.group" = "%1$@ %2$@ your message";
+"push.notification.reaction.group" = "%1$@ %2$@ 您的消息";
 "push.notification.reaction.group.nousername.noconversationname" = "在对话中有参与者%@您的信息";
 "push.notification.reaction.group.nousername" = "有参与者%@您的信息";
-"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ your message in a conversation";
+"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ 您在会话中的消息";
 
-"push.notification.reaction.oneonone" = "%1$@ your message";
+"push.notification.reaction.oneonone" = "%1$@ 您的消息";
 "push.notification.reaction.oneonone.nousername" = "有参与者%@您的信息";
 
 // NEW USER (no alert title for this)

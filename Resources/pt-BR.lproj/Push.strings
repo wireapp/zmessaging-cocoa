@@ -29,10 +29,7 @@
 
 
 "push.notification.default" = "Nova mensagem";
-
-"push.notification.ephemeral.oneonone" = "enviou uma mensagem para você";
-"push.notification.ephemeral.group" = "Alguém mandou uma mensagem";
-"push.notification.ephemeral.group.noconversationname" = "Alguém mandou uma mensagem";
+"push.notification.ephemeral" = "Alguém te mandou uma mensagem";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ em %2$@";
