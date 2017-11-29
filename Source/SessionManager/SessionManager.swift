@@ -344,7 +344,7 @@ public protocol LocalNotificationResponder : class {
     }
     
     public func addAccount() {
-        logoutCurrentSession(deleteCookie: false, error: NSError.userSessionErrorWith(.addAccountRequested, userInfo: nil))
+        logoutCurrentSession(deleteCookie: false, error: NSError(code: .addAccountRequested, userInfo: nil))
     }
     
     public func delete(account: Account) {
@@ -361,7 +361,7 @@ public protocol LocalNotificationResponder : class {
             })
         } else {
             // Deleted the active account and there's not other account we can switch to
-            logoutCurrentSession(deleteCookie: true, deleteAccount:true, error: NSError.userSessionErrorWith(.addAccountRequested, userInfo: nil))
+            logoutCurrentSession(deleteCookie: true, deleteAccount:true, error: NSError(code: .addAccountRequested, userInfo: nil))
         }
     }
     
@@ -394,7 +394,7 @@ public protocol LocalNotificationResponder : class {
     internal func loadSession(for selectedAccount: Account?, completion: @escaping (ZMUserSession) -> Void) {
         guard let account = selectedAccount, account.isAuthenticated else {
             createUnauthenticatedSession()
-            delegate?.sessionManagerDidFailToLogin(account: selectedAccount, error: NSError.userSessionErrorWith(.accessTokenExpired, userInfo: nil))
+            delegate?.sessionManagerDidFailToLogin(account: selectedAccount, error: NSError(code: .accessTokenExpired, userInfo: nil))
             return
         }
 
@@ -633,7 +633,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
     
     public func session(session: UnauthenticatedSession, createdAccount account: Account) {
         guard !(accountManager.accounts.count == SessionManager.maxNumberAccounts && accountManager.account(with: account.userIdentifier) == nil) else {
-            session.authenticationStatus.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.accountLimitReached, userInfo: nil))
+            session.authenticationStatus.notifyAuthenticationDidFail(NSError(code: .accountLimitReached, userInfo: nil))
             return
         }
         

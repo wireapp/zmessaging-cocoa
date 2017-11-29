@@ -65,10 +65,10 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
                 error = NSError.blacklistedEmail(with: response) ??
                     NSError.emailAddressInUse(with: response) ??
                     NSError.invalidEmail(with: response) ??
-                    NSError.userSessionErrorWith(.unknownError, userInfo: [:])
+                    NSError(code: .unknownError, userInfo: [:])
             case .checkActivationCode:
                 error = NSError.invalidActivationCode(with: response) ??
-                    NSError.userSessionErrorWith(.unknownError, userInfo: [:])
+                    NSError(code: .unknownError, userInfo: [:])
             default:
                 fatal("Error occurs for invalid phase: \(registrationStatus.phase)")
             }

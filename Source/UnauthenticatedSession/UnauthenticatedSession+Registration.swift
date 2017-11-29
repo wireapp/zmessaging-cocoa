@@ -66,7 +66,7 @@ extension UnauthenticatedSession {
                 try ZMUser.validatePhoneNumber(&phoneNumber)
             }
         } catch {
-            ZMUserSessionRegistrationNotification.notifyRegistrationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil), context: authenticationStatus)
+            ZMUserSessionRegistrationNotification.notifyRegistrationDidFail(NSError(code: .needsCredentials, userInfo: nil), context: authenticationStatus)
             return
         }
         

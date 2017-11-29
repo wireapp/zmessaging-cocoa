@@ -44,7 +44,7 @@ extension RegistrationStatusStrategyTestHelper {
     func checkResponseError(with phase: RegistrationStatus.Phase, code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
         registrationStatus.phase = phase
 
-        let expectedError = NSError.userSessionErrorWith(code, userInfo: [:])
+        let expectedError = NSError(code: code, userInfo: [:])
         let payload = [
             "label": errorLabel,
             "message":"some"

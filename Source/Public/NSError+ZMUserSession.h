@@ -75,10 +75,10 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     /// The account can't be created because the account limit has been reached
     ZMUserSessionAccountLimitReached,
     /// The email used in the registration is blacklisted
-    ZMUserSessionBlacklistedEmail
+    ZMUserSessionBlacklistedEmail,
+    /// Unauthorized e-mail address
+    ZMUserSessionUnauthorizedEmail
 };
-
-FOUNDATION_EXPORT NSString * const ZMUserSessionErrorDomain;
 
 FOUNDATION_EXPORT NSString * const ZMClientsKey;
 

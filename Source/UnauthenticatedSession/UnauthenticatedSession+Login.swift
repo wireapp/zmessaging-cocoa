@@ -38,9 +38,9 @@ extension UnauthenticatedSession {
         guard !updatedCredentialsInUserSession else { return }
         
         if credentials.isInvalid {
-            authenticationStatus.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.needsCredentials, userInfo: nil))
+            authenticationStatus.notifyAuthenticationDidFail(NSError(code: .needsCredentials, userInfo: nil))
         } else if !self.reachability.mayBeReachable {
-            authenticationStatus.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.networkError, userInfo:nil))
+            authenticationStatus.notifyAuthenticationDidFail(NSError(code: .networkError, userInfo:nil))
         } else {
             self.authenticationStatus.prepareForLogin(with: credentials)
         }

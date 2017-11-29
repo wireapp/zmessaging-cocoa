@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (__nullable instancetype)pendingLoginErrorWithResponse:(ZMTransportResponse *)response;
 + (__nullable instancetype)unauthorizedErrorWithResponse:(ZMTransportResponse *)response;
++ (__nullable instancetype)unauthorizedEmailErrorWithResponse:(ZMTransportResponse *)response;
 
 + (__nullable instancetype)invalidPhoneNumberErrorWithReponse:(ZMTransportResponse *)response;
 + (__nullable instancetype)phoneNumberIsAlreadyRegisteredErrorWithResponse:(ZMTransportResponse *)response;

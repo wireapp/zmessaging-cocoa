@@ -49,8 +49,8 @@ extension TeamRegistrationStrategy : ZMSingleRequestTranscoder {
             let error = NSError.blacklistedEmail(with: response) ??
                 NSError.invalidActivationCode(with: response) ??
                 NSError.emailAddressInUse(with: response) ??
-                NSError.unauthorizedError(with: response) ??
-                NSError.userSessionErrorWith(.unknownError, userInfo: [:])
+                NSError.unauthorizedEmailError(with: response) ??
+                NSError(code: .unknownError, userInfo: [:])
             registrationStatus.handleError(error)
         }
     }
