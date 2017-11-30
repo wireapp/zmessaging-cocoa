@@ -20,19 +20,20 @@ import Foundation
 
 extension ZMUserSessionErrorCode: LocalizedError {
     public var errorDescription: String? {
+        let bundle = Bundle(for: ZMUserSession.self)
         switch self {
         case .blacklistedEmail:
-            return NSLocalizedString("user_session.error.balcklisted-email", comment: "")
+            return bundle.localizedString(forKey: "user_session.error.balcklisted-email", value: nil, table: "ZMLocalizable")
         case .emailIsAlreadyRegistered:
-            return NSLocalizedString("user_session.error.email-exists", comment: "")
+            return bundle.localizedString(forKey: "user_session.error.email-exists", value: nil, table: "ZMLocalizable")
         case .invalidEmail:
-            return NSLocalizedString("user_session.error.invalid-email", comment: "")
+            return bundle.localizedString(forKey: "user_session.error.invalid-email", value: nil, table: "ZMLocalizable")
         case .invalidActivationCode:
-            return NSLocalizedString("user_session.error.invalid-code", comment: "")
+            return bundle.localizedString(forKey: "user_session.error.invalid-code", value: nil, table: "ZMLocalizable")
         case .unknownError:
-            return NSLocalizedString("user_session.error.unknown", comment: "")
+            return bundle.localizedString(forKey: "user_session.error.unknown", value: nil, table: "ZMLocalizable")
         case .unauthorizedEmail:
-            return NSLocalizedString("user_session.error.unknown", comment: "")
+            return bundle.localizedString(forKey: "user_session.error.unknown", value: nil, table: "ZMLocalizable")
         default:
             return nil
         }
