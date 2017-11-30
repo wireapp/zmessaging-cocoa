@@ -607,7 +607,11 @@ public struct CallEvent {
                                                                                      members: [CallMember(userId: userId!, audioEstablished: false)],
                                                                                      callCenter: self)
         case .established:
-            establishedDate = Date()
+            // WORKAROUND: the call established handler will is called once for every participant in a
+            // group call. Until that's no longer the case we must take care to only set establishedDate once.
+            if self.callState(conversationId: conversationId) != .established {
+                establishedDate = Date()
+            }
             
             if isVideoCall(conversationId: conversationId) {
                 avsWrapper.setVideoSendActive(userId: conversationId, active: true)
