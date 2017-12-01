@@ -220,6 +220,27 @@ class WireCallCenterV3Tests: MessagingTest {
         XCTAssertNotNil(sut.establishedDate)
     }
     
+    func testThatTheEstablishedHandlerDoesntSetTheStartTimeIfCallIsAlreadyEstablished() {
+        // given
+        WireSyncEngine.incomingCallHandler(conversationId: conversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertNil(sut.establishedDate)
+        
+        // call is established
+        WireSyncEngine.establishedCallHandler(conversationId: conversationIDRef, userId: otherUserIDRef, contextRef: context)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertNotNil(sut.establishedDate)
+        let previousEstablishedDate = sut.establishedDate
+        spinMainQueue(withTimeout: 0.1)
+        
+        // when
+        WireSyncEngine.establishedCallHandler(conversationId: conversationIDRef, userId: otherUserIDRef, contextRef: context)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(sut.establishedDate, previousEstablishedDate)
+    }
+    
     func testThatTheClosedCallHandlerPostsTheRightNotification() {
         // given
         WireSyncEngine.incomingCallHandler(conversationId: conversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
