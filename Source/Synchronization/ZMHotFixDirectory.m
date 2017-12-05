@@ -147,10 +147,10 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
     
     NSArray *confirmationReceiptsForDeletedMessages = [possibleMatches filterWithBlock:^BOOL(ZMClientMessage *candidateConfirmationReceipt) {
         if (candidateConfirmationReceipt.genericMessage.hasConfirmation &&
-            candidateConfirmationReceipt.genericMessage.confirmation.hasMessageId) {
+            candidateConfirmationReceipt.genericMessage.confirmation.firstMessageId) {
             ZMClientMessage *confirmationReceipt = candidateConfirmationReceipt;
             
-            NSUUID *originalMessageUUID = [NSUUID uuidWithTransportString:confirmationReceipt.genericMessage.confirmation.messageId];
+            NSUUID *originalMessageUUID = [NSUUID uuidWithTransportString:confirmationReceipt.genericMessage.confirmation.firstMessageId];
             
             ZMMessage *originalConfirmedMessage = [ZMMessage fetchMessageWithNonce:originalMessageUUID
                                                                    forConversation:confirmationReceipt.conversation

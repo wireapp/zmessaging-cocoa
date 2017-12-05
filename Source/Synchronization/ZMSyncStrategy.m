@@ -164,6 +164,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[AssetV3FileUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory],
                                    [[AddressBookUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory],
                                    self.clientMessageTranscoder,
+                                   [[AvailabilityRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory],
                                    [[UserProfileRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC
                                                                                   applicationStatus:self.applicationStatusDirectory
                                                                             userProfileUpdateStatus:self.applicationStatusDirectory.userProfileUpdateStatus],
