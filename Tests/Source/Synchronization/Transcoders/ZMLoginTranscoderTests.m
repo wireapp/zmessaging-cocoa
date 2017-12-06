@@ -406,7 +406,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:403 transportSessionError:nil];
 
     // when
-    [self expectAuthenticationFailedWithError:ZMUserSessionUnkownError after:^{
+    [self expectAuthenticationFailedWithError:ZMUserSessionUnknownError after:^{
         [[self.sut nextRequest] completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }];

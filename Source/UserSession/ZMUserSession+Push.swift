@@ -92,9 +92,12 @@ extension ZMUserSession: PushDispatcherOptionalClient {
             }
         case .voip:
             if let data = newToken.data {
-                managedObjectContext.pushKitToken = nil
-                self.setPushKitToken(data)
-                managedObjectContext.forceSaveOrRollback()
+                // Check if token is changed before triggering the request
+                if managedObjectContext.pushKitToken == nil || managedObjectContext.pushKitToken?.deviceToken != data {
+                    managedObjectContext.pushKitToken = nil
+                    self.setPushKitToken(data)
+                    managedObjectContext.forceSaveOrRollback()
+                }
             }
             else {
                 self.deletePushKitToken()

@@ -137,7 +137,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
             if (nil == timestamp) {
                 // In case we did not receive a payload we will add 1/10th to the last modified date of
                 // the conversation to make sure it appears below the last message
-                timestamp = [conversation.lastModifiedDate dateByAddingTimeInterval:offset];
+                timestamp = [conversation.lastModifiedDate dateByAddingTimeInterval:offset] ?: [NSDate date];
             }
             [conversation appendNewPotentialGapSystemMessageWithUsers:conversation.activeParticipants.set
                                                             timestamp:timestamp];

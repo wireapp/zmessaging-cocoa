@@ -261,7 +261,7 @@
     
     // expect
     [[userObserver expect] phoneNumberVerificationCodeRequestDidFail:[OCMArg checkWithBlock:^BOOL(NSError *error) {
-        return error.code == ZMUserSessionPhoneNumberIsAlreadyRegistered && [error.domain isEqualToString:ZMUserSessionErrorDomain];
+        return error.code == ZMUserSessionPhoneNumberIsAlreadyRegistered && [error.domain isEqualToString:NSError.ZMUserSessionErrorDomain];
     }]];
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
@@ -525,7 +525,7 @@
         }
         return nil;
     };
-    [[editiongObserver expect] emailUpdateDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionUnkownError userInfo:nil]];
+    [[editiongObserver expect] emailUpdateDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionUnknownError userInfo:nil]];
     
     // when
     [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil];

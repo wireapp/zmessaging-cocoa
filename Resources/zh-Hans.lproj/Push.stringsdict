@@ -69,7 +69,7 @@
 	<key>push.notification.call.missed.many</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>You have %2$#@new_calls@ in %1@</string>
+		<string>您在 %1@ 内收到了 %2$#@new_calls@ 个来电</string>
 		<key>new_calls</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -77,15 +77,15 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>one missed call</string>
+			<string>有一个未接来电</string>
 			<key>other</key>
-			<string>%2@ missed calls</string>
+			<string>%2@个未接来电</string>
 		</dict>
 	</dict>
 	<key>push.notification.call.missed.many.noconversationname</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>You have %1$#@new_calls@ in a conversation</string>
+		<string>您在会话中收到了 %1$#@new_calls@ 个来电</string>
 		<key>new_calls</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -93,9 +93,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>one missed call</string>
+			<string>一个未接来电</string>
 			<key>other</key>
-			<string>%1$@ missed calls</string>
+			<string>%1$@个未接来电</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.group</key>
@@ -143,7 +143,7 @@
 			<key>one</key>
 			<string>打招呼</string>
 			<key>other</key>
-			<string>%1$@ pings</string>
+			<string>%1$@ 打了一个招呼</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.group.nousername.noconversationname</key>
@@ -159,7 +159,7 @@
 			<key>one</key>
 			<string>打招呼</string>
 			<key>other</key>
-			<string>%1$@ pings</string>
+			<string>%1$@ 打了一个招呼</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.oneonone</key>
@@ -175,7 +175,7 @@
 			<key>one</key>
 			<string> </string>
 			<key>other</key>
-			<string> %1$@ times</string>
+			<string> %1$@次</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.oneonone.nousername</key>

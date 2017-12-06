@@ -25,54 +25,45 @@ private let log = ZMSLog(tag: "Calling System Message")
 /// Inserts a calling system message for V3 calls
 final class CallSystemMessageGenerator: NSObject {
     
-    var callerByConversation = [ZMConversation: ZMUser]()
     var startDateByConversation = [ZMConversation: Date]()
     var connectDateByConversation = [ZMConversation: Date]()
 
-    public func appendSystemMessageIfNeeded(callState: CallState, conversation: ZMConversation, user: ZMUser?, timeStamp: Date?) -> ZMSystemMessage?{
+    public func appendSystemMessageIfNeeded(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) -> ZMSystemMessage?{
         var systemMessage : ZMSystemMessage? = nil
 
         switch callState {
         case .outgoing:
             log.info("Setting call start date for \(conversation.displayName)")
             startDateByConversation[conversation] = Date()
-            fallthrough
-        case .incoming:
-            log.info("Adding \(user?.displayName ?? "") as caller in \"\(conversation.displayName)\"")
-            callerByConversation[conversation] = user
         case .established:
-            if nil == callerByConversation[conversation] { log.info("No caller present when setting call start date") }
             log.info("Setting call connect date for \(conversation.displayName)")
             connectDateByConversation[conversation] = Date()
         case .terminating(reason: let reason):
-            systemMessage = appendCallEndedSystemMessage(reason: reason, conversation: conversation, timeStamp: timeStamp)
-        case .none, .unknown, .answered, .establishedDataChannel:
+            systemMessage = appendCallEndedSystemMessage(reason: reason, conversation: conversation, caller: caller, timestamp: timestamp)
+        case .none, .unknown, .answered, .establishedDataChannel, .incoming:
             break
         }
         return systemMessage
     }
 
-    private func appendCallEndedSystemMessage(reason: CallClosedReason, conversation: ZMConversation, timeStamp: Date?) -> ZMSystemMessage? {
+    private func appendCallEndedSystemMessage(reason: CallClosedReason, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) -> ZMSystemMessage? {
         
         var systemMessage : ZMSystemMessage? = nil
-        if let caller = callerByConversation[conversation], let connectDate = connectDateByConversation[conversation] {
+        if let connectDate = connectDateByConversation[conversation] {
             let duration = -connectDate.timeIntervalSinceNow
             log.info("Appending performed call message: \(duration), \(caller.displayName), \"\(conversation.displayName)\"")
             systemMessage =  conversation.appendPerformedCallMessage(with: duration, caller: caller)
         }
-        else if let caller = callerByConversation[conversation] {
+        else {
             if let startDate = startDateByConversation[conversation] {
                 log.info("Appending performed call message: \(startDate), \(caller.displayName), \"\(conversation.displayName)\"")
                 systemMessage =  conversation.appendPerformedCallMessage(with: 0, caller: caller)
-            } else {
+            } else if reason == .canceled || reason == .timeout || reason == .normal {
                 log.info("Appending missed call message: \(caller.displayName), \"\(conversation.displayName)\"")
-                systemMessage = conversation.appendMissedCallMessage(fromUser: caller, at: timeStamp ?? Date())
+                systemMessage = conversation.appendMissedCallMessage(fromUser: caller, at: timestamp ?? Date())
             }
-        } else {
-            log.info("Call ended but no call info present in order to insert system message")
         }
         
-        callerByConversation[conversation] = nil
         startDateByConversation[conversation] = nil
         connectDateByConversation[conversation] = nil
         return systemMessage

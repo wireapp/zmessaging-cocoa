@@ -195,7 +195,7 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         // then
         XCTAssertEqual(observer.authenticationDidSucceedEvents, 0)
         XCTAssertEqual(observer.authenticationDidFailEvents.count, 1)
-        XCTAssertEqual(observer.authenticationDidFailEvents[0].localizedDescription, NSError.userSessionErrorWith(.needsCredentials, userInfo:nil).localizedDescription)
+        XCTAssertEqual(observer.authenticationDidFailEvents[0].localizedDescription, NSError(code: .needsCredentials, userInfo:nil).localizedDescription)
     }
     
     func testThatDuringLoginItThrowsErrorWhenOffline() {
@@ -208,7 +208,7 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         // then
         XCTAssertEqual(observer.authenticationDidSucceedEvents, 0)
         XCTAssertEqual(observer.authenticationDidFailEvents.count, 1)
-        XCTAssertEqual(observer.authenticationDidFailEvents[0].localizedDescription, NSError.userSessionErrorWith(.networkError, userInfo:nil).localizedDescription)
+        XCTAssertEqual(observer.authenticationDidFailEvents[0].localizedDescription, NSError(code: .networkError, userInfo:nil).localizedDescription)
     }
 
     func testThatItParsesCookieDataAndDoesCallTheDelegateIfTheCookieIsValidAndThereIsAUserIdKeyUser() {

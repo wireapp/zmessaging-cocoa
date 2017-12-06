@@ -149,9 +149,9 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
         super.init(userId: userId, clientId: clientId, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: transport)
     }
 
-    public func update(callState : CallState, conversationId: UUID, userId: UUID? = nil) {
+    public func update(callState : CallState, conversationId: UUID, callerId: UUID) {
         mockCallState = callState
-        WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, userId: userId, messageTime: nil).post(in: uiMOC!.notificationContext)
+        WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, callerId: callerId, messageTime: nil).post(in: uiMOC!.notificationContext)
     }
     
     public override func isVideoCall(conversationId: UUID) -> Bool {

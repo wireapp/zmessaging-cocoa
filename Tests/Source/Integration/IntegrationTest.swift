@@ -511,7 +511,7 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
     
-    public func sessionManagerCreated(userSession: ZMUserSession) {
+    public func sessionManagerActivated(userSession: ZMUserSession) {
         self.userSession = userSession
         
         userSession.syncManagedObjectContext.performGroupedBlock {

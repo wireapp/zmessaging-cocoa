@@ -147,14 +147,14 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
     NSMutableSet *usersToReset = [expectedRemoteIdentifiers mutableCopy];
     for (NSDictionary *userData in userPayload) {
         NSUUID *uuid = [userData[@"id"] UUID];
-        ZMUser *actualUser = [ZMUser userWithRemoteID:uuid createIfNeeded:NO inContext:self.managedObjectContext];
+        ZMUser *actualUser = [ZMUser fetchAndMergeWith:uuid createIfNeeded:NO in:self.managedObjectContext];
         [actualUser updateWithTransportData:userData authoritative:YES];
         [usersToReset removeObject:uuid];
     }
     
     // are there any remaining expected users that I did not find in the payload?
     for(NSUUID *uuid in usersToReset) {
-        ZMUser *actualUser = [ZMUser userWithRemoteID:uuid createIfNeeded:NO inContext:self.managedObjectContext];
+        ZMUser *actualUser = [ZMUser fetchAndMergeWith:uuid createIfNeeded:NO in:self.managedObjectContext];
         actualUser.needsToBeUpdatedFromBackend = NO;
     }
 }
@@ -198,7 +198,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
         return;
     }
     
-    ZMUser *user = [ZMUser userWithRemoteID:userId createIfNeeded:YES inContext:self.managedObjectContext];
+    ZMUser *user = [ZMUser fetchAndMergeWith:userId createIfNeeded:YES in:self.managedObjectContext];
     [user updateWithTransportData:userData authoritative:NO];
     
     return;

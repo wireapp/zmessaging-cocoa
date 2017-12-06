@@ -362,8 +362,8 @@
     __block BOOL notificationCalled = NO;
     //expect
     id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
-        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
-        XCTAssertEqual(error.code, (long) ZMUserSessionUnkownError);
+        XCTAssertEqualObjects(error.domain, NSError.ZMUserSessionErrorDomain);
+        XCTAssertEqual(error.code, (long) ZMUserSessionUnknownError);
         XCTAssertEqual(event, ZMRegistrationNotificationPhoneNumberVerificationDidFail);
         notificationCalled = YES;
     }];
@@ -395,7 +395,7 @@
     __block BOOL notificationCalled = NO;
     //expect
     id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
-        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
+        XCTAssertEqualObjects(error.domain, NSError.ZMUserSessionErrorDomain);
         XCTAssertEqual(error.code, (long) ZMUserSessionInvalidPhoneNumberVerificationCode);
         XCTAssertEqual(event, ZMRegistrationNotificationPhoneNumberVerificationDidFail);
         notificationCalled = YES;

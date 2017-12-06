@@ -228,25 +228,35 @@ static NSString *const NoTeamNameKey = @"noteamname";
 
 - (NSString *)localizedStringWithConversationName:(NSString *)conversationName teamName:(NSString *)teamName
 {
-    NSMutableArray *arguments = [NSMutableArray array];
-    NSString *key = self;
-    
-    if (conversationName == nil) {
-        key = [key stringByAppendingPathExtension:NoConversationNameKey];
+    if (conversationName && teamName) {
+        return localizedStringWithKeyAndArguments(ZMPushLocalizedString(self), @[conversationName, teamName]);
+    }
+    else if (conversationName) {
+        return conversationName;
+    }
+    else if (teamName) {
+        return teamName;
     }
     else {
-        [arguments addObject:conversationName];
-    }
-    
-    if (teamName == nil) {
-        key = [key stringByAppendingPathExtension:NoTeamNameKey];
-    }
-    else {
-        [arguments addObject:teamName];
-    }
-    
-    if (arguments.count == 0) {
         return nil;
+    }
+}
+
+- (NSString *)localizedCallKitStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation;
+{
+    NSString *key = self;
+    NSMutableArray *arguments = [NSMutableArray array];
+    
+    if (user.name == nil) {
+        key = [key stringByAppendingPathExtension:NoUserNameKey];
+    } else {
+        [arguments addObject:user.name];
+    }
+    
+    if (conversation.meaningfulDisplayName == nil) {
+        key = [key stringByAppendingPathExtension:NoConversationNameKey];
+    } else {
+        [arguments addObject:conversation.meaningfulDisplayName];
     }
     
     return localizedStringWithKeyAndArguments(ZMPushLocalizedString(key), arguments);

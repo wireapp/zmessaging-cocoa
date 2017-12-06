@@ -164,7 +164,7 @@
                 [NSError invalidEmailWithResponse:response] ?:
                 [NSError invalidPhoneNumberErrorWithReponse:response] ?:
                 [NSError invalidInvitationCodeWithResponse:response] ?:
-                [NSError userSessionErrorWithErrorCode:ZMUserSessionUnkownError userInfo:nil]
+                [NSError userSessionErrorWithErrorCode:ZMUserSessionUnknownError userInfo:nil]
             };
             [authenticationStatus didFailRegistrationForOtherReasons:error];
         }

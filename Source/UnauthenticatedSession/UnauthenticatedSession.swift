@@ -39,6 +39,7 @@ public class UnauthenticatedSession: NSObject {
     
     public let groupQueue: DispatchGroupQueue
     public let authenticationStatus: ZMAuthenticationStatus
+    public let registrationStatus: RegistrationStatus 
     let reachability: ReachabilityProvider
     private(set) var operationLoop: UnauthenticatedOperationLoop!
     private let transportSession: UnauthenticatedTransportSessionProtocol
@@ -50,6 +51,7 @@ public class UnauthenticatedSession: NSObject {
         self.delegate = delegate
         self.groupQueue = DispatchGroupQueue(queue: .main)
         self.authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue)
+        self.registrationStatus = RegistrationStatus()
         self.transportSession = transportSession
         self.reachability = reachability
         super.init()
@@ -61,7 +63,9 @@ public class UnauthenticatedSession: NSObject {
                 ZMLoginTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus, userInfoParser: self),
                 ZMLoginCodeRequestTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
                 ZMRegistrationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus, userInfoParser: self)!,
-                ZMPhoneNumberVerificationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!
+                ZMPhoneNumberVerificationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
+                EmailVerificationStrategy(groupQueue: groupQueue, status: registrationStatus),
+                TeamRegistrationStrategy(groupQueue: groupQueue, status: registrationStatus, userInfoParser: self)
             ]
         )
     }

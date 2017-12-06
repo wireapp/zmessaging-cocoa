@@ -21,16 +21,16 @@
 
 extension ZMLocalNotification {
     
-    convenience init?(callState: CallState, conversation: ZMConversation, sender: ZMUser) {
+    convenience init?(callState: CallState, conversation: ZMConversation, caller: ZMUser) {
         guard conversation.remoteIdentifier != nil else { return nil }
-        let builder = CallNotificationBuilder(callState: callState, sender: sender, conversation: conversation)
+        let builder = CallNotificationBuilder(callState: callState, caller: caller, conversation: conversation)
         self.init(conversation: conversation, type: .calling(callState), builder: builder)
     }
     
     private class CallNotificationBuilder: NotificationBuilder {
         
         let callState: CallState
-        let sender: ZMUser
+        let caller: ZMUser
         var conversation: ZMConversation?
         private var teamName: String?
         
@@ -38,9 +38,9 @@ extension ZMLocalNotification {
             .established, .answered(degraded: false), .outgoing(degraded: false), .none, .unknown
         ]
         
-        init(callState: CallState, sender: ZMUser, conversation: ZMConversation) {
+        init(callState: CallState, caller: ZMUser, conversation: ZMConversation) {
             self.callState = callState
-            self.sender = sender
+            self.caller = caller
             self.conversation = conversation
         }
         
@@ -80,7 +80,7 @@ extension ZMLocalNotification {
             }
             
             if nil != key {
-                text = key!.localizedString(with: sender, conversation: conversation) ?? ""
+                text = key!.localizedString(with: caller, conversation: conversation) ?? ""
             }
             
             return text.escapingPercentageSymbols()
@@ -110,7 +110,7 @@ extension ZMLocalNotification {
             guard
                 let moc = conversation?.managedObjectContext,
                 let selfUserID = ZMUser.selfUser(in: moc).remoteIdentifier,
-                let senderID = sender.remoteIdentifier,
+                let senderID = caller.remoteIdentifier,
                 let conversationID = conversation?.remoteIdentifier
                 else { return nil }
             

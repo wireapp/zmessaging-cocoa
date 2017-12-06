@@ -50,19 +50,18 @@ public extension NSString {
         keyComponents.append(convTypeKey)
         
         if let userName = userName, !userName.isEmpty {
-            if conversation.conversationType == .group {
-                // we only want the user name if we're in a group conversation, since
-                // otherwise the sender name will be displayed in the notification title
+            // if the conversation is oneOnOne, then the sender name will be
+            // in the notification title
+            if conversation.conversationType != .oneOnOne {
                 arguments.append(userName)
             }
         } else {
             keyComponents.append(NoUserNameKey)
         }
         
-        if conversation.conversationType == .group {
-            if convName?.isEmpty ?? true {
-                keyComponents.append(NoConversationNameKey)
-            }
+        // we don't use the conversation name for oneOnOne conversations
+        if conversation.conversationType != .oneOnOne && convName?.isEmpty ?? true {
+            keyComponents.append(NoConversationNameKey)
         }
         
         let localizationString = (self as String) + "." + keyComponents.joined(separator: ".")

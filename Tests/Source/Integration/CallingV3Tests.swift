@@ -30,7 +30,7 @@ class CallStateTestObserver : WireCallCenterCallStateObserver {
         token = WireCallCenterV3.addCallStateObserver(observer: self, for: conversation, context: context)
     }
     
-    func callCenterDidChange(callState: CallState, conversation: ZMConversation, user: ZMUser?, timeStamp: Date?) {
+    func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) {
         changes.append(callState)
     }
     
@@ -770,15 +770,14 @@ extension CallingV3Tests {
         XCTAssertTrue(login())
         let user = conversationUnderTest.connectedUser!
         
-        let timeIntervalBeforeCall = Date().timeIntervalSince1970
-        XCTAssertLessThan(conversationUnderTest.lastModifiedDate!.timeIntervalSince1970, timeIntervalBeforeCall)
+        let timeIntervalBeforeCall = conversationUnderTest.lastModifiedDate!.timeIntervalSince1970
         
         // when
         otherStartCall(user: user)
         
         // then
         let modified = conversationUnderTest.lastModifiedDate!.timeIntervalSince1970
-        XCTAssertGreaterThanOrEqual(modified, timeIntervalBeforeCall)
+        XCTAssertGreaterThan(modified, timeIntervalBeforeCall)
     }
     
 }

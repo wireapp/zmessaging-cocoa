@@ -131,7 +131,7 @@
             NSError *error = {
                 [NSError phoneNumberIsAlreadyRegisteredErrorWithResponse:response] ?:
                 [NSError invalidPhoneNumberErrorWithReponse:response] ?:
-                [NSError userSessionErrorWithErrorCode:ZMUserSessionUnkownError userInfo:nil]
+                [NSError userSessionErrorWithErrorCode:ZMUserSessionUnknownError userInfo:nil]
             };
             [authenticationStatus didFailRequestForPhoneRegistrationCode:error];
         }
@@ -147,7 +147,7 @@
         else {
             NSError *error = {
                 [NSError invalidPhoneVerificationCodeErrorWithResponse:response] ?:
-                [NSError userSessionErrorWithErrorCode:ZMUserSessionUnkownError userInfo:nil]
+                [NSError userSessionErrorWithErrorCode:ZMUserSessionUnknownError userInfo:nil]
             };
             [authenticationStatus didFailPhoneVerificationForRegistration:error];
         }

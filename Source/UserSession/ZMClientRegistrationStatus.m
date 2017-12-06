@@ -337,7 +337,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (void)notifyEmailIsNecessary
 {
-    NSError *emailMissingError = [[NSError alloc] initWithDomain:ZMUserSessionErrorDomain
+    NSError *emailMissingError = [[NSError alloc] initWithDomain:NSError.ZMUserSessionErrorDomain
                                                             code:ZMUserSessionNeedsToRegisterEmailToRegisterClient
                                                         userInfo:nil];
     [PostLoginAuthenticationNotification notifyClientRegistrationDidFailWithError:emailMissingError context:self.managedObjectContext];

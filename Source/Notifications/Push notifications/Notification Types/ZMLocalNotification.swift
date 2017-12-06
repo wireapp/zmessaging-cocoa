@@ -69,6 +69,7 @@ open class ZMLocalNotification: NSObject {
     public var conversationID: UUID? { return uuid(for: ConversationIDStringKey) }
     
     public var isEphemeral: Bool = false
+    var shouldHideContent: Bool = false
     
     init?(conversation: ZMConversation?, type: LocalNotificationType, builder: NotificationBuilder) {
         guard builder.shouldCreateNotification() else { return nil }
@@ -84,10 +85,26 @@ open class ZMLocalNotification: NSObject {
     ///
     public lazy var uiLocalNotification: UILocalNotification = {
         let note = UILocalNotification()
-        note.alertTitle = self.title
-        note.alertBody = self.body
+        
+        let candidateTitle = (self.isEphemeral || self.shouldHideContent) ? nil : self.title
+        let candidateBody = (!self.isEphemeral && self.shouldHideContent) ? ZMPushStringDefault.localizedStringForPushNotification() : self.body
+        
+        if #available(iOS 10, *) {
+            note.alertTitle = candidateTitle
+            note.alertBody = candidateBody
+        }
+        else {
+            // on iOS 9, the alert title is only visible in the notification center, so we
+            // display all info in the body
+            if let title = candidateTitle, let body = candidateBody {
+                note.alertBody = "\(title)\n\(body)"
+            } else {
+                note.alertBody = candidateBody
+            }
+        }
+        
         note.category = self.category
-        note.soundName = self.soundName
+        note.soundName = self.shouldHideContent ? ZMCustomSound.notificationNewMessageSoundName() : self.soundName
         note.userInfo = self.userInfo
         return note
     }()

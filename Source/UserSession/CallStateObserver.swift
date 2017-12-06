@@ -60,17 +60,17 @@ public final class CallStateObserver : NSObject {
 
 extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
-    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, user: ZMUser?, timeStamp: Date?) {
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) {
         
-        let userId = user?.remoteIdentifier
+        let callerId = caller.remoteIdentifier
         let conversationId = conversation.remoteIdentifier
         
         syncManagedObjectContext.performGroupedBlock {
             guard
-                let userId = userId,
+                let callerId = callerId,
                 let conversationId = conversationId,
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncManagedObjectContext),
-                let user = ZMUser(remoteID: userId, createIfNeeded: false, in: self.syncManagedObjectContext)
+                let caller = ZMUser(remoteID: callerId, createIfNeeded: false, in: self.syncManagedObjectContext)
             else {
                 return
             }
@@ -83,12 +83,12 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             }
             
             if (self.userSession?.callNotificationStyle ?? .callKit) == .pushNotifications {
-                self.localNotificationDispatcher.process(callState: callState, in: conversation, sender: user)
+                self.localNotificationDispatcher.process(callState: callState, in: conversation, caller: caller)
             }
             
             self.updateConversationListIndicator(convObjectID: conversation.objectID, callState: callState)
             
-            if let systemMessage = self.systemMessageGenerator.appendSystemMessageIfNeeded(callState: callState, conversation: conversation, user: user, timeStamp: timeStamp) {
+            if let systemMessage = self.systemMessageGenerator.appendSystemMessageIfNeeded(callState: callState, conversation: conversation, caller: caller, timestamp: timestamp) {
                 switch (systemMessage.systemMessageType, callState, conversation.conversationType) {
                 case (.missedCall, .terminating(reason: .canceled), _ ):
                     // the caller canceled the call
@@ -96,14 +96,14 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                 case (.missedCall, .terminating(reason: .normal), .group):
                     // group calls we didn't join, end with reason .normal. We should still insert a missed call in this case.
                     // since the systemMessageGenerator keeps track whether we joined or not, we can use it to decide whether we should show a missed call APNS
-                    self.localNotificationDispatcher.processMissedCall(in: conversation, sender: user)
+                    self.localNotificationDispatcher.processMissedCall(in: conversation, caller: caller)
                 default:
                     break
                 }
             }
             
-            if let timeStamp = timeStamp {
-                conversation.updateLastModifiedDateIfNeeded(timeStamp)
+            if let timestamp = timestamp {
+                conversation.updateLastModifiedDateIfNeeded(timestamp)
             }
             self.syncManagedObjectContext.enqueueDelayedSave()
         }
@@ -136,25 +136,25 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
         }
     }
     
-    public func callCenterMissedCall(conversation: ZMConversation, user: ZMUser, timestamp: Date, video: Bool) {
-        let userId = user.remoteIdentifier
+    public func callCenterMissedCall(conversation: ZMConversation, caller: ZMUser, timestamp: Date, video: Bool) {
+        let callerId = caller.remoteIdentifier
         let conversationId = conversation.remoteIdentifier
         
         syncManagedObjectContext.performGroupedBlock {
             guard
-                let userId = userId,
+                let callerId = callerId,
                 let conversationId = conversationId,
                 let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncManagedObjectContext),
-                let user = ZMUser(remoteID: userId, createIfNeeded: false, in: self.syncManagedObjectContext)
+                let caller = ZMUser(remoteID: callerId, createIfNeeded: false, in: self.syncManagedObjectContext)
                 else {
                     return
             }
             
             if (self.userSession?.callNotificationStyle ?? .callKit) == .pushNotifications {
-                self.localNotificationDispatcher.processMissedCall(in: conversation, sender: user)
+                self.localNotificationDispatcher.processMissedCall(in: conversation, caller: caller)
             }
             
-            conversation.appendMissedCallMessage(fromUser: user, at: timestamp)
+            conversation.appendMissedCallMessage(fromUser: caller, at: timestamp)
             self.syncManagedObjectContext.enqueueDelayedSave()
         }
     }

@@ -23,7 +23,7 @@
 typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     ZMUserSessionNoError = 0,
     /// ???
-    ZMUserSessionUnkownError,
+    ZMUserSessionUnknownError,
     /// Credentials are needed to authenticate
     ZMUserSessionNeedsCredentials,
     /// The credentials provided are not valid
@@ -58,6 +58,8 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     ZMUserSessionCanNotRegisterMoreClients,
     /// The invitation code provided during registration is invalid
     ZMUserSessionInvalidInvitationCode,
+    /// The Activation code provided during email activation is invalid
+    ZMUserSessionInvalidActivationCode,
     /// The current usert client was deleted remotely
     ZMUserSessionClientDeletedRemotely,
     /// The last user identity (email or phone number) cannot be removed.
@@ -71,10 +73,12 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     /// The user account was deleted
     ZMUserSessionAccountDeleted,
     /// The account can't be created because the account limit has been reached
-    ZMUserSessionAccountLimitReached
+    ZMUserSessionAccountLimitReached,
+    /// The email used in the registration is blacklisted
+    ZMUserSessionBlacklistedEmail,
+    /// Unauthorized e-mail address
+    ZMUserSessionUnauthorizedEmail
 };
-
-FOUNDATION_EXPORT NSString * const ZMUserSessionErrorDomain;
 
 FOUNDATION_EXPORT NSString * const ZMClientsKey;
 

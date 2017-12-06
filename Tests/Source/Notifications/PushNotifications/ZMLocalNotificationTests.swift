@@ -30,6 +30,7 @@ class ZMLocalNotificationTests: MessagingTest {
     var groupConversation: ZMConversation!
     var groupConversationWithoutUserDefinedName: ZMConversation!
     var groupConversationWithoutName: ZMConversation!
+    var invalidConversation: ZMConversation!
     
     override func setUp() {
         super.setUp()
@@ -43,6 +44,7 @@ class ZMLocalNotificationTests: MessagingTest {
         // an empty conversation will have no meaninful display name
         groupConversationWithoutName = insertConversation(with: UUID.create(), name: nil, type: .group, isSilenced: false, isEmpty: true)
         groupConversationWithoutUserDefinedName = insertConversation(with: UUID.create(), name: nil, type: .group, isSilenced: false)
+        invalidConversation = insertConversation(with: UUID.create(), name: nil, type: .invalid, isSilenced: false)
 
         syncMOC.performGroupedBlockAndWait {
             self.selfUser = ZMUser.selfUser(in: self.syncMOC)
@@ -60,6 +62,7 @@ class ZMLocalNotificationTests: MessagingTest {
         groupConversation = nil
         groupConversationWithoutName = nil
         groupConversationWithoutUserDefinedName = nil
+        invalidConversation = nil
         selfUser.remoteIdentifier = nil
         super.tearDown()
     }

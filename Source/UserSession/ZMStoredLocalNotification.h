@@ -24,8 +24,8 @@
 
 @interface ZMStoredLocalNotification : NSObject
 
-@property (nonatomic, readonly, nonnull) ZMConversation *conversation;
-@property (nonatomic, readonly, nonnull) ZMMessage *message;
+@property (nonatomic, readonly, nullable) ZMConversation *conversation;
+@property (nonatomic, readonly, nullable) ZMMessage *message;
 @property (nonatomic, readonly, nonnull) NSUUID *senderUUID;
 
 @property (nonatomic, readonly, nullable) NSString *category;

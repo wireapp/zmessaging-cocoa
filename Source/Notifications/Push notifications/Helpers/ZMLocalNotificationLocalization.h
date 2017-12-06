@@ -46,5 +46,6 @@
 - (NSString *)localizedStringForPushNotification;
 
 - (NSString *)localizedStringWithConversationName:(NSString *)conversationName teamName:(NSString *)teamName;
+- (NSString *)localizedCallKitStringWithUser:(ZMUser *)user conversation:(ZMConversation *)conversation;
 
 @end

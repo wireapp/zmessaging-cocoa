@@ -268,7 +268,7 @@
     // expect
     [[self.registrationObserver expect] registrationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *error) {
         XCTAssertEqual(error.code, (int) ZMUserSessionPhoneNumberIsAlreadyRegistered);
-        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
+        XCTAssertEqualObjects(error.domain, NSError.ZMUserSessionErrorDomain);
         return YES;
     }]];
     

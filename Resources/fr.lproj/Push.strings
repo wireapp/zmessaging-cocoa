@@ -145,8 +145,8 @@
 "push.notification.callkit.call.started.group.noconversationname" = "%@ appelle dans une conversation";
 
 // CONVERSATION CREATE
-"push.notification.conversation.create" = "%1$@ a créé une conversation de groupe avec vous";
-"push.notification.conversation.create.nousername" = "Quelqu'un a créé une conversation de groupe avec vous";
+"push.notification.conversation.create" = "%1$@ a créé un groupe";
+"push.notification.conversation.create.nousername" = "Quelqu'un a créé un groupe";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ souhaite se connecter";

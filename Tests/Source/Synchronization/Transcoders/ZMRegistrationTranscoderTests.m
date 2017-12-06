@@ -410,8 +410,8 @@
     XCTestExpectation *expectation = [self expectationWithDescription:@"error notification"];
     id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
         XCTAssertEqual(event, ZMRegistrationNotificationRegistrationDidFail);
-        XCTAssertEqual(error.code, (long) ZMUserSessionUnkownError);
-        XCTAssertEqual(error.domain, ZMUserSessionErrorDomain);
+        XCTAssertEqual(error.code, (long) ZMUserSessionUnknownError);
+        XCTAssertEqualObjects(error.domain, NSError.ZMUserSessionErrorDomain);
         [expectation fulfill];
     } ];
 
@@ -443,7 +443,7 @@
     id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
         XCTAssertEqual(event, ZMRegistrationNotificationRegistrationDidFail);
         XCTAssertEqual(error.code, (long) ZMUserSessionInvalidEmail);
-        XCTAssertEqual(error.domain, ZMUserSessionErrorDomain);
+        XCTAssertEqualObjects(error.domain, NSError.ZMUserSessionErrorDomain);
         [expectation fulfill];
     } ];
     
@@ -473,7 +473,7 @@
     id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
         XCTAssertEqual(event, ZMRegistrationNotificationRegistrationDidFail);
         XCTAssertEqual(error.code, (long) ZMUserSessionInvalidPhoneNumber);
-        XCTAssertEqual(error.domain, ZMUserSessionErrorDomain);
+        XCTAssertEqualObjects(error.domain, NSError.ZMUserSessionErrorDomain);
         [expectation fulfill];
     } ];
     

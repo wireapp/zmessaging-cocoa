@@ -64,7 +64,6 @@
     for(MockEvent *event in conversation.events) {
         event.time = date;
     }
-    conversation.lastEventTime = date;
 }
 
 - (void)setupGroupConversationWithOnlyConnectedParticipants
@@ -91,9 +90,6 @@
                                                                                     otherUsers:@[self.user1, self.user2]];
         self.groupConversationWithOnlyConnected.creator = self.selfUser;
         [self.groupConversationWithOnlyConnected changeNameByUser:self.selfUser name:@"Group conversation with only connected participants"];
-        [self setDate:[NSDate dateWithTimeInterval:1000 sinceDate:self.groupConversation.lastEventTime] forAllEventsInMockConversation:self.groupConversationWithOnlyConnected];
-        
-
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }

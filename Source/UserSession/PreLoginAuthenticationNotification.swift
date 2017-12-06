@@ -83,8 +83,12 @@ private enum PreLoginAuthenticationEvent {
     }
     
     @objc(registerObserver:forUnauthenticatedSession:)
-    public static func register(_ observer: PreLoginAuthenticationObserver, for unauthenticatedSession: UnauthenticatedSession) -> Any {
-        return self.register(observer, context: unauthenticatedSession.authenticationStatus)
+    public static func register(_ observer: PreLoginAuthenticationObserver, for unauthenticatedSession: UnauthenticatedSession?) -> Any {
+        if unauthenticatedSession == nil {
+            return NSObject()
+        }
+        
+        return self.register(observer, context: unauthenticatedSession!.authenticationStatus)
     }
 }
 

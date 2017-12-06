@@ -112,9 +112,6 @@ ZM_EMPTY_ASSERTING_INIT()
         storeProvider.contextDirectory.syncContext.analytics = analytics;
     }];
 
-    [[BackgroundActivityFactory sharedInstance] setApplication:[UIApplication sharedApplication]]; // TODO make BackgroundActivityFactory work with ZMApplication
-    [[BackgroundActivityFactory sharedInstance] setMainGroupQueue:storeProvider.contextDirectory.uiContext];
-    
     RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];
     
     if ([transportSession respondsToSelector:@selector(setRequestLoopDetectionCallback:)]) {
@@ -520,11 +517,16 @@ ZM_EMPTY_ASSERTING_INIT()
     switch (callNotificationStyle) {
         case ZMCallNotificationStylePushNotifications:
             self.callKitDelegate = nil;
+            [self.mediaManager setUiStartsAudio:NO];
             break;
         case ZMCallNotificationStyleCallKit:
         {
             CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[CallKitDelegate providerConfiguration]];
             CXCallController *callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
+            
+            // Should be set when CallKit is used. Then AVS will not start
+            // the audio before the audio session is active
+            [self.mediaManager setUiStartsAudio:YES];
             
             self.callKitDelegate = [[CallKitDelegate alloc] initWithProvider:provider
                                                               callController:callController

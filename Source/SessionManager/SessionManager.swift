@@ -27,7 +27,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 
 
 @objc public protocol SessionManagerDelegate : class {
-    func sessionManagerCreated(userSession : ZMUserSession)
+    func sessionManagerActivated(userSession : ZMUserSession)
     func sessionManagerDidFailToLogin(account: Account?, error : Error)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
@@ -344,7 +344,7 @@ public protocol LocalNotificationResponder : class {
     }
     
     public func addAccount() {
-        logoutCurrentSession(deleteCookie: false, error: NSError.userSessionErrorWith(.addAccountRequested, userInfo: nil))
+        logoutCurrentSession(deleteCookie: false, error: NSError(code: .addAccountRequested, userInfo: nil))
     }
     
     public func delete(account: Account) {
@@ -361,7 +361,7 @@ public protocol LocalNotificationResponder : class {
             })
         } else {
             // Deleted the active account and there's not other account we can switch to
-            logoutCurrentSession(deleteCookie: true, deleteAccount:true, error: NSError.userSessionErrorWith(.addAccountRequested, userInfo: nil))
+            logoutCurrentSession(deleteCookie: true, deleteAccount:true, error: NSError(code: .addAccountRequested, userInfo: nil))
         }
     }
     
@@ -376,6 +376,8 @@ public protocol LocalNotificationResponder : class {
     
         backgroundUserSessions[account.userIdentifier] = nil
         tearDownObservers(account: account.userIdentifier)
+        notifyUserSessionDestroyed(account.userIdentifier)
+        
         self.createUnauthenticatedSession()
         
         delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: { [weak self] in
@@ -392,7 +394,7 @@ public protocol LocalNotificationResponder : class {
     internal func loadSession(for selectedAccount: Account?, completion: @escaping (ZMUserSession) -> Void) {
         guard let account = selectedAccount, account.isAuthenticated else {
             createUnauthenticatedSession()
-            delegate?.sessionManagerDidFailToLogin(account: selectedAccount, error: NSError.userSessionErrorWith(.accessTokenExpired, userInfo: nil))
+            delegate?.sessionManagerDidFailToLogin(account: selectedAccount, error: NSError(code: .accessTokenExpired, userInfo: nil))
             return
         }
 
@@ -424,8 +426,7 @@ public protocol LocalNotificationResponder : class {
             
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
             completion(session)
-            self.notifyNewUserSessionCreated(session)
-            self.delegate?.sessionManagerCreated(userSession: session)
+            self.delegate?.sessionManagerActivated(userSession: session)
         }
     }
 
@@ -509,7 +510,7 @@ public protocol LocalNotificationResponder : class {
         self.configure(session: newSession, for: account)
 
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
-        
+        notifyNewUserSessionCreated(newSession)
         return newSession
     }
     
@@ -521,6 +522,7 @@ public protocol LocalNotificationResponder : class {
         userSession.closeAndDeleteCookie(false)
         self.tearDownObservers(account: accountId)
         self.backgroundUserSessions[accountId] = nil
+        notifyUserSessionDestroyed(accountId)
     }
     
     // Tears down and releases all background user sessions.
@@ -631,7 +633,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
     
     public func session(session: UnauthenticatedSession, createdAccount account: Account) {
         guard !(accountManager.accounts.count == SessionManager.maxNumberAccounts && accountManager.account(with: account.userIdentifier) == nil) else {
-            session.authenticationStatus.notifyAuthenticationDidFail(NSError.userSessionErrorWith(.accountLimitReached, userInfo: nil))
+            session.authenticationStatus.notifyAuthenticationDidFail(NSError(code: .accountLimitReached, userInfo: nil))
             return
         }
         
@@ -645,7 +647,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
                 self.updateProfileImage(imageData: profileImageData)
             }
             
-            let registered = session.authenticationStatus.completedRegistration
+            let registered = session.authenticationStatus.completedRegistration || session.registrationStatus.completedRegistration
             let emailCredentials = session.authenticationStatus.emailCredentials()
             
             userSession.syncManagedObjectContext.performGroupedBlock {
@@ -779,23 +781,44 @@ extension SessionManager : PreLoginAuthenticationObserver {
 }
 
 // MARK: - Session manager observer
-@objc public protocol SessionManagerObserver: class {
+
+@objc public protocol SessionManagerCreatedSessionObserver: class {
+    /// Invoked when the SessionManager creates a user session either by
+    /// activating one or creating one in the background. No assumption should
+    /// be made that the session is active.
     func sessionManagerCreated(userSession : ZMUserSession)
 }
 
-private let sessionManagerObserverNotificationName = Notification.Name(rawValue: "ZMSessionManagerObserverNotification")
+@objc public protocol SessionManagerDestroyedSessionObserver: class {
+    /// Invoked when the SessionManager tears down the user session associated
+    /// with the accountId.
+    func sessionManagerDestroyedUserSession(for accountId : UUID)
+}
+
+private let sessionManagerCreatedSessionNotificationName = Notification.Name(rawValue: "ZMSessionManagerCreatedSessionNotification")
+private let sessionManagerDestroyedSessionNotificationName = Notification.Name(rawValue: "ZMSessionManagerDestroyedSessionNotification")
 
 extension SessionManager: NotificationContext {
     
-    @objc public func addSessionManagerObserver(_ observer: SessionManagerObserver) -> Any {
+    @objc public func addSessionManagerCreatedSessionObserver(_ observer: SessionManagerCreatedSessionObserver) -> Any {
         return NotificationInContext.addObserver(
-            name: sessionManagerObserverNotificationName,
-            context: self) { [weak observer] note in
-                observer?.sessionManagerCreated(userSession: note.object as! ZMUserSession)
-        }
+            name: sessionManagerCreatedSessionNotificationName,
+            context: self)
+        { [weak observer] note in observer?.sessionManagerCreated(userSession: note.object as! ZMUserSession) }
+    }
+    
+    @objc public func addSessionManagerDestroyedSessionObserver(_ observer: SessionManagerDestroyedSessionObserver) -> Any {
+        return NotificationInContext.addObserver(
+        name: sessionManagerDestroyedSessionNotificationName,
+        context: self)
+        { [weak observer] note in observer?.sessionManagerDestroyedUserSession(for: note.object as! UUID) }
     }
     
     fileprivate func notifyNewUserSessionCreated(_ userSession: ZMUserSession) {
-        NotificationInContext(name: sessionManagerObserverNotificationName, context: self, object: userSession).post()
+        NotificationInContext(name: sessionManagerCreatedSessionNotificationName, context: self, object: userSession).post()
+    }
+    
+    fileprivate func notifyUserSessionDestroyed(_ accountId: UUID) {
+        NotificationInContext(name: sessionManagerDestroyedSessionNotificationName, context: self, object: accountId as AnyObject).post()
     }
 }
