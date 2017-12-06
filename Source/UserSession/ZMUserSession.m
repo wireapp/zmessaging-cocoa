@@ -520,6 +520,10 @@ ZM_EMPTY_ASSERTING_INIT()
             break;
         case ZMCallNotificationStyleCallKit:
         {
+            if (self.callKitDelegate != nil) {
+                return; // Don't re-create the CallKitDelegate if it already exists
+            }
+            
             CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[CallKitDelegate providerConfiguration]];
             CXCallController *callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
             
