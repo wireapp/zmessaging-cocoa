@@ -101,7 +101,7 @@
 	<key>push.notification.knock.group</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$@ pinged%2$#@new_knocks@</string>
+		<string>%1$@ 曾打招呼%2$#@new_knocks@</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -117,7 +117,7 @@
 	<key>push.notification.knock.group.noconversationname</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$@ pinged%2$#@new_knocks@in a conversation</string>
+		<string>在对话%1$@中曾打招呼%2$#@new_knocks@</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -149,7 +149,7 @@
 	<key>push.notification.knock.group.nousername.noconversationname</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$#@new_knocks@ in a conversation</string>
+		<string>在对话中%1$#@new_knocks@</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -165,7 +165,7 @@
 	<key>push.notification.knock.oneonone</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>pinged%1$#@new_knocks@</string>
+		<string>曾呼叫%1$#@new_knocks@</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -191,7 +191,7 @@
 			<key>one</key>
 			<string>打招呼</string>
 			<key>other</key>
-			<string>%2$@ pings</string>
+			<string>%2$@ 打招呼</string>
 		</dict>
 	</dict>
 </dict>
