@@ -95,6 +95,11 @@ public class MockApplicationStatus : NSObject, ApplicationStatus, DeliveryConfir
         messagesConfirmed.insert(messageNonce)
     }
     
+    public var didRequestSlowSync = false
+    public func requestSlowSync() {
+        didRequestSlowSync = true
+    }
+    
 }
 
 
