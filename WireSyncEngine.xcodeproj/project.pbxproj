@@ -920,6 +920,12 @@
 		EFC8281B1FB343B600E27E21 /* EmailVerificationStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailVerificationStrategy.swift; sourceTree = "<group>"; };
 		EFC8281D1FB34F9600E27E21 /* EmailVerificationStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailVerificationStrategyTests.swift; sourceTree = "<group>"; };
 		EFC828211FB356CE00E27E21 /* RegistrationStatusTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegistrationStatusTests.swift; sourceTree = "<group>"; };
+		F14417221FD946F100CB2850 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Push.strings"; sourceTree = "<group>"; };
+		F14417231FD946F200CB2850 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "zh-Hant"; path = "zh-Hant.lproj/Push.stringsdict"; sourceTree = "<group>"; };
+		F14417241FD946F200CB2850 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/ZMLocalizable.strings"; sourceTree = "<group>"; };
+		F14417251FD9470E00CB2850 /* lt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = lt; path = lt.lproj/Push.strings; sourceTree = "<group>"; };
+		F14417261FD9470E00CB2850 /* lt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = lt; path = lt.lproj/Push.stringsdict; sourceTree = "<group>"; };
+		F14417271FD9470E00CB2850 /* lt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = lt; path = lt.lproj/ZMLocalizable.strings; sourceTree = "<group>"; };
 		F148F6661FB9AA7600BD6909 /* TeamToRegister.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamToRegister.swift; sourceTree = "<group>"; };
 		F148F6681FBAF55800BD6909 /* TeamRegistrationStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamRegistrationStrategyTests.swift; sourceTree = "<group>"; };
 		F148F66A1FBAFAF600BD6909 /* RegistrationStatusTestHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationStatusTestHelper.swift; sourceTree = "<group>"; };
@@ -2248,6 +2254,8 @@
 				et,
 				fi,
 				pl,
+				"zh-Hant",
+				lt,
 			);
 			mainGroup = 540029AA1918CA8500578793;
 			productRefGroup = 540029B51918CA8500578793 /* Products */;
@@ -2753,6 +2761,8 @@
 				B432ADBF1E02DE9500147768 /* et */,
 				B42783671E363D3A00747363 /* fi */,
 				B42430E01E55CB6B00D73D1B /* pl */,
+				F14417221FD946F100CB2850 /* zh-Hant */,
+				F14417251FD9470E00CB2850 /* lt */,
 			);
 			name = Push.strings;
 			sourceTree = "<group>";
@@ -2778,6 +2788,8 @@
 				B432ADC01E02DE9500147768 /* et */,
 				B42783681E363D3A00747363 /* fi */,
 				B42430E11E55CB6B00D73D1B /* pl */,
+				F14417231FD946F200CB2850 /* zh-Hant */,
+				F14417261FD9470E00CB2850 /* lt */,
 			);
 			name = Push.stringsdict;
 			sourceTree = "<group>";
@@ -2811,6 +2823,8 @@
 				F1A989CC1FD03E2D00B8A82E /* et */,
 				F1A989CD1FD03E2E00B8A82E /* pl */,
 				F1A989CE1FD0579F00B8A82E /* de */,
+				F14417241FD946F200CB2850 /* zh-Hant */,
+				F14417271FD9470E00CB2850 /* lt */,
 			);
 			name = ZMLocalizable.strings;
 			sourceTree = "<group>";
