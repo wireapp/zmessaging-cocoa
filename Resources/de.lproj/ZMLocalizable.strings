@@ -14,16 +14,15 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
-// 
+//
 
 
 
 "conversation.username.groupingSeparator" = ", ";
 
-"user_session.error.blacklisted-email" = "Email address has been blacklisted";
-"user_session.error.email-exists" = "This email address has already been registered";
-"user_session.error.invalid-email" = "Please enter a valid email address";
-"user_session.error.invalid-code" = "Please enter a valid code";
-"user_session.error.unauthorized-email" = "Unauthorized email address";
-"user_session.error.unknown" = "Something went wrong, please try again";
-
+"user_session.error.blacklisted-email" = "Diese E-Mail-Adresse ist nicht zulässig";
+"user_session.error.email-exists" = "Mit dieser E-Mail-Adresse ist bereits ein Benutzerkonto registriert";
+"user_session.error.invalid-email" = "Diese E-Mail-Adresse ist ungültig";
+"user_session.error.invalid-code" = "Bitte gib einen gültigen Code ein";
+"user_session.error.unauthorized-email" = "Ein Fehler ist aufgetreten, bitte versuche es erneut";
+"user_session.error.unknown" = "Ein Fehler ist aufgetreten, bitte versuche es erneut";
