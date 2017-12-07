@@ -5,7 +5,7 @@
 	<key>push.notification.add.message.many.group</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%2$#@new_messages@ in %1$@</string>
+		<string>%2$#@new_messages@ grupėje %1$@</string>
 		<key>new_messages</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -13,15 +13,15 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>New message</string>
+			<string>Nauja žinutė</string>
 			<key>other</key>
-			<string>%2$@ messages</string>
+			<string>%2$@ žinutės</string>
 		</dict>
 	</dict>
 	<key>push.notification.add.message.many.group.noconversationname</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$#@new_messages@ in a conversation</string>
+		<string>%1$#@new_messages@ susirašinėjime</string>
 		<key>new_messages</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -29,15 +29,15 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>New message</string>
+			<string>Nauja žinutė</string>
 			<key>other</key>
-			<string>%1$@ messages</string>
+			<string>%1$@ žinutės</string>
 		</dict>
 	</dict>
 	<key>push.notification.add.message.many.oneonone</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%2$#@new_messages@ from %1$@</string>
+		<string>%2$#@new_messages@, kurias parašė %1$@</string>
 		<key>new_messages</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -45,15 +45,15 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>New message</string>
+			<string>Nauja žinutė</string>
 			<key>other</key>
-			<string>%2$@ messages</string>
+			<string>%2$@ žinutės</string>
 		</dict>
 	</dict>
 	<key>push.notification.add.message.many.oneonone.nousername</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$#@new_messages@ in a conversation</string>
+		<string>%1$#@new_messages@ susirašinėjime</string>
 		<key>new_messages</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -61,15 +61,15 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>New message</string>
+			<string>Nauja žinutė</string>
 			<key>other</key>
-			<string>%1$@ messages</string>
+			<string>%1$@ žinutės</string>
 		</dict>
 	</dict>
 	<key>push.notification.call.missed.many</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>You have %2$#@new_calls@ in %1@</string>
+		<string>Turite %2$#@new_calls@ susirašinėjime %1@</string>
 		<key>new_calls</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -77,15 +77,15 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>one missed call</string>
+			<string>vienas praleistas skambutis</string>
 			<key>other</key>
-			<string>%2@ missed calls</string>
+			<string>%2@ praleisti skambučiai</string>
 		</dict>
 	</dict>
 	<key>push.notification.call.missed.many.noconversationname</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>You have %1$#@new_calls@ in a conversation</string>
+		<string>Turite %1$#@new_calls@ susirašinėjime</string>
 		<key>new_calls</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -93,15 +93,15 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>one missed call</string>
+			<string>vienas praleistas skambutis</string>
 			<key>other</key>
-			<string>%1$@ missed calls</string>
+			<string>%1$@ praleisti skambučiai</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.group</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$@ pinged%2$#@new_knocks@</string>
+		<string>%1$@ skambtelėjo%2#@new_knocks@</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -111,13 +111,13 @@
 			<key>one</key>
 			<string> </string>
 			<key>other</key>
-			<string> %2$@ times </string>
+			<string> %2$@ kartus </string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.group.noconversationname</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$@ pinged%2$#@new_knocks@in a conversation</string>
+		<string>%1$@ skambtelėjo%2$#@new_knocks@susirašinėjime</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -127,7 +127,7 @@
 			<key>one</key>
 			<string> </string>
 			<key>other</key>
-			<string> %2$@ times </string>
+			<string> %2$@ kartus </string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.group.nousername</key>
@@ -141,15 +141,15 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>Ping</string>
+			<string>Ryšio patikrinimas</string>
 			<key>other</key>
-			<string>%1$@ pings</string>
+			<string>%1$@ skambtelėjimai</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.group.nousername.noconversationname</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$#@new_knocks@ in a conversation</string>
+		<string>%1$#@new_knocks@ susirašinėjime</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -157,15 +157,15 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>Ping</string>
+			<string>Ryšio patikrinimas</string>
 			<key>other</key>
-			<string>%1$@ pings</string>
+			<string>%1$@ skambtelėjimai</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.oneonone</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>pinged%1$#@new_knocks@</string>
+		<string>skambtelėjo%1$#@new_knocks@</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -175,7 +175,7 @@
 			<key>one</key>
 			<string> </string>
 			<key>other</key>
-			<string> %1$@ times</string>
+			<string> %1$@ kartus</string>
 		</dict>
 	</dict>
 	<key>push.notification.knock.oneonone.nousername</key>
@@ -189,9 +189,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>Ping</string>
+			<string>Ryšio patikrinimas</string>
 			<key>other</key>
-			<string>%2$@ pings</string>
+			<string>%2$@ skambtelėjimai</string>
 		</dict>
 	</dict>
 </dict>

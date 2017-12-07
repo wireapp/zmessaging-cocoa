@@ -14,16 +14,15 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
-// 
+//
 
 
 
-"conversation.username.groupingSeparator" = ", ";
+"conversation.username.groupingSeparator" = "、";
 
-"user_session.error.blacklisted-email" = "This email address is not allowed";
-"user_session.error.email-exists" = "This email address has already been registered";
-"user_session.error.invalid-email" = "This email address is invalid";
-"user_session.error.invalid-code" = "Please enter a valid code";
-"user_session.error.unauthorized-email" = "Something went wrong, please try again";
-"user_session.error.unknown" = "Something went wrong, please try again";
-
+"user_session.error.blacklisted-email" = "不能使用此電子郵件地址。";
+"user_session.error.email-exists" = "這個電郵地址已經註冊";
+"user_session.error.invalid-email" = "這個電子郵件地址無效 ";
+"user_session.error.invalid-code" = "請輸入一個有效的代碼";
+"user_session.error.unauthorized-email" = "出了點問題，請再試一次";
+"user_session.error.unknown" = "出了點問題，請再試一次";
