@@ -68,7 +68,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSString *groupIdentifier;
 @property (nonatomic, readonly) NSUUID *userIdentifier;
 @property (nonatomic, readonly) NSURL *sharedContainerURL;
-@property (nonatomic, readonly) SyncEngineOperationState operationState;
 @property (nonatomic, readonly) NSURL *accountDirectory;
 
 /// reset ui and sync contexts

@@ -57,7 +57,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
     self.mockOperationStatus = [[OperationStatus alloc] init];
-    self.mockOperationStatus.isInBackground = YES;
+    self.mockOperationStatus.isInBackground = NO;
     
     self.mockApplicationDirectory = [OCMockObject niceMockForClass:ZMApplicationStatusDirectory.class];
     [[[self.mockApplicationDirectory stub] andReturnValue:@(ZMSynchronizationStateSynchronizing)] synchronizationState];
