@@ -18,11 +18,11 @@
 
 
 
-"conversation.username.groupingSeparator" = ", ";
+"conversation.username.groupingSeparator" = "、";
 
-"user_session.error.blacklisted-email" = "Diese E-Mail-Adresse ist nicht zulässig";
-"user_session.error.email-exists" = "Mit dieser E-Mail-Adresse ist bereits ein Benutzerkonto registriert";
-"user_session.error.invalid-email" = "Diese E-Mail-Adresse ist ungültig";
-"user_session.error.invalid-code" = "Bitte gib einen gültigen Code ein";
-"user_session.error.unauthorized-email" = "Ein Fehler ist aufgetreten, bitte versuche es erneut";
-"user_session.error.unknown" = "Ein Fehler ist aufgetreten, bitte versuche es erneut";
+"user_session.error.blacklisted-email" = "不能使用此電子郵件地址。";
+"user_session.error.email-exists" = "這個電郵地址已經註冊";
+"user_session.error.invalid-email" = "這個電子郵件地址無效 ";
+"user_session.error.invalid-code" = "請輸入一個有效的代碼";
+"user_session.error.unauthorized-email" = "出了點問題，請再試一次";
+"user_session.error.unknown" = "出了點問題，請再試一次";

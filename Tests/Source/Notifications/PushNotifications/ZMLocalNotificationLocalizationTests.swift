@@ -33,7 +33,7 @@ class ZMLocalNotificationLocalizationTests: ZMLocalNotificationTests {
         // then
         XCTAssertEqual(result(conversationName, teamName), "iOS Team in Wire")
         XCTAssertEqual(result(conversationName, nil), "iOS Team")
-        XCTAssertEqual(result(nil, teamName), "in Wire")
+        XCTAssertEqual(result(nil, teamName), "Wire")
         XCTAssertNil(result(nil, nil))
     }
     

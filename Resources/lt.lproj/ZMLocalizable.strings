@@ -20,9 +20,9 @@
 
 "conversation.username.groupingSeparator" = ", ";
 
-"user_session.error.blacklisted-email" = "Diese E-Mail-Adresse ist nicht zulässig";
-"user_session.error.email-exists" = "Mit dieser E-Mail-Adresse ist bereits ein Benutzerkonto registriert";
-"user_session.error.invalid-email" = "Diese E-Mail-Adresse ist ungültig";
-"user_session.error.invalid-code" = "Bitte gib einen gültigen Code ein";
-"user_session.error.unauthorized-email" = "Ein Fehler ist aufgetreten, bitte versuche es erneut";
-"user_session.error.unknown" = "Ein Fehler ist aufgetreten, bitte versuche es erneut";
+"user_session.error.blacklisted-email" = "This email address is not allowed";
+"user_session.error.email-exists" = "This email address has already been registered";
+"user_session.error.invalid-email" = "This email address is invalid";
+"user_session.error.invalid-code" = "Įrašykite teisingą kodą";
+"user_session.error.unauthorized-email" = "Įvyko klaida, bandykite dar kartą";
+"user_session.error.unknown" = "Įvyko klaida, bandykite dar kartą";

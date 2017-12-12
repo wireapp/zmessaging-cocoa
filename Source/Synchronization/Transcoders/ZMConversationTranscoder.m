@@ -794,6 +794,13 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         [self processEvents:@[event] liveEvents:YES prefetchResult:nil];
     }
     
+    // NOTE: internal debug notification
+    if (conversation.unsyncedInactiveParticipants.count > 1) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[NSNotificationCenter defaultCenter] postNotificationName:ZMPotentialErrorDetectedNotificationName object:nil userInfo:nil];
+        });
+    }
+    
     if ([keysToParse isEqualToSet:[NSSet setWithObject:ZMConversationUserDefinedNameKey]]) {
         return NO;
     }

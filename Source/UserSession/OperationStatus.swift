@@ -68,7 +68,7 @@ public class OperationStatus : NSObject {
     
     private var backgroundFetchTimer : Timer?
     private var backgroundTaskTimer : Timer?
-    
+
     private var backgroundFetchHandler : BackgroundFetchHandler? {
         didSet {
             updateOperationState()

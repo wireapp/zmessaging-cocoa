@@ -29,12 +29,10 @@
 
 
 "push.notification.default" = "Uus sõnum";
-"push.notification.ephemeral" = "Someone sent you a message";
+"push.notification.ephemeral" = "Keegi saatis sulle sõnumi";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ vestluses %2$@";
-"push.notification.title.noconversationname" = "in %1$@";
-"push.notification.title.noteamname" = "%1$@";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -163,12 +161,12 @@
 "push.notification.failed.message.group.noconversationname" = "Sõnumi saatmine ebaõnnestus";
 
 // REACTIONS
-"push.notification.reaction.group" = "%1$@ %2$@ your message";
+"push.notification.reaction.group" = "%1$@ %2$@ sinu sõnumit";
 "push.notification.reaction.group.nousername.noconversationname" = "Keegi %@ sinu sõnumit vestluses";
 "push.notification.reaction.group.nousername" = "Keegi %@ sinu sõnumit";
-"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ your message in a conversation";
+"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ sinu sõnumit";
 
-"push.notification.reaction.oneonone" = "%1$@ your message";
+"push.notification.reaction.oneonone" = "%1$@ sinu sõnumit";
 "push.notification.reaction.oneonone.nousername" = "Keegi %@ sinu sõnumit";
 
 // NEW USER (no alert title for this)
