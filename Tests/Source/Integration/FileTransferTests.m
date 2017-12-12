@@ -208,7 +208,7 @@
     XCTAssertEqual(message.transferState, ZMFileTransferStateUploaded);
 }
 
-- (void)testThatItUpdatesAFileMessageWhenTheUploadIsCancelledRemotely
+- (void)testThatItDeletesAFileMessageWhenTheUploadIsCancelledRemotely
 {
     //given
     XCTAssertTrue([self login]);
@@ -223,10 +223,7 @@
                                      } nonce:nonce];
     
     // then
-    XCTAssertNil(message.assetId);
-    // As soon as we delete the message on cancelation we can remove this check
-    // and assert the absence of the message instead
-    XCTAssertEqual(message.transferState, ZMFileTransferStateCancelledUpload);
+    XCTAssertTrue(message.isZombieObject);
 }
 
 - (void)testThatItUpdatesAFileMessageWhenTheUploadFailsRemotely
@@ -403,13 +400,6 @@
     
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [self.mockTransportSession performRemoteChanges:^(__unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        NSData *updateMessageData = [MockUserClient encryptedWithData:updateMessage.data from:senderClient to:selfClient];
-        insertBlock(updateMessageData, mockConversation, senderClient, selfClient);
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertEqual(conversation.messages.count, 2lu);
     
@@ -424,6 +414,15 @@
     XCTAssertEqualObjects(message.filename, @"foo229");
     XCTAssertEqualObjects(message.nonce, nonce);
     
+    // perform update
+    
+    [self.mockTransportSession performRemoteChanges:^(__unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        NSData *updateMessageData = [MockUserClient encryptedWithData:updateMessage.data from:senderClient to:selfClient];
+        insertBlock(updateMessageData, mockConversation, senderClient, selfClient);
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
     return message;
 }
 
@@ -561,7 +560,7 @@
     XCTAssertTrue(message.isEphemeral);
 }
 
-- (void)testThatItUpdatesAFileMessageWhenTheUploadIsCancelledRemotely_Ephemeral
+- (void)testThatItDeletesAFileMessageWhenTheUploadIsCancelledRemotely_Ephemeral
 {
     //given
     XCTAssertTrue([self login]);
@@ -574,15 +573,9 @@
                                      ^(NSData *data, MockConversation *conversation, MockUserClient *from, MockUserClient *to) {
                                          [conversation insertOTRMessageFromClient:from toClient:to data:data];
                                      } nonce:nonce];
-    XCTAssertTrue(message.isEphemeral);
 
     // then
-    XCTAssertNil(message.assetId);
-    // As soon as we delete the message on cancelation we can remove this check
-    // and assert the absence of the message instead
-    XCTAssertEqual(message.transferState, ZMFileTransferStateCancelledUpload);
-    XCTAssertTrue(message.isEphemeral);
-
+    XCTAssertTrue(message.isZombieObject);
 }
 
 - (void)testThatItUpdatesAFileMessageWhenTheUploadFailesRemotlely_Ephemeral

@@ -508,6 +508,8 @@
     XCTAssertEqual(message.deliveryState, ZMDeliveryStatePending);
 
     [ZMMessage setDefaultExpirationTime:defaultExpirationTime];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItOTRMessagesCanBeResentAndItIsMovedToTheEndOfTheConversation
