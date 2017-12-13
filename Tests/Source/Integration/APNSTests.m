@@ -161,7 +161,7 @@
     
     // then
     XCTAssertTrue([self lastRequestsContainedTokenRequests], @"Did receive: %@", self.mockTransportSession.receivedRequests);
-    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2);
     [mockPushRegistrant stopMocking];
 }
 
@@ -205,7 +205,7 @@
     }
     XCTAssertTrue(didContainSignalingKeyRequest);
     XCTAssertTrue([self lastRequestsContainedTokenRequests]);
-    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2);
 }
 
 - (void)testThatItDoesNotReregistersPushTokensOnDemandIfItsNotChanged
@@ -243,7 +243,7 @@
     }
     XCTAssertTrue(didContainSignalingKeyRequest);
     XCTAssertFalse([self lastRequestsContainedTokenRequests]);
-    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2);
 }
 
 - (void)testThatItPingsBackToTheBackendWhenReceivingAVoIPNotificationToCancelTheAPNSNotification

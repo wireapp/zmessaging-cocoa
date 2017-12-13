@@ -100,6 +100,7 @@
     
     self.syncStrategy = [OCMockObject mockForClass:[ZMSyncStrategy class]];
     [(ZMSyncStrategy *)[[(id)self.syncStrategy stub] andReturn:applicationStatusDirectory] applicationStatusDirectory];
+    [[(id)self.syncStrategy stub] didFinishSync];
     [self verifyMockLater:self.syncStrategy];
 
     self.operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
