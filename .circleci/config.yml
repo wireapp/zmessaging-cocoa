@@ -72,7 +72,7 @@ jobs:
     - store_artifacts:
         path: SnapshotResults
     - store_test_results:
-        path: junit
+        path: build/junit
 
 
 # ----------------WORKFLOWS----------------
