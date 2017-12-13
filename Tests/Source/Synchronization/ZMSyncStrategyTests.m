@@ -106,15 +106,9 @@
     NOT_USED(taskIdentifier);
 }
 
-- (void)didStartSync
-{
-    
-}
+- (void)didStartSync { }
 
-- (void)didFinishSync
-{
-    
-}
+- (void)didFinishSync { }
 
 - (void)didRegisterUserClient:(UserClient *)userClient
 {
@@ -949,62 +943,3 @@
 }
 
 @end
-
-
-//@implementation ZMSyncStrategyTests (SyncStateDelegate)
-//
-//- (void)testThatItNotifiesSyncStateDelegateWhenSyncStarts
-//{
-//    // when
-//    [self.sut didStartSync];
-//    
-//    // then
-//    XCTAssertTrue(self.syncStateDelegate.didCallStartSync);
-//}
-//
-//
-//- (void)testThatItNotifiesSyncObserverWhenSyncCompletes
-//{
-//    // given
-//    [[self.updateEventsBuffer stub] processAllEventsInBuffer];
-//
-//    id mockObserver = [OCMockObject niceMockForProtocol:@protocol(ZMInitialSyncCompletionObserver)];
-//    id token = [ZMUserSession addInitialSyncCompletionObserver:mockObserver context:self.uiMOC];
-//
-//    // expect
-//    [[mockObserver expect] initialSyncCompleted];
-//
-//    // when
-//    [self.sut didFinishSync];
-//
-//    // then
-//    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-//
-//
-//    // tearDown
-//    token = nil;
-//
-//    [self performIgnoringZMLogError:^{
-//        WaitForAllGroupsToBeEmpty(0.5);
-//    }];
-//    [mockObserver stopMocking];
-//}
-//
-//- (void)testThatItProcessesAllEventsInBufferWhenSyncFinishes
-//{
-//    // expect
-//    [[self.updateEventsBuffer expect] processAllEventsInBuffer];
-//
-//    // when
-//    [self.sut didFinishSync];
-//
-//    // then
-//    [self.updateEventsBuffer verify];
-//
-//    [self performIgnoringZMLogError:^{
-//        WaitForAllGroupsToBeEmpty(0.5);
-//    }];
-//}
-//
-//@end
-
