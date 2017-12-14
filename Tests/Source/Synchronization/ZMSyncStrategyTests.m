@@ -71,7 +71,7 @@
 @end
 
 
-@interface ZMSyncStrategyTests : MessagingTest
+@interface ZMSyncStrategyTests : MessagingTest <ZMRequestCancellation, ZMSyncStateDelegate>
 
 @property (nonatomic) ZMSyncStrategy *sut;
 
@@ -82,6 +82,7 @@
 @property (nonatomic) id userTranscoder;
 @property (nonatomic) id clientMessageTranscoder;
 @property (nonatomic) id connectionTranscoder;
+@property (nonatomic) ZMApplicationStatusDirectory *applicationStatusDirectory;
 
 @property (nonatomic) BOOL shouldStubContextChangeTrackers;
 @property (nonatomic) id mockUpstreamSync1;
@@ -100,13 +101,27 @@
 
 @implementation ZMSyncStrategyTests;
 
+- (void)cancelTaskWithIdentifier:(ZMTaskIdentifier *)taskIdentifier
+{
+    NOT_USED(taskIdentifier);
+}
+
+- (void)didStartSync { }
+
+- (void)didFinishSync { }
+
+- (void)didRegisterUserClient:(UserClient *)userClient
+{
+    NOT_USED(userClient);
+}
+
 - (void)setUp
 {
     [super setUp];
     
     self.mockDispatcher = [OCMockObject mockForClass:[LocalNotificationDispatcher class]];
     [(LocalNotificationDispatcher *)[self.mockDispatcher stub] tearDown];
-    [(LocalNotificationDispatcher *)[self.mockDispatcher stub] processEvents:OCMOCK_ANY liveEvents:OCMOCK_ANY prefetchResult:OCMOCK_ANY];
+    [(LocalNotificationDispatcher *)[self.mockDispatcher stub] processEvents:OCMOCK_ANY liveEvents:YES prefetchResult:OCMOCK_ANY];
     self.mockUpstreamSync1 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     self.mockUpstreamSync2 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     [self verifyMockLater:self.mockUpstreamSync1];
@@ -152,7 +167,6 @@
     (void) [[[self.updateEventsBuffer stub] andReturn:self.updateEventsBuffer] initWithUpdateEventConsumer:OCMOCK_ANY];
     [self verifyMockLater:self.updateEventsBuffer];
     
-
     self.syncObjects = @[
                          connectionTranscoder,
                          self.userTranscoder,
@@ -171,15 +185,15 @@
     [self stubChangeTrackerBootstrapInitialization];
     
     self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
-
+    self.applicationStatusDirectory = [[ZMApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:[[FakeCookieStorage alloc] init] requestCancellation:self application:self.application syncStateDelegate:self];
+    
     
     self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider
                                                cookieStorage:nil
                                                 mediaManager:nil
                                                  flowManager:self.mockflowManager
-                                           syncStateDelegate:self.syncStateDelegate
                                 localNotificationsDispatcher:self.mockDispatcher
-                                    taskCancellationProvider:nil
+                                  applicationStatusDirectory:self.applicationStatusDirectory
                                                  application:self.application];
     
     self.application.applicationState = UIApplicationStateBackground;
@@ -205,6 +219,7 @@
 
 - (void)tearDown;
 {
+    self.applicationStatusDirectory = nil;
     self.fetchRequestForTrackedObjects1 = nil;
     self.fetchRequestForTrackedObjects2 = nil;
     [self.mockDispatcher tearDown];
@@ -235,7 +250,6 @@
     [self.connectionTranscoder tearDown];
     [self.connectionTranscoder stopMocking];
     self.connectionTranscoder = nil;
-    
     [self.operationStatusMock tearDown];
     self.mockflowManager = nil;
     [self.operationStatusMock stopMocking];
@@ -926,64 +940,6 @@
     // then
     [mockRequestAvailableNotification verify];
     [mockRequestAvailableNotification stopMocking];
-}
-
-@end
-
-
-@implementation ZMSyncStrategyTests (SyncStateDelegate)
-
-- (void)testThatItNotifiesSyncStateDelegateWhenSyncStarts
-{
-    // when
-    [self.sut didStartSync];
-    
-    // then
-    XCTAssertTrue(self.syncStateDelegate.didCallStartSync);
-}
-
-
-- (void)testThatItNotifiesSyncObserverWhenSyncCompletes
-{
-    // given
-    [[self.updateEventsBuffer stub] processAllEventsInBuffer];
-
-    id mockObserver = [OCMockObject niceMockForProtocol:@protocol(ZMInitialSyncCompletionObserver)];
-    id token = [ZMUserSession addInitialSyncCompletionObserver:mockObserver context:self.uiMOC];
-
-    // expect
-    [[mockObserver expect] initialSyncCompleted];
-
-    // when
-    [self.sut didFinishSync];
-
-    // then
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-
-
-    // tearDown
-    token = nil;
-
-    [self performIgnoringZMLogError:^{
-        WaitForAllGroupsToBeEmpty(0.5);
-    }];
-    [mockObserver stopMocking];
-}
-
-- (void)testThatItProcessesAllEventsInBufferWhenSyncFinishes
-{
-    // expect
-    [[self.updateEventsBuffer expect] processAllEventsInBuffer];
-
-    // when
-    [self.sut didFinishSync];
-
-    // then
-    [self.updateEventsBuffer verify];
-
-    [self performIgnoringZMLogError:^{
-        WaitForAllGroupsToBeEmpty(0.5);
-    }];
 }
 
 @end
