@@ -501,9 +501,9 @@
     return [self waitForStatus:ZMNetworkStateOffline];
 }
 
-- (BOOL)waitForOnlineStatus
+- (BOOL)waitForOnlineSynchronizingStatus
 {
-    return [self waitForStatus:ZMNetworkStateOnline];
+    return [self waitForStatus:ZMNetworkStateOnlineSynchronizing];
 }
 
 - (void)testThatWeSetUserSessionToOnlineWhenWeDidReceiveData
@@ -513,7 +513,7 @@
     [self.sut didReceiveData];
 
     // then
-    XCTAssertTrue([self waitForOnlineStatus]);
+    XCTAssertTrue([self waitForOnlineSynchronizingStatus]);
 
 }
 
@@ -646,7 +646,7 @@
     [self.sut didReceiveData];
     
     // then
-    XCTAssertTrue([self waitForOnlineStatus]);
+    XCTAssertTrue([self waitForOnlineSynchronizingStatus]);
 
 }
 
@@ -662,7 +662,7 @@
     [self.sut didReceiveData];
     
     // then
-    XCTAssertTrue([self waitForOnlineStatus]);
+    XCTAssertTrue([self waitForOnlineSynchronizingStatus]);
 
     // when
     [self.sut didGoOffline];
@@ -688,7 +688,7 @@
     // then
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertEqual(stateRecorder.stateChanges.count, 1u);
-    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges.firstObject intValue], ZMNetworkStateOnline);
+    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges.firstObject intValue], ZMNetworkStateOnlineSynchronizing);
     
     // after
     token = nil;
@@ -866,7 +866,7 @@
     }];
 
     // then
-    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1u);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 1);
 }
 
 - (void)testThatItCallsRegisterForPushNotificationsAgainIfNoPushTokenIsSet
@@ -882,7 +882,7 @@
     }];
     
     // then
-    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2u);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2);
 }
 
 - (void)testThatItDoesNotForcePushKitTokenUploadIfNotChangedTheData
@@ -900,7 +900,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 0u);
+    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 0);
     XCTAssertTrue(self.uiMOC.pushKitToken.isRegistered);
 }
 
@@ -1051,6 +1051,7 @@
 {
     //given
     [self simulateLoggedInUser];
+    self.sut.operationStatus.isInBackground = YES;
     
     [[[self.transportSession stub] andReturn:nil] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     UILocalNotification *note = [self notificationMessageConversationForCategory:ZMConversationCategory];
@@ -1226,6 +1227,7 @@
 {
     // given
     [self simulateLoggedInUser];
+    self.sut.operationStatus.isInBackground = YES;
     
     [[[self.transportSession stub] andReturn:nil] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
     
@@ -1240,7 +1242,7 @@
     }];
     
     // Fake message was sent
-    [[[[self.operationLoop syncStrategy] applicationStatusDirectory] operationStatus] finishBackgroundTaskWithTaskResult:ZMBackgroundTaskResultFinished];
+    [self.sut.operationStatus finishBackgroundTaskWithTaskResult:ZMBackgroundTaskResultFinished];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

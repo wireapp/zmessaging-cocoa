@@ -51,6 +51,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 @property (nonatomic) BOOL ownsSyncStrategy;
 @property (nonatomic) BOOL tornDown;
 @property (nonatomic) id<ZMApplication> application;
+@property (nonatomic, weak) ZMApplicationStatusDirectory *applicationStatusDirectory;
 
 @end
 
@@ -75,7 +76,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                             mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
-                       syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
+              applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
                              application:(id<ZMApplication>)application
 {
 
@@ -83,13 +84,13 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                                                                    cookieStorage:cookieStorage
                                                                     mediaManager:mediaManager
                                                                      flowManager:flowManager
-                                                               syncStateDelegate:syncStateDelegate
                                                     localNotificationsDispatcher:dispatcher
-                                                        taskCancellationProvider:transportSession
+                                                      applicationStatusDirectory:applicationStatusDirectory
                                                                      application:application];
     
     self = [self initWithTransportSession:transportSession
                              syncStrategy:syncStrategy
+               applicationStatusDirectory:applicationStatusDirectory
                                     uiMOC:storeProvider.contextDirectory.uiContext
                                   syncMOC:storeProvider.contextDirectory.syncContext];
     self.application = application;
@@ -100,6 +101,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                             syncStrategy:(ZMSyncStrategy *)syncStrategy
+              applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
                                    uiMOC:(NSManagedObjectContext *)uiMOC
                                  syncMOC:(NSManagedObjectContext *)syncMOC
 {
@@ -108,11 +110,12 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     
     self = [super init];
     if (self) {
+        self.applicationStatusDirectory = applicationStatusDirectory;
         self.transportSession = transportSession;
         self.syncStrategy = syncStrategy;
         self.syncMOC = syncMOC;
         self.shouldStopEnqueueing = NO;
-        self.syncStrategy.applicationStatusDirectory.operationStatus.delegate = self;
+        applicationStatusDirectory.operationStatus.delegate = self;
 
         if (uiMOC != nil) {
             [[NSNotificationCenter defaultCenter] addObserver:self
@@ -133,7 +136,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
         // this is needed to avoid loading from syncMOC on the main queue
         [moc performGroupedBlock:^{
             [self.transportSession configurePushChannelWithConsumer:self groupQueue:moc];
-            [self.transportSession.pushChannel setKeepOpen:syncStrategy.applicationStatusDirectory.operationStatus.operationState == SyncEngineOperationStateForeground];
+            [self.transportSession.pushChannel setKeepOpen:applicationStatusDirectory.operationStatus.operationState == SyncEngineOperationStateForeground];
         }];
     }
 
@@ -294,7 +297,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 - (BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
 {
-    return self.syncStrategy.applicationStatusDirectory.pingBackStatus;
+    return self.applicationStatusDirectory.pingBackStatus;
 }
 
 @end

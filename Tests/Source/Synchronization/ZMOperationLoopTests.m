@@ -69,6 +69,7 @@
 
     self.sut = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
                                                     syncStrategy:self.syncStrategy
+                                      applicationStatusDirectory:applicationStatusDirectory
                                                            uiMOC:self.uiMOC
                                                          syncMOC:self.syncMOC];
     self.pushChannelObserverToken = [NotificationInContext addObserverWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
@@ -134,6 +135,7 @@
     __block id<ZMPushChannelConsumer> receivedConsumer;
     
     // given
+    id applicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];
     self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
     XCTestExpectation *expectation = [self expectationWithDescription:@"Open push channel opened"];
     [[self.transportSession expect] configurePushChannelWithConsumer:[OCMArg checkWithBlock:^BOOL(id obj) {
@@ -145,6 +147,7 @@
     // when
     ZMOperationLoop *op = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
                                                                syncStrategy:self.syncStrategy
+                                                 applicationStatusDirectory:applicationStatusDirectory
                                                                       uiMOC:self.uiMOC
                                                                     syncMOC:self.syncMOC];
     WaitForAllGroupsToBeEmpty(0.5);
