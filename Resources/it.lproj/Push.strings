@@ -133,7 +133,7 @@
 "push.notification.call.missed.group.nousername.noconversationname" = "Qualcuno ha chiamato in una conversazione";
 "push.notification.call.missed.group.noconversationname" = "%1$@ ha chiamato in una conversazione";
 
-"push.notification.call.missed.oneonone" = "called";
+"push.notification.call.missed.oneonone" = "ha chiamato";
 "push.notification.call.missed.oneonone.nousername" = "Qualcuno ha chiamato";
 
 // CALLKIT

@@ -32,7 +32,7 @@
 "push.notification.ephemeral" = "有人給你新訊息";
 
 // Push Title: [Conversation Name] in [Team Name]
-"push.notification.title" = "%1$@在%2$@";
+"push.notification.title" = "%2$@中的%1$@";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@：%2$@";
@@ -57,18 +57,18 @@
 "push.notification.add.image.group" = "%1$@分享了一張圖片";
 "push.notification.add.image.group.nousername" = "新圖片";
 "push.notification.add.image.group.nousername.noconversationname" = "收到新圖片";
-"push.notification.add.image.group.noconversationname" = "%1$@ 在對話中分享了一張圖片";
+"push.notification.add.image.group.noconversationname" = "%1$@在對話中分享了一張圖片";
 
 "push.notification.add.image.oneonone" = "分享了一張圖片";
 "push.notification.add.image.oneonone.nousername" = "收到新圖片";
 
 // VIDEO
-"push.notification.add.video.group" = "%1$@分享了影片";
+"push.notification.add.video.group" = "%1$@分享了一段影片";
 "push.notification.add.video.group.nousername" = "新影片";
 "push.notification.add.video.group.nousername.noconversationname" = "新影片";
-"push.notification.add.video.group.noconversationname" = "%1$@ 在聊天當中分享了一段影片";
+"push.notification.add.video.group.noconversationname" = "%1$@ 在聊天中分享了一段影片";
 
-"push.notification.add.video.oneonone" = "分享了影片";
+"push.notification.add.video.oneonone" = "分享了一段影片";
 "push.notification.add.video.oneonone.nousername" = "新影片";
 
 // AUDIO
@@ -86,23 +86,23 @@
 "push.notification.add.file.group.nousername.noconversationname" = "對話中有一個新檔案";
 "push.notification.add.file.group.noconversationname" = "%1$@ 在聊天當中分享了一個檔案";
 
-"push.notification.add.file.oneonone" = "分享了檔案";
+"push.notification.add.file.oneonone" = "分享了一個檔案";
 "push.notification.add.file.oneonone.nousername" = "對話中有一個新檔案";
 
 // LOCATION
-"push.notification.add.location.group" = "%1$@分享了位置";
+"push.notification.add.location.group" = "%1$@分享了一個位置";
 "push.notification.add.location.group.nousername" = "新位置";
 "push.notification.add.location.group.nousername.noconversationname" = "對話中有一個新的位置分享";
-"push.notification.add.location.group.noconversationname" = "%1$@在對話中分享了一個新的位置";
+"push.notification.add.location.group.noconversationname" = "%1$@在對話中分享了一個新位置";
 
-"push.notification.add.location.oneonone" = "分享了位置";
+"push.notification.add.location.oneonone" = "分享了一個位置";
 "push.notification.add.location.oneonone.nousername" = "對話中有一個新的位置分享";
 
 // SELF ADDED/REMOVED TO GROUP
-"push.notification.member.join.self" = "%1$@新增了您";
-"push.notification.member.join.self.noconversationname" = "%1$@將您加到了一個對話";
-"push.notification.member.join.self.nousername.noconversationname" = "您被加到一個聊天室";
-"push.notification.member.join.self.nousername" = "您已被添入";
+"push.notification.member.join.self" = "%1$@加了您到對話";
+"push.notification.member.join.self.noconversationname" = "%1$@將您加進對話";
+"push.notification.member.join.self.nousername.noconversationname" = "一個對話加入了您";
+"push.notification.member.join.self.nousername" = "有對話加入了您";
 
 "push.notification.member.leave.self" = "%1$@移除了您";
 "push.notification.member.leave.self.noconversationname" = "%1$@從對話中移除了您";
@@ -125,7 +125,7 @@
 "push.notification.call.started.group" = "%1$@來電";
 "push.notification.call.started.group.nousername" = "您接到一個來電";
 "push.notification.call.started.group.noconversationname" = "%1$@撥號到一個群組聊天室";
-"push.notification.call.started.group.nousername.noconversationname" = "有參與者撥號到一個群組聊天室";
+"push.notification.call.started.group.nousername.noconversationname" = "有參與者在對話中來電";
 
 // MISSED CALLS
 "push.notification.call.missed.group" = "%1$@曾來電";
@@ -147,11 +147,11 @@
 "push.notification.conversation.create.nousername" = "某人建立了一個群組";
 
 // CONNECTIONS (there should be no alert titles for these)
-"push.notification.connection.request" = "%@想加您為連絡人";
+"push.notification.connection.request" = "%@想連絡您";
 "push.notification.connection.request.nousername" = "某人想要加您為連絡人";
 
-"push.notification.connection.accepted" = "您和%@已成為連絡人";
-"push.notification.connection.accepted.nousername" = "您有一個新的連絡人";
+"push.notification.connection.accepted" = "您和%@已連絡";
+"push.notification.connection.accepted.nousername" = "您有一個新的連絡";
 
 // FAILED MESSAGE
 "push.notification.failed.message.oneonone" = "無法傳送訊息";

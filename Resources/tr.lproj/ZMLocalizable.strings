@@ -20,9 +20,9 @@
 
 "conversation.username.groupingSeparator" = ", ";
 
-"user_session.error.blacklisted-email" = "This email address is not allowed";
-"user_session.error.email-exists" = "This email address has already been registered";
-"user_session.error.invalid-email" = "This email address is invalid";
+"user_session.error.blacklisted-email" = "Bu e-posta adresi kabul edilemiyor";
+"user_session.error.email-exists" = "Bu e-posta adresi zaten kaydedildi";
+"user_session.error.invalid-email" = "Bu e-posta adresi geçersiz";
 "user_session.error.invalid-code" = "Lütfen geçerli bir kod girin";
 "user_session.error.unauthorized-email" = "Bir şeyler ters gitti, lütfen tekrar deneyin";
 "user_session.error.unknown" = "Bir şeyler ters gitti, lütfen tekrar deneyin";
