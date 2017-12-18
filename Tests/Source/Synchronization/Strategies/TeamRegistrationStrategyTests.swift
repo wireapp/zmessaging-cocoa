@@ -30,7 +30,7 @@ class TeamRegistrationStrategyTests: MessagingTest {
         registrationStatus = TestRegistrationStatus()
         userInfoParser = MockUserInfoParser()
         sut = WireSyncEngine.TeamRegistrationStrategy(groupQueue: self.syncMOC, status: registrationStatus, userInfoParser: userInfoParser)
-        team = WireSyncEngine.TeamToRegister(teamName: "Dream Team", email: "some@email.com", fullName: "M. Jordan", password: "qwerty", accentColor: .brightOrange)
+        team = WireSyncEngine.TeamToRegister(teamName: "Dream Team", email: "some@email.com", emailCode: "23", fullName: "M. Jordan", password: "qwerty", accentColor: .brightOrange)
     }
 
     override func tearDown() {

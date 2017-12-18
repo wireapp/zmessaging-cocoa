@@ -47,6 +47,7 @@ NSNotificationName const ZMRequestToOpenSyncConversationNotificationName = @"ZMR
 NSString * const ZMAppendAVSLogNotificationName = @"AVSLogMessageNotification";
 NSNotificationName const ZMUserSessionResetPushTokensNotificationName = @"ZMUserSessionResetPushTokensNotification";
 NSNotificationName const ZMTransportRequestLoopNotificationName = @"ZMTransportRequestLoopNotificationName";
+NSNotificationName const ZMPotentialErrorDetectedNotificationName = @"ZMPotentialErrorDetectedNotificationName";
 
 static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-client/id930944768?ls=1&mt=8";
 
@@ -62,6 +63,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) NSMutableArray* observersToken;
 @property (nonatomic) id <LocalStoreProviderProtocol> storeProvider;
+@property (nonatomic) ZMApplicationStatusDirectory *applicationStatusDirectory;
 
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
 @property (nonatomic) BOOL hasCompletedInitialSync;
@@ -192,13 +194,20 @@ ZM_EMPTY_ASSERTING_INIT()
         self.managedObjectContext.zm_coreTelephonyCallCenter = callCenter;
         
         [self.syncManagedObjectContext performBlockAndWait:^{
+            self.applicationStatusDirectory = [[ZMApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncManagedObjectContext
+                                                                                                   cookieStorage:session.cookieStorage
+                                                                                             requestCancellation:session
+                                                                                                     application:application
+                                                                                               syncStateDelegate:self];
+            
             self.syncManagedObjectContext.zm_imageAssetCache = imageAssetCache;
             self.syncManagedObjectContext.zm_userImageCache = userImageCache;
             self.syncManagedObjectContext.zm_fileAssetCache = fileAssetCache;
             
             self.localNotificationDispatcher = [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:self.syncManagedObjectContext
                                                                                   foregroundNotificationDelegate:self
-                                                                                                     application:application];
+                                                                                                     application:application
+                                                                                                 operationStatus:self.operationStatus];
 
             
             
@@ -222,7 +231,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                        mediaManager:mediaManager
                                                                                         flowManager:flowManager
                                                                                       storeProvider:storeProvider
-                                                                                  syncStateDelegate:self
+                                                                         applicationStatusDirectory:self.applicationStatusDirectory
                                                                                         application:application];
             
             __weak id weakSelf = self;
@@ -268,6 +277,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self.operationLoop = nil;
     [self.transportSession tearDown];
     self.transportSession = nil;
+    self.applicationStatusDirectory = nil;
     
     [self.localNotificationDispatcher tearDown];
     self.localNotificationDispatcher = nil;
@@ -505,7 +515,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (OperationStatus *)operationStatus
 {
-    return self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus;
+    return self.applicationStatusDirectory.operationStatus;
 }
 
 @end
@@ -642,6 +652,8 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)didFinishSync
 {
+    [self.operationLoop.syncStrategy didFinishSync];
+    
     ZM_WEAK(self);
     [self.managedObjectContext performGroupedBlock:^{
         ZM_STRONG(self);
@@ -790,27 +802,27 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 
 - (UserProfileUpdateStatus *)userProfileUpdateStatus;
 {
-    return self.operationLoop.syncStrategy.applicationStatusDirectory.userProfileUpdateStatus;
+    return self.applicationStatusDirectory.userProfileUpdateStatus;
 }
 
 - (ZMClientRegistrationStatus *)clientRegistrationStatus;
 {
-    return self.operationLoop.syncStrategy.applicationStatusDirectory.clientRegistrationStatus;
+    return self.applicationStatusDirectory.clientRegistrationStatus;
 }
 
 - (ClientUpdateStatus *)clientUpdateStatus;
 {
-    return self.operationLoop.syncStrategy.applicationStatusDirectory.clientUpdateStatus;
+    return self.applicationStatusDirectory.clientUpdateStatus;
 }
 
 - (AccountStatus *)accountStatus;
 {
-    return self.operationLoop.syncStrategy.applicationStatusDirectory.accountStatus;
+    return self.applicationStatusDirectory.accountStatus;
 }
 
 - (ProxiedRequestsStatus *)proxiedRequestStatus;
 {
-    return self.operationLoop.syncStrategy.applicationStatusDirectory.proxiedRequestStatus;
+    return self.applicationStatusDirectory.proxiedRequestStatus;
 }
 
 @end
@@ -819,7 +831,7 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 
 - (id<UserProfileImageUpdateProtocol>)profileUpdate
 {
-    return self.operationLoop.syncStrategy.applicationStatusDirectory.userProfileImageUpdateStatus;
+    return self.applicationStatusDirectory.userProfileImageUpdateStatus;
 }
 
 @end

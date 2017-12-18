@@ -42,7 +42,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
                             return nil
                     }
                     XCTAssertTrue(hiddenMessage.genericMessage!.hasConfirmation())
-                    XCTAssertEqual(hiddenMessage.genericMessage!.confirmation.messageId, message.nonce.transportString())
+                    XCTAssertEqual(hiddenMessage.genericMessage!.confirmation.firstMessageId, message.nonce.transportString())
                 }
                 return nil
             }

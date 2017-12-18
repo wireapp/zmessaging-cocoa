@@ -51,24 +51,21 @@
                         cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
                          mediaManager:(AVSMediaManager *)mediaManager
                           flowManager:(id<FlowManagerType>)flowManager
-                    syncStateDelegate:(id<ZMSyncStateDelegate>)syncStateDelegate
          localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
-             taskCancellationProvider:(id <ZMRequestCancellation>)taskCancellationProvider
+           applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
                           application:(id<ZMApplication>)application;
 
 - (void)didInterruptUpdateEventsStream;
 - (void)didEstablishUpdateEventsStream;
+- (void)didFinishSync;
 
 - (ZMTransportRequest *)nextRequest;
 
 - (void)tearDown;
 
 @property (nonatomic, readonly) NSManagedObjectContext *syncMOC;
-@property (nonatomic, readonly) ZMApplicationStatusDirectory *applicationStatusDirectory;
+@property (nonatomic, weak, readonly) ZMApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic, readonly) CallingRequestStrategy *callingRequestStrategy;
 
 @end
 
-
-@interface ZMSyncStrategy (SyncStateDelegate) <ZMSyncStateDelegate>
-@end

@@ -60,17 +60,16 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
 previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
                          application:(id <ZMApplication>)application
-        backgroundAPNSPingbackStatus:(BackgroundAPNSPingBackStatus *)backgroundAPNSPingbackStatus
-                          syncStatus:(SyncStatus *)syncStatus
+                   applicationStatus:(ZMApplicationStatusDirectory *)applicationStatus
 {
-    self = [super initWithManagedObjectContext:strategy.syncMOC applicationStatus:strategy.applicationStatusDirectory];
+    self = [super initWithManagedObjectContext:strategy.syncMOC applicationStatus:applicationStatus];
     if(self) {
         _syncStrategy = strategy;
         self.application = application;
         self.previouslyReceivedEventIDsCollection = eventIDsCollection;
-        self.pingbackStatus = backgroundAPNSPingbackStatus;
-        self.syncStatus = syncStatus;
-        self.operationStatus = strategy.applicationStatusDirectory.operationStatus;
+        self.pingbackStatus = applicationStatus.pingBackStatus;
+        self.syncStatus = applicationStatus.syncStatus;
+        self.operationStatus = applicationStatus.operationStatus;
         self.listPaginator = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:NotificationsPath
                                                                            startKey:StartKey
                                                                            pageSize:ZMMissingUpdateEventsTranscoderListPageSize

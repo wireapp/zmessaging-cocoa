@@ -29,15 +29,10 @@
 
 
 "push.notification.default" = "Новое сообщение";
-
-"push.notification.ephemeral.oneonone" = "отправил(а) вам сообщение";
-"push.notification.ephemeral.group" = "Кто-то прислал сообщение";
-"push.notification.ephemeral.group.noconversationname" = "Кто-то прислал сообщение";
+"push.notification.ephemeral" = "Вам отправлено сообщение";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ в %2$@";
-"push.notification.title.noconversationname" = "в %1$@";
-"push.notification.title.noteamname" = "%1$@";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -138,7 +133,7 @@
 "push.notification.call.missed.group.nousername.noconversationname" = "Пропущенный звонок в разговоре";
 "push.notification.call.missed.group.noconversationname" = "%1$@ звонил(а) в разговоре";
 
-"push.notification.call.missed.oneonone" = "позвонил(а)";
+"push.notification.call.missed.oneonone" = "звонил(а)";
 "push.notification.call.missed.oneonone.nousername" = "Кто-то звонил";
 
 // CALLKIT
@@ -148,8 +143,8 @@
 "push.notification.callkit.call.started.group.noconversationname" = "%1$@ звонит";
 
 // CONVERSATION CREATE
-"push.notification.conversation.create" = "%1$@ создал группу";
-"push.notification.conversation.create.nousername" = "Кто-то создал группу";
+"push.notification.conversation.create" = "%1$@ создал(а) группу";
+"push.notification.conversation.create.nousername" = "Кто-то создал(а) группу";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ хочет подключиться";

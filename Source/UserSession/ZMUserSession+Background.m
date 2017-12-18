@@ -96,7 +96,7 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     NOT_USED(application);
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.operationLoop.syncStrategy.missingUpdateEventsTranscoder startDownloadingMissingNotifications];
-        [self.operationLoop.syncStrategy.applicationStatusDirectory.operationStatus startBackgroundFetchWithCompletionHandler:completionHandler];
+        [self.operationStatus startBackgroundFetchWithCompletionHandler:completionHandler];
     }];
 }
 

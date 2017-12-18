@@ -21,15 +21,17 @@ import Foundation
 public struct TeamToRegister {
     public let teamName: String
     public let email: String
+    public let emailCode: String
     public let fullName: String
     public let password: String
     public let accentColor: ZMAccentColor
     let locale: String
     let label: UUID?
 
-    public init(teamName: String, email: String, fullName: String, password: String, accentColor: ZMAccentColor) {
+    public init(teamName: String, email: String, emailCode: String, fullName: String, password: String, accentColor: ZMAccentColor) {
         self.teamName = teamName
         self.email = email
+        self.emailCode = emailCode
         self.fullName = fullName
         self.password = password
         self.accentColor = accentColor
@@ -40,9 +42,10 @@ public struct TeamToRegister {
     var payload: ZMTransportData {
         return [
             "email" : email,
+            "email_code" : emailCode,
             "team" : [
                 "name" : teamName,
-                "icon" : ""
+                "icon" : "abc"
             ],
             "accent_id" : accentColor.rawValue,
             "locale" : locale,
@@ -57,6 +60,7 @@ extension TeamToRegister: Equatable {
     public static func ==(lhs: TeamToRegister, rhs: TeamToRegister) -> Bool {
         return lhs.teamName == rhs.teamName &&
             lhs.email == rhs.email &&
+            lhs.emailCode == rhs.emailCode &&
             lhs.fullName == rhs.fullName &&
             lhs.password == rhs.password &&
             lhs.accentColor == rhs.accentColor &&

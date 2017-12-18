@@ -472,7 +472,7 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssert(login(ignoreAuthenticationFailures: true))
 
         // then
-        XCTAssertEqual(NSError.userSessionErrorWith(.accountLimitReached, userInfo: nil), recorder.notifications.last!.error)
+        XCTAssertEqual(NSError(code: .accountLimitReached, userInfo: nil), recorder.notifications.last!.error)
     }
 }
 

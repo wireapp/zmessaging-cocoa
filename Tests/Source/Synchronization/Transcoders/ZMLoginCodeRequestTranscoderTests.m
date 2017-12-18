@@ -97,7 +97,7 @@
     id token = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
         XCTAssertEqual(event, PreLoginAuthenticationEventObjcLoginCodeRequestDidFail);
         XCTAssertEqual(error.code, (long) ZMUserSessionUnknownError);
-        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
+        XCTAssertEqualObjects(error.domain, NSError.ZMUserSessionErrorDomain);
         [expectation fulfill];
     }];
     
@@ -126,7 +126,7 @@
     id token = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
         XCTAssertEqual(event, PreLoginAuthenticationEventObjcLoginCodeRequestDidFail);
         XCTAssertEqual(error.code, (long) ZMUserSessionInvalidPhoneNumber);
-        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
+        XCTAssertEqualObjects(error.domain, NSError.ZMUserSessionErrorDomain);
         [expectation fulfill];
     }];
     
@@ -154,7 +154,7 @@
     id token = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
         XCTAssertEqual(event, PreLoginAuthenticationEventObjcLoginCodeRequestDidFail);
         XCTAssertEqual(error.code, (long) ZMUserSessionCodeRequestIsAlreadyPending);
-        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
+        XCTAssertEqualObjects(error.domain, NSError.ZMUserSessionErrorDomain);
         [expectation fulfill];
     }];
     
@@ -182,7 +182,7 @@
     id token = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
         XCTAssertEqual(event, PreLoginAuthenticationEventObjcLoginCodeRequestDidFail);
         XCTAssertEqual(error.code, (long) ZMUserSessionInvalidPhoneNumber);
-        XCTAssertEqualObjects(error.domain, ZMUserSessionErrorDomain);
+        XCTAssertEqualObjects(error.domain, NSError.ZMUserSessionErrorDomain);
         [expectation fulfill];
     }];
     

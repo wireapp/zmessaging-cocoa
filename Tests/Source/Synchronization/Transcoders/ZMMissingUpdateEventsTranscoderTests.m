@@ -58,24 +58,25 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
     self.mockOperationStatus = [[OperationStatus alloc] init];
     self.mockOperationStatus.isInBackground = NO;
+    _mockPingbackStatus = [OCMockObject niceMockForClass:BackgroundAPNSPingBackStatus.class];
     
     self.mockApplicationDirectory = [OCMockObject niceMockForClass:ZMApplicationStatusDirectory.class];
     [[[self.mockApplicationDirectory stub] andReturnValue:@(ZMSynchronizationStateSynchronizing)] synchronizationState];
     [[[self.mockApplicationDirectory stub] andReturn:self.mockOperationStatus] operationStatus];
+    [[[self.mockApplicationDirectory stub] andReturn:self.mockSyncStatus] syncStatus];
+    [[[self.mockApplicationDirectory stub] andReturn:self.mockPingbackStatus] pingBackStatus];
     
     _syncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
     _mockEventIDsCollection = OCMProtocolMock(@protocol(PreviouslyReceivedEventIDsCollection));
-    _mockPingbackStatus = [OCMockObject niceMockForClass:BackgroundAPNSPingBackStatus.class];
+
     [[[(id) self.syncStrategy stub] andReturn:self.uiMOC] syncMOC];
-    [[[(id) self.syncStrategy stub] andReturn:self.mockApplicationDirectory] applicationStatusDirectory];
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.mockPingbackStatus];
     
     _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy
                                     previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
                                                              application:(id)self.application
-                                            backgroundAPNSPingbackStatus:self.mockPingbackStatus
-                                                          syncStatus:self.mockSyncStatus];
+                                                       applicationStatus:self.mockApplicationDirectory];
 }
 
 - (void)tearDown {
@@ -398,8 +399,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy
                                                                     previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
                                                                                              application:(id)self.application
-                                                                            backgroundAPNSPingbackStatus:self.mockPingbackStatus
-                                                                                          syncStatus:self.mockSyncStatus];
+                                                                                       applicationStatus:self.mockApplicationDirectory];
     WaitForAllGroupsToBeEmpty(0.5);
     [sut.listPaginator resetFetching];
     ZMTransportRequest *request = [sut.listPaginator nextRequest];

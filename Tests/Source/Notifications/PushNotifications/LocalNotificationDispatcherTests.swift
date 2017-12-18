@@ -39,8 +39,10 @@ class LocalNotificationDispatcherTests: MessagingTest {
         self.notificationDelegate = MockForegroundNotificationDelegate()
         self.sut = LocalNotificationDispatcher(in: self.syncMOC,
                                                foregroundNotificationDelegate: self.notificationDelegate,
-                                               application: self.application)
-        self.application.applicationState = .background
+                                               application: self.application,
+                                               operationStatus: self.mockUserSession.operationStatus)
+        self.mockUserSession.operationStatus.isInBackground = true
+        
         syncMOC.performGroupedBlockAndWait {
             self.user1 = ZMUser.insertNewObject(in: self.syncMOC)
             self.user2 = ZMUser.insertNewObject(in: self.syncMOC)
@@ -102,7 +104,7 @@ extension LocalNotificationDispatcherTests {
         let text = UUID.create().transportString()
         let message = self.conversation1.appendMessage(withText: text) as! ZMClientMessage
         message.sender = self.user1
-        self.application.applicationState = .active
+        self.mockUserSession.operationStatus.isInBackground = false
         
         // WHEN
         self.sut.process(message)

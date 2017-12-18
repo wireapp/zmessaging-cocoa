@@ -20,43 +20,17 @@
 @import WireTransport;
 
 #import "NSError+ZMUserSession.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
-
-NSString * const ZMUserSessionErrorDomain = @"ZMUserSession";
 NSString * const ZMClientsKey = @"clients";
 NSString * const ZMPhoneCredentialKey = @"phone";
 NSString * const ZMEmailCredentialKey = @"email";
-
-static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSessionErrorCode code)
-{
-    struct TypeMap {
-        NSUInteger code;
-        CFStringRef name;
-    } const TypeMapping[] = {
-        { ZMUserSessionNoError, CFSTR("User session no error") },
-        { ZMUserSessionUnknownError, CFSTR("User session unknown error") },
-        { ZMUserSessionNeedsCredentials, CFSTR("User session needs credentials") },
-        { ZMUserSessionInvalidCredentials, CFSTR("User session invalid credentials") },
-        { ZMUserSessionAccountIsPendingActivation, CFSTR("User session account is pending activation") },
-        { ZMUserSessionNetworkError, CFSTR("User session network error") },
-        { ZMUserSessionEmailIsAlreadyRegistered, CFSTR("User session email is already registered") },
-        { ZMUserSessionRegistrationDidFailWithUnknownError, CFSTR("User session registration did fail with unknown error") },
-    };
-    
-    for (size_t i = 0; i < (sizeof(TypeMapping)/sizeof(*TypeMapping)); ++i) {
-        if (TypeMapping[i].code == code) {
-            return (__bridge NSString *) TypeMapping[i].name;
-        }
-    }
-    return nil;
-}
-
 
 @implementation NSError (ZMUserSession)
 
 - (ZMUserSessionErrorCode)userSessionErrorCode
 {
-    if (! [self.domain isEqualToString:ZMUserSessionErrorDomain]) {
+    if (! [self.domain isEqualToString:NSError.ZMUserSessionErrorDomain]) {
         return ZMUserSessionNoError;
     } else {
         return (ZMUserSessionErrorCode) self.code;
@@ -71,12 +45,7 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
 
 + (instancetype)userSessionErrorWithErrorCode:(ZMUserSessionErrorCode)code userInfo:(NSDictionary *)userInfo
 {
-    NSMutableDictionary *newUserInfo = [NSMutableDictionary dictionaryWithDictionary:userInfo];
-    NSString *description = LocalizedDescriptionStringFromZMUserSessionErrorCode(code);
-    if (description != nil) {
-        newUserInfo[NSLocalizedDescriptionKey] = description;
-    }
-    return [NSError errorWithDomain:ZMUserSessionErrorDomain code:code userInfo:newUserInfo];
+    return [[NSError alloc] initWitUserSessionErrorWithErrorCode:code userInfo:userInfo];
 }
 
 + (instancetype)pendingLoginErrorWithResponse:(ZMTransportResponse *)response
@@ -91,6 +60,14 @@ static NSString *LocalizedDescriptionStringFromZMUserSessionErrorCode(ZMUserSess
 {
     if (response.HTTPStatus == 403 && [[response payloadLabel] isEqualToString:@"unauthorized"]) {
         return [NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidPhoneNumber userInfo:nil];
+    }
+    return nil;
+}
+
++ (instancetype)unauthorizedEmailErrorWithResponse:(ZMTransportResponse *)response
+{
+    if (response.HTTPStatus == 403 && [[response payloadLabel] isEqualToString:@"unauthorized"]) {
+        return [NSError userSessionErrorWithErrorCode:ZMUserSessionUnauthorizedEmail userInfo:nil];
     }
     return nil;
 }

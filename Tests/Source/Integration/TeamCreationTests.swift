@@ -32,7 +32,7 @@ class TeamCreationTests : IntegrationTest {
         super.setUp()
         delegate = TestRegistrationStatusDelegate()
         sessionManager?.unauthenticatedSession?.registrationStatus.delegate = delegate
-        team = TeamToRegister(teamName: "A-Team", email: "ba@a-team.de", fullName: "Bosco B. A. Baracus", password: "BadAttitude", accentColor: .vividRed)
+        team = TeamToRegister(teamName: "A-Team", email: "ba@a-team.de", emailCode: "911", fullName: "Bosco B. A. Baracus", password: "BadAttitude", accentColor: .vividRed)
     }
 
     override func tearDown() {
