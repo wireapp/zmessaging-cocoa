@@ -822,3 +822,24 @@ extension SessionManager: NotificationContext {
         NotificationInContext(name: sessionManagerDestroyedSessionNotificationName, context: self, object: accountId as AnyObject).post()
     }
 }
+
+extension SessionManager {
+    public func markAllConversationsAsRead(completion: (()->())?) {
+        let group = DispatchGroup()
+        
+        self.accountManager.accounts.forEach { account in
+            group.enter()
+            self.withSession(for: account) { userSession in
+                userSession.performChanges {
+                    userSession.markAllConversationsAsRead()
+                }
+                
+                group.leave()
+            }
+        }
+        
+        group.notify(queue: DispatchQueue.main) {
+            completion?()
+        }
+    }
+}
