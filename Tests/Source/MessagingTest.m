@@ -27,7 +27,7 @@
 @import MobileCoreServices;
 @import CoreData;
 @import WireTransport;
-@import WireTransport.Private;
+@import WireTransport.Testing;
 @import WireMockTransport;
 @import WireDataModel;
 

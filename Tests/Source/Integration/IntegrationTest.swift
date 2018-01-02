@@ -18,7 +18,7 @@
 
 import Foundation
 import WireTesting
-import WireTransport.Private
+import WireTransport.Testing
 
 @testable import WireSyncEngine
 
