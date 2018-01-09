@@ -3041,6 +3041,7 @@
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.$(PRODUCT_NAME:rfc1034identifier)";
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Source/AVS";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
@@ -3068,6 +3069,7 @@
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.$(PRODUCT_NAME:rfc1034identifier)";
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Source/AVS";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
