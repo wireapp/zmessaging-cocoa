@@ -107,15 +107,6 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     completionHandler(UIBackgroundFetchResultFailed);
 }
 
-- (BOOL)application:(id<ZMApplication>)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void (^)(NSArray * _Nullable))restorationHandler
-{
-    NOT_USED(application);
-    NOT_USED(restorationHandler);
-    NOT_USED(userActivity);
-    return NO;
-//    return [self.callKitDelegate continueUserActivity:userActivity]; // FIXME jacob, which logic to use here?
-}
-
 - (void)applicationDidEnterBackground:(NSNotification *)note;
 {
     NOT_USED(note);

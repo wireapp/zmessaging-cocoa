@@ -1,4 +1,4 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
 // 
@@ -42,9 +42,6 @@
 
 /// Lets the user session process local and remote notifications contained in the launch options;
 - (void)application:(id<ZMApplication>)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
-
-/// Forwards the Handoff/CallKit activity that user would like to continue in the app 
-- (BOOL)application:(id<ZMApplication>)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void (^)(NSArray *))restorationHandler;
 
 /// Calls registerUserNotificationSettings on application
 - (void)setupPushNotificationsForApplication:(id<ZMApplication>)application;
