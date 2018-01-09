@@ -665,9 +665,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
 extension SessionManager: PostLoginAuthenticationObserver {
 
     @objc public func clientRegistrationDidSucceed(accountId: UUID) {
-        log.debug("Tearing down unauthenticated session as reaction to successful client registration")
-        unauthenticatedSession?.tearDown()
-        unauthenticatedSession = nil
+        log.debug("Client registration was successful")
     }
     
     public func accountDeleted(accountId: UUID) {
