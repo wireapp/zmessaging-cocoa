@@ -29,10 +29,10 @@
 
 
 "push.notification.default" = "新訊息";
-"push.notification.ephemeral" = "有人給你新訊息";
+"push.notification.ephemeral" = "收到限時訊息";
 
 // Push Title: [Conversation Name] in [Team Name]
-"push.notification.title" = "%2$@中的%1$@";
+"push.notification.title" = "%2$@的%1$@";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@：%2$@";
@@ -116,7 +116,7 @@
 "push.notification.call.started.video.group" = "%1$@視訊來電";
 "push.notification.call.started.video.group.nousername" = "您接到一個視訊來電";
 "push.notification.call.started.video.group.noconversationname" = "%1$@在對話中視訊來電";
-"push.notification.call.started.video.group.nousername.noconversationname" = "有人在對話中視訊來電";
+"push.notification.call.started.video.group.nousername.noconversationname" = "對話中有視訊來電";
 
 // VOICE CALLS
 "push.notification.call.started.oneonone" = "來電";
@@ -124,13 +124,13 @@
 
 "push.notification.call.started.group" = "%1$@來電";
 "push.notification.call.started.group.nousername" = "您接到一個來電";
-"push.notification.call.started.group.noconversationname" = "%1$@撥號到一個群組聊天室";
+"push.notification.call.started.group.noconversationname" = "%1$@在對話中來電";
 "push.notification.call.started.group.nousername.noconversationname" = "有參與者在對話中來電";
 
 // MISSED CALLS
 "push.notification.call.missed.group" = "%1$@曾來電";
 "push.notification.call.missed.group.nousername" = "某人來電";
-"push.notification.call.missed.group.nousername.noconversationname" = "有人曾在對話中來電";
+"push.notification.call.missed.group.nousername.noconversationname" = "對話中曾有來電";
 "push.notification.call.missed.group.noconversationname" = "%1$@曾在對話中來電";
 
 "push.notification.call.missed.oneonone" = "曾來電";
@@ -138,8 +138,8 @@
 
 // CALLKIT
 "push.notification.callkit.call.started.group" = "%1$@在%2$@";
-"push.notification.callkit.call.started.group.nousername.noconversationname" = "有人在對話中來電";
-"push.notification.callkit.call.started.group.nousername" = "在%1$@有人來電";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "對話中來電";
+"push.notification.callkit.call.started.group.nousername" = "在%1$@中來電";
 "push.notification.callkit.call.started.group.noconversationname" = "在對話中%@來電";
 
 // CONVERSATION CREATE
@@ -162,7 +162,7 @@
 
 // REACTIONS
 "push.notification.reaction.group" = "%1$@%2$@您的訊息";
-"push.notification.reaction.group.nousername.noconversationname" = "某人%@你在對話中的訊息";
+"push.notification.reaction.group.nousername.noconversationname" = "某人%@你的訊息";
 "push.notification.reaction.group.nousername" = "某人%@您的訊息";
 "push.notification.reaction.group.noconversationname" = "%1$@在對話中%2$@您的訊息";
 
@@ -176,7 +176,7 @@
 "push.notification.action.message.open" = "開啟";
 "push.notification.action.message.reply" = "回覆";
 "push.notification.action.message.reply.button.title" = "發送";
-"push.notification.action.conversation.mute" = "關閉訊息通知";
+"push.notification.action.conversation.mute" = "靜音";
 "push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "接聽";

@@ -119,6 +119,15 @@
 {
     [super setUp];
     
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+    selfUser.remoteIdentifier = self.userIdentifier;
+    
+    ZMConversation *selfConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+    selfConversation.remoteIdentifier = self.userIdentifier;
+    selfConversation.conversationType = ZMConversationTypeSelf;
+    
+    [self.syncMOC saveOrRollback];
+    
     self.mockDispatcher = [OCMockObject mockForClass:[LocalNotificationDispatcher class]];
     [(LocalNotificationDispatcher *)[self.mockDispatcher stub] tearDown];
     [(LocalNotificationDispatcher *)[self.mockDispatcher stub] processEvents:OCMOCK_ANY liveEvents:YES prefetchResult:OCMOCK_ANY];

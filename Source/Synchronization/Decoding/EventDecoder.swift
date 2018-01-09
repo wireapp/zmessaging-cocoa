@@ -140,7 +140,7 @@ extension EventDecoder {
     
     /// Calls the `ComsumeBlock` and deletes the respective stored events subsequently.
     private func processBatch(_ events: [ZMUpdateEvent], storedEvents: [NSManagedObject], block: ConsumeBlock) {
-        block(events)
+        block(filterInvalidEvents(from: events))
         
         eventMOC.performGroupedBlockAndWait {
             storedEvents.forEach(self.eventMOC.delete(_:))
@@ -204,6 +204,21 @@ extension EventDecoder {
             } else {
                 return event
             }
+        }
+    }
+    
+    /// Filters out events that shouldn't be processed
+    fileprivate func filterInvalidEvents(from events: [ZMUpdateEvent]) -> [ZMUpdateEvent] {
+        let selfConversation = ZMConversation.selfConversation(in: syncMOC)
+        let selfUser = ZMUser.selfUser(in: syncMOC)
+        
+        return events.filter { event in
+            // The only message we process arriving in the self conversation from other users is availability updates
+            if event.conversationUUID() == selfConversation.remoteIdentifier, event.senderUUID() != selfUser.remoteIdentifier, let genericMessage = ZMGenericMessage(from: event) {
+                return genericMessage.hasAvailability()
+            }
+            
+            return true
         }
     }
 }
