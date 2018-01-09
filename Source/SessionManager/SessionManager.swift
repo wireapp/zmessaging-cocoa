@@ -411,20 +411,27 @@ public protocol LocalNotificationResponder : class {
         })
     }
 
-    /// Loads a session for a given account.
-    internal func loadSession(for selectedAccount: Account?, completion: @escaping (ZMUserSession?) -> Void) {
-        guard let account = selectedAccount, account.isAuthenticated else {
+    /**
+     Loads a session for a given account
+     
+     - Parameters:
+         - account: account for which to load the session
+         - completion: called when session is loaded or when session fails to load
+     */
+    internal func loadSession(for account: Account?, completion: @escaping (ZMUserSession?) -> Void) {
+        guard let authenticatedAccount = account, authenticatedAccount.isAuthenticated else {
+            completion(nil)
             createUnauthenticatedSession()
-            delegate?.sessionManagerDidFailToLogin(account: selectedAccount, error: NSError(code: .accessTokenExpired, userInfo: nil))
+            delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: nil))
             return
         }
 
-        self.activateSession(for: account) { session in
+        self.activateSession(for: authenticatedAccount) { session in
             self.registerSessionForRemoteNotificationsIfNeeded(session)
             completion(session)
         }
     }
-
+ 
     public func deleteAccountData(for account: Account) {
         log.debug("Deleting the data for \(account.userName) -- \(account.userIdentifier)")
         

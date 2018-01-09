@@ -31,7 +31,7 @@ extension ZMUserSession {
             sender.accept()
             managedObjectContext.saveOrRollback()
         }
-                
+        
         open(sender.connection?.conversation, at: nil)
     }
     
