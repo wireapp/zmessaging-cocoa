@@ -101,7 +101,7 @@
 	<key>push.notification.knock.group</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>%1$@ skambtelėjo%2#@new_knocks@</string>
+		<string>%1$@ skambtelėjo%2$#@new_knocks@</string>
 		<key>new_knocks</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>

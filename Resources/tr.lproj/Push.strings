@@ -29,7 +29,7 @@
 
 
 "push.notification.default" = "Yeni Mesaj";
-"push.notification.ephemeral" = "Someone sent you a message";
+"push.notification.ephemeral" = "Biri size mesaj gönderdi";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%2$@'de %1$@";
@@ -45,7 +45,7 @@
 "push.notification.add.message.oneonone.nousername" = "Yeni mesaj: %1$@";
 
 // UNKNOWN MESSAGE
-"push.notification.add.unknown.group" = "%1$@: new message";
+"push.notification.add.unknown.group" = "%1$@: yeni mesaj";
 "push.notification.add.unknown.group.nousername" = "Yeni mesaj";
 "push.notification.add.unknown.group.nousername.noconversationname" = "Yeni mesaj";
 "push.notification.add.unknown.group.noconversationname" = "%1$@ bir mesaj gönderdi";
@@ -54,8 +54,8 @@
 "push.notification.add.unknown.oneonone.nousername" = "Yeni mesaj";
 
 // IMAGE
-"push.notification.add.image.group" = "%1$@ shared a picture";
-"push.notification.add.image.group.nousername" = "New picture";
+"push.notification.add.image.group" = "%1$@ bir fotoğraf paylaştı";
+"push.notification.add.image.group.nousername" = "Yeni resim";
 "push.notification.add.image.group.nousername.noconversationname" = "Bir konuşmada yeni bir fotoğraf";
 "push.notification.add.image.group.noconversationname" = "%1$@, bir konuşmada fotoğraf paylaştı";
 
@@ -63,8 +63,8 @@
 "push.notification.add.image.oneonone.nousername" = "Bir konuşmada yeni bir fotoğraf";
 
 // VIDEO
-"push.notification.add.video.group" = "%1$@ shared a video";
-"push.notification.add.video.group.nousername" = "New video";
+"push.notification.add.video.group" = "%1$@ bir video paylaştı";
+"push.notification.add.video.group.nousername" = "Yeni video";
 "push.notification.add.video.group.nousername.noconversationname" = "Bir konuşmada yeni bir fotoğraf";
 "push.notification.add.video.group.noconversationname" = "%1$@, bir konuşmada video paylaştı";
 
@@ -72,17 +72,17 @@
 "push.notification.add.video.oneonone.nousername" = "Bir konuşmada yeni bir video";
 
 // AUDIO
-"push.notification.add.audio.group" = "%1$@ shared an audio message";
-"push.notification.add.audio.group.nousername" = "New audio message";
+"push.notification.add.audio.group" = "%1$@ bir sesli mesaj paylaştı";
+"push.notification.add.audio.group.nousername" = "Yeni sesli mesaj";
 "push.notification.add.audio.group.nousername.noconversationname" = "Bir konuşmada yeni sesli mesaj";
 "push.notification.add.audio.group.noconversationname" = "%1$@, bir konuşmada sesli mesaj paylaştı";
 
-"push.notification.add.audio.oneonone" = "shared an audio message";
+"push.notification.add.audio.oneonone" = "bir sesli mesaj paylaşıldı";
 "push.notification.add.audio.oneonone.nousername" = "Bir konuşmada yeni sesli mesaj";
 
 // FILE
-"push.notification.add.file.group" = "%1$@ shared a file";
-"push.notification.add.file.group.nousername" = "New file";
+"push.notification.add.file.group" = "%1$@ bir dosya paylaştı";
+"push.notification.add.file.group.nousername" = "Yeni dosya";
 "push.notification.add.file.group.nousername.noconversationname" = "Bir konuşmada yeni bir dosya";
 "push.notification.add.file.group.noconversationname" = "%1$@, bir konuşmada dosya paylaştı";
 
@@ -90,8 +90,8 @@
 "push.notification.add.file.oneonone.nousername" = "Bir konuşmada yeni bir dosya";
 
 // LOCATION
-"push.notification.add.location.group" = "%1$@ shared a location";
-"push.notification.add.location.group.nousername" = "New location";
+"push.notification.add.location.group" = "%1$@ bir konum paylaştı";
+"push.notification.add.location.group.nousername" = "Yeni konum";
 "push.notification.add.location.group.nousername.noconversationname" = "Bir konuşmada yeni bir konum";
 "push.notification.add.location.group.noconversationname" = "%1$@, bir konuşmada konum paylaştı";
 
@@ -99,42 +99,42 @@
 "push.notification.add.location.oneonone.nousername" = "Bir konuşmada yeni bir konum";
 
 // SELF ADDED/REMOVED TO GROUP
-"push.notification.member.join.self" = "%1$@ added you";
+"push.notification.member.join.self" = "%1$@ sizi ekledi";
 "push.notification.member.join.self.noconversationname" = "%1$@ sizi bir konuşmaya ekledi";
 "push.notification.member.join.self.nousername.noconversationname" = "Bir konuşmaya eklendiniz";
-"push.notification.member.join.self.nousername" = "You were added";
+"push.notification.member.join.self.nousername" = "Eklendiniz";
 
-"push.notification.member.leave.self" = "%1$@ removed you";
+"push.notification.member.leave.self" = "%1$@ sizi sildi";
 "push.notification.member.leave.self.noconversationname" = "%1$@ sizi bir konuşmadan çıkardı";
 "push.notification.member.leave.self.nousername.noconversationname" = "Bir konuşmadan çıkarıldınız";
 "push.notification.member.leave.self.nousername" = "Çıkarıldınız";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "is video calling";
+"push.notification.call.started.video.oneonone" = "görüntülü arıyor";
 "push.notification.call.started.video.oneonone.nousername" = "Birisi görüntülü arama yapıyor";
 
-"push.notification.call.started.video.group" = "%1$@ is video calling";
+"push.notification.call.started.video.group" = "%1$@ görüntülü arıyor";
 "push.notification.call.started.video.group.nousername" = "Birisi görüntülü arama yapıyor";
 "push.notification.call.started.video.group.noconversationname" = "%1$@ bir konuşmada görüntülü arama yapıyor";
 "push.notification.call.started.video.group.nousername.noconversationname" = "Birisi bir konuşmada görüntülü arama yapıyor";
 
 // VOICE CALLS
-"push.notification.call.started.oneonone" = "is calling";
+"push.notification.call.started.oneonone" = "arıyor";
 "push.notification.call.started.oneonone.nousername" = "Birisi arıyor";
 
-"push.notification.call.started.group" = "%1$@ is calling";
+"push.notification.call.started.group" = "%1$@ arıyor";
 "push.notification.call.started.group.nousername" = "Birisi arıyor";
 "push.notification.call.started.group.noconversationname" = "%1$@ bir konuşmada arama yapıyor";
 "push.notification.call.started.group.nousername.noconversationname" = "Birisi bir konuşmada arama yapıyor";
 
 // MISSED CALLS
-"push.notification.call.missed.group" = "%1$@ called";
-"push.notification.call.missed.group.nousername" = "Someone called";
-"push.notification.call.missed.group.nousername.noconversationname" = "Someone called in a conversation";
-"push.notification.call.missed.group.noconversationname" = "%1$@ called in a conversation";
+"push.notification.call.missed.group" = "%1$@ aradı";
+"push.notification.call.missed.group.nousername" = "Biri aradı";
+"push.notification.call.missed.group.nousername.noconversationname" = "Birisi bir konuşmada aradı";
+"push.notification.call.missed.group.noconversationname" = "%1$@ bir konuşmada aradı";
 
-"push.notification.call.missed.oneonone" = "called";
-"push.notification.call.missed.oneonone.nousername" = "Someone called";
+"push.notification.call.missed.oneonone" = "aradı";
+"push.notification.call.missed.oneonone.nousername" = "Biri aradı";
 
 // CALLKIT
 "push.notification.callkit.call.started.group" = "%2$@'de %1$@";
@@ -143,8 +143,8 @@
 "push.notification.callkit.call.started.group.noconversationname" = "%@ bir konuşmada arıyor";
 
 // CONVERSATION CREATE
-"push.notification.conversation.create" = "%1$@ created a group";
-"push.notification.conversation.create.nousername" = "Someone created a group";
+"push.notification.conversation.create" = "%1$@ grup bir grup kurdu";
+"push.notification.conversation.create.nousername" = "Birisi bir grup kurdu";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ bağlanmak istiyor";
@@ -161,12 +161,12 @@
 "push.notification.failed.message.group.noconversationname" = "Mesaj gönderilemiyor";
 
 // REACTIONS
-"push.notification.reaction.group" = "%1$@ %2$@ your message";
+"push.notification.reaction.group" = "Mesajınızı %1$@, %2$@";
 "push.notification.reaction.group.nousername.noconversationname" = "Birisi bir konuşmadan mesajınızı %@";
 "push.notification.reaction.group.nousername" = "Birisi mesajınızı %@";
-"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ your message in a conversation";
+"push.notification.reaction.group.noconversationname" = "Bir konuşmada mesajınızı %1$@, %2$@";
 
-"push.notification.reaction.oneonone" = "%1$@ your message";
+"push.notification.reaction.oneonone" = "Mesajını %1$@";
 "push.notification.reaction.oneonone.nousername" = "Birisi mesajınızı %@";
 
 // NEW USER (no alert title for this)

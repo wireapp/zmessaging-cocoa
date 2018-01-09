@@ -141,7 +141,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>打招呼</string>
+			<string>招呼</string>
 			<key>other</key>
 			<string>%1$@呼叫</string>
 		</dict>
@@ -157,7 +157,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>打招呼</string>
+			<string>招呼</string>
 			<key>other</key>
 			<string>%1$@呼叫</string>
 		</dict>
@@ -189,7 +189,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string>打招呼</string>
+			<string>招呼</string>
 			<key>other</key>
 			<string>%2$@呼叫</string>
 		</dict>
