@@ -24,6 +24,7 @@
 
 #import "ZMUserTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *UsersPath = @"/users";
 NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as string is 24 + 1 for the comma

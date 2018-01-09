@@ -18,6 +18,9 @@
 
 import Foundation
 
+private let zmLog = ZMSLog(tag: "Services")
+
+
 public extension ServiceUser {
     fileprivate func requestToAddService(to conversation: ZMConversation) -> ZMTransportRequest {
         guard let remoteIdentifier = conversation.remoteIdentifier else {
@@ -27,8 +30,8 @@ public extension ServiceUser {
         let path = "/conversations/\(remoteIdentifier.transportString())/bots"
         
         let payload: NSDictionary = ["provider": self.providerIdentifier,
-                                     "service": self.serviceIdentifier/*, // TODO verify locale sending
-                                     "locale": "en_US"NSLocale.formattedLocaleIdentifier()*/]
+                                     "service": self.serviceIdentifier,
+                                     "locale": NSLocale.formattedLocaleIdentifier()]
         
         return ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
     }
@@ -36,11 +39,26 @@ public extension ServiceUser {
 }
 
 public extension ZMConversation {
-    public func add(serviceUser: ServiceUser, in userSession: ZMUserSession, completion: (()->())?) {
+    public func add(serviceUser: ServiceUser, in userSession: ZMUserSession, completion: ((Bool)->())?) {
         let request = serviceUser.requestToAddService(to: self)
         
         request.add(ZMCompletionHandler(on: userSession.managedObjectContext, block: { (response) in
-            completion?()
+            
+            guard response.httpStatus == 201,
+                  let responseDictionary = response.payload?.asDictionary(),
+                  let userAddEventPayload = responseDictionary["event"] as? ZMTransportData,
+                  let event = ZMUpdateEvent(fromEventStreamPayload: userAddEventPayload, uuid: nil) else {
+                    zmLog.error("Wrong response for adding a bot: \(response)")
+                    completion?(false)
+                    return
+            }
+            
+            completion?(true)
+            
+            userSession.syncManagedObjectContext.performGroupedBlock {
+                // Process user added event
+                userSession.operationLoop.syncStrategy.processUpdateEvents([event], ignoreBuffer: true)
+            }
         }))
         
         // TODO: abusing search requests here
@@ -67,8 +85,8 @@ public extension ZMUserSession {
         _ = onCreatedRemotelyToken // remove warning
         
         onCreatedRemotelyToken = conversation.onCreatedRemotely {
-            conversation.add(serviceUser: serviceUser, in: self) {
-                completion?(conversation)
+            conversation.add(serviceUser: serviceUser, in: self) { result in
+                completion?(result ? conversation : nil)
                 onCreatedRemotelyToken = nil
             }
         }
