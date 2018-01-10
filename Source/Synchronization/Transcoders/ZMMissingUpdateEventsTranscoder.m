@@ -44,6 +44,8 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 @property (nonatomic, weak) SyncStatus* syncStatus;
 @property (nonatomic, weak) OperationStatus* operationStatus;
 @property (nonatomic, weak) id<ClientRegistrationDelegate> clientRegistrationDelegate;
+@property (nonatomic) NotificationsTracker *notificationsTracker;
+
 
 - (void)appendPotentialGapSystemMessageIfNeededWithResponse:(ZMTransportResponse *)response;
 
@@ -65,6 +67,9 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     self = [super initWithManagedObjectContext:strategy.syncMOC applicationStatus:applicationStatus];
     if(self) {
         _syncStrategy = strategy;
+        if (applicationStatus.analytics != nil) {
+            self.notificationsTracker = [[NotificationsTracker alloc] initWithAnalytics:applicationStatus.analytics];
+        }
         self.application = application;
         self.previouslyReceivedEventIDsCollection = eventIDsCollection;
         self.pingbackStatus = applicationStatus.pingBackStatus;
@@ -160,7 +165,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     ZMSTimePoint *tp = [ZMSTimePoint timePointWithInterval:10 label:NSStringFromClass(self.class)];
     NSArray *eventsDictionaries = [self.class eventDictionariesFromPayload:payload];
     
-    NSMutableArray *parsedEvents = [NSMutableArray array];
+    NSMutableArray<ZMUpdateEvent *> *parsedEvents = [NSMutableArray array];
     NSUUID *latestEventId = nil;
     
     for(NSDictionary *eventDict in eventsDictionaries) {
@@ -181,12 +186,15 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         // In case we are fetching the stream because we have received a push notification we need to forward them to the pingback status
         // The status will forward them to the operationloop and check if the received notification was contained in this batch.
         [self.pingbackStatus didReceiveEncryptedEvents:parsedEvents originalEvents:self.notificationEventsToCancel hasMore:self.listPaginator.hasMoreToFetch];
+        [self.notificationsTracker registerFinishStreamFetching];
+
         if (!self.listPaginator.hasMoreToFetch) {
             self.notificationEventsToCancel = nil;
         }
     } else {
         [syncStrategy processUpdateEvents:parsedEvents ignoreBuffer:YES];
     }
+    
 
     [tp warnIfLongerThanInterval];
     return latestEventId;
@@ -272,6 +280,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         // to avoid setting the notificationEventsToCancel when we're unable to create a request.
         if (nil == self.notificationEventsToCancel && fetchingForAPNS && self.listPaginator.hasMoreToFetch) {
             self.notificationEventsToCancel = self.pingbackStatus.nextNotificationEventsWithID;
+            [self.notificationsTracker registerStartStreamFetching];
         }
 
         ZMTransportRequest *request = [self.listPaginator nextRequest];
@@ -279,7 +288,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         if (fetchingForAPNS && nil != request) {
             [request forceToVoipSession];
         }
-                
+
         return request;
     } else {
         return nil;
@@ -325,7 +334,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     if (operationStatus.operationState == SyncEngineOperationStateBackgroundFetch) {
         [self updateBackgroundFetchResultWithResponse:response];
     }
-    
+
     NSUUID *latestEventId = [self processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
     if (latestEventId != nil) {
         if (response.HTTPStatus == 404 && self.isSyncing) {

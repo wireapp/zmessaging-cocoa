@@ -73,8 +73,15 @@ public final class PushDispatcher: NSObject {
     internal var pushRegistrant: PushKitRegistrant!
     private(set) var lastKnownPushTokens: [PushTokenType: Data] = [:]
     private let callbackQueue: DispatchQueue = DispatchQueue.main
+    private let notificationsTracker: NotificationsTracker?
     
-    override init() {
+    init(analytics: AnalyticsType?) {
+        if let analytics = analytics {
+            notificationsTracker = NotificationsTracker(analytics: analytics)
+        } else {
+            notificationsTracker = nil
+        }
+
         super.init()
         let didReceivePayload: DidReceivePushCallback = { [weak self] (payload, source, completion) in
             
@@ -83,7 +90,14 @@ public final class PushDispatcher: NSObject {
             guard let `self` = self else {
                 return
             }
-            
+
+            let completion: ZMPushNotificationCompletionHandler = {
+                self.notificationsTracker?.registerNotificationProcessingCompleted()
+                onCompletion?($0)
+            }
+
+            self.notificationsTracker?.registerReceivedPush()
+
             if payload.isPayloadMissingUserInformation() {
                 self.callbackQueue.async {
                     self.fallbackClient?.receivedPushNotification(with: payload, from: source, completion: completion)
