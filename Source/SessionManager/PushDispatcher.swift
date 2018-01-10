@@ -83,7 +83,7 @@ public final class PushDispatcher: NSObject {
         }
 
         super.init()
-        let didReceivePayload: DidReceivePushCallback = { [weak self] (payload, source, completion) in
+        let didReceivePayload: DidReceivePushCallback = { [weak self] (payload, source, onCompletion) in
             
             log.debug("push notification: \(payload), source \(source)")
             
