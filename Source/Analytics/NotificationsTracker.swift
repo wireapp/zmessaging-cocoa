@@ -17,6 +17,7 @@
 //
 
 import Foundation
+import WireDataModel
 
 @objc public class NotificationsTracker: NSObject {
 
@@ -27,6 +28,10 @@ import Foundation
         case startedFetchingStream
         case finishedFetchingStream
         case finishedProcessing
+
+        var identifier: String {
+            return "notifications_" + rawValue
+        }
     }
 
     weak var analytics: AnalyticsType?
@@ -52,10 +57,9 @@ import Foundation
 
     private func increment(attribute: Attributes, by amount: Double = 1) {
         var currentAttributes = analytics?.persistedAttributes(for: eventName) ?? [:]
-        let identifier = "notifications_" + attribute.rawValue
-        var value = (currentAttributes[identifier] as? Double) ?? 0
+        var value = (currentAttributes[attribute.identifier] as? Double) ?? 0
         value += amount
-        currentAttributes[identifier] = value as NSObject
+        currentAttributes[attribute.identifier] = value as NSObject
         analytics?.setPersistedAttributes(currentAttributes, for: eventName)
     }
 
