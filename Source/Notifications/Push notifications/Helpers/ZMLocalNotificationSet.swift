@@ -114,9 +114,14 @@ import WireTransport
     internal func cancelOldNotifications(_ conversation: ZMConversation) {
         guard oldNotifications.count > 0 else { return }
 
-        oldNotifications = oldNotifications.filter {
-            if ($0.zm_conversationRemoteID == conversation.remoteIdentifier) {
-                application?.cancelLocalNotification($0)
+
+        oldNotifications = oldNotifications.filter { notification in
+            if (notification.zm_conversationRemoteID == conversation.remoteIdentifier) {
+
+                conversation.managedObjectContext?.zm_userInterface.performGroupedBlock {
+                    self.application?.cancelLocalNotification(notification)
+                }
+
                 return false
             }
             return true

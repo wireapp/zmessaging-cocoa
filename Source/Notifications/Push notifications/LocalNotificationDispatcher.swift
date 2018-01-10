@@ -87,7 +87,9 @@ public class LocalNotificationDispatcher: NSObject {
         if operationStatus?.operationState == .foreground {
             self.foregroundNotificationDelegate?.didReceieveLocal(notification: note, application: application)
         } else {
-            application.scheduleLocalNotification(note.uiLocalNotification)
+            syncMOC.zm_userInterface.performGroupedBlock {
+                self.application.scheduleLocalNotification(note.uiLocalNotification)
+            }
         }
     }
 
