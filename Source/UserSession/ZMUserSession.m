@@ -64,7 +64,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) NSMutableArray* observersToken;
 @property (nonatomic) id <LocalStoreProviderProtocol> storeProvider;
-@property (nonatomic) ZMApplicationStatusDirectory *applicationStatusDirectory;
+@property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
 
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
 @property (nonatomic) BOOL hasCompletedInitialSync;
@@ -195,7 +195,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.managedObjectContext.zm_coreTelephonyCallCenter = callCenter;
         
         [self.syncManagedObjectContext performBlockAndWait:^{
-            self.applicationStatusDirectory = [[ZMApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncManagedObjectContext
+            self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncManagedObjectContext
                                                                                                    cookieStorage:session.cookieStorage
                                                                                              requestCancellation:session
                                                                                                      application:application

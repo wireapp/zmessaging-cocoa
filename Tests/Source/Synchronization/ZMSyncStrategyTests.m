@@ -82,7 +82,7 @@
 @property (nonatomic) id userTranscoder;
 @property (nonatomic) id clientMessageTranscoder;
 @property (nonatomic) id connectionTranscoder;
-@property (nonatomic) ZMApplicationStatusDirectory *applicationStatusDirectory;
+@property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
 
 @property (nonatomic) BOOL shouldStubContextChangeTrackers;
 @property (nonatomic) id mockUpstreamSync1;
@@ -145,12 +145,12 @@
     [(UserProfileImageUpdateStatus *)[self.userProfileImageUpdateStatus stub] objectsDidChange:OCMOCK_ANY];
     self.mockflowManager = [[FlowManagerMock alloc] init];
     
-    self.applicationStatusDirectoryMock = [OCMockObject niceMockForClass:ZMApplicationStatusDirectory.class];
+    self.applicationStatusDirectoryMock = [OCMockObject niceMockForClass:ApplicationStatusDirectory.class];
     [[[[self.applicationStatusDirectoryMock expect] andReturn: self.applicationStatusDirectoryMock] classMethod] alloc];
     (void) [[[self.applicationStatusDirectoryMock stub] andReturn:self.applicationStatusDirectoryMock] initWithManagedObjectContext:OCMOCK_ANY cookieStorage:OCMOCK_ANY requestCancellation:OCMOCK_ANY application:OCMOCK_ANY syncStateDelegate:OCMOCK_ANY];
     [[[self.applicationStatusDirectoryMock stub] andReturn:self.syncStatusMock] syncStatus];
     [[[self.applicationStatusDirectoryMock stub] andReturn:self.operationStatusMock] operationStatus];
-    [(ZMApplicationStatusDirectory *)[[self.applicationStatusDirectoryMock stub] andReturn:self.userProfileImageUpdateStatus] userProfileImageUpdateStatus];
+    [(ApplicationStatusDirectory *)[[self.applicationStatusDirectoryMock stub] andReturn:self.userProfileImageUpdateStatus] userProfileImageUpdateStatus];
 
     id userTranscoder = [OCMockObject mockForClass:ZMUserTranscoder.class];
     [[[[userTranscoder expect] andReturn:userTranscoder] classMethod] alloc];
@@ -194,7 +194,7 @@
     [self stubChangeTrackerBootstrapInitialization];
     
     self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
-    self.applicationStatusDirectory = [[ZMApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:[[FakeCookieStorage alloc] init] requestCancellation:self application:self.application syncStateDelegate:self];
+    self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:[[FakeCookieStorage alloc] init] requestCancellation:self application:self.application syncStateDelegate:self];
     
     
     self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider

@@ -20,7 +20,7 @@
 @import WireMessageStrategy;
 
 @class NSManagedObjectContext;
-@class ZMApplicationStatusDirectory;
+@class ApplicationStatusDirectory;
 
 @interface ZMLoginCodeRequestTranscoder : NSObject <RequestStrategy>
 

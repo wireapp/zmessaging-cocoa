@@ -36,7 +36,7 @@
 @class ClientUpdateStatus;
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
-@class ZMApplicationStatusDirectory;
+@class ApplicationStatusDirectory;
 
 @protocol ZMTransportData;
 @protocol ZMSyncStateDelegate;
@@ -52,7 +52,7 @@
                          mediaManager:(AVSMediaManager *)mediaManager
                           flowManager:(id<FlowManagerType>)flowManager
          localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
-           applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
+           applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
                           application:(id<ZMApplication>)application;
 
 - (void)didInterruptUpdateEventsStream;
@@ -64,7 +64,7 @@
 - (void)tearDown;
 
 @property (nonatomic, readonly) NSManagedObjectContext *syncMOC;
-@property (nonatomic, weak, readonly) ZMApplicationStatusDirectory *applicationStatusDirectory;
+@property (nonatomic, weak, readonly) ApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic, readonly) CallingRequestStrategy *callingRequestStrategy;
 
 @end

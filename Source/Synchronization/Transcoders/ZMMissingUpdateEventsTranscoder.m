@@ -60,7 +60,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
 previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
                          application:(id <ZMApplication>)application
-                   applicationStatus:(ZMApplicationStatusDirectory *)applicationStatus
+                   applicationStatus:(ApplicationStatusDirectory *)applicationStatus
 {
     self = [super initWithManagedObjectContext:strategy.syncMOC applicationStatus:applicationStatus];
     if(self) {
