@@ -20,6 +20,64 @@ import Foundation
 
 private let zmLog = ZMSLog(tag: "Services")
 
+public final class ServiceProvider: NSObject {
+    public let identifier: String
+    
+    public let name:  String
+    public let email: String
+    public let url:   String
+    public let providerDescription: String
+    
+    init?(payload: [AnyHashable: Any]) {
+        guard let identifier  = payload["id"] as? String,
+              let name        = payload["name"] as? String,
+              let email       = payload["email"] as? String,
+              let url         = payload["url"] as? String,
+              let description = payload["description"] as? String
+            else {
+                return nil
+            }
+        self.identifier  = identifier
+        self.name        = name
+        self.email       = email
+        self.url         = url
+        self.providerDescription = description
+        
+        super.init()
+    }
+}
+
+public final class ServiceDetails: NSObject {
+    public let serviceIdentifier:  String
+    public let providerIdentifier: String
+    
+    public let name: String
+    public let serviceDescription: String
+    public let assets: [[String: Any]]
+    public let tags: [String]
+    
+    init?(payload: [AnyHashable: Any]) {
+        guard let serviceIdentifier   = payload["id"] as? String,
+              let providerIdentifier  = payload["provider"] as? String,
+              let name                = payload["name"] as? String,
+              let description         = payload["description"] as? String,
+              let assets              = payload["assets"] as? [[String: Any]],
+              let tags                = payload["tags"] as? [String]
+            else {
+                return nil
+            }
+        
+        self.serviceIdentifier  = serviceIdentifier
+        self.providerIdentifier = providerIdentifier
+        self.name               = name
+        self.serviceDescription = description
+        self.assets             = assets
+        self.tags               = tags
+
+        super.init()
+    }
+}
+
 
 public extension ServiceUser {
     fileprivate func requestToAddService(to conversation: ZMConversation) -> ZMTransportRequest {
@@ -36,6 +94,55 @@ public extension ServiceUser {
         return ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
     }
     
+    fileprivate func requestToFetchProvider() -> ZMTransportRequest {
+        let path = "/providers/\(self.providerIdentifier)/"
+        return ZMTransportRequest(path: path, method: .methodGET, payload: nil)
+    }
+    
+    fileprivate func requestToFetchDetails() -> ZMTransportRequest {
+        let path = "/providers/\(self.providerIdentifier)/services/\(self.serviceIdentifier)"
+        return ZMTransportRequest(path: path, method: .methodGET, payload: nil)
+    }
+}
+
+public extension ServiceUser {
+    public func fetchProvider(in userSession: ZMUserSession, completion: @escaping (ServiceProvider?)->()) {
+        let request = self.requestToFetchProvider()
+        
+        request.add(ZMCompletionHandler(on: userSession.managedObjectContext, block: { (response) in
+            
+            guard response.httpStatus == 200,
+                let responseDictionary = response.payload?.asDictionary(),
+                let provider = ServiceProvider(payload: responseDictionary) else {
+                    zmLog.error("Wrong response for fetching a provider: \(response)")
+                    completion(nil)
+                    return
+            }
+            
+            completion(provider)
+        }))
+        
+        userSession.transportSession.enqueueOneTime(request)
+    }
+    
+    public func fetchDetails(in userSession: ZMUserSession, completion: @escaping (ServiceDetails?)->()) {
+        let request = self.requestToFetchDetails()
+        
+        request.add(ZMCompletionHandler(on: userSession.managedObjectContext, block: { (response) in
+            
+            guard response.httpStatus == 200,
+                let responseDictionary = response.payload?.asDictionary(),
+                let serviceDetails = ServiceDetails(payload: responseDictionary) else {
+                    zmLog.error("Wrong response for fetching a service: \(response)")
+                    completion(nil)
+                    return
+            }
+            
+            completion(serviceDetails)
+        }))
+        
+        userSession.transportSession.enqueueOneTime(request)
+    }
 }
 
 public extension ZMConversation {
@@ -61,8 +168,7 @@ public extension ZMConversation {
             }
         }))
         
-        // TODO: abusing search requests here
-        userSession.transportSession.enqueueSearch(request)
+        userSession.transportSession.enqueueOneTime(request)
     }
 }
 

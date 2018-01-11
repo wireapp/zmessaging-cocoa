@@ -178,7 +178,7 @@ extension SearchTask {
                 self?.directoryTaskIdentifier = taskIdentifier
             }))
             
-            self.session.transportSession.enqueueSearch(request)
+            self.session.transportSession.enqueueOneTime(request)
         }
     }
     
@@ -261,7 +261,7 @@ extension SearchTask {
                 self?.handleTaskIdentifier = taskIdentifier
             }))
             
-            self.session.transportSession.enqueueSearch(request)
+            self.session.transportSession.enqueueOneTime(request)
         }
     }
     
@@ -314,7 +314,7 @@ extension SearchTask {
                 self?.servicesTaskIdentifier = taskIdentifier
             }))
             
-            self.session.transportSession.enqueueSearch(request)
+            self.session.transportSession.enqueueOneTime(request)
         }
     }
     
