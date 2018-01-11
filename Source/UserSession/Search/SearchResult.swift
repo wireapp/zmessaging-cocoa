@@ -82,23 +82,22 @@ extension SearchResult {
         return SearchResult(contacts: result.contacts, teamMembers: result.teamMembers, addressBook: result.addressBook, directory: directory, conversations: result.conversations, services: services)
     }
     
-    func union(withRemoteResult result: SearchResult, serviceUsers: Bool) -> SearchResult {
-        if serviceUsers {
-            return SearchResult(contacts: contacts,
-                                teamMembers: teamMembers,
-                                addressBook: addressBook,
-                                directory: directory,
-                                conversations: conversations,
-                                services: result.services)
-        }
-        else {
-            return SearchResult(contacts: contacts,
-                                teamMembers: teamMembers,
-                                addressBook: addressBook,
-                                directory: result.directory,
-                                conversations: conversations,
-                                services: services)
-        }
+    func union(withServiceResult result: SearchResult) -> SearchResult {
+        return SearchResult(contacts: contacts,
+                            teamMembers: teamMembers,
+                            addressBook: addressBook,
+                            directory: directory,
+                            conversations: conversations,
+                            services: result.services)
+    }
+    
+    func union(withDirectoryResult result: SearchResult) -> SearchResult {
+        return SearchResult(contacts: contacts,
+                            teamMembers: teamMembers,
+                            addressBook: addressBook,
+                            directory: result.directory,
+                            conversations: conversations,
+                            services: services)
     }
     
 }

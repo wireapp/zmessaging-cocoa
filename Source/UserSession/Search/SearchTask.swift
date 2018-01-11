@@ -169,7 +169,7 @@ extension SearchTask {
                     return
                 }
                 
-                if let updatedResult = self?.result.union(withRemoteResult: result, serviceUsers: false) {
+                if let updatedResult = self?.result.union(withDirectoryResult: result) {
                     self?.result = updatedResult
                 }
             }))
@@ -305,7 +305,7 @@ extension SearchTask {
                         return
                 }
                 
-                if let updatedResult = self?.result.union(withRemoteResult: result, serviceUsers: true) {
+                if let updatedResult = self?.result.union(withServiceResult: result) {
                     self?.result = updatedResult
                 }
             }))
@@ -318,7 +318,7 @@ extension SearchTask {
         }
     }
     
-    func servicesSearchRequest(query: String, fetchLimit: Int = 10) -> ZMTransportRequest {
+    func servicesSearchRequest(query: String) -> ZMTransportRequest {
         let url = NSURLComponents()
         url.path = "/services"
         
