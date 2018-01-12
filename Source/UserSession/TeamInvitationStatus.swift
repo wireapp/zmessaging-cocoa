@@ -60,6 +60,7 @@ public class TeamInvitationStatus : NSObject {
     
     func invite(_ email : String, completionHandler : @escaping InviteCompletionHandler) {
         pendingInvitations[email] = completionHandler
+        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
     
     func retry(_ email : String) {
