@@ -28,7 +28,7 @@ extension Team {
          - completion: Handler which will be called on the main thread when the invitation has been sent
          - userSession: Session which the invitation should be sent from
      */
-    func invite(email : String, completion: @escaping InviteCompletionHandler, in userSession : ZMUserSession) {
+    public func invite(email : String, completion: @escaping InviteCompletionHandler, in userSession : ZMUserSession) {
         userSession.syncManagedObjectContext.performGroupedBlock {
             userSession.applicationStatusDirectory.teamInvitationStatus.invite(email, completionHandler: { [weak userSession] result in
                 userSession?.managedObjectContext.performGroupedBlock {

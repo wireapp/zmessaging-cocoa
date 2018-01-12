@@ -51,7 +51,7 @@ public func ==(lhs: InviteResult, rhs: InviteResult) -> Bool {
     }
 }
     
-typealias InviteCompletionHandler = (InviteResult) -> Void
+public typealias InviteCompletionHandler = (InviteResult) -> Void
 
 public class TeamInvitationStatus : NSObject {
     
