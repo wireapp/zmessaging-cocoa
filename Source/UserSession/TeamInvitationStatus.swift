@@ -40,6 +40,8 @@ public enum InviteError: Int, Error {
     case unknown
 }
 
+extension InviteResult: Equatable {}
+
 public func ==(lhs: InviteResult, rhs: InviteResult) -> Bool {
     switch (lhs, rhs) {
     case (InviteResult.success(email: let lhsEmail), InviteResult.success(email: let rhsEmail)):
@@ -55,8 +57,8 @@ public typealias InviteCompletionHandler = (InviteResult) -> Void
 
 public class TeamInvitationStatus : NSObject {
     
-    fileprivate var pendingInvitations : [ String : InviteCompletionHandler] = [:]
-    fileprivate var processedInvitations : [ String : InviteCompletionHandler] = [:]
+    fileprivate var pendingInvitations : [String : InviteCompletionHandler] = [:]
+    fileprivate var processedInvitations : [String : InviteCompletionHandler] = [:]
     
     func invite(_ email : String, completionHandler : @escaping InviteCompletionHandler) {
         pendingInvitations[email] = completionHandler
