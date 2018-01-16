@@ -148,11 +148,11 @@ public extension ServiceUser {
 public enum AddBotError: Int, Error {
     case offline
     case general
-    // In case the conversation is already full, the backend is going to refuse to add the bot to the conversation.
+    /// In case the conversation is already full, the backend is going to refuse to add the bot to the conversation.
     case tooManyParticipants
-    // The bot service is not responding to wire backend.
+    /// The bot service is not responding to wire backend.
     case botNotResponding
-    // The bot rejected to be added to the conversation.
+    /// The bot rejected to be added to the conversation.
     case botRejected
 }
 
