@@ -332,6 +332,7 @@ class SessionManagerTests_Teams: IntegrationTest {
     func testThatItUpdatesAccountAfterLoginWithTeamName() {
         // given
         let teamName = "Wire"
+        let image = MockAsset(in: mockTransportSession.managedObjectContext, forID: selfUser.previewProfileAssetIdentifier!)
         self.mockTransportSession.performRemoteChanges { session in
             _ = session.insertTeam(withName: teamName, isBound: true, users: [self.selfUser])
         }
@@ -349,7 +350,8 @@ class SessionManagerTests_Teams: IntegrationTest {
         guard let account = manager.accounts.first, manager.accounts.count == 1 else { XCTFail("Should have one account"); return }
         XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
         XCTAssertEqual(account.teamName, teamName)
-        XCTAssertNil(account.imageData)
+        XCTAssertEqual(account.imageData, image?.data)
+        XCTAssertNil(account.teamImageData)
     }
     
     func testThatItUpdatesAccountAfterTeamNameChanges() {

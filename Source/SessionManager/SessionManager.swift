@@ -580,12 +580,10 @@ extension SessionManager {
             if let userName = selfUser.name {
                 account.userName = userName
             }
-            if let userProfileImage = selfUser.imageSmallProfileData, !selfUser.isTeamMember {
+            if let userProfileImage = selfUser.imageSmallProfileData {
                 account.imageData = userProfileImage
             }
-            else {
-                account.imageData = nil
-            }
+            //an optional `teamImageData` image could be saved here
             accountManager.addOrUpdate(account)
         }
     }

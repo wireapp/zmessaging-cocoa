@@ -77,7 +77,7 @@
 @property (nonatomic) EventDecoder *eventDecoder;
 @property (nonatomic, weak) LocalNotificationDispatcher *localNotificationDispatcher;
 
-@property (nonatomic, weak) ZMApplicationStatusDirectory *applicationStatusDirectory;
+@property (nonatomic, weak) ApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic) NSArray *allChangeTrackers;
 
 @property (nonatomic) NSArray<ZMObjectSyncStrategy *> *requestStrategies;
@@ -115,7 +115,7 @@ ZM_EMPTY_ASSERTING_INIT()
                          mediaManager:(AVSMediaManager *)mediaManager
                           flowManager:(id<FlowManagerType>)flowManager
          localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
-           applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
+           applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
                           application:(id<ZMApplication>)application
 {
     self = [super init];
@@ -181,7 +181,8 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[TeamDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory syncStatus:applicationStatusDirectory.syncStatus],
                                    [[TeamSyncRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory syncStatus:applicationStatusDirectory.syncStatus],
                                    [[MemberDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory],
-                                   [[PermissionsDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory]
+                                   [[PermissionsDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory],
+                                   [[TeamInvitationRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory teamInvitationStatus:applicationStatusDirectory.teamInvitationStatus]
                                    ];
         
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
@@ -199,7 +200,7 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)createTranscodersWithLocalNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
                                              mediaManager:(AVSMediaManager *)mediaManager
                                               flowManager:(id<FlowManagerType>)flowManager
-                               applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
+                               applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
 {
     self.eventDecoder = [[EventDecoder alloc] initWithEventMOC:self.eventMOC syncMOC:self.syncMOC];
     self.connectionTranscoder = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory syncStatus:applicationStatusDirectory.syncStatus];
