@@ -125,6 +125,7 @@ public protocol LocalNotificationResponder : class {
     var blacklistVerificator: ZMBlacklistVerificator?
     let reachability: ReachabilityProvider & ReachabilityTearDown
     let pushDispatcher: PushDispatcher
+    let notificationsTracker: NotificationsTracker?
     
     internal var authenticatedSessionFactory: AuthenticatedSessionFactory
     internal let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
@@ -203,6 +204,7 @@ public protocol LocalNotificationResponder : class {
             appVersion: appVersion,
             authenticatedSessionFactory: authenticatedSessionFactory,
             unauthenticatedSessionFactory: unauthenticatedSessionFactory,
+            analytics: analytics,
             reachability: reachability,
             delegate: delegate,
             application: application,
@@ -235,12 +237,14 @@ public protocol LocalNotificationResponder : class {
         })
         
         NotificationCenter.default.addObserver(self, selector: #selector(applicationWillEnterForeground(_:)), name: .UIApplicationWillEnterForeground, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive(_:)), name: .UIApplicationDidBecomeActive, object: nil)
     }
 
     init(
         appVersion: String,
         authenticatedSessionFactory: AuthenticatedSessionFactory,
         unauthenticatedSessionFactory: UnauthenticatedSessionFactory,
+        analytics: AnalyticsType? = nil,
         reachability: ReachabilityProvider & ReachabilityTearDown,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
@@ -286,7 +290,12 @@ public protocol LocalNotificationResponder : class {
         // non nil in order to process the notification
         BackgroundActivityFactory.sharedInstance().application = UIApplication.shared
         BackgroundActivityFactory.sharedInstance().mainGroupQueue = groupQueue
-        self.pushDispatcher = PushDispatcher()
+        self.pushDispatcher = PushDispatcher(analytics: analytics)
+        if let analytics = analytics {
+            self.notificationsTracker = NotificationsTracker(analytics: analytics)
+        } else {
+            self.notificationsTracker = nil
+        }
 
         super.init()
         
@@ -713,6 +722,12 @@ extension SessionManager: PostLoginAuthenticationObserver {
         }
     }
 
+}
+
+extension SessionManager {
+    dynamic fileprivate func applicationDidBecomeActive(_ note: Notification) {
+        notificationsTracker?.dispatchEvent()
+    }
 }
 
 // MARK: - Unread Conversation Count

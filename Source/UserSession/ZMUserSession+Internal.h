@@ -83,6 +83,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
                             mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
+                               analytics:(id<AnalyticsType>)analytics
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application

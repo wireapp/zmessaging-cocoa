@@ -162,6 +162,21 @@ func ==(lhs: EventWithAttributes, rhs: EventWithAttributes) -> Bool {
 }
 
 final class MockAnalytics: NSObject, AnalyticsType {
+
+    var eventAttributes = [String : [String : NSObject]]()
+
+    public func setPersistedAttributes(_ attributes: [String : NSObject]?, for event: String) {
+        if let attributes = attributes {
+            eventAttributes[event] = attributes
+        } else {
+            eventAttributes.removeValue(forKey: event)
+        }
+    }
+
+    public func persistedAttributes(for event: String) -> [String : NSObject]? {
+        let value = eventAttributes[event] ?? [:]
+        return value
+    }
     
     @objc func tagEvent(_ event: String) {
         taggedEvents.append(event)
