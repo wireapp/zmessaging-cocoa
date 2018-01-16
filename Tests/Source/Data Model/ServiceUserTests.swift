@@ -114,9 +114,9 @@ public final class ServiceUserTests : IntegrationTest {
         let conversation = self.conversation(for: self.groupConversation)!
         
         // when
-        conversation.add(serviceUser: service, in: self.userSession!, completion: { success in
+        conversation.add(serviceUser: service, in: self.userSession!, completion: { error in
             // expect
-            XCTAssertTrue(success)
+            XCTAssertNil(error)
             jobIsDone.fulfill()
         })
         

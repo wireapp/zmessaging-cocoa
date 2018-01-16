@@ -145,8 +145,24 @@ public extension ServiceUser {
     }
 }
 
+public enum AddBotError: Int, Error {
+    case offline
+    case general
+    // In case the conversation is already full, the backend is going to refuse to add the bot to the conversation.
+    case tooManyParticipants
+    // The bot service is not responding to wire backend.
+    case botNotResponding
+    // The bot rejected to be added to the conversation.
+    case botRejected
+}
+
+public enum AddBotResult {
+    case success(conversation: ZMConversation)
+    case failure(error: AddBotError)
+}
+
 public extension ZMConversation {
-    public func add(serviceUser: ServiceUser, in userSession: ZMUserSession, completion: ((Bool)->())?) {
+    public func add(serviceUser: ServiceUser, in userSession: ZMUserSession, completion: ((AddBotError?)->())?) {
         let request = serviceUser.requestToAddService(to: self)
         
         request.add(ZMCompletionHandler(on: userSession.managedObjectContext, block: { (response) in
@@ -156,11 +172,11 @@ public extension ZMConversation {
                   let userAddEventPayload = responseDictionary["event"] as? ZMTransportData,
                   let event = ZMUpdateEvent(fromEventStreamPayload: userAddEventPayload, uuid: nil) else {
                     zmLog.error("Wrong response for adding a bot: \(response)")
-                    completion?(false)
+                    completion?(AddBotError.general) // TODO: differentiate the possible errors
                     return
             }
             
-            completion?(true)
+            completion?(nil)
             
             userSession.syncManagedObjectContext.performGroupedBlock {
                 // Process user added event
@@ -173,9 +189,9 @@ public extension ZMConversation {
 }
 
 public extension ZMUserSession {
-    public func startConversation(with serviceUser: ServiceUser, completion: ((ZMConversation?)->())?) {
+    public func startConversation(with serviceUser: ServiceUser, completion: ((AddBotResult)->())?) {
         guard self.transportSession.reachability.mayBeReachable else {
-            completion?(nil)
+            completion?(AddBotResult.failure(error: .offline))
             return
         }
         
@@ -191,8 +207,13 @@ public extension ZMUserSession {
         _ = onCreatedRemotelyToken // remove warning
         
         onCreatedRemotelyToken = conversation.onCreatedRemotely {
-            conversation.add(serviceUser: serviceUser, in: self) { result in
-                completion?(result ? conversation : nil)
+            conversation.add(serviceUser: serviceUser, in: self) { error in
+                if let error = error {
+                    completion?(AddBotResult.failure(error: error))
+                }
+                else {
+                    completion?(AddBotResult.success(conversation: conversation))
+                }
                 onCreatedRemotelyToken = nil
             }
         }
