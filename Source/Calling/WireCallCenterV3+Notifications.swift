@@ -31,8 +31,8 @@ public enum ReceivedVideoState : UInt {
 @objc
 public protocol ReceivedVideoObserver : class {
     
-    @objc(callCenterDidChangeReceivedVideoState:)
-    func callCenterDidChange(receivedVideoState: ReceivedVideoState)
+    @objc(callCenterDidChangeReceivedVideoState:user:)
+    func callCenterDidChange(receivedVideoState: ReceivedVideoState, user: ZMUser)
     
 }
 
@@ -65,9 +65,11 @@ struct WireCallCenterCBRNotification : SelfPostingNotification {
 struct WireCallCenterV3VideoNotification : SelfPostingNotification {
     static let notificationName = Notification.Name("WireCallCenterVideoNotification")
     
+    let userId : UUID
     let receivedVideoState : ReceivedVideoState
     
-    init(receivedVideoState: ReceivedVideoState) {
+    init(userId: UUID, receivedVideoState: ReceivedVideoState) {
+        self.userId = userId
         self.receivedVideoState = receivedVideoState
     }
 
@@ -277,8 +279,9 @@ extension WireCallCenterV3 {
     /// Returns a token which needs to be retained as long as the observer should be active.
     internal class func addReceivedVideoObserver(observer: ReceivedVideoObserver, context: NSManagedObjectContext) -> Any {
         return NotificationInContext.addObserver(name: WireCallCenterV3VideoNotification.notificationName, context: context.notificationContext, queue: .main) { [weak observer] note in
-            if let note = note.userInfo[WireCallCenterV3VideoNotification.userInfoKey] as? WireCallCenterV3VideoNotification {
-                observer?.callCenterDidChange(receivedVideoState: note.receivedVideoState)
+            if let note = note.userInfo[WireCallCenterV3VideoNotification.userInfoKey] as? WireCallCenterV3VideoNotification,
+               let user = ZMUser(remoteID: note.userId, createIfNeeded: false, in: context) {
+                observer?.callCenterDidChange(receivedVideoState: note.receivedVideoState, user: user)
             }
         }
     }
@@ -390,7 +393,7 @@ class VoiceChannelParticipantV3Snapshot {
         var newMembers = [CallMember]()
         
         for m in newParticipants {
-            if let idx = members.order[m], members.array[idx].audioEstablished != m.audioEstablished {
+            if let idx = members.order[m], (members.array[idx].audioEstablished != m.audioEstablished || members.array[idx].isReceivingVideo != m.isReceivingVideo) {
                 updated.insert(m)
             }
             newMembers.append(m)
