@@ -31,7 +31,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     func sessionManagerDidFailToLogin(account: Account?, error : Error)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
-    func sessionManagerWillStartMigratingLocalStore()
+    func sessionManagerWillMigrateAccount(_ account: Account)
+    func sessionManagerWillMigrateLegacyAccount()
     func sessionManagerDidBlacklistCurrentVersion()
 }
 
@@ -311,7 +312,7 @@ public protocol LocalNotificationResponder : class {
             // In order to do so we open the old database and get the user identifier.
             LocalStoreProvider.fetchUserIDFromLegacyStore(
                 in: sharedContainerURL,
-                migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
+                migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateLegacyAccount() },
                 completion: { [weak self] identifier in
                     guard let `self` = self else { return }
                     identifier.apply(self.migrateAccount)
@@ -498,7 +499,7 @@ public protocol LocalNotificationResponder : class {
                     applicationContainer: self.sharedContainerURL,
                     userIdentifier: account.userIdentifier,
                     dispatchGroup: self.dispatchGroup,
-                    migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
+                    migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateAccount(account) },
                     completion: { provider in
                         let userSession = self.startBackgroundSession(for: account, with: provider)
                         completion(userSession)
