@@ -68,8 +68,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var totalCommonConnections: UInt = 0
     
-    var serviceIdentifier: String
-    var providerIdentifier: String
+    var serviceIdentifier: String?
+    var providerIdentifier: String?
     
     init(serviceIdentifier: String, providerIdentifier: String) {
         self.serviceIdentifier = serviceIdentifier
@@ -93,11 +93,8 @@ public final class ServiceUserTests : IntegrationTest {
         var mockProviderId: String!
         mockTransportSession.performRemoteChanges { (remoteChanges) in
             let mockService = remoteChanges.insertService(withName: "Service A",
-                                                          handle: "servicea",
-                                                          accentID: 5,
                                                           identifier: UUID().transportString(),
-                                                          provider: UUID().transportString(),
-                                                          assets: Set())
+                                                          provider: UUID().transportString())
             
             mockServiceId = mockService.identifier
             mockProviderId = mockService.provider

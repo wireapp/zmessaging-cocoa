@@ -699,11 +699,8 @@ class SearchTaskTests : MessagingTest {
         
         mockTransportSession.performRemoteChanges { (remoteChanges) in
             remoteChanges.insertService(withName: "Service A",
-                                        handle: "servicea",
-                                        accentID: 5,
                                         identifier: UUID().transportString(),
-                                        provider: UUID().transportString(),
-                                        assets: Set())
+                                        provider: UUID().transportString())
         }
         
         // expect
