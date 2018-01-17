@@ -113,7 +113,7 @@ class TeamInvitationRequestStrategyTests: MessagingTest {
                              (403, "invalid-email"),
                              (403, "no-identity"),
                              (403, "no-email"),
-                             (409, "already-registered"),
+                             (409, "email-exists"),
                              (404, "unknown-error")]
         
         let responses : [ZMTransportResponse] = responseCases.map { value in

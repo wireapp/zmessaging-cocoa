@@ -37,7 +37,7 @@ extension InviteResult {
             self = InviteResult.failure(email: email, error: .noIdentity)
         case 403 where label == "no-email":
             self = InviteResult.failure(email: email, error: .noEmail)
-        case 409 where label == "already-registered":
+        case 409 where label == "email-exists":
             self = InviteResult.failure(email: email, error: .alreadyRegistered)
         default:
             self = InviteResult.failure(email: email, error: .unknown)
