@@ -81,14 +81,17 @@ public final class ServiceDetails: NSObject {
 
 public extension ServiceUser {
     fileprivate func requestToAddService(to conversation: ZMConversation) -> ZMTransportRequest {
-        guard let remoteIdentifier = conversation.remoteIdentifier else {
+        guard let remoteIdentifier = conversation.remoteIdentifier,
+              let providerIdentifier = self.providerIdentifier,
+              let serviceIdentifier = self.serviceIdentifier
+        else {
             fatal("conversation is not synced with the backend")
         }
         
         let path = "/conversations/\(remoteIdentifier.transportString())/bots"
         
-        let payload: NSDictionary = ["provider": self.providerIdentifier,
-                                     "service": self.serviceIdentifier,
+        let payload: NSDictionary = ["provider": providerIdentifier,
+                                     "service": serviceIdentifier,
                                      "locale": NSLocale.formattedLocaleIdentifier()]
         
         return ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)

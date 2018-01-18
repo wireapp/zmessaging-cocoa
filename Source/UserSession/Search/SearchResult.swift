@@ -59,7 +59,7 @@ extension SearchResult {
             return nil
         }
         
-        let searchUsersServices = ZMSearchUser.users(withPayloadArray: servicesPayload, userSession: userSession) as? [ServiceUser] ?? []
+        let searchUsersServices = ZMSearchUser.users(withPayloadArray: servicesPayload, userSession: userSession) ?? []
         
         contacts = []
         teamMembers = []

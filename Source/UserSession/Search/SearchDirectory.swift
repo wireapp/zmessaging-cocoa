@@ -69,6 +69,7 @@ public class SearchDirectory : NSObject {
     func observeSearchUsers(_ result : SearchResult) {
         let searchUserObserverCenter = userSession.managedObjectContext.searchUserObserverCenter
         result.directory.forEach(searchUserObserverCenter.addSearchUser)
+        result.services.flatMap { $0 as? ZMSearchUser }.forEach(searchUserObserverCenter.addSearchUser)
     }
     
     func requestSearchUserProfileImages(_ result : SearchResult) {
