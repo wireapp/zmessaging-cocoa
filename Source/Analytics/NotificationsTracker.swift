@@ -28,6 +28,7 @@ import WireDataModel
         case startedFetchingStream
         case finishedFetchingStream
         case finishedProcessing
+        case processingExpired
 
         var identifier: String {
             return "notifications_" + rawValue
@@ -54,6 +55,10 @@ import WireDataModel
 
     @objc public func registerStartStreamFetching() {
         increment(attribute: .startedFetchingStream)
+    }
+
+    @objc public func registerProcessingExpired() {
+        increment(attribute: .processingExpired)
     }
 
     private func increment(attribute: Attributes, by amount: Double = 1) {
