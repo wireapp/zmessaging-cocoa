@@ -162,6 +162,7 @@ public final class PushDispatcher: NSObject {
         pushRegistrant = PushKitRegistrant(didUpdateCredentials: didUpdateToken,
                                            didReceivePayload: callback,
                                            didInvalidateToken: didInvalidateToken)
+        pushRegistrant.notificationsTracker = self.notificationsTracker
         if let token = pushRegistrant.pushToken {
             self.lastKnownPushTokens[.voip] = token
         }

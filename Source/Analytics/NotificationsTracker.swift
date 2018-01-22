@@ -28,11 +28,13 @@ import WireDataModel
         case startedFetchingStream
         case finishedFetchingStream
         case finishedProcessing
+        case processingExpired
 
         var identifier: String {
             return "notifications_" + rawValue
         }
     }
+    private let isolationQueue = DispatchQueue(label: "NotificationsProcessing")
 
     weak var analytics: AnalyticsType?
     @objc public init(analytics: AnalyticsType) {
@@ -55,18 +57,26 @@ import WireDataModel
         increment(attribute: .startedFetchingStream)
     }
 
+    @objc public func registerProcessingExpired() {
+        increment(attribute: .processingExpired)
+    }
+
     private func increment(attribute: Attributes, by amount: Double = 1) {
-        var currentAttributes = analytics?.persistedAttributes(for: eventName) ?? [:]
-        var value = (currentAttributes[attribute.identifier] as? Double) ?? 0
-        value += amount
-        currentAttributes[attribute.identifier] = value as NSObject
-        analytics?.setPersistedAttributes(currentAttributes, for: eventName)
+        isolationQueue.sync {
+            var currentAttributes = analytics?.persistedAttributes(for: eventName) ?? [:]
+            var value = (currentAttributes[attribute.identifier] as? Double) ?? 0
+            value += amount
+            currentAttributes[attribute.identifier] = value as NSObject
+            analytics?.setPersistedAttributes(currentAttributes, for: eventName)
+        }
     }
 
     public func dispatchEvent() {
-        if let analytics = analytics, let attributes = analytics.persistedAttributes(for: eventName), !attributes.isEmpty {
-            analytics.tagEvent(eventName, attributes: attributes)
-            analytics.setPersistedAttributes(nil, for: eventName)
+        isolationQueue.sync {
+            if let analytics = analytics, let attributes = analytics.persistedAttributes(for: eventName), !attributes.isEmpty {
+                analytics.tagEvent(eventName, attributes: attributes)
+                analytics.setPersistedAttributes(nil, for: eventName)
+            }
         }
     }
 }

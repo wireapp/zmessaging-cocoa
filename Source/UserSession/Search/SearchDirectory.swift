@@ -69,11 +69,15 @@ public class SearchDirectory : NSObject {
     func observeSearchUsers(_ result : SearchResult) {
         let searchUserObserverCenter = userSession.managedObjectContext.searchUserObserverCenter
         result.directory.forEach(searchUserObserverCenter.addSearchUser)
+        result.services.flatMap { $0 as? ZMSearchUser }.forEach(searchUserObserverCenter.addSearchUser)
     }
     
     func requestSearchUserProfileImages(_ result : SearchResult) {
         let usersMissingProfileImage = Set(result.directory.filter({ !$0.isLocalOrHasCachedProfileImageData }))
-        SearchDirectory.userIDsMissingProfileImage.setUsers(usersMissingProfileImage, forDirectory: self)
+        let botsMissingProfileImage = Set(result.services.flatMap { $0 as? ZMSearchUser }.filter({ !$0.isLocalOrHasCachedProfileImageData }))
+
+        let allUsers = usersMissingProfileImage.union(botsMissingProfileImage)
+        SearchDirectory.userIDsMissingProfileImage.setUsers(allUsers, forDirectory: self)
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
     

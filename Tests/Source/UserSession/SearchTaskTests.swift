@@ -676,6 +676,44 @@ class SearchTaskTests : MessagingTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
+    // MARK: Services search
+    
+    func testThatItSendsASearchServicesRequest() {
+        // given
+        let request = SearchRequest(query: "Steve O'Hara & Söhne", searchOptions: [.services])
+        let task = SearchTask(request: request, context: mockUserSession.managedObjectContext, session: mockUserSession)
+        
+        // when
+        task.performRemoteSearchForServices()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(mockTransportSession.receivedRequests().first?.path, "/services?tags=tutorial&start=Steve%20O'Hara%20%26%20S%C3%B6hne")
+    }
+    
+    func testThatItCallsCompletionHandlerForServicesSearch() {
+        // given
+        let resultArrived = expectation(description: "received result")
+        let request = SearchRequest(query: "Service", searchOptions: [.services])
+        let task = SearchTask(request: request, context: mockUserSession.managedObjectContext, session: mockUserSession)
+        
+        mockTransportSession.performRemoteChanges { (remoteChanges) in
+            remoteChanges.insertService(withName: "Service A",
+                                        identifier: UUID().transportString(),
+                                        provider: UUID().transportString())
+        }
+        
+        // expect
+        task.onResult { (result, _) in
+            resultArrived.fulfill()
+            XCTAssertEqual(result.services.first?.name, "Service A")
+        }
+        
+        // when
+        task.performRemoteSearchForServices()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
     // MARK: Combined results
     
     func testThatRemoteResultsIncludePreviousLocalResults() {
