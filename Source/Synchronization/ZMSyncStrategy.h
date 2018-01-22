@@ -23,7 +23,6 @@
 
 #import "ZMObjectStrategyDirectory.h"
 #import "ZMUpdateEventsBuffer.h"
-#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @class ZMTransportRequest;
 @class ZMPushChannelConnection;
@@ -37,13 +36,16 @@
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
 @class ApplicationStatusDirectory;
+@class AVSMediaManager;
+@class CallingRequestStrategy;
 
 @protocol ZMTransportData;
 @protocol ZMSyncStateDelegate;
 @protocol ZMBackgroundable;
 @protocol ApplicationStateOwner;
 @protocol FlowManagerType;
-
+@protocol ZMApplication;
+@protocol LocalStoreProviderProtocol;
 
 @interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory>
 

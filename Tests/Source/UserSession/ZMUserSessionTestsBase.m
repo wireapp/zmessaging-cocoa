@@ -117,6 +117,7 @@
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
                                                   mediaManager:self.mediaManager
                                                    flowManager:self.flowManagerMock
+                                                     analytics:nil
                                                apnsEnvironment:self.apnsEnvironment
                                                  operationLoop:self.operationLoop
                                                    application:self.application

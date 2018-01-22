@@ -1010,8 +1010,12 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     }
     
     var startedMigrationCalled = false
-    func sessionManagerWillStartMigratingLocalStore() {
+    func sessionManagerWillMigrateAccount(_ account: Account) {
         startedMigrationCalled = true
+    }
+    
+    func sessionManagerWillMigrateLegacyAccount() {
+        // no op
     }
     
 }

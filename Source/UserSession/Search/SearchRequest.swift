@@ -27,6 +27,7 @@ public struct SearchOptions : OptionSet {
     public static let teamMembers = SearchOptions(rawValue: 1 << 2)
     public static let directory = SearchOptions(rawValue: 1 << 3)
     public static let conversations = SearchOptions(rawValue: 1 << 4)
+    public static let services = SearchOptions(rawValue: 1 << 5)
     
     public init(rawValue: Int) {
         self.rawValue = rawValue

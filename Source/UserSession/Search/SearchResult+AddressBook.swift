@@ -61,7 +61,8 @@ extension SearchResult {
                             teamMembers: teamMembers,
                             addressBook: connectedUsers + additionalConnectedUsers + additionalNonConnectedUsers + searchUsersFromAddressBook,
                             directory: directory,
-                            conversations: conversations)
+                            conversations: conversations,
+                            services: services)
     }
     
     /// Returns users that are linked to the given address book contacts
