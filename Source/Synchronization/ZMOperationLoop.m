@@ -51,7 +51,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 @property (nonatomic) BOOL ownsSyncStrategy;
 @property (nonatomic) BOOL tornDown;
 @property (nonatomic) id<ZMApplication> application;
-@property (nonatomic, weak) ZMApplicationStatusDirectory *applicationStatusDirectory;
+@property (nonatomic, weak) ApplicationStatusDirectory *applicationStatusDirectory;
 
 @end
 
@@ -76,7 +76,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
                             mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
-              applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
+              applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
                              application:(id<ZMApplication>)application
 {
 
@@ -101,7 +101,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                             syncStrategy:(ZMSyncStrategy *)syncStrategy
-              applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
+              applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
                                    uiMOC:(NSManagedObjectContext *)uiMOC
                                  syncMOC:(NSManagedObjectContext *)syncMOC
 {

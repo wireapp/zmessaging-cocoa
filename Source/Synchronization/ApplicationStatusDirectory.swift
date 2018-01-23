@@ -20,7 +20,6 @@ import Foundation
 import CoreData
 import WireMessageStrategy
 
-@objc(ZMApplicationStatusDirectory)
 public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
 
     public let apnsConfirmationStatus : BackgroundAPNSConfirmationStatus
@@ -34,6 +33,8 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let syncStatus : SyncStatus
     public let operationStatus : OperationStatus
     public let requestCancellation: ZMRequestCancellation
+    public let analytics: AnalyticsType?
+    public let teamInvitationStatus: TeamInvitationStatus
 
     public var notificationFetchStatus: BackgroundNotificationFetchStatus {
         return pingBackStatus.status
@@ -41,10 +42,12 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     
     fileprivate var callInProgressObserverToken : Any? = nil
     
-    public init(withManagedObjectContext managedObjectContext : NSManagedObjectContext, cookieStorage : ZMPersistentCookieStorage, requestCancellation: ZMRequestCancellation, application : ZMApplication, syncStateDelegate: ZMSyncStateDelegate) {
+    public init(withManagedObjectContext managedObjectContext : NSManagedObjectContext, cookieStorage : ZMPersistentCookieStorage, requestCancellation: ZMRequestCancellation, application : ZMApplication, syncStateDelegate: ZMSyncStateDelegate, analytics: AnalyticsType? = nil) {
         self.requestCancellation = requestCancellation
         self.apnsConfirmationStatus = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: managedObjectContext, backgroundActivityFactory: BackgroundActivityFactory.sharedInstance())
         self.operationStatus = OperationStatus()
+        self.analytics = analytics
+        self.teamInvitationStatus = TeamInvitationStatus()
         self.operationStatus.isInBackground = application.applicationState == .background
         self.syncStatus = SyncStatus(managedObjectContext: managedObjectContext, syncStateDelegate: syncStateDelegate)
         self.userProfileUpdateStatus = UserProfileUpdateStatus(managedObjectContext: managedObjectContext)

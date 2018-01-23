@@ -111,7 +111,18 @@ final public class SearchUserAndAsset: NSObject {
             guard let `self` = self else { return }
             let previous = self.entries[directory]
             let userIdsToPrevious = previous?.dictionary { ($0.userId, $0) }
-            self.entries[directory] = Set(users.map { userIdsToPrevious?[$0.remoteIdentifier] ?? SearchUserAndAsset(searchUser: $0) })
+            self.entries[directory] = Set(users.map {
+                if let previous = userIdsToPrevious?[$0.remoteIdentifier] {
+                    return previous
+                }
+                else if let assetKeyObject = ZMSearchUser.searchUserToMediumAssetIDCache().object(forKey: $0.remoteIdentifier as AnyObject) as? SearchUserAssetObjC,
+                    let assetKey = assetKeyObject.assetKey {
+                    return SearchUserAndAsset(searchUser: $0, assetKey: assetKey)
+                }
+                else {
+                    return SearchUserAndAsset(searchUser: $0)
+                }
+            })
         }
     }
 

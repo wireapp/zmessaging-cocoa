@@ -234,6 +234,7 @@
     ZMUserSession *userSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
                                                                     mediaManager:self.mediaManager
                                                                      flowManager:self.flowManagerMock
+                                                                       analytics:nil
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
@@ -476,6 +477,7 @@
     ZMUserSession *testSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
                                                                     mediaManager:self.mediaManager
                                                                      flowManager:self.flowManagerMock
+                                                                       analytics:nil
                                                                  apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
