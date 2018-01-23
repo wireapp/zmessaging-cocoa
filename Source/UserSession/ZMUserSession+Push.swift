@@ -117,8 +117,11 @@ extension ZMUserSession: PushDispatcherOptionalClient {
     public func receivedPushNotification(with payload: [AnyHashable: Any],
                                          from source: ZMPushNotficationType,
                                          completion: ZMPushNotificationCompletionHandler?) {
+        guard let syncMoc = self.syncManagedObjectContext else {
+            return
+        }
         
-        self.syncManagedObjectContext.performGroupedBlock {
+        syncMoc.performGroupedBlock {
             let notAuthenticated = !self.isAuthenticated()
             
             if notAuthenticated {
