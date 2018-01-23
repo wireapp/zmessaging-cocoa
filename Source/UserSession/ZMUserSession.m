@@ -64,7 +64,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) NSMutableArray* observersToken;
 @property (nonatomic) id <LocalStoreProviderProtocol> storeProvider;
-@property (nonatomic) ZMApplicationStatusDirectory *applicationStatusDirectory;
+@property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
 
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
 @property (nonatomic) BOOL hasCompletedInitialSync;
@@ -132,6 +132,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [self initWithTransportSession:transportSession
                              mediaManager:mediaManager
                               flowManager:flowManager
+                                analytics:analytics
                           apnsEnvironment:apnsEnvironment
                             operationLoop:nil
                               application:application
@@ -143,6 +144,7 @@ ZM_EMPTY_ASSERTING_INIT()
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
                             mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
+                               analytics:(id<AnalyticsType>)analytics
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
@@ -195,11 +197,12 @@ ZM_EMPTY_ASSERTING_INIT()
         self.managedObjectContext.zm_coreTelephonyCallCenter = callCenter;
         
         [self.syncManagedObjectContext performBlockAndWait:^{
-            self.applicationStatusDirectory = [[ZMApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncManagedObjectContext
+            self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncManagedObjectContext
                                                                                                    cookieStorage:session.cookieStorage
                                                                                              requestCancellation:session
                                                                                                      application:application
-                                                                                               syncStateDelegate:self];
+                                                                                               syncStateDelegate:self
+                                                                                                       analytics:analytics];
             
             self.syncManagedObjectContext.zm_imageAssetCache = imageAssetCache;
             self.syncManagedObjectContext.zm_userImageCache = userImageCache;

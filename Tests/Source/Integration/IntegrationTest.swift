@@ -520,7 +520,11 @@ extension IntegrationTest : SessionManagerDelegate {
         }
     }
     
-    public func sessionManagerWillStartMigratingLocalStore() {
+    public func sessionManagerWillMigrateLegacyAccount() {
+        // no-op
+    }
+    
+    public func sessionManagerWillMigrateAccount(_ account: Account) {
         // no-op
     }
     

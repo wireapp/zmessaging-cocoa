@@ -31,7 +31,8 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     func sessionManagerDidFailToLogin(account: Account?, error : Error)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
-    func sessionManagerWillStartMigratingLocalStore()
+    func sessionManagerWillMigrateAccount(_ account: Account)
+    func sessionManagerWillMigrateLegacyAccount()
     func sessionManagerDidBlacklistCurrentVersion()
 }
 
@@ -125,6 +126,7 @@ public protocol LocalNotificationResponder : class {
     var blacklistVerificator: ZMBlacklistVerificator?
     let reachability: ReachabilityProvider & ReachabilityTearDown
     let pushDispatcher: PushDispatcher
+    let notificationsTracker: NotificationsTracker?
     
     internal var authenticatedSessionFactory: AuthenticatedSessionFactory
     internal let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
@@ -203,6 +205,7 @@ public protocol LocalNotificationResponder : class {
             appVersion: appVersion,
             authenticatedSessionFactory: authenticatedSessionFactory,
             unauthenticatedSessionFactory: unauthenticatedSessionFactory,
+            analytics: analytics,
             reachability: reachability,
             delegate: delegate,
             application: application,
@@ -235,12 +238,14 @@ public protocol LocalNotificationResponder : class {
         })
         
         NotificationCenter.default.addObserver(self, selector: #selector(applicationWillEnterForeground(_:)), name: .UIApplicationWillEnterForeground, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive(_:)), name: .UIApplicationDidBecomeActive, object: nil)
     }
 
     init(
         appVersion: String,
         authenticatedSessionFactory: AuthenticatedSessionFactory,
         unauthenticatedSessionFactory: UnauthenticatedSessionFactory,
+        analytics: AnalyticsType? = nil,
         reachability: ReachabilityProvider & ReachabilityTearDown,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
@@ -286,7 +291,12 @@ public protocol LocalNotificationResponder : class {
         // non nil in order to process the notification
         BackgroundActivityFactory.sharedInstance().application = UIApplication.shared
         BackgroundActivityFactory.sharedInstance().mainGroupQueue = groupQueue
-        self.pushDispatcher = PushDispatcher()
+        self.pushDispatcher = PushDispatcher(analytics: analytics)
+        if let analytics = analytics {
+            self.notificationsTracker = NotificationsTracker(analytics: analytics)
+        } else {
+            self.notificationsTracker = nil
+        }
 
         super.init()
         
@@ -302,7 +312,7 @@ public protocol LocalNotificationResponder : class {
             // In order to do so we open the old database and get the user identifier.
             LocalStoreProvider.fetchUserIDFromLegacyStore(
                 in: sharedContainerURL,
-                migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
+                migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateLegacyAccount() },
                 completion: { [weak self] identifier in
                     guard let `self` = self else { return }
                     identifier.apply(self.migrateAccount)
@@ -489,7 +499,7 @@ public protocol LocalNotificationResponder : class {
                     applicationContainer: self.sharedContainerURL,
                     userIdentifier: account.userIdentifier,
                     dispatchGroup: self.dispatchGroup,
-                    migration: { [weak self] in self?.delegate?.sessionManagerWillStartMigratingLocalStore() },
+                    migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateAccount(account) },
                     completion: { provider in
                         let userSession = self.startBackgroundSession(for: account, with: provider)
                         completion(userSession)
@@ -580,12 +590,10 @@ extension SessionManager {
             if let userName = selfUser.name {
                 account.userName = userName
             }
-            if let userProfileImage = selfUser.imageSmallProfileData, !selfUser.isTeamMember {
+            if let userProfileImage = selfUser.imageSmallProfileData {
                 account.imageData = userProfileImage
             }
-            else {
-                account.imageData = nil
-            }
+            //an optional `teamImageData` image could be saved here
             accountManager.addOrUpdate(account)
         }
     }
@@ -715,6 +723,12 @@ extension SessionManager: PostLoginAuthenticationObserver {
         }
     }
 
+}
+
+extension SessionManager {
+    dynamic fileprivate func applicationDidBecomeActive(_ note: Notification) {
+        notificationsTracker?.dispatchEvent()
+    }
 }
 
 // MARK: - Unread Conversation Count

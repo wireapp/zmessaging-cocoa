@@ -23,12 +23,14 @@ public class SearchTask {
     
     public typealias ResultHandler = (_ result: SearchResult, _ isCompleted: Bool) -> Void
  
-    fileprivate let session : ZMUserSession
-    fileprivate let context : NSManagedObjectContext
-    fileprivate let request : SearchRequest
-    fileprivate var taskIdentifier : ZMTaskIdentifier?
-    fileprivate var resultHandlers : [ResultHandler] = []
-    fileprivate var result : SearchResult = SearchResult(contacts: [], teamMembers: [], addressBook: [],  directory: [], conversations: [])
+    fileprivate let session: ZMUserSession
+    fileprivate let context: NSManagedObjectContext
+    fileprivate let request: SearchRequest
+    fileprivate var directoryTaskIdentifier: ZMTaskIdentifier?
+    fileprivate var handleTaskIdentifier: ZMTaskIdentifier?
+    fileprivate var servicesTaskIdentifier: ZMTaskIdentifier?
+    fileprivate var resultHandlers: [ResultHandler] = []
+    fileprivate var result: SearchResult = SearchResult(contacts: [], teamMembers: [], addressBook: [],  directory: [], conversations: [], services: [])
     
     fileprivate var tasksRemaining = 0 {
         didSet {
@@ -59,9 +61,9 @@ public class SearchTask {
     public func cancel() {
         resultHandlers.removeAll()
         
-        if let taskIdentifier = taskIdentifier {
-            session.transportSession.cancelTask(with: taskIdentifier)
-        }
+        directoryTaskIdentifier.flatMap(session.transportSession.cancelTask)
+        servicesTaskIdentifier.flatMap(session.transportSession.cancelTask)
+        handleTaskIdentifier.flatMap(session.transportSession.cancelTask)
         
         tasksRemaining = 0
     }
@@ -72,6 +74,7 @@ public class SearchTask {
         performLocalSearch()
         performRemoteSearch()
         performRemoteSearchForTeamUser()
+        performRemoteSearchForServices()
     }
 }
 
@@ -90,7 +93,7 @@ extension SearchTask {
             let connectedUsers = self.request.searchOptions.contains(.contacts) ? self.connectedUsers(matchingQuery: self.request.query) : []
             let teamMembers = self.request.searchOptions.contains(.teamMembers) ? self.teamMembers(matchingQuery: self.request.query, team: team) : []
             let conversations = self.request.searchOptions.contains(.conversations) ? self.conversations(matchingQuery: self.request.query) : []
-            let result = SearchResult(contacts: connectedUsers, teamMembers: teamMembers, addressBook: [], directory: [], conversations: conversations)
+            let result = SearchResult(contacts: connectedUsers, teamMembers: teamMembers, addressBook: [], directory: [], conversations: conversations, services: [])
             
             self.session.managedObjectContext.performGroupedBlock {
                 self.result = self.result.union(withLocalResult: result.copy(on: self.session.managedObjectContext))
@@ -166,16 +169,16 @@ extension SearchTask {
                     return
                 }
                 
-                if let updatedResult = self?.result.union(withRemoteResult: result) {
+                if let updatedResult = self?.result.union(withDirectoryResult: result) {
                     self?.result = updatedResult
                 }
             }))
             
             request.add(ZMTaskCreatedHandler(on: self.context, block: { [weak self] (taskIdentifier) in
-                self?.taskIdentifier = taskIdentifier
+                self?.directoryTaskIdentifier = taskIdentifier
             }))
             
-            self.session.transportSession.enqueueSearch(request)
+            self.session.transportSession.enqueueOneTime(request)
         }
     }
     
@@ -243,7 +246,8 @@ extension SearchTask {
                                 teamMembers: prevResult.teamMembers,
                                 addressBook: prevResult.addressBook,
                                 directory: result.directory + prevResult.directory,
-                                conversations: prevResult.conversations
+                                conversations: prevResult.conversations,
+                                services: prevResult.services
                             )
                         }
                     } else {
@@ -254,10 +258,10 @@ extension SearchTask {
             }))
             
             request.add(ZMTaskCreatedHandler(on: self.context, block: { [weak self] (taskIdentifier) in
-                self?.taskIdentifier = taskIdentifier
+                self?.handleTaskIdentifier = taskIdentifier
             }))
             
-            self.session.transportSession.enqueueSearch(request)
+            self.session.transportSession.enqueueOneTime(request)
         }
     }
     
@@ -271,6 +275,54 @@ extension SearchTask {
         let url = NSURLComponents()
         url.path = "/users"
         url.queryItems = [URLQueryItem(name: "handles", value: handle)]
+        let urlStr = url.string?.replacingOccurrences(of: "+", with: "%2B") ?? ""
+        return ZMTransportRequest(getFromPath: urlStr)
+    }
+}
+
+extension SearchTask {
+    
+    func performRemoteSearchForServices() {
+        guard request.searchOptions.contains(.services) else { return }
+        
+        tasksRemaining += 1
+
+        context.performGroupedBlock {
+            let request = self.servicesSearchRequest(query: self.request.query)
+            
+            request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in
+                
+                defer {
+                    self?.tasksRemaining -= 1
+                }
+                
+                guard
+                    let session = self?.session,
+                    let query = self?.request.query,
+                    let payload = response.payload?.asDictionary(),
+                    let result = SearchResult(servicesPayload: payload, query: query, userSession: session)
+                    else {
+                        return
+                }
+                
+                if let updatedResult = self?.result.union(withServiceResult: result) {
+                    self?.result = updatedResult
+                }
+            }))
+            
+            request.add(ZMTaskCreatedHandler(on: self.context, block: { [weak self] (taskIdentifier) in
+                self?.servicesTaskIdentifier = taskIdentifier
+            }))
+            
+            self.session.transportSession.enqueueOneTime(request)
+        }
+    }
+    
+    func servicesSearchRequest(query: String) -> ZMTransportRequest {
+        let url = NSURLComponents()
+        url.path = "/services"
+        
+        url.queryItems = [URLQueryItem(name: "tags", value: "tutorial"), URLQueryItem(name: "start", value: query)]
         let urlStr = url.string?.replacingOccurrences(of: "+", with: "%2B") ?? ""
         return ZMTransportRequest(getFromPath: urlStr)
     }

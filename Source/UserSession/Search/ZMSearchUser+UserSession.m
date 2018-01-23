@@ -77,7 +77,7 @@
     
     ZMTransportSession *session = userSession.transportSession;
     Require(session != nil);
-    [session enqueueSearchRequest:request];
+    [session enqueueOneTimeRequest:request];
 }
 
 - (ZMTransportRequest *)requestUserInfoInUserSession:(ZMUserSession *)userSession
