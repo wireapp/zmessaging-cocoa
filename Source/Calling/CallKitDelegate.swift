@@ -23,6 +23,8 @@ import avs
 
 private let zmLog = ZMSLog(tag: "calling")
 
+private let identifierSeparator : Character = "+"
+
 private struct CallKitCall {
     let conversation : ZMConversation
     let observer : CallObserver
@@ -39,7 +41,7 @@ public class CallKitDelegate : NSObject {
     
     fileprivate let provider : CXProvider
     fileprivate let callController : CXCallController
-    fileprivate unowned let sessionManager : SessionManager
+    fileprivate unowned let sessionManager : SessionManagerType
     fileprivate weak var flowManager : FlowManagerType?
     fileprivate weak var mediaManager: AVSMediaManager?
     fileprivate var callStateObserverToken : Any?
@@ -47,7 +49,7 @@ public class CallKitDelegate : NSObject {
     fileprivate var connectedCallConversation : ZMConversation?
     fileprivate var calls : [UUID : CallKitCall]
     
-    public convenience init(sessionManager: SessionManager, flowManager: FlowManagerType?, mediaManager: AVSMediaManager?) {
+    public convenience init(sessionManager: SessionManagerType, flowManager: FlowManagerType?, mediaManager: AVSMediaManager?) {
         self.init(provider: CXProvider(configuration: CallKitDelegate.providerConfiguration),
                   callController: CXCallController(queue: DispatchQueue.main),
                   sessionManager: sessionManager,
@@ -57,7 +59,7 @@ public class CallKitDelegate : NSObject {
     
     public init(provider : CXProvider,
          callController: CXCallController,
-         sessionManager: SessionManager,
+         sessionManager: SessionManagerType,
          flowManager: FlowManagerType?,
          mediaManager: AVSMediaManager?) {
         
@@ -129,18 +131,34 @@ public class CallKitDelegate : NSObject {
 @available(iOS 10.0, *)
 extension CallKitDelegate {
     
-    func conversationAssociated(with contacts: [INPerson]) -> ZMConversation? {
+    func callIdentifiers(from customIdentifier : String) -> (UUID, UUID)? {
+        let identifiers = customIdentifier.split(separator: identifierSeparator)
+        
+        guard identifiers.count == 2,
+              let accountIdentifier = identifiers.first,
+              let userIdentifier = identifiers.last,
+              let accountId = UUID.init(uuidString: String(accountIdentifier)),
+              let userId = UUID.init(uuidString: String(userIdentifier)) else { return nil }
+        
+        return (accountId, userId)
+    }
+    
+    func findConversationAssociated(with contacts: [INPerson], completion: @escaping (ZMConversation) -> Void) {
         
         guard contacts.count == 1,
               let contact = contacts.first,
               let customIdentifier = contact.customIdentifier,
-              let remoteIdentifier = UUID.init(uuidString: customIdentifier),
-              let managedObjectContext = sessionManager.activeUserSession?.managedObjectContext
+              let (accountId, conversationId) = callIdentifiers(from: customIdentifier),
+              let account = sessionManager.accountManager.account(with: accountId)
         else {
-            return nil
+            return
         }
         
-        return ZMConversation(remoteID: remoteIdentifier, createIfNeeded: false, in: managedObjectContext)
+        sessionManager.withSession(for: account) { (userSession) in
+            if let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.managedObjectContext) {
+                completion(conversation)
+            }
+        }
     }
     
     public func continueUserActivity(_ userActivity : NSUserActivity) -> Bool {
@@ -160,8 +178,11 @@ extension CallKitDelegate {
             video = true
         }
         
-        if let contacts = contacts, contacts.count == 1, let conversation = conversationAssociated(with: contacts) {
-            requestStartCall(in: conversation, video: video)
+        if let contacts = contacts {
+            findConversationAssociated(with: contacts) { [weak self] (conversation) in
+                self?.requestStartCall(in: conversation, video: video)
+            }
+            
             return true
         }
         
@@ -431,9 +452,11 @@ extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMisse
 @available(iOS 10.0, *)
 extension ZMConversation {
     
-    var callKitHandle : CXHandle? {
-        if let remoteIdentifier = remoteIdentifier {
-            return CXHandle(type: .generic, value: remoteIdentifier.transportString())
+    var callKitHandle: CXHandle? {
+        if let managedObjectContext = managedObjectContext,
+           let userId = ZMUser.selfUser(in: managedObjectContext).remoteIdentifier,
+           let remoteIdentifier = remoteIdentifier {
+            return CXHandle(type: .generic, value: userId.transportString() + String(identifierSeparator) + remoteIdentifier.transportString())
         }
         
         return nil

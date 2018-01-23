@@ -37,6 +37,16 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     func sessionManagerDidBlacklistCurrentVersion()
 }
 
+
+public protocol SessionManagerType : class {
+    
+    var accountManager : AccountManager { get }
+    var backgroundUserSessions: [UUID: ZMUserSession] { get }
+    
+    func withSession(for account: Account, perform completion: @escaping (ZMUserSession)->())
+
+}
+
 public protocol LocalNotificationResponder : class {
     func processLocal(_ notification: ZMLocalNotification, forSession session: ZMUserSession)
 }
@@ -104,7 +114,7 @@ public protocol LocalNotificationResponder : class {
 ///
 
 
-@objc public class SessionManager : NSObject {
+@objc public class SessionManager : NSObject, SessionManagerType {
 
     /// Maximum number of accounts which can be logged in simultanously
     public static let maxNumberAccounts = 3
