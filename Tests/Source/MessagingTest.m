@@ -391,8 +391,6 @@ static ZMReachability *sharedReachabilityMock = nil;
     
     id conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [self verifyMockLater:conversationTranscoder];
-    id systemMessageEventConsumer = [OCMockObject mockForClass:SystemMessageEventsConsumer.class];
-    [self verifyMockLater:systemMessageEventConsumer];
     id clientMessageTranscoder = [OCMockObject mockForClass:ClientMessageTranscoder.class];
     [self verifyMockLater:clientMessageTranscoder];
     id selfStrategy = [OCMockObject mockForClass:ZMSelfStrategy.class];
