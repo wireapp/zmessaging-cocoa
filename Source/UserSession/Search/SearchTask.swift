@@ -152,7 +152,7 @@ extension SearchTask {
         tasksRemaining += 1
         
         context.performGroupedBlock {
-            let request = self.searchRequestInDirectory(withQuery: self.request.query)
+            let request = type(of: self).searchRequestInDirectory(withQuery: self.request.query)
             
             request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in
                 
@@ -182,7 +182,7 @@ extension SearchTask {
         }
     }
     
-    func searchRequestInDirectory(withQuery query : String, fetchLimit: Int = 10) -> ZMTransportRequest {
+    static func searchRequestInDirectory(withQuery query : String, fetchLimit: Int = 10) -> ZMTransportRequest {
         var query = query
         
         if query.hasPrefix("@") {
@@ -206,7 +206,7 @@ extension SearchTask {
         tasksRemaining += 1
         
         context.performGroupedBlock {
-            let request = self.searchRequestInDirectory(withHandle: self.request.query)
+            let request = type(of: self).searchRequestInDirectory(withHandle: self.request.query)
             
             request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in
                 
@@ -265,7 +265,7 @@ extension SearchTask {
         }
     }
     
-    func searchRequestInDirectory(withHandle handle : String) -> ZMTransportRequest {
+    static func searchRequestInDirectory(withHandle handle : String) -> ZMTransportRequest {
         var handle = handle.lowercased()
         
         if handle.hasPrefix("@") {
@@ -288,7 +288,7 @@ extension SearchTask {
         tasksRemaining += 1
 
         context.performGroupedBlock {
-            let request = self.servicesSearchRequest(query: self.request.query)
+            let request = type(of: self).servicesSearchRequest(query: self.request.query)
             
             request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in
                 
@@ -318,11 +318,11 @@ extension SearchTask {
         }
     }
     
-    func servicesSearchRequest(query: String) -> ZMTransportRequest {
+    static func servicesSearchRequest(query: String) -> ZMTransportRequest {
         let url = NSURLComponents()
         url.path = "/services"
         
-        url.queryItems = [URLQueryItem(name: "tags", value: "tutorial"), URLQueryItem(name: "start", value: query)]
+        url.queryItems = [URLQueryItem(name: "tags", value: "tutorial"), URLQueryItem(name: "start", value: query.trimmingCharacters(in: .whitespacesAndNewlines))]
         let urlStr = url.string?.replacingOccurrences(of: "+", with: "%2B") ?? ""
         return ZMTransportRequest(getFromPath: urlStr)
     }
