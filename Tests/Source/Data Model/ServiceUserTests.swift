@@ -22,6 +22,7 @@ import XCTest
 @testable import WireSyncEngine
 
 final class DummyServiceUser: NSObject, ServiceUser {
+    
     var name: String! = "Service user"
     
     var displayName: String! = "Service"
@@ -51,6 +52,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     var isTeamMember: Bool = false
     
     var canBeConnected: Bool = false
+    
+    var isServiceUser: Bool = true
     
     func refreshData() {
         

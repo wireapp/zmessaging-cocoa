@@ -108,16 +108,20 @@ extension ZMUserSession: PushDispatcherOptionalClient {
 
     public func mustHandle(payload: [AnyHashable: Any]) -> Bool {
         requireInternal(Thread.isMainThread, "Should be on main thread")
-        let moc = self.managedObjectContext
-        requireInternal(moc != nil, "MOC should be set")
-        return payload.isPayload(for: ZMUser.selfUser(in: moc!))
+        guard let moc = self.managedObjectContext else {
+            return false
+        }
+        return payload.isPayload(for: ZMUser.selfUser(in: moc))
     }
     
     public func receivedPushNotification(with payload: [AnyHashable: Any],
                                          from source: ZMPushNotficationType,
                                          completion: ZMPushNotificationCompletionHandler?) {
+        guard let syncMoc = self.syncManagedObjectContext else {
+            return
+        }
         
-        self.syncManagedObjectContext.performGroupedBlock {
+        syncMoc.performGroupedBlock {
             let notAuthenticated = !self.isAuthenticated()
             
             if notAuthenticated {

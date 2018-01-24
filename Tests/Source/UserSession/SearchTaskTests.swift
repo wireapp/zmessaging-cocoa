@@ -714,6 +714,17 @@ class SearchTaskTests : MessagingTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
+    func testThatItTrimsThePrefixQuery() throws {
+        // when
+        let task = SearchTask.servicesSearchRequest(query: "Search query ")
+        // then
+        let components = URLComponents(url: task.URL, resolvingAgainstBaseURL: false)
+        
+        XCTAssertEqual(components?.queryItems?.count, 2)
+        let prefixComponent = components!.queryItems!.filter { $0.name == "start" }.first!
+        XCTAssertEqual(prefixComponent.value, "Search query")
+    }
+    
     // MARK: Combined results
     
     func testThatRemoteResultsIncludePreviousLocalResults() {
