@@ -24,10 +24,14 @@ import OCMock
 
 @testable import WireSyncEngine
 
-class MockSessionManager : SessionManagerType {
+@available(iOS 10.0, *)
+class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
     
     static let accountManagerURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("MockSessionManager.accounts")
     
+    var localNotificationResponder: LocalNotificationResponder? = nil
+    var callKitDelegate: WireSyncEngine.CallKitDelegate? = nil
+    var callNotificationStyle: CallNotificationStyle = .pushNotifications
     var accountManager: AccountManager = AccountManager(sharedDirectory: accountManagerURL)
     var backgroundUserSessions: [UUID : ZMUserSession] = [:]
     
@@ -36,6 +40,10 @@ class MockSessionManager : SessionManagerType {
         if let userSession = mockUserSession {
             completion(userSession)
         }
+    }
+    
+    func updateAppIconBadge() {
+        
     }
     
     deinit {
@@ -177,7 +185,7 @@ class MockProvider : CXProvider {
 
 @available(iOS 10.0, *)
 class CallKitDelegateTest: MessagingTest {
-    var sut: CallKitDelegate!
+    var sut: WireSyncEngine.CallKitDelegate!
     var callKitProvider: MockCallKitProvider!
     var callKitController: MockCallKitCallController!
     var mockWireCallCenterV3 : WireCallCenterV3Mock!
@@ -223,7 +231,7 @@ class CallKitDelegateTest: MessagingTest {
         selfUser.remoteIdentifier = UUID()
         
         let flowManager = FlowManagerMock()
-        let configuration = CallKitDelegate.providerConfiguration
+        let configuration = WireSyncEngine.CallKitDelegate.providerConfiguration
         self.callKitProvider = MockCallKitProvider(configuration: configuration)
         self.callKitController = MockCallKitCallController()
         self.mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: "123", uiMOC: uiMOC, flowManager: flowManager, transport: WireCallCenterTransportMock())
@@ -232,11 +240,11 @@ class CallKitDelegateTest: MessagingTest {
         mockSessionManager.mockUserSession = self.mockUserSession
         mockSessionManager.accountManager.addAndSelect(Account(userName: "Test User", userIdentifier: selfUser.remoteIdentifier!))
         
-        self.sut = CallKitDelegate(provider: callKitProvider,
-                                   callController: callKitController,
-                                   sessionManager: mockSessionManager,
-                                   flowManager: flowManager,
-                                   mediaManager: nil)
+        self.sut = WireSyncEngine.CallKitDelegate(provider: callKitProvider,
+                                                  callController: callKitController,
+                                                  sessionManager: mockSessionManager,
+                                                  flowManager: flowManager,
+                                                  mediaManager: nil)
         
         CallKitDelegateTestsMocking.mockUserSession(self.mockUserSession)
         
@@ -254,7 +262,7 @@ class CallKitDelegateTest: MessagingTest {
     // Public API - provider configuration
     func testThatItReturnsTheProviderConfiguration() {
         // when
-        let configuration = CallKitDelegate.providerConfiguration
+        let configuration = WireSyncEngine.CallKitDelegate.providerConfiguration
         
         // then
         XCTAssertEqual(configuration.supportsVideo, true)
@@ -264,7 +272,7 @@ class CallKitDelegateTest: MessagingTest {
     
     func testThatItReturnsDefaultRingSound() {
         // when
-        let configuration = CallKitDelegate.providerConfiguration
+        let configuration = WireSyncEngine.CallKitDelegate.providerConfiguration
         
         // then
         XCTAssertEqual(configuration.ringtoneSound, "ringing_from_them_long.caf")
@@ -278,7 +286,7 @@ class CallKitDelegateTest: MessagingTest {
         // given
         UserDefaults.standard.setValue(customSoundName, forKey: "ZMCallSoundName")
         // when
-        let configuration = CallKitDelegate.providerConfiguration
+        let configuration = WireSyncEngine.CallKitDelegate.providerConfiguration
         
         // then
         XCTAssertEqual(configuration.ringtoneSound, customSoundName + ".m4a")
@@ -286,11 +294,11 @@ class CallKitDelegateTest: MessagingTest {
     
     func testThatItInvalidatesTheProviderOnDeinit() {
         // given
-        sut = CallKitDelegate(provider: callKitProvider,
-                              callController: callKitController,
-                              sessionManager: mockSessionManager,
-                              flowManager: FlowManagerMock(),
-                              mediaManager: nil)
+        sut = WireSyncEngine.CallKitDelegate(provider: callKitProvider,
+                                             callController: callKitController,
+                                             sessionManager: mockSessionManager,
+                                             flowManager: FlowManagerMock(),
+                                             mediaManager: nil)
         
         // when
         sut = nil

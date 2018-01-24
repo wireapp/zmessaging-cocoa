@@ -419,6 +419,7 @@ static ZMReachability *sharedReachabilityMock = nil;
         [[[mockUserSession stub] andReturn:self.searchMOC] searchManagedObjectContext];
         [[[mockUserSession stub] andReturn:self.sharedContainerURL] sharedContainerURL];
         [[[mockUserSession stub] andReturn:self.mockOperationStatus] operationStatus];
+        [[[mockUserSession stub] andReturnValue:@(CallNotificationStylePushNotifications)] callNotificationStyle];
 
         [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockTransportSession] transportSession];
         _mockUserSession = mockUserSession;

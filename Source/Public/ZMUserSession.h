@@ -46,6 +46,7 @@
 @protocol ZMApplication;
 @protocol LocalStoreProviderProtocol;
 @protocol FlowManagerType;
+@protocol SessionManagerType;
 
 @class ManagedObjectContextDirectory;
 @class TopConversationsDirectory;
@@ -57,11 +58,6 @@
 
 @protocol ZMAVSLogObserverToken <NSObject>
 @end
-
-typedef NS_ENUM(NSUInteger, ZMCallNotificationStyle) {
-    ZMCallNotificationStylePushNotifications,
-    ZMCallNotificationStyleCallKit
-};
 
 extern NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName;
 extern NSString * const ZMPhoneVerificationCodeKey;
@@ -90,7 +86,7 @@ extern NSString * const ZMPotentialErrorDetectedNotificationName;
                           appVersion:(NSString *)appVersion
                        storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
 
-@property (nonatomic, weak) SessionManager *sessionManager;
+@property (nonatomic, weak) id<SessionManagerType> sessionManager;
 @property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;
 @property (atomic, readonly) ZMNetworkState networkState;

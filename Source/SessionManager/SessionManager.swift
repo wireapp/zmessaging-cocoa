@@ -27,6 +27,11 @@ private let log = ZMSLog(tag: "SessionManager")
 public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 
 
+@objc public enum CallNotificationStyle : UInt {
+    case pushNotifications
+    case callKit
+}
+
 @objc public protocol SessionManagerDelegate : class {
     func sessionManagerActivated(userSession : ZMUserSession)
     func sessionManagerDidFailToLogin(account: Account?, error : Error)
@@ -37,16 +42,23 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     func sessionManagerDidBlacklistCurrentVersion()
 }
 
-
+@objc
 public protocol SessionManagerType : class {
     
     var accountManager : AccountManager { get }
     var backgroundUserSessions: [UUID: ZMUserSession] { get }
+    weak var localNotificationResponder: LocalNotificationResponder? { get }
+    
+    @available(iOS 10.0, *)
+    var callKitDelegate : CallKitDelegate? { get }
+    var callNotificationStyle: CallNotificationStyle { get }
     
     func withSession(for account: Account, perform completion: @escaping (ZMUserSession)->())
+    func updateAppIconBadge()
 
 }
 
+@objc
 public protocol LocalNotificationResponder : class {
     func processLocal(_ notification: ZMLocalNotification, forSession session: ZMUserSession)
 }
@@ -154,7 +166,7 @@ public protocol LocalNotificationResponder : class {
     
     private var _callKitDelegate : AnyObject?
     @available(iOS 10.0, *)
-    internal var callKitDelegate : CallKitDelegate? {
+    public var callKitDelegate : CallKitDelegate? {
         get {
             return _callKitDelegate as? CallKitDelegate
         }
@@ -602,7 +614,7 @@ public protocol LocalNotificationResponder : class {
         }
     }
 
-    public var callNotificationStyle: ZMCallNotificationStyle = .callKit {
+    public var callNotificationStyle: CallNotificationStyle = .callKit {
         didSet {
             if #available(iOS 10.0, *) {
                 updateCallNotificationStyle()
@@ -829,7 +841,7 @@ extension SessionManager: ZMConversationListObserver {
         }
     }
     
-    func updateAppIconBadge() {
+    public func updateAppIconBadge() {
         DispatchQueue.main.async {
             for (accountID, session) in self.backgroundUserSessions {
                 let account = self.accountManager.account(with: accountID)

@@ -85,6 +85,8 @@
         return YES;
     }]];
     [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
+    
+    self.mockSessionManager = [[MockSessionManager alloc] init];
     self.mediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
     self.flowManagerMock = [[FlowManagerMock alloc] init];
     self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
@@ -125,6 +127,7 @@
                                                  storeProvider:self.storeProvider];
         
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
+    self.sut.sessionManager = self.mockSessionManager;
     
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -164,6 +167,7 @@
     self.thirdPartyServices = nil;
     self.sut.thirdPartyServicesDelegate = nil;
     self.sut.requestToOpenViewDelegate = nil;
+    self.mockSessionManager = nil;
 
     [self.transportSession stopMocking];
     self.transportSession = nil;

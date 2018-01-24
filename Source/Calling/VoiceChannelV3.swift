@@ -123,8 +123,8 @@ extension VoiceChannelV3 : CallActions {
     }
     
     public func join(video: Bool, userSession: ZMUserSession) -> Bool {
-        if userSession.sessionManager.callNotificationStyle == .callKit, #available(iOS 10.0, *) {
-            userSession.sessionManager.callKitDelegate?.requestJoinCall(in: conversation!, video: video)
+        if userSession.callNotificationStyle == .callKit, #available(iOS 10.0, *) {
+            userSession.callKitDelegate?.requestJoinCall(in: conversation!, video: video)
             return true
         } else {
             return join(video: video)
@@ -132,16 +132,16 @@ extension VoiceChannelV3 : CallActions {
     }
     
     public func leave(userSession: ZMUserSession) {
-        if userSession.sessionManager.callNotificationStyle == .callKit, #available(iOS 10.0, *) {
-            userSession.sessionManager.callKitDelegate?.requestEndCall(in: conversation!)
+        if userSession.callNotificationStyle == .callKit, #available(iOS 10.0, *) {
+            userSession.callKitDelegate?.requestEndCall(in: conversation!)
         } else {
             return leave()
         }
     }
     
     public func ignore(userSession: ZMUserSession) {
-        if userSession.sessionManager.callNotificationStyle == .callKit, #available(iOS 10.0, *) {
-            userSession.sessionManager.callKitDelegate?.requestEndCall(in: conversation!)
+        if userSession.callNotificationStyle == .callKit, #available(iOS 10.0, *) {
+            userSession.callKitDelegate?.requestEndCall(in: conversation!)
         } else {
             return ignore()
         }
