@@ -100,8 +100,8 @@
 
 // SELF ADDED/REMOVED TO GROUP
 "push.notification.member.join.self" = "%1$@加了您到對話";
-"push.notification.member.join.self.noconversationname" = "%1$@將您加進對話";
-"push.notification.member.join.self.nousername.noconversationname" = "一個對話加入了您";
+"push.notification.member.join.self.noconversationname" = "%1$@加您到對話中";
+"push.notification.member.join.self.nousername.noconversationname" = " 有對話加入了您";
 "push.notification.member.join.self.nousername" = "有對話加入了您";
 
 "push.notification.member.leave.self" = "%1$@移除了您";

@@ -29,7 +29,7 @@
 
 
 "push.notification.default" = "Nuevo mensaje";
-"push.notification.ephemeral" = "Someone sent you a message";
+"push.notification.ephemeral" = "Alguien te envió un mensaje";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ en %2$@";
@@ -45,7 +45,7 @@
 "push.notification.add.message.oneonone.nousername" = "Nuevo mensaje: %1$@";
 
 // UNKNOWN MESSAGE
-"push.notification.add.unknown.group" = "%1$@: new message";
+"push.notification.add.unknown.group" = "%1$@: mensaje nuevo";
 "push.notification.add.unknown.group.nousername" = "Nuevo mensaje";
 "push.notification.add.unknown.group.nousername.noconversationname" = "Nuevo mensaje";
 "push.notification.add.unknown.group.noconversationname" = "%1$@ envió un mensaje";
@@ -54,8 +54,8 @@
 "push.notification.add.unknown.oneonone.nousername" = "Nuevo mensaje";
 
 // IMAGE
-"push.notification.add.image.group" = "%1$@ shared a picture";
-"push.notification.add.image.group.nousername" = "New picture";
+"push.notification.add.image.group" = "%1$@ compartió una foto";
+"push.notification.add.image.group.nousername" = "Nueva foto";
 "push.notification.add.image.group.nousername.noconversationname" = "Nueva foto en un chat";
 "push.notification.add.image.group.noconversationname" = "%1$@ envió una foto en un chat";
 
@@ -63,8 +63,8 @@
 "push.notification.add.image.oneonone.nousername" = "Nueva foto en un chat";
 
 // VIDEO
-"push.notification.add.video.group" = "%1$@ shared a video";
-"push.notification.add.video.group.nousername" = "New video";
+"push.notification.add.video.group" = "%1$@ envió un vídeo";
+"push.notification.add.video.group.nousername" = "Nuevo video";
 "push.notification.add.video.group.nousername.noconversationname" = "Nuevo vídeo en un chat";
 "push.notification.add.video.group.noconversationname" = "%1$@ envió un vídeo en un chat";
 
@@ -72,17 +72,17 @@
 "push.notification.add.video.oneonone.nousername" = "Nuevo vídeo en un chat";
 
 // AUDIO
-"push.notification.add.audio.group" = "%1$@ shared an audio message";
-"push.notification.add.audio.group.nousername" = "New audio message";
+"push.notification.add.audio.group" = "%1$@ envió un mensaje de voz";
+"push.notification.add.audio.group.nousername" = "Nuevo mensaje de voz";
 "push.notification.add.audio.group.nousername.noconversationname" = "Nuevo mensaje de audio en un chat";
 "push.notification.add.audio.group.noconversationname" = "%1$@ envió un mensaje de audio en un chat";
 
-"push.notification.add.audio.oneonone" = "shared an audio message";
+"push.notification.add.audio.oneonone" = "compartió un mensaje de voz";
 "push.notification.add.audio.oneonone.nousername" = "Nuevo mensaje de audio en un chat";
 
 // FILE
-"push.notification.add.file.group" = "%1$@ shared a file";
-"push.notification.add.file.group.nousername" = "New file";
+"push.notification.add.file.group" = "%1$@ compartió un archivo";
+"push.notification.add.file.group.nousername" = "Nuevo archivo";
 "push.notification.add.file.group.nousername.noconversationname" = "Nuevo archivo en un chat";
 "push.notification.add.file.group.noconversationname" = "%1$@ envió un archivo en un chat";
 
@@ -90,8 +90,8 @@
 "push.notification.add.file.oneonone.nousername" = "Nuevo archivo en un chat";
 
 // LOCATION
-"push.notification.add.location.group" = "%1$@ shared a location";
-"push.notification.add.location.group.nousername" = "New location";
+"push.notification.add.location.group" = "%1$@ compartió una ubicación";
+"push.notification.add.location.group.nousername" = "Nueva ubicación";
 "push.notification.add.location.group.nousername.noconversationname" = "Nueva ubicación en un chat";
 "push.notification.add.location.group.noconversationname" = "%1$@ envió una ubicación en un chat";
 
@@ -99,42 +99,42 @@
 "push.notification.add.location.oneonone.nousername" = "Nueva ubicación en un chat";
 
 // SELF ADDED/REMOVED TO GROUP
-"push.notification.member.join.self" = "%1$@ added you";
+"push.notification.member.join.self" = "%1$@ te añadió";
 "push.notification.member.join.self.noconversationname" = "%1$@ te añadió a un chat";
 "push.notification.member.join.self.nousername.noconversationname" = "Te añadieron a un chat";
-"push.notification.member.join.self.nousername" = "You were added";
+"push.notification.member.join.self.nousername" = "Fuiste agregado";
 
-"push.notification.member.leave.self" = "%1$@ removed you";
+"push.notification.member.leave.self" = "%1$@ te removió";
 "push.notification.member.leave.self.noconversationname" = "%1$@ te eliminó de un chat";
 "push.notification.member.leave.self.nousername.noconversationname" = "Te eliminaron de un chat";
 "push.notification.member.leave.self.nousername" = "Te han eliminado";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "is video calling";
+"push.notification.call.started.video.oneonone" = "está haciendo una videollamada";
 "push.notification.call.started.video.oneonone.nousername" = "Vídeollamada entrante";
 
-"push.notification.call.started.video.group" = "%1$@ is video calling";
+"push.notification.call.started.video.group" = "%1$@ está en una videollamada";
 "push.notification.call.started.video.group.nousername" = "Vídeollamada entrante";
 "push.notification.call.started.video.group.noconversationname" = "Vídeollamada de %1$@ en un chat";
 "push.notification.call.started.video.group.nousername.noconversationname" = "Vídeollamada entrante en chat";
 
 // VOICE CALLS
-"push.notification.call.started.oneonone" = "is calling";
+"push.notification.call.started.oneonone" = "está llamando";
 "push.notification.call.started.oneonone.nousername" = "Llamada entrante";
 
-"push.notification.call.started.group" = "%1$@ is calling";
+"push.notification.call.started.group" = "%1$@ está llamando";
 "push.notification.call.started.group.nousername" = "Llamada entrante";
 "push.notification.call.started.group.noconversationname" = "Llamada de %1$@ en un chat";
 "push.notification.call.started.group.nousername.noconversationname" = "Llamada entrante en un chat";
 
 // MISSED CALLS
-"push.notification.call.missed.group" = "%1$@ called";
-"push.notification.call.missed.group.nousername" = "Someone called";
-"push.notification.call.missed.group.nousername.noconversationname" = "Someone called in a conversation";
-"push.notification.call.missed.group.noconversationname" = "%1$@ called in a conversation";
+"push.notification.call.missed.group" = "%1$@ llamó";
+"push.notification.call.missed.group.nousername" = "Alguien llamó";
+"push.notification.call.missed.group.nousername.noconversationname" = "Alguien llamó en una conversación";
+"push.notification.call.missed.group.noconversationname" = "%1$@ llamó en una conversación";
 
-"push.notification.call.missed.oneonone" = "called";
-"push.notification.call.missed.oneonone.nousername" = "Someone called";
+"push.notification.call.missed.oneonone" = "llamó";
+"push.notification.call.missed.oneonone.nousername" = "Alguien llamó";
 
 // CALLKIT
 "push.notification.callkit.call.started.group" = "%1$@ en %2$@";
@@ -143,8 +143,8 @@
 "push.notification.callkit.call.started.group.noconversationname" = "Llamada de %1$@ en un chat";
 
 // CONVERSATION CREATE
-"push.notification.conversation.create" = "%1$@ created a group";
-"push.notification.conversation.create.nousername" = "Someone created a group";
+"push.notification.conversation.create" = "%1$@ creó un grupo";
+"push.notification.conversation.create.nousername" = "Alguien creó un grupo";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ quiere conectarse contigo";
@@ -161,12 +161,12 @@
 "push.notification.failed.message.group.noconversationname" = "No se puede enviar el mensaje";
 
 // REACTIONS
-"push.notification.reaction.group" = "%1$@ %2$@ your message";
+"push.notification.reaction.group" = "%1$@ %2$@ tu mensaje";
 "push.notification.reaction.group.nousername.noconversationname" = "Alguien %@ tu mensaje en un chat";
 "push.notification.reaction.group.nousername" = "Alguien %@ tu mensaje";
-"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ your message in a conversation";
+"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ tu mensaje en una conversación";
 
-"push.notification.reaction.oneonone" = "%1$@ your message";
+"push.notification.reaction.oneonone" = "%1$@ tu mensaje";
 "push.notification.reaction.oneonone.nousername" = "Alguien %@ tu mensaje";
 
 // NEW USER (no alert title for this)
