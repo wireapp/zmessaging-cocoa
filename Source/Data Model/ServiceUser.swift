@@ -166,9 +166,27 @@ public enum AddBotError: Int, Error {
     case botRejected
 }
 
+
 public enum AddBotResult {
     case success(conversation: ZMConversation)
     case failure(error: AddBotError)
+}
+
+extension AddBotError {
+    init?(response: ZMTransportResponse) {
+        switch response.httpStatus {
+        case 201:
+            return nil
+        case 403:
+            self = .tooManyParticipants
+        case 419:
+            self = .botRejected
+        case 502:
+            self = .botNotResponding
+        default:
+            self = .general
+        }
+    }
 }
 
 public extension ZMConversation {
@@ -182,7 +200,7 @@ public extension ZMConversation {
                   let userAddEventPayload = responseDictionary["event"] as? ZMTransportData,
                   let event = ZMUpdateEvent(fromEventStreamPayload: userAddEventPayload, uuid: nil) else {
                     zmLog.error("Wrong response for adding a bot: \(response)")
-                    completion?(AddBotError.general) // TODO: differentiate the possible errors
+                    completion?(AddBotError(response: response))
                     return
             }
             

@@ -138,4 +138,49 @@ public final class ServiceUserTests : IntegrationTest {
         // then
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
+    
+    func testThatItDetectsTheSuccessResponse() {
+        // GIVEN
+        let response = ZMTransportResponse(payload: nil, httpStatus: 201, transportSessionError: nil)
+        // WHEN
+        let error = AddBotError(response: response)
+        // THEN
+        XCTAssertEqual(error, nil)
+    }
+    
+    func testThatItDetectsTheConversationFullResponse() {
+        // GIVEN
+        let response = ZMTransportResponse(payload: nil, httpStatus: 403, transportSessionError: nil)
+        // WHEN
+        let error = AddBotError(response: response)
+        // THEN
+        XCTAssertEqual(error, .tooManyParticipants)
+    }
+    
+    func testThatItDetectsBotRejectedResponse() {
+        // GIVEN
+        let response = ZMTransportResponse(payload: nil, httpStatus: 419, transportSessionError: nil)
+        // WHEN
+        let error = AddBotError(response: response)
+        // THEN
+        XCTAssertEqual(error, .botRejected)
+    }
+    
+    func testThatItDetectsBotNotResponding() {
+        // GIVEN
+        let response = ZMTransportResponse(payload: nil, httpStatus: 502, transportSessionError: nil)
+        // WHEN
+        let error = AddBotError(response: response)
+        // THEN
+        XCTAssertEqual(error, .botNotResponding)
+    }
+    
+    func testThatItDetectsGeneralError() {
+        // GIVEN
+        let response = ZMTransportResponse(payload: nil, httpStatus: 500, transportSessionError: nil)
+        // WHEN
+        let error = AddBotError(response: response)
+        // THEN
+        XCTAssertEqual(error, .general)
+    }
 }
