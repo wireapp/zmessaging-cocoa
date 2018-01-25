@@ -688,7 +688,7 @@ class SearchTaskTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(mockTransportSession.receivedRequests().first?.path, "/services?tags=tutorial&start=Steve%20O'Hara%20%26%20S%C3%B6hne")
+        XCTAssertEqual(mockTransportSession.receivedRequests().first?.path, "/services?tags=integration&start=Steve%20O'Hara%20%26%20S%C3%B6hne")
     }
     
     func testThatItCallsCompletionHandlerForServicesSearch() {

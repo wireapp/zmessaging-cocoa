@@ -322,7 +322,7 @@ extension SearchTask {
         let url = NSURLComponents()
         url.path = "/services"
         
-        url.queryItems = [URLQueryItem(name: "tags", value: "tutorial"), URLQueryItem(name: "start", value: query.trimmingCharacters(in: .whitespacesAndNewlines))]
+        url.queryItems = [URLQueryItem(name: "tags", value: "integration"), URLQueryItem(name: "start", value: query.trimmingCharacters(in: .whitespacesAndNewlines))]
         let urlStr = url.string?.replacingOccurrences(of: "+", with: "%2B") ?? ""
         return ZMTransportRequest(getFromPath: urlStr)
     }
