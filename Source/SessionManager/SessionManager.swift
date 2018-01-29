@@ -804,7 +804,6 @@ extension SessionManager: ZMConversationListObserver {
     
     @objc fileprivate func applicationWillEnterForeground(_ note: Notification) {
         updateAllUnreadCounts()
-        switchToActiveCallConversation()
     }
     
     public func conversationListDidChange(_ changeInfo: ConversationListChangeInfo) {
@@ -834,15 +833,6 @@ extension SessionManager: ZMConversationListObserver {
         }
     }
     
-    fileprivate func switchToActiveCallConversation() {
-        for userSession in backgroundUserSessions.values {
-            if let conversation =  userSession.callCenter?.activeCallConversations(in: userSession).first {
-                self.userSession(userSession, show: conversation)
-                break
-            }
-        }
-    }
-    
     public func updateAppIconBadge() {
         DispatchQueue.main.async {
             for (accountID, session) in self.backgroundUserSessions {
@@ -857,10 +847,15 @@ extension SessionManager: ZMConversationListObserver {
 extension SessionManager : WireCallCenterCallStateObserver {
     
     public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) {
-        guard case CallState.answered = callState, let moc = conversation.managedObjectContext else { return }
+        guard let moc = conversation.managedObjectContext else { return }
         
-        for (_, session) in backgroundUserSessions where session.managedObjectContext == moc && activeUserSession != session {
-            session.open(conversation, at: nil)
+        switch callState {
+        case .answered, .outgoing:
+            for (_, session) in backgroundUserSessions where session.managedObjectContext == moc && activeUserSession != session {
+                session.open(conversation, at: nil)
+            }
+        default:
+            return
         }
     }
     
