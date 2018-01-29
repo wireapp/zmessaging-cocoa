@@ -222,16 +222,19 @@ public struct CallMember : Hashable {
 
     let remoteId : UUID
     let audioEstablished : Bool
+    let isReceivingVideo : Bool
     
     init?(wcallMember: wcall_member) {
         guard let remoteId = UUID(cString:wcallMember.userid) else { return nil }
         self.remoteId = remoteId
         audioEstablished = (wcallMember.audio_estab != 0)
+        isReceivingVideo = (wcallMember.video_recv != 0)
     }
     
-    init(userId : UUID, audioEstablished: Bool) {
+    init(userId : UUID, audioEstablished : Bool = false, isReceivingVideo: Bool = false) {
         self.remoteId = userId
         self.audioEstablished = audioEstablished
+        self.isReceivingVideo = isReceivingVideo
     }
     
     public var hashValue: Int {
@@ -447,16 +450,17 @@ internal func groupMemberHandler(conversationIdRef: UnsafePointer<Int8>?, contex
 
 /// Handles video state changes
 /// In order to be passed to C, this function needs to be global
-internal func videoStateChangeHandler(state: Int32, contextRef: UnsafeMutableRawPointer?) {
+internal func videoStateChangeHandler(userId: UnsafePointer<Int8>?, state: Int32, contextRef: UnsafeMutableRawPointer?) {
     guard let contextRef = contextRef else { return }
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
     if let state = ReceivedVideoState(rawValue: UInt(state)),
+       let userId = UUID(cString: userId),
        let context = callCenter.uiMOC {
         
         context.performGroupedBlock {
-            WireCallCenterV3VideoNotification(receivedVideoState: state).post(in: context.notificationContext)
+            WireCallCenterV3VideoNotification(userId: userId, receivedVideoState: state).post(in: context.notificationContext)
         }
     } else {
         zmLog.error("Couldn't send video state change notification")
@@ -465,7 +469,7 @@ internal func videoStateChangeHandler(state: Int32, contextRef: UnsafeMutableRaw
 
 /// Handles audio CBR mode enabling
 /// In order to be passed to C, this function needs to be global
-internal func constantBitRateChangeHandler(enabled: Int32, contextRef: UnsafeMutableRawPointer?) {
+internal func constantBitRateChangeHandler(userId: UnsafePointer<Int8>?, enabled: Int32, contextRef: UnsafeMutableRawPointer?) {
     guard let contextRef = contextRef else { return }
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
@@ -604,7 +608,7 @@ public struct CallEvent {
             
             participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
                                                                                      selfUserID: selfUserId,
-                                                                                     members: [CallMember(userId: userId!, audioEstablished: false)],
+                                                                                     members: [CallMember(userId: userId!)],
                                                                                      callCenter: self)
         case .established:
             // WORKAROUND: the call established handler will is called once for every participant in a
@@ -635,7 +639,7 @@ public struct CallEvent {
         }
         
         if let context = uiMOC, let callerId = callerId  {
-            WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, callerId: callerId, messageTime: messageTime).post(in: context.notificationContext)
+            WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: callerId, messageTime: messageTime).post(in: context.notificationContext)
         }
     }
     
@@ -643,7 +647,7 @@ public struct CallEvent {
         zmLog.debug("missed call")
         
         if let context = uiMOC {
-            WireCallCenterMissedCallNotification(conversationId: conversationId, callerId: userId, timestamp: timestamp, video: isVideoCall).post(in: context.notificationContext)
+            WireCallCenterMissedCallNotification(context: context, conversationId: conversationId, callerId: userId, timestamp: timestamp, video: isVideoCall).post(in: context.notificationContext)
         }
     }
     
@@ -672,7 +676,7 @@ public struct CallEvent {
             }
             
             if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId) {
-                WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, callerId: callerId, messageTime:nil).post(in: context.notificationContext)
+                WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: callerId, messageTime:nil).post(in: context.notificationContext)
             }
         }
         return answered
@@ -690,7 +694,7 @@ public struct CallEvent {
             createSnapshot(callState: callState, callStarter: selfUserId,  video: video, for: conversationId)
             
             if let context = uiMOC {
-                WireCallCenterCallStateNotification(callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime:nil).post(in: context.notificationContext)
+                WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime:nil).post(in: context.notificationContext)
             }
         }
         return started
@@ -839,7 +843,7 @@ extension WireCallCenterV3 : ZMConversationObserver {
             callSnapshots[conversationId] = previousSnapshot.update(with: updatedCallState)
             
             if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId) {
-                WireCallCenterCallStateNotification(callState: updatedCallState, conversationId: conversationId, callerId: callerId, messageTime: Date()).post(in: context.notificationContext)
+                WireCallCenterCallStateNotification(context: context, callState: updatedCallState, conversationId: conversationId, callerId: callerId, messageTime: Date()).post(in: context.notificationContext)
             }
         }
     }

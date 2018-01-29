@@ -25,6 +25,35 @@ import OCMock
 @testable import WireSyncEngine
 
 @available(iOS 10.0, *)
+class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
+    
+    static let accountManagerURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("MockSessionManager.accounts")
+    
+    var localNotificationResponder: LocalNotificationResponder? = nil
+    var callKitDelegate: WireSyncEngine.CallKitDelegate? = nil
+    var callNotificationStyle: CallNotificationStyle = .pushNotifications
+    var accountManager: AccountManager = AccountManager(sharedDirectory: accountManagerURL)
+    var backgroundUserSessions: [UUID : ZMUserSession] = [:]
+    
+    var mockUserSession : ZMUserSession? = nil
+    func withSession(for account: Account, perform completion: @escaping (ZMUserSession) -> ()) {
+        if let userSession = mockUserSession {
+            completion(userSession)
+        }
+    }
+    
+    func updateAppIconBadge() {
+        
+    }
+    
+    deinit {
+        try? FileManager.default.removeItem(at: MockSessionManager.accountManagerURL)
+    }
+    
+    
+}
+
+@available(iOS 10.0, *)
 class MockCallKitProvider: CXProvider {
 
     public var timesSetDelegateCalled: Int = 0
@@ -156,10 +185,11 @@ class MockProvider : CXProvider {
 
 @available(iOS 10.0, *)
 class CallKitDelegateTest: MessagingTest {
-    var sut: CallKitDelegate!
+    var sut: WireSyncEngine.CallKitDelegate!
     var callKitProvider: MockCallKitProvider!
     var callKitController: MockCallKitCallController!
     var mockWireCallCenterV3 : WireCallCenterV3Mock!
+    var mockSessionManager :  MockSessionManager!
     
     func otherUser(moc: NSManagedObjectContext) -> ZMUser {
         let otherUser = ZMUser(context: moc)
@@ -201,19 +231,22 @@ class CallKitDelegateTest: MessagingTest {
         selfUser.remoteIdentifier = UUID()
         
         let flowManager = FlowManagerMock()
-        let configuration = CallKitDelegate.providerConfiguration
+        let configuration = WireSyncEngine.CallKitDelegate.providerConfiguration
         self.callKitProvider = MockCallKitProvider(configuration: configuration)
         self.callKitController = MockCallKitCallController()
         self.mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: "123", uiMOC: uiMOC, flowManager: flowManager, transport: WireCallCenterTransportMock())
+        self.mockSessionManager = MockSessionManager()
         
-        self.sut = CallKitDelegate(provider: self.callKitProvider,
-                                   callController: self.callKitController,
-                                   userSession: self.mockUserSession,
-                                   flowManager: flowManager,
-                                   mediaManager: nil)
+        mockSessionManager.mockUserSession = self.mockUserSession
+        mockSessionManager.accountManager.addAndSelect(Account(userName: "Test User", userIdentifier: selfUser.remoteIdentifier!))
         
-        mockUserSession.callKitDelegate = sut
-        CallKitDelegateTestsMocking.mockUserSession(self.mockUserSession, callKitDelegate: self.sut)
+        self.sut = WireSyncEngine.CallKitDelegate(provider: callKitProvider,
+                                                  callController: callKitController,
+                                                  sessionManager: mockSessionManager,
+                                                  flowManager: flowManager,
+                                                  mediaManager: nil)
+        
+        CallKitDelegateTestsMocking.mockUserSession(self.mockUserSession)
         
         self.uiMOC.zm_callCenter = mockWireCallCenterV3
     }
@@ -221,6 +254,7 @@ class CallKitDelegateTest: MessagingTest {
     override func tearDown() {
         self.sut = nil
         self.mockWireCallCenterV3 = nil
+        self.mockSessionManager = nil
         
         super.tearDown()
     }
@@ -228,7 +262,7 @@ class CallKitDelegateTest: MessagingTest {
     // Public API - provider configuration
     func testThatItReturnsTheProviderConfiguration() {
         // when
-        let configuration = CallKitDelegate.providerConfiguration
+        let configuration = WireSyncEngine.CallKitDelegate.providerConfiguration
         
         // then
         XCTAssertEqual(configuration.supportsVideo, true)
@@ -238,7 +272,7 @@ class CallKitDelegateTest: MessagingTest {
     
     func testThatItReturnsDefaultRingSound() {
         // when
-        let configuration = CallKitDelegate.providerConfiguration
+        let configuration = WireSyncEngine.CallKitDelegate.providerConfiguration
         
         // then
         XCTAssertEqual(configuration.ringtoneSound, "ringing_from_them_long.caf")
@@ -252,7 +286,7 @@ class CallKitDelegateTest: MessagingTest {
         // given
         UserDefaults.standard.setValue(customSoundName, forKey: "ZMCallSoundName")
         // when
-        let configuration = CallKitDelegate.providerConfiguration
+        let configuration = WireSyncEngine.CallKitDelegate.providerConfiguration
         
         // then
         XCTAssertEqual(configuration.ringtoneSound, customSoundName + ".m4a")
@@ -260,11 +294,11 @@ class CallKitDelegateTest: MessagingTest {
     
     func testThatItInvalidatesTheProviderOnDeinit() {
         // given
-        sut = CallKitDelegate(provider: self.callKitProvider,
-                              callController: self.callKitController,
-                              userSession: self.mockUserSession,
-                              flowManager: FlowManagerMock(),
-                              mediaManager: nil)
+        sut = WireSyncEngine.CallKitDelegate(provider: callKitProvider,
+                                             callController: callKitController,
+                                             sessionManager: mockSessionManager,
+                                             flowManager: FlowManagerMock(),
+                                             mediaManager: nil)
         
         // when
         sut = nil
@@ -276,7 +310,8 @@ class CallKitDelegateTest: MessagingTest {
     // Public API - outgoing calls
     func testThatItReportsTheStartCallRequest() {
         // given
-        let user = otherUser(moc: self.uiMOC)
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        let user = otherUser(moc: uiMOC)
         createOneOnOneConversation(user: user)
         let conversation = user.oneToOneConversation!
         
@@ -291,11 +326,12 @@ class CallKitDelegateTest: MessagingTest {
         
         XCTAssertEqual(action.callUUID, sut.callUUID(for: conversation))
         XCTAssertEqual(action.handle.type, .generic)
-        XCTAssertEqual(action.handle.value, conversation.remoteIdentifier?.transportString())
+        XCTAssertEqual(action.handle.value, "\(selfUser.remoteIdentifier!.transportString())+\(conversation.remoteIdentifier!.transportString())")
     }
     
     func testThatItReportsTheStartCallRequest_groupConversation() {
         // given
+        let selfUser = ZMUser.selfUser(in: uiMOC)
         let conversation = self.conversation(type: .group)
         
         // when
@@ -309,12 +345,13 @@ class CallKitDelegateTest: MessagingTest {
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXStartCallAction
         XCTAssertEqual(action.callUUID, sut.callUUID(for: conversation))
         XCTAssertEqual(action.handle.type, .generic)
-        XCTAssertEqual(action.handle.value, conversation.remoteIdentifier?.transportString())
+        XCTAssertEqual(action.handle.value, "\(selfUser.remoteIdentifier!.transportString())+\(conversation.remoteIdentifier!.transportString())")
         XCTAssertFalse(action.isVideo)
     }
     
     func testThatItReportsTheStartCallRequest_Video() {
         // given
+        let selfUser = ZMUser.selfUser(in: uiMOC)
         let otherUser = self.otherUser(moc: self.uiMOC)
         createOneOnOneConversation(user: otherUser)
         let conversation = otherUser.oneToOneConversation!
@@ -330,7 +367,7 @@ class CallKitDelegateTest: MessagingTest {
         
         XCTAssertEqual(action.callUUID, sut.callUUID(for: conversation))
         XCTAssertEqual(action.handle.type, .generic)
-        XCTAssertEqual(action.handle.value, conversation.remoteIdentifier?.transportString())
+        XCTAssertEqual(action.handle.value, "\(selfUser.remoteIdentifier!.transportString())+\(conversation.remoteIdentifier!.transportString())")
         XCTAssertTrue(action.isVideo)
     }
     
@@ -543,15 +580,16 @@ class CallKitDelegateTest: MessagingTest {
     
     func testThatItStartsCallForGroup() {
         // given
+        let selfUser = ZMUser.selfUser(in: uiMOC)
         let conversation = self.conversation(type: .group)
-        let identifier = conversation.remoteIdentifier!.transportString()
+        let identifier = "\(selfUser.remoteIdentifier!.transportString())+\(conversation.remoteIdentifier!.transportString())"
         let handle = INPersonHandle(value: identifier, type: .unknown)
         let person = INPerson(personHandle: handle, nameComponents: .none, displayName: .none, image: .none, contactIdentifier: .none, customIdentifier: identifier)
-        
         let activity = self.userActivityFor(contacts: [person])
         
         // when
         _ = sut.continueUserActivity(activity)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)

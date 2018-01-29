@@ -22,7 +22,6 @@
 @import WireSystem;
 @import WireUtilities;
 @import WireDataModel;
-@import CallKit;
 @import CoreTelephony;
 
 #import "ZMUserSession+Background.h"
@@ -64,7 +63,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) NSMutableArray* observersToken;
 @property (nonatomic) id <LocalStoreProviderProtocol> storeProvider;
-@property (nonatomic) ZMApplicationStatusDirectory *applicationStatusDirectory;
+@property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
 
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
 @property (nonatomic) BOOL hasCompletedInitialSync;
@@ -132,6 +131,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [self initWithTransportSession:transportSession
                              mediaManager:mediaManager
                               flowManager:flowManager
+                                analytics:analytics
                           apnsEnvironment:apnsEnvironment
                             operationLoop:nil
                               application:application
@@ -143,6 +143,7 @@ ZM_EMPTY_ASSERTING_INIT()
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
                             mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
+                               analytics:(id<AnalyticsType>)analytics
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
@@ -195,11 +196,12 @@ ZM_EMPTY_ASSERTING_INIT()
         self.managedObjectContext.zm_coreTelephonyCallCenter = callCenter;
         
         [self.syncManagedObjectContext performBlockAndWait:^{
-            self.applicationStatusDirectory = [[ZMApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncManagedObjectContext
+            self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncManagedObjectContext
                                                                                                    cookieStorage:session.cookieStorage
                                                                                              requestCancellation:session
                                                                                                      application:application
-                                                                                               syncStateDelegate:self];
+                                                                                               syncStateDelegate:self
+                                                                                                       analytics:analytics];
             
             self.syncManagedObjectContext.zm_imageAssetCache = imageAssetCache;
             self.syncManagedObjectContext.zm_userImageCache = userImageCache;
@@ -517,38 +519,6 @@ ZM_EMPTY_ASSERTING_INIT()
 - (OperationStatus *)operationStatus
 {
     return self.applicationStatusDirectory.operationStatus;
-}
-
-- (void)setCallNotificationStyle:(ZMCallNotificationStyle)callNotificationStyle
-{
-    _callNotificationStyle = callNotificationStyle;
-    
-    switch (callNotificationStyle) {
-        case ZMCallNotificationStylePushNotifications:
-            self.callKitDelegate = nil;
-            [self.mediaManager setUiStartsAudio:NO];
-            break;
-        case ZMCallNotificationStyleCallKit:
-        {
-            if (self.callKitDelegate != nil) {
-                return; // Don't re-create the CallKitDelegate if it already exists
-            }
-            
-            CXProvider *provider = [[CXProvider alloc] initWithConfiguration:[CallKitDelegate providerConfiguration]];
-            CXCallController *callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
-            
-            // Should be set when CallKit is used. Then AVS will not start
-            // the audio before the audio session is active
-            [self.mediaManager setUiStartsAudio:YES];
-            
-            self.callKitDelegate = [[CallKitDelegate alloc] initWithProvider:provider
-                                                              callController:callController
-                                                                 userSession:self
-                                                                 flowManager:self.flowManager
-                                                                mediaManager:self.mediaManager];
-        }
-            break;
-    }
 }
 
 @end

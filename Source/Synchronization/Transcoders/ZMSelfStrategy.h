@@ -23,7 +23,7 @@
 @class NSOperationQueue;
 @class ZMUpstreamModifiedObjectSync;
 @class ZMClientRegistrationStatus;
-@class ZMApplicationStatusDirectory;
+@class ApplicationStatusDirectory;
 @class SyncStatus;
 
 @interface ZMSelfStrategy : ZMAbstractRequestStrategy <ZMContextChangeTrackerSource>

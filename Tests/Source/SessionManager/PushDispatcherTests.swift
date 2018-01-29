@@ -43,7 +43,7 @@ final class TestPushDispatcherClient: NSObject, PushDispatcherOptionalClient {
 }
 
 public final class PushDispatcherTests: ZMTBaseTest {
-    let sut = PushDispatcher()
+    var sut: PushDispatcher!
     
     static let token = Data(bytes: [0xba, 0xdf, 0x00, 0xd0])
     static let userID = UUID().transportString()
@@ -55,6 +55,16 @@ public final class PushDispatcherTests: ZMTBaseTest {
     static let payloadWithoutUser: [AnyHashable: Any] = ["data": [
         "type": "notice"
         ]]
+
+    public override func setUp() {
+        super.setUp()
+        sut = PushDispatcher(analytics: nil)
+    }
+    
+    public override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
     
     func testThatItDoesNotRetainTheObservers() {
         weak var observerWeakReference: TestPushDispatcherClient?

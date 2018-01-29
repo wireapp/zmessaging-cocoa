@@ -58,7 +58,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @interface ZMUserSession ()
 
 @property (nonatomic, readonly) id<ZMApplication> application;
-@property (nonatomic) CallKitDelegate *callKitDelegate;
 @property (nonatomic) ZMCallStateObserver *callStateObserver;
 @property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
 @property (nonatomic) ManagedObjectContextChangeObserver *messageReplyObserver;
@@ -83,6 +82,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
                             mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
+                               analytics:(id<AnalyticsType>)analytics
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application

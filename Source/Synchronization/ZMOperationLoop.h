@@ -27,7 +27,7 @@
 @protocol FlowManagerType;
 
 @class ZMPersistentCookieStorage;
-@class ZMApplicationStatusDirectory;
+@class ApplicationStatusDirectory;
 @class BackgroundAPNSPingBackStatus;
 
 extern NSString * const ZMPushChannelIsOpenKey;
@@ -44,7 +44,7 @@ extern NSString * const ZMPushChannelResponseStatusKey;
                             mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
-              applicationStatusDirectory:(ZMApplicationStatusDirectory *)applicationStatusDirectory
+              applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
                              application:(id<ZMApplication>)application;
 
 - (void)tearDown;

@@ -52,7 +52,7 @@
     self.pushChannelNotifications = [NSMutableArray array];
     self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
     self.syncStrategy = [OCMockObject niceMockForClass:[ZMSyncStrategy class]];
-    id applicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];
+    id applicationStatusDirectory = [OCMockObject niceMockForClass:[ApplicationStatusDirectory class]];
     
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.transportSession];
@@ -64,7 +64,7 @@
     [[[self.syncStrategy stub] andReturn:self.syncMOC] syncMOC];
     
     
-    [(ZMApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturn:self.pingBackStatus] pingBackStatus];
+    [(ApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturn:self.pingBackStatus] pingBackStatus];
     [(ZMSyncStrategy *)[[self.syncStrategy stub] andReturn:applicationStatusDirectory] applicationStatusDirectory];
 
     self.sut = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
@@ -135,7 +135,7 @@
     __block id<ZMPushChannelConsumer> receivedConsumer;
     
     // given
-    id applicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];
+    id applicationStatusDirectory = [OCMockObject niceMockForClass:[ApplicationStatusDirectory class]];
     self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
     XCTestExpectation *expectation = [self expectationWithDescription:@"Open push channel opened"];
     [[self.transportSession expect] configurePushChannelWithConsumer:[OCMArg checkWithBlock:^BOOL(id obj) {

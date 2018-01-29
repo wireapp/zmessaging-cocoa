@@ -391,8 +391,6 @@ static ZMReachability *sharedReachabilityMock = nil;
     
     id conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [self verifyMockLater:conversationTranscoder];
-    id systemMessageEventConsumer = [OCMockObject mockForClass:SystemMessageEventsConsumer.class];
-    [self verifyMockLater:systemMessageEventConsumer];
     id clientMessageTranscoder = [OCMockObject mockForClass:ClientMessageTranscoder.class];
     [self verifyMockLater:clientMessageTranscoder];
     id selfStrategy = [OCMockObject mockForClass:ZMSelfStrategy.class];
@@ -421,6 +419,7 @@ static ZMReachability *sharedReachabilityMock = nil;
         [[[mockUserSession stub] andReturn:self.searchMOC] searchManagedObjectContext];
         [[[mockUserSession stub] andReturn:self.sharedContainerURL] sharedContainerURL];
         [[[mockUserSession stub] andReturn:self.mockOperationStatus] operationStatus];
+        [[[mockUserSession stub] andReturnValue:@(CallNotificationStylePushNotifications)] callNotificationStyle];
 
         [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockTransportSession] transportSession];
         _mockUserSession = mockUserSession;
@@ -590,52 +589,47 @@ static ZMReachability *sharedReachabilityMock = nil;
     return selfClient;
 }
 
-- (ZMClientMessage *)createClientTextMessage:(BOOL)encrypted
+- (ZMClientMessage *)createClientTextMessage
 {
-    return [self createClientTextMessage:self.name encrypted:encrypted];
+    return [self createClientTextMessageWithText:self.name];
 }
 
-- (ZMClientMessage *)createClientTextMessage:(NSString *)text encrypted:(BOOL)encrypted
+- (ZMClientMessage *)createClientTextMessageWithText:(NSString *)text
 {
     ZMClientMessage *message = [ZMClientMessage insertNewObjectInManagedObjectContext:self.syncMOC];
     NSUUID *messageNonce = [NSUUID createUUID];
     ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:text nonce:messageNonce.transportString expiresAfter:nil];
     [message addData:textMessage.data];
-    message.isEncrypted = encrypted;
     return message;
 }
 
-- (ZMAssetClientMessage *)createImageMessageWithImageData:(NSData *)imageData format:(ZMImageFormat)format processed:(BOOL)processed stored:(BOOL)stored encrypted:(BOOL)encrypted moc:(NSManagedObjectContext *)moc
+- (ZMAssetClientMessage *)createImageMessageWithImageData:(NSData *)imageData format:(ZMImageFormat)format processed:(BOOL)processed stored:(BOOL)stored moc:(NSManagedObjectContext *)moc
 {
     NSUUID *nonce = [NSUUID createUUID];
     ZMAssetClientMessage *imageMessage = [ZMAssetClientMessage assetClientMessageWithOriginalImage:imageData nonce:nonce managedObjectContext:moc expiresAfter:0];
-    imageMessage.isEncrypted = encrypted;
     
-    if(processed) {
+    if (processed) {
         
         CGSize imageSize = [ZMImagePreprocessor sizeOfPrerotatedImageWithData:imageData];
         ZMIImageProperties *properties = [ZMIImageProperties imagePropertiesWithSize:imageSize
                                                                               length:imageData.length
                                                                             mimeType:@"image/jpeg"];
-        ZMImageAssetEncryptionKeys *keys = nil;
-        if (encrypted) {
-            keys = [[ZMImageAssetEncryptionKeys alloc] initWithOtrKey:[NSData zmRandomSHA256Key]
-                                                               macKey:[NSData zmRandomSHA256Key]
-                                                                  mac:[NSData zmRandomSHA256Key]];
-        }
+        ZMImageAssetEncryptionKeys *keys = [[ZMImageAssetEncryptionKeys alloc] initWithOtrKey:[NSData zmRandomSHA256Key]
+                                                                                       macKey:[NSData zmRandomSHA256Key]
+                                                                                          mac:[NSData zmRandomSHA256Key]];
         
         ZMGenericMessage *message = [ZMGenericMessage genericMessageWithMediumImageProperties:properties processedImageProperties:properties encryptionKeys:keys nonce:nonce.transportString format:format expiresAfter:nil];
         [imageMessage add:message];
         
         ImageAssetCache *directory = self.uiMOC.zm_imageAssetCache;
+        
+        [directory storeAssetData:nonce format:format encrypted:YES data:imageData];
+        
         if (stored) {
             [directory storeAssetData:nonce format:ZMImageFormatOriginal encrypted:NO data:imageData];
         }
         if (processed) {
             [directory storeAssetData:nonce format:format encrypted:NO data:imageData];
-        }
-        if (encrypted) {
-            [directory storeAssetData:nonce format:format encrypted:YES data:imageData];
         }
     }
     return imageMessage;

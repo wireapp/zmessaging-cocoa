@@ -46,6 +46,7 @@
 @protocol ZMApplication;
 @protocol LocalStoreProviderProtocol;
 @protocol FlowManagerType;
+@protocol SessionManagerType;
 
 @class ManagedObjectContextDirectory;
 @class TopConversationsDirectory;
@@ -57,11 +58,6 @@
 
 @protocol ZMAVSLogObserverToken <NSObject>
 @end
-
-typedef NS_ENUM(NSUInteger, ZMCallNotificationStyle) {
-    ZMCallNotificationStylePushNotifications,
-    ZMCallNotificationStyleCallKit
-};
 
 extern NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName;
 extern NSString * const ZMPhoneVerificationCodeKey;
@@ -90,7 +86,7 @@ extern NSString * const ZMPotentialErrorDetectedNotificationName;
                           appVersion:(NSString *)appVersion
                        storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
 
-@property (nonatomic, weak) SessionManager *sessionManager;
+@property (nonatomic, weak) id<SessionManagerType> sessionManager;
 @property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;
 @property (atomic, readonly) ZMNetworkState networkState;
@@ -117,20 +113,11 @@ extern NSString * const ZMPotentialErrorDetectedNotificationName;
 /// Top conversation directory
 @property (nonatomic, readonly) TopConversationsDirectory *topConversationsDirectory;
 
-/// CallKit delegate
-@property (nonatomic, readonly) CallKitDelegate *callKitDelegate;
-
-/// The URL of the shared container that has been determinned using the passed in application group identifier
-//@property (nonatomic, readonly) NSURL *sharedContainerURL;
-
 /// The sync has been completed as least once
 @property (nonatomic, readonly) BOOL hasCompletedInitialSync;
 
 /// Request the push token from iOS and send it to the backend.
 - (void)registerForRemoteNotifications;
-
-/// Session can notify about the background calls via iOS CallKit or using the push notifications.
-@property (nonatomic) ZMCallNotificationStyle callNotificationStyle;
 
 @end
 

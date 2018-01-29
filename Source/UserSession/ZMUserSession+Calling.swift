@@ -24,6 +24,15 @@ extension ZMUserSession {
         return managedObjectContext.zm_callCenter
     }
     
+    internal var callNotificationStyle : CallNotificationStyle {
+        return sessionManager.callNotificationStyle
+    }
+    
+    @available(iOS 10.0, *)
+    internal var callKitDelegate : CallKitDelegate? {
+        return sessionManager.callKitDelegate
+    }
+    
     var useConstantBitRateAudio : Bool {
         set {
             managedObjectContext.zm_useConstantBitRateAudio = newValue

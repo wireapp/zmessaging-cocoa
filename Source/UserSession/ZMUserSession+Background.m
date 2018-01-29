@@ -107,13 +107,6 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     completionHandler(UIBackgroundFetchResultFailed);
 }
 
-- (BOOL)application:(id<ZMApplication>)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void (^)(NSArray * _Nullable))restorationHandler
-{
-    NOT_USED(application);
-    NOT_USED(restorationHandler);
-    return [self.callKitDelegate continueUserActivity:userActivity];
-}
-
 - (void)applicationDidEnterBackground:(NSNotification *)note;
 {
     NOT_USED(note);
@@ -128,6 +121,14 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     [self mergeChangesFromStoredSaveNotificationsIfNeeded];
     
     [ZMConversationList refetchAllListsInUserSession:self];
+    
+    // In the case that an ephemeral was sent via the share extension, we need
+    // to ensure that they have timers running or are deleted/obfuscated if
+    // needed. Note: ZMMessageTimer will only create a new timer for a message
+    // if one does not already exist.
+    [self.syncManagedObjectContext performGroupedBlock:^{
+        [ZMMessage deleteOldEphemeralMessages:self.syncManagedObjectContext];
+    }];
 }
 
 - (void)mergeChangesFromStoredSaveNotificationsIfNeeded

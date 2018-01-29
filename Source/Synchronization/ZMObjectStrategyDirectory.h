@@ -17,7 +17,7 @@
 // 
 
 @import WireMessageStrategy;
-#import <Foundation/Foundation.h>
+@import Foundation;
 #import "ZMUpdateEventsBuffer.h"
 
 @class ZMConnectionTranscoder;
