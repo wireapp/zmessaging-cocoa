@@ -191,6 +191,11 @@ extension AddBotError {
 
 public extension ZMConversation {
     public func add(serviceUser: ServiceUser, in userSession: ZMUserSession, completion: ((AddBotError?)->())?) {
+        guard userSession.transportSession.reachability.mayBeReachable else {
+            completion?(AddBotError.offline)
+            return
+        }
+        
         let request = serviceUser.requestToAddService(to: self)
         
         request.add(ZMCompletionHandler(on: userSession.managedObjectContext, block: { (response) in
