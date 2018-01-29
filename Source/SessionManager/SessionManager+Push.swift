@@ -107,8 +107,7 @@ extension SessionManager {
         
         var foundSession: Bool = false
         self.backgroundUserSessions.forEach { accountId, backgroundSession in
-            if session == backgroundSession,
-                let account = self.accountManager.account(with: accountId) {
+            if session == backgroundSession, let account = self.accountManager.account(with: accountId) {
                 self.select(account) { _ in
                     completion()
                 }

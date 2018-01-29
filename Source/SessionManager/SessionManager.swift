@@ -146,6 +146,7 @@ public protocol LocalNotificationResponder : class {
     let application: ZMApplication
     var postLoginAuthenticationToken: Any?
     var preLoginAuthenticationToken: Any?
+    var callCenterObserverToken: Any?
     var blacklistVerificator: ZMBlacklistVerificator?
     let reachability: ReachabilityProvider & ReachabilityTearDown
     let pushDispatcher: PushDispatcher
@@ -338,6 +339,7 @@ public protocol LocalNotificationResponder : class {
         self.pushDispatcher.fallbackClient = self
         
         postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
+        callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
         
         if let account = accountManager.selectedAccount {
             selectInitialAccount(account, launchOptions: launchOptions)
@@ -850,6 +852,18 @@ extension SessionManager: ZMConversationListObserver {
             self.application.applicationIconBadgeNumber = self.accountManager.totalUnreadCount
         }
     }
+}
+
+extension SessionManager : WireCallCenterCallStateObserver {
+    
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) {
+        guard case CallState.answered = callState, let moc = conversation.managedObjectContext else { return }
+        
+        for (_, session) in backgroundUserSessions where session.managedObjectContext == moc && activeUserSession != session {
+            session.open(conversation, at: nil)
+        }
+    }
+    
 }
 
 extension SessionManager : PreLoginAuthenticationObserver {

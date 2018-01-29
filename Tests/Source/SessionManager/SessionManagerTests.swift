@@ -875,6 +875,47 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         self.sessionManager!.tearDownAllBackgroundSessions()
     }
     
+    func testThatItActivatesAccountWhichReceivesACallInTheBackground() {
+        // GIVEN
+        let manager = sessionManager!.accountManager
+        let account1 = Account(userName: "Test Account 1", userIdentifier: currentUserIdentifier)
+        account1.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+
+        manager.addOrUpdate(account1)
+        let account2 = Account(userName: "Test Account 2", userIdentifier: UUID())
+        account2.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        manager.addOrUpdate(account2)
+        
+        // Make account 1 the active session
+        weak var session1: ZMUserSession? = nil
+        sessionManager?.loadSession(for: account1, completion: { (session) in
+            session1 = session
+        })
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(sessionManager!.activeUserSession, session1)
+        
+        // Load session for account 2 in the background
+        weak var session2: ZMUserSession? = nil
+        weak var conversation: ZMConversation? = nil
+        weak var caller: ZMUser? = nil
+        self.sessionManager!.withSession(for: account2, perform: { session in
+            session2 = session
+            conversation = ZMConversation.insertNewObject(in: session.managedObjectContext)
+            caller = ZMUser.insertNewObject(in: session.managedObjectContext)
+        })
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // WHEN
+        sessionManager?.callCenterDidChange(callState: .answered(degraded: false), conversation: conversation!, caller: caller!, timestamp: nil)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(sessionManager!.activeUserSession, session2)
+        
+        // CLEANUP
+        self.sessionManager!.tearDownAllBackgroundSessions()
+    }
+    
 }
 
 class SessionManagerTests_Push: IntegrationTest {
