@@ -112,6 +112,7 @@ extension PushKitRegistrant : PKPushRegistryDelegate {
             activity.end()
         }
     }
+
     public func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenForType type: PKPushType) {
         ZMLogPushKit_swift("Registry \(self.registry.description) did invalide push token for type '\(type)'.")
         didInvalidateToken()

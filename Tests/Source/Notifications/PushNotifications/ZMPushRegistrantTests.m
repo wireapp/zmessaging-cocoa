@@ -22,34 +22,53 @@
 #import "ZMPushRegistrant.h"
 @import PushKit;
 @import UIKit;
-
-
+@import WireSystem;
 
 @interface ZMPushRegistrantTests_PushKit : MessagingTest
 
 @property (nonatomic) id mockRegistry;
-@property (nonatomic) PushKitRegistrant *sut;
+@property (nonatomic) ZMPushRegistrant *sut;
+@property (nonatomic) id<ZMSGroupQueue> queue;
 
 @property (nonatomic, copy) void(^didUpdateCredentials)(NSData *);
-@property (nonatomic, copy) void(^didReceivePayload)(NSDictionary *, void(^)(ZMPushPayloadResult));
+@property (nonatomic, copy) void(^didReceivePayload)(NSDictionary *, ZMPushNotficationType, void(^)(ZMPushPayloadResult));
 @property (nonatomic, copy) dispatch_block_t didInvalidateToken;
 
 @end
 
+@interface FakeGroupQueue : NSObject <ZMSGroupQueue>
 
+@end
+
+@implementation FakeGroupQueue
+
+- (void)performGroupedBlock:(dispatch_block_t)block
+{
+    block();
+}
+
+- (ZMSDispatchGroup *)dispatchGroup
+{
+    return nil;
+}
+
+@end
 
 @implementation ZMPushRegistrantTests_PushKit
 
 - (void)setUp
 {
     [super setUp];
+    self.queue = [[FakeGroupQueue alloc] init];
+    [BackgroundActivityFactory sharedInstance].mainGroupQueue = self.queue;
+    [BackgroundActivityFactory sharedInstance].application = [UIApplication sharedApplication];
 
     self.mockRegistry = [OCMockObject mockForClass:PKPushRegistry.class];
 }
 
 - (void)createSUT;
 {
-    self.sut = [[PushKitRegistrant alloc] initWithFakeRegistry:self.mockRegistry didUpdateCredentials:self.didUpdateCredentials didReceivePayload:self.didReceivePayload didInvalidateToken:self.didInvalidateToken];
+    self.sut = [[ZMPushRegistrant alloc] initWithFakeRegistry:self.mockRegistry didUpdateCredentials:self.didUpdateCredentials didReceivePayload:self.didReceivePayload didInvalidateToken:self.didInvalidateToken];
 }
 
 - (void)tearDown
@@ -66,7 +85,7 @@
     [(PKPushRegistry *) [self.mockRegistry expect] setDelegate:ZM_ARG_SAVE(delegate)];
     [(PKPushRegistry *) [self.mockRegistry expect] setDesiredPushTypes:[NSSet setWithObject:PKPushTypeVoIP]];
     self.didUpdateCredentials = ^(NSData * ZM_UNUSED data){};
-    self.didReceivePayload = ^(NSDictionary * ZM_UNUSED info, void(^result)(ZMPushPayloadResult) ZM_UNUSED){};
+    self.didReceivePayload = ^(NSDictionary * ZM_UNUSED info, ZMPushNotficationType ZM_UNUSED pushResult, void(^result)(ZMPushPayloadResult) ZM_UNUSED){};
     self.didInvalidateToken = ^{};
     
     // when
@@ -97,7 +116,7 @@
         [e fulfill];
     };
     ZM_WEAK(self);
-    self.didReceivePayload = ^(NSDictionary * ZM_UNUSED info, void(^result)(ZMPushPayloadResult) ZM_UNUSED){
+    self.didReceivePayload = ^(NSDictionary * ZM_UNUSED info, ZMPushNotficationType ZM_UNUSED pushResult, void(^result)(ZMPushPayloadResult) ZM_UNUSED){
         ZM_STRONG(self);
         XCTFail();
     };
@@ -138,7 +157,7 @@
         XCTFail();
     };
     __block NSDictionary *receivedPayload;
-    self.didReceivePayload = ^(NSDictionary *p, void(^result)(ZMPushPayloadResult)){
+    self.didReceivePayload = ^(NSDictionary *p, ZMPushNotficationType ZM_UNUSED pushResult, void(^result)(ZMPushPayloadResult)){
         receivedPayload = p;
         result(ZMPushPayloadResultSuccess);
         [e fulfill];
@@ -169,10 +188,10 @@
 
 @interface ZMPushRegistrantTests_AppDelegate : MessagingTest
 
-@property (nonatomic) ApplicationRemoteNotification *sut;
+@property (nonatomic) ZMApplicationRemoteNotification *sut;
 
 @property (nonatomic, copy) void(^didUpdateCredentials)(NSData *);
-@property (nonatomic, copy) void(^didReceivePayload)(NSDictionary *, void(^)(ZMPushPayloadResult));
+@property (nonatomic, copy) void(^didReceivePayload)(NSDictionary *, ZMPushNotficationType, void(^)(ZMPushPayloadResult));
 @property (nonatomic, copy) dispatch_block_t didInvalidateToken;
 
 @end
@@ -188,7 +207,7 @@
 
 - (void)createSUT;
 {
-    self.sut = [[ApplicationRemoteNotification alloc] initWithDidUpdateCredentials:self.didUpdateCredentials didReceivePayload:self.didReceivePayload didInvalidateToken:self.didInvalidateToken];
+    self.sut = [[ZMApplicationRemoteNotification alloc] initWithDidUpdateCredentials:self.didUpdateCredentials didReceivePayload:self.didReceivePayload didInvalidateToken:self.didInvalidateToken];
 }
 
 - (void)tearDown
@@ -207,7 +226,7 @@
         [e fulfill];
     };
     ZM_WEAK(self);
-    self.didReceivePayload = ^(NSDictionary * ZM_UNUSED info, void(^result)(ZMPushPayloadResult) ZM_UNUSED){
+    self.didReceivePayload = ^(NSDictionary * ZM_UNUSED info, ZMPushNotficationType ZM_UNUSED pushResult, void(^result)(ZMPushPayloadResult) ZM_UNUSED){
         ZM_STRONG(self);
         XCTFail();
     };
@@ -238,7 +257,7 @@
         XCTFail();
     };
     __block NSDictionary *receivedPayload;
-    self.didReceivePayload = ^(NSDictionary *p, void(^result)(ZMPushPayloadResult)){
+    self.didReceivePayload = ^(NSDictionary *p, ZMPushNotficationType ZM_UNUSED pushResult, void(^result)(ZMPushPayloadResult)){
         receivedPayload = p;
         result(ZMPushPayloadResultSuccess);
         [e fulfill];
