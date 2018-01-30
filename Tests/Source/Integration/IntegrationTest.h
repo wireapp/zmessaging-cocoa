@@ -55,6 +55,8 @@
 @property (nonatomic, null_unspecified) MockUser *user3; // not connected, with profile picture, in a common group conversation
 @property (nonatomic, null_unspecified) MockUser *user4; // not connected, with profile picture, no shared conversations
 @property (nonatomic, null_unspecified) MockUser *user5; // not connected, no shared conversation
+@property (nonatomic, null_unspecified) MockUser *serviceUser; // service user
+@property (nonatomic, null_unspecified) MockConversation *groupConversationWithServiceUser;
 @property (nonatomic, null_unspecified) MockConversation *selfToUser1Conversation;
 @property (nonatomic, null_unspecified) MockConversation *selfToUser2Conversation;
 @property (nonatomic, null_unspecified) MockConversation *groupConversation;

@@ -343,6 +343,22 @@ extension IntegrationTest {
             self.connectionSelfToUser2 = connectionSelfToUser2
         })
     }
+
+    @objc
+    func createConversationsWithServiceUser() {
+        mockTransportSession.performRemoteChanges({ session in
+            let bot = session.insertUser(withName: "Botty the Bot")
+            bot.accentID = 3
+            session.addProfilePicture(to: bot)
+            session.addV3ProfilePicture(to: bot)
+            self.serviceUser = bot
+
+            let groupConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [self.user1, self.user2, bot])
+            groupConversation.creator = self.user2;
+            groupConversation.changeName(by:self.selfUser, name:"Group conversation with bot")
+            self.groupConversationWithServiceUser = groupConversation
+        })
+    }
     
     @objc
     func login() -> Bool {
