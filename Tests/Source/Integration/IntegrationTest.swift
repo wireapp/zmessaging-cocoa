@@ -141,12 +141,14 @@ extension IntegrationTest {
         user3 = nil
         user4 = nil
         user5 = nil
+        serviceUser = nil
         selfToUser1Conversation = nil
         selfToUser2Conversation = nil
         connectionSelfToUser1 = nil
         connectionSelfToUser2 = nil
         selfConversation = nil
         groupConversation = nil
+        groupConversationWithServiceUser = nil
         application = nil
         resetInMemoryDatabases()
         deleteSharedContainerContent()
