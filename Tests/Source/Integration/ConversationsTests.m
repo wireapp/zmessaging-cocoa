@@ -357,6 +357,29 @@
     XCTAssertEqual(groupConversation.keysThatHaveLocalModifications.count, 0u);
 }
 
+- (void)testThatServiceUsersAreRemovedFromAConversationWhenTheyAreRemovedRemotely
+{
+    // given
+    [self createConversationsWithServiceUser];
+    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertTrue([self login]);
+    
+    ZMUser *bot = [self userForMockUser:self.serviceUser];
+    ZMConversation *groupConversation = [self conversationForMockConversation:self.groupConversationWithServiceUser];
+    XCTAssertNotNil(groupConversation);
+    XCTAssertTrue([groupConversation.activeParticipants containsObject:bot]);
+    
+    // when
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [self.groupConversationWithServiceUser removeUsersByUser:session.selfUser removedUser:self.serviceUser];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    XCTAssertFalse([groupConversation.activeParticipants containsObject:bot]);
+    XCTAssertEqual(groupConversation.keysThatHaveLocalModifications.count, 0u);
+}
+
 
 - (void)testThatAddingAndRemovingAParticipantToAConversationSendsOutChangeNotifications
 {
