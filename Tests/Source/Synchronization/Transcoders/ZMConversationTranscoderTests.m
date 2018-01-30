@@ -2223,6 +2223,72 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertFalse([conversation.keysThatHaveLocalModifications containsObject:modifiedKey]);
 }
 
+- (void)testThatItCreatesARequestForRemovingAServiceUser
+{
+    // given
+    NSString *modifiedKey = ZMConversationUnsyncedInactiveParticipantsKey;
+
+    NSUUID *user3ID = [NSUUID createUUID];
+    NSUUID *conversationID = [NSUUID createUUID];
+
+    NSSet *keys = [NSSet setWithObject:modifiedKey];
+
+    __block ZMConversation *conversation;
+
+    [self.syncMOC performBlockAndWait:^{
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        selfUser.remoteIdentifier = self.selfUserID;
+
+        ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user1.remoteIdentifier = [NSUUID createUUID];
+
+        ZMUser *user2 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user2.remoteIdentifier = [NSUUID createUUID];
+
+        ZMUser *user3 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user3.remoteIdentifier = user3ID;
+        user3.serviceIdentifier = [[NSUUID createUUID] transportString];
+        user3.providerIdentifier = [[NSUUID createUUID] transportString];
+
+        conversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2, user3]];
+        conversation.remoteIdentifier = conversationID;
+
+        [conversation synchronizeAddedUser:user1];
+        [conversation synchronizeAddedUser:user2];
+        [conversation synchronizeAddedUser:user3];
+
+        [conversation removeParticipant:user3];
+        [conversation setLocallyModifiedKeys:keys];
+
+        [self.syncMOC saveOrRollback];
+    }];
+
+
+    for (id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
+        [tracker objectsDidChange:[NSSet setWithObject:conversation]];
+    }
+
+    ZMTransportRequest *request = [self.sut nextRequest];
+    XCTAssertNotNil(request);
+    XCTAssertNotNil(request.expirationDate);
+
+    // when
+    NSDictionary *responsePayload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[user3ID] eventType:@"conversation.member-leave"];
+    // Response after removing service user is wrapped inside a dictionary
+    NSDictionary *wrappedPayload = @{@"events" : responsePayload };
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:wrappedPayload HTTPStatus:200 transportSessionError:nil];
+    [request completeWithResponse:response];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    [self.syncMOC saveOrRollback];
+
+    // then
+    XCTAssertEqual(request.method, ZMMethodDELETE);
+    NSString *expectedPath = [NSString pathWithComponents:@[ @"/", @"conversations", conversationID.transportString, @"bots", user3ID.transportString ]];
+    XCTAssertEqualObjects(request.path, expectedPath);
+    XCTAssertFalse([conversation.keysThatHaveLocalModifications containsObject:modifiedKey]);
+}
+
 - (void)testThatItCreatesSeveralRequestsForRemovingSeveralParticipants
 {
     // given

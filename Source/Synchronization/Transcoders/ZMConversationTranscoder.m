@@ -665,8 +665,9 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     if (unsyncedUser == nil) {
         return nil;
     }
-    
-    NSString *path = [NSString pathWithComponents:@[ ConversationsPath, conversation.remoteIdentifier.transportString, @"members", unsyncedUser.remoteIdentifier.transportString ]];
+
+    NSString *participantKind = unsyncedUser.isServiceUser ? @"bots" : @"members";
+    NSString *path = [NSString pathWithComponents:@[ ConversationsPath, conversation.remoteIdentifier.transportString, participantKind, unsyncedUser.remoteIdentifier.transportString ]];
     
     ZMTransportRequest *request = [ZMTransportRequest requestWithPath:path method:ZMMethodDELETE payload:nil];
     [request expireAfterInterval:ZMTransportRequestDefaultExpirationInterval];
@@ -778,6 +779,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         return nil;
         
     }
+
     ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
     return event;
 }
