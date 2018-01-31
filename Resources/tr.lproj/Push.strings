@@ -46,12 +46,12 @@
 
 // UNKNOWN MESSAGE
 "push.notification.add.unknown.group" = "%1$@: yeni mesaj";
-"push.notification.add.unknown.group.nousername" = "Yeni mesaj";
-"push.notification.add.unknown.group.nousername.noconversationname" = "Yeni mesaj";
+"push.notification.add.unknown.group.nousername" = "Yeni Mesaj";
+"push.notification.add.unknown.group.nousername.noconversationname" = "Yeni Mesaj";
 "push.notification.add.unknown.group.noconversationname" = "%1$@ bir mesaj gönderdi";
 
-"push.notification.add.unknown.oneonone" = "Yeni mesaj";
-"push.notification.add.unknown.oneonone.nousername" = "Yeni mesaj";
+"push.notification.add.unknown.oneonone" = "Yeni Mesaj";
+"push.notification.add.unknown.oneonone.nousername" = "Yeni Mesaj";
 
 // IMAGE
 "push.notification.add.image.group" = "%1$@ bir fotoğraf paylaştı";
