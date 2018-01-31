@@ -46,8 +46,6 @@ NSNotificationName const ZMLaunchedWithPhoneVerificationCodeNotificationName = @
 NSNotificationName const ZMRequestToOpenSyncConversationNotificationName = @"ZMRequestToOpenSyncConversation";
 NSString * const ZMAppendAVSLogNotificationName = @"AVSLogMessageNotification";
 NSNotificationName const ZMUserSessionResetPushTokensNotificationName = @"ZMUserSessionResetPushTokensNotification";
-NSNotificationName const ZMTransportRequestLoopNotificationName = @"ZMTransportRequestLoopNotificationName";
-NSNotificationName const ZMPotentialErrorDetectedNotificationName = @"ZMPotentialErrorDetectedNotificationName";
 
 static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-client/id930944768?ls=1&mt=8";
 
@@ -123,7 +121,7 @@ ZM_EMPTY_ASSERTING_INIT()
             }
             ZMLogWarn(@"Request loop happening at path: %@", path);
             dispatch_async(dispatch_get_main_queue(), ^{
-                [[NSNotificationCenter defaultCenter] postNotificationName:ZMTransportRequestLoopNotificationName object:nil userInfo:@{@"path" : path}];
+                [[NSNotificationCenter defaultCenter] postNotificationName:ZMLoggingRequestLoopNotificationName object:nil userInfo:@{@"path" : path}];
             });
         };
     }

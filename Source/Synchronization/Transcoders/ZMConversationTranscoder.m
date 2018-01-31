@@ -28,6 +28,8 @@
 #import "ZMSimpleListRequestPaginator.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
+static NSString* ZMLogTag ZM_UNUSED = @"Conversations";
+
 static NSString *const ConversationsPath = @"/conversations";
 static NSString *const ConversationIDsPath = @"/conversations/ids";
 
@@ -558,6 +560,8 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     ZMUser *sender = [ZMUser userWithRemoteID:senderUUID createIfNeeded:YES inContext:self.managedObjectContext];
     NSSet *users = [event usersFromUserIDsInManagedObjectContext:self.managedObjectContext createIfNeeded:YES];
     
+    ZMLogDebug(@"processMemberLeaveEvent (%@) leaving users.count = %li", conversation.remoteIdentifier.transportString, users.count);
+    
     if ([users intersectsSet:conversation.activeParticipants.set] || [conversation.modifiedKeys intersectsSet:[NSSet setWithObjects:ZMConversationIsSelfAnActiveMemberKey, ZMConversationUnsyncedInactiveParticipantsKey, nil]]) {
         [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
     }
@@ -795,14 +799,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         [self updatePropertiesOfConversation:conversation withPostPayloadEvent:event];
         [self processEvents:@[event] liveEvents:YES prefetchResult:nil];
     }
-    
-    // NOTE: internal debug notification
-    if (conversation.unsyncedInactiveParticipants.count > 1) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:ZMPotentialErrorDetectedNotificationName object:nil userInfo:nil];
-        });
-    }
-    
+        
     if ([keysToParse isEqualToSet:[NSSet setWithObject:ZMConversationUserDefinedNameKey]]) {
         return NO;
     }
