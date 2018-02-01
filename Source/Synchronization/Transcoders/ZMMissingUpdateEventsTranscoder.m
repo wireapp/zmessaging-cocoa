@@ -186,7 +186,6 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         // In case we are fetching the stream because we have received a push notification we need to forward them to the pingback status
         // The status will forward them to the operationloop and check if the received notification was contained in this batch.
         [self.pingbackStatus didReceiveEncryptedEvents:parsedEvents originalEvents:self.notificationEventsToCancel hasMore:self.listPaginator.hasMoreToFetch];
-        [self.notificationsTracker registerFinishStreamFetching];
 
         if (!self.listPaginator.hasMoreToFetch) {
             self.notificationEventsToCancel = nil;
@@ -280,13 +279,16 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         // to avoid setting the notificationEventsToCancel when we're unable to create a request.
         if (nil == self.notificationEventsToCancel && fetchingForAPNS && self.listPaginator.hasMoreToFetch) {
             self.notificationEventsToCancel = self.pingbackStatus.nextNotificationEventsWithID;
-            [self.notificationsTracker registerStartStreamFetching];
         }
 
         ZMTransportRequest *request = [self.listPaginator nextRequest];
 
         if (fetchingForAPNS && nil != request) {
             [request forceToVoipSession];
+            [self.notificationsTracker registerStartStreamFetching];
+            [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.managedObjectContext block:^(__unused ZMTransportResponse * _Nonnull response) {
+                [self.notificationsTracker registerFinishStreamFetching];
+            }]];
         }
 
         return request;
