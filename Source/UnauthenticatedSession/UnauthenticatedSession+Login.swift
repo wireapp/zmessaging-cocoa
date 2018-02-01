@@ -56,8 +56,13 @@ extension UnauthenticatedSession {
         } catch {
             return false
         }
+            
+        if !self.reachability.mayBeReachable {
+            authenticationStatus.notifyAuthenticationDidFail(NSError(code: .networkError, userInfo:nil))
+        } else {
+            authenticationStatus.prepareForRequestingPhoneVerificationCode(forLogin: phoneNumber)
+        }
         
-        authenticationStatus.prepareForRequestingPhoneVerificationCode(forLogin: phoneNumber)
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         return true
     }
