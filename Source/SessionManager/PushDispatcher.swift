@@ -177,8 +177,13 @@ public final class PushDispatcher: NSObject {
     // -application:didReceiveRemoteNotification:completionHandler:
     public func didReceiveRemoteNotification(_ payload: [AnyHashable: Any],
                                              fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
+        self.notificationsTracker?.registerReceivedPush()
+        let handler: (UIBackgroundFetchResult)->() = {
+            self.notificationsTracker?.registerNotificationProcessingCompleted()
+            fetchCompletionHandler($0)
+        }
         self.remoteNotificationHandler.didReceiveRemoteNotification(payload,
-                                                                    fetchCompletionHandler: fetchCompletionHandler)
+                                                                    fetchCompletionHandler: handler)
     }
 }
 
