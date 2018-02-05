@@ -470,9 +470,20 @@ extension ZMConversation {
     
     func localizedCallerName(with user: ZMUser) -> String? {
         
+        let conversationName = self.userDefinedName
+        let callerName : String? = user.name
+        
         switch conversationType {
         case .group:
-            return ("callkit.call.started.group" as NSString).localizedCallKitString(with: user, conversation: self)
+            if let conversationName = conversationName, let callerName = callerName {
+                return String.localizedStringWithFormat("callkit.call.started.group".pushFormatString, callerName, conversationName)
+            } else if let conversationName = conversationName {
+                return String.localizedStringWithFormat("callkit.call.started.group.nousername".pushFormatString, conversationName)
+            } else if let callerName = callerName {
+                return String.localizedStringWithFormat("callkit.call.started.group.noconversationname".pushFormatString, callerName)
+            } else {
+                return String.localizedStringWithFormat("callkit.call.started.group.nousername.noconversationname".pushFormatString)
+            }
         case .oneOnOne:
             return connectedUser?.displayName
         default:

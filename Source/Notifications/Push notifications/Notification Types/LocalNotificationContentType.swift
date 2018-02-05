@@ -20,24 +20,31 @@ import Foundation
 
 
 
-public enum ZMLocalNotificationContentType : Equatable {
-    case undefined, image, video, audio, location, fileUpload, knock
-    case system(ZMSystemMessageType)
-    case text(String)
+public enum LocalNotificationEventType {
+    case connectionRequestAccepted, connectionRequestPending, newConnection, conversationCreated
+}
+
+public enum LocalNotificationContentType : Equatable {
+    case undefined, image, video, audio, location, fileUpload, knock, text(String), reaction(emoji: String), ephemeral, hidden, participantsRemoved, participantsAdded
     
-    static func typeForMessage(_ message: ZMConversationMessage) -> ZMLocalNotificationContentType {
+    static func typeForMessage(_ message: ZMConversationMessage) -> LocalNotificationContentType? {
+        
+        if message.isEphemeral {
+            return .ephemeral
+        }
+        
         if let text = message.textMessageData?.messageText , !text.isEmpty {
             return .text(text)
         }
+        
         if message.knockMessageData != nil {
             return .knock
         }
+        
         if message.imageMessageData != nil {
             return .image
         }
-        if let systemMessage = message.systemMessageData {
-            return .system(systemMessage.systemMessageType)
-        }
+        
         if let fileData = message.fileMessageData {
             if fileData.isAudio {
                 return .audio
@@ -47,37 +54,36 @@ public enum ZMLocalNotificationContentType : Equatable {
             }
             return .fileUpload
         }
+        
         if message.locationMessageData != nil {
             return .location
         }
+        
+        if let systemMessageData = message.systemMessageData{
+            switch systemMessageData.systemMessageType {
+            case .participantsAdded:
+                return .participantsAdded
+            case .participantsRemoved:
+                return .participantsRemoved
+            default:
+                return nil
+            }
+        }
+        
         return .undefined
     }
     
-    var localizationString : String? {
-        switch self {
-        case .text:         return ZMPushStringMessageAdd
-        case .image:        return ZMPushStringImageAdd
-        case .video:        return ZMPushStringVideoAdd
-        case .audio:        return ZMPushStringAudioAdd
-        case .location:     return ZMPushStringLocationAdd
-        case .fileUpload:   return ZMPushStringFileAdd
-        case .knock:        return ZMPushStringKnock
-        case .undefined:    return ZMPushStringUnknownAdd
-        default:            return nil
-        }
-    }
 }
 
-public func ==(rhs: ZMLocalNotificationContentType, lhs: ZMLocalNotificationContentType) -> Bool {
+public func ==(rhs: LocalNotificationContentType, lhs: LocalNotificationContentType) -> Bool {
     switch (rhs, lhs) {
     case (.text(let left), .text(let right)):
         return left == right
-    case (.system(let lType), .system(let rType)):
-        return lType == rType
-    case (.image, .image), (.video, .video), (.audio, .audio), (.location, .location), (.fileUpload, .fileUpload), (.knock, .knock), (.undefined, .undefined):
+    case (.image, .image), (.video, .video), (.audio, .audio), (.location, .location), (.fileUpload, .fileUpload), (.knock, .knock), (.undefined, .undefined), (.reaction, .reaction):
         return true
     default:
         return false
     }
 }
+
 
