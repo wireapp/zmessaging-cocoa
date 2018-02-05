@@ -262,7 +262,7 @@ extension String {
         case 0:
             fallthrough
         default:
-            return String.localizedStringWithFormat(format)
+            return NSLocalizedString(format, comment: "")
             
         }
     }

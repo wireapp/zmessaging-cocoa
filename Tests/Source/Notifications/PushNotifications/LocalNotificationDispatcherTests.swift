@@ -304,7 +304,6 @@ extension LocalNotificationDispatcherTests {
         XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
         XCTAssertEqual(self.notificationDelegate.receivedLocalNotifications.count, 0)
         guard let notification = self.application.scheduledLocalNotifications.first else { return XCTFail() }
-        print(notification.alertBody!)
         XCTAssertTrue(notification.alertBody!.contains(text))
     }
     
