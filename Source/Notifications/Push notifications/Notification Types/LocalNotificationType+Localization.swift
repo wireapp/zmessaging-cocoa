@@ -63,7 +63,7 @@ private let ZMPushStringNewConnection       = "new_user"            // "[senderN
 
 private let OneOnOneKey = "oneonone"
 private let GroupKey = "group"
-private let SelfKey = "group"
+private let SelfKey = "self"
 private let NoConversationNameKey = "noconversationname"
 private let NoUserNameKey = "nousername"
 
