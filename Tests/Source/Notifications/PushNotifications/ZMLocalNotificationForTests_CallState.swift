@@ -142,6 +142,23 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         XCTAssertEqual(note.soundName, ZMCustomSound.notificationNewMessageSoundName())
     }
     
+    func testMissedCallFromSelfUser() {
+        
+        // given
+        let state: CallState = .terminating(reason: .timeout)
+        let caller = ZMUser.selfUser(in: uiMOC)
+        caller.name = "SelfUser"
+        
+        // when
+        guard let note = ZMLocalNotification(callState: state, conversation: conversation, caller: caller) else { return XCTFail("Did not create notification") }
+        
+        // then
+        XCTAssertEqual(note.title, "Callie")
+        XCTAssertEqual(note.body, "called")
+        XCTAssertEqual(note.category, ZMMissedCallCategory)
+        XCTAssertEqual(note.soundName, ZMCustomSound.notificationNewMessageSoundName())
+    }
+    
     func testThatItAddsATitleIfTheUserIsPartOfATeam() {
         self.syncMOC.performGroupedBlockAndWait {
             

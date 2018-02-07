@@ -132,8 +132,6 @@ extension LocalNotificationType {
         
         if case .failedMessage = self {
             return nil
-        } else if sender.isSelfUser {
-            return SelfKey
         } else if sender.name == nil || sender.name.isEmpty {
             return NoUserNameKey
         }
