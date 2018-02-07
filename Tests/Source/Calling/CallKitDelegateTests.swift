@@ -243,7 +243,6 @@ class CallKitDelegateTest: MessagingTest {
         self.sut = WireSyncEngine.CallKitDelegate(provider: callKitProvider,
                                                   callController: callKitController,
                                                   sessionManager: mockSessionManager,
-                                                  flowManager: flowManager,
                                                   mediaManager: nil)
         
         CallKitDelegateTestsMocking.mockUserSession(self.mockUserSession)
@@ -297,7 +296,6 @@ class CallKitDelegateTest: MessagingTest {
         sut = WireSyncEngine.CallKitDelegate(provider: callKitProvider,
                                              callController: callKitController,
                                              sessionManager: mockSessionManager,
-                                             flowManager: FlowManagerMock(),
                                              mediaManager: nil)
         
         // when

@@ -634,7 +634,7 @@ public protocol LocalNotificationResponder : class {
             // Should be set to true when CallKit is used. Then AVS will not start
             // the audio before the audio session is active
             authenticatedSessionFactory.mediaManager.setUiStartsAudio(true)
-            callKitDelegate = CallKitDelegate(sessionManager: self, flowManager: authenticatedSessionFactory.flowManager, mediaManager: authenticatedSessionFactory.mediaManager)
+            callKitDelegate = CallKitDelegate(sessionManager: self, mediaManager: authenticatedSessionFactory.mediaManager)
         }
     }
     

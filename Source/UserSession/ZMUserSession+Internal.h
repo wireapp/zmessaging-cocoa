@@ -43,9 +43,9 @@
 
 @protocol FlowManagerType;
 
-extern NSString * const ZMAppendAVSLogNotificationName;
 
 @interface ZMUserSession (AuthenticationStatus)
+
 @property (nonatomic, readonly) UserProfileUpdateStatus *userProfileUpdateStatus;
 @property (nonatomic, readonly) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic, readonly) ClientUpdateStatus *clientUpdateStatus;

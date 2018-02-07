@@ -42,31 +42,27 @@ public class CallKitDelegate : NSObject {
     fileprivate let provider : CXProvider
     fileprivate let callController : CXCallController
     fileprivate unowned let sessionManager : SessionManagerType
-    fileprivate weak var flowManager : FlowManagerType?
     fileprivate weak var mediaManager: AVSMediaManager?
     fileprivate var callStateObserverToken : Any?
     fileprivate var missedCallObserverToken : Any?
     fileprivate var connectedCallConversation : ZMConversation?
     fileprivate var calls : [UUID : CallKitCall]
     
-    public convenience init(sessionManager: SessionManagerType, flowManager: FlowManagerType?, mediaManager: AVSMediaManager?) {
+    public convenience init(sessionManager: SessionManagerType, mediaManager: AVSMediaManager?) {
         self.init(provider: CXProvider(configuration: CallKitDelegate.providerConfiguration),
                   callController: CXCallController(queue: DispatchQueue.main),
                   sessionManager: sessionManager,
-                  flowManager: flowManager,
                   mediaManager: mediaManager)
     }
     
     public init(provider : CXProvider,
          callController: CXCallController,
          sessionManager: SessionManagerType,
-         flowManager: FlowManagerType?,
          mediaManager: AVSMediaManager?) {
         
         self.provider = provider
         self.callController = callController
         self.sessionManager = sessionManager
-        self.flowManager = flowManager
         self.mediaManager = mediaManager
         self.calls = [:]
         
@@ -100,12 +96,9 @@ public class CallKitDelegate : NSObject {
         return configuration
     }
     
-    fileprivate func log (for conversation: ZMConversation?, format: String, arguments: CVarArg..., file: String = #file, line: Int = #line) {
-        let messageWithLineNumber = String(format: "%s:%ld: %@", file, line, String(format: format, arguments))
-        
-        if let conversationId = conversation?.remoteIdentifier {
-            flowManager?.appendLog(for: conversationId, message: messageWithLineNumber)
-        }
+    fileprivate func log(_ message: String, file: String = #file, line: Int = #line) {
+        let messageWithLineNumber = String(format: "%@:%ld: %@", URL(fileURLWithPath: file).lastPathComponent, line, message)
+        SessionManager.logAVS(message: messageWithLineNumber)
     }
     
     fileprivate func endAllOngoingCallKitCalls(exceptIn conversation: ZMConversation) {
@@ -213,7 +206,7 @@ extension CallKitDelegate {
             let managedObjectContext = conversation.managedObjectContext,
             let handle = conversation.callKitHandle
         else {
-            zmLog.warn("Ignore request to start call since remoteIdentifier or handle is nil")
+            self.log("Ignore request to start call since remoteIdentifier or handle is nil")
             return
         }
         
@@ -230,7 +223,7 @@ extension CallKitDelegate {
             if let error = error as? CXErrorCodeRequestTransactionError, error.code == .callUUIDAlreadyExists {
                 self?.requestAnswerCall(in: conversation, video: video)
             } else if let error = error {
-                self?.log(for: conversation, format: "Cannot start call: \(error)")
+                self?.log("Cannot start call: \(error)")
             }
         }
         
@@ -247,7 +240,7 @@ extension CallKitDelegate {
         
         callController.request(transaction) { [weak self] (error) in
             if let error = error {
-                self?.log(for: conversation, format: "Cannot answer call: \(error)")
+                self?.log("Cannot answer call: \(error)")
             }
         }
     }
@@ -260,7 +253,7 @@ extension CallKitDelegate {
         
         callController.request(transaction) { [weak self] (error) in
             if let error = error {
-                self?.log(for: conversation, format: "Cannot end call: \(error)")
+                self?.log("Cannot end call: \(error)")
                 conversation.voiceChannel?.endCall()
             }
         }
@@ -268,7 +261,7 @@ extension CallKitDelegate {
     
     func reportIncomingCall(from user: ZMUser, in conversation: ZMConversation, video: Bool) {
         guard let handle = conversation.callKitHandle else {
-            return log(for: conversation, format: "Cannot report incoming call: conversation is missing handle")
+            return log("Cannot report incoming call: conversation is missing handle")
         }
         
         let update = CXCallUpdate()
@@ -285,7 +278,7 @@ extension CallKitDelegate {
         
         provider.reportNewIncomingCall(with: callUUID, update: update) { [weak self] (error) in
             if let error = error {
-                self?.log(for: conversation, format: "Cannot report incoming call: \(error)")
+                self?.log("Cannot report incoming call: \(error)")
                 self?.calls.removeValue(forKey: callUUID)
                 conversation.voiceChannel?.leave()
             } else {
@@ -314,11 +307,11 @@ extension CallKitDelegate {
 extension CallKitDelegate : CXProviderDelegate {
     
     public func providerDidBegin(_ provider: CXProvider) {
-        log(for: nil, format: "providerDidBegin: \(provider)")
+        log("providerDidBegin: \(provider)")
     }
     
     public func providerDidReset(_ provider: CXProvider) {
-        log(for: nil, format: "providerDidReset: \(provider)")
+        log("providerDidReset: \(provider)")
         mediaManager?.resetAudioDevice()
         calls.removeAll()
         
@@ -331,10 +324,10 @@ extension CallKitDelegate : CXProviderDelegate {
     }
     
     public func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
-        log(for: nil, format: "perform CXStartCallAction: \(action)")
+        log("perform CXStartCallAction: \(action)")
         
         guard let call = calls[action.callUUID] else {
-            log(for: nil, format: "fail CXStartCallAction because call did not exist")
+            log("fail CXStartCallAction because call did not exist")
             action.fail()
             return
         }
@@ -363,10 +356,10 @@ extension CallKitDelegate : CXProviderDelegate {
     }
     
     public func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
-        log(for: nil, format: "perform CXAnswerCallAction: \(action)")
+        log("perform CXAnswerCallAction: \(action)")
         
         guard let call = calls[action.callUUID] else {
-            log(for: nil, format: "fail CXAnswerCallAction because call did not exist")
+            log("fail CXAnswerCallAction because call did not exist")
             action.fail()
             return
         }
@@ -385,10 +378,10 @@ extension CallKitDelegate : CXProviderDelegate {
     }
     
     public func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
-        log(for: nil, format: "perform CXEndCallAction: \(action)")
+        log("perform CXEndCallAction: \(action)")
         
         guard let call = calls[action.callUUID] else {
-            log(for: nil, format: "fail CXEndCallAction because call did not exist")
+            log("fail CXEndCallAction because call did not exist")
             action.fail()
             return
         }
@@ -399,24 +392,24 @@ extension CallKitDelegate : CXProviderDelegate {
     }
     
     public func provider(_ provider: CXProvider, perform action: CXSetHeldCallAction) {
-        log(for: nil, format: "perform CXSetHeldCallAction: \(action)")
+        log("perform CXSetHeldCallAction: \(action)")
         mediaManager?.isMicrophoneMuted = action.isOnHold
         action.fulfill()
     }
     
     public func provider(_ provider: CXProvider, perform action: CXSetMutedCallAction) {
-        log(for: nil, format: "perform CXSetMutedCallAction: \(action)")
+        log("perform CXSetMutedCallAction: \(action)")
         mediaManager?.isMicrophoneMuted = action.isMuted
         action.fulfill()
     }
     
     public func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
-        log(for: nil, format: "didActivate audioSession")
+        log("didActivate audioSession")
         mediaManager?.startAudio()
     }
     
     public func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
-        log(for: nil, format: "didDeactivate audioSession")
+        log("didDeactivate audioSession")
         mediaManager?.resetAudioDevice()
     }
 }

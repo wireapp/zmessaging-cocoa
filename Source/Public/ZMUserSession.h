@@ -51,14 +51,6 @@
 @class ManagedObjectContextDirectory;
 @class TopConversationsDirectory;
 
-@protocol ZMAVSLogObserver <NSObject>
-@required
-- (void)logMessage:(NSString *)msg;
-@end
-
-@protocol ZMAVSLogObserverToken <NSObject>
-@end
-
 extern NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName;
 extern NSString * const ZMPhoneVerificationCodeKey;
 extern NSString * const ZMUserSessionResetPushTokensNotificationName;
@@ -138,18 +130,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 
 @end
 
-
-
-@interface ZMUserSession (AVSLogging)
-
-/// Add observer for AVS logging
-+ (id<ZMAVSLogObserverToken>)addAVSLogObserver:(id<ZMAVSLogObserver>)observer;
-/// Remove observer for AVS logging
-+ (void)removeAVSLogObserver:(id<ZMAVSLogObserverToken>)token;
-
-+ (void)appendAVSLogMessageForConversation:(ZMConversation *)conversation withMessage:(NSString *)message;
-
-@end
 
 @interface ZMUserSession (Calling)
 
