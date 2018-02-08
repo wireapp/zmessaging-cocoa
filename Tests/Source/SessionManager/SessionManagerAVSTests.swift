@@ -37,7 +37,7 @@ class SessionManagerAVSTests: ZMTBaseTest {
         // given
         let logMessage = "123"
         let logger = TestAVSLogger()
-        var token = SessionManager.addLogger(logger)
+        var token : Any? = SessionManager.addLogger(logger)
         XCTAssertNotNil(token)
         
         // when
