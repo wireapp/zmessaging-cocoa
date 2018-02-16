@@ -322,7 +322,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *resp ZM_UNUSED) {
-        [ZMClientMessage insertNewObjectInManagedObjectContext:self.syncMOC];
+        NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC]);
     }]];
     
     // when
@@ -369,7 +369,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *resp ZM_UNUSED) {
-        [ZMClientMessage insertNewObjectInManagedObjectContext:self.syncMOC];
+        NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC]);
     }]];
     
     // when
@@ -391,7 +391,7 @@
 - (void)testThatWhenThereIsAnInsertionItAsksForNextRequest
 {
     // given
-    [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC]);
     ZMTransportEnqueueResult *resultNO = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:NO];
 
     BOOL(^checkGenerator)(ZMTransportRequestGenerator) = ^BOOL(ZMTransportRequestGenerator generator) {
@@ -419,7 +419,7 @@
 
 - (void)testThatWhenThereIsAnUpdateItAsksForNextRequest
 {
-    ZMClientMessage *entity = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMClientMessage *entity = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
 
     [[[self.syncStrategy expect] andReturnValue:@YES]
      processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];
@@ -472,8 +472,8 @@
 - (void)testThatItCallsSyncStrategyDidRegisterWithInsertedObjects
 {
     // given
-    ZMClientMessage *entity1 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMClientMessage *entity2 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMClientMessage *entity1 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
+    ZMClientMessage *entity2 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
     
     NSSet *insertSet = [NSSet setWithObjects:entity1, entity2, nil];
 
@@ -497,8 +497,8 @@
 - (void)testThatItCallsSyncStrategyDidRegisterWithUpdatedObjects
 {
     // given
-    [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMClientMessage *entity2 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC]);
+    ZMClientMessage *entity2 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
 
     [[[self.syncStrategy expect] andReturnValue:@NO]
      processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];
@@ -530,8 +530,8 @@
 - (void)testThatSyncStrategyDidRegisterIsCalledWithInsertedObjectsFromTheSyncContext
 {
     // given
-    ZMClientMessage *entity1 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMClientMessage *entity2 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMClientMessage *entity1 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
+    ZMClientMessage *entity2 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
     
     NSSet *insertSet = [NSSet setWithObjects:entity1, entity2, nil];
 
@@ -570,8 +570,8 @@
 - (void)testThatSyncStrategyDidRegisterIsCalledWithUpdatedObjectsFromTheSyncContext
 {
     // given
-    [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMClientMessage *entity2 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC]);
+    ZMClientMessage *entity2 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
 
     [[[self.syncStrategy expect] andReturnValue:@NO]
      processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];

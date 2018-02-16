@@ -170,6 +170,7 @@
 - (void)setUp {
     [super setUp];
     
+    [self createSelfClient];
     self.fakeHotFixDirectory = [[FakeHotFixDirectory alloc] init];
     self.sut = [[ZMHotFix alloc] initWithHotFixDirectory:self.fakeHotFixDirectory syncMOC:self.syncMOC];
     }
@@ -410,6 +411,7 @@
     [self saveNewVersion];
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
     conversation.conversationType = ZMConversationTypeOneOnOne;
+    conversation.remoteIdentifier = NSUUID.createUUID;
     
     ZMAssetClientMessage *uploadedImageMessage = [conversation appendOTRMessageWithImageData:self.mediumJPEGData nonce:NSUUID.createUUID];
     [uploadedImageMessage markAsSent];

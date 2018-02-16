@@ -287,7 +287,7 @@ extension LocalNotificationDispatcherTests {
     func testThatItCreatesNotificationForSelfGroupParticipation() {
     
         // GIVEN
-        let message = ZMSystemMessage.insertNewObject(in: self.syncMOC)
+        let message = ZMSystemMessage(nonce: UUID(), managedObjectContext: syncMOC)
         message.visibleInConversation = self.conversation1
         message.sender = self.user1
         message.systemMessageType = .participantsAdded
@@ -310,7 +310,7 @@ extension LocalNotificationDispatcherTests {
     func testThatItDoesNotCreateNotificationForOtherGroupParticipation() {
         
         // GIVEN
-        let message = ZMSystemMessage.insertNewObject(in: self.syncMOC)
+        let message = ZMSystemMessage(nonce: UUID(), managedObjectContext: syncMOC)
         message.visibleInConversation = self.conversation1
         message.sender = self.user1
         message.systemMessageType = .participantsAdded
@@ -332,8 +332,8 @@ extension LocalNotificationDispatcherTests {
         sender.remoteIdentifier = UUID.create()
         
         let message = conversation.appendMessage(withText: "text") as! ZMClientMessage
-        let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
-        let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce!.transportString(), nonce: UUID.create().transportString())
+        let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce!.transportString(), nonce: UUID.create().transportString())
         
         let event1 = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction1, senderID: sender.remoteIdentifier!)
         let event2 = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction2, senderID: sender.remoteIdentifier!)

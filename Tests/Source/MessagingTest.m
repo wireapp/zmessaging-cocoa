@@ -351,7 +351,6 @@ static ZMReachability *sharedReachabilityMock = nil;
         return nil != self.contextDirectory;
     }]);
     
-    ImageAssetCache *imageAssetCache = [[ImageAssetCache alloc] initWithMBLimit:100 location:nil];
     FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:nil];
     
     [self.uiMOC addGroup:self.dispatchGroup];
@@ -364,7 +363,6 @@ static ZMReachability *sharedReachabilityMock = nil;
         
         [self.syncMOC setZm_userInterfaceContext:self.uiMOC];
         [self.syncMOC setPersistentStoreMetadata:@(notificationContentVisible) forKey:@"ZMShouldNotificationContentKey"];
-        self.syncMOC.zm_imageAssetCache = imageAssetCache;
         self.syncMOC.zm_fileAssetCache = fileAssetCache;
     }];
     
@@ -381,7 +379,6 @@ static ZMReachability *sharedReachabilityMock = nil;
     [self.uiMOC setZm_syncContext:self.syncMOC];
     [self.uiMOC setPersistentStoreMetadata:@(notificationContentVisible) forKey:@"ZMShouldNotificationContentKey"];
 
-    self.uiMOC.zm_imageAssetCache = imageAssetCache;
     self.uiMOC.zm_fileAssetCache = fileAssetCache;
 }
 
@@ -596,43 +593,11 @@ static ZMReachability *sharedReachabilityMock = nil;
 
 - (ZMClientMessage *)createClientTextMessageWithText:(NSString *)text
 {
-    ZMClientMessage *message = [ZMClientMessage insertNewObjectInManagedObjectContext:self.syncMOC];
-    NSUUID *messageNonce = [NSUUID createUUID];
-    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:text nonce:messageNonce.transportString expiresAfter:nil];
+    NSUUID *nonce = [NSUUID createUUID];
+    ZMClientMessage *message = [[ZMClientMessage alloc] initWithNonce:nonce managedObjectContext:self.syncMOC];
+    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:text nonce:nonce.transportString expiresAfter:nil];
     [message addData:textMessage.data];
     return message;
-}
-
-- (ZMAssetClientMessage *)createImageMessageWithImageData:(NSData *)imageData format:(ZMImageFormat)format processed:(BOOL)processed stored:(BOOL)stored moc:(NSManagedObjectContext *)moc
-{
-    NSUUID *nonce = [NSUUID createUUID];
-    ZMAssetClientMessage *imageMessage = [ZMAssetClientMessage assetClientMessageWithOriginalImage:imageData nonce:nonce managedObjectContext:moc expiresAfter:0];
-    
-    if (processed) {
-        
-        CGSize imageSize = [ZMImagePreprocessor sizeOfPrerotatedImageWithData:imageData];
-        ZMIImageProperties *properties = [ZMIImageProperties imagePropertiesWithSize:imageSize
-                                                                              length:imageData.length
-                                                                            mimeType:@"image/jpeg"];
-        ZMImageAssetEncryptionKeys *keys = [[ZMImageAssetEncryptionKeys alloc] initWithOtrKey:[NSData zmRandomSHA256Key]
-                                                                                       macKey:[NSData zmRandomSHA256Key]
-                                                                                          mac:[NSData zmRandomSHA256Key]];
-        
-        ZMGenericMessage *message = [ZMGenericMessage genericMessageWithMediumImageProperties:properties processedImageProperties:properties encryptionKeys:keys nonce:nonce.transportString format:format expiresAfter:nil];
-        [imageMessage add:message];
-        
-        ImageAssetCache *directory = self.uiMOC.zm_imageAssetCache;
-        
-        [directory storeAssetData:nonce format:format encrypted:YES data:imageData];
-        
-        if (stored) {
-            [directory storeAssetData:nonce format:ZMImageFormatOriginal encrypted:NO data:imageData];
-        }
-        if (processed) {
-            [directory storeAssetData:nonce format:format encrypted:NO data:imageData];
-        }
-    }
-    return imageMessage;
 }
 
 @end
