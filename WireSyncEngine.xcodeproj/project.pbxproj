@@ -274,6 +274,7 @@
 		54F7217E19A62225009A8AF5 /* ZMUpdateEventsBufferTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54F7217C19A62225009A8AF5 /* ZMUpdateEventsBufferTests.m */; };
 		54FEAAA91BC7BB9C002DE521 /* ZMBlacklistDownloader+Testing.h in Headers */ = {isa = PBXBuildFile; fileRef = 54FEAAA81BC7BB9C002DE521 /* ZMBlacklistDownloader+Testing.h */; };
 		54FF64291F73D00C00787EF2 /* NSManagedObjectContext+AuthenticationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FF64281F73D00C00787EF2 /* NSManagedObjectContext+AuthenticationStatus.swift */; };
+		7C1F4BF5203C4F67000537A8 /* Analytics+PushChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1F4BF4203C4F67000537A8 /* Analytics+PushChannel.swift */; };
 		85D8522CF8DE246DDD5BD12C /* MockEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D85AAE7FA09852AB9B0D6A /* MockEntity.m */; };
 		85D85EAFA1CB6E457D14E3B7 /* MockEntity2.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D85C9E7A2AAAE14D4BC2CC /* MockEntity2.m */; };
 		85D85EEDD5DD19FB747ED4A5 /* MockModelObjectContextFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D852DA0CD2C94CADB3B6FE /* MockModelObjectContextFactory.m */; };
@@ -826,6 +827,7 @@
 		54FC8A0F192CD55000D3C016 /* LoginFlowTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LoginFlowTests.m; sourceTree = "<group>"; };
 		54FEAAA81BC7BB9C002DE521 /* ZMBlacklistDownloader+Testing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ZMBlacklistDownloader+Testing.h"; sourceTree = "<group>"; };
 		54FF64281F73D00C00787EF2 /* NSManagedObjectContext+AuthenticationStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSManagedObjectContext+AuthenticationStatus.swift"; sourceTree = "<group>"; };
+		7C1F4BF4203C4F67000537A8 /* Analytics+PushChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Analytics+PushChannel.swift"; sourceTree = "<group>"; };
 		85D8502FFC4412F91D0CC1A4 /* ZMOperationLoop.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMOperationLoop.m; sourceTree = "<group>"; };
 		85D85104C6D06FA902E3253C /* ZMSyncStrategyTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMSyncStrategyTests.m; sourceTree = "<group>"; };
 		85D85110893896EBA6E879CE /* MockEntity2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MockEntity2.h; sourceTree = "<group>"; };
@@ -1603,6 +1605,7 @@
 				54B2A0861DAE71F100BB40B1 /* Clusterizer+VOIP.swift */,
 				CEF2DE7E1DB778F300451642 /* RequestLoopAnalyticsTracker.swift */,
 				F1EB0E77200501C70040D73E /* NotificationsTracker.swift */,
+				7C1F4BF4203C4F67000537A8 /* Analytics+PushChannel.swift */,
 			);
 			path = Analytics;
 			sourceTree = "<group>";
@@ -2683,6 +2686,7 @@
 				5498162D1A432BC800A7CE2E /* ZMMissingUpdateEventsTranscoder.m in Sources */,
 				549816461A432BC800A7CE2E /* ZMOperationLoop+Background.m in Sources */,
 				549816451A432BC800A7CE2E /* ZMOperationLoop.m in Sources */,
+				7C1F4BF5203C4F67000537A8 /* Analytics+PushChannel.swift in Sources */,
 				549AEA3B1D6340BC003C0BEC /* AddressBookUploadRequestStrategy.swift in Sources */,
 				BF7ED2E21DF6BD16003A4397 /* Analytics+HandleSuggestions.swift in Sources */,
 				F9AB00221F0CDAF00037B437 /* FileRelocator.swift in Sources */,

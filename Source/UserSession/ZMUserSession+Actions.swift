@@ -107,10 +107,14 @@ extension ZMUserSession {
             
             self.messageReplyObserver = nil
             self.syncManagedObjectContext.performGroupedBlock {
+                
+                let conversationOnSyncContext = notification.conversation(in: self.syncManagedObjectContext)
                 if result == .failed {
                     zmLog.warn("failed to reply via push notification action")
-                    let conversationOnSyncContext = notification.conversation(in: self.syncManagedObjectContext)
                     self.localNotificationDispatcher.didFailToSendMessage(in: conversationOnSyncContext!)
+                } else {
+                    let message = notification.message(in: conversationOnSyncContext!, in: self.syncManagedObjectContext)
+                    self.syncManagedObjectContext.analytics?.tagTextReplyFromPushNotification(conversation: conversationOnSyncContext, action: .text, message: message)
                 }
                 activity?.end()
                 completionHandler()
