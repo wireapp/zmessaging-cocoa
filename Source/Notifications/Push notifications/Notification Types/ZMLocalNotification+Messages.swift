@@ -92,7 +92,7 @@ extension ZMLocalNotification {
             var userInfo = [AnyHashable: Any]()
             userInfo[SelfUserIDStringKey] = selfUserID.transportString()
             userInfo[SenderIDStringKey] = senderID.transportString()
-            userInfo[MessageNonceIDStringKey] = message.nonce.transportString()
+            userInfo[MessageNonceIDStringKey] = message.nonce!.transportString()
             userInfo[ConversationIDStringKey] = conversationID.transportString()
             userInfo[EventTimeKey] = eventTime
             userInfo[ConversationNameStringKey] = conversation.meaningfulDisplayName

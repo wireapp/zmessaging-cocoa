@@ -124,11 +124,6 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 
 - (ZMClientMessage *)createClientTextMessage;
 - (ZMClientMessage *)createClientTextMessageWithText:(NSString *)text;
-- (ZMAssetClientMessage *)createImageMessageWithImageData:(NSData *)imageData
-                                                   format:(ZMImageFormat)format
-                                                processed:(BOOL)processed
-                                                   stored:(BOOL)stored
-                                                      moc:(NSManagedObjectContext *)moc;
 
 @end
 

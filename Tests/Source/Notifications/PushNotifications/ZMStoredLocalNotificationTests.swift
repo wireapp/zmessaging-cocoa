@@ -51,11 +51,8 @@ class ZMStoredLocalNotificationTests: MessagingTest {
         
         // given
         let textInput = "Foobar"
-        let message = ZMClientMessage.insertNewObject(in: uiMOC)
-        let genericMessage = ZMGenericMessage.message(text: textInput, nonce: UUID.create().transportString(), expiresAfter: nil)
-        message.add(genericMessage.data())
+        let message = conversation.appendMessage(withText: textInput) as! ZMClientMessage
         message.sender = sender
-        message.visibleInConversation = conversation
         uiMOC.saveOrRollback()
         
         let note = ZMLocalNotification(message: message)

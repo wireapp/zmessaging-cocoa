@@ -102,7 +102,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     conversation.remoteIdentifier = [NSUUID createUUID];
     conversation.conversationType = ZMConversationTypeGroup;
     
-    ZMMessage *msg = [ZMTextMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMMessage *msg = [[ZMTextMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
     msg.serverTimestamp = [NSDate date];
     [conversation.mutableMessages addObject:msg];
     conversation.lastServerTimeStamp = [msg.serverTimestamp dateByAddingTimeInterval:5];
@@ -3541,7 +3541,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
         
         // forcing an event here - in real code it will be created in another syncObject, not tested here
-        ZMSystemMessage *memberJoinEvent = [ZMSystemMessage insertNewObjectInManagedObjectContext:self.syncMOC];
+        ZMSystemMessage *memberJoinEvent = [[ZMSystemMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC];
         memberJoinEvent.systemMessageType = ZMSystemMessageTypeParticipantsAdded;
         [existingConnection.conversation.mutableMessages addObject:memberJoinEvent];
         
@@ -3836,7 +3836,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         NSDate *date = [NSDate dateWithTimeIntervalSinceReferenceDate:417005700];
         for (size_t i = 0; i < MessageCount; ++i) {
-            ZMTextMessage *message = [ZMTextMessage insertNewObjectInManagedObjectContext:self.syncMOC];
+            ZMTextMessage *message = [[ZMTextMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC];
             message.text = [NSString stringWithFormat:@"%llu", (long long unsigned) i];
             message.serverTimestamp = [date dateByAddingTimeInterval:(NSTimeInterval) i];
             [syncConversation.mutableMessages addObject:message];
