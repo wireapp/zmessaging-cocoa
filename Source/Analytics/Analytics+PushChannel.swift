@@ -1,35 +1,46 @@
 //
-//  Analytics+PushChannel.swift
-//  WireSyncEngine-ios
+// Wire
+// Copyright (C) 2018 Wire Swiss GmbH
 //
-//  Created by Nicola Giancecchi on 20.02.18.
-//  Copyright © 2018 Zeta Project Gmbh. All rights reserved.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
 import Foundation
 
 extension AnalyticsType {
     
-    private static var contributionEventName: String {
-        return "contribution"
-    }
-    
-    func tagTextReplyFromPushNotification(conversation: ZMConversation?, action: PushChannelAction, message: ZMMessage?) {
-        let attributes: [String: NSObject] = [
-            "action": action.rawValue as NSString,
-            "conversation_type": (conversation?.conversationType.analyticsType ?? "") as NSString,
-            "is_ephemeral": NSNumber(value: message?.isEphemeral ?? false)
-        ]
-        
-        tagEvent(Self.contributionEventName, attributes: attributes)
+    public func tagActionOnPushNotification(conversation: ZMConversation?, action: ConversationMediaAction) {
+        guard let conversation = conversation else { return }
+        var attributes = conversation.ephemeralTrackingAttributes
+        attributes["action"] = action.attributeValue
+        attributes["conversation_type"] = conversation.conversationType.analyticsType
+        attributes["with_service"] = conversation.includesServiceUser ? "true" : "false"
+        tagEvent("contribution", attributes: attributes as [String : NSObject])
     }
     
 }
 
-enum PushChannelAction: String {
-    case text = "text"
-    case like = "like"
-    case call = "call"
+public extension ZMConversation {
+    
+    var ephemeralTrackingAttributes: [String: String] {
+        let ephemeral = destructionTimeout != .none
+        var attributes = ["is_ephemeral": ephemeral ? "true" : "false"]
+        guard ephemeral else { return attributes }
+        attributes["ephemeral_time"] = "\(Int(destructionTimeout.rawValue))"
+        return attributes
+    }
+    
 }
 
 extension ZMConversationType {
@@ -45,3 +56,36 @@ extension ZMConversationType {
         }
     }
 }
+
+@objc public enum ConversationMediaAction: UInt {
+    case text, photo, audioCall, videoCall, gif, ping, fileTransfer, videoMessage, audioMessage, location
+    
+    public var attributeValue: String {
+        switch self {
+        case .text:         return "text"
+        case .photo:        return "photo"
+        case .audioCall:    return "audio_call"
+        case .videoCall:    return "video_call"
+        case .gif:          return "giphy"
+        case .ping:         return "ping"
+        case .fileTransfer: return "file"
+        case .videoMessage: return "video"
+        case .audioMessage: return "audio"
+        case .location:     return "location"
+        }
+    }
+}
+
+extension ZMConversation {
+    
+    /// Whether the conversation includes at least 1 service user.
+    public var includesServiceUser: Bool {
+        guard let participants = otherActiveParticipants.array as? [ZMBareUser] else { return false }
+        return participants.any { $0.isServiceUser }
+    }
+}
+
+
+
+
+

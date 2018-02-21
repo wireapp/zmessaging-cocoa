@@ -40,11 +40,13 @@ extension ZMUserSession {
             let callState = note.conversation?.voiceChannel?.state
         else {
             open(note.conversation, at: nil)
+            self.managedObjectContext.analytics?.tagActionOnPushNotification(conversation: note.conversation, action: .audioCall)
             return
         }
         
         if case let .incoming(video: video, shouldRing: _, degraded: _) = callState, callCenter?.activeCallConversations(in: self).count == 0 {
             _ = note.conversation?.voiceChannel?.join(video: video, userSession: self)
+            self.managedObjectContext.analytics?.tagActionOnPushNotification(conversation: note.conversation, action: .videoCall)
         }
         
         open(note.conversation, at: nil)
@@ -113,8 +115,7 @@ extension ZMUserSession {
                     zmLog.warn("failed to reply via push notification action")
                     self.localNotificationDispatcher.didFailToSendMessage(in: conversationOnSyncContext!)
                 } else {
-                    let message = notification.message(in: conversationOnSyncContext!, in: self.syncManagedObjectContext)
-                    self.syncManagedObjectContext.analytics?.tagTextReplyFromPushNotification(conversation: conversationOnSyncContext, action: .text, message: message)
+                    self.syncManagedObjectContext.analytics?.tagActionOnPushNotification(conversation: conversationOnSyncContext, action: .text)
                 }
                 activity?.end()
                 completionHandler()
