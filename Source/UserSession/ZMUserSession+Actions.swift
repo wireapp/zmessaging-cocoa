@@ -40,13 +40,11 @@ extension ZMUserSession {
             let callState = note.conversation?.voiceChannel?.state
         else {
             open(note.conversation, at: nil)
-            self.managedObjectContext.analytics?.tagActionOnPushNotification(conversation: note.conversation, action: .audioCall)
             return
         }
         
         if case let .incoming(video: video, shouldRing: _, degraded: _) = callState, callCenter?.activeCallConversations(in: self).count == 0 {
             _ = note.conversation?.voiceChannel?.join(video: video, userSession: self)
-            self.managedObjectContext.analytics?.tagActionOnPushNotification(conversation: note.conversation, action: .videoCall)
         }
         
         open(note.conversation, at: nil)
@@ -130,6 +128,26 @@ extension ZMUserSession {
         }
         
         
+    }
+    
+    public func handleTrackingOnCallNotification(_ notification: UILocalNotification) {
+        
+        guard let conversation = notification.conversation(in: managedObjectContext),
+            let callState = conversation.voiceChannel?.state,
+            case .incoming(video: _, shouldRing: _, degraded: _) = callState,
+            let callCenter = self.callCenter,
+            callCenter.activeCallConversations(in: self).count == 0 else{
+            return
+        }
+        
+        let type : ConversationMediaAction = callCenter.isVideoCall(conversationId: conversation.remoteIdentifier!) ? .videoCall : .audioCall
+        
+        self.syncManagedObjectContext.performGroupedBlock { [weak self] in
+            guard let `self` = self,
+                let conversationInSyncContext = notification.conversation(in: self.syncManagedObjectContext)
+                else { return }
+            self.syncManagedObjectContext.analytics?.tagActionOnPushNotification(conversation: conversationInSyncContext, action: type)
+        }
     }
     
     public func likeMessage(with notification: UILocalNotification, completionHandler: @escaping () -> Void) {
