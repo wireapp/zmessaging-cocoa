@@ -26,7 +26,7 @@ extension AnalyticsType {
         attributes["action"] = action.attributeValue
         attributes["conversation_type"] = conversation.conversationType.analyticsType
         attributes["with_service"] = conversation.includesServiceUser ? "true" : "false"
-        tagEvent("contribution", attributes: attributes as [String : NSObject])
+        tagEvent("contributed", attributes: attributes as [String : NSObject])
     }
     
 }
