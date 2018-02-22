@@ -41,6 +41,11 @@ public extension ZMConversation {
         return attributes
     }
     
+    /// Whether the conversation includes at least 1 service user.
+    public var includesServiceUser: Bool {
+        guard let participants = otherActiveParticipants.array as? [ZMBareUser] else { return false }
+        return participants.any { $0.isServiceUser }
+    }
 }
 
 extension ZMConversationType {
@@ -75,16 +80,6 @@ extension ZMConversationType {
         }
     }
 }
-
-extension ZMConversation {
-    
-    /// Whether the conversation includes at least 1 service user.
-    public var includesServiceUser: Bool {
-        guard let participants = otherActiveParticipants.array as? [ZMBareUser] else { return false }
-        return participants.any { $0.isServiceUser }
-    }
-}
-
 
 
 
