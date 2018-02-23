@@ -3278,7 +3278,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               };
     
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventConversationCreate)] type];
+    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeConversationCreate)] type];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -3334,7 +3334,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               };
     
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventConversationCreate)] type];
+    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeConversationCreate)] type];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -3374,7 +3374,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               };
     
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventConversationCreate)] type];
+    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeConversationCreate)] type];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -3414,7 +3414,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               @"data": @{@"name": newName}
                               };
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventConversationRename)] type];
+    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeConversationRename)] type];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:time] timeStamp];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:user3.remoteIdentifier] senderUUID];
@@ -3444,7 +3444,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               @"connection" : @{}
                               };
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventUnknown)] type];
+    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUnknown)] type];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:nil] conversationUUID];
 

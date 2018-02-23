@@ -336,7 +336,7 @@
                                   @"connection" : samplePayload
                                   };
         ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventUserConnection)] type];
+        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUserConnection)] type];
         (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
         
         // when
@@ -366,7 +366,7 @@
                               };
     
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventUserConnection)] type];
+    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUserConnection)] type];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
     
     // when
@@ -385,7 +385,7 @@
                                   @"connection" : samplePayload
                                   };
         ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventUnknown)] type];
+        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUnknown)] type];
         (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
         
         // when
@@ -419,7 +419,7 @@
                                   @"connection" : samplePayload
                                   };
         ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventUserConnection)] type];
+        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUserConnection)] type];
         (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
         
         // when
