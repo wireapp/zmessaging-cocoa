@@ -319,18 +319,18 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (BOOL)shouldProcessUpdateEvent:(ZMUpdateEvent *)event
 {
     switch (event.type) {
-        case ZMUpdateEventConversationMessageAdd:
-        case ZMUpdateEventConversationClientMessageAdd:
-        case ZMUpdateEventConversationOtrMessageAdd:
-        case ZMUpdateEventConversationOtrAssetAdd:
-        case ZMUpdateEventConversationKnock:
-        case ZMUpdateEventConversationAssetAdd:
-        case ZMUpdateEventConversationMemberJoin:
-        case ZMUpdateEventConversationMemberLeave:
-        case ZMUpdateEventConversationRename:
-        case ZMUpdateEventConversationMemberUpdate:
-        case ZMUpdateEventConversationCreate:
-        case ZMUpdateEventConversationConnectRequest:
+        case ZMUpdateEventTypeConversationMessageAdd:
+        case ZMUpdateEventTypeConversationClientMessageAdd:
+        case ZMUpdateEventTypeConversationOtrMessageAdd:
+        case ZMUpdateEventTypeConversationOtrAssetAdd:
+        case ZMUpdateEventTypeConversationKnock:
+        case ZMUpdateEventTypeConversationAssetAdd:
+        case ZMUpdateEventTypeConversationMemberJoin:
+        case ZMUpdateEventTypeConversationMemberLeave:
+        case ZMUpdateEventTypeConversationRename:
+        case ZMUpdateEventTypeConversationMemberUpdate:
+        case ZMUpdateEventTypeConversationCreate:
+        case ZMUpdateEventTypeConversationConnectRequest:
             return YES;
         default:
             return NO;
@@ -362,8 +362,8 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 {
     NSDate *timeStamp = event.timeStamp;
     
-    BOOL isMessageEvent = (event.type == ZMUpdateEventConversationOtrMessageAdd) ||
-                          (event.type == ZMUpdateEventConversationOtrAssetAdd);
+    BOOL isMessageEvent = (event.type == ZMUpdateEventTypeConversationOtrMessageAdd) ||
+    (event.type == ZMUpdateEventTypeConversationOtrAssetAdd);
     
     // Message events already update the conversation on insert. There is no need to do it here, since different message types (e.g. edit and delete) might have a different effect on the lastModifiedDate and unreadCount
     if (timeStamp != nil && !isMessageEvent) {
@@ -383,9 +383,9 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (BOOL)shouldUnarchiveOrUpdateLastModifiedWithEvent:(ZMUpdateEvent *)event
 {
     switch (event.type) {
-        case ZMUpdateEventConversationMemberUpdate:
-        case ZMUpdateEventConversationMemberLeave:
-        case ZMUpdateEventConversationRename:
+        case ZMUpdateEventTypeConversationMemberUpdate:
+        case ZMUpdateEventTypeConversationMemberLeave:
+        case ZMUpdateEventTypeConversationRename:
             return NO;
 
         default:
@@ -396,7 +396,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (void)updatePropertiesOfConversation:(ZMConversation *)conversation withPostPayloadEvent:(ZMUpdateEvent *)event
 {
     BOOL senderIsSelfUser = ([event.senderUUID isEqual:[ZMUser selfUserInContext:self.managedObjectContext].remoteIdentifier]);
-    BOOL selfUserLeft = (event.type == ZMUpdateEventConversationMemberLeave) && senderIsSelfUser;
+    BOOL selfUserLeft = (event.type == ZMUpdateEventTypeConversationMemberLeave) && senderIsSelfUser;
     if (selfUserLeft && conversation.clearedTimeStamp != nil && [conversation.clearedTimeStamp isEqualToDate:conversation.lastServerTimeStamp]) {
         [conversation updateClearedFromPostPayloadEvent:event];
     }
@@ -427,7 +427,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 {
     for(ZMUpdateEvent *event in events) {
         
-        if (event.type == ZMUpdateEventConversationCreate) {
+        if (event.type == ZMUpdateEventTypeConversationCreate) {
             [self createConversationFromEvent:event];
             continue;
         }
@@ -466,15 +466,15 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (void)markConversationForDownloadIfNeeded:(ZMConversation *)conversation afterEvent:(ZMUpdateEvent *)event {
     
     switch(event.type) {
-        case ZMUpdateEventConversationOtrAssetAdd:
-        case ZMUpdateEventConversationOtrMessageAdd:
-        case ZMUpdateEventConversationRename:
-        case ZMUpdateEventConversationMemberLeave:
-        case ZMUpdateEventConversationKnock:
-        case ZMUpdateEventConversationMessageAdd:
-        case ZMUpdateEventConversationTyping:
-        case ZMUpdateEventConversationAssetAdd:
-        case ZMUpdateEventConversationClientMessageAdd:
+        case ZMUpdateEventTypeConversationOtrAssetAdd:
+        case ZMUpdateEventTypeConversationOtrMessageAdd:
+        case ZMUpdateEventTypeConversationRename:
+        case ZMUpdateEventTypeConversationMemberLeave:
+        case ZMUpdateEventTypeConversationKnock:
+        case ZMUpdateEventTypeConversationMessageAdd:
+        case ZMUpdateEventTypeConversationTyping:
+        case ZMUpdateEventTypeConversationAssetAdd:
+        case ZMUpdateEventTypeConversationClientMessageAdd:
             break;
         default:
             return;
@@ -493,26 +493,26 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (void)processUpdateEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation previousLastServerTimestamp:(NSDate *)previousLastServerTimestamp
 {
     switch (event.type) {
-        case ZMUpdateEventConversationRename: {
+        case ZMUpdateEventTypeConversationRename: {
             [self processConversationRenameEvent:event forConversation:conversation];
             break;
         }
-        case ZMUpdateEventConversationMemberJoin:
+        case ZMUpdateEventTypeConversationMemberJoin:
         {
             [self processMemberJoinEvent:event forConversation:conversation];
             break;
         }
-        case ZMUpdateEventConversationMemberLeave:
+        case ZMUpdateEventTypeConversationMemberLeave:
         {
             [self processMemberLeaveEvent:event forConversation:conversation];
             break;
         }
-        case ZMUpdateEventConversationMemberUpdate:
+        case ZMUpdateEventTypeConversationMemberUpdate:
         {
             [self processMemberUpdateEvent:event forConversation:conversation previousLastServerTimeStamp:previousLastServerTimestamp];
             break;
         }
-        case ZMUpdateEventConversationConnectRequest:
+        case ZMUpdateEventTypeConversationConnectRequest:
         {
             [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
             break;
