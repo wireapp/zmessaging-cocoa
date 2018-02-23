@@ -115,6 +115,14 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(__unused NSManagedObjectContext *context) {
                          [ZMHotFixDirectory restartSlowSync:context];
                      }],
+
+                    /// We need to refetch all team conversations to get data about access levels that were
+                    /// introduced after implementing wireless users funtionality.
+                    [ZMHotFixPatch
+                     patchWithVersion:@"146.0.0"
+                     patchCode:^(__unused NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory refetchTeamGroupConversations:context];
+                     }],
                     ];
     });
     return patches;
