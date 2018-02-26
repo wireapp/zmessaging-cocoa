@@ -20,7 +20,7 @@ import XCTest
 import WireMessageStrategy
 import WireDataModel
 
-class ZMConversationTranscoderSystemMessageTests: ObjectTranscoderTests {
+class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
     
     var sut: ZMConversationTranscoder!
     var localNotificationDispatcher: MockPushMessageHandler!
@@ -355,7 +355,7 @@ class ZMConversationTranscoderSystemMessageTests: ObjectTranscoderTests {
     
 }
 
-extension ZMConversationTranscoderSystemMessageTests : ZMSyncStateDelegate {
+extension ZMConversationTranscoderTests_Swift : ZMSyncStateDelegate {
     
     func didStartSync() {
         // nop
@@ -370,3 +370,39 @@ extension ZMConversationTranscoderSystemMessageTests : ZMSyncStateDelegate {
     }
     
 }
+
+// MARK: - Update events
+extension ZMConversationTranscoderTests_Swift {
+    func testThatItHandlesAccessModeUpdateEvent() {
+        self.syncMOC.performAndWait {
+
+            let newAccessMode = ConversationAccessMode(values: ["code", "invite"])
+            let newAccessRole = ConversationAccessRole.team
+
+            XCTAssertNotEqual(self.conversation.accessMode, newAccessMode)
+            XCTAssertNotEqual(self.conversation.accessRole, newAccessRole)
+
+            // GIVEN
+            let payload = [
+                "from": self.user.remoteIdentifier!.transportString(),
+                "conversation": self.conversation.remoteIdentifier!.transportString(),
+                "time": NSDate().transportString(),
+                "data": [
+                    "access": newAccessMode.stringValue,
+                    "access_role": newAccessRole.rawValue
+                ],
+                "type": "conversation.access-update"
+                ] as [String: Any]
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+
+            // WHEN
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+
+            // THEN
+            XCTAssertEqual(self.conversation.accessMode, newAccessMode)
+            XCTAssertEqual(self.conversation.accessRole, newAccessRole)
+        }
+    }
+}
+
+
