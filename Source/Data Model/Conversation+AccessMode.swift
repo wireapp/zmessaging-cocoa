@@ -84,14 +84,13 @@ extension ZMConversation {
         userSession.transportSession.enqueueOneTime(request)
     }
     
-    func setAllowGuests(_ allowGuests: Bool, in userSession: ZMUserSession, _ completion: @escaping (VoidResult) -> Void) {
-        guard self.allowGuests != allowGuests else { return completion(.success) }
+    public func setAllowGuests(_ allowGuests: Bool, in userSession: ZMUserSession, _ completion: @escaping (VoidResult) -> Void) {
         let request = WirelessRequestFactory.set(allowGuests: allowGuests, for: self)
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
             if let payload = response.payload,
                 let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
-                // Process `conversation.access-update` event
                 self.allowGuests = allowGuests
+                // Process `conversation.access-update` event
                 userSession.syncManagedObjectContext.performGroupedBlock {
                     userSession.operationLoop.syncStrategy.processUpdateEvents([event], ignoreBuffer: true)
                 }
