@@ -331,6 +331,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         case ZMUpdateEventTypeConversationMemberUpdate:
         case ZMUpdateEventTypeConversationCreate:
         case ZMUpdateEventTypeConversationConnectRequest:
+        case ZMUpdateEventTypeConversationAccessModeUpdate:
             return YES;
         default:
             return NO;
@@ -517,6 +518,9 @@ static NSString *const ConversationTeamManagedKey = @"managed";
             [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
             break;
         }
+        case ZMUpdateEventTypeConversationAccessModeUpdate:
+            [self processAccessModeUpdateEvent:event inConversation:conversation];
+            break;
         default: {
             break;
         }
