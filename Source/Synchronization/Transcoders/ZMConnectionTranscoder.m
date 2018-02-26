@@ -124,7 +124,7 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
         return;
     }
     NSArray *userConnectionEvents = [events filterWithBlock:^BOOL(ZMUpdateEvent *evt) {
-        return evt.type == ZMUpdateEventUserConnection;
+        return evt.type == ZMUpdateEventTypeUserConnection;
     }];
     
     for(ZMUpdateEvent *event in userConnectionEvents) {

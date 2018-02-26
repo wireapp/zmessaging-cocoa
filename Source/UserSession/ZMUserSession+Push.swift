@@ -154,6 +154,10 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
 
     public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
         
+        if let category = notification.category, category == ZMIncomingCallCategory {
+            self.handleTrackingOnCallNotification(notification)
+        }
+        
         self.pendingLocalNotification = ZMStoredLocalNotification(notification: notification,
                                                                   managedObjectContext: self.managedObjectContext,
                                                                   actionIdentifier: nil,

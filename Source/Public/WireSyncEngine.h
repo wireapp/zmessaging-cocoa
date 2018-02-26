@@ -64,3 +64,4 @@
 #import <WireSyncEngine/ZMSyncStrategy+EventProcessing.h>
 #import <WireSyncEngine/ZMObjectStrategyDirectory.h>
 #import <WireSyncEngine/ZMUpdateEventsBuffer.h>
+#import <WireSyncEngine/ZMConversationTranscoder.h>

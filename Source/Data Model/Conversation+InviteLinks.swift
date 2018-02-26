@@ -20,17 +20,6 @@ import Foundation
 
 private let zmLog = ZMSLog(tag: "ConversationLink")
 
-// TODO: Move to wire-ios-utilities
-enum Result<T> {
-    case success(T)
-    case failure(Error)
-}
-
-enum VoidResult {
-    case success
-    case failure(Error)
-}
-
 fileprivate extension ZMConversation {
     struct TransportKey {
         static let data = "data"
@@ -94,9 +83,6 @@ extension ZMConversation {
         
         userSession.transportSession.enqueueOneTime(request)
     }
-    
-    // TODO: The access level should also be possible to change by setting it on a conversation,
-    // the ZMConversationTranscoder should be adjusted to synchronize it when updating the properties of a conversation.
     
     func setMode(_ mode: ConversationAccessMode, in userSession: ZMUserSession, _ completion: @escaping (VoidResult) -> Void) {
         guard accessMode != mode else { return completion(.success) }

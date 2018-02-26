@@ -66,7 +66,7 @@
     ZMConversation *conversation;
     ZMMessage *message;
     
-    NSString *category = (event.type == ZMUpdateEventUserConnection) ? ZMConnectCategory : ZMConversationCategory;
+    NSString *category = (event.type == ZMUpdateEventTypeUserConnection) ? ZMConnectCategory : ZMConversationCategory;
     NSUUID *senderUUID = [event senderUUID];
     
     NSUUID *conversationID = [event conversationUUID];
