@@ -84,13 +84,14 @@ extension ZMConversation {
         userSession.transportSession.enqueueOneTime(request)
     }
     
-    func setMode(_ mode: ConversationAccessMode, in userSession: ZMUserSession, _ completion: @escaping (VoidResult) -> Void) {
-        guard accessMode != mode else { return completion(.success) }
-        let request = WirelessRequestFactory.setMode(for: self, mode: mode)
+    func setAllowGuests(_ allowGuests: Bool, in userSession: ZMUserSession, _ completion: @escaping (VoidResult) -> Void) {
+        guard self.allowGuests != allowGuests else { return completion(.success) }
+        let request = WirelessRequestFactory.set(allowGuests: allowGuests, for: self)
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
             if let payload = response.payload,
                 let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
                 // Process `conversation.access-update` event
+                self.allowGuests = allowGuests
                 userSession.syncManagedObjectContext.performGroupedBlock {
                     userSession.operationLoop.syncStrategy.processUpdateEvents([event], ignoreBuffer: true)
                 }
@@ -106,7 +107,7 @@ extension ZMConversation {
     }
 }
 
-fileprivate struct WirelessRequestFactory {
+internal struct WirelessRequestFactory {
     static func fetchLinkRequest(for conversation: ZMConversation) -> ZMTransportRequest {
         guard let identifier = conversation.remoteIdentifier?.transportString() else {
             fatal("conversation is not yet inserted on the backend")
@@ -121,11 +122,16 @@ fileprivate struct WirelessRequestFactory {
         return .init(path: "/conversations/\(identifier)/code", method: .methodPOST, payload: nil)
     }
     
-    static func setMode(for conversation: ZMConversation, mode: ConversationAccessMode) -> ZMTransportRequest {
+    static func set(allowGuests: Bool, for conversation: ZMConversation) -> ZMTransportRequest {
+        guard conversation.conversationType == .group,
+            let _ = conversation.teamRemoteIdentifier else {
+            fatal("conversation cannot be set to allow guests")
+        }
         guard let identifier = conversation.remoteIdentifier?.transportString() else {
             fatal("conversation is not yet inserted on the backend")
         }
-        let payload = [ "access": mode.stringValue ]
+        let payload = [ "access": ConversationAccessMode.value(forAllowGuests: allowGuests).stringValue as Any,
+                        "access_role": ConversationAccessRole.value(forAllowGuests: allowGuests).rawValue]
         return .init(path: "/conversations/\(identifier)/access", method: .methodPUT, payload: payload as ZMTransportData)
     }
 }
