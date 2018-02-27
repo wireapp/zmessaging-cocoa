@@ -43,6 +43,48 @@ public enum WirelessLinkError: Error {
 }
 
 extension ZMConversation {
+    func fetchWirelessLink(in userSession: ZMUserSession, _ completion: @escaping (Result<String>) -> Void) {
+        let request = WirelessRequestFactory.fetchLinkRequest(for: self)
+        request.add(ZMCompletionHandler(on: managedObjectContext!) { [weak self] response in
+            if response.httpStatus == 200, let uri = response.payload?.asDictionary()?[ZMConversation.TransportKey.uri] as? String {
+                //                self?.conversationLink = uri
+                zmLog.error("Did fetch existing wireless link: \(uri)")
+                completion(.success(uri))
+            } else {
+                let error = WirelessLinkError(response: response) ?? .unknown
+                zmLog.error("Error fetching wireless link: \(error)")
+                completion(.failure(error))
+            }
+        })
+        
+        userSession.transportSession.enqueueOneTime(request)
+    }
+    
+    func createWirelessLink(in userSession: ZMUserSession, _ completion: @escaping (Result<String>) -> Void) {
+        let request = WirelessRequestFactory.createLinkRequest(for: self)
+        request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
+            if response.httpStatus == 200, let payload = response.payload,
+                let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil),
+                let data = payload.asDictionary()?[ZMConversation.TransportKey.data] as? [String: Any],
+                let uri = data[ZMConversation.TransportKey.uri] as? String {
+                zmLog.error("Did create wireless link: \(uri)")
+                completion(.success(uri))
+                
+                // Process `conversation.code-update` event
+                userSession.syncManagedObjectContext.performGroupedBlock {
+                    userSession.operationLoop.syncStrategy.processUpdateEvents([event], ignoreBuffer: true)
+                }
+            } else {
+                let error = WirelessLinkError(response: response) ?? .unknown
+                zmLog.error("Error creating wireless link: \(error)")
+                completion(.failure(error))
+            }
+        })
+        
+        userSession.transportSession.enqueueOneTime(request)
+    }
+    
+    
     public func setAllowGuests(_ allowGuests: Bool, in userSession: ZMUserSession, _ completion: @escaping (VoidResult) -> Void) {
         let request = WirelessRequestFactory.set(allowGuests: allowGuests, for: self)
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
