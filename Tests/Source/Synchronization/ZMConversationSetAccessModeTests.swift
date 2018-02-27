@@ -38,7 +38,7 @@ public class ZMConversationSetAccessModeTests : MessagingTest {
         XCTAssertNotNil(payload["access"])
         XCTAssertEqual(Set(payload["access"] as! [String]), Set(["invite", "code"]))
         XCTAssertNotNil(payload["access_role"])
-        XCTAssertEqual(payload["access_role"], "non_verified")
+        XCTAssertEqual(payload["access_role"], "non_activated")
     }
 }
 
