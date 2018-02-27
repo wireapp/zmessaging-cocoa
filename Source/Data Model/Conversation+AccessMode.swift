@@ -20,6 +20,28 @@ import Foundation
 
 private let zmLog = ZMSLog(tag: "ConversationLink")
 
+fileprivate extension ZMConversation {
+    struct TransportKey {
+        static let data = "data"
+        static let uri = "uri"
+    }
+}
+
+public enum WirelessLinkError: Error {
+    case noCode
+    case invalidOperation
+    case unknown
+
+    init?(response: ZMTransportResponse) {
+        switch (response.httpStatus, response.payloadLabel()) {
+        case (403, "invalid-op"?): self = .invalidOperation
+        case (404, "no-conversation-code"?): self = .noCode
+        case (400..<499, _): self = .unknown
+        default: return nil
+        }
+    }
+}
+
 public enum SetAllowGuestsError: Error {
     case unknown
 }
