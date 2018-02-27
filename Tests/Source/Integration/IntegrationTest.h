@@ -29,6 +29,7 @@
 @class ZMAPNSEnvironment;
 @class UnauthenticatedSession;
 @class MockUser;
+@class MockTeam;
 @class MockConversation;
 @class MockConnection;
 @class SearchDirectory;
@@ -55,8 +56,14 @@
 @property (nonatomic, null_unspecified) MockUser *user3; // not connected, with profile picture, in a common group conversation
 @property (nonatomic, null_unspecified) MockUser *user4; // not connected, with profile picture, no shared conversations
 @property (nonatomic, null_unspecified) MockUser *user5; // not connected, no shared conversation
-@property (nonatomic, null_unspecified) MockUser *serviceUser; // service user
+
+@property (nonatomic, null_unspecified) MockTeam *team;
+@property (nonatomic, null_unspecified) MockUser *serviceUser;
+@property (nonatomic, null_unspecified) MockUser *teamUser1;
+@property (nonatomic, null_unspecified) MockUser *teamUser2;
 @property (nonatomic, null_unspecified) MockConversation *groupConversationWithServiceUser;
+@property (nonatomic, null_unspecified) MockConversation *groupConversationWithWholeTeam;
+
 @property (nonatomic, null_unspecified) MockConversation *selfToUser1Conversation;
 @property (nonatomic, null_unspecified) MockConversation *selfToUser2Conversation;
 @property (nonatomic, null_unspecified) MockConversation *groupConversation;

@@ -20,28 +20,15 @@ import Foundation
 @testable import WireSyncEngine
 
 class TeamInviteTests: IntegrationTest {
-    
-    var team: MockTeam?
-    
+
     override func setUp() {
         super.setUp()
         createSelfUserAndConversation()
         createExtraUsersAndConversations()
-        team = remotelyInsertTeam(members: [selfUser])
     }
     
     override func tearDown() {
-        team = nil
         super.tearDown()
-    }
-    
-    @discardableResult func remotelyInsertTeam(members: Set<MockUser>, isBound: Bool = true) -> MockTeam? {
-        var mockTeam: MockTeam?
-        mockTransportSession.performRemoteChanges { session in
-            mockTeam = session.insertTeam(withName: "Team", isBound: true, users: members)
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        return mockTeam
     }
 
     func testThatItSendsATeamMemberInvitation_Successful() {
