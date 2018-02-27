@@ -362,6 +362,7 @@
 		F11E35D62040172200D4D5DB /* ZMHotFixTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11E35D52040172200D4D5DB /* ZMHotFixTests.swift */; };
 		F132C105203F02C700C58933 /* ZMConversationTranscoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 54294A1F19472D4E007BE3CE /* ZMConversationTranscoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F132C114203F20AB00C58933 /* ZMHotFixDirectoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F132C113203F20AB00C58933 /* ZMHotFixDirectoryTests.swift */; };
+		F13A26E120456002004F8E47 /* ConversationTests+Guests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13A26E020456002004F8E47 /* ConversationTests+Guests.swift */; };
 		F148F6671FB9AA7600BD6909 /* TeamToRegister.swift in Sources */ = {isa = PBXBuildFile; fileRef = F148F6661FB9AA7600BD6909 /* TeamToRegister.swift */; };
 		F148F6691FBAF55800BD6909 /* TeamRegistrationStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F148F6681FBAF55800BD6909 /* TeamRegistrationStrategyTests.swift */; };
 		F148F66B1FBAFAF600BD6909 /* RegistrationStatusTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F148F66A1FBAFAF600BD6909 /* RegistrationStatusTestHelper.swift */; };
@@ -961,6 +962,7 @@
 		EFC828211FB356CE00E27E21 /* RegistrationStatusTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegistrationStatusTests.swift; sourceTree = "<group>"; };
 		F11E35D52040172200D4D5DB /* ZMHotFixTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMHotFixTests.swift; sourceTree = "<group>"; };
 		F132C113203F20AB00C58933 /* ZMHotFixDirectoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMHotFixDirectoryTests.swift; sourceTree = "<group>"; };
+		F13A26E020456002004F8E47 /* ConversationTests+Guests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+Guests.swift"; sourceTree = "<group>"; };
 		F14417221FD946F100CB2850 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Push.strings"; sourceTree = "<group>"; };
 		F14417231FD946F200CB2850 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "zh-Hant"; path = "zh-Hant.lproj/Push.stringsdict"; sourceTree = "<group>"; };
 		F14417241FD946F200CB2850 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/ZMLocalizable.strings"; sourceTree = "<group>"; };
@@ -1807,6 +1809,7 @@
 				F964700B1D5C720D00A81A92 /* ConversationTests+MessageEditing.m */,
 				F9E462D91D7043C60036CFA7 /* ConversationTests+Confirmation.swift */,
 				F920F4D51DA3DCF8002B860B /* ConversationTests+Ephemeral.swift */,
+				F13A26E020456002004F8E47 /* ConversationTests+Guests.swift */,
 				09914E501BD6613600C10BF8 /* ConversationTests+OTR.m */,
 				5430FF141CE4A359004ECFFE /* FileTransferTests.m */,
 				541918EB195AD9D100A5023D /* SendAndReceiveMessagesTests.m */,
@@ -2553,6 +2556,7 @@
 				3EA1EC6D19BDE4C800AA1384 /* ZMPushTokenTests.m in Sources */,
 				F9F846351ED307F70087C1A4 /* VoiceChannelParticipantV3SnapshotTests.swift in Sources */,
 				54773ABD1DF093AC00B484AF /* SearchDirectoryAddressBookTests.swift in Sources */,
+				F13A26E120456002004F8E47 /* ConversationTests+Guests.swift in Sources */,
 				54DE9BEF1DE760A900EFFB9C /* RandomHandleGeneratorTests.swift in Sources */,
 				F1ACD2C9201F6D760089BEF6 /* ZMPushRegistrantTests.m in Sources */,
 				F9C598AD1A0947B300B1F760 /* ZMBlacklistDownloaderTest.m in Sources */,
