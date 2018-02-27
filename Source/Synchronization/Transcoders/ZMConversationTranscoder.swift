@@ -30,4 +30,15 @@ extension ZMConversationTranscoder {
         conversation.accessRole = ConversationAccessRole(rawValue: accessRole)
 
     }
+
+}
+
+extension ZMConversation {
+    @objc public var accessPayload: [String]? {
+        return accessMode?.stringValue
+    }
+    
+    @objc public var accessRolePayload: String? {
+        return accessRole?.rawValue
+    }
 }

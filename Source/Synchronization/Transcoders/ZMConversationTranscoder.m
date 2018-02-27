@@ -42,6 +42,8 @@ static NSString *const UserInfoAddedValueKey = @"added";
 static NSString *const UserInfoRemovedValueKey = @"removed";
 
 static NSString *const ConversationTeamKey = @"team";
+static NSString *const ConversationAccessKey = @"access";
+static NSString *const ConversationAccessRoleKey = @"access_role";
 static NSString *const ConversationTeamIdKey = @"teamid";
 static NSString *const ConversationTeamManagedKey = @"managed";
 
@@ -751,6 +753,16 @@ static NSString *const ConversationTeamManagedKey = @"managed";
                              ConversationTeamIdKey: insertedConversation.team.remoteIdentifier.transportString,
                              ConversationTeamManagedKey: @NO // FIXME:
                              };
+    }
+
+    NSArray <NSString *> *accessPayload = insertedConversation.accessPayload;
+    if (nil != accessPayload) {
+        payload[ConversationAccessKey] = accessPayload;
+    }
+
+    NSString *accessRolePayload = insertedConversation.accessRolePayload;
+    if (nil != accessRolePayload) {
+        payload[ConversationAccessRoleKey] = accessRolePayload;
     }
     
     request = [ZMTransportRequest requestWithPath:ConversationsPath method:ZMMethodPOST payload:payload];
