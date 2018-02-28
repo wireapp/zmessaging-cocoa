@@ -120,7 +120,7 @@ extension IntegrationTest {
         application = ApplicationMock()
         mockTransportSession = MockTransportSession(dispatchGroup: self.dispatchGroup)
         mockTransportSession.cookieStorage = ZMPersistentCookieStorage(forServerName: "ztest.example.com", userIdentifier: currentUserIdentifier)
-        WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self;
+        WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self
         mockTransportSession.cookieStorage.deleteKeychainItems()
                 
         createSessionManager()
@@ -332,7 +332,7 @@ extension IntegrationTest {
             self.selfToUser2Conversation = selfToUser2Conversation
             
             let groupConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [user1, user2, user3])
-            groupConversation.creator = user3;
+            groupConversation.creator = user3
             groupConversation.changeName(by:self.selfUser, name:"Group conversation")
             self.groupConversation = groupConversation
             
@@ -372,13 +372,13 @@ extension IntegrationTest {
 
             let groupConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [user1, user2, bot])
             groupConversation.team = team
-            groupConversation.creator = user2;
+            groupConversation.creator = user2
             groupConversation.changeName(by:self.selfUser, name:"Group conversation with bot")
             self.groupConversationWithServiceUser = groupConversation
 
             let teamConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [self.teamUser1, self.teamUser2])
             teamConversation.team = team
-            teamConversation.creator = user2;
+            teamConversation.creator = user2
             teamConversation.changeName(by:self.selfUser, name:"Team Group conversation")
             self.groupConversationWithWholeTeam = groupConversation
         })
