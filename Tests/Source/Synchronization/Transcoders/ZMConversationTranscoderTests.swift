@@ -362,27 +362,18 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
     }
     
     func testThatItIncludesTheAccessModeAndRoleInTheCreationPayload_NoTeam_AllowGuests() {
-        assertAccessRoleAndModeWhenInserting(team: false, allowGuests: true, expectedModes: ["invite", "code"], expectedRole: "non_activated")
+        assertAccessRoleAndModeWhenInserting(team: false, allowGuests: true, expectedModes: nil, expectedRole: nil)
     }
     
     func testThatItIncludesTheAccessModeAndRoleInTheCreationPayload_NoTeam_NoGuests() {
-        assertAccessRoleAndModeWhenInserting(team: false, allowGuests: false, expectedModes: [], expectedRole: "team")
-    }
-    
-    func testThatItIncludesTheAccessModeAndRoleInTheCreationPayload_OneOnOne_AllowGuests() {
-        assertAccessRoleAndModeWhenInserting(team: false, allowGuests: true, expectedModes: ["invite", "code"], expectedRole: "non_activated")
-    }
-    
-    func testThatItIncludesTheAccessModeAndRoleInTheCreationPayload_OneOnOne_NoGuests() {
-        assertAccessRoleAndModeWhenInserting(team: false, allowGuests: false, expectedModes: [], expectedRole: "team")
+        assertAccessRoleAndModeWhenInserting(team: false, allowGuests: false, expectedModes: nil, expectedRole: nil)
     }
     
     private func assertAccessRoleAndModeWhenInserting(
         team: Bool = true,
-        group: Bool = true,
         allowGuests: Bool,
-        expectedModes: [String],
-        expectedRole: String,
+        expectedModes: [String]?,
+        expectedRole: String?,
         file: StaticString = #file,
         line: UInt = #line
         ) {
@@ -400,19 +391,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
                 return team
             }()
             
-            let conversation: ZMConversation? = {
-                if group {
-                    return .insertGroupConversation(into: moc, withParticipants: [], name: self.name!, in: team, allowGuests: allowGuests)
-                } else {
-                    let conversation = ZMConversation.insertNewObject(in: moc)
-                    conversation.conversationType = .oneOnOne
-                    let user = ZMUser.insertNewObject(in: moc)
-                    user.remoteIdentifier = .create()
-                    conversation.connection = ZMConnection.insertNewSentConnection(to: user)
-                    conversation.connection?.status = .accepted
-                    return conversation
-                }
-            }()
+            let conversation = ZMConversation.insertGroupConversation(into: moc, withParticipants: [], name: self.name!, in: team, allowGuests: allowGuests)
             guard let inserted = conversation else { return XCTFail("no conversation", file: file, line: line) }
             XCTAssert(moc.saveOrRollback())
             
@@ -426,19 +405,17 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
         // Then
         guard let payload = request?.payload as? [String: Any] else { return XCTFail("no payload", file: file, line: line) }
         
-        if !team || !group {
-            XCTAssertNil(payload["access_role"])
-            XCTAssertNil(payload["acces"])
-            return
-        }
-        
-        guard let accessModes = payload["access"] as? [String] else { return XCTFail("no access modes", file: file, line: line) }
-        guard let accessRole = payload["access_role"] as? String else { return XCTFail("no access role", file: file, line: line) }
-        
-        XCTAssertEqual(accessRole, expectedRole, "unexpected access role", file: file, line: line)
-        XCTAssertEqual(accessModes.count, expectedModes.count, "number of modes not matching", file: file, line: line)
-        expectedModes.forEach {
-            XCTAssert(accessModes.contains($0), "access mode missing: \($0)", file: file, line: line)
+        if let expectedModes = expectedModes, let expectedRole = expectedRole {
+            guard let accessModes = payload["access"] as? [String] else { return XCTFail("no access modes", file: file, line: line) }
+            guard let accessRole = payload["access_role"] as? String else { return XCTFail("no access role", file: file, line: line) }
+            XCTAssertEqual(accessRole, expectedRole, "unexpected access role", file: file, line: line)
+            XCTAssertEqual(accessModes.count, expectedModes.count, "number of modes not matching", file: file, line: line)
+            expectedModes.forEach {
+                XCTAssert(accessModes.contains($0), "access mode missing: \($0)", file: file, line: line)
+            }
+        } else {
+            XCTAssertNil(payload["access_role"], file: file, line: line)
+            XCTAssertNil(payload["acces"], file: file, line: line)
         }
     }
     
