@@ -389,6 +389,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         case ZMUpdateEventTypeConversationMemberUpdate:
         case ZMUpdateEventTypeConversationMemberLeave:
         case ZMUpdateEventTypeConversationRename:
+        case ZMUpdateEventTypeConversationAccessModeUpdate:
             return NO;
 
         default:
