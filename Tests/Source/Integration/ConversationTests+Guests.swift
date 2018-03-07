@@ -18,18 +18,35 @@
 
 import Foundation
 
-class ConversationTests_Guests : ConversationTestsBase {
+class ConversationTests_Guests : TeamTests {
 
     override func setUp() {
         super.setUp()
         createTeamAndConversations()
     }
 
+    func createConversation(in team: MockTeam) -> MockConversation {
+        var result: MockConversation!
+        mockTransportSession.performRemoteChanges({ session in
+
+            let teamConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [self.user1])
+            teamConversation.team = team
+            teamConversation.creator = self.selfUser
+            teamConversation.changeName(by:self.selfUser, name:"Team Group conversation")
+            result = teamConversation
+        })
+        
+        return result
+    }
+    
     func testThatItSendsRequestToChangeAccessMode() {
         // given
+        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
+        let mockConversation = self.createConversation(in: mockTeam)
         XCTAssert(login())
-
-        let conversation = self.conversation(for: self.groupConversationWithWholeTeam!)!
+        
+        let conversation = self.conversation(for: mockConversation)!
+        
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         XCTAssertFalse(conversation.allowGuests)
         mockTransportSession?.resetReceivedRequests()
