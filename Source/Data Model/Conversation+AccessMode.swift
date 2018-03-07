@@ -44,6 +44,26 @@ extension ZMConversation {
         
         userSession.transportSession.enqueueOneTime(request)
     }
+    
+    public var canManageAccess: Bool {
+        // Check conversation
+        guard self.conversationType == .group,
+            let moc = self.managedObjectContext,
+            let _ = self.teamRemoteIdentifier,
+            let _ = self.remoteIdentifier?.transportString() else {
+                return false
+        }
+        
+        // Check user
+        let selfUser = ZMUser.selfUser(in: moc)
+        guard selfUser.isTeamMember,
+             !selfUser.isGuest(in: self),
+             selfUser.team == self.team else {
+            return false
+        }
+        
+        return true
+    }
 }
 
 internal struct WirelessRequestFactory {
@@ -62,9 +82,8 @@ internal struct WirelessRequestFactory {
     }
     
     static func set(allowGuests: Bool, for conversation: ZMConversation) -> ZMTransportRequest {
-        guard conversation.conversationType == .group,
-            let _ = conversation.teamRemoteIdentifier else {
-            fatal("conversation cannot be set to allow guests")
+        guard conversation.canManageAccess else {
+            fatal("conversation cannot be managed")
         }
         guard let identifier = conversation.remoteIdentifier?.transportString() else {
             fatal("conversation is not yet inserted on the backend")

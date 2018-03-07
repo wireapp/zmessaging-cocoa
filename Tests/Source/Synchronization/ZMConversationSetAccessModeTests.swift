@@ -22,10 +22,34 @@ import WireTesting
 @testable import WireSyncEngine
 
 public class ZMConversationSetAccessModeTests : MessagingTest {
+    override public func setUp() {
+        super.setUp()
+        
+        teamA = {
+                let team = Team.insertNewObject(in: self.uiMOC)
+                team.name = "Team A"
+                team.remoteIdentifier = UUID()
+                return team
+        }()
+        
+        teamB = {
+            let team = Team.insertNewObject(in: self.uiMOC)
+            team.name = "Team B"
+            team.remoteIdentifier = UUID()
+            return team
+        }()
+    }
+    
+    override public func tearDown() {
+        teamA = nil
+        teamB = nil
+        super.tearDown()
+    }
+    
     func testThatItGeneratesCorrectSetAccessModeRequest() {
         // given
-        let team = Team.insertNewObject(in: self.uiMOC)
-        let conversation = ZMConversation.insertGroupConversation(into: self.uiMOC, withParticipants: [], name: "Test Conversation", in: team)!
+        selfUser(options: SelfUserOptions(team: .teamA))
+        let conversation = self.conversation(options: ConversationOptions(hasRemoteId: true, team: .teamA, isGroup: true))
         conversation.remoteIdentifier = UUID()
         conversation.teamRemoteIdentifier = UUID()
         // when
@@ -39,6 +63,135 @@ public class ZMConversationSetAccessModeTests : MessagingTest {
         XCTAssertEqual(Set(payload["access"] as! [String]), Set(["invite", "code"]))
         XCTAssertNotNil(payload["access_role"])
         XCTAssertEqual(payload["access_role"], "non_activated")
+    }
+    
+    enum ConversationOptionsTeam {
+        case none
+        case teamA
+        case teamB
+    }
+    
+    struct ConversationOptions {
+        let hasRemoteId: Bool
+        let team: ConversationOptionsTeam
+        let isGroup: Bool
+    }
+    
+    var teamA: Team!
+    var teamB: Team!
+    
+    @discardableResult func createMembership(user: ZMUser, team: Team) -> Member {
+        let member = Member.insertNewObject(in: self.uiMOC)
+        member.user = user
+        member.team = team
+        return member
+    }
+    
+    func conversation(options: ConversationOptions) -> ZMConversation {
+        let conversation = ZMConversation.insertGroupConversation(into: self.uiMOC, withParticipants: [], name: "Test Conversation", in: nil)!
+        if options.hasRemoteId {
+            conversation.remoteIdentifier = UUID()
+        }
+        else {
+            conversation.remoteIdentifier = nil
+        }
+        if options.isGroup {
+            conversation.conversationType = .group
+        }
+        else {
+            conversation.conversationType = .invalid
+        }
+        
+        switch options.team {
+        case .none: conversation.team = nil
+        case .teamA:
+            conversation.team = teamA
+            conversation.teamRemoteIdentifier = teamA.remoteIdentifier
+        case .teamB:
+            conversation.team = teamB
+            conversation.teamRemoteIdentifier = teamB.remoteIdentifier
+        }
+        
+        return conversation
+    }
+    
+    struct SelfUserOptions {
+        let team: ConversationOptionsTeam
+    }
+    
+    @discardableResult func selfUser(options: SelfUserOptions) -> ZMUser {
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        switch options.team {
+        case .none:
+            selfUser.membership?.team = nil
+            selfUser.membership?.user = nil
+            
+        case .teamA: createMembership(user: selfUser, team: teamA)
+        case .teamB: createMembership(user: selfUser, team: teamB)
+        }
+        
+        return selfUser
+    }
+    
+    struct TestCase {
+        let conversationOptions: ConversationOptions
+        let userOptions: SelfUserOptions
+        let expectedResult: Bool
+    }
+    
+    let cases: [TestCase] = [TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
+                                                                               team: .teamA,
+                                                                               isGroup: true),
+                                      userOptions: SelfUserOptions(team: .teamA),
+                                      expectedResult: true),
+                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: false,
+                                                                               team: .teamA,
+                                                                               isGroup: true),
+                                      userOptions: SelfUserOptions(team: .teamA),
+                                      expectedResult: false),
+                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
+                                                                               team: .teamB,
+                                                                               isGroup: true),
+                                      userOptions: SelfUserOptions(team: .teamA),
+                                      expectedResult: false),
+                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
+                                                                               team: .teamA,
+                                                                               isGroup: true),
+                                      userOptions: SelfUserOptions(team: .teamB),
+                                      expectedResult: false),
+                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
+                                                                               team: .none,
+                                                                               isGroup: true),
+                                      userOptions: SelfUserOptions(team: .teamA),
+                                      expectedResult: false),
+                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
+                                                                               team: .teamA,
+                                                                               isGroup: true),
+                                      userOptions: SelfUserOptions(team: .none),
+                                      expectedResult: false),
+                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
+                                                                               team: .teamA,
+                                                                               isGroup: false),
+                                      userOptions: SelfUserOptions(team: .teamA),
+                                      expectedResult: false),
+                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
+                                                                               team: .teamA,
+                                                                               isGroup: true),
+                                      userOptions: SelfUserOptions(team: .none),
+                                      expectedResult: false),
+                             ]
+    
+    func testCanManageAccess() {
+        cases.forEach { testCase in
+            // given
+            let _ = self.selfUser(options: testCase.userOptions)
+            let conversation = self.conversation(options: testCase.conversationOptions)
+            // when
+            let result = conversation.canManageAccess
+            // then
+            XCTAssertEqual(result, testCase.expectedResult)
+        }
+        
     }
 }
 
