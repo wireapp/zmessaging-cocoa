@@ -251,7 +251,6 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
         self.loginPhoneNumberThatNeedsAValidationCode = self.registrationPhoneNumberThatNeedsAValidationCode;
         self.registrationPhoneNumberThatNeedsAValidationCode = nil;
         ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
-        return;
     }
     
     [self resetLoginAndRegistrationStatus];
