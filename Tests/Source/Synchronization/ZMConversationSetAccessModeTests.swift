@@ -50,8 +50,6 @@ public class ZMConversationSetAccessModeTests : MessagingTest {
         // given
         selfUser(options: SelfUserOptions(team: .teamA))
         let conversation = self.conversation(options: ConversationOptions(hasRemoteId: true, team: .teamA, isGroup: true))
-        conversation.remoteIdentifier = UUID()
-        conversation.teamRemoteIdentifier = UUID()
         // when
         let request = WireSyncEngine.WirelessRequestFactory.set(allowGuests: true, for: conversation)
         // then
@@ -63,6 +61,42 @@ public class ZMConversationSetAccessModeTests : MessagingTest {
         XCTAssertEqual(Set(payload["access"] as! [String]), Set(["invite", "code"]))
         XCTAssertNotNil(payload["access_role"])
         XCTAssertEqual(payload["access_role"], "non_activated")
+    }
+    
+    func testThatItGeneratesCorrectFetchLinkRequest() {
+        // given
+        selfUser(options: SelfUserOptions(team: .teamA))
+        let conversation = self.conversation(options: ConversationOptions(hasRemoteId: true, team: .teamA, isGroup: true))
+        // when
+        let request = WireSyncEngine.WirelessRequestFactory.fetchLinkRequest(for: conversation)
+        // then
+        XCTAssertEqual(request.method, .methodGET)
+        XCTAssertEqual(request.path, "/conversations/\(conversation.remoteIdentifier!.transportString())/code")
+        XCTAssertNil(request.payload)
+    }
+    
+    func testThatItGeneratesCorrectCreateLinkRequest() {
+        // given
+        selfUser(options: SelfUserOptions(team: .teamA))
+        let conversation = self.conversation(options: ConversationOptions(hasRemoteId: true, team: .teamA, isGroup: true))
+        // when
+        let request = WireSyncEngine.WirelessRequestFactory.createLinkRequest(for: conversation)
+        // then
+        XCTAssertEqual(request.method, .methodPOST)
+        XCTAssertEqual(request.path, "/conversations/\(conversation.remoteIdentifier!.transportString())/code")
+        XCTAssertNil(request.payload)
+    }
+    
+    func testThatItGeneratesCorrectDeleteLinkRequest() {
+        // given
+        selfUser(options: SelfUserOptions(team: .teamA))
+        let conversation = self.conversation(options: ConversationOptions(hasRemoteId: true, team: .teamA, isGroup: true))
+        // when
+        let request = WireSyncEngine.WirelessRequestFactory.deleteLinkRequest(for: conversation)
+        // then
+        XCTAssertEqual(request.method, .methodDELETE)
+        XCTAssertEqual(request.path, "/conversations/\(conversation.remoteIdentifier!.transportString())/code")
+        XCTAssertNil(request.payload)
     }
     
     enum ConversationOptionsTeam {
