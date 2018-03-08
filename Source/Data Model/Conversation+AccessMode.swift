@@ -63,7 +63,7 @@ extension ZMConversation {
             }
             else {
                 let error = WirelessLinkError(response: response) ?? .unknown
-                zmLog.error("Error fetching wireless link: \(error)")
+                zmLog.debug("Error fetching wireless link: \(error)")
                 completion(.failure(error))
             }
         })
@@ -97,10 +97,18 @@ extension ZMConversation {
         let request = WirelessRequestFactory.createLinkRequest(for: self)
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
             if response.httpStatus == 200,
-                let payload = response.payload?.asDictionary(),
-                let data = payload[ZMConversation.TransportKey.data] as? [String: Any],
+                let payload = response.payload,
+                let data = payload.asDictionary()?[ZMConversation.TransportKey.data] as? [String: Any],
                 let uri = data[ZMConversation.TransportKey.uri] as? String {
+                
                 completion(.success(uri))
+                
+                if let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
+                    // Process `conversation.code-update` event
+                    userSession.syncManagedObjectContext.performGroupedBlock {
+                        userSession.operationLoop.syncStrategy.processUpdateEvents([event], ignoreBuffer: true)
+                    }
+                }
             }
             else if response.httpStatus == 204,
                 let payload = response.payload?.asDictionary(),
@@ -126,7 +134,7 @@ extension ZMConversation {
                 completion(.success)
             } else {
                 let error = WirelessLinkError(response: response) ?? .unknown
-                zmLog.error("Error creating wireless link: \(error)")
+                zmLog.debug("Error creating wireless link: \(error)")
                 completion(.failure(error))
             }
         })
@@ -147,7 +155,7 @@ extension ZMConversation {
                 }
                 completion(.success)
             } else {
-                zmLog.error("Error creating wireless link: \(response)")
+                zmLog.debug("Error creating wireless link: \(response)")
                 completion(.failure(SetAllowGuestsError.unknown))
             }
         })

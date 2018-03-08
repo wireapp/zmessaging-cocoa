@@ -21,7 +21,7 @@ import XCTest
 import WireTesting
 @testable import WireSyncEngine
 
-public class ZMConversationSetAccessModeTests : MessagingTest {
+public class ZMConversationAccessModeTests : MessagingTest {
     override public func setUp() {
         super.setUp()
         
