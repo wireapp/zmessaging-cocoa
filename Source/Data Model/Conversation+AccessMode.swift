@@ -47,7 +47,7 @@ public enum WirelessLinkError: Error {
 }
 
 extension ZMConversation {
-    func fetchWirelessLink(in userSession: ZMUserSession, _ completion: @escaping (Result<String>) -> Void) {
+    public func fetchWirelessLink(in userSession: ZMUserSession, _ completion: @escaping (Result<String>) -> Void) {
         let request = WirelessRequestFactory.fetchLinkRequest(for: self)
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
             if response.httpStatus == 200, let uri = response.payload?.asDictionary()?[ZMConversation.TransportKey.uri] as? String {
@@ -63,7 +63,7 @@ extension ZMConversation {
         userSession.transportSession.enqueueOneTime(request)
     }
     
-    func createWirelessLink(in userSession: ZMUserSession, _ completion: @escaping (Result<String>) -> Void) {
+    public func createWirelessLink(in userSession: ZMUserSession, _ completion: @escaping (Result<String>) -> Void) {
         let request = WirelessRequestFactory.createLinkRequest(for: self)
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
             if response.httpStatus == 200, let payload = response.payload,
@@ -77,6 +77,22 @@ extension ZMConversation {
                 userSession.syncManagedObjectContext.performGroupedBlock {
                     userSession.operationLoop.syncStrategy.processUpdateEvents([event], ignoreBuffer: true)
                 }
+            } else {
+                let error = WirelessLinkError(response: response) ?? .unknown
+                zmLog.error("Error creating wireless link: \(error)")
+                completion(.failure(error))
+            }
+        })
+        
+        userSession.transportSession.enqueueOneTime(request)
+    }
+    
+    public func deleteWirelessLink(in userSession: ZMUserSession, _ completion: @escaping (VoidResult) -> Void) {
+        let request = WirelessRequestFactory.deleteLinkRequest(for: self)
+        
+        request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
+            if response.httpStatus == 200 {
+                completion(.success)
             } else {
                 let error = WirelessLinkError(response: response) ?? .unknown
                 zmLog.error("Error creating wireless link: \(error)")
@@ -141,6 +157,13 @@ internal struct WirelessRequestFactory {
             fatal("conversation is not yet inserted on the backend")
         }
         return .init(path: "/conversations/\(identifier)/code", method: .methodPOST, payload: nil)
+    }
+    
+    static func deleteLinkRequest(for conversation: ZMConversation) -> ZMTransportRequest {
+        guard let identifier = conversation.remoteIdentifier?.transportString() else {
+            fatal("conversation is not yet inserted on the backend")
+        }
+        return .init(path: "/conversations/\(identifier)/code", method: .methodDELETE, payload: nil)
     }
     
     static func set(allowGuests: Bool, for conversation: ZMConversation) -> ZMTransportRequest {
