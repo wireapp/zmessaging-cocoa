@@ -344,7 +344,6 @@
 		CE99C4A01D378C5D0001D297 /* MockLinkPreviewDetector.m in Sources */ = {isa = PBXBuildFile; fileRef = CE99C49F1D378C5D0001D297 /* MockLinkPreviewDetector.m */; };
 		CEE02E461DDA0F4D00BA2BE2 /* avs.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE5DC1A01DDA09F000D24DBA /* avs.framework */; };
 		CEF2DE7F1DB778F300451642 /* RequestLoopAnalyticsTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF2DE7E1DB778F300451642 /* RequestLoopAnalyticsTracker.swift */; };
-		D5168F39200CEE1500F8222A /* TeamInviteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5168F37200CEDCC00F8222A /* TeamInviteTests.swift */; };
 		D5D10DA4203AE43200145497 /* Conversation+AccessMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D10DA3203AE43200145497 /* Conversation+AccessMode.swift */; };
 		EE01E0371F90DD67001AA33C /* audio.m4a in Resources */ = {isa = PBXBuildFile; fileRef = EE01E0361F90DABC001AA33C /* audio.m4a */; };
 		EE01E0391F90FEC1001AA33C /* ZMLocalNotificationTests_ExpiredMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01E0381F90FEC1001AA33C /* ZMLocalNotificationTests_ExpiredMessage.swift */; };
@@ -944,7 +943,6 @@
 		CE99C49F1D378C5D0001D297 /* MockLinkPreviewDetector.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MockLinkPreviewDetector.m; sourceTree = "<group>"; };
 		CE99C4A11D37ACC60001D297 /* Ono.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Ono.framework; path = Carthage/Build/iOS/Ono.framework; sourceTree = "<group>"; };
 		CEF2DE7E1DB778F300451642 /* RequestLoopAnalyticsTracker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestLoopAnalyticsTracker.swift; sourceTree = "<group>"; };
-		D5168F37200CEDCC00F8222A /* TeamInviteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamInviteTests.swift; sourceTree = "<group>"; };
 		D5D10DA3203AE43200145497 /* Conversation+AccessMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Conversation+AccessMode.swift"; sourceTree = "<group>"; };
 		EE01E0361F90DABC001AA33C /* audio.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = audio.m4a; sourceTree = "<group>"; };
 		EE01E0381F90FEC1001AA33C /* ZMLocalNotificationTests_ExpiredMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMLocalNotificationTests_ExpiredMessage.swift; sourceTree = "<group>"; };
