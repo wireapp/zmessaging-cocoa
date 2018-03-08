@@ -20,6 +20,10 @@ import Foundation
 
 private let zmLog = ZMSLog(tag: "ConversationLink")
 
+public enum SetAllowGuestsError: Error {
+    case unknown
+}
+
 fileprivate extension ZMConversation {
     struct TransportKey {
         static let data = "data"
@@ -42,16 +46,11 @@ public enum WirelessLinkError: Error {
     }
 }
 
-public enum SetAllowGuestsError: Error {
-    case unknown
-}
-
 extension ZMConversation {
     func fetchWirelessLink(in userSession: ZMUserSession, _ completion: @escaping (Result<String>) -> Void) {
         let request = WirelessRequestFactory.fetchLinkRequest(for: self)
-        request.add(ZMCompletionHandler(on: managedObjectContext!) { [weak self] response in
+        request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
             if response.httpStatus == 200, let uri = response.payload?.asDictionary()?[ZMConversation.TransportKey.uri] as? String {
-                //                self?.conversationLink = uri
                 zmLog.error("Did fetch existing wireless link: \(uri)")
                 completion(.success(uri))
             } else {
@@ -88,7 +87,6 @@ extension ZMConversation {
         userSession.transportSession.enqueueOneTime(request)
     }
     
-    
     public func setAllowGuests(_ allowGuests: Bool, in userSession: ZMUserSession, _ completion: @escaping (VoidResult) -> Void) {
         let request = WirelessRequestFactory.set(allowGuests: allowGuests, for: self)
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
@@ -108,6 +106,26 @@ extension ZMConversation {
         
         userSession.transportSession.enqueueOneTime(request)
     }
+    
+    public var canManageAccess: Bool {
+        // Check conversation
+        guard self.conversationType == .group,
+            let moc = self.managedObjectContext,
+            let _ = self.teamRemoteIdentifier,
+            let _ = self.remoteIdentifier?.transportString() else {
+                return false
+        }
+        
+        // Check user
+        let selfUser = ZMUser.selfUser(in: moc)
+        guard selfUser.isTeamMember,
+             !selfUser.isGuest(in: self),
+             selfUser.team == self.team else {
+            return false
+        }
+        
+        return true
+    }
 }
 
 internal struct WirelessRequestFactory {
@@ -126,9 +144,8 @@ internal struct WirelessRequestFactory {
     }
     
     static func set(allowGuests: Bool, for conversation: ZMConversation) -> ZMTransportRequest {
-        guard conversation.conversationType == .group,
-            let _ = conversation.teamRemoteIdentifier else {
-            fatal("conversation cannot be set to allow guests")
+        guard conversation.canManageAccess else {
+            fatal("conversation cannot be managed")
         }
         guard let identifier = conversation.remoteIdentifier?.transportString() else {
             fatal("conversation is not yet inserted on the backend")

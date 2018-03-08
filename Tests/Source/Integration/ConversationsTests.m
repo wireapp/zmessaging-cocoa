@@ -360,7 +360,7 @@
 - (void)testThatServiceUsersAreRemovedFromAConversationWhenTheyAreRemovedRemotely
 {
     // given
-    [self createConversationsWithServiceUser];
+    [self createTeamAndConversations];
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertTrue([self login]);
     

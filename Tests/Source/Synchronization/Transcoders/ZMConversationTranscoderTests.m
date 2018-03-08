@@ -3628,7 +3628,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }];
 }
 
-- (void)testThatItDoesNotSetLastModifiedDateFromPushPayloadIfItIsAMemberUpdate
+- (void)testThatItDoesNotSetLastModifiedDateFromPushPayloadIfForIgnoredEvents
 {
     // given
     __block ZMConversation *conversation;
@@ -3640,19 +3640,24 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.remoteIdentifier = conversationID;
         conversation.lastModifiedDate = lastModifiedDate;
+    
+        NSArray<NSNumber *> *ignoredEventTypes = @[@(ZMUpdateEventTypeConversationAccessModeUpdate), @(ZMUpdateEventTypeTeamMemberUpdate), @(ZMUpdateEventTypeTeamMemberLeave), @(ZMUpdateEventTypeConversationRename)];
+        NSMutableArray<ZMUpdateEvent *> *events = @[].mutableCopy;
         
-        NSDictionary *payload = @{@"conversation": conversation.remoteIdentifier.transportString,
-                                  @"data": @{
-                                          },
-                                  @"from": @"6185dc93-aabd-4ece-bf75-372a6dd3592b",
-                                  @"time": newerLastModifiedDate.transportString,
-                                  @"type": @"conversation.member-update"};
-        
-        ZMUpdateEvent *updateEvent = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-        XCTAssertNotNil(updateEvent);
+        for (NSNumber *eventType in ignoredEventTypes) {
+            NSDictionary *payload = @{@"conversation": conversation.remoteIdentifier.transportString,
+                                      @"data": @{},
+                                      @"from": @"6185dc93-aabd-4ece-bf75-372a6dd3592b",
+                                      @"time": newerLastModifiedDate.transportString,
+                                      @"type": [ZMUpdateEvent eventTypeStringForUpdateEventType:eventType.unsignedIntegerValue]};
+            
+            [events addObject:[ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil]];
+        }
         
         // when
-        [self.sut processEvents:@[updateEvent] liveEvents:YES prefetchResult:nil];
+        [self performIgnoringZMLogError:^{ // ignore errors from that we are sending incomplete payloads
+            [self.sut processEvents:events liveEvents:YES prefetchResult:nil];
+        }];
         
         // then
         XCTAssertEqualWithAccuracy(conversation.lastModifiedDate.timeIntervalSinceReferenceDate, lastModifiedDate.timeIntervalSinceReferenceDate, 0.2);

@@ -117,7 +117,8 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      }],
 
                     /// We need to refetch all team conversations to get data about access levels that were
-                    /// introduced after implementing wireless users funtionality.
+                    /// introduced after implementing wireless users functionality.
+
                     [ZMHotFixPatch
                      patchWithVersion:@"146.0.0"
                      patchCode:^(__unused NSManagedObjectContext *context) {

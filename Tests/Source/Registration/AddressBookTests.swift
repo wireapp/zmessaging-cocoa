@@ -31,6 +31,7 @@ class AddressBookTests : XCTestCase {
     
     override func tearDown() {
         self.addressBookFake = nil
+        super.tearDown()
     }
 }
 
