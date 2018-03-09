@@ -692,8 +692,9 @@ extension SessionManager: ZMUserObserver {
 
 // MARK: - UnauthenticatedSessionDelegate
 
-extension SessionManager: UnauthenticatedSessionDelegate {
+extension SessionManager {
 
+    /// Needs to be called before we try to register another device because API requires password
     @objc public func update(credentials: ZMCredentials) -> Bool {
         guard let userSession = activeUserSession, let emailCredentials = credentials as? ZMEmailCredentials else { return false }
 
@@ -701,6 +702,9 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         return true
     }
+}
+
+extension SessionManager: UnauthenticatedSessionDelegate {
 
     public func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) -> Bool {
         return update(credentials: credentials)
