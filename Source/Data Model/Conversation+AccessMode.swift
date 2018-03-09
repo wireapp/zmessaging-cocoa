@@ -96,7 +96,7 @@ extension ZMConversation {
     func createWirelessLink(in userSession: ZMUserSession, _ completion: @escaping (Result<String>) -> Void) {
         let request = WirelessRequestFactory.createLinkRequest(for: self)
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
-            if response.httpStatus == 200,
+            if response.httpStatus == 201,
                 let payload = response.payload,
                 let data = payload.asDictionary()?[ZMConversation.TransportKey.data] as? [String: Any],
                 let uri = data[ZMConversation.TransportKey.uri] as? String {
