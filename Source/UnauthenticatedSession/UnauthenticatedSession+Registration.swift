@@ -70,7 +70,7 @@ extension UnauthenticatedSession {
             return
         }
 
-        whenReachable {
+        authenticationErrorIfNotReachable {
             self.authenticationStatus.prepareForRegistration(of: user)
             RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
@@ -78,7 +78,7 @@ extension UnauthenticatedSession {
     
     @objc
     public func requestPhoneVerificationCodeForRegistration(_ phoneNumber: String) {
-        whenReachable {
+        authenticationErrorIfNotReachable {
             self.authenticationStatus.prepareForRequestingPhoneVerificationCode(forRegistration: phoneNumber)
             RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }

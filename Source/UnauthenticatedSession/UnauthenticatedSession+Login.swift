@@ -40,7 +40,7 @@ extension UnauthenticatedSession {
         if credentials.isInvalid {
             authenticationStatus.notifyAuthenticationDidFail(NSError(code: .needsCredentials, userInfo: nil))
         } else {
-            whenReachable {
+            authenticationErrorIfNotReachable {
                 self.authenticationStatus.prepareForLogin(with: credentials)
                 RequestAvailableNotification.notifyNewRequestsAvailable(nil)
             }
@@ -57,7 +57,7 @@ extension UnauthenticatedSession {
             return false
         }
 
-        whenReachable {
+        authenticationErrorIfNotReachable {
             self.authenticationStatus.prepareForRequestingPhoneVerificationCode(forLogin: phoneNumber)
             RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }

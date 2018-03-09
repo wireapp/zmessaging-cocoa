@@ -79,7 +79,7 @@ public class UnauthenticatedSession: NSObject {
         tornDown = true
     }
 
-    func whenReachable(_ block: () -> ()) {
+    func authenticationErrorIfNotReachable(_ block: () -> ()) {
         if self.reachability.mayBeReachable {
             block()
         } else {
