@@ -106,6 +106,7 @@ public class UserExpirationObserverTests: MessagingTest {
         XCTAssertTrue(self.waitInRunLoop(for: { () -> (Bool) in
             user.needsToBeUpdatedFromBackend == true
         }))
+        XCTAssertFalse(sut.expiringUsers.contains(user))
     }
     
     func testThatItDoesNotRetainItself() {

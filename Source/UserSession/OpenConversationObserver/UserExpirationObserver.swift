@@ -52,5 +52,7 @@ import Foundation
         }
         
         user.needsToBeUpdatedFromBackend = true
+        timerForUser[timer] = nil
+        expiringUsers.remove(user)
     }
 }
