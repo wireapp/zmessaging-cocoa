@@ -136,9 +136,7 @@ extension ZMUserSession: PushDispatcherOptionalClient {
                 self.sessionManager?.updateAppIconBadge()
             }
             
-            self.operationLoop.saveEventsAndSendNotification(forPayload: payload,
-                                                             fetchCompletionHandler: completionHandler,
-                                                             source: source)
+            self.operationLoop.fetchEvents(fromPushChannelPayload: payload, completionHandler: completionHandler, source: source)
         }
     }
     

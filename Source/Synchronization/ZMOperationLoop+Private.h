@@ -22,7 +22,7 @@
 
 @class APSSignalingKeysStore;
 @class ZMSyncStrategy;
-@class BackgroundAPNSPingBackStatus;
+@class PushNotificationStatus;
 @class ZMSyncStrategy;
 
 // Required by OperationLoop+Background.h
@@ -31,7 +31,7 @@
 @property (nonatomic) APSSignalingKeysStore *apsSignalKeyStore;
 @property (nonatomic) ZMSyncStrategy *syncStrategy;
 @property (nonatomic, weak) NSManagedObjectContext *syncMOC;
-@property (nonatomic, readonly) BackgroundAPNSPingBackStatus *backgroundAPNSPingBackStatus;
+@property (nonatomic, readonly) PushNotificationStatus *pushNotificationStatus;
 @end
 
 

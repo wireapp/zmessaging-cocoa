@@ -310,7 +310,7 @@
 		A9692F8A1986476900849241 /* NSString_NormalizationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A9692F881986476900849241 /* NSString_NormalizationTests.m */; };
 		AF6415A41C9C17FF00A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt in Resources */ = {isa = PBXBuildFile; fileRef = AF6415A01C9C151700A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt */; };
 		AF6415A51C9C180200A535F5 /* ExternalMessageTextFixture.txt in Resources */ = {isa = PBXBuildFile; fileRef = AF6415A11C9C151700A535F5 /* ExternalMessageTextFixture.txt */; };
-		BF00441B1C737CE9007A6EA4 /* BackgroundAPNSPingBackStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF00441A1C737CE9007A6EA4 /* BackgroundAPNSPingBackStatus.swift */; };
+		BF00441B1C737CE9007A6EA4 /* PushNotificationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF00441A1C737CE9007A6EA4 /* PushNotificationStatus.swift */; };
 		BF158D2F1CE087D8007C6F8A /* video.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = BF158D2E1CE087D8007C6F8A /* video.mp4 */; };
 		BF1F52C41ECC6DAF002FB553 /* ZMSimpleListRequestPaginator.h in Headers */ = {isa = PBXBuildFile; fileRef = 548213FE1A0253CC001AA4E0 /* ZMSimpleListRequestPaginator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF2A9D511D6B536E00FA7DBC /* EventDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2A9D501D6B536E00FA7DBC /* EventDecoder.swift */; };
@@ -909,7 +909,7 @@
 		B4D37F951D7EEA5100D0C1BC /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = uk; path = uk.lproj/Push.stringsdict; sourceTree = "<group>"; };
 		B4D37F961D7EEA5B00D0C1BC /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Push.strings; sourceTree = "<group>"; };
 		B4D37F971D7EEA5B00D0C1BC /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = ru; path = ru.lproj/Push.stringsdict; sourceTree = "<group>"; };
-		BF00441A1C737CE9007A6EA4 /* BackgroundAPNSPingBackStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackgroundAPNSPingBackStatus.swift; sourceTree = "<group>"; };
+		BF00441A1C737CE9007A6EA4 /* PushNotificationStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PushNotificationStatus.swift; sourceTree = "<group>"; };
 		BF158D2E1CE087D8007C6F8A /* video.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = video.mp4; sourceTree = "<group>"; };
 		BF1F52CB1ECDD778002FB553 /* SlowSyncTests+Teams.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SlowSyncTests+Teams.swift"; sourceTree = "<group>"; };
 		BF2A9D501D6B536E00FA7DBC /* EventDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EventDecoder.swift; path = Decoding/EventDecoder.swift; sourceTree = "<group>"; };
@@ -1660,7 +1660,7 @@
 				F9FD167A1BDFCDAD00725F5C /* ZMClientRegistrationStatus.m */,
 				54973A351DD48CAB007F8702 /* NSManagedObject+EncryptionContext.swift */,
 				F9B171F51C0EF21100E6EEC6 /* ClientUpdateStatus.swift */,
-				BF00441A1C737CE9007A6EA4 /* BackgroundAPNSPingBackStatus.swift */,
+				BF00441A1C737CE9007A6EA4 /* PushNotificationStatus.swift */,
 				F97678F91D76D11400CC075D /* BackgroundAPNSConfirmationStatus.swift */,
 				F9B8308B1DEEDC2900FF6FE7 /* SyncStatus.swift */,
 				160C31261E6434500012E4BC /* OperationStatus.swift */,
@@ -2680,7 +2680,7 @@
 				F90EC5A31E7BF1AC00A6779E /* AVSWrapper.swift in Sources */,
 				16F5F16C1E4092C00062F0AE /* NSManagedObjectContext+CTCallCenter.swift in Sources */,
 				16962EE420286D690069D88D /* LocalNotificationType+Configuration.swift in Sources */,
-				BF00441B1C737CE9007A6EA4 /* BackgroundAPNSPingBackStatus.swift in Sources */,
+				BF00441B1C737CE9007A6EA4 /* PushNotificationStatus.swift in Sources */,
 				09531F181AE960E300B8556A /* ZMLoginCodeRequestTranscoder.m in Sources */,
 				F148F6671FB9AA7600BD6909 /* TeamToRegister.swift in Sources */,
 				F98DD6D51ABB2F7C001D58CF /* ZMUserSession+UserNotificationCategories.m in Sources */,

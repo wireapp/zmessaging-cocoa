@@ -28,7 +28,6 @@
 
 @class ZMPersistentCookieStorage;
 @class ApplicationStatusDirectory;
-@class BackgroundAPNSPingBackStatus;
 
 extern NSString * const ZMPushChannelIsOpenKey;
 extern NSString * const ZMPushChannelResponseStatusKey;
