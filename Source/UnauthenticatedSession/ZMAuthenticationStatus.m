@@ -256,10 +256,9 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (void)didFailRegistrationWithDuplicatedEmail {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
-    self.duplicateRegistrationEmail = YES;
-    ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:self.registrationUser.emailAddress password:self.registrationUser.password];
     self.registrationUser = nil;
-    self.loginCredentials = credentials;
+    [ZMUserSessionRegistrationNotification notifyRegistrationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionEmailIsAlreadyRegistered userInfo:@{}] context:self];
+    [self resetLoginAndRegistrationStatus];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 
