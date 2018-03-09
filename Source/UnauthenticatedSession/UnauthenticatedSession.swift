@@ -79,6 +79,13 @@ public class UnauthenticatedSession: NSObject {
         tornDown = true
     }
 
+    func whenReachable(_ block: () -> ()) {
+        if self.reachability.mayBeReachable {
+            block()
+        } else {
+            authenticationStatus.notifyAuthenticationDidFail(NSError(code: .networkError, userInfo:nil))
+        }
+    }
 }
 
 // MARK: - UserInfoParser
