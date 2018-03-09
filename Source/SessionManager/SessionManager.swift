@@ -694,12 +694,16 @@ extension SessionManager: ZMUserObserver {
 
 extension SessionManager: UnauthenticatedSessionDelegate {
 
-    public func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) -> Bool {
+    @objc public func update(credentials: ZMCredentials) -> Bool {
         guard let userSession = activeUserSession, let emailCredentials = credentials as? ZMEmailCredentials else { return false }
-        
+
         userSession.setEmailCredentials(emailCredentials)
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         return true
+    }
+
+    public func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) -> Bool {
+        return update(credentials: credentials)
     }
     
     public func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data) {
