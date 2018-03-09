@@ -18,10 +18,15 @@
 
 import Foundation
 
-@objc public class UserExpirationObserver: NSObject {
-    var expiringUsers: Set<ZMUser> = Set()
+@objc public class UserExpirationObserver: NSObject, ZMTimerClient {
+    internal private(set) var expiringUsers: Set<ZMUser> = Set()
+    private var timerForUser: [ZMTimer: ZMUser] = [:]
     
-    func check(users: Set<ZMUser>) {
+    deinit {
+        timerForUser.forEach { $0.key.cancel() }
+    }
+    
+    public func check(users: Set<ZMUser>) {
         let allWireless = Set(users.filter { $0.isWirelessUser }).subtracting(expiringUsers)
         
         let expired = Set(allWireless.filter { $0.isExpired })
@@ -30,17 +35,22 @@ import Foundation
         
         expired.forEach { $0.needsToBeUpdatedFromBackend = true }
         notExpired.forEach {
-            self.perform(#selector(expire(_:)), with: $0, afterDelay: $0.expiresAfter)
+            let timer = ZMTimer(target: self)!
+            timer.fire(afterTimeInterval: $0.expiresAfter)
+            timerForUser[timer] = $0
         }
         expiringUsers.formUnion(notExpired)
     }
     
-    func expire(_ user: ZMUser) {
-        user.needsToBeUpdatedFromBackend = true
-        expiringUsers.remove(user)
+    public func check(usersIn conversation: ZMConversation) {
+        check(users: Set(conversation.activeParticipants.array as! [ZMUser]))
     }
     
-    func check(usersIn conversation: ZMConversation) {
-        check(users: Set(conversation.activeParticipants.array as! [ZMUser]))
+    public func timerDidFire(_ timer: ZMTimer) {
+        guard let user = timerForUser[timer] else {
+            fatal("Unknown timer: \(timer)")
+        }
+        
+        user.needsToBeUpdatedFromBackend = true
     }
 }

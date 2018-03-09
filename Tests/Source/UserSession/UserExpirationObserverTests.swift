@@ -107,4 +107,25 @@ public class UserExpirationObserverTests: MessagingTest {
             user.needsToBeUpdatedFromBackend == true
         }))
     }
+    
+    func testThatItDoesNotRetainItself() {
+        weak var sut: UserExpirationObserver?
+        autoreleasepool {
+            let localSut = UserExpirationObserver()
+            // given
+            let user = ZMUser.insertNewObject(in: self.uiMOC)
+            user.name = "User"
+            user.remoteIdentifier = UUID()
+            user.needsToBeUpdatedFromBackend = false
+            user.mockSetExpires(at: Date(timeIntervalSinceNow: 100000))
+            // when
+            localSut.check(users: Set([user]))
+            sut = localSut
+            // then
+            XCTAssertNotNil(sut)
+        }
+        
+        // ...and then
+        XCTAssertNil(sut)
+    }
 }
