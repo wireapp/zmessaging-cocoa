@@ -362,26 +362,6 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     }];
 }
 
--(void)testThatItCallsRegistrationFailOnInvalidEmailCredentialsIfDuplicatedEmailRegistered
-{
-    // given
-    NSDictionary *content = @{@"code":@403,
-                              @"message":@"Invalid login credentials",
-                              @"label":@"invalid-credentials"};
-    ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:@"foo@example.com" password:@"12345678"];
-    user.name = @"foo";
-    [self.authenticationStatus prepareForRegistrationOfUser:user];
-    [self.authenticationStatus didFailRegistrationWithDuplicatedEmail];
-    
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:content HTTPStatus:403 transportSessionError:nil];
-
-    // when
-    [self expectRegistrationFailedWithError:ZMUserSessionEmailIsAlreadyRegistered after:^{
-        [[self.sut nextRequest] completeWithResponse:response];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }];
-}
-
 -(void)testThatItCallsRegistrationFailOnInvalidPhoneNumberCredentialsIfNotDuplicatedPhoneNumberRegistered
 {
     // given
@@ -559,77 +539,25 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 - (void)testThatItResetsDidRegisterDuplicatedEmailAfterASuccessfulLoginRequest
 {
     // given
-    NSDictionary *content = @{@"access_token": @"61184561417968870ce708ed0c319206914bc56db444d01227a63f9b9849045f.1.1401213378.a.3bc5750a-b965-40f8-aff2-831e9b5ac2e9.846754296078244309",
-                              @"expires_in": @604800,
-                              @"token_type": @"Bearer"
-                              };
-    ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:@"foo@example.com" password:@"12345678"];
-    user.name = @"foo";
+
+    XCTestExpectation *ex = [self expectationWithDescription:@"auth"];
+    id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
+        NOT_USED(event);
+        XCTAssertNotNil(error);
+        XCTAssertEqual((ZMUserSessionErrorCode)error.code, ZMUserSessionEmailIsAlreadyRegistered);
+        [ex fulfill];
+    }];
+    
+    ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:@"foo@foo.com" password:@"12345678"];
+    
     [self.authenticationStatus prepareForRegistrationOfUser:user];
     [self.authenticationStatus didFailRegistrationWithDuplicatedEmail];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:content HTTPStatus:200 transportSessionError:nil];
     
-    // when
-    [self expectAuthenticationSucceedAfter:^{
-        [[self.sut nextRequest] completeWithResponse:response];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }];
+    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
     
     // then
+    token = nil;
     XCTAssertNotEqual(self.authenticationStatus.currentPhase, ZMAuthenticationPhaseWaitingForEmailVerification);
-}
-
--(void)testThatOnPendingActivationItStartsTheTimedRequestWith5SecondsAndDoesNotResetCredentials
-{
-    // given
-    NSDictionary *content = @{@"code":@403,
-                              @"message":@"Account pending activation",
-                              @"label":@"pending-activation"};
-    
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:content HTTPStatus:403 transportSessionError:nil];
-    ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:@"foo@example.com" password:@"12345678"];
-    user.name = @"foo";
-    [self.authenticationStatus prepareForRegistrationOfUser:user];
-    [self.authenticationStatus didFailRegistrationWithDuplicatedEmail];
-    
-    // when
-    [self expectAuthenticationFailedWithError:ZMUserSessionAccountIsPendingActivation after:^{
-        [[self.sut nextRequest] completeWithResponse:response];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }];
-}
-
--(void)testThatOnPendingActivationItResetTheTimerToZeroWhenTheFollowingRequestIsCompleted
-{
-    // given
-    DefaultPendingValidationLoginAttemptInterval = 0.2;
-    NSDictionary *payloadPending = @{@"code":@403,
-                              @"message":@"Account pending activation",
-                              @"label":@"pending-activation"};
-    
-    NSDictionary *payloadValid = @{@"access_token": @"61184561417968870ce708ed0c319206914bc56db444d01227a63f9b9849045f.1.1401213378.a.3bc5750a-b965-40f8-aff2-831e9b5ac2e9.846754296078244309",
-                              @"expires_in": @604800,
-                              @"token_type": @"Bearer"
-                              };
-    
-    ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:@"foo@example.com" password:@"12345678"];
-    user.name = @"foo";
-    [self.authenticationStatus prepareForRegistrationOfUser:user];
-    [self.authenticationStatus didFailRegistrationWithDuplicatedEmail];
-    ZMTransportResponse *responsePending = [ZMTransportResponse responseWithPayload:payloadPending HTTPStatus:403 transportSessionError:nil];
-    ZMTransportResponse *responseValid = [ZMTransportResponse responseWithPayload:payloadValid HTTPStatus:200 transportSessionError:nil];
-    
-    // when
-    [self expectAuthenticationFailedWithError:ZMUserSessionAccountIsPendingActivation after:^{
-        [[self.sut nextRequest] completeWithResponse:responsePending];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }];
-    
-    // when
-    [self expectAuthenticationSucceedAfter:^{
-        [[self.sut nextRequest] completeWithResponse:responseValid];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }];
 }
 
 - (void)testThatItSendsAVerificationResendRequest_AuthenticationStatus;
