@@ -73,8 +73,6 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     self.registrationUser = nil;
 
     self.isWaitingForEmailVerification = NO;
-    
-    self.duplicateRegistrationEmail = NO;
 }
 
 - (void)setRegistrationUser:(ZMCompleteRegistrationUser *)registrationUser
@@ -320,13 +318,9 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)didFailLoginWithEmail:(BOOL)invalidCredentials
 {
     ZMLogDebug(@"%@ invalid credentials: %d", NSStringFromSelector(_cmd), invalidCredentials);
-    if(self.duplicateRegistrationEmail) {
-        [ZMUserSessionRegistrationNotification notifyRegistrationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionEmailIsAlreadyRegistered userInfo:@{}] context:self];
-    }
-    else {
-        NSError *error = [NSError userSessionErrorWithErrorCode:(invalidCredentials ? ZMUserSessionInvalidCredentials : ZMUserSessionUnknownError) userInfo:nil];
-        [self notifyAuthenticationDidFail:error];
-    }
+    
+    NSError *error = [NSError userSessionErrorWithErrorCode:(invalidCredentials ? ZMUserSessionInvalidCredentials : ZMUserSessionUnknownError) userInfo:nil];
+    [self notifyAuthenticationDidFail:error];
     [self resetLoginAndRegistrationStatus];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }

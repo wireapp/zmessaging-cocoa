@@ -31,8 +31,6 @@
 @property (nonatomic) BOOL isWaitingForEmailVerification;
 @property (nonatomic) BOOL completedRegistration;
 
-@property (nonatomic) BOOL duplicateRegistrationEmail;
-
 @property (nonatomic) BOOL isWaitingForLogin;
 @property (nonatomic) BOOL canClearCredentials;
 
