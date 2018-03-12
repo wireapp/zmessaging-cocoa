@@ -52,6 +52,7 @@ static NSString * const PushNotificationTypeNotice = @"notice";
         NSUUID *eventId = [self messageNonceFromFromPushChannelData:payload];
         if (eventId == nil) {
             completionHandler(ZMPushPayloadResultNoData);
+            return;
         }
         
         [self.pushNotificationStatus fetchEventId:eventId completionHandler:completionHandler];
@@ -70,7 +71,7 @@ static NSString * const PushNotificationTypeNotice = @"notice";
     NSString *type = [userInfoData optionalStringForKey:PushChannelNotificationTypeKey];
     
     if ([type isEqualToString:PushNotificationTypePlain]) {
-        return [userInfoData optionalUuidForKey:PushChannelIdentifierKey];
+        return [internalData optionalUuidForKey:PushChannelIdentifierKey];
     } else if ([type isEqualToString:PushNotificationTypeCipher]) {
         return [self messageNonceFromEncryptedPushChannelData:userInfoData];
     } else if ([type isEqualToString:PushNotificationTypeNotice]) {

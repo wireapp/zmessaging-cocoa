@@ -169,8 +169,8 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     NSUUID *latestEventId = nil;
     
     for (NSDictionary *eventDictionary in eventsDictionaries) {
-        NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:eventDictionary pushStartingAt:nil]; // TODO jacob: how should we handle the source
-
+        NSArray *events = [ZMUpdateEvent eventsArrayFromTransportData:eventDictionary source:self.isFetchingStreamForAPNS ? ZMUpdateEventSourcePushNotification : ZMUpdateEventSourceDownload];
+        
         for (ZMUpdateEvent *event in events) {
             [event appendDebugInformation:@"From missing update events transcoder, processUpdateEventsAndReturnLastNotificationIDFromPayload"];
             [parsedEvents addObject:event];
@@ -183,7 +183,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     }
     
     [syncStrategy processUpdateEvents:parsedEvents ignoreBuffer:YES];
-    [self.pushNotificationStatus didFetchEventIds:eventIds finished:self.listPaginator.hasMoreToFetch];
+    [self.pushNotificationStatus didFetchEventIds:eventIds finished:!self.listPaginator.hasMoreToFetch];
     
     [tp warnIfLongerThanInterval];
     return latestEventId;

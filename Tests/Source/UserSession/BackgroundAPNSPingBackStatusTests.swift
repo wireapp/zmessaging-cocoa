@@ -21,29 +21,7 @@
 import WireTesting
 import WireMockTransport
 
-
 // MARK: - Mocks
-
-class OperationLoopNewRequestObserver {
-    
-    var token : NSObjectProtocol?
-    var notifications = [Notification]()
-    fileprivate var notificationCenter = NotificationCenter.default
-    fileprivate var newRequestNotification = "RequestAvailableNotification"
-    
-    init() {
-        token = notificationCenter.addObserver(forName: Notification.Name(rawValue: newRequestNotification), object: nil, queue: .main) { [weak self] note in
-            self?.notifications.append(note)
-        }
-    }
-    
-    deinit {
-        notifications.removeAll()
-        if let token = token {
-            notificationCenter.removeObserver(token)
-        }
-    }
-}
 
 
 @objc class MockAuthenticationProvider: NSObject, AuthenticationStatusProvider {
@@ -66,508 +44,102 @@ class OperationLoopNewRequestObserver {
     
 }
 
-
 // MARK: - Tests
 
-class EventsWithIdentifierTests: ZMTBaseTest {
+class PushNotificationStatusTests: ZMTBaseTest {
     
-    var sut: EventsWithIdentifier!
-    var identifier: UUID!
-    var events: [ZMUpdateEvent]!
+    var sut: PushNotificationStatus!
     
-    func messageAddPayload() -> [String : Any] {
-        return [
-            "conversation": UUID.create().transportString(),
-            "time": Date(),
-            "data": [
-                "content": "saf",
-                "nonce": UUID.create().transportString(),
-            ],
-            "from": UUID.create().transportString(),
-            "type": "conversation.message-add"
-        ];
-    }
-    
-    override func setUp() {
-        super.setUp()
-        identifier = UUID.create()
-        let pushChannelData :  [String : Any] = [
-            "id": identifier.transportString(),
-            "payload": [messageAddPayload(), messageAddPayload()]
-        ]
-        
-        events = ZMUpdateEvent.eventsArray(fromPushChannelData: pushChannelData as ZMTransportData)
-        sut = EventsWithIdentifier(events: events, identifier: identifier, isNotice:true)
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        sut = nil
-        events = nil
-        identifier = nil
-    }
-    
-    func testEquatable() {
-        //given
-        let a = EventsWithIdentifier(events: nil, identifier: UUID.create(), isNotice: true)
-        let a1 = EventsWithIdentifier(events: nil, identifier: a.identifier, isNotice: true)
-        
-        let b = EventsWithIdentifier(events: events, identifier: UUID.create(), isNotice: false)
-        let b1 = EventsWithIdentifier(events: b.events, identifier: b.identifier, isNotice: false)
-        
-        let c = EventsWithIdentifier(events: events, identifier: UUID.create(), isNotice: false)
-
-        // then
-        XCTAssertEqual(a, a)
-        XCTAssert(a.isEqual(a))
-
-        XCTAssertEqual(a, a1)
-        XCTAssert(a.isEqual(a1))
-        
-        XCTAssertEqual(b, b1)
-        XCTAssert(b.isEqual(b1))
-
-        XCTAssertNotEqual(a, b)
-        XCTAssertFalse(a.isEqual(b))
-
-        XCTAssertNotEqual(a, c)
-        XCTAssertFalse(a.isEqual(c))
-
-        XCTAssertNotEqual(b, c)
-        XCTAssertFalse(b.isEqual(c))
-    }
-    
-    func testThatItCreatesTheEventsWithIdentifierCorrectly() {
-        // then
-        XCTAssertEqual(identifier, sut.identifier)
-        XCTAssertEqual(events, sut.events!)
-        XCTAssertTrue(sut.isNotice)
-    }
-    
-    func testThatItFiltersThePreexistingEvent() {
-        // given
-        guard let preexistingNonce = events.first?.messageNonce() else { return XCTFail() }
-        
-        // when
-        let filteredEventsWithID = sut.filteredWithoutPreexistingNonces([preexistingNonce])
-        
-        // then
-        guard let event = filteredEventsWithID.events?.first else { return XCTFail() }
-        XCTAssertEqual(filteredEventsWithID.events?.count, 1)
-        XCTAssertNotEqual(event.messageNonce(), preexistingNonce)
-        XCTAssertEqual(filteredEventsWithID.identifier, sut.identifier)
-        XCTAssertEqual(filteredEventsWithID.isNotice, sut.isNotice)
-        XCTAssertEqual(event, events.last)
-    }
-    
-}
-
-class BackgroundAPNSPingBackStatusTests: MessagingTest {
-
-    var sut: BackgroundAPNSPingBackStatus!
-    var observer: OperationLoopNewRequestObserver!
-    var authenticationProvider: MockAuthenticationProvider!
-    var groupQueue: ZMSGroupQueue!
     
     override func setUp() {
         super.setUp()
         
-        groupQueue = FakeGroupQueue()
-        BackgroundActivityFactory.sharedInstance().mainGroupQueue = groupQueue
-        BackgroundActivityFactory.sharedInstance().application = UIApplication.shared
-        authenticationProvider = MockAuthenticationProvider()
-
-        sut = BackgroundAPNSPingBackStatus(
-            syncManagedObjectContext: syncMOC,
-            authenticationProvider: authenticationProvider
-        )
-        observer = OperationLoopNewRequestObserver()
+        sut = PushNotificationStatus()
     }
     
     override func tearDown() {
-        groupQueue = nil
-        observer = nil
         sut = nil
-        BackgroundActivityFactory.sharedInstance().mainGroupQueue = nil
-        BackgroundActivityFactory.sharedInstance().application = nil
-        authenticationProvider = nil
+        
         super.tearDown()
     }
-
-    func testThatItSetsTheNotificationID() {
+    
+    func testThatStatusIsInProgressWhenAddingEventIdToFetch() {
         // given
-        XCTAssertFalse(sut.hasNotificationIDs)
-        let notificationID = UUID.create()
+        let eventId = UUID.create()
+        
         
         // when
-        sut.didReceiveVoIPNotification(createEventsWithID(notificationID))
+        sut.fetch(eventId: eventId) { (_) in }
         
         // then
-        XCTAssertTrue(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
-        
-        // when
-        let notificationIDToPing = sut.nextNotificationEventsWithID()?.identifier
-        XCTAssertEqual(notificationID, notificationIDToPing)
-        XCTAssertNotNil(sut.nextNotificationEventsWithID())
-        XCTAssertTrue(sut.hasNotificationIDs)
-    }
-
-    func testThatItRemovesTheNotificationIdWhenTheFetchCompleted_NoHasMore() {
-        checkThatItRemovesTheNotificationIdWhenItReceivesAResponse(hasMore: false)
-    }
-
-    func testThatItRemovesTheNotificationIdWhenTheFetchCompleted_HasMore() {
-        checkThatItRemovesTheNotificationIdWhenItReceivesAResponse(hasMore: true)
-    }
-
-    func checkThatItRemovesTheNotificationIdWhenItReceivesAResponse(hasMore: Bool) {
-        // given
-        XCTAssertFalse(sut.hasNotificationIDs)
-        let eventsWithId = createEventsWithID(.create())
-
-        // when
-        sut.didReceiveVoIPNotification(eventsWithId)
-
-        // then
-        XCTAssertTrue(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
-
-        // when
-        sut.didReceive(encryptedEvents: [], originalEvents: eventsWithId, hasMore: hasMore)
-
-        // then
-        XCTAssertNil(sut.nextNotificationEventsWithID())
-        XCTAssertFalse(sut.hasNotificationIDs)
+        XCTAssertEqual(sut.status, .inProgress)
     }
     
-    func testThatItRemovesTheNotificationIdWhenItFails() {
+    func testThatStatusIsInProgressWhenNotAllEventsIdsHaveBeenFetched() {
         // given
-        XCTAssertFalse(sut.hasNotificationIDs)
-        let notificationID = UUID.create()
-        let eventsWithID = createEventsWithID(notificationID)
+        let eventId1 = UUID.create()
+        let eventId2 = UUID.create()
+        
+        sut.fetch(eventId: eventId1) { (_) in }
+        sut.fetch(eventId: eventId2) { (_) in }
         
         // when
-        var callcount = 0
-        let handler: (ZMPushPayloadResult, [ZMUpdateEvent]) -> Void = { result in
-            XCTAssertEqual(result.0, .failure)
-            XCTAssertEqual(result.1, [])
-            callcount += 1
-        }
-        sut.didReceiveVoIPNotification(eventsWithID, handler: handler)
+        sut.didFetch(eventIds: [eventId1], finished: true)
         
         // then
-        XCTAssertTrue(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
-        
-        // when
-        guard let notificationEventsWithIDToPing = sut.nextNotificationEventsWithID() else { return XCTFail("No events with identifier") }
-        
-        // then
-        XCTAssertEqual(notificationID, notificationEventsWithIDToPing.identifier)
-        XCTAssertNotNil(sut.nextNotificationEventsWithID())
-        XCTAssertTrue(sut.hasNotificationIDs)
-        
-        // when
-        sut.didFailDownloading(originalEvents: notificationEventsWithIDToPing)
-        
-        // then
-        XCTAssertFalse(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.done)
-        XCTAssertEqual(callcount, 1)
-        XCTAssertNil(sut.nextNotificationEventsWithID())
-    }
-
-    func testThatItDoesNotChangeTheStatusOrRemoveTheHandlerWhenTheItHasMoreEventsToFetch() {
-        // given
-        let eventsWithID = createEventsWithID()
-
-        // when
-        var receivedEvents = [(ZMPushPayloadResult, [ZMUpdateEvent])]()
-        sut.didReceiveVoIPNotification(eventsWithID) {
-            receivedEvents.append($0)
-        }
-
-        guard let currentEvents = sut.eventsWithHandlerByNotificationID[eventsWithID.identifier]?.events else { return XCTFail() }
-
-        // then
-        XCTAssertEqual(currentEvents, eventsWithID.events!)
-
-        // when
-        sut.didReceive(encryptedEvents: eventsWithID.events!, originalEvents: eventsWithID, hasMore: true)
-
-        // then
-        XCTAssertNotNil(sut.eventsWithHandlerByNotificationID[eventsWithID.identifier])
-        XCTAssertNotNil(sut.backgroundActivity)
-        guard let firstResult = receivedEvents.first else { return XCTFail("Did not receive first batch of events") }
-        XCTAssertEqual(firstResult.0, ZMPushPayloadResult.needsMoreRequests)
-        XCTAssertEqual(firstResult.1, eventsWithID.events!)
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
-
-        // when
-        let otherEvents = [ZMUpdateEvent(), ZMUpdateEvent()]
-        sut.didReceive(encryptedEvents: otherEvents, originalEvents: eventsWithID, hasMore: false)
-
-        // then
-        guard let secondResult = receivedEvents.last else { return XCTFail("Did not receive first batch of events") }
-        XCTAssertEqual(secondResult.0, ZMPushPayloadResult.success)
-        XCTAssertEqual(secondResult.1, otherEvents)
-        XCTAssertNil(sut.eventsWithHandlerByNotificationID[eventsWithID.identifier])
-        XCTAssertNil(sut.backgroundActivity)
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.done)
-    }
-
-    func testThatItRemovesTheIDWhenTheFetchFailed() {
-        // given
-        XCTAssertFalse(sut.hasNotificationIDs)
-        let notificationID = UUID.create()
-        let eventsWithID = createEventsWithID(notificationID)
-        
-        // when
-        sut.didReceiveVoIPNotification(eventsWithID)
-        
-        // then
-        XCTAssertTrue(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
-        
-        // when
-        guard let notificationEventsWithIDToPing = sut.nextNotificationEventsWithID() else { return XCTFail("No events with identifier") }
-        
-        // then
-        XCTAssertEqual(notificationID, notificationEventsWithIDToPing.identifier)
-        XCTAssertTrue(sut.hasNotificationIDs)
-        
-        // when
-        sut.didFailDownloading(originalEvents: notificationEventsWithIDToPing)
-
-        // then
-        XCTAssertFalse(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.done)
+        XCTAssertEqual(sut.status, .inProgress)
     }
     
-    func testThatItPostsNewRequestsAvailableNotificationWhenAddingANotificationID() {
+    func testThatStatusIsDoneAfterEventIdIsFetched() {
+        // given
+        let eventId = UUID.create()
+        sut.fetch(eventId: eventId) { (_) in }
+        
         // when
-        sut.didReceiveVoIPNotification(createEventsWithID())
+        sut.didFetch(eventIds: [eventId], finished: true)
         
         // then
-        XCTAssertEqual(observer.notifications.count, 1)
+        XCTAssertEqual(sut.status, .done)
     }
     
-    func testThatItCallsTheHandlerAfterPingBackRequestCompletedSuccessfully() {
-        checkThatItCallsTheHandlerAfterPingBackRequestCompleted(.success)
-    }
-    
-    func testThatItCallsTheHandlerAfterPingBackRequestCompletedUnsuccessfully_Permanent() {
-        checkThatItCallsTheHandlerAfterPingBackRequestCompleted(.permanentError)
-    }
-    
-    func checkThatItCallsTheHandlerAfterPingBackRequestCompleted(_ status: ZMTransportResponseStatus) {
+    func testThatStatusIsDoneAfterEventIdIsFetchedEvenIfMoreEventsWillBeFetched() {
         // given
-        let eventsWithID = createEventsWithID()
-        let expectation = self.expectation(description: "It calls the completion handler")
+        let eventId = UUID.create()
+        sut.fetch(eventId: eventId) { (_) in }
         
-        // expect
-        sut.didReceiveVoIPNotification(eventsWithID) { result in
-            let expectedResult: ZMPushPayloadResult = (status == .success) ? .success : .failure
-            let expectedEvents = (status == .success) ? eventsWithID.events! : []
-            XCTAssertEqual(result.0, expectedResult)
-            XCTAssertEqual(result.1, expectedEvents)
-            expectation.fulfill()
-        }
-
         // when
-        if status == .success {
-            sut.didReceive(encryptedEvents: eventsWithID.events!, originalEvents: eventsWithID, hasMore: false)
-        } else {
-            sut.didFailDownloading(originalEvents: eventsWithID)
+        sut.didFetch(eventIds: [eventId], finished: false)
+        
+        // then
+        XCTAssertEqual(sut.status, .done)
+    }
+    
+    func testThatStatusIsDoneIfEventsCantBeFetched() {
+        // given
+        let eventId = UUID.create()
+        sut.fetch(eventId: eventId) { (_) in }
+        
+        // when
+        sut.didFailToFetchEvents()
+        
+        // then
+        XCTAssertEqual(sut.status, .done)
+    }
+    
+    func testThatCompletionHandlerIsCalledAfterAllEventsHasBeenFetched() {
+        // given
+        let eventId = UUID.create()
+        sut.fetch(eventId: eventId) { (result) in
+            _ = self.expectation(description: "completion handler was called")
         }
         
+        // when
+        sut.didFetch(eventIds: [eventId], finished: true)
+        
         // then
+        XCTAssertEqual(sut.status, .done)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
-    func testThatItDoesSetTheStatusToDoneIfThereAreNoMoreNotificationIDsAndItReceivedEvents() {
-        // given
-        let eventsWithID = createEventsWithID()
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.done)
-        sut.didReceiveVoIPNotification(eventsWithID)
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
-        
-        // when
-        _ = sut.nextNotificationEventsWithID()
-        XCTAssertTrue(sut.hasNotificationIDs)
-
-        sut.didReceive(encryptedEvents: eventsWithID.events!, originalEvents: eventsWithID, hasMore: false)
-        
-        // then
-        XCTAssertFalse(sut.hasNotificationIDs)
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.done)
-    }
-    
-    func testThatItRemovesEventsFromIdentifierEventsMappingAfterSuccesfullyPerformingPingBack() {
-        // given
-        let eventsWithID = createEventsWithID()
-
-        // when
-        sut.didReceiveVoIPNotification(eventsWithID)
-        guard let currentEvents = sut.eventsWithHandlerByNotificationID[eventsWithID.identifier]?.events else { return XCTFail() }
-        
-        // then
-        XCTAssertTrue(sut.hasNotificationIDs)
-        XCTAssertEqual(currentEvents, eventsWithID.events!)
-        
-        // when
-        sut.didReceive(encryptedEvents: eventsWithID.events!, originalEvents: eventsWithID, hasMore: false)
-        
-        // then
-        XCTAssertNil(sut.eventsWithHandlerByNotificationID[eventsWithID.identifier])
-    }
-    
-    func testThatItRemovesEventsWithHandlerFromIdentifierEventsMappingAfterFailingToPerformPingBack() {
-        // given
-        let eventsWithID = createEventsWithID()
-        let expectedIdentifier = eventsWithID.identifier
-        
-        // when
-        sut.didReceiveVoIPNotification(eventsWithID)
-        guard let currentEventsWithHandler = sut.eventsWithHandlerByNotificationID[expectedIdentifier] else { return XCTFail() }
-        
-        // then
-        XCTAssertTrue(sut.hasNotificationIDs)
-        XCTAssertEqual(currentEventsWithHandler.events!, eventsWithID.events!)
-        
-        // when
-        sut.didFailDownloading(originalEvents: eventsWithID)
-        
-        // then
-        XCTAssertNil(sut.eventsWithHandlerByNotificationID[expectedIdentifier])
-    }
-
-    func testThatItDoesNotRemoveTheIdentifierFromTheEventsIdentifierMappingWhenPingBackForOtherIDsFinishes() {
-        // given
-        let firstEventsWithIDs = createEventsWithID()
-        let secondEventsWithIDs = createEventsWithID()
-        let thirdEventsWithIDs = createEventsWithID()
-        let expectedIdentifier = firstEventsWithIDs.identifier
-        
-        // when
-        [firstEventsWithIDs, secondEventsWithIDs, thirdEventsWithIDs].forEach(sut.didReceiveVoIPNotification)
-        guard let currentEvents = sut.eventsWithHandlerByNotificationID[expectedIdentifier]?.events else { return XCTFail() }
-        
-        // then
-        XCTAssertEqual(sut.eventsWithHandlerByNotificationID.keys.count, 3)
-        XCTAssertTrue(sut.hasNotificationIDs)
-        XCTAssertEqual(currentEvents, firstEventsWithIDs.events!)
-        
-        // when
-        sut.didReceive(encryptedEvents:[], originalEvents: secondEventsWithIDs, hasMore: false)
-        sut.didFailDownloading(originalEvents: thirdEventsWithIDs)
-        
-        // then
-        guard let finalEvents = sut.eventsWithHandlerByNotificationID[expectedIdentifier]?.events else { return XCTFail() }
-        XCTAssertEqual(finalEvents, firstEventsWithIDs.events!)
-    }
-
-    func testThatItStartsABackgroundActivityWhenTheStatusIsAuthenticated() {
-        // when
-        sut.didReceiveVoIPNotification(createEventsWithID())
-        XCTAssertTrue(sut.hasNotificationIDs)
-        
-        // then
-        XCTAssertNotNil(sut.backgroundActivity)
-    }
-    
-    func testThatItDoesNotStartABackgroundActivityWhenTheStatusIsNotAuthenticated() {
-        // given
-        authenticationProvider.mockIsAuthenticated = false
-        
-        // when
-        sut.didReceiveVoIPNotification(createEventsWithID())
-        XCTAssertTrue(sut.hasNotificationIDs)
-        
-        // then
-        XCTAssertNil(sut.backgroundActivity)
-    }
-    
-    func testThatItEndsTheBackgroundActivityWhenRequestCompletesSuccessfully() {
-        checkThatItEndsTheBackgroundActivityAfterThePingBackCompleted(true)
-    }
-    
-    func testThatItEndsTheBackgroundActivityWhenRequestCompletesUnsuccessfully() {
-        checkThatItEndsTheBackgroundActivityAfterThePingBackCompleted(false)
-    }
-    
-    func checkThatItEndsTheBackgroundActivityAfterThePingBackCompleted(_ successfully: Bool) {
-        // given
-        let eventsWithID = createEventsWithID()
-        sut.didReceiveVoIPNotification(eventsWithID)
-        XCTAssertTrue(sut.hasNotificationIDs)
-        XCTAssertNotNil(sut.backgroundActivity)
-        
-        // when
-        let nextEventsWithID = sut.nextNotificationEventsWithID()!
-        XCTAssertEqual(nextEventsWithID.identifier, eventsWithID.identifier)
-
-        if successfully {
-            sut.didReceive(encryptedEvents: [], originalEvents: nextEventsWithID, hasMore: false)
-        } else {
-            sut.didFailDownloading(originalEvents: nextEventsWithID)
-        }
-
-        // then
-        XCTAssertNil(sut.backgroundActivity)
-    }
-    
-    func simulatePingBack() -> UUID {
-        let nextEventsWithID = sut.nextNotificationEventsWithID()!
-        sut.didReceive(encryptedEvents:[], originalEvents: nextEventsWithID, hasMore: false)
-        return nextEventsWithID.identifier
-    }
-
-    func testThatItTakesTheOrderFromTheNotificationIDsArray() {
-        // given
-        let eventsWithID1 = createEventsWithID(isNotice: true)
-        let eventsWithID2 = createEventsWithID(isNotice: false)
-        let eventsWithID3 = createEventsWithID(isNotice: true)
-
-        sut.didReceiveVoIPNotification(eventsWithID1)
-        sut.didReceiveVoIPNotification(eventsWithID2)
-        sut.didReceiveVoIPNotification(eventsWithID3)
-
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
-
-        // when & then
-        XCTAssertNotNil(sut.notificationIDs.index(of: eventsWithID1))
-        XCTAssertNotNil(sut.notificationIDs.index(of: eventsWithID2))
-        XCTAssertNotNil(sut.notificationIDs.index(of: eventsWithID3))
-
-        sut.didReceive(encryptedEvents: [], originalEvents: eventsWithID1, hasMore: false)
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
-        XCTAssertNil(sut.notificationIDs.index(of: eventsWithID1))
-
-        sut.didReceive(encryptedEvents: [], originalEvents: eventsWithID2, hasMore: false)
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.inProgress)
-        XCTAssertNil(sut.notificationIDs.index(of: eventsWithID2))
-
-        sut.didReceive(encryptedEvents: [], originalEvents: eventsWithID3, hasMore: false)
-        XCTAssertEqual(sut.status, BackgroundNotificationFetchStatus.done)
-        XCTAssertNil(sut.notificationIDs.index(of: eventsWithID3))
-    }
-
 }
 
-
-// MARK: - Helper
-
-
-extension BackgroundAPNSPingBackStatus {
-    func didReceiveVoIPNotification(_ eventsWithID: EventsWithIdentifier) {
-        didReceiveVoIPNotification(eventsWithID, handler: { _ in })
-    }
-}
-
-extension BackgroundAPNSPingBackStatusTests {
-    func createEventsWithID(_ identifier: UUID = UUID.create(), events: [ZMUpdateEvent] = [ZMUpdateEvent()], isNotice: Bool = false) -> EventsWithIdentifier {
-        return EventsWithIdentifier(events: events, identifier: identifier, isNotice: isNotice)
-    }
-}
