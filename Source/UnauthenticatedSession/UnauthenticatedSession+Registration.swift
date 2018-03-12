@@ -69,15 +69,19 @@ extension UnauthenticatedSession {
             ZMUserSessionRegistrationNotification.notifyRegistrationDidFail(NSError(code: .needsCredentials, userInfo: nil), context: authenticationStatus)
             return
         }
-        
-        authenticationStatus.prepareForRegistration(of: user)
-        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+
+        authenticationErrorIfNotReachable {
+            self.authenticationStatus.prepareForRegistration(of: user)
+            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        }
     }
     
     @objc
     public func requestPhoneVerificationCodeForRegistration(_ phoneNumber: String) {
-        authenticationStatus.prepareForRequestingPhoneVerificationCode(forRegistration: phoneNumber)
-        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        authenticationErrorIfNotReachable {
+            self.authenticationStatus.prepareForRequestingPhoneVerificationCode(forRegistration: phoneNumber)
+            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        }
     }
     
     @objc
