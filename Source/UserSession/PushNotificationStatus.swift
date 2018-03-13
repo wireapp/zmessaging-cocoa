@@ -63,9 +63,8 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
         guard eventId.isType1UUID else {
             return zmLog.error("Attempt to fetch event id not conforming to UUID type1: \(eventId)")
         }
-        // add eventId to list of events to fetch
         
-        if let order = managedObjectContext.zm_lastNotificationID?.compare(withType1: eventId), order == .orderedDescending || order == .orderedSame {
+        if lastEventIdIsNewerThan(eventId: eventId){
             // We have already fetched the event and will therefore immediately call the completion handler
             return completionHandler(.success)
         }
@@ -82,12 +81,9 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
     /// - parameter finished: True when when all available events have been downloaded
     @objc(didFetchEventIds:finished:)
     public func didFetch(eventIds: [UUID], finished: Bool) {
-        // remove eventId from list and call completion handler
         eventsIdsToFetch.subtract(eventIds)
         
-        guard let lastEventId = managedObjectContext.zm_lastNotificationID, finished else { return }
-        
-        for eventId in completionHandlers.keys.filter({  lastEventId.compare(withType1: $0) == .orderedDescending || lastEventId.compare(withType1: $0) == .orderedSame }) {
+        for eventId in completionHandlers.keys.filter({  self.lastEventIdIsNewerThan(eventId: $0) }) {
             let completionHandler = completionHandlers.removeValue(forKey: eventId)
             completionHandler?(.success)
         }
@@ -95,14 +91,17 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
     
     /// Report that events couldn't be fetched due to a permanent error
     public func didFailToFetchEvents() {
-        // remove eventId from list and call completion handler
-        
         for completionHandler in completionHandlers.values {
             completionHandler(.failure)
         }
         
         eventsIdsToFetch.removeAll()
         completionHandlers.removeAll()
+    }
+    
+    private func lastEventIdIsNewerThan(eventId: UUID) -> Bool {
+        guard let order = managedObjectContext.zm_lastNotificationID?.compare(withType1: eventId) else { return false }
+        return order == .orderedDescending || order == .orderedSame
     }
     
 }
