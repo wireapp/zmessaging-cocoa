@@ -981,6 +981,39 @@ class SessionManagerTests_Push: IntegrationTest {
     }
 }
 
+extension SessionManagerTests {
+    func testThatItMarksConversationsAsRead() {
+        // given
+        let account1 = self.createAccount(with: UUID())
+        let account2 = self.createAccount(with: UUID())
+        
+        var conversations: [ZMConversation] = []
+        
+        self.sessionManager?.withSession(for: account1, perform: { createdSession in
+            conversations.append(createdSession.insertConversationWithUnreadMessage())
+        })
+        
+        self.sessionManager?.withSession(for: account2, perform: { createdSession in
+            conversations.append(createdSession.insertConversationWithUnreadMessage())
+        })
+        // when
+        
+        let doneExpectation = self.expectation(description: "Conversations are marked as read")
+
+        self.sessionManager?.markAllConversationsAsRead(completion: {
+            doneExpectation.fulfill()
+        })
+        
+        // then
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        
+        XCTAssertEqual(conversations.filter { $0.lastReadMessage == nil }.count, 0)
+        
+        // cleanup
+        self.sessionManager!.tearDownAllBackgroundSessions()
+    }
+}
+
 // MARK: - Mocks
 class SessionManagerTestDelegate: SessionManagerDelegate {
     

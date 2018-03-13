@@ -196,7 +196,7 @@ extension ZMUserSession {
 
 
 
-extension ZMUserSession {
+public extension ZMUserSession {
     public func markAllConversationsAsRead() {
         self.managedObjectContext.conversationListDirectory().conversationsIncludingArchived.forEach { conversation in
             (conversation as! ZMConversation).markAsRead()
