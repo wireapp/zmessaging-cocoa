@@ -20,60 +20,13 @@
 import Foundation
 import WireDataModel
 
-private let lastUpdateEventIDKey = "LastUpdateEventID"
 private let zmLog = ZMSLog(tag: "PushNotificationStatus")
-
-// MARK: - AuthenticationStatusProvider
-
-@objc public protocol AuthenticationStatusProvider { // TODO jacob: move this to another file
-    var isAuthenticated: Bool { get }
-}
-
-extension ZMPersistentCookieStorage: AuthenticationStatusProvider {
-    public var isAuthenticated: Bool {
-        return authenticationCookieData != nil
-    }
-}
-
-@objc public protocol ZMLastNotificationIDStore {
-    var zm_lastNotificationID : UUID? { get set }
-    var zm_hasLastNotificationID : Bool { get }
-}
 
 extension UUID {
     func compare(withType1 uuid: UUID) -> ComparisonResult {
         return (self as NSUUID).compare(withType1UUID: uuid as NSUUID)
     }
 }
-
-extension NSManagedObjectContext : ZMLastNotificationIDStore {
-    public var zm_lastNotificationID: UUID? {
-        set (newValue) {
-            if let value = newValue, let previousValue = zm_lastNotificationID,
-                value.isType1UUID && previousValue.isType1UUID &&
-                previousValue.compare(withType1: value) != .orderedAscending {
-                return
-            }
-
-            self.setPersistentStoreMetadata(newValue?.uuidString, key: lastUpdateEventIDKey)
-        }
-
-        get {
-            guard let uuidString = self.persistentStoreMetadata(forKey: lastUpdateEventIDKey) as? String,
-                let uuid = UUID(uuidString: uuidString)
-                else { return nil }
-            return uuid
-        }
-    }
-
-    public var zm_hasLastNotificationID: Bool {
-        return zm_lastNotificationID != nil
-    }
-}
-
-
-// MARK: - BackgroundAPNSPingBackStatus
-
 
 extension BackgroundNotificationFetchStatus: CustomStringConvertible {
 

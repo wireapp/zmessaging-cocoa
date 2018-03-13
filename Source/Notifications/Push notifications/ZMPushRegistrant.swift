@@ -106,8 +106,7 @@ extension PushKitRegistrant : PKPushRegistryDelegate {
             // This should happen only in tests
             return
         }
-        didReceivePayload(payload.dictionaryPayload, .voIP) {
-            result in
+        didReceivePayload(payload.dictionaryPayload, .voIP) { result in
             ZMLogPushKit_swift("Registry \(self.registry.description) did finish background task")
             activity.end()
         }

@@ -332,7 +332,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         // The fetch of the notification stream was initiated after the push channel was established
         // so we must restart the fetching to be sure that we haven't missed any notifications.
         if (syncStatus.pushChannelEstablishedDate.timeIntervalSinceReferenceDate < self.listPaginator.lastResetFetchDate.timeIntervalSinceReferenceDate) {
-            [syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase]; // TODO jacob: I think we should always call this method if we are done. SyncStatus keep track if we need to restart or not.
+            [syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
         }
     }
     

@@ -23,15 +23,6 @@ import WireMockTransport
 
 // MARK: - Mocks
 
-
-@objc class MockAuthenticationProvider: NSObject, AuthenticationStatusProvider {
-    var mockIsAuthenticated: Bool = true
-    
-    var isAuthenticated: Bool {
-        return mockIsAuthenticated
-    }
-}
-
 @objc class FakeGroupQueue : NSObject, ZMSGroupQueue {
     
     var dispatchGroup : ZMSDispatchGroup! {
