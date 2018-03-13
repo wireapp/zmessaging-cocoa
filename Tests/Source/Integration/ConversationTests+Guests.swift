@@ -82,8 +82,8 @@ class ConversationTests_Guests : TeamTests {
         let conversation = self.conversation(for: mockConversation)!
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertTrue(conversation.accessMode == [.code, .invite])
-        XCTAssertTrue(conversation.accessRole == .nonActivated)
+        XCTAssertEqual(conversation.accessMode, [.code, .invite])
+        XCTAssertEqual(conversation.accessRole, .nonActivated)
         mockTransportSession?.resetReceivedRequests()
         
         // when
@@ -118,8 +118,8 @@ class ConversationTests_Guests : TeamTests {
         let conversation = self.conversation(for: mockConversation)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertTrue(conversation.accessMode == [.invite])
-        XCTAssertTrue(conversation.accessRole == .activated)
+        XCTAssertEqual(conversation.accessMode, [.invite])
+        XCTAssertEqual(conversation.accessRole, .activated)
         mockTransportSession?.resetReceivedRequests()
         
         // when
@@ -156,8 +156,8 @@ class ConversationTests_Guests : TeamTests {
         let conversation = self.conversation(for: mockConversation)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertTrue(conversation.accessMode == [.code, .invite])
-        XCTAssertTrue(conversation.accessRole == .nonActivated)
+        XCTAssertEqual(conversation.accessMode, [.code, .invite])
+        XCTAssertEqual(conversation.accessRole, .nonActivated)
         mockTransportSession?.resetReceivedRequests()
         
         // when
@@ -196,8 +196,8 @@ class ConversationTests_Guests : TeamTests {
         let conversation = self.conversation(for: mockConversation)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertTrue(conversation.accessMode == [.code, .invite])
-        XCTAssertTrue(conversation.accessRole == .nonActivated)
+        XCTAssertEqual(conversation.accessMode, [.code, .invite])
+        XCTAssertEqual(conversation.accessRole, .nonActivated)
         mockTransportSession?.resetReceivedRequests()
         
         // when
@@ -236,8 +236,8 @@ class ConversationTests_Guests : TeamTests {
         let conversation = self.conversation(for: mockConversation)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertTrue(conversation.accessMode == [.code, .invite])
-        XCTAssertTrue(conversation.accessRole == .nonActivated)
+        XCTAssertEqual(conversation.accessMode, [.code, .invite])
+        XCTAssertEqual(conversation.accessRole, .nonActivated)
         mockTransportSession?.resetReceivedRequests()
         
         // when
@@ -273,8 +273,8 @@ class ConversationTests_Guests : TeamTests {
         let conversation = self.conversation(for: mockConversation)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertTrue(conversation.accessMode == [.code, .invite])
-        XCTAssertTrue(conversation.accessRole == .nonActivated)
+        XCTAssertEqual(conversation.accessMode, [.code, .invite])
+        XCTAssertEqual(conversation.accessRole, .nonActivated)
         mockTransportSession?.resetReceivedRequests()
         
         // when
