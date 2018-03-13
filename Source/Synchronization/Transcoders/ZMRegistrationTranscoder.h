@@ -22,7 +22,7 @@
 
 @protocol UserInfoParser;
 @class ZMTransportResponse;
-@class ZMApplicationStatusDirectory;
+@class ApplicationStatusDirectory;
 
 
 @interface ZMRegistrationTranscoder : NSObject <RequestStrategy>

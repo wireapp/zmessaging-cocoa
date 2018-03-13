@@ -109,5 +109,18 @@ extension ZMHotFixDirectory {
     public static func restartSlowSync(_ context: NSManagedObjectContext) {
         NotificationInContext(name: .ForceSlowSync, context: context.notificationContext).post()
     }
+
+    /// Marks all conversations created in a team to be refetched.
+    /// This is needed because we have introduced access levels when implementing
+    /// wireless guests feature
+    public static func refetchTeamGroupConversations(_ context: NSManagedObjectContext) {
+        // Batch update changes the underlying data in the persistent store and should be much more
+        let predicate = NSPredicate(format: "team != nil AND conversationType == %d", ZMConversationType.group.rawValue)
+        let request = ZMConversation.sortedFetchRequest(with: predicate)
+        let conversations = context.executeFetchRequestOrAssert(request) as? [ZMConversation]
+
+        conversations?.forEach { $0.needsToBeUpdatedFromBackend = true }
+        context.enqueueDelayedSave()
+    }
     
 }

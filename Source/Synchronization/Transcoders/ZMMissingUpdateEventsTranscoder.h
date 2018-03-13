@@ -20,7 +20,7 @@
 @import Foundation;
 @import WireMessageStrategy;
 
-@class ZMApplicationStatusDirectory;
+@class ApplicationStatusDirectory;
 @protocol PreviouslyReceivedEventIDsCollection;
 @protocol ZMApplication;
 
@@ -33,7 +33,7 @@
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
 previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
                          application:(id <ZMApplication>)application
-                   applicationStatus:(ZMApplicationStatusDirectory *)applicationStatus;
+                   applicationStatus:(ApplicationStatusDirectory *)applicationStatus;
 
 - (void)startDownloadingMissingNotifications;
 

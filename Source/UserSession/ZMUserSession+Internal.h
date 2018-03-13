@@ -43,9 +43,9 @@
 
 @protocol FlowManagerType;
 
-extern NSString * const ZMAppendAVSLogNotificationName;
 
 @interface ZMUserSession (AuthenticationStatus)
+
 @property (nonatomic, readonly) UserProfileUpdateStatus *userProfileUpdateStatus;
 @property (nonatomic, readonly) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic, readonly) ClientUpdateStatus *clientUpdateStatus;
@@ -58,11 +58,11 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @interface ZMUserSession ()
 
 @property (nonatomic, readonly) id<ZMApplication> application;
-@property (nonatomic) CallKitDelegate *callKitDelegate;
 @property (nonatomic) ZMCallStateObserver *callStateObserver;
 @property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
 @property (nonatomic) ManagedObjectContextChangeObserver *messageReplyObserver;
 @property (nonatomic) ManagedObjectContextChangeObserver *likeMesssageObserver;
+@property (nonatomic)  UserExpirationObserver *userExpirationObserver;
 @property (nonatomic, readonly) NSURL *sharedContainerURL;
 
 - (void)notifyThirdPartyServices;
@@ -83,6 +83,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
                             mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
+                               analytics:(id<AnalyticsType>)analytics
                          apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application

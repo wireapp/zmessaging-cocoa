@@ -61,6 +61,7 @@ public final class PushKitRegistrant : NSObject, PushNotificationSource {
         }
     }
     
+    public var notificationsTracker: NotificationsTracker?
     public var analytics: AnalyticsType?
     
     public convenience required init(didUpdateCredentials: @escaping (Data) -> Void, didReceivePayload: @escaping DidReceivePushCallback, didInvalidateToken: @escaping () -> Void) {
@@ -99,14 +100,18 @@ extension PushKitRegistrant : PKPushRegistryDelegate {
     
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, forType type: PKPushType) {
         ZMLogPushKit_swift("Registry \(self.registry.description) did receive '\(payload.type)' payload: \(payload.dictionaryPayload)")
-        if let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName:"Process PushKit payload") {
-            didReceivePayload(payload.dictionaryPayload, .voIP) {
-                result in
-                ZMLogPushKit_swift("Registry \(self.registry.description) did finish background task")
-                activity.end()
-            }
+        guard let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Process PushKit payload", expirationHandler: { [weak self] in
+            self?.notificationsTracker?.registerProcessingExpired()
+        }) else {
+            // This should happen only in tests
+            return
+        }
+        didReceivePayload(payload.dictionaryPayload, .voIP) { result in
+            ZMLogPushKit_swift("Registry \(self.registry.description) did finish background task")
+            activity.end()
         }
     }
+
     public func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenForType type: PKPushType) {
         ZMLogPushKit_swift("Registry \(self.registry.description) did invalide push token for type '\(type)'.")
         didInvalidateToken()
@@ -158,7 +163,7 @@ extension ApplicationRemoteNotification {
     
     fileprivate func fetchResult(_ result: ZMPushPayloadResult) -> UIBackgroundFetchResult {
         switch (result) {
-        case .success, .needsMoreRequests:
+        case .success:
             return .newData
         case .failure:
             return .failed

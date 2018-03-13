@@ -124,7 +124,7 @@ extension VoiceChannelV3 : CallActions {
     
     public func join(video: Bool, userSession: ZMUserSession) -> Bool {
         if userSession.callNotificationStyle == .callKit, #available(iOS 10.0, *) {
-            userSession.callKitDelegate.requestJoinCall(in: conversation!, video: video)
+            userSession.callKitDelegate?.requestJoinCall(in: conversation!, video: video)
             return true
         } else {
             return join(video: video)
@@ -133,7 +133,7 @@ extension VoiceChannelV3 : CallActions {
     
     public func leave(userSession: ZMUserSession) {
         if userSession.callNotificationStyle == .callKit, #available(iOS 10.0, *) {
-            userSession.callKitDelegate.requestEndCall(in: conversation!)
+            userSession.callKitDelegate?.requestEndCall(in: conversation!)
         } else {
             return leave()
         }
@@ -141,7 +141,7 @@ extension VoiceChannelV3 : CallActions {
     
     public func ignore(userSession: ZMUserSession) {
         if userSession.callNotificationStyle == .callKit, #available(iOS 10.0, *) {
-            userSession.callKitDelegate.requestEndCall(in: conversation!)
+            userSession.callKitDelegate?.requestEndCall(in: conversation!)
         } else {
             return ignore()
         }

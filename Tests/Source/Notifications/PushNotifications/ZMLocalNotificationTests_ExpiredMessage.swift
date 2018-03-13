@@ -72,7 +72,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             
             // given
-            let message = ZMMessage.insertNewObject(in: self.syncMOC)
+            let message = ZMMessage(nonce: UUID(), managedObjectContext: self.syncMOC)
             self.oneOnOneConversation.mutableMessages.add(message)
             
             // when
@@ -89,7 +89,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             
             // given
-            let message = ZMMessage.insertNewObject(in: self.syncMOC)
+            let message = ZMMessage(nonce: UUID(), managedObjectContext: self.syncMOC)
             self.oneOnOneConversation.mutableMessages.add(message)
             
             // when
@@ -106,7 +106,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             
             // given
-            let message = ZMMessage.insertNewObject(in: self.syncMOC)
+            let message = ZMMessage(nonce: UUID(), managedObjectContext: self.syncMOC)
             self.groupConversation.mutableMessages.add(message)
             
             // when
@@ -123,7 +123,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             
             // given
-            let message = ZMMessage.insertNewObject(in: self.syncMOC)
+            let message = ZMMessage(nonce: UUID(), managedObjectContext: self.syncMOC)
             self.groupConversationWithoutName.mutableMessages.add(message)
             
             // when
@@ -140,7 +140,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             
             // given
-            let message = ZMMessage.insertNewObject(in: self.syncMOC)
+            let message = ZMMessage(nonce: UUID(), managedObjectContext: self.syncMOC)
             self.oneOnOneConversation.mutableMessages.add(message)
             let connection = ZMConnection.insertNewObject(in: self.syncMOC)
             connection.conversation = self.oneOnOneConversation
@@ -160,7 +160,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             
             // given
-            let message = ZMMessage.insertNewObject(in: self.syncMOC)
+            let message = ZMMessage(nonce: UUID(), managedObjectContext: self.syncMOC)
             self.oneOnOneConversation.mutableMessages.add(message)
             let connection = ZMConnection.insertNewObject(in: self.syncMOC)
             connection.conversation = self.oneOnOneConversation

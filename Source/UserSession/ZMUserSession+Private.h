@@ -26,6 +26,8 @@
 @class LocalNotificationDispatcher;
 @class ZMStoredLocalNotification;
 @class AccountStatus;
+@class ApplicationStatusDirectory;
+@class UserExpirationObserver;
 
 #import "ZMUserSession.h"
 
@@ -49,9 +51,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSManagedObjectContext *searchManagedObjectContext;
 @property (nonatomic, readonly) OperationStatus *operationStatus;
 @property (nonatomic, readonly) AccountStatus *accountStatus;
+@property (nonatomic, readonly) ApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic, readonly) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic, nullable) ManagedObjectContextChangeObserver *messageReplyObserver;
 @property (nonatomic, nullable) ManagedObjectContextChangeObserver *likeMesssageObserver;
+@property (nonatomic, nonnull)  UserExpirationObserver *userExpirationObserver;
 
 - (void)tearDown;
 

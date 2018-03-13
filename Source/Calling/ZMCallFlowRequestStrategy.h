@@ -36,7 +36,6 @@
                    applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                          application:(id<ZMApplication>)application;
 
-- (void)appendLogForConversationID:(NSUUID *)conversationID message:(NSString *)message;
 - (void)tearDown;
 
 @end

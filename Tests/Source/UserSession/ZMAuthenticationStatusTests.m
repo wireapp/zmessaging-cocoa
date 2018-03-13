@@ -399,21 +399,6 @@
     XCTAssertNil(self.sut.registrationPhoneNumberThatNeedsAValidationCode);
 }
 
-- (void)testThatItRequestsALoginPhoneVerificationCodeWhenRequestingARegistrationPhoneCodeFailsBecauseOfDuplicatedEmail
-{
-    // given
-    NSString *phone = @"+3912345678900";
-    
-    // when
-    [self.sut prepareForRequestingPhoneVerificationCodeForRegistration:phone];
-    [self.sut didFailRequestForPhoneRegistrationCode:[NSError userSessionErrorWithErrorCode:ZMUserSessionPhoneNumberIsAlreadyRegistered userInfo:nil]];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseRequestPhoneVerificationCodeForLogin);
-    XCTAssertNil(self.sut.registrationPhoneNumberThatNeedsAValidationCode);
-    XCTAssertEqualObjects(self.sut.loginPhoneNumberThatNeedsAValidationCode, phone);
-}
-
 - (void)testThatItResetsWhenFailingTheRequestForPhoneRegistrationCode
 {
     // expect

@@ -43,7 +43,7 @@ final class TestPushDispatcherClient: NSObject, PushDispatcherOptionalClient {
 }
 
 public final class PushDispatcherTests: ZMTBaseTest {
-    let sut = PushDispatcher()
+    var sut: PushDispatcher!
     
     static let token = Data(bytes: [0xba, 0xdf, 0x00, 0xd0])
     static let userID = UUID().transportString()
@@ -55,6 +55,16 @@ public final class PushDispatcherTests: ZMTBaseTest {
     static let payloadWithoutUser: [AnyHashable: Any] = ["data": [
         "type": "notice"
         ]]
+
+    public override func setUp() {
+        super.setUp()
+        sut = PushDispatcher(analytics: nil)
+    }
+    
+    public override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
     
     func testThatItDoesNotRetainTheObservers() {
         weak var observerWeakReference: TestPushDispatcherClient?
@@ -131,25 +141,6 @@ public final class PushDispatcherTests: ZMTBaseTest {
         XCTAssertTrue(NSDictionary(dictionary: client.canHandlePayloads[0]).isEqual(to: type(of: self).payload))
     }
     
-    func testThatItInvokesFallbackObserverForPushWithoutUser() {
-        // GIVEN
-        let client = TestPushDispatcherClient()
-        sut.add(client: client)
-        let fallbackClient = TestPushDispatcherClient()
-        sut.fallbackClient = fallbackClient
-        
-        // WHEN
-        sut.didReceiveRemoteNotification(type(of: self).payloadWithoutUser, fetchCompletionHandler: { _ in })
-
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // THEN
-        XCTAssertEqual(client.canHandlePayloads.count, 0)
-        
-        XCTAssertEqual(fallbackClient.receivedPayloads.count, 1)
-        XCTAssertTrue(NSDictionary(dictionary: fallbackClient.receivedPayloads[0]).isEqual(to: type(of: self).payloadWithoutUser))
-    }
-
     func testThatItForwardsTheNotificationToTheFallbackObserverIfCannotHandle() {
         // GIVEN
         let client = TestPushDispatcherClient()

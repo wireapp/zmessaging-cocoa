@@ -60,7 +60,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSManagedObjectContext *alternativeTestMOC;
 @property (nonatomic, readonly) NSManagedObjectContext *searchMOC;
 @property (nonatomic, readonly) ManagedObjectContextDirectory *contextDirectory;
-@property (nonatomic, readonly) ApplicationMock *application;
+@property (nonatomic, readonly) ApplicationMock<ZMApplication> *application;
 
 @property (nonatomic, readonly) MockTransportSession *mockTransportSession;
 @property (nonatomic, readonly) ZMUserSession *mockUserSession;
@@ -122,14 +122,8 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 - (UserClient *)createSelfClient;
 
 
-- (ZMClientMessage *)createClientTextMessage:(BOOL)encrypted;
-- (ZMClientMessage *)createClientTextMessage:(NSString *)text encrypted:(BOOL)encrypted;
-- (ZMAssetClientMessage *)createImageMessageWithImageData:(NSData *)imageData
-                                                   format:(ZMImageFormat)format
-                                                processed:(BOOL)processed
-                                                   stored:(BOOL)stored
-                                                encrypted:(BOOL)encrypted
-                                                      moc:(NSManagedObjectContext *)moc;
+- (ZMClientMessage *)createClientTextMessage;
+- (ZMClientMessage *)createClientTextMessageWithText:(NSString *)text;
 
 @end
 

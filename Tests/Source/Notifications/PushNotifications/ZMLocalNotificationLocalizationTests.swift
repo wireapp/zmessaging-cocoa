@@ -19,32 +19,13 @@
 import XCTest
 @testable import WireSyncEngine
 
+@available(iOS 10.0, *)
 class ZMLocalNotificationLocalizationTests: ZMLocalNotificationTests {
     
-    func testThatItLocalizesTitle() {
-        // given
-        let conversationName = "iOS Team"
-        let teamName = "Wire"
-        
-        let result: (String?, String?) -> String? = {
-            ZMPushStringTitle.localizedString(withConversationName: $0, teamName: $1)
-        }
-        
-        // then
-        XCTAssertEqual(result(conversationName, teamName), "iOS Team in Wire")
-        XCTAssertEqual(result(conversationName, nil), "iOS Team")
-        XCTAssertEqual(result(nil, teamName), "Wire")
-        XCTAssertNil(result(nil, nil))
-    }
-    
-    func testThatItLocalizesCallkitPushString() {
-        // "push.notification.callkit.call.started.group" = "%1$@ in %2$@";
-        // "push.notification.callkit.call.started.group.nousername.noconversationname" = "Someone calling in a conversation";
-        // "push.notification.callkit.call.started.group.nousername" = "Someone calling in %1$@";
-        // "push.notification.callkit.call.started.group.noconversationname" = "%@ calling in a conversation";
+    func testThatItLocalizesCallkitCallerName() {
         
         let result: (ZMUser, ZMConversation) -> String = {
-            ("callkit.call.started.group" as NSString).localizedCallKitString(with: $0, conversation: $1)
+            $1.localizedCallerName(with: $0)!
         }
         
         // then
@@ -52,6 +33,5 @@ class ZMLocalNotificationLocalizationTests: ZMLocalNotificationTests {
         XCTAssertEqual(result(userWithNoName, groupConversationWithoutName), "Someone calling in a conversation")
         XCTAssertEqual(result(userWithNoName, groupConversation), "Someone calling in Super Conversation")
         XCTAssertEqual(result(sender, groupConversationWithoutName), "Super User calling in a conversation")
-        XCTAssertEqual(result(sender, invalidConversation), "Super User calling in a conversation")
     }
 }

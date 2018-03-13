@@ -100,11 +100,6 @@ ZM_EMPTY_ASSERTING_INIT()
         }
     }
 
-    id<ZMSimpleListRequestPaginatorSync> strongTranscoder = self.transcoder;
-    if ([strongTranscoder respondsToSelector:@selector(additionalQueryItems)]) {
-        [queryItems addObjectsFromArray:strongTranscoder.additionalQueryItems];
-    }
-
     NSURLComponents *components = [NSURLComponents componentsWithString:self.basePath];
     components.queryItems = queryItems;
     

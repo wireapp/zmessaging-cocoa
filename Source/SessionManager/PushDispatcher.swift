@@ -73,32 +73,38 @@ public final class PushDispatcher: NSObject {
     internal var pushRegistrant: PushKitRegistrant!
     private(set) var lastKnownPushTokens: [PushTokenType: Data] = [:]
     private let callbackQueue: DispatchQueue = DispatchQueue.main
+    private let notificationsTracker: NotificationsTracker?
     
-    override init() {
+    init(analytics: AnalyticsType?) {
+        if let analytics = analytics {
+            notificationsTracker = NotificationsTracker(analytics: analytics)
+        } else {
+            notificationsTracker = nil
+        }
+
         super.init()
-        let didReceivePayload: DidReceivePushCallback = { [weak self] (payload, source, completion) in
+        let didReceivePayload: DidReceivePushCallback = { [weak self] (payload, source, onCompletion) in
             
             log.debug("push notification: \(payload), source \(source)")
             
             guard let `self` = self else {
                 return
             }
-            
-            if payload.isPayloadMissingUserInformation() {
-                self.callbackQueue.async {
-                    self.fallbackClient?.receivedPushNotification(with: payload, from: source, completion: completion)
-                }
+
+            let completion: ZMPushNotificationCompletionHandler = {
+                self.notificationsTracker?.registerNotificationProcessingCompleted()
+                onCompletion?($0)
             }
-            else {
-                self.callbackQueue.async {
-                    let possibleHandlers = self.clients.filter { $0.mustHandle(payload: payload) }
-                    
-                    if let handler = possibleHandlers.last {
-                            handler.receivedPushNotification(with: payload, from: source, completion: completion)
-                    }
-                    else {
-                            self.fallbackClient?.receivedPushNotification(with: payload, from: source, completion: completion)
-                    }
+
+            self.notificationsTracker?.registerReceivedPush()
+
+            self.callbackQueue.async {
+                let possibleHandlers = self.clients.filter { $0.mustHandle(payload: payload) }
+                
+                if let handler = possibleHandlers.last {
+                    handler.receivedPushNotification(with: payload, from: source, completion: completion)
+                } else {
+                    self.fallbackClient?.receivedPushNotification(with: payload, from: source, completion: completion)
                 }
             }
         }
@@ -148,6 +154,7 @@ public final class PushDispatcher: NSObject {
         pushRegistrant = PushKitRegistrant(didUpdateCredentials: didUpdateToken,
                                            didReceivePayload: callback,
                                            didInvalidateToken: didInvalidateToken)
+        pushRegistrant.notificationsTracker = self.notificationsTracker
         if let token = pushRegistrant.pushToken {
             self.lastKnownPushTokens[.voip] = token
         }

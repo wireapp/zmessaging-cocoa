@@ -46,12 +46,12 @@
 
 // UNKNOWN MESSAGE
 "push.notification.add.unknown.group" = "%1$@: new message";
-"push.notification.add.unknown.group.nousername" = "Nowa wiadomość";
-"push.notification.add.unknown.group.nousername.noconversationname" = "Nowa wiadomość";
+"push.notification.add.unknown.group.nousername" = "nowa wiadomość";
+"push.notification.add.unknown.group.nousername.noconversationname" = "nowa wiadomość";
 "push.notification.add.unknown.group.noconversationname" = "%1$@ wysłał/ -a wiadomość";
 
-"push.notification.add.unknown.oneonone" = "Nowa wiadomość";
-"push.notification.add.unknown.oneonone.nousername" = "Nowa wiadomość";
+"push.notification.add.unknown.oneonone" = "nowa wiadomość";
+"push.notification.add.unknown.oneonone.nousername" = "nowa wiadomość";
 
 // IMAGE
 "push.notification.add.image.group" = "%1$@ shared a picture";

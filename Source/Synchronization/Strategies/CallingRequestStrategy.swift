@@ -20,15 +20,6 @@ import Foundation
 import WireMessageStrategy
 import WireDataModel
 
-
-extension ZMConversation {
-    @objc (appendCallingMessageWithContent:)
-    public func appendCallingMessage(content: String) -> ZMClientMessage? {
-        let genericMessage = ZMGenericMessage(callingContent: content, nonce: NSUUID().transportString())
-        return self.append(genericMessage, expires: false, hidden: true)
-    }
-}
-
 @objc
 public final class CallingRequestStrategy : NSObject, RequestStrategy {
     

@@ -121,7 +121,7 @@ class ConversationStatusStrategyTests: MessagingTest {
             conversation.remoteIdentifier = UUID.create()
             conversation.setLocallyModifiedKeys(Set(arrayLiteral: "clearedTimeStamp"))
             
-            let message = ZMMessage.insertNewObject(in: self.syncMOC)
+            let message = ZMMessage(nonce: UUID(), managedObjectContext: self.syncMOC)
             message.serverTimestamp = conversation.clearedTimeStamp
             message.visibleInConversation = conversation
             

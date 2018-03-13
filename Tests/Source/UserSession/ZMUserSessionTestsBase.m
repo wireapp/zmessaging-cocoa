@@ -85,6 +85,8 @@
         return YES;
     }]];
     [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
+    
+    self.mockSessionManager = [[MockSessionManager alloc] init];
     self.mediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
     self.flowManagerMock = [[FlowManagerMock alloc] init];
     self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
@@ -93,10 +95,10 @@
     self.proxiedRequestStatus = [[ProxiedRequestsStatus alloc] initWithRequestCancellation:self.transportSession];
     self.operationStatus = [[OperationStatus alloc] init];
     
-    id applicationStatusDirectory = [OCMockObject niceMockForClass:[ZMApplicationStatusDirectory class]];
-    [(ZMApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.clientRegistrationStatus] clientRegistrationStatus];
-    [(ZMApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.proxiedRequestStatus] proxiedRequestStatus];
-    [(ZMApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.operationStatus] operationStatus];
+    id applicationStatusDirectory = [OCMockObject niceMockForClass:[ApplicationStatusDirectory class]];
+    [(ApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.clientRegistrationStatus] clientRegistrationStatus];
+    [(ApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.proxiedRequestStatus] proxiedRequestStatus];
+    [(ApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.operationStatus] operationStatus];
     
     self.syncStrategy = [OCMockObject mockForClass:[ZMSyncStrategy class]];
     [(ZMSyncStrategy *)[[(id)self.syncStrategy stub] andReturn:applicationStatusDirectory] applicationStatusDirectory];
@@ -117,6 +119,7 @@
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
                                                   mediaManager:self.mediaManager
                                                    flowManager:self.flowManagerMock
+                                                     analytics:nil
                                                apnsEnvironment:self.apnsEnvironment
                                                  operationLoop:self.operationLoop
                                                    application:self.application
@@ -124,6 +127,7 @@
                                                  storeProvider:self.storeProvider];
         
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
+    self.sut.sessionManager = self.mockSessionManager;
     
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -163,6 +167,7 @@
     self.thirdPartyServices = nil;
     self.sut.thirdPartyServicesDelegate = nil;
     self.sut.requestToOpenViewDelegate = nil;
+    self.mockSessionManager = nil;
 
     [self.transportSession stopMocking];
     self.transportSession = nil;

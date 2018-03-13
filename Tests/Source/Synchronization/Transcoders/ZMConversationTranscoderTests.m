@@ -102,7 +102,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     conversation.remoteIdentifier = [NSUUID createUUID];
     conversation.conversationType = ZMConversationTypeGroup;
     
-    ZMMessage *msg = [ZMTextMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMMessage *msg = [[ZMTextMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
     msg.serverTimestamp = [NSDate date];
     [conversation.mutableMessages addObject:msg];
     conversation.lastServerTimeStamp = [msg.serverTimestamp dateByAddingTimeInterval:5];
@@ -2223,6 +2223,72 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertFalse([conversation.keysThatHaveLocalModifications containsObject:modifiedKey]);
 }
 
+- (void)testThatItCreatesARequestForRemovingAServiceUser
+{
+    // given
+    NSString *modifiedKey = ZMConversationUnsyncedInactiveParticipantsKey;
+
+    NSUUID *user3ID = [NSUUID createUUID];
+    NSUUID *conversationID = [NSUUID createUUID];
+
+    NSSet *keys = [NSSet setWithObject:modifiedKey];
+
+    __block ZMConversation *conversation;
+
+    [self.syncMOC performBlockAndWait:^{
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        selfUser.remoteIdentifier = self.selfUserID;
+
+        ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user1.remoteIdentifier = [NSUUID createUUID];
+
+        ZMUser *user2 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user2.remoteIdentifier = [NSUUID createUUID];
+
+        ZMUser *user3 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user3.remoteIdentifier = user3ID;
+        user3.serviceIdentifier = [[NSUUID createUUID] transportString];
+        user3.providerIdentifier = [[NSUUID createUUID] transportString];
+
+        conversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2, user3]];
+        conversation.remoteIdentifier = conversationID;
+
+        [conversation synchronizeAddedUser:user1];
+        [conversation synchronizeAddedUser:user2];
+        [conversation synchronizeAddedUser:user3];
+
+        [conversation removeParticipant:user3];
+        [conversation setLocallyModifiedKeys:keys];
+
+        [self.syncMOC saveOrRollback];
+    }];
+
+
+    for (id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
+        [tracker objectsDidChange:[NSSet setWithObject:conversation]];
+    }
+
+    ZMTransportRequest *request = [self.sut nextRequest];
+    XCTAssertNotNil(request);
+    XCTAssertNotNil(request.expirationDate);
+
+    // when
+    NSDictionary *responsePayload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[user3ID] eventType:@"conversation.member-leave"];
+    // Response after removing service user is wrapped inside a dictionary
+    NSDictionary *wrappedPayload = @{@"events" : responsePayload };
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:wrappedPayload HTTPStatus:200 transportSessionError:nil];
+    [request completeWithResponse:response];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    [self.syncMOC saveOrRollback];
+
+    // then
+    XCTAssertEqual(request.method, ZMMethodDELETE);
+    NSString *expectedPath = [NSString pathWithComponents:@[ @"/", @"conversations", conversationID.transportString, @"bots", user3ID.transportString ]];
+    XCTAssertEqualObjects(request.path, expectedPath);
+    XCTAssertFalse([conversation.keysThatHaveLocalModifications containsObject:modifiedKey]);
+}
+
 - (void)testThatItCreatesSeveralRequestsForRemovingSeveralParticipants
 {
     // given
@@ -3212,7 +3278,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               };
     
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventConversationCreate)] type];
+    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeConversationCreate)] type];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -3268,7 +3334,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               };
     
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventConversationCreate)] type];
+    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeConversationCreate)] type];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -3308,7 +3374,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               };
     
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventConversationCreate)] type];
+    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeConversationCreate)] type];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
     
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -3348,7 +3414,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               @"data": @{@"name": newName}
                               };
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventConversationRename)] type];
+    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeConversationRename)] type];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:time] timeStamp];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:user3.remoteIdentifier] senderUUID];
@@ -3378,7 +3444,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               @"connection" : @{}
                               };
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventUnknown)] type];
+    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUnknown)] type];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:nil] conversationUUID];
 
@@ -3475,7 +3541,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
         
         // forcing an event here - in real code it will be created in another syncObject, not tested here
-        ZMSystemMessage *memberJoinEvent = [ZMSystemMessage insertNewObjectInManagedObjectContext:self.syncMOC];
+        ZMSystemMessage *memberJoinEvent = [[ZMSystemMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC];
         memberJoinEvent.systemMessageType = ZMSystemMessageTypeParticipantsAdded;
         [existingConnection.conversation.mutableMessages addObject:memberJoinEvent];
         
@@ -3562,7 +3628,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }];
 }
 
-- (void)testThatItDoesNotSetLastModifiedDateFromPushPayloadIfItIsAMemberUpdate
+- (void)testThatItDoesNotSetLastModifiedDateFromPushPayloadIfForIgnoredEvents
 {
     // given
     __block ZMConversation *conversation;
@@ -3574,19 +3640,24 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.remoteIdentifier = conversationID;
         conversation.lastModifiedDate = lastModifiedDate;
+    
+        NSArray<NSNumber *> *ignoredEventTypes = @[@(ZMUpdateEventTypeConversationAccessModeUpdate), @(ZMUpdateEventTypeTeamMemberUpdate), @(ZMUpdateEventTypeTeamMemberLeave), @(ZMUpdateEventTypeConversationRename)];
+        NSMutableArray<ZMUpdateEvent *> *events = @[].mutableCopy;
         
-        NSDictionary *payload = @{@"conversation": conversation.remoteIdentifier.transportString,
-                                  @"data": @{
-                                          },
-                                  @"from": @"6185dc93-aabd-4ece-bf75-372a6dd3592b",
-                                  @"time": newerLastModifiedDate.transportString,
-                                  @"type": @"conversation.member-update"};
-        
-        ZMUpdateEvent *updateEvent = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-        XCTAssertNotNil(updateEvent);
+        for (NSNumber *eventType in ignoredEventTypes) {
+            NSDictionary *payload = @{@"conversation": conversation.remoteIdentifier.transportString,
+                                      @"data": @{},
+                                      @"from": @"6185dc93-aabd-4ece-bf75-372a6dd3592b",
+                                      @"time": newerLastModifiedDate.transportString,
+                                      @"type": [ZMUpdateEvent eventTypeStringForUpdateEventType:eventType.unsignedIntegerValue]};
+            
+            [events addObject:[ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil]];
+        }
         
         // when
-        [self.sut processEvents:@[updateEvent] liveEvents:YES prefetchResult:nil];
+        [self performIgnoringZMLogError:^{ // ignore errors from that we are sending incomplete payloads
+            [self.sut processEvents:events liveEvents:YES prefetchResult:nil];
+        }];
         
         // then
         XCTAssertEqualWithAccuracy(conversation.lastModifiedDate.timeIntervalSinceReferenceDate, lastModifiedDate.timeIntervalSinceReferenceDate, 0.2);
@@ -3770,7 +3841,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         NSDate *date = [NSDate dateWithTimeIntervalSinceReferenceDate:417005700];
         for (size_t i = 0; i < MessageCount; ++i) {
-            ZMTextMessage *message = [ZMTextMessage insertNewObjectInManagedObjectContext:self.syncMOC];
+            ZMTextMessage *message = [[ZMTextMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC];
             message.text = [NSString stringWithFormat:@"%llu", (long long unsigned) i];
             message.serverTimestamp = [date dateByAddingTimeInterval:(NSTimeInterval) i];
             [syncConversation.mutableMessages addObject:message];

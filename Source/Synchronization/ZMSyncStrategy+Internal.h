@@ -19,6 +19,7 @@
 
 #import "ZMSyncStrategy.h"
 @class ZMGSMCallHandler;
+@class EventDecoder;
 
 @interface ZMSyncStrategy (Internal)
 

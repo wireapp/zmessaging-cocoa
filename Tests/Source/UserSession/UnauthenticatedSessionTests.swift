@@ -198,7 +198,7 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         XCTAssertEqual(observer.authenticationDidFailEvents[0].localizedDescription, NSError(code: .needsCredentials, userInfo:nil).localizedDescription)
     }
     
-    func testThatDuringLoginItThrowsErrorWhenOffline() {
+    func testThatDuringLoginWithEmailItThrowsErrorWhenOffline() {
         let observer = TestAuthenticationObserver(unauthenticatedSession: sut)
         // given
         reachability.mayBeReachable = false
@@ -211,6 +211,19 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         XCTAssertEqual(observer.authenticationDidFailEvents[0].localizedDescription, NSError(code: .networkError, userInfo:nil).localizedDescription)
     }
 
+    func testThatDuringLoginWithPhoneNumberItThrowsErrorWhenOffline() {
+        let observer = TestAuthenticationObserver(unauthenticatedSession: sut)
+        // given
+        reachability.mayBeReachable = false
+        // when
+        sut.login(with: ZMPhoneCredentials(phoneNumber: "+49111111111111", verificationCode: "1234"))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        // then
+        XCTAssertEqual(observer.authenticationDidSucceedEvents, 0)
+        XCTAssertEqual(observer.authenticationDidFailEvents.count, 1)
+        XCTAssertEqual(observer.authenticationDidFailEvents[0].localizedDescription, NSError(code: .networkError, userInfo:nil).localizedDescription)
+    }
+    
     func testThatItParsesCookieDataAndDoesCallTheDelegateIfTheCookieIsValidAndThereIsAUserIdKeyUser() {
         // given
         let userId = UUID.create()

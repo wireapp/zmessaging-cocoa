@@ -41,7 +41,7 @@
 #import <WireSyncEngine/ZMUserTranscoder.h>
 #import <WireSyncEngine/NSError+ZMUserSessionInternal.h>
 #import <WireSyncEngine/ZMOperationLoop.h>
-#import <WireSyncEngine/ZMLocalNotificationLocalization.h>
+#import <WireSyncEngine/ZMOperationLoop+Private.h>
 #import <WireSyncEngine/UILocalNotification+StringProcessing.h>
 #import <WireSyncEngine/ZMHotFixDirectory.h>
 #import <WireSyncEngine/ZMUserSessionRegistrationNotification.h>
@@ -60,3 +60,8 @@
 #import <WireSyncEngine/ZMPhoneNumberVerificationTranscoder.h>
 #import <WireSyncEngine/ZMHotFix.h>
 #import <WireSyncEngine/ZMStoredLocalNotification.h>
+#import <WireSyncEngine/ZMSyncStrategy.h>
+#import <WireSyncEngine/ZMSyncStrategy+EventProcessing.h>
+#import <WireSyncEngine/ZMObjectStrategyDirectory.h>
+#import <WireSyncEngine/ZMUpdateEventsBuffer.h>
+#import <WireSyncEngine/ZMConversationTranscoder.h>

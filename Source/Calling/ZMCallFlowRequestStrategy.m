@@ -33,7 +33,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 @property (nonatomic) NSNotificationQueue *voiceGainNotificationQueue;
 @property (nonatomic) BOOL pushChannelIsOpen;
 @property (nonatomic, readonly, weak) NSManagedObjectContext *uiManagedObjectContext;
-@property (nonatomic, strong) dispatch_queue_t avsLogQueue;
 @property (nonatomic, readonly, weak) id<ZMApplication> application;
 @property (nonatomic) id pushChannelObserverToken;
 
@@ -70,7 +69,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
                                                  [self pushChannelDidChange:note];
                                              }];
         self.pushChannelIsOpen = NO;
-        self.avsLogQueue = dispatch_queue_create("AVSLog", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -93,13 +91,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Calling";
 - (ZMTransportRequest *)nextRequestIfAllowed
 {
     return nil;
-}
-
-- (void)appendLogForConversationID:(NSUUID *)conversationID message:(NSString *)message;
-{
-    dispatch_async(self.avsLogQueue, ^{
-        [self.flowManager appendLogFor:conversationID message:message];
-    });
 }
 
 - (void)pushChannelDidChange:(NotificationInContext *)note

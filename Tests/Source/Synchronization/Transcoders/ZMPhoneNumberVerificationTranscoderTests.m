@@ -211,28 +211,6 @@
     XCTAssertEqualObjects(expectedRequest, request);
 }
 
-- (void)testThatIfDuplicatedPhoneNumberGoesToLoginCodeRequestStatus
-{
-    // given
-    NSString *phoneNumber = @"+712434235";
-    [self.authenticationStatus prepareForRequestingPhoneVerificationCodeForRegistration:phoneNumber];
-    
-    ZMTransportRequest *request = [self.sut nextRequest];
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"code": @0,
-                                                                               @"message": @"",
-                                                                               @"label": @"key-exists"}
-                                                                  HTTPStatus:409
-                                                       transportSessionError:nil];
-    
-    //when
-    [request completeWithResponse:response];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqual(self.authenticationStatus.currentPhase, ZMAuthenticationPhaseRequestPhoneVerificationCodeForLogin);
-    XCTAssertEqualObjects(self.authenticationStatus.loginPhoneNumberThatNeedsAValidationCode, phoneNumber);
-}
-
 - (void)testThatIfPhoneVerificationCodeRequestFailsPhoneNumberIsClearedAndCreadentialsAreNotSet
 {
     // given

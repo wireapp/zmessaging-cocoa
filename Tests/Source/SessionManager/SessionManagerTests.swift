@@ -332,6 +332,7 @@ class SessionManagerTests_Teams: IntegrationTest {
     func testThatItUpdatesAccountAfterLoginWithTeamName() {
         // given
         let teamName = "Wire"
+        let image = MockAsset(in: mockTransportSession.managedObjectContext, forID: selfUser.previewProfileAssetIdentifier!)
         self.mockTransportSession.performRemoteChanges { session in
             _ = session.insertTeam(withName: teamName, isBound: true, users: [self.selfUser])
         }
@@ -349,7 +350,8 @@ class SessionManagerTests_Teams: IntegrationTest {
         guard let account = manager.accounts.first, manager.accounts.count == 1 else { XCTFail("Should have one account"); return }
         XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
         XCTAssertEqual(account.teamName, teamName)
-        XCTAssertNil(account.imageData)
+        XCTAssertEqual(account.imageData, image?.data)
+        XCTAssertNil(account.teamImageData)
     }
     
     func testThatItUpdatesAccountAfterTeamNameChanges() {
@@ -473,51 +475,6 @@ class SessionManagerTests_Teams: IntegrationTest {
 
         // then
         XCTAssertEqual(NSError(code: .accountLimitReached, userInfo: nil), recorder.notifications.last!.error)
-    }
-}
-
-class SessionManagerPayloadCheckerTests: MessagingTest {
-    func testThatItDetectsTheUserFromPayload() {
-        // GIVEN
-        let user = ZMUser.selfUser(in: self.uiMOC)
-        user.remoteIdentifier = UUID()
-        
-        let payload: [AnyHashable: Any] = ["data": [
-                "user": user.remoteIdentifier!.transportString()
-            ]
-        ]
-        // WHEN & THEN
-        XCTAssertTrue(payload.isPayload(for: user))
-    }
-    
-    func testThatItDiscardsThePayloadFromOtherUser() {
-        // GIVEN
-        let user = ZMUser.selfUser(in: self.uiMOC)
-        user.remoteIdentifier = UUID()
-        
-        let payload: [AnyHashable: Any] = ["data": [
-            "user": UUID().transportString()
-            ]
-        ]
-        // WHEN & THEN
-        XCTAssertFalse(payload.isPayload(for: user))
-    }
-    
-    func testThatItDetectsPayloadWithUserAsCorrect() {
-        // GIVEN
-        let payload: [AnyHashable: Any] = ["data": [
-            "user": UUID().transportString()
-            ]
-        ]
-        // WHEN
-        XCTAssertFalse(payload.isPayloadMissingUserInformation())
-    }
-    
-    func testThatItDetectsPayloadWithoutUserAsWrong() {
-        // GIVEN
-        let payload: [AnyHashable: Any] = [:]
-        // WHEN
-        XCTAssertTrue(payload.isPayloadMissingUserInformation())
     }
 }
 
@@ -873,6 +830,47 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         self.sessionManager!.tearDownAllBackgroundSessions()
     }
     
+    func testThatItActivatesAccountWhichReceivesACallInTheBackground() {
+        // GIVEN
+        let manager = sessionManager!.accountManager
+        let account1 = Account(userName: "Test Account 1", userIdentifier: currentUserIdentifier)
+        account1.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+
+        manager.addOrUpdate(account1)
+        let account2 = Account(userName: "Test Account 2", userIdentifier: UUID())
+        account2.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        manager.addOrUpdate(account2)
+        
+        // Make account 1 the active session
+        weak var session1: ZMUserSession? = nil
+        sessionManager?.loadSession(for: account1, completion: { (session) in
+            session1 = session
+        })
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(sessionManager!.activeUserSession, session1)
+        
+        // Load session for account 2 in the background
+        weak var session2: ZMUserSession? = nil
+        weak var conversation: ZMConversation? = nil
+        weak var caller: ZMUser? = nil
+        self.sessionManager!.withSession(for: account2, perform: { session in
+            session2 = session
+            conversation = ZMConversation.insertNewObject(in: session.managedObjectContext)
+            caller = ZMUser.insertNewObject(in: session.managedObjectContext)
+        })
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // WHEN
+        sessionManager?.callCenterDidChange(callState: .answered(degraded: false), conversation: conversation!, caller: caller!, timestamp: nil)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(sessionManager!.activeUserSession, session2)
+        
+        // CLEANUP
+        self.sessionManager!.tearDownAllBackgroundSessions()
+    }
+    
 }
 
 class SessionManagerTests_Push: IntegrationTest {
@@ -1008,8 +1006,12 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     }
     
     var startedMigrationCalled = false
-    func sessionManagerWillStartMigratingLocalStore() {
+    func sessionManagerWillMigrateAccount(_ account: Account) {
         startedMigrationCalled = true
+    }
+    
+    func sessionManagerWillMigrateLegacyAccount() {
+        // no op
     }
     
 }

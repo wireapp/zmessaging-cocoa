@@ -23,10 +23,8 @@
 
 @implementation CallKitDelegateTestsMocking
 
-+ (void)mockUserSession:(id)userSession callKitDelegate:(id)callKitDelegate
-{
-    [[(id)[userSession stub] andReturn:callKitDelegate] callKitDelegate];
-    
++ (void)mockUserSession:(id)userSession
+{    
     [(id)[userSession stub] performChanges:[OCMArg checkWithBlock:^BOOL(id param) {
         void (^passedBlock)() = param;
         passedBlock();

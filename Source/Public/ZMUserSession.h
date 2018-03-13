@@ -46,28 +46,14 @@
 @protocol ZMApplication;
 @protocol LocalStoreProviderProtocol;
 @protocol FlowManagerType;
+@protocol SessionManagerType;
 
 @class ManagedObjectContextDirectory;
 @class TopConversationsDirectory;
 
-@protocol ZMAVSLogObserver <NSObject>
-@required
-- (void)logMessage:(NSString *)msg;
-@end
-
-@protocol ZMAVSLogObserverToken <NSObject>
-@end
-
-typedef NS_ENUM(NSUInteger, ZMCallNotificationStyle) {
-    ZMCallNotificationStylePushNotifications,
-    ZMCallNotificationStyleCallKit
-};
-
 extern NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName;
 extern NSString * const ZMPhoneVerificationCodeKey;
 extern NSString * const ZMUserSessionResetPushTokensNotificationName;
-extern NSString * const ZMTransportRequestLoopNotificationName;
-extern NSString * const ZMPotentialErrorDetectedNotificationName;
 
 /// The main entry point for the WireSyncEngine API.
 ///
@@ -90,7 +76,7 @@ extern NSString * const ZMPotentialErrorDetectedNotificationName;
                           appVersion:(NSString *)appVersion
                        storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
 
-@property (nonatomic, weak) SessionManager *sessionManager;
+@property (nonatomic, weak) id<SessionManagerType> sessionManager;
 @property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;
 @property (atomic, readonly) ZMNetworkState networkState;
@@ -117,20 +103,11 @@ extern NSString * const ZMPotentialErrorDetectedNotificationName;
 /// Top conversation directory
 @property (nonatomic, readonly) TopConversationsDirectory *topConversationsDirectory;
 
-/// CallKit delegate
-@property (nonatomic, readonly) CallKitDelegate *callKitDelegate;
-
-/// The URL of the shared container that has been determinned using the passed in application group identifier
-//@property (nonatomic, readonly) NSURL *sharedContainerURL;
-
 /// The sync has been completed as least once
 @property (nonatomic, readonly) BOOL hasCompletedInitialSync;
 
 /// Request the push token from iOS and send it to the backend.
 - (void)registerForRemoteNotifications;
-
-/// Session can notify about the background calls via iOS CallKit or using the push notifications.
-@property (nonatomic) ZMCallNotificationStyle callNotificationStyle;
 
 @end
 
@@ -153,18 +130,6 @@ extern NSString * const ZMPotentialErrorDetectedNotificationName;
 
 @end
 
-
-
-@interface ZMUserSession (AVSLogging)
-
-/// Add observer for AVS logging
-+ (id<ZMAVSLogObserverToken>)addAVSLogObserver:(id<ZMAVSLogObserver>)observer;
-/// Remove observer for AVS logging
-+ (void)removeAVSLogObserver:(id<ZMAVSLogObserverToken>)token;
-
-+ (void)appendAVSLogMessageForConversation:(ZMConversation *)conversation withMessage:(NSString *)message;
-
-@end
 
 @interface ZMUserSession (Calling)
 

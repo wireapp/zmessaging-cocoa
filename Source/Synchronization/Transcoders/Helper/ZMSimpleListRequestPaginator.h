@@ -68,7 +68,4 @@
 @optional
 - (BOOL)shouldParseErrorForResponse:(ZMTransportResponse*)response;
 
-/// Any additional query parameters the paginator should append to the request
-@property (nonatomic, readonly) NSArray <NSURLQueryItem *> * additionalQueryItems;
-
 @end

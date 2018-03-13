@@ -75,7 +75,6 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     self.isWaitingForEmailVerification = NO;
     
     self.duplicateRegistrationEmail = NO;
-    self.duplicateRegistrationPhoneNumber = NO;
 }
 
 - (void)setRegistrationUser:(ZMCompleteRegistrationUser *)registrationUser
@@ -188,11 +187,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
     self.authenticationCookieData = nil;
-    BOOL wasDuplicated = self.duplicateRegistrationPhoneNumber;
     [self resetLoginAndRegistrationStatus];
-    if(wasDuplicated && credentials.credentialWithPhone) {
-        self.duplicateRegistrationPhoneNumber = YES;
-    }
     self.loginCredentials = credentials;
     self.isWaitingForLogin = YES;
     [self startLoginTimer];
@@ -229,31 +224,14 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)prepareForRegistrationPhoneVerificationWithCredentials:(ZMPhoneCredentials *)phoneCredentials
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
-    // if it was duplicated phone, do login instead
-    BOOL wasDuplicated = self.duplicateRegistrationPhoneNumber;
     [self resetLoginAndRegistrationStatus];
-
-    self.duplicateRegistrationPhoneNumber = wasDuplicated;
-    if(wasDuplicated) {
-        self.loginCredentials = phoneCredentials;
-    }
-    else {
-        self.registrationPhoneValidationCredentials = phoneCredentials;
-    }
+    self.registrationPhoneValidationCredentials = phoneCredentials;
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 
 - (void)didFailRequestForPhoneRegistrationCode:(NSError *)error
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
-    if(error.code == ZMUserSessionPhoneNumberIsAlreadyRegistered) {
-        self.duplicateRegistrationPhoneNumber = YES;
-        self.loginPhoneNumberThatNeedsAValidationCode = self.registrationPhoneNumberThatNeedsAValidationCode;
-        self.registrationPhoneNumberThatNeedsAValidationCode = nil;
-        ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
-        return;
-    }
-    
     [self resetLoginAndRegistrationStatus];
     [ZMUserSessionRegistrationNotification notifyPhoneNumberVerificationCodeRequestDidFail:error context:self];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
@@ -333,18 +311,10 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)didFailLoginWithPhone:(BOOL)invalidCredentials
 {
     ZMLogDebug(@"%@ invalid credentials: %d", NSStringFromSelector(_cmd), invalidCredentials);
-    BOOL isDuplicated = self.duplicateRegistrationPhoneNumber;
     [self resetLoginAndRegistrationStatus];
     
-    if(isDuplicated) {
-        NSError *error = [NSError userSessionErrorWithErrorCode:ZMUserSessionPhoneNumberIsAlreadyRegistered userInfo:nil];
-        
-        [ZMUserSessionRegistrationNotification notifyRegistrationDidFail:error context:self];
-    }
-    else {
-        NSError *error = [NSError userSessionErrorWithErrorCode:(invalidCredentials ? ZMUserSessionInvalidCredentials : ZMUserSessionUnknownError) userInfo:nil];
-        [self notifyAuthenticationDidFail:error];
-    }
+    NSError *error = [NSError userSessionErrorWithErrorCode:(invalidCredentials ? ZMUserSessionInvalidCredentials : ZMUserSessionUnknownError) userInfo:nil];
+    [self notifyAuthenticationDidFail:error];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 

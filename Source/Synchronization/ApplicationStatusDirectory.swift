@@ -20,7 +20,6 @@ import Foundation
 import CoreData
 import WireMessageStrategy
 
-@objc(ZMApplicationStatusDirectory)
 public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
 
     public let apnsConfirmationStatus : BackgroundAPNSConfirmationStatus
@@ -28,23 +27,27 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let userProfileUpdateStatus : UserProfileUpdateStatus
     public let clientRegistrationStatus : ZMClientRegistrationStatus
     public let clientUpdateStatus : ClientUpdateStatus
-    public let pingBackStatus : BackgroundAPNSPingBackStatus
+    public let pushNotificationStatus : PushNotificationStatus
     public let accountStatus : AccountStatus
     public let proxiedRequestStatus : ProxiedRequestsStatus
     public let syncStatus : SyncStatus
     public let operationStatus : OperationStatus
     public let requestCancellation: ZMRequestCancellation
+    public let analytics: AnalyticsType?
+    public let teamInvitationStatus: TeamInvitationStatus
 
     public var notificationFetchStatus: BackgroundNotificationFetchStatus {
-        return pingBackStatus.status
+        return pushNotificationStatus.status
     }
     
     fileprivate var callInProgressObserverToken : Any? = nil
     
-    public init(withManagedObjectContext managedObjectContext : NSManagedObjectContext, cookieStorage : ZMPersistentCookieStorage, requestCancellation: ZMRequestCancellation, application : ZMApplication, syncStateDelegate: ZMSyncStateDelegate) {
+    public init(withManagedObjectContext managedObjectContext : NSManagedObjectContext, cookieStorage : ZMPersistentCookieStorage, requestCancellation: ZMRequestCancellation, application : ZMApplication, syncStateDelegate: ZMSyncStateDelegate, analytics: AnalyticsType? = nil) {
         self.requestCancellation = requestCancellation
         self.apnsConfirmationStatus = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: managedObjectContext, backgroundActivityFactory: BackgroundActivityFactory.sharedInstance())
         self.operationStatus = OperationStatus()
+        self.analytics = analytics
+        self.teamInvitationStatus = TeamInvitationStatus()
         self.operationStatus.isInBackground = application.applicationState == .background
         self.syncStatus = SyncStatus(managedObjectContext: managedObjectContext, syncStateDelegate: syncStateDelegate)
         self.userProfileUpdateStatus = UserProfileUpdateStatus(managedObjectContext: managedObjectContext)
@@ -53,7 +56,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
                                                                    cookieStorage: cookieStorage,
                                                                    registrationStatusDelegate: syncStateDelegate)
         self.accountStatus = AccountStatus(managedObjectContext: managedObjectContext)
-        self.pingBackStatus = BackgroundAPNSPingBackStatus(syncManagedObjectContext: managedObjectContext, authenticationProvider: cookieStorage)
+        self.pushNotificationStatus = PushNotificationStatus(managedObjectContext: managedObjectContext)
         self.proxiedRequestStatus = ProxiedRequestsStatus(requestCancellation: requestCancellation)
         self.userProfileImageUpdateStatus = UserProfileImageUpdateStatus(managedObjectContext: managedObjectContext)
         super.init()
