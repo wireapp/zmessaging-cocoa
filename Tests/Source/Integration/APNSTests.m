@@ -255,7 +255,7 @@
         convIdentifier = conversation.identifier;
     }];
     WaitForAllGroupsToBeEmpty(0.2);
-    NSUUID *notificationID = NSUUID.createUUID;
+    NSUUID *notificationID = NSUUID.timeBasedUUID;
     NSUUID *conversationID = [NSUUID uuidWithTransportString:convIdentifier];
     
     NSDictionary *eventPayload = [self conversationCreatePayloadWithNotificationID:notificationID
@@ -310,7 +310,7 @@
         convIdentifier = conversation.identifier;
     }];
     WaitForAllGroupsToBeEmpty(0.2);
-    NSUUID *notificationID = NSUUID.createUUID;
+    NSUUID *notificationID = NSUUID.timeBasedUUID;
     NSUUID *conversationID = [NSUUID uuidWithTransportString:convIdentifier];
     
     NSDictionary *eventPayload = [self conversationCreatePayloadWithNotificationID:notificationID

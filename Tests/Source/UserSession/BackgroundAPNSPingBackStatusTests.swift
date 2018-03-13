@@ -46,7 +46,7 @@ import WireMockTransport
 
 // MARK: - Tests
 
-class PushNotificationStatusTests: ZMTBaseTest {
+class PushNotificationStatusTests: MessagingTest {
     
     var sut: PushNotificationStatus!
     
@@ -54,7 +54,7 @@ class PushNotificationStatusTests: ZMTBaseTest {
     override func setUp() {
         super.setUp()
         
-        sut = PushNotificationStatus()
+        sut = PushNotificationStatus(managedObjectContext: syncMOC)
     }
     
     override func tearDown() {
@@ -65,7 +65,7 @@ class PushNotificationStatusTests: ZMTBaseTest {
     
     func testThatStatusIsInProgressWhenAddingEventIdToFetch() {
         // given
-        let eventId = UUID.create()
+        let eventId = UUID.timeBasedUUID() as UUID
         
         
         // when
@@ -77,13 +77,14 @@ class PushNotificationStatusTests: ZMTBaseTest {
     
     func testThatStatusIsInProgressWhenNotAllEventsIdsHaveBeenFetched() {
         // given
-        let eventId1 = UUID.create()
-        let eventId2 = UUID.create()
+        let eventId1 = UUID.timeBasedUUID() as UUID
+        let eventId2 = UUID.timeBasedUUID() as UUID
         
         sut.fetch(eventId: eventId1) { (_) in }
         sut.fetch(eventId: eventId2) { (_) in }
         
         // when
+        syncMOC.zm_lastNotificationID = eventId1
         sut.didFetch(eventIds: [eventId1], finished: true)
         
         // then
@@ -92,10 +93,11 @@ class PushNotificationStatusTests: ZMTBaseTest {
     
     func testThatStatusIsDoneAfterEventIdIsFetched() {
         // given
-        let eventId = UUID.create()
+        let eventId = UUID.timeBasedUUID() as UUID
         sut.fetch(eventId: eventId) { (_) in }
         
         // when
+        syncMOC.zm_lastNotificationID = eventId
         sut.didFetch(eventIds: [eventId], finished: true)
         
         // then
@@ -104,10 +106,11 @@ class PushNotificationStatusTests: ZMTBaseTest {
     
     func testThatStatusIsDoneAfterEventIdIsFetchedEvenIfMoreEventsWillBeFetched() {
         // given
-        let eventId = UUID.create()
+        let eventId = UUID.timeBasedUUID() as UUID
         sut.fetch(eventId: eventId) { (_) in }
         
         // when
+        syncMOC.zm_lastNotificationID = eventId
         sut.didFetch(eventIds: [eventId], finished: false)
         
         // then
@@ -116,7 +119,7 @@ class PushNotificationStatusTests: ZMTBaseTest {
     
     func testThatStatusIsDoneIfEventsCantBeFetched() {
         // given
-        let eventId = UUID.create()
+        let eventId = UUID.timeBasedUUID() as UUID
         sut.fetch(eventId: eventId) { (_) in }
         
         // when
@@ -128,13 +131,33 @@ class PushNotificationStatusTests: ZMTBaseTest {
     
     func testThatCompletionHandlerIsCalledAfterAllEventsHasBeenFetched() {
         // given
-        let eventId = UUID.create()
+        let eventId = UUID.timeBasedUUID() as UUID
+        let expectation = self.expectation(description: "completion handler was called")
+        
+        // expect
         sut.fetch(eventId: eventId) { (result) in
-            _ = self.expectation(description: "completion handler was called")
+            expectation.fulfill()
         }
         
         // when
+        syncMOC.zm_lastNotificationID = eventId
         sut.didFetch(eventIds: [eventId], finished: true)
+        
+        // then
+        XCTAssertEqual(sut.status, .done)
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
+    func testThatCompletionHandlerIsCalledImmediatelyIfEventHasAlreadyBeenFetched() {
+        // given
+        let eventId = UUID.timeBasedUUID() as UUID
+        let expectation = self.expectation(description: "completion handler was called")
+        syncMOC.zm_lastNotificationID = eventId
+
+        // when
+        sut.fetch(eventId: eventId) { (result) in
+            expectation.fulfill()
+        }
         
         // then
         XCTAssertEqual(sut.status, .done)

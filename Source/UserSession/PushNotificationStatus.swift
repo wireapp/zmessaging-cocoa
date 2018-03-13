@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2016 Wire Swiss GmbH
+// Copyright (C) 2018 Wire Swiss GmbH
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ import Foundation
 import WireDataModel
 
 private let lastUpdateEventIDKey = "LastUpdateEventID"
+private let zmLog = ZMSLog(tag: "PushNotificationStatus")
 
 // MARK: - AuthenticationStatusProvider
 
@@ -89,11 +90,15 @@ extension BackgroundNotificationFetchStatus: CustomStringConvertible {
 open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusProvider {
 
     private var eventsIdsToFetch: Set<UUID> = Set()
-    private var receivedEventsIds: Set<UUID> = Set()
     private var completionHandlers: [UUID: ZMPushResultHandler] = [:]
+    private let managedObjectContext: NSManagedObjectContext
     
     public var status: BackgroundNotificationFetchStatus {
         return eventsIdsToFetch.isEmpty ? .done : .inProgress
+    }
+    
+    public init(managedObjectContext: NSManagedObjectContext) {
+        self.managedObjectContext = managedObjectContext
     }
     
     /// Schedule to fetch an event with a given UUID
@@ -102,11 +107,13 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
     /// - parameter completionHandler: The completion handler will be run when event has been downloaded and when there's no more events to fetch
     @objc(fetchEventId:completionHandler:)
     public func fetch(eventId: UUID, completionHandler: @escaping (ZMPushPayloadResult) -> Void) {
+        guard eventId.isType1UUID else {
+            return zmLog.error("Attempt to fetch event id not conforming to UUID type1: \(eventId)")
+        }
         // add eventId to list of events to fetch
         
-        // TODO jacob: if we receive a push notice for an event which was fetched in a previous launch we would never call the completion handler
-        
-        guard !receivedEventsIds.contains(eventId) else {
+        if let order = managedObjectContext.zm_lastNotificationID?.compare(withType1: eventId), order == .orderedDescending || order == .orderedSame {
+            // We have already fetched the event and will therefore immediately call the completion handler
             return completionHandler(.success)
         }
         
@@ -123,12 +130,11 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
     @objc(didFetchEventIds:finished:)
     public func didFetch(eventIds: [UUID], finished: Bool) {
         // remove eventId from list and call completion handler
-        receivedEventsIds.formUnion(eventIds)
         eventsIdsToFetch.subtract(eventIds)
         
-        guard !finished else { return }
+        guard let lastEventId = managedObjectContext.zm_lastNotificationID, finished else { return }
         
-        for eventId in completionHandlers.keys.filter({ self.receivedEventsIds.contains($0) }) {
+        for eventId in completionHandlers.keys.filter({  lastEventId.compare(withType1: $0) == .orderedDescending || lastEventId.compare(withType1: $0) == .orderedSame }) {
             let completionHandler = completionHandlers.removeValue(forKey: eventId)
             completionHandler?(.success)
         }
