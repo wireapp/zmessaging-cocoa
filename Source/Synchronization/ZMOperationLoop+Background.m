@@ -29,7 +29,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Network";
 static NSString * const PushChannelDataKey = @"data";
 static NSString * const PushChannelIdentifierKey = @"id";
 static NSString * const PushChannelNotificationTypeKey = @"type";
-
 static NSString * const PushNotificationTypePlain  = @"plain";
 static NSString * const PushNotificationTypeCipher = @"cipher";
 static NSString * const PushNotificationTypeNotice = @"notice";
@@ -41,14 +40,6 @@ static NSString * const PushNotificationTypeNotice = @"notice";
     ZMLogDebug(@"----> Received push notification payload: %@, source: %lu", payload, (unsigned long)source);
     
     [self.syncMOC performGroupedBlock:^{
-        if (![self notificationIsForCurrentUser:payload]) {
-            ZMLogDebug(@"Push is for the different user: skipping");
-            if (nil != completionHandler) {
-                completionHandler(ZMPushPayloadResultNoData); // TODO jacob: should we really call the completion handler? That would end the background activity
-            }
-            return;
-        }
-        
         NSUUID *eventId = [self messageNonceFromFromPushChannelData:payload];
         if (eventId == nil) {
             completionHandler(ZMPushPayloadResultNoData);
@@ -100,15 +91,6 @@ static NSString * const PushNotificationTypeNotice = @"notice";
     
     NSDictionary *dataPayload = [decodedData optionalDictionaryForKey:PushChannelDataKey];
     return [dataPayload optionalUuidForKey:PushChannelIdentifierKey];
-}
-
-- (BOOL)notificationIsForCurrentUser:(NSDictionary *)userInfo {
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-    // No reason to process the push when the user is not given
-    if (selfUser == nil) {
-        return NO;
-    }
-    return [userInfo isPayloadForUser:selfUser];
 }
 
 @end

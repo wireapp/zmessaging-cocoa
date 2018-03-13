@@ -926,60 +926,6 @@
     [self.pushNotificationStatus verify];
 }
 
-- (void)testThatItUsesTheNotificationWithoutUserID
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // GIVEN
-        NSDictionary *pushPayload =  @{@"aps" : @{},
-                                       @"data" : @{
-                                               @"type" : @"notice"
-                                               }
-                                       };
-        // WHEN & THEN
-        XCTAssertTrue([self.sut notificationIsForCurrentUser:pushPayload]);
-    }];
-}
-
-- (void)testThatItUsesTheNotificationForCurrentUser
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // GIVEN
-        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-        selfUser.remoteIdentifier = [NSUUID UUID];
-        
-        NSDictionary *pushPayload =  @{@"aps" : @{},
-                                       @"data" : @{
-                                               @"user": selfUser.remoteIdentifier.transportString,
-                                               @"type" : @"notice"
-                                               }
-                                       };
-        // WHEN & THEN
-        XCTAssertTrue([self.sut notificationIsForCurrentUser:pushPayload]);
-    }];
-}
-
-- (void)testThatItIgnoresTheNotificationForOtherUser
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // GIVEN
-        NSDictionary *pushPayload =  @{@"aps" : @{},
-                                       @"data" : @{
-                                               @"user": [NSUUID UUID].transportString,
-                                               @"type" : @"notice"
-                                               }
-                                       };
-        // WHEN & THEN
-        XCTAssertFalse([self.sut notificationIsForCurrentUser:pushPayload]);
-    }];
-}
-
-- (NSArray *)messageAddPayloadWithNonces:(NSArray <NSUUID *>*)nonces
-{
-    return [nonces mapWithBlock:^NSDictionary *(NSUUID *nonce) {
-        return [self payLoadForMessageAddEventWithNonce:nonce];
-    }];
-}
-
 @end
 
 #endif

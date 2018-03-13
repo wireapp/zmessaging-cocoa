@@ -478,51 +478,6 @@ class SessionManagerTests_Teams: IntegrationTest {
     }
 }
 
-class SessionManagerPayloadCheckerTests: MessagingTest {
-    func testThatItDetectsTheUserFromPayload() {
-        // GIVEN
-        let user = ZMUser.selfUser(in: self.uiMOC)
-        user.remoteIdentifier = UUID()
-        
-        let payload: [AnyHashable: Any] = ["data": [
-                "user": user.remoteIdentifier!.transportString()
-            ]
-        ]
-        // WHEN & THEN
-        XCTAssertTrue(payload.isPayload(for: user))
-    }
-    
-    func testThatItDiscardsThePayloadFromOtherUser() {
-        // GIVEN
-        let user = ZMUser.selfUser(in: self.uiMOC)
-        user.remoteIdentifier = UUID()
-        
-        let payload: [AnyHashable: Any] = ["data": [
-            "user": UUID().transportString()
-            ]
-        ]
-        // WHEN & THEN
-        XCTAssertFalse(payload.isPayload(for: user))
-    }
-    
-    func testThatItDetectsPayloadWithUserAsCorrect() {
-        // GIVEN
-        let payload: [AnyHashable: Any] = ["data": [
-            "user": UUID().transportString()
-            ]
-        ]
-        // WHEN
-        XCTAssertFalse(payload.isPayloadMissingUserInformation())
-    }
-    
-    func testThatItDetectsPayloadWithoutUserAsWrong() {
-        // GIVEN
-        let payload: [AnyHashable: Any] = [:]
-        // WHEN
-        XCTAssertTrue(payload.isPayloadMissingUserInformation())
-    }
-}
-
 class SessionManagerTests_MultiUserSession: IntegrationTest {
     func testThatItLoadsAndKeepsBackgroundUserSession() {
         // GIVEN
