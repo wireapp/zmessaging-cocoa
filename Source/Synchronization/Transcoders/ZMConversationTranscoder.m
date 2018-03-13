@@ -567,7 +567,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     ZMUser *sender = [ZMUser userWithRemoteID:senderUUID createIfNeeded:YES inContext:self.managedObjectContext];
     NSSet *users = [event usersFromUserIDsInManagedObjectContext:self.managedObjectContext createIfNeeded:YES];
     
-    ZMLogDebug(@"processMemberLeaveEvent (%@) leaving users.count = %li", conversation.remoteIdentifier.transportString, users.count);
+    ZMLogDebug(@"processMemberLeaveEvent (%@) leaving users.count = %lu", conversation.remoteIdentifier.transportString, (unsigned long)users.count);
     
     if ([users intersectsSet:conversation.activeParticipants.set] || [conversation.modifiedKeys intersectsSet:[NSSet setWithObjects:ZMConversationIsSelfAnActiveMemberKey, ZMConversationUnsyncedInactiveParticipantsKey, nil]]) {
         [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
