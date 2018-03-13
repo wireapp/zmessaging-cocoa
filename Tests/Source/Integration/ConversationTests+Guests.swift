@@ -48,7 +48,7 @@ class ConversationTests_Guests : TeamTests {
         let conversation = self.conversation(for: mockConversation)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertFalse(conversation.allowGuests)
+        XCTAssertFalse(conversation.accessMode!.contains(.allowGuests))
         mockTransportSession?.resetReceivedRequests()
 
         // when
@@ -63,7 +63,7 @@ class ConversationTests_Guests : TeamTests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
 
         // then
-        XCTAssertTrue(conversation.allowGuests)
+        XCTAssertTrue(conversation.accessMode!.contains(.allowGuests))
         XCTAssertEqual(mockTransportSession.receivedRequests().count, 1)
         guard let request = mockTransportSession.receivedRequests().first else { return }
         XCTAssertEqual(request.path, "/conversations/\(conversation.remoteIdentifier!.transportString())/access")
@@ -82,7 +82,8 @@ class ConversationTests_Guests : TeamTests {
         let conversation = self.conversation(for: mockConversation)!
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertTrue(conversation.allowGuests)
+        XCTAssertEqual(conversation.accessMode, [.code, .invite])
+        XCTAssertEqual(conversation.accessRole, .nonActivated)
         mockTransportSession?.resetReceivedRequests()
         
         // when
@@ -117,7 +118,8 @@ class ConversationTests_Guests : TeamTests {
         let conversation = self.conversation(for: mockConversation)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertFalse(conversation.allowGuests)
+        XCTAssertEqual(conversation.accessMode, [.invite])
+        XCTAssertEqual(conversation.accessRole, .activated)
         mockTransportSession?.resetReceivedRequests()
         
         // when
@@ -154,7 +156,8 @@ class ConversationTests_Guests : TeamTests {
         let conversation = self.conversation(for: mockConversation)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertTrue(conversation.allowGuests)
+        XCTAssertEqual(conversation.accessMode, [.code, .invite])
+        XCTAssertEqual(conversation.accessRole, .nonActivated)
         mockTransportSession?.resetReceivedRequests()
         
         // when
@@ -193,7 +196,8 @@ class ConversationTests_Guests : TeamTests {
         let conversation = self.conversation(for: mockConversation)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertTrue(conversation.allowGuests)
+        XCTAssertEqual(conversation.accessMode, [.code, .invite])
+        XCTAssertEqual(conversation.accessRole, .nonActivated)
         mockTransportSession?.resetReceivedRequests()
         
         // when
@@ -232,7 +236,8 @@ class ConversationTests_Guests : TeamTests {
         let conversation = self.conversation(for: mockConversation)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertTrue(conversation.allowGuests)
+        XCTAssertEqual(conversation.accessMode, [.code, .invite])
+        XCTAssertEqual(conversation.accessRole, .nonActivated)
         mockTransportSession?.resetReceivedRequests()
         
         // when
@@ -268,7 +273,8 @@ class ConversationTests_Guests : TeamTests {
         let conversation = self.conversation(for: mockConversation)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertTrue(conversation.allowGuests)
+        XCTAssertEqual(conversation.accessMode, [.code, .invite])
+        XCTAssertEqual(conversation.accessRole, .nonActivated)
         mockTransportSession?.resetReceivedRequests()
         
         // when
@@ -295,7 +301,7 @@ class ConversationTests_Guests : TeamTests {
 
         let conversation = self.conversation(for: self.groupConversationWithWholeTeam!)!
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertFalse(conversation.allowGuests)
+        XCTAssertFalse(conversation.accessMode!.contains(.allowGuests))
 
         // when
         mockTransportSession?.performRemoteChanges { session in
@@ -304,6 +310,6 @@ class ConversationTests_Guests : TeamTests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
 
         // then
-        XCTAssertTrue(conversation.allowGuests)
+        XCTAssertTrue(conversation.accessMode!.contains(.allowGuests))
     }
 }

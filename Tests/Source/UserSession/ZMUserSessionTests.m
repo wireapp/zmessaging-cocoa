@@ -931,7 +931,7 @@
 {
     // expect
     NSDictionary *remoteNotification = @{@"a": @"b"};
-    [[self.operationLoop reject] saveEventsAndSendNotificationForPayload:remoteNotification fetchCompletionHandler:OCMOCK_ANY source:ZMPushNotficationTypeAlert];
+    [[self.operationLoop reject] fetchEventsFromPushChannelPayload:remoteNotification completionHandler:OCMOCK_ANY source:ZMPushNotficationTypeAlert];
     
     // when
     [self.sut application:OCMOCK_ANY didReceiveRemoteNotification:remoteNotification fetchCompletionHandler:^(UIBackgroundFetchResult result) {

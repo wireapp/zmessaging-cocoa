@@ -258,6 +258,8 @@ ZM_EMPTY_ASSERTING_INIT()
             }
         }];
         
+        self.userExpirationObserver = [[UserExpirationObserver alloc] init];
+        
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
     return self;
