@@ -27,7 +27,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let userProfileUpdateStatus : UserProfileUpdateStatus
     public let clientRegistrationStatus : ZMClientRegistrationStatus
     public let clientUpdateStatus : ClientUpdateStatus
-    public let pingBackStatus : BackgroundAPNSPingBackStatus
+    public let pushNotificationStatus : PushNotificationStatus
     public let accountStatus : AccountStatus
     public let proxiedRequestStatus : ProxiedRequestsStatus
     public let syncStatus : SyncStatus
@@ -37,7 +37,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let teamInvitationStatus: TeamInvitationStatus
 
     public var notificationFetchStatus: BackgroundNotificationFetchStatus {
-        return pingBackStatus.status
+        return pushNotificationStatus.status
     }
     
     fileprivate var callInProgressObserverToken : Any? = nil
@@ -56,7 +56,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
                                                                    cookieStorage: cookieStorage,
                                                                    registrationStatusDelegate: syncStateDelegate)
         self.accountStatus = AccountStatus(managedObjectContext: managedObjectContext)
-        self.pingBackStatus = BackgroundAPNSPingBackStatus(syncManagedObjectContext: managedObjectContext, authenticationProvider: cookieStorage)
+        self.pushNotificationStatus = PushNotificationStatus(managedObjectContext: managedObjectContext)
         self.proxiedRequestStatus = ProxiedRequestsStatus(requestCancellation: requestCancellation)
         self.userProfileImageUpdateStatus = UserProfileImageUpdateStatus(managedObjectContext: managedObjectContext)
         super.init()

@@ -26,30 +26,6 @@ let PushChannelDataKey = "data"
 private let log = ZMSLog(tag: "Push")
 
 extension Dictionary {
-    internal func isPayload(for user: ZMUser) -> Bool {
-        if self.isPayloadMissingUserInformation() {
-            return true
-        }
-        
-        let userInfoData = self[PushChannelDataKey as! Key] as! [String: Any]
-        let userId = userInfoData[PushChannelUserIDKey] as! String
-        
-        return user.remoteIdentifier == UUID(uuidString: userId)
-    }
-    
-    internal func isPayloadMissingUserInformation() -> Bool {
-        guard let userInfoData = self[PushChannelDataKey as! Key] as? [String: Any] else {
-            log.debug("No data dictionary in notification userInfo payload");
-            return true // Old-style push might not contain the user id
-        }
-        
-        guard let _ = userInfoData[PushChannelUserIDKey] as? String else {
-            // Old-style push might not contain the user id
-            return true
-        }
-        
-        return false
-    }
     
     internal func accountId() -> UUID? {
         guard let userInfoData = self[PushChannelDataKey as! Key] as? [String: Any] else {
@@ -62,13 +38,6 @@ extension Dictionary {
         }
     
         return UUID(uuidString: userIdString)
-    }
-}
-
-extension NSDictionary {
-    @objc(isPayloadForUser:)
-    public func isPayload(for user: ZMUser) -> Bool {
-        return (self as Dictionary).isPayload(for: user)
     }
 }
 
@@ -108,10 +77,11 @@ extension ZMUserSession: PushDispatcherOptionalClient {
 
     public func mustHandle(payload: [AnyHashable: Any]) -> Bool {
         requireInternal(Thread.isMainThread, "Should be on main thread")
-        guard let moc = self.managedObjectContext else {
+        guard let moc = self.managedObjectContext, let accountId = payload.accountId() else {
             return false
         }
-        return payload.isPayload(for: ZMUser.selfUser(in: moc))
+        
+        return accountId == ZMUser.selfUser(in: moc).remoteIdentifier
     }
     
     public func receivedPushNotification(with payload: [AnyHashable: Any],
@@ -136,9 +106,7 @@ extension ZMUserSession: PushDispatcherOptionalClient {
                 self.sessionManager?.updateAppIconBadge()
             }
             
-            self.operationLoop.saveEventsAndSendNotification(forPayload: payload,
-                                                             fetchCompletionHandler: completionHandler,
-                                                             source: source)
+            self.operationLoop.fetchEvents(fromPushChannelPayload: payload, completionHandler: completionHandler, source: source)
         }
     }
     

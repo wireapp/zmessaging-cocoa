@@ -106,8 +106,7 @@ extension PushKitRegistrant : PKPushRegistryDelegate {
             // This should happen only in tests
             return
         }
-        didReceivePayload(payload.dictionaryPayload, .voIP) {
-            result in
+        didReceivePayload(payload.dictionaryPayload, .voIP) { result in
             ZMLogPushKit_swift("Registry \(self.registry.description) did finish background task")
             activity.end()
         }
@@ -164,7 +163,7 @@ extension ApplicationRemoteNotification {
     
     fileprivate func fetchResult(_ result: ZMPushPayloadResult) -> UIBackgroundFetchResult {
         switch (result) {
-        case .success, .needsMoreRequests:
+        case .success:
             return .newData
         case .failure:
             return .failed

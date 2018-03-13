@@ -295,9 +295,9 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     }];
 }
 
-- (BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
+- (PushNotificationStatus *)pushNotificationStatus
 {
-    return self.applicationStatusDirectory.pingBackStatus;
+    return self.applicationStatusDirectory.pushNotificationStatus;
 }
 
 @end
