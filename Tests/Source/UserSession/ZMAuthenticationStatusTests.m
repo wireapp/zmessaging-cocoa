@@ -344,15 +344,25 @@
     NSString *email = @"gfdgfgdfg@fds.sgf";
     NSString *password = @"#$4tewt343$";
     
+    NSError *expectedError = [NSError userSessionErrorWithErrorCode:ZMUserSessionEmailIsAlreadyRegistered userInfo:@{}];
+    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
+    ZM_WEAK(self);
+    self.registrationCallback = ^(ZMUserSessionRegistrationNotificationType type, NSError *error) {
+        ZM_STRONG(self);
+        XCTAssertEqual(error.code, expectedError.code);
+        XCTAssertEqual(type, ZMUserSessionEmailIsAlreadyRegistered);
+        [expectation fulfill];
+    };
+    
     // when
     [self.sut prepareForRegistrationOfUser:[ZMCompleteRegistrationUser registrationUserWithEmail:email password:password]];
     [self.sut didFailRegistrationWithDuplicatedEmail];
     
     // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseLoginWithEmail);
+    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertNil(self.sut.registrationUser);
-    XCTAssertEqualObjects(self.sut.loginCredentials.email, email);
-    XCTAssertEqualObjects(self.sut.loginCredentials.password, password);
+    XCTAssertNil(self.sut.loginCredentials);
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
 }
 
 - (void)testThatItResetsWhenRegistrationFails

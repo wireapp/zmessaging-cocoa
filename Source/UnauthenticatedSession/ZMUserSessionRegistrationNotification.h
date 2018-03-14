@@ -53,6 +53,8 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionRegistrationNotificationType) {
 + (id)addObserverInSession:(UnauthenticatedSession *)session withBlock:(void(^)(ZMUserSessionRegistrationNotificationType event, NSError *error))block ZM_MUST_USE_RETURN;
 + (id)addObserverInContext:(ZMAuthenticationStatus *)context withBlock:(void(^)(ZMUserSessionRegistrationNotificationType event, NSError *error))block ZM_MUST_USE_RETURN;
 
++ (NSNotificationName)name;
+
 @end
 
 
