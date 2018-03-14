@@ -42,12 +42,12 @@ extension BackgroundNotificationFetchStatus: CustomStringConvertible {
 @objc
 open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusProvider {
 
-    private var eventsIdsToFetch: Set<UUID> = Set()
+    private var eventIdRanking = NSMutableOrderedSet()
     private var completionHandlers: [UUID: ZMPushResultHandler] = [:]
     private let managedObjectContext: NSManagedObjectContext
     
     public var status: BackgroundNotificationFetchStatus {
-        return eventsIdsToFetch.isEmpty ? .done : .inProgress
+        return eventIdRanking.count == 0 ? .done : .inProgress
     }
     
     public init(managedObjectContext: NSManagedObjectContext) {
@@ -69,7 +69,7 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
             return completionHandler(.success)
         }
         
-        eventsIdsToFetch.insert(eventId)
+        eventIdRanking.add(eventId)
         completionHandlers[eventId] = completionHandler
         
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
@@ -81,9 +81,14 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
     /// - parameter finished: True when when all available events have been downloaded
     @objc(didFetchEventIds:finished:)
     public func didFetch(eventIds: [UUID], finished: Bool) {
-        eventsIdsToFetch.subtract(eventIds)
+        let highestRankingEventId = eventIdRanking.firstObject as? UUID
         
-        for eventId in completionHandlers.keys.filter({  self.lastEventIdIsNewerThan(eventId: $0) }) {
+        highestRankingEventId.apply(eventIdRanking.remove)
+        eventIdRanking.minusSet(Set<UUID>(eventIds))
+        
+        guard finished else { return }
+        
+        for eventId in completionHandlers.keys.filter({  self.lastEventIdIsNewerThan(eventId: $0) || highestRankingEventId == $0 }) {
             let completionHandler = completionHandlers.removeValue(forKey: eventId)
             completionHandler?(.success)
         }
@@ -95,7 +100,7 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
             completionHandler(.failure)
         }
         
-        eventsIdsToFetch.removeAll()
+        eventIdRanking.removeAllObjects()
         completionHandlers.removeAll()
     }
     

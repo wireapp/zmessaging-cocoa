@@ -108,6 +108,18 @@ class PushNotificationStatusTests: MessagingTest {
         XCTAssertEqual(sut.status, .done)
     }
     
+    func testThatStatusIsDoneAfterEventIdIsFetchedEvenIfNoEventsWereDownloaded() {
+        // given
+        let eventId = UUID.timeBasedUUID() as UUID
+        sut.fetch(eventId: eventId) { (_) in }
+        
+        // when
+        sut.didFetch(eventIds: [], finished: true)
+        
+        // then
+        XCTAssertEqual(sut.status, .done)
+    }
+    
     func testThatStatusIsDoneIfEventsCantBeFetched() {
         // given
         let eventId = UUID.timeBasedUUID() as UUID
@@ -120,7 +132,24 @@ class PushNotificationStatusTests: MessagingTest {
         XCTAssertEqual(sut.status, .done)
     }
     
-    func testThatCompletionHandlerIsCalledAfterAllEventsHasBeenFetched() {
+    func testThatCompletionHandlerIsNotCalledIfAllEventsHaveNotBeenFetched() {
+        // given
+        let eventId = UUID.timeBasedUUID() as UUID
+        
+        // expect
+        sut.fetch(eventId: eventId) { (result) in
+            XCTFail("Didn't expect completion handler to be called")
+        }
+        
+        // when
+        syncMOC.zm_lastNotificationID = eventId
+        sut.didFetch(eventIds: [eventId], finished: false)
+        
+        // then
+        XCTAssertEqual(sut.status, .done)
+    }
+    
+    func testThatCompletionHandlerIsCalledAfterAllEventsHaveBeenFetched() {
         // given
         let eventId = UUID.timeBasedUUID() as UUID
         let expectation = self.expectation(description: "completion handler was called")
@@ -133,6 +162,24 @@ class PushNotificationStatusTests: MessagingTest {
         // when
         syncMOC.zm_lastNotificationID = eventId
         sut.didFetch(eventIds: [eventId], finished: true)
+        
+        // then
+        XCTAssertEqual(sut.status, .done)
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
+    func testThatCompletionHandlerIsCalledEvenIfNoEventsWereDownloaded() {
+        // given
+        let eventId = UUID.timeBasedUUID() as UUID
+        let expectation = self.expectation(description: "completion handler was called")
+        
+        // expect
+        sut.fetch(eventId: eventId) { (result) in
+            expectation.fulfill()
+        }
+        
+        // when
+        sut.didFetch(eventIds: [], finished: true)
         
         // then
         XCTAssertEqual(sut.status, .done)
