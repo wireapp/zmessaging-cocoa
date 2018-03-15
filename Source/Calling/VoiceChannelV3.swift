@@ -156,7 +156,6 @@ extension VoiceChannelV3 : CallActionsInternal {
               let remoteIdentifier = conversation.remoteIdentifier
         else { return false }
         
-        let isGroup = (conversation.conversationType == .group)
         var joined = false
         
         switch state {
@@ -165,7 +164,7 @@ extension VoiceChannelV3 : CallActionsInternal {
                 joined = callCenter?.answerCall(conversationId: remoteIdentifier) ?? false
             }
         default:
-            joined = self.callCenter?.startCall(conversationId: remoteIdentifier, video: video, isGroup: isGroup) ?? false
+            joined = self.callCenter?.startCall(conversationId: remoteIdentifier, video: video) ?? false
         }
         
         return joined
@@ -176,8 +175,7 @@ extension VoiceChannelV3 : CallActionsInternal {
               let remoteID = conv.remoteIdentifier
         else { return }
         
-        let isGroup = (conv.conversationType == .group)
-        self.callCenter?.closeCall(conversationId: remoteID, isGroup: isGroup)
+        self.callCenter?.closeCall(conversationId: remoteID)
     }
     
     public func ignore() {

@@ -250,10 +250,11 @@ private struct CallSnapshot {
     let callState : CallState
     let callStarter : UUID
     let isVideo : Bool
+    let isGroup : Bool
     var conversationObserverToken : NSObjectProtocol?
     
     public func update(with callState: CallState) -> CallSnapshot {
-        return CallSnapshot(callState: callState, callStarter: callStarter, isVideo: isVideo, conversationObserverToken: conversationObserverToken)
+        return CallSnapshot(callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, conversationObserverToken: conversationObserverToken)
     }
 }
 
@@ -553,7 +554,8 @@ public struct CallEvent {
         else { return }
         
         let token = ConversationChangeInfo.add(observer: self, for: conversation)
-        callSnapshots[conversationId] = CallSnapshot(callState: callState, callStarter: callStarter ?? selfUserId, isVideo: video, conversationObserverToken: token)
+        let group = conversation.conversationType == .group
+        callSnapshots[conversationId] = CallSnapshot(callState: callState, callStarter: callStarter ?? selfUserId, isVideo: video, isGroup: group, conversationObserverToken: token)
     }
     
     public fileprivate(set) var isConstantBitRateAudioActive : Bool = false
@@ -682,13 +684,13 @@ public struct CallEvent {
         return answered
     }
     
-    @objc(startCallForConversationID:video:isGroup:)
-    public func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool {
+    @objc(startCallForConversationID:video:)
+    public func startCall(conversationId: UUID, video: Bool) -> Bool {
         endAllCalls(exluding: conversationId)
         
         clearSnapshot(conversationId: conversationId) // make sure we don't have an old state for this conversation
         
-        let started = avsWrapper.startCall(conversationId: conversationId, video: video, isGroup: isGroup, useCBR: useConstantBitRateAudio)
+        let started = avsWrapper.startCall(conversationId: conversationId, video: video, isGroup: isGroup(conversationId: conversationId), useCBR: useConstantBitRateAudio)
         if started {
             let callState : CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
             createSnapshot(callState: callState, callStarter: selfUserId,  video: video, for: conversationId)
@@ -700,10 +702,10 @@ public struct CallEvent {
         return started
     }
     
-    @objc(closeCallForConversationID:isGroup:)
-    public func closeCall(conversationId: UUID, isGroup: Bool) {
+    @objc(closeCallForConversationID:)
+    public func closeCall(conversationId: UUID) {
         avsWrapper.endCall(conversationId: conversationId)
-        if isGroup, let previousSnapshot = callSnapshots[conversationId] { // TODO move isGroup into CallSnapshot
+        if let previousSnapshot = callSnapshots[conversationId], previousSnapshot.isGroup {
             let callState : CallState = .incoming(video: previousSnapshot.isVideo, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
             callSnapshots[conversationId] = previousSnapshot.update(with: callState)
         }
@@ -727,7 +729,7 @@ public struct CallEvent {
             case .incoming:
                 rejectCall(conversationId: key)
             default:
-                closeCall(conversationId: key, isGroup: false)
+                closeCall(conversationId: key)
             }
         }
     }
@@ -746,6 +748,11 @@ public struct CallEvent {
         let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: uiMOC!)
         let degraded = conversation?.securityLevel == .secureWithIgnored
         return degraded
+    }
+    
+    fileprivate func isGroup(conversationId: UUID) -> Bool {
+        let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: uiMOC!)
+        return conversation?.conversationType == .group
     }
 
     public func setVideoCaptureDevice(_ captureDevice: CaptureDevice, for conversationId: UUID) {
