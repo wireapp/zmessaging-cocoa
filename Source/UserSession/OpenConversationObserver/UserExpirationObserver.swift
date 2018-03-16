@@ -21,9 +21,14 @@ import Foundation
 @objc public class UserExpirationObserver: NSObject, ZMTimerClient {
     internal private(set) var expiringUsers: Set<ZMUser> = Set()
     private var timerForUser: [ZMTimer: ZMUser] = [:]
+    private let managedObjectContext: NSManagedObjectContext
     
     deinit {
         timerForUser.forEach { $0.key.cancel() }
+    }
+    
+    public init(managedObjectContext: NSManagedObjectContext) {
+        self.managedObjectContext = managedObjectContext
     }
     
     public func check(users: Set<ZMUser>) {
@@ -47,12 +52,14 @@ import Foundation
     }
     
     public func timerDidFire(_ timer: ZMTimer) {
-        guard let user = timerForUser[timer] else {
-            fatal("Unknown timer: \(timer)")
+        managedObjectContext.performGroupedBlock {
+            guard let user = self.timerForUser[timer] else {
+                fatal("Unknown timer: \(timer)")
+            }
+            
+            user.needsToBeUpdatedFromBackend = true
+            self.timerForUser[timer] = nil
+            self.expiringUsers.remove(user)
         }
-        
-        user.needsToBeUpdatedFromBackend = true
-        timerForUser[timer] = nil
-        expiringUsers.remove(user)
     }
 }
