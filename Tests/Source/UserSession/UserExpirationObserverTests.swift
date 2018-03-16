@@ -44,7 +44,17 @@ extension XCTestCase {
 }
 
 public class UserExpirationObserverTests: MessagingTest {
-    let sut = UserExpirationObserver()
+    var sut: UserExpirationObserver!
+    
+    override public func setUp() {
+        super.setUp()
+        sut = UserExpirationObserver(managedObjectContext: self.uiMOC)
+    }
+    
+    override public func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
     
     func testThatItIgnoresNonExpiringUsers() {
         // given
@@ -112,7 +122,7 @@ public class UserExpirationObserverTests: MessagingTest {
     func testThatItDoesNotRetainItself() {
         weak var sut: UserExpirationObserver?
         autoreleasepool {
-            let localSut = UserExpirationObserver()
+            let localSut = UserExpirationObserver(managedObjectContext: self.uiMOC)
             // given
             let user = ZMUser.insertNewObject(in: self.uiMOC)
             user.name = "User"
