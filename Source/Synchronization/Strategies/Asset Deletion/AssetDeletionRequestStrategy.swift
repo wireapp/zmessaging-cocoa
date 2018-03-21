@@ -18,7 +18,7 @@
 
 import Foundation
 
-fileprivate struct RequestFactory {
+fileprivate extension AssetRequestFactory {
     static func request(for identifier: String, on queue: ZMSGroupQueue, block: @escaping ZMCompletionHandlerBlock) -> ZMTransportRequest {
         let request = ZMTransportRequest(path: "/assets/v3/\(identifier)", method: .methodDELETE, payload: nil)
         request.add(ZMCompletionHandler(on: queue, block: block))
@@ -40,7 +40,6 @@ final public class AssetDeletionRequestStrategy: AbstractRequestStrategy, ZMSing
         self.identifierProvider = identifierProvider
         super.init(withManagedObjectContext: context, applicationStatus: applicationStatus)
         requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: context)
-        
     }
     
     private func handle(response: ZMTransportResponse, for identifier: String) {
@@ -60,7 +59,7 @@ final public class AssetDeletionRequestStrategy: AbstractRequestStrategy, ZMSing
     
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         guard sync == requestSync, let identifier = identifierProvider.nextIdentifierToDelete() else { return nil }
-        return RequestFactory.request(for: identifier, on: managedObjectContext) { [weak self] response in
+        return AssetRequestFactory.request(for: identifier, on: managedObjectContext) { [weak self] response in
             self?.handle(response: response, for: identifier)
         }
     }

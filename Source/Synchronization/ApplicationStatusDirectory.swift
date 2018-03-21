@@ -60,7 +60,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         self.pushNotificationStatus = PushNotificationStatus(managedObjectContext: managedObjectContext)
         self.proxiedRequestStatus = ProxiedRequestsStatus(requestCancellation: requestCancellation)
         self.userProfileImageUpdateStatus = UserProfileImageUpdateStatus(managedObjectContext: managedObjectContext)
-        self.assetDeletionStatus = AssetDeletionStatus(provider: managedObjectContext)
+        self.assetDeletionStatus = AssetDeletionStatus(provider: managedObjectContext, queue: managedObjectContext)
         super.init()
         
         callInProgressObserverToken = NotificationInContext.addObserver(name: CallStateObserver.CallInProgressNotification, context: managedObjectContext.notificationContext) { [weak self] (note) in

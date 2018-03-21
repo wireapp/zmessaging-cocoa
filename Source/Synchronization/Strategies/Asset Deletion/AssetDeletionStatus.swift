@@ -30,12 +30,14 @@ final public class AssetDeletionStatus: NSObject, AssetDeletionIdentifierProvide
     
     private var provider: DeletableAssetIdentifierProvider
     private var identifiersInProgress = Set<String>()
+    private let queue: ZMSGroupQueue
     
     private var remainingIdentifiersToDelete: Set<String> {
         return provider.assetIdentifiersToBeDeleted.subtracting(identifiersInProgress)
     }
     
-    init(provider: DeletableAssetIdentifierProvider) {
+    init(provider: DeletableAssetIdentifierProvider, queue: ZMSGroupQueue) {
+        self.queue = queue
         self.provider = provider
         super.init()
         NotificationCenter.default.addObserver(self, selector: #selector(handle), name: .deleteAssetNotification, object: nil)
@@ -43,6 +45,12 @@ final public class AssetDeletionStatus: NSObject, AssetDeletionIdentifierProvide
     
     @objc private func handle(note: Notification) {
         guard note.name == Notification.Name.deleteAssetNotification, let identifier = note.object as? String else { return }
+        queue.performGroupedBlock { [weak self] in
+            self?.add(identifier)
+        }
+    }
+    
+    private func add(_ identifier: String) {
         provider.assetIdentifiersToBeDeleted.insert(identifier)
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         log.debug("Added asset identifier to list: \(identifier)")
