@@ -19,7 +19,7 @@
 import WireDataModel
 @testable import WireSyncEngine
 
-class AssetDeletionStatusTests: XCTestCase {
+class AssetDeletionStatusTests: MessagingTest {
     
     private var sut: AssetDeletionStatus!
     fileprivate var identifierProvider: DeletableAssetIdentifierProvider!
@@ -27,7 +27,7 @@ class AssetDeletionStatusTests: XCTestCase {
     override func setUp() {
         super.setUp()
         identifierProvider = IdentifierProvider()
-        sut = AssetDeletionStatus(provider: identifierProvider)
+        sut = AssetDeletionStatus(provider: identifierProvider, queue: FakeGroupQueue())
     }
     
     override func tearDown() {
@@ -50,6 +50,7 @@ class AssetDeletionStatusTests: XCTestCase {
         
         // When
         NotificationCenter.default.post(name: .deleteAssetNotification, object: expected)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // Then
         XCTAssertEqual(identifierProvider.assetIdentifiersToBeDeleted, [expected])
@@ -97,7 +98,7 @@ class AssetDeletionStatusTests: XCTestCase {
         NotificationCenter.default.post(name: .deleteAssetNotification, object: expected)
         
         // Then
-        waitForExpectations(timeout: 0.5, handler: nil)
+        XCTAssert(waitForCustomExpectations(withTimeout: 0.1))
         _ = observer
     }
     
@@ -110,7 +111,7 @@ class AssetDeletionStatusTests: XCTestCase {
         guard let first = sut.nextIdentifierToDelete() else { return XCTFail("no first identifier") }
         
         // When
-        sut.didDelete(identifier: firstExpected)
+        sut.didDelete(identifier: first)
         
         // Then
         guard let second = sut.nextIdentifierToDelete() else { return XCTFail("no second identifier") }
