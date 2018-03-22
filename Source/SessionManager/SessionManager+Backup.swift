@@ -20,8 +20,12 @@ import Foundation
 import WireDataModel
 
 extension SessionManager {
+    enum BackupError: Error {
+        case noActiveAccount
+    }
+
     public func backupActiveAccount(completion: @escaping ((Result<URL>) -> ())) {
-        let userId = self.accountManager.selectedAccount!.userIdentifier
+        guard let userId = self.accountManager.selectedAccount?.userIdentifier else { return completion(.failure(BackupError.noActiveAccount)) }
         StorageStack.backupLocalStorage(accountIdentifier: userId, applicationContainer: sharedContainerURL, completion: completion)
     }
 }
