@@ -31,11 +31,7 @@ final public class AssetDeletionRequestStrategy: AbstractRequestStrategy, ZMSing
     private var requestSync: ZMSingleRequestSync!
     private let identifierProvider: AssetDeletionIdentifierProviderType
     
-    @objc(initWithManagedObjectContext:applicationStatusDirectory:)
-    public convenience init(context: NSManagedObjectContext, applicationStatusDirectory: ApplicationStatusDirectory) {
-        self.init(context: context, applicationStatus: applicationStatusDirectory, identifierProvider: applicationStatusDirectory.assetDeletionStatus)
-    }
-    
+    @objc(initWithManagedObjectContext:applicationStatus:identifierProvider:)
     required public init(context: NSManagedObjectContext, applicationStatus: ApplicationStatus, identifierProvider: AssetDeletionIdentifierProviderType) {
         self.identifierProvider = identifierProvider
         super.init(withManagedObjectContext: context, applicationStatus: applicationStatus)

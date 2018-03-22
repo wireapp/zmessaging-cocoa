@@ -20,7 +20,7 @@ import Foundation
 
 private let log = ZMSLog(tag: "AssetDeletion")
 
-public protocol AssetDeletionIdentifierProviderType: class {
+@objc public protocol AssetDeletionIdentifierProviderType: class {
     func nextIdentifierToDelete() -> String?
     func didDelete(identifier: String)
     func didFailToDelete(identifier: String)
@@ -36,7 +36,8 @@ final public class AssetDeletionStatus: NSObject, AssetDeletionIdentifierProvide
         return provider.assetIdentifiersToBeDeleted.subtracting(identifiersInProgress)
     }
     
-    init(provider: DeletableAssetIdentifierProvider, queue: ZMSGroupQueue) {
+    @objc(initWithProvider:queue:)
+    public init(provider: DeletableAssetIdentifierProvider, queue: ZMSGroupQueue) {
         self.queue = queue
         self.provider = provider
         super.init()
