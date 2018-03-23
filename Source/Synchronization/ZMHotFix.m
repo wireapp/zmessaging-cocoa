@@ -71,12 +71,9 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
         ZMLogDebug(@"Invalid version string, skipping HotFix");
         return;
     }
+
     ZMVersion *lastSavedVersion = [self lastSavedVersion];
     ZMVersion *currentVersion = [[ZMVersion alloc] initWithVersionString:currentVersionString];
-    if ([currentVersion compareWithVersion:lastSavedVersion] == NSOrderedSame) {
-        ZMLogDebug(@"Current version equal to last saved version (%@). Not applying any HotFix.", lastSavedVersion.versionString);
-        return;
-    }
     
     if (lastSavedVersion == nil) {
         ZMLogDebug(@"No saved last version. We assume it's a new database and don't apply any HotFix.");
@@ -84,6 +81,11 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
             [self saveNewVersion:currentVersionString];
             [self.syncMOC saveOrRollback];
         }];
+        return;
+    }
+    
+    if ([currentVersion compareWithVersion:lastSavedVersion] == NSOrderedSame) {
+        ZMLogDebug(@"Current version equal to last saved version (%@). Not applying any HotFix.", lastSavedVersion.versionString);
         return;
     }
     
@@ -99,9 +101,11 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
 - (ZMVersion *)lastSavedVersion
 {
     NSString *versionString = [self.syncMOC persistentStoreMetadataForKey:LastSavedVersionKey];
+    if (nil == versionString) {
+        return nil;
+    }
     return [[ZMVersion alloc] initWithVersionString:versionString];
 }
-
 
 - (void)saveNewVersion:(NSString *)version
 {
