@@ -215,8 +215,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
     BOOL shouldStartTimer = NO;
     ZMAuthenticationStatus * authenticationStatus = self.authenticationStatus;
     if (response.result == ZMTransportResponseStatusSuccess) {
-        [authenticationStatus loginSucceed];
-        [self.userInfoParser parseUserInfoFromResponse:response];
+        [authenticationStatus loginSucceededWithResponse:response];
     }
     else if (response.result == ZMTransportResponseStatusPermanentError) {
         

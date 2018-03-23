@@ -30,6 +30,8 @@
 @class ZMPhoneCredentials;
 @class ZMPersistentCookieStorage;
 @class ZMClientRegistrationStatus;
+@class ZMTransportResponse;
+@protocol UserInfoParser;
 
 FOUNDATION_EXPORT NSTimeInterval DebugLoginFailureTimerOverride;
 
@@ -43,6 +45,7 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
     ZMAuthenticationPhaseUnauthenticated = 0,
     ZMAuthenticationPhaseLoginWithPhone,
     ZMAuthenticationPhaseLoginWithEmail,
+    ZMAuthenticationPhaseWaitingToImportBackup,
     ZMAuthenticationPhaseRequestPhoneVerificationCodeForRegistration,
     ZMAuthenticationPhaseRequestPhoneVerificationCodeForLogin,
     ZMAuthenticationPhaseVerifyPhoneForRegistration,
@@ -61,6 +64,7 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 @property (nonatomic, readonly) ZMPhoneCredentials *registrationPhoneValidationCredentials;
 @property (nonatomic, readonly) ZMCompleteRegistrationUser *registrationUser;
 
+@property (nonatomic, readonly) BOOL isWaitingForBackupImport;
 @property (nonatomic, readonly) BOOL completedRegistration;
 @property (nonatomic, readonly) BOOL needsCredentialsToLogin;
 
@@ -69,19 +73,20 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 
 @property (nonatomic) NSData *authenticationCookieData;
 
-- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue;
+- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue userInfoParser:(id<UserInfoParser>)userInfoParser;
 
 - (id)addAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
 
 - (void)prepareForRegistrationOfUser:(ZMCompleteRegistrationUser *)user;
 - (void)prepareForLoginWithCredentials:(ZMCredentials *)credentials;
+- (void)continueAfterBackupImportStep;
 - (void)cancelWaitingForEmailVerification;
 - (void)prepareForRequestingPhoneVerificationCodeForRegistration:(NSString *)phone;
 - (void)prepareForRequestingPhoneVerificationCodeForLogin:(NSString *)phone;
 - (void)prepareForRegistrationPhoneVerificationWithCredentials:(ZMPhoneCredentials *)phoneCredentials;
 
 
-- (void)didCompleteRegistrationSuccessfully;
+- (void)didCompleteRegistrationSuccessfullyWithResponse:(ZMTransportResponse *)response;
 - (void)didFailRegistrationWithDuplicatedEmail;
 - (void)didFailRegistrationForOtherReasons:(NSError *)error;
 
@@ -94,8 +99,7 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 - (void)didCompletePhoneVerificationSuccessfully;
 - (void)didFailPhoneVerificationForRegistration:(NSError *)error;
 
-
-- (void)loginSucceed; // called just after recieveing successful login response
+- (void)loginSucceededWithResponse:(ZMTransportResponse *)response;
 - (void)didFailLoginWithPhone:(BOOL)invalidCredentials;
 - (void)didFailLoginWithEmailBecausePendingValidation;
 - (void)didFailLoginWithEmail:(BOOL)invalidCredentials;

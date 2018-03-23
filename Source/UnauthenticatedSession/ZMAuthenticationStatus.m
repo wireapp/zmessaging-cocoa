@@ -37,16 +37,20 @@ NSTimeInterval DebugLoginFailureTimerOverride = 0;
 static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 @interface ZMAuthenticationStatus ()
+
+@property (nonatomic, weak) id<UserInfoParser> userInfoParser;
+@property (nonatomic, strong) ZMTransportResponse *authenticationResponse;
+
 @end
 
 @implementation ZMAuthenticationStatus
 
-- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue
-{
+- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue userInfoParser:(nullable id<UserInfoParser>)userInfoParser {
     self = [super init];
     if(self) {
         self.groupQueue = groupQueue;
         self.isWaitingForLogin = !self.isLoggedIn;
+        self.userInfoParser = userInfoParser;
     }
     return self;
 }
@@ -123,6 +127,9 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     if(self.isLoggedIn) {
         return ZMAuthenticationPhaseAuthenticated;
     }
+    if(self.isWaitingForBackupImport) {
+        return ZMAuthenticationPhaseWaitingToImportBackup;
+    }
     if(self.isWaitingForEmailVerification) {
         return ZMAuthenticationPhaseWaitingForEmailVerification;
     }
@@ -157,7 +164,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (BOOL)isLoggedIn
 {
-    return nil != self.authenticationCookieData;
+    return nil != self.authenticationCookieData && !self.isWaitingForBackupImport;
 }
 
 - (void)startLoginTimer
@@ -201,6 +208,23 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     self.registrationUser = user;
 }
 
+- (void)continueAfterBackupImportStep
+{
+    ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
+    [self continueAuthenticationWithResponse:self.authenticationResponse];
+    ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
+}
+
+- (void)continueAuthenticationWithResponse:(ZMTransportResponse *)response
+{
+    self.isWaitingForBackupImport = NO;
+    if (self.isWaitingForLogin) {
+        self.isWaitingForLogin = NO;
+    }
+    [self.userInfoParser parseUserInfoFromResponse:response];
+    [self notifyAuthenticationDidSucceed];
+}
+
 - (void)prepareForRequestingPhoneVerificationCodeForRegistration:(NSString *)phone
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
@@ -235,7 +259,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 
-- (void)didCompleteRegistrationSuccessfully
+- (void)didCompleteRegistrationSuccessfullyWithResponse:(ZMTransportResponse *)response
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
     self.completedRegistration = YES;
@@ -247,8 +271,11 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
         self.registrationUser = nil;
         [ZMUserSessionRegistrationNotification notifyEmailVerificationDidSucceedInContext:self];
     } else if (self.currentPhase == ZMAuthenticationPhaseAuthenticated) {
-        [self loginSucceed];
+        [self continueAuthenticationWithResponse:response];
+    } else if (self.currentPhase == ZMAuthenticationPhaseRegisterWithPhone) {
+        [self continueAuthenticationWithResponse:response];
     }
+
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 
@@ -294,13 +321,12 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 
-- (void)loginSucceed
+- (void)loginSucceededWithResponse:(ZMTransportResponse *)response
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
-    if (self.isWaitingForLogin) {
-        self.isWaitingForLogin = NO;
-    }
-    [self notifyAuthenticationDidSucceed];
+    self.authenticationResponse = response;
+    self.isWaitingForBackupImport = YES;
+    [self notifyAuthenticationReadyToImportBackup];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 

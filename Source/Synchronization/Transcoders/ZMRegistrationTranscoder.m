@@ -148,11 +148,7 @@
     NOT_USED(sync);
     ZMAuthenticationStatus *authenticationStatus = self.authenticationStatus;
     if (response.result == ZMTransportResponseStatusSuccess) {
-        BOOL shouldParseUserInfo = authenticationStatus.currentPhase == ZMAuthenticationPhaseRegisterWithPhone;
-        if (shouldParseUserInfo) {
-            [self.userInfoParser parseUserInfoFromResponse:response];
-        }
-        [authenticationStatus didCompleteRegistrationSuccessfully];
+        [authenticationStatus didCompleteRegistrationSuccessfullyWithResponse:response];
     }
     else if (response.result == ZMTransportResponseStatusPermanentError) {
         // if email is duplicated backed return 400 and json with key-exists label

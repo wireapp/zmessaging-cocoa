@@ -29,6 +29,7 @@
 @property (nonatomic) ZMCompleteRegistrationUser *internalRegistrationUser;
 
 @property (nonatomic) BOOL isWaitingForEmailVerification;
+@property (nonatomic) BOOL isWaitingForBackupImport;
 @property (nonatomic) BOOL completedRegistration;
 
 @property (nonatomic) BOOL isWaitingForLogin;
