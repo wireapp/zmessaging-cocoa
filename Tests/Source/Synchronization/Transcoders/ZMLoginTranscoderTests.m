@@ -82,21 +82,21 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 
 - (void)setUp {
     [super setUp];
-    
+
+    self.mockUserInfoParser = [[MockUserInfoParser alloc] init];
+
     self.groupQueue = [[DispatchGroupQueue alloc] initWithQueue:dispatch_get_main_queue()];
     self.originalLoginTimerInterval = DefaultPendingValidationLoginAttemptInterval;
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithGroupQueue:self.groupQueue];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithGroupQueue:self.groupQueue userInfoParser:self.mockUserInfoParser];
 
     self.mockClientRegistrationStatus = [OCMockObject niceMockForClass:[ZMClientRegistrationStatus class]];
     
     self.mockLocale = [OCMockObject niceMockForClass:[NSLocale class]];
     [[[self.mockLocale stub] andReturn:[NSLocale localeWithLocaleIdentifier:@"fr_FR"]] currentLocale];
 
-    self.mockUserInfoParser = [[MockUserInfoParser alloc] init];
-    
+
     self.sut = [[ZMLoginTranscoder alloc] initWithGroupQueue:self.groupQueue
-                                        authenticationStatus:self.authenticationStatus
-                                              userInfoParser:self.mockUserInfoParser];
+                                        authenticationStatus:self.authenticationStatus];
     
     self.testEmailCredentials = [ZMEmailCredentials credentialsWithEmail:TestEmail password:TestPassword];
     self.testPhoneNumberCredentials = [ZMPhoneCredentials credentialsWithPhoneNumber:TestPhoneNumber verificationCode:TestPhoneCode];
@@ -117,7 +117,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 - (void)testThatItCreatesTheTimedRequestSyncWithZeroDelayInDefaultConstructor
 {
     // given
-    ZMLoginTranscoder *sut = [[ZMLoginTranscoder alloc] initWithGroupQueue:self.groupQueue authenticationStatus:self.authenticationStatus userInfoParser:nil];
+    ZMLoginTranscoder *sut = [[ZMLoginTranscoder alloc] initWithGroupQueue:self.groupQueue authenticationStatus:self.authenticationStatus];
     
     // then
     XCTAssertNotNil(sut.timedDownstreamSync);
@@ -132,7 +132,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 - (void)expectAuthenticationSucceedAfter:(void(^)())block;
 {
     id mockAuthStatus = [OCMockObject partialMockForObject:self.authenticationStatus];
-    [[[mockAuthStatus expect] andForwardToRealObject] loginSucceed];
+    [[[mockAuthStatus expect] andForwardToRealObject] loginSucceededWithResponse:OCMOCK_ANY];
     
     // when
     block();

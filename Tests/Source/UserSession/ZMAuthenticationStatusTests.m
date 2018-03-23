@@ -38,6 +38,7 @@
 
 @property (nonatomic) id registrationObserverToken;
 @property (nonatomic, copy) void(^registrationCallback)(ZMUserSessionRegistrationNotificationType type, NSError *error);
+@property (nonatomic) MockUserInfoParser *userInfoParser;
 
 @end
 
@@ -46,8 +47,9 @@
 - (void)setUp {
     [super setUp];
 
+    self.userInfoParser = [[MockUserInfoParser alloc] init];
     DispatchGroupQueue *groupQueue = [[DispatchGroupQueue alloc] initWithQueue:dispatch_get_main_queue()];
-    self.sut = [[ZMAuthenticationStatus alloc] initWithGroupQueue:groupQueue];
+    self.sut = [[ZMAuthenticationStatus alloc] initWithGroupQueue:groupQueue userInfoParser:self.userInfoParser];
 
     // If a test fires any notification and it's not listening for it, this will fail
     ZM_WEAK(self);
@@ -79,6 +81,7 @@
     self.sut = nil;
     self.authenticationObserverToken = nil;
     self.registrationObserverToken = nil;
+    self.userInfoParser = nil;
     [super tearDown];
 }
 
@@ -140,7 +143,7 @@
     // when
     [self.sut prepareForRegistrationOfUser:regUser];
     [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didCompleteRegistrationSuccessfully];
+        [self.sut didCompleteRegistrationSuccessfullyWithResponse:nil]; // TODO: pass something here
     }];
     
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
@@ -327,7 +330,7 @@
     // when
     [self performPretendingUiMocIsSyncMoc:^{
         [self.sut prepareForRegistrationOfUser:[ZMCompleteRegistrationUser registrationUserWithEmail:email password:password]];
-        [self.sut didCompleteRegistrationSuccessfully];
+        [self.sut didCompleteRegistrationSuccessfullyWithResponse:nil]; // TODO: pass something here
     }];
     
     // then

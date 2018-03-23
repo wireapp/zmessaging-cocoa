@@ -26,11 +26,13 @@
 #import "ZMAuthenticationStatus.h"
 #import "ZMCredentials+Internal.h"
 #import "ZMUserSessionRegistrationNotification.h"
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @interface ZMPhoneNumberVerificationTranscoderTests : MessagingTest
 
 @property (nonatomic) ZMPhoneNumberVerificationTranscoder *sut;
 @property (nonatomic) ZMAuthenticationStatus *authenticationStatus;
+@property (nonatomic) MockUserInfoParser *userInfoParser;
 
 @end
 
@@ -40,13 +42,15 @@
     [super setUp];
 
     DispatchGroupQueue *groupQueue = [[DispatchGroupQueue alloc] initWithQueue:dispatch_get_main_queue()];
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithGroupQueue:groupQueue];
+    self.userInfoParser = [[MockUserInfoParser alloc] init];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithGroupQueue:groupQueue userInfoParser:self.userInfoParser];
     self.sut = [[ZMPhoneNumberVerificationTranscoder alloc] initWithGroupQueue:groupQueue authenticationStatus:self.authenticationStatus];
 }
 
 - (void)tearDown {
     self.authenticationStatus = nil;
     self.sut = nil;
+    self.userInfoParser = nil;
     [super tearDown];
 }
 
