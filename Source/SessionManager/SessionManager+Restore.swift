@@ -18,17 +18,10 @@
 
 import Foundation
 
-public enum BackupRestoreError: Error {
-    case versionTooNew
-    case versionTooOld
-    case fileError
-}
-
 extension SessionManager {
     /// Restores the account database from the Wire iOS database back up file.
     /// @param completion called when the restoration is ended. If success, Result.success with the new restored account
     /// is called.
     public func restoreFromBackup(at location: URL, completion: (Result<Account>)->()) {
-        completion(Result.failure(BackupRestoreError.fileError))
     }
 }
