@@ -60,9 +60,9 @@ public class UnauthenticatedSession: NSObject {
             transportSession: transportSession,
             operationQueue: groupQueue,
             requestStrategies: [
-                ZMLoginTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus, userInfoParser: self),
+                ZMLoginTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus),
                 ZMLoginCodeRequestTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
-                ZMRegistrationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus, userInfoParser: self)!,
+                ZMRegistrationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
                 ZMPhoneNumberVerificationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
                 EmailVerificationStrategy(groupQueue: groupQueue, status: registrationStatus),
                 TeamRegistrationStrategy(groupQueue: groupQueue, status: registrationStatus, userInfoParser: self)

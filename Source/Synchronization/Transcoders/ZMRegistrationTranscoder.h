@@ -28,8 +28,7 @@
 @interface ZMRegistrationTranscoder : NSObject <RequestStrategy>
 
 - (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue
-              authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
-                    userInfoParser:(id<UserInfoParser>)userInfoParser;
+              authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus;
 
 - (void)resetRegistrationState;
 

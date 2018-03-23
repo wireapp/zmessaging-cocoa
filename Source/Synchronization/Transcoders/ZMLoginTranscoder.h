@@ -33,8 +33,7 @@ NS_ASSUME_NONNULL_BEGIN;
 - (instancetype)init NS_UNAVAILABLE;
 
 - (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue
-              authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
-                    userInfoParser:(nullable id<UserInfoParser>)userInfoParser;
+              authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus;
 
 @end
 
