@@ -26,9 +26,9 @@ public enum BackupRestoreError: Error {
 
 extension SessionManager {
     /// Restores the account database from the Wire iOS database back up file.
-    /// @param callback called when the restoration is ended. If success, Result.success with the new restored account
+    /// @param completion called when the restoration is ended. If success, Result.success with the new restored account
     /// is called.
-    public func restoreFromBackup(at location: URL, callback: (Result<Account>)->()) {
-        callback(Result.failure(BackupRestoreError.fileError))
+    public func restoreFromBackup(at location: URL, completion: (Result<Account>)->()) {
+        completion(Result.failure(BackupRestoreError.fileError))
     }
 }
