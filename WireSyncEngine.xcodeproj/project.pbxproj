@@ -357,6 +357,7 @@
 		D52257232062637500562561 /* DeletableAssetIdentifierProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52257222062637500562561 /* DeletableAssetIdentifierProvider.swift */; };
 		D55272EA2062732100F542BE /* AssetDeletionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D55272E92062732100F542BE /* AssetDeletionStatusTests.swift */; };
 		D55272EC2062733F00F542BE /* AssetDeletionRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D55272EB2062733F00F542BE /* AssetDeletionRequestStrategyTests.swift */; };
+		D59F3A1020691A0F0023474F /* ZipArchive.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D59F3A0F20691A0F0023474F /* ZipArchive.framework */; };
 		D5D10DA4203AE43200145497 /* Conversation+AccessMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D10DA3203AE43200145497 /* Conversation+AccessMode.swift */; };
 		EE01E0371F90DD67001AA33C /* audio.m4a in Resources */ = {isa = PBXBuildFile; fileRef = EE01E0361F90DABC001AA33C /* audio.m4a */; };
 		EE01E0391F90FEC1001AA33C /* ZMLocalNotificationTests_ExpiredMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE01E0381F90FEC1001AA33C /* ZMLocalNotificationTests_ExpiredMessage.swift */; };
@@ -970,6 +971,7 @@
 		D52257222062637500562561 /* DeletableAssetIdentifierProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeletableAssetIdentifierProvider.swift; sourceTree = "<group>"; };
 		D55272E92062732100F542BE /* AssetDeletionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetDeletionStatusTests.swift; sourceTree = "<group>"; };
 		D55272EB2062733F00F542BE /* AssetDeletionRequestStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetDeletionRequestStrategyTests.swift; sourceTree = "<group>"; };
+		D59F3A0F20691A0F0023474F /* ZipArchive.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ZipArchive.framework; path = Carthage/Build/iOS/ZipArchive.framework; sourceTree = "<group>"; };
 		D5D10DA3203AE43200145497 /* Conversation+AccessMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Conversation+AccessMode.swift"; sourceTree = "<group>"; };
 		EE01E0361F90DABC001AA33C /* audio.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = audio.m4a; sourceTree = "<group>"; };
 		EE01E0381F90FEC1001AA33C /* ZMLocalNotificationTests_ExpiredMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMLocalNotificationTests_ExpiredMessage.swift; sourceTree = "<group>"; };
@@ -1174,6 +1176,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D59F3A1020691A0F0023474F /* ZipArchive.framework in Frameworks */,
 				CE5DC1A11DDA09F000D24DBA /* avs.framework in Frameworks */,
 				09CC4AAE1B7C885800201C63 /* libc++.dylib in Frameworks */,
 				09CC4AAC1B7C885100201C63 /* libbz2.dylib in Frameworks */,
@@ -1423,6 +1426,7 @@
 		540029B61918CA8500578793 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D59F3A0F20691A0F0023474F /* ZipArchive.framework */,
 				54E03A551E93CEED0089AC69 /* WireCryptobox.framework */,
 				54E03A561E93CEED0089AC69 /* WireDataModel.framework */,
 				54E03A571E93CEED0089AC69 /* WireImages.framework */,

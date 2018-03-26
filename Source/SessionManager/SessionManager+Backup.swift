@@ -21,12 +21,16 @@ import WireDataModel
 import ZipArchive
 
 extension SessionManager {
+    
+    public typealias BackupResultClosure = (Result<URL>) -> Void
+    static private let compressionQueue = DispatchQueue(label: "history-backup-compression")
+
     enum BackupError: Error {
         case noActiveAccount
         case compressionError
     }
 
-    public func backupActiveAccount(completion: @escaping ((Result<URL>) -> ())) {
+    public func backupActiveAccount(completion: @escaping BackupResultClosure) {
         guard let userId = accountManager.selectedAccount?.userIdentifier,
               let context = activeUserSession?.managedObjectContext,
               let clientId = ZMUser(remoteID: userId, createIfNeeded: false, in: context)?.selfClient()?.remoteIdentifier
@@ -36,8 +40,17 @@ extension SessionManager {
             accountIdentifier: userId,
             clientIdentifier: clientId,
             applicationContainer: sharedContainerURL,
-            completion: { completion($0.map(SessionManager.compress)) }
+            completion: { SessionManager.handleBackupResult($0, completion: completion) }
         )
+    }
+    
+    private static func handleBackupResult(_ result: Result<StorageStack.BackupInfo>, completion: @escaping BackupResultClosure) {
+        compressionQueue.async {
+            let result = result.map(compress)
+            DispatchQueue.main.async {
+                completion(result)
+            }
+        }
     }
     
     private static func compress(backup: StorageStack.BackupInfo) throws -> URL {
@@ -55,7 +68,7 @@ extension SessionManager {
 
 fileprivate extension BackupMetadata {
     
-    private static let fileExtension = "wirebackup"
+    private static let fileExtension = "wireiosbackup"
     
     private static let formatter: DateFormatter = {
        let formatter = DateFormatter()
