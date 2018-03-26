@@ -31,11 +31,9 @@ extension SessionManager {
     }
 
     public func backupActiveAccount(completion: @escaping BackupResultClosure) {
-        guard let userId = accountManager.selectedAccount?.userIdentifier,
-              let context = activeUserSession?.managedObjectContext,
-              let clientId = ZMUser.selfUser(in: context).selfClient()?.remoteIdentifier
-        else { return completion(.failure(BackupError.noActiveAccount)) }
-        
+        guard let userId = accountManager.selectedAccount?.userIdentifier
+              let clientId = activeUserSession?.selfUserClient().remoteIdentifier else { return completion(.failure(BackupError.noActiveAccount)) }
+
         StorageStack.backupLocalStorage(
             accountIdentifier: userId,
             clientIdentifier: clientId,
