@@ -32,9 +32,12 @@ extension SessionManager {
               let clientId = ZMUser(remoteID: userId, createIfNeeded: false, in: context)?.selfClient()?.remoteIdentifier
         else { return completion(.failure(BackupError.noActiveAccount)) }
         
-        StorageStack.backupLocalStorage(accountIdentifier: userId, clientIdentifier: clientId, applicationContainer: sharedContainerURL) { result in
-            completion(result.map(SessionManager.compress))
-        }
+        StorageStack.backupLocalStorage(
+            accountIdentifier: userId,
+            clientIdentifier: clientId,
+            applicationContainer: sharedContainerURL,
+            completion: { completion($0.map(SessionManager.compress)) }
+        )
     }
     
     private static func compress(backup: StorageStack.BackupInfo) throws -> URL {
