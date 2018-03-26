@@ -1,2 +1,3 @@
 github "wireapp/wire-ios-mocktransport" ~> 71.0
 github "wireapp/wire-ios-testing" ~> 13.0
+github "wireapp/ZipArchive" ~> 2.0
