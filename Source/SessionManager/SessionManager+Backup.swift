@@ -40,15 +40,22 @@ extension SessionManager {
             accountIdentifier: userId,
             clientIdentifier: clientId,
             applicationContainer: sharedContainerURL,
-            completion: { SessionManager.handleBackupResult($0, completion: completion) }
+            dispatchGroup: dispatchGroup,
+            completion: { [weak self] in SessionManager.handle(result: $0, dispatchGroup: self?.dispatchGroup, completion: completion) }
         )
     }
     
-    private static func handleBackupResult(_ result: Result<StorageStack.BackupInfo>, completion: @escaping BackupResultClosure) {
+    private static func handle(
+        result: Result<StorageStack.BackupInfo>,
+        dispatchGroup: ZMSDispatchGroup? = nil,
+        completion: @escaping BackupResultClosure
+        ) {
+        dispatchGroup?.enter()
         compressionQueue.async {
             let result = result.map(compress)
             DispatchQueue.main.async {
                 completion(result)
+                dispatchGroup?.leave()
             }
         }
     }

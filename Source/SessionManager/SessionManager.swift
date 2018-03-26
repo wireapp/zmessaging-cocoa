@@ -158,7 +158,7 @@ public protocol LocalNotificationResponder : class {
     fileprivate let sessionLoadingQueue : DispatchQueue = DispatchQueue(label: "sessionLoadingQueue")
     
     let sharedContainerURL: URL
-    fileprivate let dispatchGroup: ZMSDispatchGroup?
+    let dispatchGroup: ZMSDispatchGroup?
     fileprivate var accountTokens : [UUID : [Any]] = [:]
     fileprivate var memoryWarningObserver: NSObjectProtocol?
     fileprivate var isSelectingAccount : Bool = false
