@@ -18,14 +18,55 @@
 
 import Foundation
 import WireDataModel
+import ZipArchive
 
 extension SessionManager {
     enum BackupError: Error {
         case noActiveAccount
+        case compressionError
     }
 
     public func backupActiveAccount(completion: @escaping ((Result<URL>) -> ())) {
-        guard let userId = self.accountManager.selectedAccount?.userIdentifier else { return completion(.failure(BackupError.noActiveAccount)) }
-        StorageStack.backupLocalStorage(accountIdentifier: userId, applicationContainer: sharedContainerURL, completion: completion)
+        guard let userId = accountManager.selectedAccount?.userIdentifier,
+              let context = activeUserSession?.managedObjectContext,
+              let clientId = ZMUser(remoteID: userId, createIfNeeded: false, in: context)?.selfClient()?.remoteIdentifier
+        else { return completion(.failure(BackupError.noActiveAccount)) }
+        
+        StorageStack.backupLocalStorage(accountIdentifier: userId, clientIdentifier: clientId, applicationContainer: sharedContainerURL) { result in
+            completion(result.map(SessionManager.compress))
+        }
+    }
+    
+    private static func compress(backup: StorageStack.BackupInfo) throws -> URL {
+        let targetURL = compressedBackupURL(for: backup)
+        guard compress(fileAt: backup.url, to: targetURL) else { throw BackupError.compressionError }
+        return targetURL
+    }
+    
+    /// Creates a gzip archive of the backup directory at the given url
+    /// and stores it at the given target URL.
+    /// parameter url: The url of the backup directory that should be compressed.
+    /// parameter targetURL: The url where the compressed backup should be placed.
+    private static func compress(fileAt url: URL, to targetURL: URL) -> Bool {
+        return SSZipArchive.createZipFile(atPath: targetURL.path, withContentsOfDirectory: url.path)
+    }
+    
+    private static func compressedBackupURL(for backup: StorageStack.BackupInfo) -> URL {
+        return backup.url.deletingLastPathComponent().appendingPathComponent(backup.metadata.backupFilename)
+    }
+}
+
+fileprivate extension BackupMetadata {
+    
+    private static let fileExtension = "wirebackup"
+    
+    private static let formatter: DateFormatter = {
+       let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy/MM/dd-HH:mm"
+        return formatter
+    }()
+    
+    var backupFilename: String {
+        return "\(BackupMetadata.formatter.string(from: creationTime)).\(BackupMetadata.fileExtension)"
     }
 }
