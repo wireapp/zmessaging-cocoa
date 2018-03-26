@@ -39,22 +39,16 @@ extension SessionManager {
     
     private static func compress(backup: StorageStack.BackupInfo) throws -> URL {
         let targetURL = compressedBackupURL(for: backup)
-        guard compress(fileAt: backup.url, to: targetURL) else { throw BackupError.compressionError }
+        guard backup.url.zipDirectory(to: targetURL) else { throw BackupError.compressionError }
         return targetURL
-    }
-    
-    /// Creates a gzip archive of the backup directory at the given url
-    /// and stores it at the given target URL.
-    /// parameter url: The url of the backup directory that should be compressed.
-    /// parameter targetURL: The url where the compressed backup should be placed.
-    private static func compress(fileAt url: URL, to targetURL: URL) -> Bool {
-        return SSZipArchive.createZipFile(atPath: targetURL.path, withContentsOfDirectory: url.path)
     }
     
     private static func compressedBackupURL(for backup: StorageStack.BackupInfo) -> URL {
         return backup.url.deletingLastPathComponent().appendingPathComponent(backup.metadata.backupFilename)
     }
 }
+
+// MARK: - Compressed Filename
 
 fileprivate extension BackupMetadata {
     
@@ -68,5 +62,17 @@ fileprivate extension BackupMetadata {
     
     var backupFilename: String {
         return "\(BackupMetadata.formatter.string(from: creationTime)).\(BackupMetadata.fileExtension)"
+    }
+}
+
+// MARK: - Zip Helper
+
+fileprivate extension URL {
+    func zipDirectory(to url: URL) -> Bool {
+        return SSZipArchive.createZipFile(atPath: url.path, withContentsOfDirectory: path)
+    }
+    
+    func unzip(to url: URL) -> Bool {
+        return SSZipArchive.unzipFile(atPath: path, toDestination: url.path)
     }
 }
