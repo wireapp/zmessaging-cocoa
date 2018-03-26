@@ -33,7 +33,7 @@ extension SessionManager {
     public func backupActiveAccount(completion: @escaping BackupResultClosure) {
         guard let userId = accountManager.selectedAccount?.userIdentifier,
               let context = activeUserSession?.managedObjectContext,
-              let clientId = ZMUser(remoteID: userId, createIfNeeded: false, in: context)?.selfClient()?.remoteIdentifier
+              let clientId = ZMUser.selfUser(in: context).selfClient()?.remoteIdentifier
         else { return completion(.failure(BackupError.noActiveAccount)) }
         
         StorageStack.backupLocalStorage(
@@ -79,7 +79,7 @@ fileprivate extension BackupMetadata {
     
     private static let formatter: DateFormatter = {
        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy/MM/dd-HH:mm"
+        formatter.dateFormat = "yyyy-MM-dd"
         return formatter
     }()
     
@@ -90,7 +90,7 @@ fileprivate extension BackupMetadata {
 
 // MARK: - Zip Helper
 
-fileprivate extension URL {
+extension URL {
     func zipDirectory(to url: URL) -> Bool {
         return SSZipArchive.createZipFile(atPath: url.path, withContentsOfDirectory: path)
     }
