@@ -23,11 +23,16 @@ import ZipArchive
 extension SessionManager {
     
     public typealias BackupResultClosure = (Result<URL>) -> Void
+    public typealias RestoreResultClosure = (VoidResult) -> Void
+    
     static private let compressionQueue = DispatchQueue(label: "history-backup-compression")
 
+    // MARK: - Export
+    
     enum BackupError: Error {
         case noActiveAccount
         case compressionError
+        case invalidFileExtension
     }
 
     public func backupActiveAccount(completion: @escaping BackupResultClosure) {
@@ -48,14 +53,48 @@ extension SessionManager {
         dispatchGroup: ZMSDispatchGroup? = nil,
         completion: @escaping BackupResultClosure
         ) {
-        dispatchGroup?.enter()
-        compressionQueue.async {
-            let result = result.map(compress)
-            DispatchQueue.main.async {
-                completion(result)
-                dispatchGroup?.leave()
+        compressionQueue.async(group: dispatchGroup) {
+            let decompressed = result.map(compress)
+            DispatchQueue.main.async(group: dispatchGroup) {
+                completion(decompressed)
             }
         }
+    }
+    
+    // MARK: - Import
+    
+    /// Restores the account database from the Wire iOS database back up file.
+    /// @param completion called when the restoration is ended. If success, Result.success with the new restored account
+    /// is called.
+    public func restoreFromBackup(at location: URL, with userId: UUID, completion: @escaping RestoreResultClosure) {
+        func complete(_ result: VoidResult) {
+            DispatchQueue.main.async(group: dispatchGroup) {
+                completion(.success)
+            }
+        }
+        
+        // Verify the imported file has the correct file extension (`wireiosbackup`).
+        guard location.pathExtension == BackupMetadata.fileExtension else { return completion(.failure(BackupError.invalidFileExtension)) }
+        
+        SessionManager.compressionQueue.async(group: dispatchGroup) { [weak self] in
+            guard let `self` = self else { return }
+            let url = SessionManager.unzippedBackupURL(for: location)
+            guard location.unzip(to: url) else { return complete(.failure(BackupError.compressionError)) }
+            StorageStack.importLocalStorage(
+                accountIdentifier: userId,
+                from: url,
+                applicationContainer: self.sharedContainerURL,
+                dispatchGroup: self.dispatchGroup,
+                completion: { _ in complete(.success) }
+            )
+        }
+    }
+    
+    // MARK: - Helper
+    
+    private static func unzippedBackupURL(for url: URL) -> URL {
+        let newPath = url.deletingPathExtension().lastPathComponent + "_unzipped"
+        return url.deletingLastPathComponent().appendingPathComponent(newPath)
     }
     
     private static func compress(backup: StorageStack.BackupInfo) throws -> URL {
@@ -73,7 +112,7 @@ extension SessionManager {
 
 fileprivate extension BackupMetadata {
     
-    private static let fileExtension = "wireiosbackup"
+    fileprivate static let fileExtension = "wireiosbackup"
     
     private static let formatter: DateFormatter = {
        let formatter = DateFormatter()

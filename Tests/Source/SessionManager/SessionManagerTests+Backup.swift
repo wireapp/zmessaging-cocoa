@@ -93,10 +93,50 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssert(FileManager.default.fileExists(atPath: dataURL.path))
     }
     
+    func testThatItImportsAZippedBackup() throws {
+        // Given
+        XCTAssert(login())
+        prefetchClientByInsertingMessage(in: selfToUser1Conversation)
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        
+        mockTransportSession.performRemoteChanges {
+            $0.registerClient(for: self.selfUser, label: self.name!, type: "permanent")
+        }
+        
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        let backupResult = backupActiveAcount()
+        guard let url = backupResult.value else { return XCTFail("\(backupResult.error!)") }
+        
+        let moc = sessionManager!.activeUserSession!.managedObjectContext!
+        let userId = ZMUser.selfUser(in: moc).remoteIdentifier!
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: userId, applicationContainer: sharedContainer)
+        let fm = FileManager.default
+        try fm.removeItem(at: accountFolder)
+        let storePath = accountFolder.appendingPathComponent("store").path
+        XCTAssertFalse(fm.fileExists(atPath: storePath))
+        
+        // When
+        let result = restoreAcount(withIdentifier: userId, to: url)
+        
+        // Then
+        XCTAssertNil(result.error, "\(result.error!)")
+        XCTAssert(fm.fileExists(atPath: storePath))
+    }
+    
+    // MARK: - Helper
+    
     private func backupActiveAcount(file: StaticString = #file, line: UInt = #line) -> Result<URL> {
         var result: Result<URL> = .failure(TestError.uninitialized)
         sessionManager?.backupActiveAccount { result = $0 }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5), file: file, line: line)
+        return result
+    }
+    
+    private func restoreAcount(withIdentifier userId: UUID, to url: URL, file: StaticString = #file, line: UInt = #line) -> VoidResult {
+        var result: VoidResult = .failure(TestError.uninitialized)
+        sessionManager?.restoreFromBackup(at: url, with: userId) { result = $0 }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         return result
     }
     
