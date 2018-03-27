@@ -93,8 +93,8 @@ extension SessionManager {
     // MARK: - Helper
     
     private static func unzippedBackupURL(for url: URL) -> URL {
-        let newPath = url.deletingPathExtension().lastPathComponent + "_unzipped"
-        return url.deletingLastPathComponent().appendingPathComponent(newPath)
+        let filename = url.deletingPathExtension().lastPathComponent
+        return StorageStack.importsDirectory.appendingPathExtension(filename)
     }
     
     private static func compress(backup: StorageStack.BackupInfo) throws -> URL {
