@@ -27,6 +27,7 @@ public enum PreLoginAuthenticationEventObjc : Int {
     case loginCodeRequestDidFail
     case authenticationDidSucceed
     case authenticationDidFail
+    case readyToImportBackup
 }
 
 public typealias PreLoginAuthenticationObserverHandler = (_ event: PreLoginAuthenticationEventObjc, _ error : NSError?) -> Void
@@ -59,6 +60,10 @@ public class PreLoginAuthenticationObserverToken : NSObject, PreLoginAuthenticat
     
     public func authenticationDidFail(_ error: NSError) {
         handler(.authenticationDidFail, error)
+    }
+
+    public func authenticationReadyToImportBackup() {
+        handler(.readyToImportBackup, nil)
     }
 }
 

@@ -58,9 +58,6 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 
 @end
 
-
-
-
 @interface ZMLoginTranscoderTests : MessagingTest
 
 @property (nonatomic) DispatchGroupQueue *groupQueue;
@@ -496,6 +493,8 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     // when
     [self expectAuthenticationSucceedAfter:^{
         [[self.sut nextRequest] completeWithResponse:response];
+        WaitForAllGroupsToBeEmpty(0.5);
+        [self.authenticationStatus continueAfterBackupImportStep];
         [self.authenticationStatus setAuthenticationCookieData:[@"foo" dataUsingEncoding:NSUTF8StringEncoding]];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
@@ -519,6 +518,8 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     // when
     [self expectAuthenticationSucceedAfter:^{
         [[self.sut nextRequest] completeWithResponse:response];
+        WaitForAllGroupsToBeEmpty(0.5);
+        [self.authenticationStatus continueAfterBackupImportStep];
         [self.authenticationStatus setAuthenticationCookieData:[@"foo" dataUsingEncoding:NSUTF8StringEncoding]];
         WaitForAllGroupsToBeEmpty(0.5);
     }];

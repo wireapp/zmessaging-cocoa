@@ -53,14 +53,21 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 - (NSArray *)expectationsForSuccessfulRegistration
 {
     XCTestExpectation *authenticationDidSucceedExpectation = [self expectationWithDescription:@"authentication did succeed"];
+    XCTestExpectation *readyToImportBackup = [self expectationWithDescription:@"ready to import backup"];
     id preLoginToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
         NOT_USED(error);
-        
+
         if (event == PreLoginAuthenticationEventObjcAuthenticationDidSucceed) {
+//            WaitForAllGroupsToBeEmpty(0.5);
             [authenticationDidSucceedExpectation fulfill];
+        } else if (event == PreLoginAuthenticationEventObjcReadyToImportBackup) {
+            [self.unauthenticatedSession continueAfterBackupImportStep];
+//            WaitForAllGroupsToBeEmpty(0.5);
+            [readyToImportBackup fulfill];
         }
+
     }];
-    
+
     XCTestExpectation *clientRegisteredExpectation = [self expectationWithDescription:@"client was registered"];
     id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
         NOT_USED(error);
@@ -124,6 +131,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
     // then
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+    WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertNotNil([self.mockTransportSession.cookieStorage authenticationCookieData]);
     XCTAssertTrue(self.userSession.isLoggedIn);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -209,13 +217,16 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
     [self.unauthenticatedSession loginWithCredentials:credentials];
     WaitForAllGroupsToBeEmpty(0.5);
+    [self.unauthenticatedSession continueAfterBackupImportStep];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // should not make more requests
     XCTAssertLessThanOrEqual(numberOfRequests, 2);
     XCTAssertFalse(self.userSession.isLoggedIn);
     
-    XCTAssertEqual(recorder.notifications.count, 1lu);
-    XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcAuthenticationDidSucceed);
+    XCTAssertEqual(recorder.notifications.count, 2lu);
+    XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcReadyToImportBackup);
+    XCTAssertEqual(recorder.notifications.lastObject.event, PreLoginAuthenticationEventObjcAuthenticationDidSucceed);
 }
 
 - (void)testThatWhenTransportSessionDeletesCookieInResponseToFailedRenewTokenWeGoToUnathorizedState
@@ -252,12 +263,15 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
     [self.unauthenticatedSession loginWithCredentials:credentials];
     WaitForAllGroupsToBeEmpty(0.5);
+    [self.unauthenticatedSession continueAfterBackupImportStep];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // should not make more requests
     XCTAssertLessThanOrEqual(numberOfRequests, 2);
     XCTAssertFalse(self.userSession.isLoggedIn);
-    XCTAssertEqual(recorder.notifications.count, 1lu);
-    XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcAuthenticationDidSucceed);
+    XCTAssertEqual(recorder.notifications.count, 2lu);
+    XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcReadyToImportBackup);
+    XCTAssertEqual(recorder.notifications.lastObject.event, PreLoginAuthenticationEventObjcAuthenticationDidSucceed);
 }
 
 
@@ -367,6 +381,8 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     
     // and when
     [self.unauthenticatedSession loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code]];
+    WaitForAllGroupsToBeEmpty(0.5);
+    [self.unauthenticatedSession continueAfterBackupImportStep];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -593,9 +609,12 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
     // and when
     [self.unauthenticatedSession loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.phoneVerificationCodeForLogin]];
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
     WaitForAllGroupsToBeEmpty(0.5);
-    
+    [self.unauthenticatedSession continueAfterBackupImportStep];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+
     // then
     postLoginToken = nil;
 }

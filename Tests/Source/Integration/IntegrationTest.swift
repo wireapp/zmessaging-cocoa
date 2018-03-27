@@ -415,6 +415,9 @@ extension IntegrationTest {
         
         sessionManager?.unauthenticatedSession?.login(with: credentials)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        sessionManager?.unauthenticatedSession?.continueAfterBackupImportStep()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
         authenticationObserver = nil
         
         return didSucceed
