@@ -143,7 +143,7 @@
     // when
     [self.sut prepareForRegistrationOfUser:regUser];
     [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didCompleteRegistrationSuccessfullyWithResponse:nil]; // TODO: pass something here
+        [self.sut didCompleteRegistrationSuccessfullyWithResponse:nil]; // We don't care about response in here
     }];
     
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
@@ -330,7 +330,7 @@
     // when
     [self performPretendingUiMocIsSyncMoc:^{
         [self.sut prepareForRegistrationOfUser:[ZMCompleteRegistrationUser registrationUserWithEmail:email password:password]];
-        [self.sut didCompleteRegistrationSuccessfullyWithResponse:nil]; // TODO: pass something here
+        [self.sut didCompleteRegistrationSuccessfullyWithResponse:nil]; // We don't care about response in here
     }];
     
     // then
@@ -671,9 +671,35 @@
     XCTAssertEqualObjects(self.sut.loginCredentials, credentials1);
 }
 
+- (void)testThatItWaitsForBackupImportAfterLoggingInWithEmail
+{
+    // expect
+    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
+    ZM_WEAK(self);
+    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        ZM_STRONG(self);
+        XCTAssertEqual(event, PreLoginAuthenticationEventObjcReadyToImportBackup);
+        XCTAssertNil(error);
+        [expectation fulfill];
+    };
+
+    // given
+    NSString *email = @"gfdgfgdfg@fds.sgf";
+    NSString *password = @"#$4tewt343$";
+
+    // when
+    [self performPretendingUiMocIsSyncMoc:^{
+        [self.sut prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:email password:password]];
+    }];
+    [self.sut loginSucceededWithResponse:nil];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // then
+    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseWaitingToImportBackup);
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
+}
+
 @end
-
-
 
 
 @implementation ZMAuthenticationStatusTests (CredentialProvider)
@@ -734,6 +760,42 @@
 
 @end
 
+@implementation ZMAuthenticationStatusTests (UserInfoParser)
+
+- (void)testThatItCallsUserInfoParserAfterSuccessfulAuthentication
+{
+    // given
+    NSString *email = @"foo@foo.bar";
+    NSString *pass = @"123456xcxc";
+
+    ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:pass];
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
+
+    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
+    ZM_WEAK(self);
+    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        ZM_STRONG(self);
+        if (!(event == PreLoginAuthenticationEventObjcReadyToImportBackup ||
+              event == PreLoginAuthenticationEventObjcAuthenticationDidSucceed)) {
+            XCTFail(@"Unexpected event");
+        }
+        XCTAssertEqual(error, nil);
+        [expectation fulfill];
+    };
+
+    // when
+    [self performPretendingUiMocIsSyncMoc:^{
+        [self.sut prepareForLoginWithCredentials:credentials];
+        [self.sut loginSucceededWithResponse:response];
+        [self.sut continueAfterBackupImportStep];
+    }];
+
+    // then
+    XCTAssertEqual(self.userInfoParser.parseCallCount, 1);
+    XCTAssertEqual(self.userInfoParser.parsedResponses.firstObject, response);
+}
+
+@end
 
 
 @implementation ZMAuthenticationStatusTests (CookieLabel)
