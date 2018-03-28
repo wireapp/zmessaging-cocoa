@@ -331,7 +331,8 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     } else {
         self.authenticationResponse = response;
         self.isWaitingForBackupImport = YES;
-        [self notifyAuthenticationReadyToImportBackup];
+        BOOL existingAccount = [self.userInfoParser accountExistsLocallyFromResponse:response];
+        [self notifyAuthenticationReadyToImportBackupWithExistingAccount:existingAccount];
     }
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }

@@ -24,9 +24,12 @@ public protocol UnauthenticatedSessionDelegate: class {
     func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials)  -> Bool
     func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data)
     func session(session: UnauthenticatedSession, createdAccount account: Account)
+    func session(session: UnauthenticatedSession, isExistingAccount account: Account) -> Bool
 }
 
 @objc public protocol UserInfoParser: class {
+    @objc(accountExistsLocallyFromResponse:)
+    func accountExistsLocally(from response: ZMTransportResponse) -> Bool
     @objc(parseUserInfoFromResponse:)
     func parseUserInfo(from response: ZMTransportResponse)
 }
@@ -91,6 +94,15 @@ public class UnauthenticatedSession: NSObject {
 // MARK: - UserInfoParser
 
 extension UnauthenticatedSession: UserInfoParser {
+    public func accountExistsLocally(from response: ZMTransportResponse) -> Bool {
+        guard let info = response.extractUserInfo() else {
+            log.warn("Failed to parse UserInfo from response: \(response)")
+            return false
+        }
+        let account = Account(userName: "", userIdentifier: info.identifier)
+        guard let delegate = delegate else { return false }
+        return delegate.session(session: self, isExistingAccount: account)
+    }
 
     public func parseUserInfo(from response: ZMTransportResponse) {
         guard let info = response.extractUserInfo() else { return log.warn("Failed to parse UserInfo from response: \(response)") }

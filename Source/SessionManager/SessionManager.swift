@@ -705,6 +705,9 @@ extension SessionManager {
 }
 
 extension SessionManager: UnauthenticatedSessionDelegate {
+    public func session(session: UnauthenticatedSession, isExistingAccount account: Account) -> Bool {
+        return accountManager.accounts.contains(account)
+    }
 
     public func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) -> Bool {
         return update(credentials: credentials)
