@@ -33,7 +33,6 @@ public final class AccountStatus : NSObject, ZMInitialSyncCompletionObserver {
     var initialSyncToken: Any?
     
     public fileprivate (set) var accountState : AccountState = .activated
-    public var hadHistoryBeforeSync : Bool
     
     public func initialSyncCompleted() {
         self.managedObjectContext.performGroupedBlock {
@@ -79,19 +78,11 @@ public final class AccountStatus : NSObject, ZMInitialSyncCompletionObserver {
     
     @objc public init(managedObjectContext: NSManagedObjectContext) {
         self.managedObjectContext = managedObjectContext
-        self.hadHistoryBeforeSync = AccountStatus.hasHistory(in: managedObjectContext)
         
         super.init()
         
         self.initialSyncToken = ZMUserSession.addInitialSyncCompletionObserver(self, context: managedObjectContext)
         self.authenticationToken = PostLoginAuthenticationNotification.addObserver(self, context: managedObjectContext)
-    }
-    
-    private static func hasHistory(in managedObjectContext: NSManagedObjectContext) -> Bool {
-        let convRequest = NSFetchRequest<ZMConversation>(entityName:ZMConversation.entityName())
-        guard let convCount = try? managedObjectContext.count(for: convRequest) else { return false }
-        let hasHistory = convCount > 1
-        return hasHistory
     }
 }
 
