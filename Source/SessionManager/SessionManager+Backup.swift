@@ -117,7 +117,8 @@ extension SessionManager {
 
 fileprivate extension BackupMetadata {
     
-    fileprivate static let fileExtension = "wireiosbackup"
+    fileprivate static let namePrefix = "Wire Backup"
+    fileprivate static let fileExtension = "ios-bkp"
     
     private static let formatter: DateFormatter = {
        let formatter = DateFormatter()
@@ -126,7 +127,7 @@ fileprivate extension BackupMetadata {
     }()
     
     var backupFilename: String {
-        return "\(BackupMetadata.formatter.string(from: creationTime)).\(BackupMetadata.fileExtension)"
+        return "\(BackupMetadata.namePrefix) \(BackupMetadata.formatter.string(from: creationTime)).\(BackupMetadata.fileExtension)"
     }
 }
 

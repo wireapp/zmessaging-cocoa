@@ -80,7 +80,11 @@ class SessionManagerTests_Backup: IntegrationTest {
         guard url.unzip(to: unzippedURL) else { return XCTFail("Decompression failed") }
         
         // Then
-        XCTAssertEqual(url.pathExtension, "wireiosbackup")
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let expectedName = "Wire Backup \(formatter.string(from: .init())).ios-bkp"
+        
+        XCTAssertEqual(url.lastPathComponent, expectedName)
         let dataURL = unzippedURL.appendingPathComponent("data")
         let metadataURL = unzippedURL.appendingPathComponent("export.json")
         let metadata = try BackupMetadata(url: metadataURL)
