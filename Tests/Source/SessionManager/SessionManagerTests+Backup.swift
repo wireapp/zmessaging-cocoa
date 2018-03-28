@@ -159,9 +159,11 @@ class SessionManagerTests_Backup: IntegrationTest {
         let moc = sessionManager!.activeUserSession!.managedObjectContext!
         let userId = ZMUser.selfUser(in: moc).remoteIdentifier!
         XCTAssertNil(restoreAcount(withIdentifier: userId, from: url).error)
+        XCTAssert(FileManager.default.fileExists(atPath: StorageStack.backupsDirectory.path))
+        XCTAssert(FileManager.default.fileExists(atPath: StorageStack.importsDirectory.path))
         
         // When
-        SessionManager.clearPreviousBackups(group: dispatchGroup)
+        SessionManager.clearPreviousBackups(dispatchGroup: dispatchGroup)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // Then
