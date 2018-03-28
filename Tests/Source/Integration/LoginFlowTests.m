@@ -374,30 +374,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     DebugLoginFailureTimerOverride = 0;
 }
 
-- (void)testThatWhenWeLoginItChecksForTheHistory
-{
-    // given
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[]];
-        [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[]];
-    }];
-    
-    XCTAssertTrue([self login]);
-    XCTAssertFalse(self.userSession.hadHistoryAtLastLogin);
-    
-    // when
-    [self destroySessionManager];
-    [self deleteAuthenticationCookie];
-    [self createSessionManager];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertTrue([self login]);
-
-    // then
-    XCTAssertTrue(self.userSession.hadHistoryAtLastLogin);
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
 @end
 
 
