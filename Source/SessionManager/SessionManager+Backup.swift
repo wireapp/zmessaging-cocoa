@@ -92,6 +92,11 @@ extension SessionManager {
     
     // MARK: - Helper
     
+    /// Deletes all previously exported and imported backups.
+    public static func clearPreviousBackups(group: ZMSDispatchGroup? = nil) {
+        StorageStack.clearBackupDirectory()
+    }
+    
     private static func unzippedBackupURL(for url: URL) -> URL {
         let filename = url.deletingPathExtension().lastPathComponent
         return StorageStack.importsDirectory.appendingPathExtension(filename)

@@ -145,6 +145,30 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssertEqual(result.error as? SessionManager.BackupError, .invalidFileExtension)
     }
     
+    func testThatItDeletesABackup() {
+        // Given
+        XCTAssert(login())
+        mockTransportSession.performRemoteChanges {
+            $0.registerClient(for: self.selfUser, label: self.name!, type: "permanent")
+        }
+        
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        let result = backupActiveAcount()
+        guard let url = result.value else { return XCTFail("\(result.error!)") }
+        let moc = sessionManager!.activeUserSession!.managedObjectContext!
+        let userId = ZMUser.selfUser(in: moc).remoteIdentifier!
+        XCTAssertNil(restoreAcount(withIdentifier: userId, from: url).error)
+        
+        // When
+        SessionManager.clearPreviousBackups(group: dispatchGroup)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // Then
+        XCTAssertFalse(FileManager.default.fileExists(atPath: StorageStack.backupsDirectory.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: StorageStack.importsDirectory.path))
+    }
+    
     // MARK: - Helper
     
     private func backupActiveAcount(file: StaticString = #file, line: UInt = #line) -> Result<URL> {
