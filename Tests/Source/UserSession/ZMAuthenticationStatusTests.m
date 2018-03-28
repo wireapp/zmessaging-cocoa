@@ -699,6 +699,39 @@
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
 }
 
+- (void)testThatItAsksForUserInfoParserIfAccountForBackupExists
+{
+    // expect
+    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
+    ZM_WEAK(self);
+    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        ZM_STRONG(self);
+        XCTAssertEqual(event, PreLoginAuthenticationEventObjcReadyToImportBackupExistingAccount);
+        XCTAssertNil(error);
+        [expectation fulfill];
+    };
+
+    // given
+    NSString *email = @"gfdgfgdfg@fds.sgf";
+    NSString *password = @"#$4tewt343$";
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
+    self.userInfoParser.existingAccounts = [self.userInfoParser.existingAccounts arrayByAddingObject:response];
+
+    // when
+    [self performPretendingUiMocIsSyncMoc:^{
+        [self.sut prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:email password:password]];
+    }];
+
+    [self.sut loginSucceededWithResponse:response];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // then
+    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseWaitingToImportBackup);
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
+    XCTAssertEqual(self.userInfoParser.accountExistsLocallyCalled, 1);
+}
+
+
 @end
 
 
