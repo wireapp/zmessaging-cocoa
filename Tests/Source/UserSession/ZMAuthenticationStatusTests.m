@@ -678,7 +678,7 @@
     ZM_WEAK(self);
     self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
         ZM_STRONG(self);
-        XCTAssertEqual(event, PreLoginAuthenticationEventObjcReadyToImportBackup);
+        XCTAssertEqual(event, PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount);
         XCTAssertNil(error);
         [expectation fulfill];
     };
@@ -775,7 +775,7 @@
     ZM_WEAK(self);
     self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
         ZM_STRONG(self);
-        if (!(event == PreLoginAuthenticationEventObjcReadyToImportBackup ||
+        if (!(event == PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount ||
               event == PreLoginAuthenticationEventObjcAuthenticationDidSucceed)) {
             XCTFail(@"Unexpected event");
         }

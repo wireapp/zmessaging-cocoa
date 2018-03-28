@@ -19,6 +19,13 @@
 
 @objc public class MockUserInfoParser: NSObject, UserInfoParser {
 
+    public var accountExistsLocallyCalled = 0
+    public var existingAccounts = [ZMTransportResponse]()
+    public func accountExistsLocally(from response: ZMTransportResponse) -> Bool {
+        accountExistsLocallyCalled += 1
+        return existingAccounts.contains(response)
+    }
+
     var parseCallCount = 0
     var parsedResponses = [ZMTransportResponse]()
 

@@ -59,7 +59,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
         if (event == PreLoginAuthenticationEventObjcAuthenticationDidSucceed) {
             [authenticationDidSucceedExpectation fulfill];
-        } else if (event == PreLoginAuthenticationEventObjcReadyToImportBackup) {
+        } else if (event == PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount) {
             [self.unauthenticatedSession continueAfterBackupImportStep];
             [readyToImportBackup fulfill];
         }
@@ -124,7 +124,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTestExpectation *readyToImportBackup = [self expectationWithDescription:@"ready to import backup"];
     id preLoginToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
         NOT_USED(error);
-        if (event == PreLoginAuthenticationEventObjcReadyToImportBackup) {
+        if (event == PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount) {
             [readyToImportBackup fulfill];
         }
     }];
@@ -166,7 +166,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTestExpectation *readyToImportBackup = [self expectationWithDescription:@"ready to import backup"];
     id preLoginToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
         NOT_USED(error);
-        if (event == PreLoginAuthenticationEventObjcReadyToImportBackup) {
+        if (event == PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount) {
             [readyToImportBackup fulfill];
         }
     }];
@@ -290,7 +290,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertFalse(self.userSession.isLoggedIn);
     
     XCTAssertEqual(recorder.notifications.count, 2lu);
-    XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcReadyToImportBackup);
+    XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount);
     XCTAssertEqual(recorder.notifications.lastObject.event, PreLoginAuthenticationEventObjcAuthenticationDidSucceed);
 }
 
@@ -335,7 +335,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertLessThanOrEqual(numberOfRequests, 2);
     XCTAssertFalse(self.userSession.isLoggedIn);
     XCTAssertEqual(recorder.notifications.count, 2lu);
-    XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcReadyToImportBackup);
+    XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount);
     XCTAssertEqual(recorder.notifications.lastObject.event, PreLoginAuthenticationEventObjcAuthenticationDidSucceed);
 }
 

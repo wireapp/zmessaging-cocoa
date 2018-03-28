@@ -27,7 +27,8 @@ public enum PreLoginAuthenticationEventObjc : Int {
     case loginCodeRequestDidFail
     case authenticationDidSucceed
     case authenticationDidFail
-    case readyToImportBackup
+    case readyToImportBackupExistingAccount
+    case readyToImportBackupNewAccount
 }
 
 public typealias PreLoginAuthenticationObserverHandler = (_ event: PreLoginAuthenticationEventObjc, _ error : NSError?) -> Void
@@ -62,8 +63,9 @@ public class PreLoginAuthenticationObserverToken : NSObject, PreLoginAuthenticat
         handler(.authenticationDidFail, error)
     }
 
-    public func authenticationReadyToImportBackup() {
-        handler(.readyToImportBackup, nil)
+    public func authenticationReadyToImportBackup(existingAccount: Bool) {
+        let value: PreLoginAuthenticationEventObjc = existingAccount ? .readyToImportBackupExistingAccount : .readyToImportBackupNewAccount
+        handler(value, nil)
     }
 }
 
@@ -132,6 +134,11 @@ final class TestAuthenticationObserver: NSObject, PreLoginAuthenticationObserver
 
 
 final class MockUnauthenticatedSessionDelegate: NSObject, UnauthenticatedSessionDelegate {
+
+    var existingAccounts = [Account]()
+    func session(session: UnauthenticatedSession, isExistingAccount account: Account) -> Bool {
+        return existingAccounts.contains(account)
+    }
 
     var createdAccounts = [Account]()
     var didUpdateCredentials : Bool = false
