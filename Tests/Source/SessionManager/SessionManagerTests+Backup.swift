@@ -188,7 +188,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         
         do {
             let conversation = self.conversation(for: selfToUser1Conversation)!
-            conversation.messageDestructionTimeout = 1
+            conversation.messageDestructionTimeout = 0.5
             let moc = sessionManager!.activeUserSession!.managedObjectContext!
             
             let message = conversation.appendMessage(withText: "foo") as! ZMClientMessage
@@ -209,16 +209,15 @@ class SessionManagerTests_Backup: IntegrationTest {
         
         XCTAssertNil(restoreAcount(withIdentifier: userId, from: url).error)
         XCTAssert(login())
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 1.5))
-        spinMainQueue(withTimeout: 1.5)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        spinMainQueue(withTimeout: 1)
         
         // Then
-        do {
-            let moc = sessionManager!.activeUserSession!.managedObjectContext!
-            let message = ZMMessage.fetch(withNonce: nonce, for: conversation(for: selfToUser1Conversation)!, in: moc)
-            XCTAssertNil(message?.textMessageData?.messageText)
-            XCTAssertNil(message?.sender)
-        }
+        XCTAssert(wait(withTimeout: 2) {
+            let moc = self.sessionManager!.activeUserSession!.managedObjectContext!
+            let message = ZMMessage.fetch(withNonce: nonce, for: self.conversation(for: self.selfToUser1Conversation)!, in: moc)
+            return nil == message?.textMessageData?.messageText && nil == message?.sender
+        })
     }
     
     // MARK: - Helper
