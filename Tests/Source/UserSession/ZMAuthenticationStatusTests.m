@@ -731,6 +731,40 @@
     XCTAssertEqual(self.userInfoParser.accountExistsLocallyCalled, 1);
 }
 
+- (void)testThatItExtractsUserIdentifierFromLoginResponse
+{
+    // expect
+    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
+    ZM_WEAK(self);
+    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
+        ZM_STRONG(self);
+        XCTAssertEqual(event, PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount);
+        XCTAssertNil(error);
+        [expectation fulfill];
+    };
+
+    // given
+    NSString *email = @"gfdgfgdfg@fds.sgf";
+    NSString *password = @"#$4tewt343$";
+    NSUUID *userID = [NSUUID createUUID];
+    self.userInfoParser.userId = userID;
+    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
+
+    // when
+    [self performPretendingUiMocIsSyncMoc:^{
+        [self.sut prepareForLoginWithCredentials:[ZMEmailCredentials credentialsWithEmail:email password:password]];
+    }];
+
+    [self.sut loginSucceededWithResponse:response];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // then
+    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseWaitingToImportBackup);
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
+    XCTAssertEqualObjects(self.sut.authenticatedUserIdentifier, userID);
+    XCTAssertEqual(self.userInfoParser.userIdentifierCalled, 1);
+
+}
 
 @end
 

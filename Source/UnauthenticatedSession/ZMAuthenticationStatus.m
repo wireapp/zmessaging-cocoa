@@ -65,6 +65,14 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     return self.internalLoginCredentials;
 }
 
+- (NSUUID *)authenticatedUserIdentifier
+{
+    if (self.authenticationResponse != nil) {
+        return [self.userInfoParser userIdentifierFromResponse:self.authenticationResponse];
+    }
+    return nil;
+}
+
 - (void)resetLoginAndRegistrationStatus
 {
     [self stopLoginTimer];

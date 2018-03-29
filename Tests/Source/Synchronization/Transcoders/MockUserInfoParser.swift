@@ -34,4 +34,11 @@
         parsedResponses.append(response)
     }
 
+    public var userId: UUID?
+    public var userIdentifierCalled = 0
+    public func userIdentifier(from response: ZMTransportResponse) -> UUID? {
+        userIdentifierCalled += 1
+        return userId
+    }
+
 }
