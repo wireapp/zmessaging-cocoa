@@ -741,6 +741,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
                 userSession.syncManagedObjectContext.registeredOnThisDevice = registered
                 userSession.syncManagedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = registered
                 userSession.accountStatus.didCompleteLogin()
+                ZMMessage.deleteOldEphemeralMessages(userSession.syncManagedObjectContext)
             }
         }
     }

@@ -175,6 +175,52 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssertFalse(FileManager.default.fileExists(atPath: StorageStack.importsDirectory.path))
     }
     
+    func testThatItDeletesOldEphemeralMessagesWhenRestoringFromABackup() {
+        // Given
+        XCTAssert(login())
+        mockTransportSession.performRemoteChanges {
+            $0.registerClient(for: self.selfUser, label: self.name!, type: "permanent")
+        }
+        
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        let userId = currentUserIdentifier!
+        let nonce = UUID.create()
+        
+        do {
+            let conversation = self.conversation(for: selfToUser1Conversation)!
+            conversation.messageDestructionTimeout = 1
+            let moc = sessionManager!.activeUserSession!.managedObjectContext!
+            
+            let message = conversation.appendMessage(withText: "foo") as! ZMClientMessage
+            message.nonce = nonce
+            message.sender = ZMUser.insertNewObject(in: moc)
+            message.sender?.remoteIdentifier = .create()
+            XCTAssert(message.startSelfDestructionIfNeeded())
+            XCTAssertNotNil(message.destructionDate)
+            XCTAssertNotNil(message.textMessageData?.messageText)
+            XCTAssertNotNil(message.sender)
+            XCTAssert(moc.saveOrRollback())
+        }
+        
+        // When
+        guard let url = backupActiveAcount().value else { return XCTFail("backup failed") }
+        deleteAuthenticationCookie()
+        recreateSessionManagerAndDeleteLocalData()
+        
+        XCTAssertNil(restoreAcount(withIdentifier: userId, from: url).error)
+        XCTAssert(login())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        spinMainQueue(withTimeout: 1.0)
+        
+        // Then
+        do {
+            let moc = sessionManager!.activeUserSession!.managedObjectContext!
+            let message = ZMMessage.fetch(withNonce: nonce, for: conversation(for: selfToUser1Conversation)!, in: moc)
+            XCTAssertNil(message?.textMessageData?.messageText)
+            XCTAssertNil(message?.sender)
+        }
+    }
+    
     // MARK: - Helper
     
     private func backupActiveAcount(file: StaticString = #file, line: UInt = #line) -> Result<URL> {
