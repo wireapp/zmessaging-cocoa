@@ -30,6 +30,7 @@ extension SessionManager {
     // MARK: - Export
     
     enum BackupError: Error {
+        case notAuthenticated
         case noActiveAccount
         case compressionError
         case invalidFileExtension
@@ -66,14 +67,16 @@ extension SessionManager {
     /// Restores the account database from the Wire iOS database back up file.
     /// @param completion called when the restoration is ended. If success, Result.success with the new restored account
     /// is called.
-    public func restoreFromBackup(at location: URL, with userId: UUID, completion: @escaping RestoreResultClosure) {
+    public func restoreFromBackup(at location: URL, completion: @escaping RestoreResultClosure) {
         func complete(_ result: VoidResult) {
             DispatchQueue.main.async(group: dispatchGroup) {
-                completion(.success)
+                completion(result)
             }
         }
-        
-        // Verify the imported file has the correct file extension (`wireiosbackup`).
+
+        guard let userId = unauthenticatedSession?.authenticationStatus.authenticatedUserIdentifier else { return completion(.failure(BackupError.notAuthenticated)) }
+
+        // Verify the imported file has the correct file extension.
         guard location.pathExtension == BackupMetadata.fileExtension else { return completion(.failure(BackupError.invalidFileExtension)) }
         
         SessionManager.compressionQueue.async(group: dispatchGroup) { [weak self] in

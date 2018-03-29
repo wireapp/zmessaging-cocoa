@@ -94,6 +94,11 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssertEqual(metadata.userIdentifier, sessionManager?.accountManager.selectedAccount?.userIdentifier)
         XCTAssert(FileManager.default.fileExists(atPath: dataURL.path))
     }
+
+    func testThatItReturnsAnErrorWhenUserIsNotAuthenticated() {
+        sessionManager?.logoutCurrentSession()
+        XCTAssertEqual(restoreAcount(from: URL(fileURLWithPath: "")).error as? SessionManager.BackupError, .notAuthenticated)
+    }
     
     func testThatItImportsAZippedBackup() throws {
         // Given
@@ -118,7 +123,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssertFalse(fm.fileExists(atPath: storePath))
         
         // When
-        let result = restoreAcount(withIdentifier: userId, from: url)
+        let result = restoreAcount(from: url)
         
         // Then
         XCTAssertNil(result.error, "\(result.error!)")
@@ -138,12 +143,9 @@ class SessionManagerTests_Backup: IntegrationTest {
         let dataURL = backupURL.appendingPathComponent("invalid_backup.zip")
         let randomData = Data.secureRandomData(length: 1024)
         try randomData.write(to: dataURL)
-        
-        let moc = sessionManager!.activeUserSession!.managedObjectContext!
-        let userId = ZMUser.selfUser(in: moc).remoteIdentifier!
-        
+
         // When
-        let result = restoreAcount(withIdentifier: userId, from: dataURL)
+        let result = restoreAcount(from: dataURL)
         
         // Then
         XCTAssertEqual(result.error as? SessionManager.BackupError, .invalidFileExtension)
@@ -160,9 +162,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         
         let result = backupActiveAcount()
         guard let url = result.value else { return XCTFail("\(result.error!)") }
-        let moc = sessionManager!.activeUserSession!.managedObjectContext!
-        let userId = ZMUser.selfUser(in: moc).remoteIdentifier!
-        XCTAssertNil(restoreAcount(withIdentifier: userId, from: url).error)
+        XCTAssertNil(restoreAcount(from: url).error)
         XCTAssert(FileManager.default.fileExists(atPath: StorageStack.backupsDirectory.path))
         XCTAssert(FileManager.default.fileExists(atPath: StorageStack.importsDirectory.path))
         
@@ -184,9 +184,9 @@ class SessionManagerTests_Backup: IntegrationTest {
         return result
     }
     
-    private func restoreAcount(withIdentifier userId: UUID, from url: URL, file: StaticString = #file, line: UInt = #line) -> VoidResult {
+    private func restoreAcount(from url: URL, file: StaticString = #file, line: UInt = #line) -> VoidResult {
         var result: VoidResult = .failure(TestError.uninitialized)
-        sessionManager?.restoreFromBackup(at: url, with: userId) { result = $0 }
+        sessionManager?.restoreFromBackup(at: url) { result = $0 }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         return result
     }
