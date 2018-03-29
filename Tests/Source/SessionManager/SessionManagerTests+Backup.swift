@@ -209,8 +209,8 @@ class SessionManagerTests_Backup: IntegrationTest {
         
         XCTAssertNil(restoreAcount(withIdentifier: userId, from: url).error)
         XCTAssert(login())
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        spinMainQueue(withTimeout: 1.0)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 1.5))
+        spinMainQueue(withTimeout: 1.5)
         
         // Then
         do {
