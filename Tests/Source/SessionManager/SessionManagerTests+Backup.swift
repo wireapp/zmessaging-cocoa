@@ -200,6 +200,7 @@ class SessionManagerTests_Backup: IntegrationTest {
             XCTAssertNotNil(message.textMessageData?.messageText)
             XCTAssertNotNil(message.sender)
             XCTAssert(moc.saveOrRollback())
+            XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         }
         
         // When
@@ -210,14 +211,15 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssertNil(restoreAcount(withIdentifier: userId, from: url).error)
         XCTAssert(login())
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        spinMainQueue(withTimeout: 1)
+        spinMainQueue(withTimeout: 2)
         
         // Then
-        XCTAssert(wait(withTimeout: 2) {
+        XCTAssert(wait(withTimeout: 5) {
             let moc = self.sessionManager!.activeUserSession!.managedObjectContext!
             let message = ZMMessage.fetch(withNonce: nonce, for: self.conversation(for: self.selfToUser1Conversation)!, in: moc)
             return nil == message?.textMessageData?.messageText && nil == message?.sender
         })
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     // MARK: - Helper
