@@ -88,7 +88,15 @@ extension SessionManager {
                 from: url,
                 applicationContainer: self.sharedContainerURL,
                 dispatchGroup: self.dispatchGroup,
-                completion: { _ in complete(.success) }
+                completion: { result in
+                    switch result {
+                    case .success(_):
+                        complete(.success)
+                    case .failure(let error):
+                        complete(.failure(error))
+                    }
+                    
+                }
             )
         }
     }
