@@ -54,10 +54,10 @@ class SessionManagerTests_Backup: IntegrationTest {
             client = UserClient.insertNewObject(in: context)
             client?.remoteIdentifier = identifier
             client?.user = ZMUser.selfUser(in: context)
+            context.setPersistentStoreMetadata(identifier, key: ZMPersistedClientIdKey)
             context.saveOrRollback()
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        context.setPersistentStoreMetadata(identifier, key: "PersistedClientId")
         return client
     }
     
@@ -68,9 +68,7 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItCreatesABackupIncludingMetadataAndZipsIt() throws {
         // Given
         XCTAssert(login())
-        mockTransportSession.performRemoteChanges {
-            $0.registerClient(for: self.selfUser, label: self.name!, type: "permanent")
-        }
+        createSelfClient()
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
@@ -104,11 +102,8 @@ class SessionManagerTests_Backup: IntegrationTest {
         // Given
         XCTAssert(login())
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        
-        mockTransportSession.performRemoteChanges {
-            $0.registerClient(for: self.selfUser, label: self.name!, type: "permanent")
-        }
-        
+        createSelfClient()
+
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         let backupResult = backupActiveAcount()
@@ -133,10 +128,8 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItReturnsAnErrorWhenImportingFileWithWrongPathExtension() throws {
         // Given
         XCTAssert(login())
-        mockTransportSession.performRemoteChanges {
-            $0.registerClient(for: self.selfUser, label: self.name!, type: "permanent")
-        }
-        
+        createSelfClient()
+
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         try FileManager.default.createDirectory(atPath: backupURL.path, withIntermediateDirectories: true, attributes: nil)
@@ -154,10 +147,8 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItDeletesABackup() {
         // Given
         XCTAssert(login())
-        mockTransportSession.performRemoteChanges {
-            $0.registerClient(for: self.selfUser, label: self.name!, type: "permanent")
-        }
-        
+        createSelfClient()
+
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         let result = backupActiveAcount()
@@ -178,10 +169,8 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItDeletesOldEphemeralMessagesWhenRestoringFromABackup() {
         // Given
         XCTAssert(login())
-        mockTransportSession.performRemoteChanges {
-            $0.registerClient(for: self.selfUser, label: self.name!, type: "permanent")
-        }
-        
+        createSelfClient()
+
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         let nonce = UUID.create()
         
