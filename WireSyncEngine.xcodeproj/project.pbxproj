@@ -261,7 +261,6 @@
 		54E03A611E93CEED0089AC69 /* WireCryptobox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54E03A551E93CEED0089AC69 /* WireCryptobox.framework */; };
 		54E03A631E93CEED0089AC69 /* WireImages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54E03A571E93CEED0089AC69 /* WireImages.framework */; };
 		54E03A641E93CEED0089AC69 /* WireLinkPreview.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54E03A581E93CEED0089AC69 /* WireLinkPreview.framework */; };
-		54E03A651E93CEED0089AC69 /* WireMessageStrategy.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54E03A591E93CEED0089AC69 /* WireMessageStrategy.framework */; };
 		54E03A671E93CEED0089AC69 /* WireProtos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54E03A5B1E93CEED0089AC69 /* WireProtos.framework */; };
 		54E03A681E93CEED0089AC69 /* WireRequestStrategy.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54E03A5C1E93CEED0089AC69 /* WireRequestStrategy.framework */; };
 		54E03A691E93CEED0089AC69 /* WireSystem.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54E03A5D1E93CEED0089AC69 /* WireSystem.framework */; };
@@ -592,7 +591,6 @@
 		160C31401E6DDFC30012E4BC /* VoiceChannelV3Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VoiceChannelV3Tests.swift; sourceTree = "<group>"; };
 		160C31431E8049320012E4BC /* ApplicationStatusDirectory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationStatusDirectory.swift; sourceTree = "<group>"; };
 		160C31491E82AC170012E4BC /* OperationStatusTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OperationStatusTests.swift; sourceTree = "<group>"; };
-		1621D26E1D77098B007108C2 /* WireRequestStrategy.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WireRequestStrategy.framework; path = Carthage/Build/iOS/WireRequestStrategy.framework; sourceTree = "<group>"; };
 		1621D2701D770FB1007108C2 /* ZMSyncStateDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMSyncStateDelegate.h; sourceTree = "<group>"; };
 		162A81D3202B453000F6200C /* SessionManager+AVS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionManager+AVS.swift"; sourceTree = "<group>"; };
 		162A81D5202B5BC600F6200C /* SessionManagerAVSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManagerAVSTests.swift; sourceTree = "<group>"; };
@@ -816,7 +814,6 @@
 		54E03A561E93CEED0089AC69 /* WireDataModel.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WireDataModel.framework; path = Carthage/Build/iOS/WireDataModel.framework; sourceTree = "<group>"; };
 		54E03A571E93CEED0089AC69 /* WireImages.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WireImages.framework; path = Carthage/Build/iOS/WireImages.framework; sourceTree = "<group>"; };
 		54E03A581E93CEED0089AC69 /* WireLinkPreview.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WireLinkPreview.framework; path = Carthage/Build/iOS/WireLinkPreview.framework; sourceTree = "<group>"; };
-		54E03A591E93CEED0089AC69 /* WireMessageStrategy.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WireMessageStrategy.framework; path = Carthage/Build/iOS/WireMessageStrategy.framework; sourceTree = "<group>"; };
 		54E03A5A1E93CEED0089AC69 /* WireMockTransport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WireMockTransport.framework; path = Carthage/Build/iOS/WireMockTransport.framework; sourceTree = "<group>"; };
 		54E03A5B1E93CEED0089AC69 /* WireProtos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WireProtos.framework; path = Carthage/Build/iOS/WireProtos.framework; sourceTree = "<group>"; };
 		54E03A5C1E93CEED0089AC69 /* WireRequestStrategy.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WireRequestStrategy.framework; path = Carthage/Build/iOS/WireRequestStrategy.framework; sourceTree = "<group>"; };
@@ -1191,7 +1188,6 @@
 				54E03A611E93CEED0089AC69 /* WireCryptobox.framework in Frameworks */,
 				54E03A6B1E93CEED0089AC69 /* WireTransport.framework in Frameworks */,
 				54E03A671E93CEED0089AC69 /* WireProtos.framework in Frameworks */,
-				54E03A651E93CEED0089AC69 /* WireMessageStrategy.framework in Frameworks */,
 				54E03A691E93CEED0089AC69 /* WireSystem.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1433,7 +1429,6 @@
 				54E03A561E93CEED0089AC69 /* WireDataModel.framework */,
 				54E03A571E93CEED0089AC69 /* WireImages.framework */,
 				54E03A581E93CEED0089AC69 /* WireLinkPreview.framework */,
-				54E03A591E93CEED0089AC69 /* WireMessageStrategy.framework */,
 				54E03A5A1E93CEED0089AC69 /* WireMockTransport.framework */,
 				54E03A5B1E93CEED0089AC69 /* WireProtos.framework */,
 				54E03A5C1E93CEED0089AC69 /* WireRequestStrategy.framework */,
@@ -1443,7 +1438,6 @@
 				54E03A601E93CEED0089AC69 /* WireUtilities.framework */,
 				CE5DC1A01DDA09F000D24DBA /* avs.framework */,
 				5442A7311E42244C00415104 /* libPhoneNumberiOS.framework */,
-				1621D26E1D77098B007108C2 /* WireRequestStrategy.framework */,
 				CE99C4A11D37ACC60001D297 /* Ono.framework */,
 				09C77C431BA2FB8E00E2163F /* libcryptobox.a */,
 				09C77C441BA2FB8E00E2163F /* libsodium.a */,
