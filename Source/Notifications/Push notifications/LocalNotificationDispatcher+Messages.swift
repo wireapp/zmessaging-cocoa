@@ -17,7 +17,7 @@
 //
 
 import Foundation
-import WireMessageStrategy
+import WireRequestStrategy
 
 extension LocalNotificationDispatcher: PushMessageHandler {
 

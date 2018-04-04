@@ -18,7 +18,7 @@
 
 import Foundation
 import CoreData
-import WireMessageStrategy
+import WireRequestStrategy
 
 public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
 

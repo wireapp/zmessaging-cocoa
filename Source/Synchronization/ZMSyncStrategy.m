@@ -22,7 +22,7 @@
 @import WireUtilities;
 @import WireTransport;
 @import WireDataModel;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 @import WireRequestStrategy;
 
 #import "ZMSyncStrategy+Internal.h"

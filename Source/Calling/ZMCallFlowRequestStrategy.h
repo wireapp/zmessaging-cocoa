@@ -19,7 +19,7 @@
 
 #import <Foundation/Foundation.h>
 @import WireRequestStrategy;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 @import avs;
 
 @class ZMConversation;

@@ -17,7 +17,7 @@
 // 
 
 
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 
 @class NSManagedObjectContext;
 @class NSOperationQueue;

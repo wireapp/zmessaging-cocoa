@@ -21,7 +21,7 @@
 @import WireTransport;
 @import WireSyncEngine;
 @import WireDataModel;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 @import OCMock;
 
 

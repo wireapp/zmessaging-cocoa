@@ -19,7 +19,7 @@
 
 @import Foundation;
 @import WireRequestStrategy;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 
 @protocol UserInfoParser;
 @class NSManagedObjectContext;

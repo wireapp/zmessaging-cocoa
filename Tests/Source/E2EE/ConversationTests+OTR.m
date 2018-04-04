@@ -23,7 +23,7 @@
 
 @import WireDataModel;
 @import WireUtilities;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 
 @interface ConversationTestsOTR : ConversationTestsBase
 @end
