@@ -90,6 +90,18 @@ extension ZMHotFixDirectory {
         }
     }
 
+    /// Marks all users (excluding self) to be refetched.
+    public static func refetchUsers(_ context: NSManagedObjectContext) {
+        let request = ZMUser.sortedFetchRequest()
+        let users = context.executeFetchRequestOrAssert(request) as? [ZMUser]
+
+        users?.lazy
+            .filter { !$0.isSelfUser }
+            .forEach { $0.needsToBeUpdatedFromBackend = true }
+
+        context.enqueueDelayedSave()
+    }
+    
     /// Marks all connected users (including self) to be refetched.
     /// Unconnected users are refreshed with a call to `refreshData` when information is displayed.
     /// See also the related `ZMUserSession.isPendingHotFixChanges` in `ZMHotFix+PendingChanges.swift`.
@@ -97,11 +109,11 @@ extension ZMHotFixDirectory {
         let predicate = NSPredicate(format: "connection != nil")
         let request = ZMUser.sortedFetchRequest(with: predicate)
         let users = context.executeFetchRequestOrAssert(request) as? [ZMUser]
-
+        
         users?.lazy
             .filter { $0.isConnected }
             .forEach { $0.needsToBeUpdatedFromBackend = true }
-
+        
         ZMUser.selfUser(in: context).needsToBeUpdatedFromBackend = true
         context.enqueueDelayedSave()
     }
