@@ -210,14 +210,18 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         let result = restoreAcount(from: url)
-        XCTAssertNil(result.error, "\(result.error!)")
+        guard nil == result.error else { return XCTFail("\(result.error!)") }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        XCTAssert(login())
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         spinMainQueue(withTimeout: 2)
         
         // Then
         XCTAssert(wait(withTimeout: 5) {
-            let moc = self.sessionManager!.activeUserSession!.managedObjectContext!
-            let message = ZMMessage.fetch(withNonce: nonce, for: self.conversation(for: self.selfToUser1Conversation)!, in: moc)
+            guard let moc = self.sessionManager?.activeUserSession?.managedObjectContext else { return false }
+            guard let conversation = self.conversation(for: self.selfToUser1Conversation) else { return false }
+            let message = ZMMessage.fetch(withNonce: nonce, for: conversation, in: moc)
             return nil == message?.textMessageData?.messageText && nil == message?.sender
         })
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
