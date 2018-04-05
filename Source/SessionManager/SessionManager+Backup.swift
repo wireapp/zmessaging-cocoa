@@ -19,6 +19,7 @@
 import Foundation
 import WireDataModel
 import ZipArchive
+import WireUtilities
 
 extension SessionManager {
     
@@ -88,15 +89,7 @@ extension SessionManager {
                 from: url,
                 applicationContainer: self.sharedContainerURL,
                 dispatchGroup: self.dispatchGroup,
-                completion: { result in
-                    switch result {
-                    case .success(_):
-                        complete(.success)
-                    case .failure(let error):
-                        complete(.failure(error))
-                    }
-                    
-                }
+                completion: completion => VoidResult.init(result:)
             )
         }
     }
