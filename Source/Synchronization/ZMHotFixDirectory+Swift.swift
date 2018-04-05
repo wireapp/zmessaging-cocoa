@@ -109,11 +109,11 @@ extension ZMHotFixDirectory {
         let predicate = NSPredicate(format: "connection != nil")
         let request = ZMUser.sortedFetchRequest(with: predicate)
         let users = context.executeFetchRequestOrAssert(request) as? [ZMUser]
-        
+
         users?.lazy
             .filter { $0.isConnected }
             .forEach { $0.needsToBeUpdatedFromBackend = true }
-        
+
         ZMUser.selfUser(in: context).needsToBeUpdatedFromBackend = true
         context.enqueueDelayedSave()
     }
