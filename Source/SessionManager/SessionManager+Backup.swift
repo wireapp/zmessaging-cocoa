@@ -19,6 +19,7 @@
 import Foundation
 import WireDataModel
 import ZipArchive
+import WireUtilities
 
 extension SessionManager {
     
@@ -38,24 +39,26 @@ extension SessionManager {
 
     public func backupActiveAccount(completion: @escaping BackupResultClosure) {
         guard let userId = accountManager.selectedAccount?.userIdentifier,
-              let clientId = activeUserSession?.selfUserClient()?.remoteIdentifier else { return completion(.failure(BackupError.noActiveAccount)) }
+              let clientId = activeUserSession?.selfUserClient()?.remoteIdentifier,
+              let handle = activeUserSession.flatMap(ZMUser.selfUser)?.handle else { return completion(.failure(BackupError.noActiveAccount)) }
 
         StorageStack.backupLocalStorage(
             accountIdentifier: userId,
             clientIdentifier: clientId,
             applicationContainer: sharedContainerURL,
             dispatchGroup: dispatchGroup,
-            completion: { [weak self] in SessionManager.handle(result: $0, dispatchGroup: self?.dispatchGroup, completion: completion) }
+            completion: { [weak self] in SessionManager.handle(result: $0, dispatchGroup: self?.dispatchGroup, completion: completion, handle: handle) }
         )
     }
     
     private static func handle(
         result: Result<StorageStack.BackupInfo>,
         dispatchGroup: ZMSDispatchGroup? = nil,
-        completion: @escaping BackupResultClosure
+        completion: @escaping BackupResultClosure,
+        handle: String
         ) {
         compressionQueue.async(group: dispatchGroup) {
-            let decompressed = result.map(compress)
+            let decompressed = result.map { ($0, handle) } .map(compress)
             DispatchQueue.main.async(group: dispatchGroup) {
                 completion(decompressed)
             }
@@ -88,7 +91,7 @@ extension SessionManager {
                 from: url,
                 applicationContainer: self.sharedContainerURL,
                 dispatchGroup: self.dispatchGroup,
-                completion: { _ in complete(.success) }
+                completion: completion >>> VoidResult.init(result:)
             )
         }
     }
@@ -105,14 +108,14 @@ extension SessionManager {
         return StorageStack.importsDirectory.appendingPathComponent(filename)
     }
     
-    private static func compress(backup: StorageStack.BackupInfo) throws -> URL {
-        let targetURL = compressedBackupURL(for: backup)
+    private static func compress(backup: StorageStack.BackupInfo, handle: String) throws -> URL {
+        let targetURL = compressedBackupURL(for: backup, handle: handle)
         guard backup.url.zipDirectory(to: targetURL) else { throw BackupError.compressionError }
         return targetURL
     }
-    
-    private static func compressedBackupURL(for backup: StorageStack.BackupInfo) -> URL {
-        return backup.url.deletingLastPathComponent().appendingPathComponent(backup.metadata.backupFilename)
+
+    private static func compressedBackupURL(for backup: StorageStack.BackupInfo, handle: String) -> URL {
+        return backup.url.deletingLastPathComponent().appendingPathComponent(backup.metadata.backupFilename(for: handle))
     }
 }
 
@@ -120,7 +123,8 @@ extension SessionManager {
 
 fileprivate extension BackupMetadata {
     
-    fileprivate static let namePrefix = "Wire-Backup"
+    fileprivate static let nameAppName = "Wire"
+    fileprivate static let nameFileName = "Backup"
     fileprivate static let fileExtension = "ios_wbu"
 
     private static let formatter: DateFormatter = {
@@ -129,8 +133,8 @@ fileprivate extension BackupMetadata {
         return formatter
     }()
     
-    var backupFilename: String {
-        return "\(BackupMetadata.namePrefix)_\(BackupMetadata.formatter.string(from: creationTime)).\(BackupMetadata.fileExtension)"
+    func backupFilename(for handle: String) -> String {
+        return "\(BackupMetadata.nameAppName)-\(handle)-\(BackupMetadata.nameFileName)_\(BackupMetadata.formatter.string(from: creationTime)).\(BackupMetadata.fileExtension)"
     }
 }
 
