@@ -195,17 +195,20 @@ class SessionManagerTests_Backup: IntegrationTest {
         guard let url = backupActiveAcount().value else { return XCTFail("backup failed") }
         deleteAuthenticationCookie()
         recreateSessionManagerAndDeleteLocalData()
+
         XCTAssert(login())
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         let result = restoreAcount(from: url)
-        XCTAssertNil(result.error, "\(result.error!)")
+        guard nil == result.error else { return XCTFail("\(result.error!)") }
+
+        XCTAssert(login())
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         spinMainQueue(withTimeout: 2)
         
         // Then
         XCTAssert(wait(withTimeout: 5) {
-            let moc = self.sessionManager!.activeUserSession!.managedObjectContext!
+            guard let moc = self.sessionManager?.activeUserSession?.managedObjectContext else { return false }
             let message = ZMMessage.fetch(withNonce: nonce, for: self.conversation(for: self.selfToUser1Conversation)!, in: moc)
             return nil == message?.textMessageData?.messageText && nil == message?.sender
         })
