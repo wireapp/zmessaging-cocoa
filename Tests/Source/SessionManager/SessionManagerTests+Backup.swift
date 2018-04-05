@@ -82,7 +82,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         // Then
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd"
-        let expectedName = "Wire-Backup_\(formatter.string(from: .init())).ios_wbu"
+        let expectedName = "Wire-\(self.selfUser!.handle!)-Backup_\(formatter.string(from: .init())).ios_wbu"
         
         XCTAssertEqual(url.lastPathComponent, expectedName)
         let dataURL = unzippedURL.appendingPathComponent("data")
