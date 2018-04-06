@@ -54,10 +54,10 @@ class SessionManagerTests_Backup: IntegrationTest {
             client = UserClient.insertNewObject(in: context)
             client?.remoteIdentifier = identifier
             client?.user = ZMUser.selfUser(in: context)
+            context.setPersistentStoreMetadata(identifier, key: "PersistedClientId")
             context.saveOrRollback()
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        context.setPersistentStoreMetadata(identifier, key: "PersistedClientId")
         return client
     }
     
@@ -68,9 +68,7 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItCreatesABackupIncludingMetadataAndZipsIt() throws {
         // Given
         XCTAssert(login())
-        mockTransportSession.performRemoteChanges {
-            $0.registerClient(for: self.selfUser, label: self.name!, type: "permanent")
-        }
+        createSelfClient()
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
@@ -104,10 +102,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         // Given
         XCTAssert(login())
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        
-        mockTransportSession.performRemoteChanges {
-            $0.registerClient(for: self.selfUser, label: self.name!, type: "permanent")
-        }
+        createSelfClient()
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
@@ -133,9 +128,7 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItReturnsAnErrorWhenImportingFileWithWrongPathExtension() throws {
         // Given
         XCTAssert(login())
-        mockTransportSession.performRemoteChanges {
-            $0.registerClient(for: self.selfUser, label: self.name!, type: "permanent")
-        }
+        createSelfClient()
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
@@ -154,9 +147,7 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItDeletesABackup() {
         // Given
         XCTAssert(login())
-        mockTransportSession.performRemoteChanges {
-            $0.registerClient(for: self.selfUser, label: self.name!, type: "permanent")
-        }
+        createSelfClient()
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
@@ -178,9 +169,7 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItDeletesOldEphemeralMessagesWhenRestoringFromABackup() {
         // Given
         XCTAssert(login())
-        mockTransportSession.performRemoteChanges {
-            $0.registerClient(for: self.selfUser, label: self.name!, type: "permanent")
-        }
+        createSelfClient()
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         let nonce = UUID.create()
@@ -210,14 +199,18 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         let result = restoreAcount(from: url)
-        XCTAssertNil(result.error, "\(result.error!)")
+        guard nil == result.error else { return XCTFail("\(result.error!)") }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        XCTAssert(login())
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         spinMainQueue(withTimeout: 2)
         
         // Then
         XCTAssert(wait(withTimeout: 5) {
-            let moc = self.sessionManager!.activeUserSession!.managedObjectContext!
-            let message = ZMMessage.fetch(withNonce: nonce, for: self.conversation(for: self.selfToUser1Conversation)!, in: moc)
+            guard let moc = self.sessionManager?.activeUserSession?.managedObjectContext else { return false }
+            guard let conversation = self.conversation(for: self.selfToUser1Conversation) else { return false }
+            let message = ZMMessage.fetch(withNonce: nonce, for: conversation, in: moc)
             return nil == message?.textMessageData?.messageText && nil == message?.sender
         })
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
