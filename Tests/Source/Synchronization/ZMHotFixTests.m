@@ -580,7 +580,7 @@
 
     // then
     XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertTrue(unconnectedUser.needsToBeUpdatedFromBackend);
     XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend);
 }
 
@@ -623,9 +623,46 @@
 
     // then
     XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertTrue(unconnectedUser.needsToBeUpdatedFromBackend);
     XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend);
 }
 
-@end
+- (void)testThatItMarksConnectedUsersToBeUpdatedFromTheBackend_157_0_0
+{
+    // given
+    [self.syncMOC setPersistentStoreMetadata:@"156.0.0" forKey:@"lastSavedVersion"];
+    ZMUser *connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+    connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
+    connectedUser.connection.status = ZMConnectionStatusAccepted;
+    connectedUser.needsToBeUpdatedFromBackend = NO;
+    
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+    selfUser.needsToBeUpdatedFromBackend = NO;
+    
+    ZMUser *unconnectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+    unconnectedUser.needsToBeUpdatedFromBackend = NO;
+    
+    [self.syncMOC saveOrRollback];
+    
+    XCTAssertTrue(connectedUser.isConnected);
+    XCTAssertFalse(unconnectedUser.isConnected);
+    XCTAssertFalse(connectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
+    
+    // when
+    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"157.0.0"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
+    
+    [self.syncMOC saveOrRollback];
+    
+    // then
+    XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertTrue(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
+}
 
+@end
