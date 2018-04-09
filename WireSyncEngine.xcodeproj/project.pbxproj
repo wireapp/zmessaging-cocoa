@@ -40,6 +40,7 @@
 		160C31411E6DDFC30012E4BC /* VoiceChannelV3Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C31401E6DDFC30012E4BC /* VoiceChannelV3Tests.swift */; };
 		160C31441E8049320012E4BC /* ApplicationStatusDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C31431E8049320012E4BC /* ApplicationStatusDirectory.swift */; };
 		160C314A1E82AC170012E4BC /* OperationStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C31491E82AC170012E4BC /* OperationStatusTests.swift */; };
+		161681352077721600BCF33A /* ZMOperationLoop+OperationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161681342077721600BCF33A /* ZMOperationLoop+OperationStatus.swift */; };
 		1618B4101DE5FAD4003F015C /* ZMUserSession+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3EC2357F192B617700B72C21 /* ZMUserSession+Internal.h */; };
 		1621D2711D770FB1007108C2 /* ZMSyncStateDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 1621D2701D770FB1007108C2 /* ZMSyncStateDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		162A81D4202B453000F6200C /* SessionManager+AVS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162A81D3202B453000F6200C /* SessionManager+AVS.swift */; };
@@ -591,6 +592,7 @@
 		160C31401E6DDFC30012E4BC /* VoiceChannelV3Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VoiceChannelV3Tests.swift; sourceTree = "<group>"; };
 		160C31431E8049320012E4BC /* ApplicationStatusDirectory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationStatusDirectory.swift; sourceTree = "<group>"; };
 		160C31491E82AC170012E4BC /* OperationStatusTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OperationStatusTests.swift; sourceTree = "<group>"; };
+		161681342077721600BCF33A /* ZMOperationLoop+OperationStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMOperationLoop+OperationStatus.swift"; sourceTree = "<group>"; };
 		1621D2701D770FB1007108C2 /* ZMSyncStateDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMSyncStateDelegate.h; sourceTree = "<group>"; };
 		162A81D3202B453000F6200C /* SessionManager+AVS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionManager+AVS.swift"; sourceTree = "<group>"; };
 		162A81D5202B5BC600F6200C /* SessionManagerAVSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManagerAVSTests.swift; sourceTree = "<group>"; };
@@ -1910,6 +1912,7 @@
 				F962A8EF19FFD4DC00FD0F80 /* ZMOperationLoop+Private.h */,
 				85D8502FFC4412F91D0CC1A4 /* ZMOperationLoop.m */,
 				54C8A39B1F7536DB004961DF /* ZMOperationLoop+Notifications.swift */,
+				161681342077721600BCF33A /* ZMOperationLoop+OperationStatus.swift */,
 				F962A8E819FFC06E00FD0F80 /* ZMOperationLoop+Background.h */,
 				F962A8E919FFC06E00FD0F80 /* ZMOperationLoop+Background.m */,
 				85D853338EC38D9B021D71BF /* ZMSyncStrategy.h */,
@@ -2705,6 +2708,7 @@
 				F98EDCF51D82B924001E65CB /* ZMSpellOutSmallNumbersFormatter.m in Sources */,
 				1660AA091ECCAC900056D403 /* SearchDirectory.swift in Sources */,
 				54B2A08C1DAE71F100BB40B1 /* Clusterizer+VOIP.swift in Sources */,
+				161681352077721600BCF33A /* ZMOperationLoop+OperationStatus.swift in Sources */,
 				F19F1D3A1EFBFD2B00275E27 /* ZMBackendEnvironment+setup.swift in Sources */,
 				F9ABE84E1EFD568B00D83214 /* MemberDownloadRequestStrategy.swift in Sources */,
 				54A0A6311BCE9864001A3A4C /* ZMHotFix.m in Sources */,

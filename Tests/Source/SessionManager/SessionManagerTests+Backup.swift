@@ -166,7 +166,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssertFalse(FileManager.default.fileExists(atPath: StorageStack.importsDirectory.path))
     }
     
-    func testThatItDeletesOldEphemeralMessagesWhenRestoringFromABackup() {
+    func DISABLED_testThatItDeletesOldEphemeralMessagesWhenRestoringFromABackup() {
         // Given
         XCTAssert(login())
         createSelfClient()

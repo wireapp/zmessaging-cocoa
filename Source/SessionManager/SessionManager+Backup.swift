@@ -91,7 +91,7 @@ extension SessionManager {
                 from: url,
                 applicationContainer: self.sharedContainerURL,
                 dispatchGroup: self.dispatchGroup,
-                completion: completion >>> VoidResult.init(result:)
+                completion: completion >>> VoidResult.init
             )
         }
     }

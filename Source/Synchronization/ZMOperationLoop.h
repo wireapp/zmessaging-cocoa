@@ -35,6 +35,7 @@ extern NSString * const ZMPushChannelResponseStatusKey;
 @interface ZMOperationLoop : NSObject
 
 @property (nonatomic, readonly) id<ZMApplication> application;
+@property (nonatomic, readonly) ZMTransportSession *transportSession;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
