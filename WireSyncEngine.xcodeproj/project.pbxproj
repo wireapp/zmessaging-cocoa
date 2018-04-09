@@ -41,6 +41,7 @@
 		160C31441E8049320012E4BC /* ApplicationStatusDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C31431E8049320012E4BC /* ApplicationStatusDirectory.swift */; };
 		160C314A1E82AC170012E4BC /* OperationStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160C31491E82AC170012E4BC /* OperationStatusTests.swift */; };
 		161681352077721600BCF33A /* ZMOperationLoop+OperationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161681342077721600BCF33A /* ZMOperationLoop+OperationStatus.swift */; };
+		16168137207790F600BCF33A /* Conversation+Participants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16168136207790F600BCF33A /* Conversation+Participants.swift */; };
 		1618B4101DE5FAD4003F015C /* ZMUserSession+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3EC2357F192B617700B72C21 /* ZMUserSession+Internal.h */; };
 		1621D2711D770FB1007108C2 /* ZMSyncStateDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 1621D2701D770FB1007108C2 /* ZMSyncStateDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		162A81D4202B453000F6200C /* SessionManager+AVS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162A81D3202B453000F6200C /* SessionManager+AVS.swift */; };
@@ -593,6 +594,7 @@
 		160C31431E8049320012E4BC /* ApplicationStatusDirectory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationStatusDirectory.swift; sourceTree = "<group>"; };
 		160C31491E82AC170012E4BC /* OperationStatusTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OperationStatusTests.swift; sourceTree = "<group>"; };
 		161681342077721600BCF33A /* ZMOperationLoop+OperationStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMOperationLoop+OperationStatus.swift"; sourceTree = "<group>"; };
+		16168136207790F600BCF33A /* Conversation+Participants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Conversation+Participants.swift"; sourceTree = "<group>"; };
 		1621D2701D770FB1007108C2 /* ZMSyncStateDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMSyncStateDelegate.h; sourceTree = "<group>"; };
 		162A81D3202B453000F6200C /* SessionManager+AVS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionManager+AVS.swift"; sourceTree = "<group>"; };
 		162A81D5202B5BC600F6200C /* SessionManagerAVSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManagerAVSTests.swift; sourceTree = "<group>"; };
@@ -1343,6 +1345,7 @@
 				872A2EE51FFFBC2900900B22 /* ServiceUser.swift */,
 				168CF4282007840A009FCB89 /* Team+Invite.swift */,
 				D5D10DA3203AE43200145497 /* Conversation+AccessMode.swift */,
+				16168136207790F600BCF33A /* Conversation+Participants.swift */,
 				3EFFDE481A13B01B00E80E22 /* Push Token */,
 			);
 			path = "Data Model";
@@ -2711,6 +2714,7 @@
 				161681352077721600BCF33A /* ZMOperationLoop+OperationStatus.swift in Sources */,
 				F19F1D3A1EFBFD2B00275E27 /* ZMBackendEnvironment+setup.swift in Sources */,
 				F9ABE84E1EFD568B00D83214 /* MemberDownloadRequestStrategy.swift in Sources */,
+				16168137207790F600BCF33A /* Conversation+Participants.swift in Sources */,
 				54A0A6311BCE9864001A3A4C /* ZMHotFix.m in Sources */,
 				F19F4F3C1E604AA700F4D8FF /* UserImageAssetUpdateStrategy.swift in Sources */,
 				164EAF9C1F4455FA00B628C4 /* ZMUserSession+Actions.swift in Sources */,
