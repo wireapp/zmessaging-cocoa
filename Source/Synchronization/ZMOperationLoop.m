@@ -64,10 +64,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 @end
 
 
-@interface ZMOperationLoop (OperationStatus) <ZMOperationStatusDelegate>
-@end
-
-
 @implementation ZMOperationLoop
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
@@ -360,11 +356,3 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 @end
 
-@implementation ZMOperationLoop (OperationStatus)
-
-- (void)operationStatusDidChangeState:(enum SyncEngineOperationState)state
-{
-    self.transportSession.pushChannel.keepOpen = state == SyncEngineOperationStateForeground || state == SyncEngineOperationStateBackgroundCall;
-}
-
-@end
