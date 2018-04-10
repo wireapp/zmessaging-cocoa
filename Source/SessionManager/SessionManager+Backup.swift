@@ -31,12 +31,13 @@ extension SessionManager {
 
     // MARK: - Export
     
-    enum BackupError: Error {
+    public enum BackupError: Error {
         case notAuthenticated
         case noActiveAccount
         case compressionError
         case invalidFileExtension
         case keyCreationFailed
+        case decryptionError
         case unknown
     }
 
@@ -101,7 +102,10 @@ extension SessionManager {
             do {
                 try SessionManager.decrypt(from: location, to: decryptedURL, password: password)
             } catch {
-                return complete(.failure(error))
+                switch error {
+                case ChaCha20Encryption.EncryptionError.decryptionFailed: return complete(.failure(BackupError.decryptionError))
+                default: return complete(.failure(error))
+                }
             }
             
             let url = SessionManager.unzippedBackupURL(for: location)

@@ -186,7 +186,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         guard let error = restoreAcount(password: "wrongpassword!!11!", from: url).error else { return XCTFail("no error thrown") }
      
         // Then
-        guard case ChaCha20Encryption.EncryptionError.decryptionFailed = error else { return XCTFail("wrong error: \(error)") }
+        guard case SessionManager.BackupError.decryptionError = error else { return XCTFail("wrong error: \(error)") }
     }
     
     func testThatItDeletesABackup() {
