@@ -46,6 +46,10 @@ class SessionManagerTests_Backup: IntegrationTest {
         super.tearDown()
     }
     
+    private func createTemporaryURL() -> URL {
+        return backupURL.appendingPathComponent(UUID().uuidString)
+    }
+    
     @discardableResult private func createSelfClient() -> UserClient? {
         var client: UserClient?
         let identifier = name!
@@ -73,9 +77,17 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // When
-        let result = backupActiveAcount()
+        let result = backupActiveAcount(password: "12345678")
         guard let url = result.value else { return XCTFail("\(result.error!)") }
-        guard url.unzip(to: unzippedURL) else { return XCTFail("Decompression failed") }
+        
+        let decryptedURL = createTemporaryURL()
+        do {
+            try SessionManager.decrypt(from: url, to: decryptedURL, password: "12345678")
+        } catch {
+            XCTFail("Unable to decrypt: \(error)")
+        }
+        
+        guard decryptedURL.unzip(to: unzippedURL) else { return XCTFail("Decompression failed") }
         
         // Then
         let formatter = DateFormatter()
@@ -218,16 +230,27 @@ class SessionManagerTests_Backup: IntegrationTest {
     
     // MARK: - Helper
     
-    private func backupActiveAcount(file: StaticString = #file, line: UInt = #line) -> Result<URL> {
+    private func backupActiveAcount(
+        password: String = "superstrongpassword",
+        file: StaticString = #file,
+        line: UInt = #line
+        ) -> Result<URL> {
+
         var result: Result<URL> = .failure(TestError.uninitialized)
-        sessionManager?.backupActiveAccount { result = $0 }
+        sessionManager?.backupActiveAccount(password: password) { result = $0 }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5), file: file, line: line)
         return result
     }
     
-    private func restoreAcount(from url: URL, file: StaticString = #file, line: UInt = #line) -> VoidResult {
+    private func restoreAcount(
+        password: String = "superstrongpassword",
+        from url: URL,
+        file: StaticString = #file,
+        line: UInt = #line
+        ) -> VoidResult {
+        
         var result: VoidResult = .failure(TestError.uninitialized)
-        sessionManager?.restoreFromBackup(at: url) { result = $0 }
+        sessionManager?.restoreFromBackup(at: url, password: password) { result = $0 }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         return result
     }

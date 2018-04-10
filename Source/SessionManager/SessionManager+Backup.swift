@@ -20,13 +20,14 @@ import Foundation
 import WireDataModel
 import ZipArchive
 import WireUtilities
+import WireCryptobox
 
 extension SessionManager {
     
     public typealias BackupResultClosure = (Result<URL>) -> Void
     public typealias RestoreResultClosure = (VoidResult) -> Void
     
-    static private let compressionQueue = DispatchQueue(label: "history-backup-compression")
+    static private let workerQueue = DispatchQueue(label: "history-backup")
 
     // MARK: - Export
     
@@ -35,9 +36,11 @@ extension SessionManager {
         case noActiveAccount
         case compressionError
         case invalidFileExtension
+        case keyCreationFailed
+        case unknown
     }
 
-    public func backupActiveAccount(completion: @escaping BackupResultClosure) {
+    public func backupActiveAccount(password: String, completion: @escaping BackupResultClosure) {
         guard let userId = accountManager.selectedAccount?.userIdentifier,
               let clientId = activeUserSession?.selfUserClient()?.remoteIdentifier,
               let handle = activeUserSession.flatMap(ZMUser.selfUser)?.handle else { return completion(.failure(BackupError.noActiveAccount)) }
@@ -47,20 +50,30 @@ extension SessionManager {
             clientIdentifier: clientId,
             applicationContainer: sharedContainerURL,
             dispatchGroup: dispatchGroup,
-            completion: { [weak self] in SessionManager.handle(result: $0, dispatchGroup: self?.dispatchGroup, completion: completion, handle: handle) }
+            completion: { [dispatchGroup] in SessionManager.handle(result: $0, password: password, dispatchGroup: dispatchGroup, completion: completion, handle: handle) }
         )
     }
     
     private static func handle(
         result: Result<StorageStack.BackupInfo>,
+        password: String,
         dispatchGroup: ZMSDispatchGroup? = nil,
         completion: @escaping BackupResultClosure,
         handle: String
         ) {
-        compressionQueue.async(group: dispatchGroup) {
-            let decompressed = result.map { ($0, handle) } .map(compress)
+        workerQueue.async(group: dispatchGroup) {
+            let encrypted: Result<URL> = result.map { info in
+                // 1. Compress the backup
+                let compressed = try compress(backup: info)
+                
+                // 2. Encrypt the backup
+                let url = targetBackupURL(for: info, handle: handle)
+                try encrypt(from: compressed, to: url, password: password)
+                return url
+            }
+            
             DispatchQueue.main.async(group: dispatchGroup) {
-                completion(decompressed)
+                completion(encrypted)
             }
         }
     }
@@ -70,7 +83,7 @@ extension SessionManager {
     /// Restores the account database from the Wire iOS database back up file.
     /// @param completion called when the restoration is ended. If success, Result.success with the new restored account
     /// is called.
-    public func restoreFromBackup(at location: URL, completion: @escaping RestoreResultClosure) {
+    public func restoreFromBackup(at location: URL, password: String, completion: @escaping RestoreResultClosure) {
         func complete(_ result: VoidResult) {
             DispatchQueue.main.async(group: dispatchGroup) {
                 completion(result)
@@ -82,10 +95,17 @@ extension SessionManager {
         // Verify the imported file has the correct file extension.
         guard location.pathExtension == BackupMetadata.fileExtension else { return completion(.failure(BackupError.invalidFileExtension)) }
         
-        SessionManager.compressionQueue.async(group: dispatchGroup) { [weak self] in
+        SessionManager.workerQueue.async(group: dispatchGroup) { [weak self] in
             guard let `self` = self else { return }
+            let decryptedURL = SessionManager.temporaryURL(for: location)
+            do {
+                try SessionManager.decrypt(from: location, to: decryptedURL, password: password)
+            } catch {
+                return complete(.failure(error))
+            }
+            
             let url = SessionManager.unzippedBackupURL(for: location)
-            guard location.unzip(to: url) else { return complete(.failure(BackupError.compressionError)) }
+            guard decryptedURL.unzip(to: url) else { return complete(.failure(BackupError.compressionError)) }
             StorageStack.importLocalStorage(
                 accountIdentifier: userId,
                 from: url,
@@ -94,6 +114,22 @@ extension SessionManager {
                 completion: completion >>> VoidResult.init
             )
         }
+    }
+    
+    // MARK: - Encryption & Decryption
+    
+    static func encrypt(from input: URL, to output: URL, password: String) throws {
+        guard let key = ChaCha20Encryption.Key(passphrase: password) else { throw BackupError.keyCreationFailed }
+        guard let inputStream = InputStream(url: input) else { throw BackupError.unknown }
+        guard let outputStream = OutputStream(url: output, append: false) else { throw BackupError.unknown }
+        try ChaCha20Encryption.encrypt(input: inputStream, output: outputStream, key: key)
+    }
+    
+    static func decrypt(from input: URL, to output: URL, password: String) throws {
+        guard let key = ChaCha20Encryption.Key(passphrase: password) else { throw BackupError.keyCreationFailed }
+        guard let inputStream = InputStream(url: input) else { throw BackupError.unknown }
+        guard let outputStream = OutputStream(url: output, append: false) else { throw BackupError.unknown }
+        try ChaCha20Encryption.decrypt(input: inputStream, output: outputStream, key: key)
     }
     
     // MARK: - Helper
@@ -108,14 +144,19 @@ extension SessionManager {
         return StorageStack.importsDirectory.appendingPathComponent(filename)
     }
     
-    private static func compress(backup: StorageStack.BackupInfo, handle: String) throws -> URL {
-        let targetURL = compressedBackupURL(for: backup, handle: handle)
-        guard backup.url.zipDirectory(to: targetURL) else { throw BackupError.compressionError }
-        return targetURL
+    private static func compress(backup: StorageStack.BackupInfo) throws -> URL {
+        let url = temporaryURL(for: backup.url)
+        guard backup.url.zipDirectory(to: url) else { throw BackupError.compressionError }
+        return url
     }
 
-    private static func compressedBackupURL(for backup: StorageStack.BackupInfo, handle: String) -> URL {
-        return backup.url.deletingLastPathComponent().appendingPathComponent(backup.metadata.backupFilename(for: handle))
+    private static func targetBackupURL(for backup: StorageStack.BackupInfo, handle: String) -> URL {
+        let component = backup.metadata.backupFilename(for: handle)
+        return backup.url.deletingLastPathComponent().appendingPathComponent(component)
+    }
+    
+    private static func temporaryURL(for url: URL) -> URL {
+        return url.deletingLastPathComponent().appendingPathComponent(UUID().uuidString)
     }
 }
 
