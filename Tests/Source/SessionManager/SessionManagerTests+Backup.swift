@@ -36,6 +36,13 @@ class SessionManagerTests_Backup: IntegrationTest {
         let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         backupURL = directory.appendingPathComponent("BackupTests")
         unzippedURL = directory.appendingPathComponent("BackupTests_Unzipped")
+
+        do {
+            try FileManager.default.createDirectory(atPath: backupURL.path, withIntermediateDirectories: true, attributes: nil)
+            try FileManager.default.createDirectory(atPath: unzippedURL.path, withIntermediateDirectories: true, attributes: nil)
+        } catch {
+            XCTFail("Unable to create directories: \(error)")
+        }
     }
     
     override func tearDown() {
@@ -66,7 +73,8 @@ class SessionManagerTests_Backup: IntegrationTest {
     }
     
     func testThatItReturnsAnErrorWhenThereIsNoSelectedAccount() {
-        XCTAssertEqual(backupActiveAcount().error as? SessionManager.BackupError, .noActiveAccount)
+        let result = backupActiveAcount(password: name!)
+        XCTAssertEqual(result.error as? SessionManager.BackupError, .noActiveAccount)
     }
     
     func testThatItCreatesABackupIncludingMetadataAndZipsIt() throws {
@@ -81,11 +89,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         guard let url = result.value else { return XCTFail("\(result.error!)") }
         
         let decryptedURL = createTemporaryURL()
-        do {
-            try SessionManager.decrypt(from: url, to: decryptedURL, password: "12345678")
-        } catch {
-            XCTFail("Unable to decrypt: \(error)")
-        }
+        try SessionManager.decrypt(from: url, to: decryptedURL, password: "12345678")
         
         guard decryptedURL.unzip(to: unzippedURL) else { return XCTFail("Decompression failed") }
         
@@ -107,7 +111,8 @@ class SessionManagerTests_Backup: IntegrationTest {
 
     func testThatItReturnsAnErrorWhenUserIsNotAuthenticated() {
         sessionManager?.logoutCurrentSession()
-        XCTAssertEqual(restoreAcount(from: URL(fileURLWithPath: "")).error as? SessionManager.BackupError, .notAuthenticated)
+        let result = restoreAcount(password: name!, from: createTemporaryURL())
+        XCTAssertEqual(result.error as? SessionManager.BackupError, .notAuthenticated)
     }
     
     func testThatItImportsAZippedBackup() throws {
@@ -118,7 +123,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
-        let backupResult = backupActiveAcount()
+        let backupResult = backupActiveAcount(password: name!)
         guard let url = backupResult.value else { return XCTFail("\(backupResult.error!)") }
         
         let moc = sessionManager!.activeUserSession!.managedObjectContext!
@@ -130,7 +135,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssertFalse(fm.fileExists(atPath: storePath))
         
         // When
-        let result = restoreAcount(from: url)
+        let result = restoreAcount(password: name!, from: url)
         
         // Then
         XCTAssertNil(result.error, "\(result.error!)")
@@ -148,12 +153,40 @@ class SessionManagerTests_Backup: IntegrationTest {
         let dataURL = backupURL.appendingPathComponent("invalid_backup.zip")
         let randomData = Data.secureRandomData(length: 1024)
         try randomData.write(to: dataURL)
+        let encryptedURL = createTemporaryURL()
+        try SessionManager.encrypt(from: dataURL, to: encryptedURL, password: "notsorandom")
 
         // When
-        let result = restoreAcount(from: dataURL)
+        let result = restoreAcount(password: "notsorandom", from: encryptedURL)
         
         // Then
         XCTAssertEqual(result.error as? SessionManager.BackupError, .invalidFileExtension)
+    }
+    
+    func testThatItReturnsAnErrorWhenImportingFileWithWrongPassword() throws {
+        // Given
+        XCTAssert(login())
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        createSelfClient()
+        
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        let backupResult = backupActiveAcount(password: "correctpassword")
+        guard let url = backupResult.value else { return XCTFail("\(backupResult.error!)") }
+        
+        let moc = sessionManager!.activeUserSession!.managedObjectContext!
+        let userId = ZMUser.selfUser(in: moc).remoteIdentifier!
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: userId, applicationContainer: sharedContainer)
+        let fm = FileManager.default
+        try fm.removeItem(at: accountFolder)
+        let storePath = accountFolder.appendingPathComponent("store").path
+        XCTAssertFalse(fm.fileExists(atPath: storePath))
+        
+        // When
+        guard let error = restoreAcount(password: "wrongpassword!!11!", from: url).error else { return XCTFail("no error thrown") }
+     
+        // Then
+        guard case ChaCha20Encryption.EncryptionError.decryptionFailed = error else { return XCTFail("wrong error: \(error)") }
     }
     
     func testThatItDeletesABackup() {
@@ -163,9 +196,9 @@ class SessionManagerTests_Backup: IntegrationTest {
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
-        let result = backupActiveAcount()
+        let result = backupActiveAcount(password: "idontneednopassword")
         guard let url = result.value else { return XCTFail("\(result.error!)") }
-        XCTAssertNil(restoreAcount(from: url).error)
+        XCTAssertNil(restoreAcount(password: "idontneednopassword", from: url).error)
         XCTAssert(FileManager.default.fileExists(atPath: StorageStack.backupsDirectory.path))
         XCTAssert(FileManager.default.fileExists(atPath: StorageStack.importsDirectory.path))
         
@@ -204,14 +237,15 @@ class SessionManagerTests_Backup: IntegrationTest {
         }
         
         // When
-        guard let url = backupActiveAcount().value else { return XCTFail("backup failed") }
+        let result = backupActiveAcount(password: "12345678")
+        guard let url = result.value else { return XCTFail("backup failed") }
         deleteAuthenticationCookie()
         recreateSessionManagerAndDeleteLocalData()
         XCTAssert(login())
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        let result = restoreAcount(from: url)
-        guard nil == result.error else { return XCTFail("\(result.error!)") }
+        let restoreResult = restoreAcount(password: "12345678", from: url)
+        guard nil == restoreResult.error else { return XCTFail("\(result.error!)") }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         XCTAssert(login())
@@ -231,7 +265,7 @@ class SessionManagerTests_Backup: IntegrationTest {
     // MARK: - Helper
     
     private func backupActiveAcount(
-        password: String = "superstrongpassword",
+        password: String,
         file: StaticString = #file,
         line: UInt = #line
         ) -> Result<URL> {
@@ -243,7 +277,7 @@ class SessionManagerTests_Backup: IntegrationTest {
     }
     
     private func restoreAcount(
-        password: String = "superstrongpassword",
+        password: String,
         from url: URL,
         file: StaticString = #file,
         line: UInt = #line
