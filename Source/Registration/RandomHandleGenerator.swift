@@ -166,13 +166,13 @@ extension String {
     
     /// Returns a truncated version of the string
     func truncated(at position: Int) -> String {
-        return self.substring(to: self.index(self.startIndex, offsetBy: min(position, self.characters.count)))
+        return self.substring(to: self.index(self.startIndex, offsetBy: min(position, self.count)))
     }
     
     /// Returns the string if its a valid handle, or nil
     fileprivate var validHandle : String? {
         let normalized = self.normalizedForUserHandle
-        guard normalized.characters.count >= minimumUserHandleLength else {
+        guard normalized.count >= minimumUserHandleLength else {
             return nil
         }
         return normalized

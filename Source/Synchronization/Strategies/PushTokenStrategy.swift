@@ -84,7 +84,7 @@ public class PushTokenStrategy : AbstractRequestStrategy, ZMSingleRequestTransco
         
         // hex encode the token:
         let encodedToken = token.deviceToken.reduce(""){$0 + String(format: "%02hhx", $1)}
-        if encodedToken.characters.count == 0 {
+        if encodedToken.isEmpty {
             return nil
         }
         
