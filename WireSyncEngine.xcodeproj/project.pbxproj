@@ -90,6 +90,7 @@
 		168CF42B20079A02009FCB89 /* TeamInvitationRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168CF42A20079A02009FCB89 /* TeamInvitationRequestStrategy.swift */; };
 		168CF42D2007BCA0009FCB89 /* TeamInvitationRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168CF42C2007BCA0009FCB89 /* TeamInvitationRequestStrategyTests.swift */; };
 		168CF42F2007BCD9009FCB89 /* TeamInvitationStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168CF42E2007BCD9009FCB89 /* TeamInvitationStatusTests.swift */; };
+		16904A84207E078C00C92806 /* ConversationTests+Participants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16904A83207E078C00C92806 /* ConversationTests+Participants.swift */; };
 		16962EE220286A4C0069D88D /* LocalNotificationType+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16962EE120286A4C0069D88D /* LocalNotificationType+Localization.swift */; };
 		16962EE420286D690069D88D /* LocalNotificationType+Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16962EE320286D690069D88D /* LocalNotificationType+Configuration.swift */; };
 		16962EE52028A86D0069D88D /* ZMLocalNotificationLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB568181FA22FBE003ADA3A /* ZMLocalNotificationLocalizationTests.swift */; };
@@ -638,6 +639,7 @@
 		168CF42A20079A02009FCB89 /* TeamInvitationRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamInvitationRequestStrategy.swift; sourceTree = "<group>"; };
 		168CF42C2007BCA0009FCB89 /* TeamInvitationRequestStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamInvitationRequestStrategyTests.swift; sourceTree = "<group>"; };
 		168CF42E2007BCD9009FCB89 /* TeamInvitationStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamInvitationStatusTests.swift; sourceTree = "<group>"; };
+		16904A83207E078C00C92806 /* ConversationTests+Participants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+Participants.swift"; sourceTree = "<group>"; };
 		16962EE120286A4C0069D88D /* LocalNotificationType+Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalNotificationType+Localization.swift"; sourceTree = "<group>"; };
 		16962EE320286D690069D88D /* LocalNotificationType+Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalNotificationType+Configuration.swift"; sourceTree = "<group>"; };
 		16A702CF1E92998100B8410D /* ApplicationStatusDirectoryTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationStatusDirectoryTests.swift; sourceTree = "<group>"; };
@@ -1852,6 +1854,7 @@
 				F9E462D91D7043C60036CFA7 /* ConversationTests+Confirmation.swift */,
 				F920F4D51DA3DCF8002B860B /* ConversationTests+Ephemeral.swift */,
 				F13A26E020456002004F8E47 /* ConversationTests+Guests.swift */,
+				16904A83207E078C00C92806 /* ConversationTests+Participants.swift */,
 				09914E501BD6613600C10BF8 /* ConversationTests+OTR.m */,
 				5430FF141CE4A359004ECFFE /* FileTransferTests.m */,
 				541918EB195AD9D100A5023D /* SendAndReceiveMessagesTests.m */,
@@ -2633,6 +2636,7 @@
 				F94F6B331E54B9C000D46A29 /* CallingRequestStrategyTests.swift in Sources */,
 				545643D61C62C1A800A2129C /* ConversationTestsBase.m in Sources */,
 				16FF47451F0C06EA0044C491 /* PhoneRegistrationTests.m in Sources */,
+				16904A84207E078C00C92806 /* ConversationTests+Participants.swift in Sources */,
 				3E26BED51A4037370071B4C9 /* IsTypingTests.m in Sources */,
 				54E4DD0F1DE4A9C500FEF192 /* UserHandleTests.swift in Sources */,
 				F9DAC54F1C2035660001F11E /* ConversationStatusStrategyTests.swift in Sources */,

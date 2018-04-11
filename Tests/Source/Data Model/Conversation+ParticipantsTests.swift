@@ -402,6 +402,115 @@ class Conversation_ParticipantsTests: MessagingTest {
         mockTransportSession.resetReceivedRequests()
     }
     
+    func testThatClearedTimestampAreUpdatedWhenRemovingSelf() {
+        
+        // given
+        let user = ZMUser.insertNewObject(in: uiMOC)
+        user.remoteIdentifier = UUID()
+        
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.remoteIdentifier = UUID()
+        
+        let conversationId = UUID()
+        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [user])!
+        conversation.remoteIdentifier = conversationId
+        conversation.conversationType = .group;
+
+        let message = ZMClientMessage(nonce: UUID(), managedObjectContext: uiMOC)
+        message.serverTimestamp = Date()
+        conversation.mutableMessages.add(message)
+        conversation.lastServerTimeStamp = message.serverTimestamp?.addingTimeInterval(5)
+        
+        conversation.clearMessageHistory()
+        uiMOC.saveOrRollback()
+        
+        let memberLeaveTimestamp = Date().addingTimeInterval(1000)
+        let receivedSuccess = expectation(description: "received success")
+        
+        mockTransportSession.responseGeneratorBlock = { request in
+            guard request.path == "/conversations/\(conversation.remoteIdentifier!.transportString())/members/\(selfUser.remoteIdentifier!.transportString())" else { return nil }
+            
+            let payload = self.responsePayloadForUserEventInConversation(conversation.remoteIdentifier!, senderId: UUID(), usersIds: [user.remoteIdentifier!], eventType: EventConversationMemberLeave, time: memberLeaveTimestamp)
+            return ZMTransportResponse(payload: payload, httpStatus: 200, transportSessionError: nil)
+        }
+        
+        // when
+        conversation.removeParticipant(selfUser, userSession: mockUserSession) { result in
+            switch result {
+            case .success:
+                receivedSuccess.fulfill()
+            default: break
+            }
+        }
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        syncMOC.saveOrRollback()
+        
+        // then
+        syncMOC.performGroupedBlockAndWait {
+            let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncMOC)!
+            XCTAssertEqual(conversation.clearedTimeStamp?.transportString(), memberLeaveTimestamp.transportString())
+        }
+        
+        mockTransportSession.responseGeneratorBlock = nil
+        mockTransportSession.resetReceivedRequests()
+    }
+    
+    func testThatClearedTimestampAreNotUpdatedWhenRemovingOtherUser() {
+        
+        // given
+        let user = ZMUser.insertNewObject(in: uiMOC)
+        user.remoteIdentifier = UUID()
+        
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.remoteIdentifier = UUID()
+        
+        let conversationId = UUID()
+        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [user])!
+        conversation.remoteIdentifier = conversationId
+        conversation.conversationType = .group;
+        
+        let message = ZMClientMessage(nonce: UUID(), managedObjectContext: uiMOC)
+        message.serverTimestamp = Date()
+        conversation.mutableMessages.add(message)
+        conversation.lastServerTimeStamp = message.serverTimestamp?.addingTimeInterval(5)
+        
+        conversation.clearMessageHistory()
+        uiMOC.saveOrRollback()
+        
+        let clearedTimestamp = conversation.clearedTimeStamp
+        let memberLeaveTimestamp = Date().addingTimeInterval(1000)
+        let receivedSuccess = expectation(description: "received success")
+        
+        mockTransportSession.responseGeneratorBlock = { request in
+            guard request.path == "/conversations/\(conversation.remoteIdentifier!.transportString())/members/\(user.remoteIdentifier!.transportString())" else { return nil }
+            
+            let payload = self.responsePayloadForUserEventInConversation(conversation.remoteIdentifier!, senderId: UUID(), usersIds: [user.remoteIdentifier!], eventType: EventConversationMemberLeave, time: memberLeaveTimestamp)
+            return ZMTransportResponse(payload: payload, httpStatus: 200, transportSessionError: nil)
+        }
+        
+        // when
+        conversation.removeParticipant(user, userSession: mockUserSession) { result in
+            switch result {
+            case .success:
+                receivedSuccess.fulfill()
+            default: break
+            }
+        }
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        syncMOC.saveOrRollback()
+        
+        // then
+        syncMOC.performGroupedBlockAndWait {
+            let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncMOC)!
+            XCTAssertEqual(conversation.clearedTimeStamp?.transportString(), clearedTimestamp?.transportString())
+        }
+        
+        mockTransportSession.responseGeneratorBlock = nil
+        mockTransportSession.resetReceivedRequests()
+    }
+    
     // MARK: - Request Factory
     
     func testThatItCreatesRequestForRemovingService() {

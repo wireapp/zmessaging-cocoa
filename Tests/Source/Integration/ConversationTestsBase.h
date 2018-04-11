@@ -52,6 +52,7 @@
 - (NSURL *)createTestFile:(NSString *)name;
 
 @property (nonatomic) MockConversation *groupConversationWithOnlyConnected;
+@property (nonatomic) MockConversation *emptyGroupConversation;
 @property (nonatomic) NSMutableArray *receivedConversationWindowChangeNotifications;
 
 @end

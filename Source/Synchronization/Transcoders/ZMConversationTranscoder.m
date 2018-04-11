@@ -394,18 +394,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     }
 }
 
-- (void)updatePropertiesOfConversation:(ZMConversation *)conversation withPostPayloadEvent:(ZMUpdateEvent *)event
-{
-    BOOL senderIsSelfUser = ([event.senderUUID isEqual:[ZMUser selfUserInContext:self.managedObjectContext].remoteIdentifier]);
-    BOOL selfUserLeft = (event.type == ZMUpdateEventTypeConversationMemberLeave) && senderIsSelfUser;
-    if (selfUserLeft && conversation.clearedTimeStamp != nil && [conversation.clearedTimeStamp isEqualToDate:conversation.lastServerTimeStamp]) {
-        [conversation updateClearedFromPostPayloadEvent:event];
-    }
-    
-    // Self generated messages shouldn't generate unread dots
-    [conversation updateLastReadFromPostPayloadEvent:event];
-}
-
 - (BOOL)isSelfConversationEvent:(ZMUpdateEvent *)event;
 {
     NSUUID * const conversationID = event.conversationUUID;
@@ -742,7 +730,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 {
     ZMUpdateEvent *event = [self conversationEventWithKeys:keysToParse responsePayload:response.payload];
     if (event != nil) {
-        [self updatePropertiesOfConversation:conversation withPostPayloadEvent:event];
+        [conversation updateLastReadFromPostPayloadEvent:event];
         [self processEvents:@[event] liveEvents:YES prefetchResult:nil];
     }
         

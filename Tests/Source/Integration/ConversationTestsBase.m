@@ -90,6 +90,10 @@
                                                                                     otherUsers:@[self.user1, self.user2]];
         self.groupConversationWithOnlyConnected.creator = self.selfUser;
         [self.groupConversationWithOnlyConnected changeNameByUser:self.selfUser name:@"Group conversation with only connected participants"];
+        
+        self.emptyGroupConversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[]];
+        self.emptyGroupConversation.creator = self.selfUser;
+        [self.emptyGroupConversation changeNameByUser:self.selfUser name:@"Empty group conversation"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }

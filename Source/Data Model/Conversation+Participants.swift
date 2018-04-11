@@ -1,9 +1,19 @@
- //
-//  Conversation+Participants.swift
-//  WireSyncEngine-ios
 //
-//  Created by Jacob Persson on 06.04.18.
-//  Copyright © 2018 Zeta Project Gmbh. All rights reserved.
+// Wire
+// Copyright (C) 2018 Wire Swiss GmbH
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
 import Foundation
@@ -43,6 +53,7 @@ extension ZMConversation {
     public func addParticipants(_ participants: Set<ZMUser>, userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
         
         guard conversationType == .group,
+              let conversationId = remoteIdentifier,
               !participants.isEmpty,
               !participants.contains(ZMUser.selfUser(inUserSession: userSession))
         else { return completion(.failure(ConversationAddParticipantsError.invalidOperation)) }
@@ -53,6 +64,7 @@ extension ZMConversation {
             if response.httpStatus == 200 {
                 if let payload = response.payload, let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
                     userSession.syncManagedObjectContext.performGroupedBlock {
+                        ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.syncManagedObjectContext)?.updateLastRead(fromPostPayloadEvent: event)
                         userSession.operationLoop.syncStrategy.processUpdateEvents([event], ignoreBuffer: true)
                     }
                 }
@@ -74,14 +86,23 @@ extension ZMConversation {
     
     public func removeParticipant(_ participant: ZMUser, userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
         
-        guard conversationType == .group else { return completion(.failure(ConversationRemoveParticipantError.invalidOperation)) }
+        guard conversationType == .group, let conversationId = remoteIdentifier  else { return completion(.failure(ConversationRemoveParticipantError.invalidOperation)) }
         
+        let isRemovingSelfUser = participant.isSelfUser
         let request = ConversationParticipantRequestFactory.requestForRemovingParticipant(participant, conversation: self)
         
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
             if response.httpStatus == 200 {
                 if let payload = response.payload, let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
                     userSession.syncManagedObjectContext.performGroupedBlock {
+                        let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.syncManagedObjectContext)
+                        
+                        // Update cleared timestamp if self user left and deleted history
+                        if let clearedTimestamp = conversation?.clearedTimeStamp, clearedTimestamp == conversation?.lastServerTimeStamp, isRemovingSelfUser {
+                            conversation?.updateCleared(fromPostPayloadEvent: event)
+                        }
+                        
+                        conversation?.updateLastRead(fromPostPayloadEvent: event)
                         userSession.operationLoop.syncStrategy.processUpdateEvents([event], ignoreBuffer: true)
                     }
                 }
