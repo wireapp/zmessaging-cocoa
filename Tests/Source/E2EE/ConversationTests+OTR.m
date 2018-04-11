@@ -1089,7 +1089,7 @@
     
     // then
     ZMUser *addedUser = [self userForMockUser:self.user5];
-    XCTAssertTrue([conversation.otherActiveParticipants containsObject:addedUser]);
+    XCTAssertTrue([conversation.lastServerSyncedActiveParticipants containsObject:addedUser]);
     XCTAssertNil(addedUser.connection);
     
     XCTAssertFalse(conversation.allUsersTrusted);

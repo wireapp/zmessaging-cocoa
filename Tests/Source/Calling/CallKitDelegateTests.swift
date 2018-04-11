@@ -218,7 +218,7 @@ class CallKitDelegateTest: MessagingTest {
         conversation.isSelfAnActiveMember = true
         
         if type == .group {
-            conversation.addParticipant(self.otherUser(moc: moc))
+            conversation.internalAddParticipants(Set(arrayLiteral: self.otherUser(moc: moc)))
         }
         
         return conversation

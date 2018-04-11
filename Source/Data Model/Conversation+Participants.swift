@@ -10,7 +10,7 @@ import Foundation
  
  private let zmLog = ZMSLog(tag: "Conversation")
  
- enum ConversationRemoveParticipantError: Error {
+ public enum ConversationRemoveParticipantError: Error {
     case unknown, invalidOperation, conversationNotFound
     
     init?(response: ZMTransportResponse) {
@@ -23,7 +23,7 @@ import Foundation
     }
  }
  
- enum ConversationAddParticipantsError: Error {
+ public enum ConversationAddParticipantsError: Error {
     case unknown, invalidOperation, accessDenied, notConnectedToUser, conversationNotFound
     
     init?(response: ZMTransportResponse) {
@@ -41,6 +41,11 @@ import Foundation
 extension ZMConversation {
     
     public func addParticipants(_ participants: Set<ZMUser>, userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
+        
+        guard conversationType == .group,
+              !participants.isEmpty,
+              !participants.contains(ZMUser.selfUser(inUserSession: userSession))
+        else { return completion(.failure(ConversationAddParticipantsError.invalidOperation)) }
         
         let request = ConversationParticipantRequestFactory.requestForAddingParticipants(participants, conversation: self)
         
@@ -68,6 +73,8 @@ extension ZMConversation {
     }
     
     public func removeParticipant(_ participant: ZMUser, userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
+        
+        guard conversationType == .group else { return completion(.failure(ConversationRemoveParticipantError.invalidOperation)) }
         
         let request = ConversationParticipantRequestFactory.requestForRemovingParticipant(participant, conversation: self)
         

@@ -508,7 +508,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             let teamConversation1 = ZMConversation.insertNewObject(in: self.syncMOC)
             teamConversation1.remoteIdentifier = teamConversationId
             teamConversation1.conversationType = .group
-            teamConversation1.addParticipant(user)
+            teamConversation1.internalAddParticipants(Set(arrayLiteral: user))
             teamConversation1.team = team
             let conversation = ZMConversation.insertGroupConversation(into: self.syncMOC, withParticipants: [user, otherUser])
             conversation?.remoteIdentifier = conversationId
@@ -533,8 +533,8 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             XCTAssertNil(user.membership)
             guard let teamConversation = ZMConversation.fetch(withRemoteIdentifier: teamConversationId, in: self.syncMOC) else { return XCTFail("No Team Conversation") }
             guard let conversation = ZMConversation.fetch(withRemoteIdentifier: conversationId, in: self.syncMOC) else { return XCTFail("No Conversation") }
-            XCTAssertFalse(teamConversation.otherActiveParticipants.contains(user))
-            XCTAssert(conversation.otherActiveParticipants.contains(user))
+            XCTAssertFalse(teamConversation.lastServerSyncedActiveParticipants.contains(user))
+            XCTAssert(conversation.lastServerSyncedActiveParticipants.contains(user))
         }
     }
     
@@ -556,13 +556,13 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             let teamConversation1 = ZMConversation.insertNewObject(in: self.syncMOC)
             teamConversation1.remoteIdentifier = teamConversationId
             teamConversation1.conversationType = .group
-            teamConversation1.addParticipant(user)
+            teamConversation1.internalAddParticipants(Set(arrayLiteral: user))
             teamConversation1.team = team
             
             let teamConversation2 = ZMConversation.insertNewObject(in: self.syncMOC)
             teamConversation2.remoteIdentifier = teamAnotherConversationId
             teamConversation2.conversationType = .group
-            teamConversation2.addParticipant(user)
+            teamConversation2.internalAddParticipants(Set(arrayLiteral: user))
             teamConversation2.team = team
 
             

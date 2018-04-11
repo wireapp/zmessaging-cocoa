@@ -88,42 +88,12 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
         }
     }
     
-    func testThatItCreatesAndNotifiesSystemMessagesIfMemberIsAlreadyPartOfConversationButNotYetSynced() {
-        
-        self.syncMOC.performAndWait {
-            
-            // GIVEN
-            conversation.setLocallyModifiedKeys(Set<AnyHashable>([ZMConversationUnsyncedActiveParticipantsKey]))
-            let payload = [
-                "from": self.user.remoteIdentifier!.transportString(),
-                "conversation": self.conversation.remoteIdentifier!.transportString(),
-                "time": NSDate().transportString(),
-                "data": [
-                    "user_ids": [self.user.remoteIdentifier!.transportString()]
-                ],
-                "type": "conversation.member-join"
-                ] as [String: Any]
-            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
-            
-            // WHEN
-            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
-            
-            // THEN
-            guard let message = self.conversation.messages.lastObject as? ZMSystemMessage else {
-                XCTFail()
-                return
-            }
-            XCTAssertEqual(message.systemMessageType, .participantsAdded)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
-        }
-    }
-    
     func testThatItIgnoresMemberJoinEventsIfMemberIsAlreadyPartOfConversation() {
         
         self.syncMOC.performAndWait {
             
             // GIVEN
-            self.conversation.internalAddParticipants(Set<ZMUser>([user]), isAuthoritative: true)
+            self.conversation.internalAddParticipants(Set<ZMUser>([user]))
             
             let payload = [
                 "from": self.user.remoteIdentifier!.transportString(),
@@ -150,7 +120,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
         self.syncMOC.performAndWait {
             
             // GIVEN
-            self.conversation.internalAddParticipants(Set<ZMUser>([user]), isAuthoritative: true)
+            self.conversation.internalAddParticipants(Set<ZMUser>([user]))
             
             let payload = [
                 "from": self.user.remoteIdentifier!.transportString(),
@@ -158,70 +128,6 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
                 "time": NSDate().transportString(),
                 "data": [
                     "user_ids": [self.user.remoteIdentifier!.transportString()]
-                ],
-                "type": "conversation.member-leave"
-                ] as [String: Any]
-            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
-            
-            // WHEN
-            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
-            
-            // THEN
-            guard let message = self.conversation.messages.lastObject as? ZMSystemMessage else {
-                XCTFail()
-                return
-            }
-            XCTAssertEqual(message.systemMessageType, .participantsRemoved)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
-        }
-    }
-    
-    func testThatItCreatesAndNotifiesSystemMessagesIfMemberIsNotPartOfConversationButYetNotSynced() {
-        
-        self.syncMOC.performAndWait {
-            
-            // GIVEN
-            conversation.setLocallyModifiedKeys(Set<AnyHashable>([ZMConversationUnsyncedInactiveParticipantsKey]))
-            let payload = [
-                "from": self.user.remoteIdentifier!.transportString(),
-                "conversation": self.conversation.remoteIdentifier!.transportString(),
-                "time": NSDate().transportString(),
-                "data": [
-                    "user_ids": [self.user.remoteIdentifier!.transportString()]
-                ],
-                "type": "conversation.member-leave"
-                ] as [String: Any]
-            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
-            
-            // WHEN
-            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
-            
-            // THEN
-            guard let message = self.conversation.messages.lastObject as? ZMSystemMessage else {
-                XCTFail()
-                return
-            }
-            XCTAssertEqual(message.systemMessageType, .participantsRemoved)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
-        }
-    }
-    
-    func testThatItCreatesAndNotifiesSystemMessagesISelfUserIsNotPartOfConversationButYetNotSynced() {
-        
-        self.syncMOC.performAndWait {
-            
-            // GIVEN
-            let selfUser = ZMUser.selfUser(in: syncMOC)
-            selfUser.remoteIdentifier = UUID()
-            conversation.internalRemoveParticipants(Set<ZMUser>([selfUser]), sender: selfUser)
-            conversation.setLocallyModifiedKeys(Set<AnyHashable>([ZMConversationIsSelfAnActiveMemberKey]))
-            
-            let payload = [
-                "from": selfUser.remoteIdentifier!.transportString(),
-                "conversation": self.conversation.remoteIdentifier!.transportString(),
-                "time": NSDate().transportString(),
-                "data": [
-                    "user_ids": [selfUser.remoteIdentifier!.transportString()]
                 ],
                 "type": "conversation.member-leave"
                 ] as [String: Any]
