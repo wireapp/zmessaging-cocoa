@@ -157,8 +157,8 @@ public protocol LocalNotificationResponder : class {
     
     fileprivate let sessionLoadingQueue : DispatchQueue = DispatchQueue(label: "sessionLoadingQueue")
     
-    fileprivate let sharedContainerURL: URL
-    fileprivate let dispatchGroup: ZMSDispatchGroup?
+    let sharedContainerURL: URL
+    let dispatchGroup: ZMSDispatchGroup?
     fileprivate var accountTokens : [UUID : [Any]] = [:]
     fileprivate var memoryWarningObserver: NSObjectProtocol?
     fileprivate var isSelectingAccount : Bool = false
@@ -705,6 +705,9 @@ extension SessionManager {
 }
 
 extension SessionManager: UnauthenticatedSessionDelegate {
+    public func session(session: UnauthenticatedSession, isExistingAccount account: Account) -> Bool {
+        return accountManager.accounts.contains(account)
+    }
 
     public func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) -> Bool {
         return update(credentials: credentials)
@@ -738,6 +741,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
                 userSession.syncManagedObjectContext.registeredOnThisDevice = registered
                 userSession.syncManagedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = registered
                 userSession.accountStatus.didCompleteLogin()
+                ZMMessage.deleteOldEphemeralMessages(userSession.syncManagedObjectContext)
             }
         }
     }

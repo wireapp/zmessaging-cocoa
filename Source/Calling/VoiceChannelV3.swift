@@ -106,6 +106,14 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
 
 extension VoiceChannelV3 : CallActions {
     
+    public func mute(_ muted: Bool, userSession: ZMUserSession) {
+        if userSession.callNotificationStyle == .callKit, #available(iOS 10.0, *) {
+            userSession.callKitDelegate?.requestMuteCall(in: conversation!, muted: muted)
+        } else {
+            userSession.mediaManager.isMicrophoneMuted = muted
+        }
+    }
+    
     public func continueByDecreasingConversationSecurity(userSession: ZMUserSession) {
         guard let conversation = conversation else { return }
         conversation.makeNotSecure()

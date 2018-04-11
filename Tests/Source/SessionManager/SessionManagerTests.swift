@@ -16,7 +16,6 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-
 import XCTest
 import WireTesting
 import PushKit
@@ -475,6 +474,18 @@ class SessionManagerTests_Teams: IntegrationTest {
 
         // then
         XCTAssertEqual(NSError(code: .accountLimitReached, userInfo: nil), recorder.notifications.last!.error)
+    }
+
+    func testThatItChecksAccountsForExistingAccount() {
+        // given
+        let account1 = Account(userName: "Account 1", userIdentifier: UUID.create())
+        let account2 = Account(userName: "Account 2", userIdentifier: UUID.create())
+
+        sessionManager?.accountManager.addOrUpdate(account1)
+
+        // then
+        XCTAssertTrue(sessionManager!.session(session: self.unauthenticatedSession!, isExistingAccount: account1))
+        XCTAssertFalse(sessionManager!.session(session: self.unauthenticatedSession!, isExistingAccount: account2))
     }
 }
 

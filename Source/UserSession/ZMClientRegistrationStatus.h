@@ -16,7 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 #import "ZMSyncStateDelegate.h"
 
 @class ZMCredentials;

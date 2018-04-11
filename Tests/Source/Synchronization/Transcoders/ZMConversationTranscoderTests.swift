@@ -17,7 +17,7 @@
 //
 
 import XCTest
-import WireMessageStrategy
+import WireRequestStrategy
 import WireDataModel
 
 class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {

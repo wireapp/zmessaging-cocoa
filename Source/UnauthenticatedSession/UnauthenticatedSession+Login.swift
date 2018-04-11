@@ -29,6 +29,11 @@ extension ZMCredentials {
 }
 
 extension UnauthenticatedSession {
+
+    @objc(continueAfterBackupImportStep)
+    public func continueAfterBackupImportStep() {
+        authenticationStatus.continueAfterBackupImportStep()
+    }
         
     /// Attempt to log in with the given credentials
     @objc(loginWithCredentials:)

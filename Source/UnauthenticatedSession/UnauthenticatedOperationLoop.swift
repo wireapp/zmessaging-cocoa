@@ -19,7 +19,7 @@
 
 import Foundation
 import WireTransport
-import WireMessageStrategy
+import WireRequestStrategy
 
 
 private let log = ZMSLog(tag: "Network")

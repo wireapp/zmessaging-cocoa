@@ -18,7 +18,7 @@
 
 import Foundation
 import CoreData
-import WireMessageStrategy
+import WireRequestStrategy
 
 public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
 
@@ -35,6 +35,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let requestCancellation: ZMRequestCancellation
     public let analytics: AnalyticsType?
     public let teamInvitationStatus: TeamInvitationStatus
+    public let assetDeletionStatus: AssetDeletionStatus
 
     public var notificationFetchStatus: BackgroundNotificationFetchStatus {
         return pushNotificationStatus.status
@@ -59,6 +60,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         self.pushNotificationStatus = PushNotificationStatus(managedObjectContext: managedObjectContext)
         self.proxiedRequestStatus = ProxiedRequestsStatus(requestCancellation: requestCancellation)
         self.userProfileImageUpdateStatus = UserProfileImageUpdateStatus(managedObjectContext: managedObjectContext)
+        self.assetDeletionStatus = AssetDeletionStatus(provider: managedObjectContext, queue: managedObjectContext)
         super.init()
         
         callInProgressObserverToken = NotificationInContext.addObserver(name: CallStateObserver.CallInProgressNotification, context: managedObjectContext.notificationContext) { [weak self] (note) in

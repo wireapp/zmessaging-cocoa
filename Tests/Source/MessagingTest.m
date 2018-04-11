@@ -18,7 +18,7 @@
 
 
 @import WireMockTransport;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 
 #import "MessagingTest.h"
 #import <libkern/OSAtomic.h>

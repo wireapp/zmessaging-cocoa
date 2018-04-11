@@ -28,7 +28,6 @@
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
-static NSString *const HasHistoryKey = @"hasHistory";
 
 @implementation ZMUserSession (Authentication)
 
@@ -52,11 +51,6 @@ static NSString *const HasHistoryKey = @"hasHistory";
 - (BOOL)needsToRegisterClient
 {
     return true;
-}
-
-- (BOOL)hadHistoryAtLastLogin
-{
-    return self.accountStatus.hadHistoryBeforeSync;
 }
 
 - (void)deleteUserKeychainItems;

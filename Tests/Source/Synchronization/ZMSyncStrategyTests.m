@@ -21,7 +21,7 @@
 @import WireTransport;
 @import WireSyncEngine;
 @import WireDataModel;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 @import OCMock;
 
 
@@ -151,6 +151,8 @@
     [[[self.applicationStatusDirectoryMock stub] andReturn:self.syncStatusMock] syncStatus];
     [[[self.applicationStatusDirectoryMock stub] andReturn:self.operationStatusMock] operationStatus];
     [(ApplicationStatusDirectory *)[[self.applicationStatusDirectoryMock stub] andReturn:self.userProfileImageUpdateStatus] userProfileImageUpdateStatus];
+    AssetDeletionStatus *deletionStatus = [[AssetDeletionStatus alloc] initWithProvider:self.syncMOC queue:self.syncMOC];
+    [(ApplicationStatusDirectory *)[[self.applicationStatusDirectoryMock stub] andReturn:deletionStatus] assetDeletionStatus];
 
     id userTranscoder = [OCMockObject mockForClass:ZMUserTranscoder.class];
     [[[[userTranscoder expect] andReturn:userTranscoder] classMethod] alloc];
@@ -195,7 +197,6 @@
     
     self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
     self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:[[FakeCookieStorage alloc] init] requestCancellation:self application:self.application syncStateDelegate:self analytics:nil];
-    
     self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider
                                                cookieStorage:nil
                                                 mediaManager:nil

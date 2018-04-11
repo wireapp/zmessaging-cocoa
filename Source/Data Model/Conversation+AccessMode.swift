@@ -110,7 +110,7 @@ extension ZMConversation {
                     }
                 }
             }
-            else if response.httpStatus == 204,
+            else if response.httpStatus == 200,
                 let payload = response.payload?.asDictionary(),
                 let uri = payload[ZMConversation.TransportKey.uri] as? String {
                 completion(.success(uri))

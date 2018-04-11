@@ -186,6 +186,18 @@ extension CallKitDelegate {
 @available(iOS 10.0, *)
 extension CallKitDelegate {
     
+    func requestMuteCall(in conversation: ZMConversation, muted:  Bool) {
+        guard let existingCallUUID = callUUID(for: conversation) else { return }
+        
+        let action = CXSetMutedCallAction(call: existingCallUUID, muted: muted)
+        
+        callController.request(CXTransaction(action: action)) { [weak self] (error) in
+            if let error = error {
+                self?.log("Cannot update call to muted = \(muted): \(error)")
+            }
+        }
+    }
+    
     func requestJoinCall(in conversation: ZMConversation, video: Bool) {
         
         let existingCallUUID = callUUID(for: conversation)

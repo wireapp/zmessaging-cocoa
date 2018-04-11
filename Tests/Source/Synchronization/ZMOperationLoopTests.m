@@ -737,6 +737,29 @@
     XCTAssertEqualObjects(note.userInfo[ZMPushChannelResponseStatusKey], @(100));
 }
 
+- (void)testThatItInformsTransportSessionWhenEnteringForeground
+{
+    // expect
+    [[self.transportSession expect] enterForeground];
+    
+    // when
+    [self.sut operationStatusDidChangeState:SyncEngineOperationStateForeground];
+    
+    // then
+    [self.transportSession verify];
+}
+
+- (void)testThatItInformsTransportSessionWhenEnteringBackground
+{
+    // expect
+    [[self.transportSession expect] enterBackground];
+    
+    // when
+    [self.sut operationStatusDidChangeState:SyncEngineOperationStateBackground];
+    
+    // then
+    [self.transportSession verify];
+}
 
 @end
 

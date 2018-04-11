@@ -415,6 +415,9 @@ extension IntegrationTest {
         
         sessionManager?.unauthenticatedSession?.login(with: credentials)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        sessionManager?.unauthenticatedSession?.continueAfterBackupImportStep()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
         authenticationObserver = nil
         
         return didSucceed
@@ -433,7 +436,9 @@ extension IntegrationTest {
     
     @objc(userForMockUser:)
     func user(for mockUser: MockUser) -> ZMUser? {
-        let uuid = mockUser.identifier.uuid()
+        let uuid = mockUser.managedObjectContext!.performGroupedBlockAndWait {
+            mockUser.identifier.uuid()
+        }
         let data = (uuid as NSUUID).data() as NSData
         let predicate = NSPredicate(format: "remoteIdentifier_data == %@", data)
         let request = ZMUser.sortedFetchRequest(with: predicate)
@@ -448,7 +453,9 @@ extension IntegrationTest {
     
     @objc(conversationForMockConversation:)
     func conversation(for mockConversation: MockConversation) -> ZMConversation? {
-        let uuid = mockConversation.identifier.uuid()
+        let uuid = mockConversation.managedObjectContext!.performGroupedBlockAndWait {
+            mockConversation.identifier.uuid()
+        }
         let data = (uuid as NSUUID).data() as NSData
         let predicate = NSPredicate(format: "remoteIdentifier_data == %@", data)
         let request = ZMConversation.sortedFetchRequest(with: predicate)

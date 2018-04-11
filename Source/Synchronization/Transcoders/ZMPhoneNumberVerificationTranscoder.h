@@ -18,7 +18,7 @@
 
 
 @import WireRequestStrategy;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 
 @class ZMAuthenticationStatus;
 

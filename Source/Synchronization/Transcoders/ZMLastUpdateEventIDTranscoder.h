@@ -18,7 +18,7 @@
 
 
 @import Foundation;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 
 @protocol ZMObjectStrategyDirectory;
 @class SyncStatus;

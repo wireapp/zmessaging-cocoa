@@ -21,7 +21,7 @@
 @import WireTesting;
 @import WireSyncEngine;
 @import WireDataModel;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 
 #import "ZMUserSession.h"
 #import "ZMUser+Testing.h"

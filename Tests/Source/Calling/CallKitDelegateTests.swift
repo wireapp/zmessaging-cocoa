@@ -556,6 +556,26 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertEqual(action.callUUID, callUUID)
     }
     
+    func testThatReportsMutingOfCall() {
+        // given
+        let conversation = self.conversation(type: .group)
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        
+        mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date())
+        let callUUID = sut.callUUID(for: conversation)
+        
+        // when
+        sut.requestMuteCall(in: conversation, muted: true)
+        
+        // then
+        XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXSetMutedCallAction)
+        
+        let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXSetMutedCallAction
+        XCTAssertEqual(action.callUUID, callUUID)
+    }
+    
     // Public API - activity & intents
     
     func userActivityFor(contacts: [INPerson]?, isVideo: Bool = false) -> NSUserActivity {
