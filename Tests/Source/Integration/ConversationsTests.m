@@ -490,12 +490,12 @@
             if (!didSendMemberLeaveRequest) {
                 didSendFirstArchivedMessage = YES;
                 firstArchivedRef = [[request.payload asDictionary] dateForKey:@"otr_archived_ref"];
-                firstIsArchived = [request.payload[@"otr_archived"] boolValue];
+                firstIsArchived = [request.payload.asDictionary[@"otr_archived"] boolValue];
                 XCTAssertEqualObjects(firstArchivedRef, conversation.lastServerTimeStamp);
             } else {
                 didSendSecondArchivedMessage = YES;
                 secondArchivedRef = [[request.payload asDictionary] dateForKey:@"otr_archived_ref"];
-                secondIsArchived = [request.payload[@"otr_archived"] boolValue];
+                secondIsArchived = [request.payload.asDictionary[@"otr_archived"] boolValue];
             }
         }
         return nil;
@@ -1239,8 +1239,8 @@
         NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/self", self.groupConversation.identifier];
         XCTAssertEqualObjects(request.path, expectedPath);
         XCTAssertEqual(request.method, ZMMethodPUT);
-        XCTAssertEqualObjects(request.payload[@"otr_archived_ref"], conversation.archivedChangedTimestamp.transportString);
-        XCTAssertEqualObjects(request.payload[@"otr_archived"], @(conversation.isArchived));
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_archived_ref"], conversation.archivedChangedTimestamp.transportString);
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_archived"], @(conversation.isArchived));
     }
     
     // Tears down context(s) &
@@ -1283,8 +1283,8 @@
     XCTAssertEqualObjects(request.path, expectedPath);
     XCTAssertEqual(request.method, ZMMethodPUT);
     XCTAssertEqualObjects(conversation.lastServerTimeStamp, conversation.archivedChangedTimestamp);
-    XCTAssertEqualObjects(request.payload[@"otr_archived_ref"], conversation.archivedChangedTimestamp.transportString);
-    XCTAssertEqualObjects(request.payload[@"otr_archived"], @(conversation.isArchived));
+    XCTAssertEqualObjects(request.payload.asDictionary[@"otr_archived_ref"], conversation.archivedChangedTimestamp.transportString);
+    XCTAssertEqualObjects(request.payload.asDictionary[@"otr_archived"], @(conversation.isArchived));
 }
 
 - (void)testThatSilencingAConversationIsSynchronizedToTheBackend
@@ -1308,8 +1308,8 @@
         XCTAssertEqualObjects(request.path, expectedPath);
         XCTAssertEqual(request.method, ZMMethodPUT);
         XCTAssertEqualObjects(conversation.lastServerTimeStamp, conversation.silencedChangedTimestamp);
-        XCTAssertEqualObjects(request.payload[@"otr_muted_ref"], conversation.silencedChangedTimestamp.transportString);
-        XCTAssertEqualObjects(request.payload[@"otr_muted"], @(conversation.isSilenced));
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_ref"], conversation.silencedChangedTimestamp.transportString);
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted"], @(conversation.isSilenced));
     }
     
     // Tears down context(s) &
@@ -1351,8 +1351,8 @@
     NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/self", self.groupConversation.identifier];
     XCTAssertEqualObjects(request.path, expectedPath);
     XCTAssertEqual(request.method, ZMMethodPUT);
-    XCTAssertEqualObjects(request.payload[@"otr_muted"], @0);
-    XCTAssertEqualObjects(request.payload[@"otr_muted_ref"], conversation.lastServerTimeStamp.transportString);
+    XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted"], @0);
+    XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_ref"], conversation.lastServerTimeStamp.transportString);
 }
 
 - (void)testThatWhenBlockingAUserTheOneOnOneConversationIsRemovedFromTheConversationList
@@ -1776,8 +1776,8 @@
         
         ZMTransportRequest *firstRequest = self.mockTransportSession.receivedRequests.firstObject;
         NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/self", conversation.remoteIdentifier.transportString];
-        XCTAssertEqualObjects(firstRequest.payload[@"otr_archived_ref"], conversation.lastServerTimeStamp.transportString);
-        XCTAssertEqualObjects(firstRequest.payload[@"otr_archived"], @1);
+        XCTAssertEqualObjects(firstRequest.payload.asDictionary[@"otr_archived_ref"], conversation.lastServerTimeStamp.transportString);
+        XCTAssertEqualObjects(firstRequest.payload.asDictionary[@"otr_archived"], @1);
 
         XCTAssertEqualObjects(firstRequest.path, expectedPath);
         XCTAssertEqual(firstRequest.method, ZMMethodPUT);

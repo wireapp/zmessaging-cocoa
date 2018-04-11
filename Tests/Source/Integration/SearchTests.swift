@@ -305,9 +305,9 @@ class SearchTests : IntegrationTest {
         guard let mediumImageIdenitifer = UUID(uuidString: user4.mediumImageIdentifier!) else { XCTFail(); return }
         
         
-        guard let searchUserAsset = mediumAssetIDCache?.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
+        guard let searchUserAsset = mediumAssetIDCache.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
         XCTAssertEqual(searchUserAsset.legacyID, mediumImageIdenitifer)
-        XCTAssertNil(mediumImageCache?.object(forKey: remoteIdentifer as AnyObject))
+        XCTAssertNil(mediumImageCache.object(forKey: remoteIdentifer as AnyObject))
         
         // when requesting medium image
         userSession?.performChanges {
@@ -347,9 +347,9 @@ class SearchTests : IntegrationTest {
             guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
             XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             
-            guard let searchUserAsset = mediumAssetIDCache?.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
+            guard let searchUserAsset = mediumAssetIDCache.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
             XCTAssertEqual(searchUserAsset.legacyID, mediumImageIdenitifer)
-            XCTAssertNil(mediumImageCache?.object(forKey: remoteIdentifer as AnyObject))
+            XCTAssertNil(mediumImageCache.object(forKey: remoteIdentifer as AnyObject))
             
             // when requesting medium image
             userSession?.performChanges {
@@ -362,8 +362,8 @@ class SearchTests : IntegrationTest {
         }
         
         // clear the cache
-        mediumImageCache?.removeObject(forKey: remoteIdentifer as AnyObject)
-        mediumAssetIDCache?.removeObject(forKey: remoteIdentifer as AnyObject)
+        mediumImageCache.removeObject(forKey: remoteIdentifer as AnyObject)
+        mediumAssetIDCache.removeObject(forKey: remoteIdentifer as AnyObject)
         
         // second search
         do {
@@ -371,9 +371,9 @@ class SearchTests : IntegrationTest {
             guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
             XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             
-            guard let searchUserAsset = mediumAssetIDCache?.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
+            guard let searchUserAsset = mediumAssetIDCache.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
             XCTAssertEqual(searchUserAsset.legacyID, mediumImageIdenitifer)
-            XCTAssertNil(mediumImageCache?.object(forKey: remoteIdentifer as AnyObject))
+            XCTAssertNil(mediumImageCache.object(forKey: remoteIdentifer as AnyObject))
             
             // when requesting medium image
             userSession?.performChanges {
@@ -413,12 +413,12 @@ class SearchTests : IntegrationTest {
         guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        guard let searchUserAsset = mediumAssetIDCache?.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
+        guard let searchUserAsset = mediumAssetIDCache.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
         XCTAssertEqual(searchUserAsset.legacyID, mediumImageIdenitifer)
-        XCTAssertNil(mediumImageCache?.object(forKey: remoteIdentifer as AnyObject))
+        XCTAssertNil(mediumImageCache.object(forKey: remoteIdentifer as AnyObject))
         
         // (2) remove mediumAssetID from cache
-        mediumAssetIDCache?.removeObject(forKey: remoteIdentifer as AnyObject)
+        mediumAssetIDCache.removeObject(forKey: remoteIdentifer as AnyObject)
         
         // (3) when requesting medium image
         userSession?.performChanges {
@@ -573,9 +573,9 @@ class SearchTests : IntegrationTest {
         let mediumImageCache = ZMSearchUser.searchUserToMediumImageCache()
         
         guard let remoteIdentifer = UUID(uuidString: user4.identifier) else { XCTFail(); return }
-        guard let searchUserAsset = mediumAssetIDCache?.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
+        guard let searchUserAsset = mediumAssetIDCache.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
         XCTAssertEqual(searchUserAsset.assetKey, user4.completeProfileAssetIdentifier)
-        XCTAssertNil(mediumImageCache?.object(forKey: remoteIdentifer as AnyObject))
+        XCTAssertNil(mediumImageCache.object(forKey: remoteIdentifer as AnyObject))
         
         mockTransportSession.resetReceivedRequests()
         
@@ -618,10 +618,10 @@ class SearchTests : IntegrationTest {
         
         guard let remoteIdentifer = UUID(uuidString: user4.identifier) else { XCTFail(); return }
         
-        mediumAssetIDCache?.removeAllObjects()
+        mediumAssetIDCache.removeAllObjects()
         
-        XCTAssertNil(mediumAssetIDCache?.object(forKey: remoteIdentifer as AnyObject))
-        XCTAssertNil(mediumImageCache?.object(forKey: remoteIdentifer as AnyObject))
+        XCTAssertNil(mediumAssetIDCache.object(forKey: remoteIdentifer as AnyObject))
+        XCTAssertNil(mediumImageCache.object(forKey: remoteIdentifer as AnyObject))
         XCTAssertNil(searchUser.completeAssetKey)
         
         // We reset the requests after having performed the search and fetching the users (in comparison to the other tests).

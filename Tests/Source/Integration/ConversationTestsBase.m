@@ -114,7 +114,7 @@
     [observer clearNotifications];
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
-        createMessage(session);
+        createMessage();
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -167,7 +167,7 @@
     [observer clearNotifications];
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
-        createMessage(session);
+        createMessage();
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);

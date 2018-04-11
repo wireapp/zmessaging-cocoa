@@ -104,7 +104,7 @@
         if (![aRequest.path isEqualToString: @"/push/tokens"]) {
             continue;
         }
-        NSString *transportType = aRequest.payload[@"transport"];
+        NSString *transportType = aRequest.payload.asDictionary[@"transport"];
         if ([transportType isEqualToString:@"APNS_VOIP"]) {
             didContainVOIPRequest = YES;
         }

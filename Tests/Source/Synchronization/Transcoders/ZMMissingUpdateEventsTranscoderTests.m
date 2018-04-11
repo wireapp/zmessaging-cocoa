@@ -767,7 +767,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 
     [(id)self.sut.listPaginator didReceiveResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:400 transportSessionError:nil] forSingleRequest:self.requestSync];
 
-    id <ZMTransportData> payload = response.payload[@"notifications"][0];
+    id <ZMTransportData> payload = response.payload.asDictionary[@"notifications"][0];
     NSArray<ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];
     NSArray<NSUUID *> *eventIds = [expectedEvents mapWithBlock:^id(ZMUpdateEvent *event) {
         return event.uuid;
@@ -790,7 +790,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 
         ZMTransportResponse *response = [self responseForSettingLastUpdateEventID:NSUUID.createUUID hasMore:YES];
         ZMTransportRequest *request = [self.sut nextRequest];
-        id <ZMTransportData> payload = response.payload[@"notifications"][0];
+        id <ZMTransportData> payload = response.payload.asDictionary[@"notifications"][0];
         NSArray <ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];
         NSArray<NSUUID *> *eventIds = [expectedEvents mapWithBlock:^id(ZMUpdateEvent *event) {
             return event.uuid;
@@ -809,7 +809,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
         [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
         ZMTransportResponse *response = [self responseForSettingLastUpdateEventID:NSUUID.createUUID hasMore:NO];
         ZMTransportRequest *request = [self.sut nextRequest];
-        id <ZMTransportData> payload = response.payload[@"notifications"][0];
+        id <ZMTransportData> payload = response.payload.asDictionary[@"notifications"][0];
         NSArray <ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];
         NSArray<NSUUID *> *eventIds = [expectedEvents mapWithBlock:^id(ZMUpdateEvent *event) {
             return event.uuid;
