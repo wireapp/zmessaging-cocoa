@@ -77,7 +77,9 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
     }
     
     public var isConstantBitRateAudioActive: Bool {
-        return self.callCenter?.isConstantBitRateAudioActive ?? false
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { return false }
+        
+        return self.callCenter?.isContantBitRate(conversationId: remoteIdentifier) ?? false
     }
     
     public var initiator : ZMUser? {

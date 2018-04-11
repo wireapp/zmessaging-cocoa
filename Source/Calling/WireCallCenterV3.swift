@@ -247,14 +247,19 @@ public struct CallMember : Hashable {
 }
 
 private struct CallSnapshot {
-    let callState : CallState
-    let callStarter : UUID
-    let isVideo : Bool
-    let isGroup : Bool
+    let callState: CallState
+    let callStarter: UUID
+    let isVideo: Bool
+    let isGroup: Bool
+    let isConstantBitRate: Bool
     var conversationObserverToken : NSObjectProtocol?
     
     public func update(with callState: CallState) -> CallSnapshot {
-        return CallSnapshot(callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, conversationObserverToken: conversationObserverToken)
+        return CallSnapshot(callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, isConstantBitRate: isConstantBitRate, conversationObserverToken: conversationObserverToken)
+    }
+    
+    public func updateConstantBitrate(_ enabled: Bool) -> CallSnapshot {
+        return CallSnapshot(callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, isConstantBitRate: enabled, conversationObserverToken: conversationObserverToken)
     }
 }
 
@@ -478,8 +483,11 @@ internal func constantBitRateChangeHandler(userId: UnsafePointer<Int8>?, enabled
     if let context = callCenter.uiMOC {
         context.performGroupedBlock {
             let enabled = enabled == 1 ? true : false
-            callCenter.isConstantBitRateAudioActive = enabled
-            WireCallCenterCBRNotification(enabled: enabled).post(in: context.notificationContext)
+            
+            if let establishedCall = callCenter.callSnapshots.first(where: { $0.value.callState == .established || $0.value.callState == .establishedDataChannel }) {
+                callCenter.callSnapshots[establishedCall.key] = establishedCall.value.updateConstantBitrate(enabled)
+                WireCallCenterCBRNotification(enabled: enabled).post(in: context.notificationContext)
+            }
         }
     } else {
         zmLog.error("Couldn't send CBR notification")
@@ -555,10 +563,9 @@ public struct CallEvent {
         
         let token = ConversationChangeInfo.add(observer: self, for: conversation)
         let group = conversation.conversationType == .group
-        callSnapshots[conversationId] = CallSnapshot(callState: callState, callStarter: callStarter ?? selfUserId, isVideo: video, isGroup: group, conversationObserverToken: token)
+        callSnapshots[conversationId] = CallSnapshot(callState: callState, callStarter: callStarter ?? selfUserId, isVideo: video, isGroup: group, isConstantBitRate: false, conversationObserverToken: token)
     }
     
-    public fileprivate(set) var isConstantBitRateAudioActive : Bool = false
     public var useConstantBitRateAudio: Bool = false
     
     var avsWrapper : AVSWrapperType!
@@ -742,6 +749,11 @@ public struct CallEvent {
     @objc(isVideoCallForConversationID:)
     public func isVideoCall(conversationId: UUID) -> Bool {
         return callSnapshots[conversationId]?.isVideo ?? false
+    }
+    
+    @objc(isConstantBitRateInConversationID:)
+    public func isContantBitRate(conversationId: UUID) -> Bool {
+        return callSnapshots[conversationId]?.isConstantBitRate ?? false
     }
     
     fileprivate func isDegraded(conversationId: UUID) -> Bool {

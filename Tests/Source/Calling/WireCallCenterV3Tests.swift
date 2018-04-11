@@ -408,28 +408,70 @@ class WireCallCenterV3Tests: MessagingTest {
     func testThatCBRIsEnabledOnAudioCBRChangeHandler() {
         // given
         let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        WireSyncEngine.establishedCallHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
         WireSyncEngine.constantBitRateChangeHandler(userId: otherUserIDRef, enabled: 1, contextRef: context)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertTrue(sut.isConstantBitRateAudioActive)
+        XCTAssertTrue(sut.isContantBitRate(conversationId: oneOnOneConversationID))
     }
     
     func testThatCBRIsDisabledOnAudioCBRChangeHandler() {
         // given
         let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        WireSyncEngine.establishedCallHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
         WireSyncEngine.constantBitRateChangeHandler(userId: otherUserIDRef, enabled: 1, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))        
+        XCTAssertTrue(sut.isContantBitRate(conversationId: oneOnOneConversationID))
+        
+        // when
+        WireSyncEngine.constantBitRateChangeHandler(userId: otherUserIDRef, enabled: 0, contextRef: context)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        XCTAssertTrue(sut.isConstantBitRateAudioActive)
+
+        // then
+        XCTAssertFalse(sut.isContantBitRate(conversationId: oneOnOneConversationID))
+    }
+    
+    func testThatCBRIsNotEnabledOnAudioCBRChangeHandlerWhenCallIsNotEstablished() {
+        // given
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
         WireSyncEngine.constantBitRateChangeHandler(userId: otherUserIDRef, enabled: 0, contextRef: context)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertFalse(sut.isConstantBitRateAudioActive)
+        XCTAssertFalse(sut.isContantBitRate(conversationId: oneOnOneConversationID))
+    }
+    
+    func testThatCBRIsNotEnabledAfterCallIsTerminated() {
+        // given
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        WireSyncEngine.establishedCallHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        WireSyncEngine.constantBitRateChangeHandler(userId: otherUserIDRef, enabled: 1, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        WireSyncEngine.closedCallHandler(reason: WCALL_REASON_NORMAL, conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertFalse(sut.isContantBitRate(conversationId: oneOnOneConversationID))
     }
     
 }
