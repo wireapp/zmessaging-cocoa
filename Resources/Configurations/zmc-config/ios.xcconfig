@@ -14,28 +14,20 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
-// 
-
-
-
+//
 
 //
 // This is the main file used by Framework targets on iOS.
 // It gets included by {target}-ios.xcconfig
 //
 
-
+#include "swift.xcconfig"
 
 
 // Architectures
 //
-SDKROOT = iphoneos
-ARCHS = armv7 arm64
-
-
-// Code Signing
-//
-CODE_SIGN_IDENTITY = iPhone Developer
+VALID_ARCHS[sdk=iphoneos*] = arm64 armv7
+VALID_ARCHS[sdk=iphonesimulator*] = x86_64
 
 
 // Deployment

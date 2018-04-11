@@ -1,7 +1,4 @@
 
-#include "zmc-config/swift.xcconfig"
-#include "libs.xcconfig"
+#include "zmc-config/ios.xcconfig"
 
 PRODUCT_NAME = WireSyncEngine
-
-
