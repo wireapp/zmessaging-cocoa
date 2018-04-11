@@ -410,6 +410,7 @@
 		F1C1F3F01FCF18C5007273E3 /* NSError+Localized.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C1F3EF1FCF18C5007273E3 /* NSError+Localized.swift */; };
 		F1C51FE71FB49660009C2269 /* RegistrationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C51FE61FB49660009C2269 /* RegistrationStatus.swift */; };
 		F1C51FE91FB4A9C7009C2269 /* TeamRegistrationStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C51FE81FB4A9C7009C2269 /* TeamRegistrationStrategy.swift */; };
+		F1E48003207E3789008D4299 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F1E48002207E3789008D4299 /* Default-568h@2x.png */; };
 		F1EB0E78200501C70040D73E /* NotificationsTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1EB0E77200501C70040D73E /* NotificationsTracker.swift */; };
 		F1FE8027200684F200A438CF /* NotificationsTrackingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1FE8025200684DB00A438CF /* NotificationsTrackingTests.swift */; };
 		F905C47F1E79A86A00AF34A5 /* WireCallCenterV3Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F905C47E1E79A86A00AF34A5 /* WireCallCenterV3Tests.swift */; };
@@ -1036,6 +1037,7 @@
 		F1C1F3EF1FCF18C5007273E3 /* NSError+Localized.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSError+Localized.swift"; sourceTree = "<group>"; };
 		F1C51FE61FB49660009C2269 /* RegistrationStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationStatus.swift; sourceTree = "<group>"; };
 		F1C51FE81FB4A9C7009C2269 /* TeamRegistrationStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamRegistrationStrategy.swift; sourceTree = "<group>"; };
+		F1E48002207E3789008D4299 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		F1EB0E77200501C70040D73E /* NotificationsTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsTracker.swift; sourceTree = "<group>"; };
 		F1FE8025200684DB00A438CF /* NotificationsTrackingTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationsTrackingTests.swift; sourceTree = "<group>"; };
 		F905C47E1E79A86A00AF34A5 /* WireCallCenterV3Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WireCallCenterV3Tests.swift; sourceTree = "<group>"; };
@@ -1292,6 +1294,7 @@
 				3E1860B6191A5D99000FE027 /* TestHost-main.m */,
 				3E1860B7191A5D99000FE027 /* TestHostAppDelegate.h */,
 				3E1860B8191A5D99000FE027 /* TestHostAppDelegate.m */,
+				F1E48002207E3789008D4299 /* Default-568h@2x.png */,
 				3E9848BC1A65253000F7B050 /* Hack.swift */,
 				872C995A1DB65D0D006A3BDE /* harp.m4a */,
 				872C99571DB659E6006A3BDE /* ringing_from_them_long.caf */,
@@ -2385,6 +2388,7 @@
 			files = (
 				872C995B1DB65D0D006A3BDE /* harp.m4a in Resources */,
 				872C99591DB659E6006A3BDE /* ringing_from_them_long.caf in Resources */,
+				F1E48003207E3789008D4299 /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
