@@ -2986,6 +2986,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0994E1DD1B835C4900A51721 /* ios-test-host.xcconfig */;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "WireSyncEngine Test Host.entitlements";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Tests/iOS Test Host/Test-Host-Prefix.pch";
 				INFOPLIST_FILE = "Tests/iOS Test Host/Test-Host-Info.plist";
@@ -2999,6 +3000,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0994E1DD1B835C4900A51721 /* ios-test-host.xcconfig */;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "WireSyncEngine Test Host.entitlements";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Tests/iOS Test Host/Test-Host-Prefix.pch";
 				INFOPLIST_FILE = "Tests/iOS Test Host/Test-Host-Info.plist";
@@ -3012,6 +3014,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				INFOPLIST_FILE = "$(SRCROOT)/Tests/Resources/Tests-ios-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.WireSyncEngine-Test-Host";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3025,6 +3028,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				INFOPLIST_FILE = "$(SRCROOT)/Tests/Resources/Tests-ios-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.WireSyncEngine-Test-Host";
 				PRODUCT_NAME = "$(TARGET_NAME)";
