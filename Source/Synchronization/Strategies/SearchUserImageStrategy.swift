@@ -173,11 +173,11 @@ public class SearchUserImageStrategy : AbstractRequestStrategy {
         if response.result == .success {
             if let imageData = response.imageData ?? response.rawData {
                 imagesByUserIDCache.setObject(imageData as NSData, forKey: userAssetID.userId as NSUUID)
+                uiContext.performGroupedBlock {
+                    userAssetID.user.notifyNewSmallImageData(imageData, searchUserObserverCenter: self.uiContext.searchUserObserverCenter)
+                }
+                userIDsTable.removeAllEntries(with: [userAssetID.userId])
             }
-            uiContext.performGroupedBlock {
-                userAssetID.user.notifyNewSmallImageData(response.imageData, searchUserObserverCenter: self.uiContext.searchUserObserverCenter)
-            }
-            userIDsTable.removeAllEntries(with: [userAssetID.userId])
         }
         else if (response.result == .permanentError) {
             userIDsTable.removeAllEntries(with: [userAssetID.userId])

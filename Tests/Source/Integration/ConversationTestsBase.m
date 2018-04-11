@@ -96,7 +96,7 @@
 
 - (void)testThatItSendsANotificationInConversation:(MockConversation *)mockConversation
                                     ignoreLastRead:(BOOL)ignoreLastRead
-                        onRemoteMessageCreatedWith:(void(^)())createMessage
+                        onRemoteMessageCreatedWith:(void(^)(void))createMessage
                                             verify:(void(^)(ZMConversation *))verifyConversation
 {
     // given
@@ -137,7 +137,7 @@
 }
 
 - (void)testThatItSendsANotificationInConversation:(MockConversation *)mockConversation
-                        onRemoteMessageCreatedWith:(void(^)())createMessage
+                        onRemoteMessageCreatedWith:(void(^)(void))createMessage
                                 verifyWithObserver:(void(^)(ZMConversation *, ConversationChangeObserver *))verifyConversation;
 {
     [self testThatItSendsANotificationInConversation:mockConversation
@@ -147,8 +147,8 @@
 }
 
 - (void)testThatItSendsANotificationInConversation:(MockConversation *)mockConversation
-                                   afterLoginBlock:(void(^)())afterLoginBlock
-                        onRemoteMessageCreatedWith:(void(^)())createMessage
+                                   afterLoginBlock:(void(^)(void))afterLoginBlock
+                        onRemoteMessageCreatedWith:(void(^)(void))createMessage
                                 verifyWithObserver:(void(^)(ZMConversation *, ConversationChangeObserver *))verifyConversation;
 {
     // given
