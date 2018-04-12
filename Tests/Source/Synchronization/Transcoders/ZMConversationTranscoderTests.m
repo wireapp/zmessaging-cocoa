@@ -1417,7 +1417,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                                      [user2.remoteIdentifier transportString],
                                                      [user3.remoteIdentifier transportString]
                                                      ]];
-        XCTAssertEqualObjects([NSSet setWithArray:request.payload[@"users"]], expectedUsers);
+        XCTAssertEqualObjects([NSSet setWithArray:request.payload.asDictionary[@"users"]], expectedUsers);
     }];
 }
 
@@ -1456,8 +1456,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertEqual(ZMMethodPOST, request.method);
 
         NSSet *expectedUsers = [users mapWithBlock:^NSString *(ZMUser *user) { return user.remoteIdentifier.transportString; }].set;
-        XCTAssertEqualObjects([NSSet setWithArray:request.payload[@"users"]], expectedUsers);
-        XCTAssertEqualObjects(request.payload[@"name"], name);
+        XCTAssertEqualObjects([NSSet setWithArray:request.payload.asDictionary[@"users"]], expectedUsers);
+        XCTAssertEqualObjects(request.payload.asDictionary[@"name"], name);
     }];
 }
 
@@ -1481,8 +1481,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertEqual(ZMMethodPOST, request.method);
 
         NSSet *expected = [users mapWithBlock:^NSString *(ZMUser *user) { return user.remoteIdentifier.transportString; }].set;
-        XCTAssertEqualObjects([NSSet setWithArray:request.payload[@"users"]], expected);
-        NSDictionary *teamPayload = request.payload[@"team"];
+        XCTAssertEqualObjects([NSSet setWithArray:request.payload.asDictionary[@"users"]], expected);
+        NSDictionary *teamPayload = request.payload.asDictionary[@"team"];
         Team *team = [ZMUser selfUserInContext:self.syncMOC].team;
         XCTAssertNotNil(team);
         XCTAssertEqualObjects(teamPayload[@"teamid"], team.remoteIdentifier.transportString);
@@ -1510,9 +1510,9 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertEqual(ZMMethodPOST, request.method);
 
     NSSet *expected = [users mapWithBlock:^NSString *(ZMUser *user) { return user.remoteIdentifier.transportString; }].set;
-    XCTAssertEqualObjects([NSSet setWithArray:request.payload[@"users"]], expected);
-    XCTAssertEqualObjects(request.payload[@"name"], name);
-    NSDictionary *teamPayload = request.payload[@"team"];
+    XCTAssertEqualObjects([NSSet setWithArray:request.payload.asDictionary[@"users"]], expected);
+    XCTAssertEqualObjects(request.payload.asDictionary[@"name"], name);
+    NSDictionary *teamPayload = request.payload.asDictionary[@"team"];
     Team *team = [ZMUser selfUserInContext:self.syncMOC].team;
     XCTAssertNotNil(team);
 
@@ -1939,7 +1939,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                                      [user1.remoteIdentifier transportString],
                                                      [user2.remoteIdentifier transportString],
                                                      ]];
-        XCTAssertEqualObjects([NSSet setWithArray:request.payload[@"users"]], expectedUsers);
+        XCTAssertEqualObjects([NSSet setWithArray:request.payload.asDictionary[@"users"]], expectedUsers);
     }];
 }
 

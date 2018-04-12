@@ -125,6 +125,6 @@ extension NSRegularExpression {
             return false
         }
         
-        return self.matches(in: string, options: [], range: NSRange(location: 0, length: string.characters.count)).count > 0
+        return !self.matches(in: string, options: [], range: NSRange(location: 0, length: string.count)).isEmpty
     }
 }

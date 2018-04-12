@@ -126,7 +126,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [sut tearDown];
 }
 
-- (void)expectAuthenticationSucceedAfter:(void(^)())block;
+- (void)expectAuthenticationSucceedAfter:(void(^)(void))block;
 {
     id mockAuthStatus = [OCMockObject partialMockForObject:self.authenticationStatus];
     [[[mockAuthStatus expect] andForwardToRealObject] loginSucceededWithResponse:OCMOCK_ANY];
@@ -138,7 +138,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     [mockAuthStatus verify];
 }
 
-- (void)expectAuthenticationFailedWithError:(ZMUserSessionErrorCode)code after:(void(^)())block;
+- (void)expectAuthenticationFailedWithError:(ZMUserSessionErrorCode)code after:(void(^)(void))block;
 {
     //expect
     __block BOOL notified = NO;
@@ -159,7 +159,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 //    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
 }
 
-- (void)expectRegistrationSucceedAfter:(void(^)())block;
+- (void)expectRegistrationSucceedAfter:(void(^)(void))block;
 {
     //expect
     __block BOOL notified = NO;
@@ -177,7 +177,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     token = nil;
 }
 
-- (void)expectRegistrationFailedWithError:(ZMUserSessionErrorCode)code after:(void(^)())block;
+- (void)expectRegistrationFailedWithError:(ZMUserSessionErrorCode)code after:(void(^)(void))block;
 {
     //expect
     __block BOOL notified = NO;

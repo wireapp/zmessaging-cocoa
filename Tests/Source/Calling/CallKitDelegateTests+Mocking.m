@@ -26,7 +26,7 @@
 + (void)mockUserSession:(id)userSession
 {    
     [(id)[userSession stub] performChanges:[OCMArg checkWithBlock:^BOOL(id param) {
-        void (^passedBlock)() = param;
+        void (^passedBlock)(void) = param;
         passedBlock();
         return YES;
     }]];

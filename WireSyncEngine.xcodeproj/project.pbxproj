@@ -410,6 +410,7 @@
 		F1C1F3F01FCF18C5007273E3 /* NSError+Localized.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C1F3EF1FCF18C5007273E3 /* NSError+Localized.swift */; };
 		F1C51FE71FB49660009C2269 /* RegistrationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C51FE61FB49660009C2269 /* RegistrationStatus.swift */; };
 		F1C51FE91FB4A9C7009C2269 /* TeamRegistrationStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C51FE81FB4A9C7009C2269 /* TeamRegistrationStrategy.swift */; };
+		F1E48003207E3789008D4299 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F1E48002207E3789008D4299 /* Default-568h@2x.png */; };
 		F1EB0E78200501C70040D73E /* NotificationsTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1EB0E77200501C70040D73E /* NotificationsTracker.swift */; };
 		F1FE8027200684F200A438CF /* NotificationsTrackingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1FE8025200684DB00A438CF /* NotificationsTrackingTests.swift */; };
 		F905C47F1E79A86A00AF34A5 /* WireCallCenterV3Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F905C47E1E79A86A00AF34A5 /* WireCallCenterV3Tests.swift */; };
@@ -543,8 +544,6 @@
 		0932EA431AE5514100D1BFD1 /* ZMPhoneNumberVerificationTranscoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMPhoneNumberVerificationTranscoder.h; sourceTree = "<group>"; };
 		0932EA441AE5514100D1BFD1 /* ZMPhoneNumberVerificationTranscoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMPhoneNumberVerificationTranscoder.m; sourceTree = "<group>"; };
 		093694441BA9633300F36B3A /* UserClientRequestFactoryTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserClientRequestFactoryTests.swift; sourceTree = "<group>"; };
-		094CDBEB1B84CFC8004AD7BF /* WireSyncEngine-ios-test-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "WireSyncEngine-ios-test-target.xcconfig"; sourceTree = "<group>"; };
-		094CDBEC1B84CFDB004AD7BF /* libs.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = libs.xcconfig; sourceTree = "<group>"; };
 		09531F131AE960E300B8556A /* ZMLoginCodeRequestTranscoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMLoginCodeRequestTranscoder.h; sourceTree = "<group>"; };
 		09531F141AE960E300B8556A /* ZMLoginCodeRequestTranscoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMLoginCodeRequestTranscoder.m; sourceTree = "<group>"; };
 		09531F1A1AE9644800B8556A /* ZMLoginCodeRequestTranscoderTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMLoginCodeRequestTranscoderTests.m; sourceTree = "<group>"; };
@@ -554,18 +553,13 @@
 		0994E1DD1B835C4900A51721 /* ios-test-host.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "ios-test-host.xcconfig"; sourceTree = "<group>"; };
 		0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "ios-test-target.xcconfig"; sourceTree = "<group>"; };
 		0994E1DF1B835C4900A51721 /* ios.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ios.xcconfig; sourceTree = "<group>"; };
-		0994E1E01B835C4900A51721 /* osx-test-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "osx-test-target.xcconfig"; sourceTree = "<group>"; };
-		0994E1E11B835C4900A51721 /* osx.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = osx.xcconfig; sourceTree = "<group>"; };
 		0994E1E21B835C4900A51721 /* project-common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "project-common.xcconfig"; sourceTree = "<group>"; };
 		0994E1E31B835C4900A51721 /* project-debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "project-debug.xcconfig"; sourceTree = "<group>"; };
 		0994E1E41B835C4900A51721 /* project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = project.xcconfig; sourceTree = "<group>"; };
-		0994E1E61B835C4900A51721 /* simulator.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = simulator.xcconfig; sourceTree = "<group>"; };
 		0994E1E71B835C4900A51721 /* swift.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = swift.xcconfig; sourceTree = "<group>"; };
 		0994E1E81B835C4900A51721 /* tests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = tests.xcconfig; sourceTree = "<group>"; };
 		0994E1E91B835C4900A51721 /* warnings-debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "warnings-debug.xcconfig"; sourceTree = "<group>"; };
 		0994E1EA1B835C4900A51721 /* warnings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = warnings.xcconfig; sourceTree = "<group>"; };
-		0994E1EE1B835C4900A51721 /* WireSyncEngine-ios.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "WireSyncEngine-ios.xcconfig"; sourceTree = "<group>"; };
-		0994E1EF1B835C4900A51721 /* WireSyncEngine-osx.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "WireSyncEngine-osx.xcconfig"; sourceTree = "<group>"; };
 		0994E1F01B835C4900A51721 /* WireSyncEngine.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = WireSyncEngine.xcconfig; sourceTree = "<group>"; };
 		0994E1F11B835D1100A51721 /* version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = version.xcconfig; sourceTree = "<group>"; };
 		09B730891B301F0200A5CCC9 /* ZMUserSession+Proxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "ZMUserSession+Proxy.m"; sourceTree = "<group>"; };
@@ -1043,6 +1037,7 @@
 		F1C1F3EF1FCF18C5007273E3 /* NSError+Localized.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSError+Localized.swift"; sourceTree = "<group>"; };
 		F1C51FE61FB49660009C2269 /* RegistrationStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationStatus.swift; sourceTree = "<group>"; };
 		F1C51FE81FB4A9C7009C2269 /* TeamRegistrationStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamRegistrationStrategy.swift; sourceTree = "<group>"; };
+		F1E48002207E3789008D4299 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		F1EB0E77200501C70040D73E /* NotificationsTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsTracker.swift; sourceTree = "<group>"; };
 		F1FE8025200684DB00A438CF /* NotificationsTrackingTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationsTrackingTests.swift; sourceTree = "<group>"; };
 		F905C47E1E79A86A00AF34A5 /* WireCallCenterV3Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WireCallCenterV3Tests.swift; sourceTree = "<group>"; };
@@ -1214,12 +1209,9 @@
 				0994E1DD1B835C4900A51721 /* ios-test-host.xcconfig */,
 				0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */,
 				0994E1DF1B835C4900A51721 /* ios.xcconfig */,
-				0994E1E01B835C4900A51721 /* osx-test-target.xcconfig */,
-				0994E1E11B835C4900A51721 /* osx.xcconfig */,
 				0994E1E21B835C4900A51721 /* project-common.xcconfig */,
 				0994E1E31B835C4900A51721 /* project-debug.xcconfig */,
 				0994E1E41B835C4900A51721 /* project.xcconfig */,
-				0994E1E61B835C4900A51721 /* simulator.xcconfig */,
 				0994E1E71B835C4900A51721 /* swift.xcconfig */,
 				0994E1E81B835C4900A51721 /* tests.xcconfig */,
 				0994E1E91B835C4900A51721 /* warnings-debug.xcconfig */,
@@ -1302,6 +1294,7 @@
 				3E1860B6191A5D99000FE027 /* TestHost-main.m */,
 				3E1860B7191A5D99000FE027 /* TestHostAppDelegate.h */,
 				3E1860B8191A5D99000FE027 /* TestHostAppDelegate.m */,
+				F1E48002207E3789008D4299 /* Default-568h@2x.png */,
 				3E9848BC1A65253000F7B050 /* Hack.swift */,
 				872C995A1DB65D0D006A3BDE /* harp.m4a */,
 				872C99571DB659E6006A3BDE /* ringing_from_them_long.caf */,
@@ -1313,12 +1306,8 @@
 			isa = PBXGroup;
 			children = (
 				0994E1DB1B835C4900A51721 /* zmc-config */,
-				0994E1EE1B835C4900A51721 /* WireSyncEngine-ios.xcconfig */,
-				0994E1EF1B835C4900A51721 /* WireSyncEngine-osx.xcconfig */,
 				0994E1F01B835C4900A51721 /* WireSyncEngine.xcconfig */,
 				0994E1F11B835D1100A51721 /* version.xcconfig */,
-				094CDBEB1B84CFC8004AD7BF /* WireSyncEngine-ios-test-target.xcconfig */,
-				094CDBEC1B84CFDB004AD7BF /* libs.xcconfig */,
 			);
 			path = Configurations;
 			sourceTree = "<group>";
@@ -2326,7 +2315,7 @@
 			attributes = {
 				LastSwiftMigration = 0710;
 				LastSwiftUpdateCheck = 0700;
-				LastUpgradeCheck = 0830;
+				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = "Zeta Project Gmbh";
 				TargetAttributes = {
 					3E186087191A56F6000FE027 = {
@@ -2399,6 +2388,7 @@
 			files = (
 				872C995B1DB65D0D006A3BDE /* harp.m4a in Resources */,
 				872C99591DB659E6006A3BDE /* ringing_from_them_long.caf in Resources */,
+				F1E48003207E3789008D4299 /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2996,31 +2986,12 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0994E1DD1B835C4900A51721 /* ios-test-host.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_ENTITLEMENTS = "WireSyncEngine Test Host.entitlements";
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
-				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/Carthage/Build/iOS",
-				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Tests/iOS Test Host/Test-Host-Prefix.pch";
-				HEADER_SEARCH_PATHS = "$(SDKROOT)/usr/include/libxml2";
 				INFOPLIST_FILE = "Tests/iOS Test Host/Test-Host-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 3.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -3029,105 +3000,40 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0994E1DD1B835C4900A51721 /* ios-test-host.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_ENTITLEMENTS = "WireSyncEngine Test Host.entitlements";
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
-				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/Carthage/Build/iOS",
-				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Tests/iOS Test Host/Test-Host-Prefix.pch";
-				HEADER_SEARCH_PATHS = "$(SDKROOT)/usr/include/libxml2";
 				INFOPLIST_FILE = "Tests/iOS Test Host/Test-Host-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
-				SWIFT_VERSION = 3.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALIDATE_PRODUCT = YES;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
 		};
 		3E1860D3191A649D000FE027 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 094CDBEB1B84CFC8004AD7BF /* WireSyncEngine-ios-test-target.xcconfig */;
+			baseConfigurationReference = 0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/WireSyncEngine Test Host.app/WireSyncEngine Test Host";
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Carthage/Build/iOS",
-				);
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_WARN_ABOUT_MISSING_NEWLINE = NO;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(CRYPTO_INCLUDE)",
-					"$(SDKROOT)/usr/include/libxml2",
-				);
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				INFOPLIST_FILE = "$(SRCROOT)/Tests/Resources/Tests-ios-Info.plist";
-				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-framework",
-					XCTest,
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.WireSyncEngine-Test-Host";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/Tests/Source/Test-Bridging-Header.h";
-				SWIFT_VERSION = 3.0;
-				TEST_HOST = "$(BUNDLE_LOADER)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WireSyncEngine Test Host.app/WireSyncEngine Test Host";
 				WRAPPER_EXTENSION = xctest;
 			};
 			name = Debug;
 		};
 		3E1860D4191A649D000FE027 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 094CDBEB1B84CFC8004AD7BF /* WireSyncEngine-ios-test-target.xcconfig */;
+			baseConfigurationReference = 0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/WireSyncEngine Test Host.app/WireSyncEngine Test Host";
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Carthage/Build/iOS",
-				);
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_WARN_ABOUT_MISSING_NEWLINE = NO;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(CRYPTO_INCLUDE)",
-					"$(SDKROOT)/usr/include/libxml2",
-				);
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				INFOPLIST_FILE = "$(SRCROOT)/Tests/Resources/Tests-ios-Info.plist";
-				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-framework",
-					XCTest,
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.WireSyncEngine-Test-Host";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/Tests/Source/Test-Bridging-Header.h";
-				SWIFT_VERSION = 3.0;
-				TEST_HOST = "$(BUNDLE_LOADER)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WireSyncEngine Test Host.app/WireSyncEngine Test Host";
 				WRAPPER_EXTENSION = xctest;
 			};
 			name = Release;
@@ -3136,13 +3042,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0994E1E31B835C4900A51721 /* project-debug.xcconfig */;
 			buildSettings = {
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				ENABLE_TESTABILITY = YES;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
 		};
@@ -3150,67 +3049,28 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0994E1E41B835C4900A51721 /* project.xcconfig */;
 			buildSettings = {
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				GCC_NO_COMMON_BLOCKS = YES;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 			};
 			name = Release;
 		};
 		549815A71A43232500A7CE2E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0994E1EE1B835C4900A51721 /* WireSyncEngine-ios.xcconfig */;
+			baseConfigurationReference = 0994E1F01B835C4900A51721 /* WireSyncEngine.xcconfig */;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				DEVELOPMENT_TEAM = "";
-				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Carthage/Build/iOS",
-				);
 				GCC_PREFIX_HEADER = "$(SRCROOT)/Source/WireSyncEngine-iOS.pch";
-				GCC_WARN_ABOUT_MISSING_NEWLINE = NO;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(CRYPTO_INCLUDE)",
-					"$(SDKROOT)/usr/include/libxml2",
-				);
 				INFOPLIST_FILE = "$(SRCROOT)/Resources/WireSyncEngine-ios-Info.plist";
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
-				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.$(PRODUCT_NAME:rfc1034identifier)";
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Source/AVS";
-				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
 		549815A91A43232500A7CE2E /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0994E1EE1B835C4900A51721 /* WireSyncEngine-ios.xcconfig */;
+			baseConfigurationReference = 0994E1F01B835C4900A51721 /* WireSyncEngine.xcconfig */;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				DEVELOPMENT_TEAM = "";
-				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Carthage/Build/iOS",
-				);
 				GCC_PREFIX_HEADER = "$(SRCROOT)/Source/WireSyncEngine-iOS.pch";
-				GCC_WARN_ABOUT_MISSING_NEWLINE = NO;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(CRYPTO_INCLUDE)",
-					"$(SDKROOT)/usr/include/libxml2",
-				);
 				INFOPLIST_FILE = "$(SRCROOT)/Resources/WireSyncEngine-ios-Info.plist";
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
-				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.$(PRODUCT_NAME:rfc1034identifier)";
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Source/AVS";
-				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};

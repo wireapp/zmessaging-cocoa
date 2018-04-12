@@ -31,7 +31,7 @@ final public class SearchUserAndAsset: NSObject {
     }
 
     var userId: UUID {
-        return user.remoteIdentifier
+        return user.remoteIdentifier!
     }
 
     public init(searchUser: ZMSearchUser) {
@@ -112,7 +112,7 @@ final public class SearchUserAndAsset: NSObject {
             let previous = self.entries[directory]
             let userIdsToPrevious = previous?.dictionary { ($0.userId, $0) }
             self.entries[directory] = Set(users.map {
-                if let previous = userIdsToPrevious?[$0.remoteIdentifier] {
+                if let previous = userIdsToPrevious?[$0.remoteIdentifier!] {
                     return previous
                 }
                 else if let assetKeyObject = ZMSearchUser.searchUserToMediumAssetIDCache().object(forKey: $0.remoteIdentifier as AnyObject) as? SearchUserAssetObjC,

@@ -43,7 +43,7 @@ public protocol CallProperties : NSObjectProtocol {
     
     var state: CallState { get }
     
-    weak var conversation : ZMConversation? { get }
+    var conversation : ZMConversation? { get }
     
     /// The date and time of current call start
     var callStartDate : Date? { get }
