@@ -158,7 +158,6 @@ static ZMReachability *sharedReachabilityMock = nil;
     
     ZM_WEAK(self);
     void(^recordProcessedEvents)(NSInvocation *) = ^(NSInvocation * invocation) {
-//        NOT_USED(invocation);
         ZM_STRONG(self);
         __unsafe_unretained NSArray *events;
         [invocation getArgument:&events atIndex:2];

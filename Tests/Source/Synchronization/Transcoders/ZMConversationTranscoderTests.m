@@ -1957,7 +1957,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.conversationType = ZMConversationTypeGroup;
         conversation.remoteIdentifier = conversationID;
         [conversation internalAddParticipants:[NSSet setWithObjects:removedUser, nonRemovedUser, nil]];
-//        [conversation addParticipant:nonRemovedUser];
         
         XCTAssertEqual(conversation.lastServerSyncedActiveParticipants.count, 2u);
     }];

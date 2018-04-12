@@ -71,7 +71,7 @@ extension ZMConversation {
                 
                 completion(.success)
             }
-            else if  response.httpStatus == 204 {
+            else if response.httpStatus == 204 {
                 completion(.success) // users were already added to the conversation
             }
             else {
