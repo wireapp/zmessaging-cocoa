@@ -25,10 +25,6 @@
 DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
 VALIDATE_PRODUCT = YES
 
-// Packaging
-//
-INFOPLIST_PREPROCESS = YES
-
 // Deployment
 //
 COPY_PHASE_STRIP = YES
