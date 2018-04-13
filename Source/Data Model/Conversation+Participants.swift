@@ -109,7 +109,7 @@ extension ZMConversation {
                 
                 completion(.success)
             }
-            else if  response.httpStatus == 204 {
+            else if response.httpStatus == 204 {
                 completion(.success) // user was already not part of conversation
             }
             else {
