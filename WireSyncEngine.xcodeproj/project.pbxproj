@@ -25,9 +25,6 @@
 		09BCDB8E1BCE7F000020DCC7 /* ZMAPSMessageDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 09BCDB8C1BCE7F000020DCC7 /* ZMAPSMessageDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		09BCDB8F1BCE7F000020DCC7 /* ZMAPSMessageDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 09BCDB8D1BCE7F000020DCC7 /* ZMAPSMessageDecoder.m */; };
 		09C77C531BA6C77000E2163F /* UserClientRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09C77C521BA6C77000E2163F /* UserClientRequestStrategy.swift */; };
-		09CC4AAA1B7C884900201C63 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 09CC4AA91B7C884900201C63 /* libz.dylib */; };
-		09CC4AAC1B7C885100201C63 /* libbz2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 09CC4AAB1B7C885100201C63 /* libbz2.dylib */; };
-		09CC4AAE1B7C885800201C63 /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 09CC4AAD1B7C885800201C63 /* libc++.dylib */; };
 		09D7A88A1AE7E591008F190C /* ZMPhoneNumberVerificationTranscoderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 09D7A8881AE7E591008F190C /* ZMPhoneNumberVerificationTranscoderTests.m */; };
 		09D7CE641AE94D4200CC5F45 /* ZMCredentials+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 09D7CE621AE94D4200CC5F45 /* ZMCredentials+Internal.h */; };
 		09E393BB1BAB0BB500F3EA1B /* ZMUserSession+OTR.h in Headers */ = {isa = PBXBuildFile; fileRef = 09E393B91BAB0BB500F3EA1B /* ZMUserSession+OTR.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -570,12 +567,7 @@
 		09B978F31B679B6200A30B38 /* OCMock.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OCMock.framework; path = Carthage/Build/iOS/OCMock.framework; sourceTree = "<group>"; };
 		09BCDB8C1BCE7F000020DCC7 /* ZMAPSMessageDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMAPSMessageDecoder.h; sourceTree = "<group>"; };
 		09BCDB8D1BCE7F000020DCC7 /* ZMAPSMessageDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMAPSMessageDecoder.m; sourceTree = "<group>"; };
-		09C77C431BA2FB8E00E2163F /* libcryptobox.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcryptobox.a; path = "Carthage/Checkouts/cryptobox-ios/build/lib/libcryptobox.a"; sourceTree = "<group>"; };
-		09C77C441BA2FB8E00E2163F /* libsodium.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsodium.a; path = "Carthage/Checkouts/cryptobox-ios/build/lib/libsodium.a"; sourceTree = "<group>"; };
 		09C77C521BA6C77000E2163F /* UserClientRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserClientRequestStrategy.swift; sourceTree = "<group>"; };
-		09CC4AA91B7C884900201C63 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.4.sdk/usr/lib/libz.dylib; sourceTree = DEVELOPER_DIR; };
-		09CC4AAB1B7C885100201C63 /* libbz2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.4.sdk/usr/lib/libbz2.dylib; sourceTree = DEVELOPER_DIR; };
-		09CC4AAD1B7C885800201C63 /* libc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++.dylib"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.4.sdk/usr/lib/libc++.dylib"; sourceTree = DEVELOPER_DIR; };
 		09CC4AB71B7CB8B700201C63 /* Cartfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Cartfile; sourceTree = "<group>"; };
 		09CC4AB81B7CB8BF00201C63 /* Cartfile.private */ = {isa = PBXFileReference; lastKnownFileType = text; path = Cartfile.private; sourceTree = "<group>"; };
 		09D7A8881AE7E591008F190C /* ZMPhoneNumberVerificationTranscoderTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMPhoneNumberVerificationTranscoderTests.m; sourceTree = "<group>"; };
@@ -1180,11 +1172,8 @@
 			files = (
 				D59F3A1020691A0F0023474F /* ZipArchive.framework in Frameworks */,
 				CE5DC1A11DDA09F000D24DBA /* avs.framework in Frameworks */,
-				09CC4AAE1B7C885800201C63 /* libc++.dylib in Frameworks */,
-				09CC4AAC1B7C885100201C63 /* libbz2.dylib in Frameworks */,
 				54E03A631E93CEED0089AC69 /* WireImages.framework in Frameworks */,
 				54E03A6C1E93CEED0089AC69 /* WireUtilities.framework in Frameworks */,
-				09CC4AAA1B7C884900201C63 /* libz.dylib in Frameworks */,
 				5442A7321E42244C00415104 /* libPhoneNumberiOS.framework in Frameworks */,
 				54E03A681E93CEED0089AC69 /* WireRequestStrategy.framework in Frameworks */,
 				54E03A641E93CEED0089AC69 /* WireLinkPreview.framework in Frameworks */,
@@ -1437,11 +1426,6 @@
 				CE5DC1A01DDA09F000D24DBA /* avs.framework */,
 				5442A7311E42244C00415104 /* libPhoneNumberiOS.framework */,
 				CE99C4A11D37ACC60001D297 /* Ono.framework */,
-				09C77C431BA2FB8E00E2163F /* libcryptobox.a */,
-				09C77C441BA2FB8E00E2163F /* libsodium.a */,
-				09CC4AAD1B7C885800201C63 /* libc++.dylib */,
-				09CC4AAB1B7C885100201C63 /* libbz2.dylib */,
-				09CC4AA91B7C884900201C63 /* libz.dylib */,
 				1E16CE861BF4BC5F00336616 /* ProtocolBuffers.framework */,
 				09B978F31B679B6200A30B38 /* OCMock.framework */,
 			);
