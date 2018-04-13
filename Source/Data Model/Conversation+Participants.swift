@@ -34,7 +34,7 @@ import Foundation
  }
  
  public enum ConversationAddParticipantsError: Error {
-    case unknown, invalidOperation, accessDenied, notConnectedToUser, conversationNotFound
+    case unknown, invalidOperation, accessDenied, notConnectedToUser, conversationNotFound, tooManyMembers
     
     init?(response: ZMTransportResponse) {
         switch (response.httpStatus, response.payloadLabel()) {
@@ -42,6 +42,7 @@ import Foundation
         case (403, "access-denied"?): self = .accessDenied
         case (403, "not-connected"?): self = .notConnectedToUser
         case (404, "no-conversation"?): self = .conversationNotFound
+        case (403, "too-many-members"?): self = .tooManyMembers
         case (400..<499, _): self = .unknown
         default: return nil
         }
