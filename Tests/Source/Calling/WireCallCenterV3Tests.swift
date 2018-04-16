@@ -405,12 +405,28 @@ class WireCallCenterV3Tests: MessagingTest {
         }
     }
     
-    func testThatCBRIsEnabledOnAudioCBRChangeHandler() {
+    func testThatCBRIsEnabledOnAudioCBRChangeHandler_whenCallIsEstablished() {
         // given
         let context = Unmanaged.passUnretained(self.sut).toOpaque()
         WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         WireSyncEngine.establishedCallHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        WireSyncEngine.constantBitRateChangeHandler(userId: otherUserIDRef, enabled: 1, contextRef: context)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertTrue(sut.isContantBitRate(conversationId: oneOnOneConversationID))
+    }
+    
+    func testThatCBRIsEnabledOnAudioCBRChangeHandler_whenDataChannelIsEstablished() {
+        // given
+        let context = Unmanaged.passUnretained(self.sut).toOpaque()
+        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        WireSyncEngine.dataChannelEstablishedHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when

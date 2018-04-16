@@ -147,6 +147,8 @@ public enum CallState : Equatable {
             return lDegraded == rDegraded
         case (.none, .none):
             fallthrough
+        case (.establishedDataChannel, .establishedDataChannel):
+            fallthrough
         case (.established, .established):
             fallthrough
         case (.terminating, .terminating):
