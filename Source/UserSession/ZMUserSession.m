@@ -282,6 +282,7 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.blackList teardown];
     
     __block NSMutableArray *keysToRemove = [NSMutableArray array];
+    [self.managedObjectContext zm_teardownMessageDeletionTimer];
     [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {
         if ([obj respondsToSelector:@selector((tearDown))]) {
             [obj tearDown];
@@ -291,6 +292,7 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.managedObjectContext.userInfo removeObjectsForKeys:keysToRemove];
     [keysToRemove removeAllObjects];
     [self.syncManagedObjectContext performBlockAndWait:^{
+        [self.syncManagedObjectContext zm_teardownMessageObfuscationTimer];
         [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {
             if ([obj respondsToSelector:@selector((tearDown))]) {
                 [obj tearDown];
