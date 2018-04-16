@@ -80,9 +80,9 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItCreatesABackupIncludingMetadataAndZipsIt() throws {
         // Given
         XCTAssert(login())
-        createSelfClient()
-        
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+//        createSelfClient()
+        establishSession(with: user1)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // When
         let result = backupActiveAcount(password: "12345678")
@@ -119,8 +119,8 @@ class SessionManagerTests_Backup: IntegrationTest {
         // Given
         XCTAssert(login())
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        createSelfClient()
-        
+//        createSelfClient()
+        establishSession(with: user1)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         let backupResult = backupActiveAcount(password: name!)
@@ -145,8 +145,8 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItReturnsAnErrorWhenImportingFileWithWrongPathExtension() throws {
         // Given
         XCTAssert(login())
-        createSelfClient()
-        
+//        createSelfClient()
+        establishSession(with: user1)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         try FileManager.default.createDirectory(atPath: backupURL.path, withIntermediateDirectories: true, attributes: nil)
@@ -167,7 +167,8 @@ class SessionManagerTests_Backup: IntegrationTest {
         // Given
         XCTAssert(login())
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        createSelfClient()
+//        createSelfClient()
+        establishSession(with: user1)
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
@@ -192,7 +193,8 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItDeletesABackup() {
         // Given
         XCTAssert(login())
-        createSelfClient()
+//        createSelfClient()
+        establishSession(with: user1)
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
@@ -214,7 +216,8 @@ class SessionManagerTests_Backup: IntegrationTest {
     func DISABLED_testThatItDeletesOldEphemeralMessagesWhenRestoringFromABackup() {
         // Given
         XCTAssert(login())
-        createSelfClient()
+//        createSelfClient()
+        establishSession(with: user1)
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         let nonce = UUID.create()
