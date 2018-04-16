@@ -90,7 +90,7 @@ class ZMLocalNotificationTests: MessagingTest {
             conversation.isSilenced = isSilenced
             conversation.lastServerTimeStamp = Date()
             conversation.lastReadServerTimeStamp = conversation.lastServerTimeStamp
-            if !isEmpty { conversation.mutableOtherActiveParticipants.addObjects(from: [self.sender, self.otherUser1]) }
+            if !isEmpty { conversation.mutableLastServerSyncedActiveParticipants.addObjects(from: [self.sender, self.otherUser1]) }
             self.syncMOC.saveOrRollback()
         }
         return conversation

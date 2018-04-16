@@ -40,7 +40,7 @@
     }
 
     NSMutableSet *activeUsersUUID = [NSMutableSet set];
-    for(ZMUser *user in self.otherActiveParticipants) {
+    for(ZMUser *user in self.lastServerSyncedActiveParticipants) {
         [activeUsersUUID addObject:user.remoteIdentifier];
     }
     NSMutableSet *mockActiveUsersUUID = [NSMutableSet set];

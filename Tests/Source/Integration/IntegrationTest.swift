@@ -436,8 +436,8 @@ extension IntegrationTest {
     
     @objc(userForMockUser:)
     func user(for mockUser: MockUser) -> ZMUser? {
-        let uuid = mockUser.managedObjectContext!.performGroupedBlockAndWait {
-            mockUser.identifier.uuid()
+        let uuid = mockUser.managedObjectContext!.performGroupedAndWait { _ in
+            return mockUser.identifier.uuid()
         }
         let data = (uuid as NSUUID).data() as NSData
         let predicate = NSPredicate(format: "remoteIdentifier_data == %@", data)
@@ -453,8 +453,8 @@ extension IntegrationTest {
     
     @objc(conversationForMockConversation:)
     func conversation(for mockConversation: MockConversation) -> ZMConversation? {
-        let uuid = mockConversation.managedObjectContext!.performGroupedBlockAndWait {
-            mockConversation.identifier.uuid()
+        let uuid = mockConversation.managedObjectContext!.performGroupedAndWait { _ in
+            return mockConversation.identifier.uuid()
         }
         let data = (uuid as NSUUID).data() as NSData
         let predicate = NSPredicate(format: "remoteIdentifier_data == %@", data)

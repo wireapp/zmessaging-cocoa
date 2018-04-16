@@ -81,8 +81,11 @@ static ZMReachability *sharedReachabilityMock = nil;
 @property (nonatomic) NSUUID *userIdentifier;
 @property (nonatomic) NSURL *sharedContainerURL;
 @property (nonatomic) OperationStatus *mockOperationStatus;
+@property (nonatomic) NSMutableArray<ZMUpdateEvent *> *processedUpdateEvents;
 
 @property (nonatomic) MockTransportSession *mockTransportSession;
+@property (nonatomic) id mockOperationLoop;
+@property (nonatomic) id mockSyncStrategy;
 
 @property (nonatomic) NSTimeInterval originalConversationLastReadTimestampTimerValue; // this will speed up the tests A LOT
 
@@ -142,11 +145,29 @@ static ZMReachability *sharedReachabilityMock = nil;
     
     NSFileManager *fm = NSFileManager.defaultManager;
     NSString *bundleIdentifier = [NSBundle bundleForClass:self.class].bundleIdentifier;
+    self.processedUpdateEvents = [NSMutableArray array];
     self.groupIdentifier = [@"group." stringByAppendingString:bundleIdentifier];
     self.userIdentifier = [NSUUID UUID];
     self.sharedContainerURL = [fm containerURLForSecurityApplicationGroupIdentifier:self.groupIdentifier];
     self.mockOperationStatus = [[OperationStatus alloc] init];
     self.mockOperationStatus.isInBackground = NO;
+    self.mockOperationLoop = [OCMockObject niceMockForClass:ZMOperationLoop.class];
+    self.mockSyncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
+    
+    [[[self.mockOperationLoop stub] andReturn:self.mockSyncStrategy] syncStrategy];
+    
+    ZM_WEAK(self);
+    void(^recordProcessedEvents)(NSInvocation *) = ^(NSInvocation * invocation) {
+        ZM_STRONG(self);
+        __unsafe_unretained NSArray *events;
+        [invocation getArgument:&events atIndex:2];
+        
+        if (events != nil) {
+            [self.processedUpdateEvents addObjectsFromArray:[events copy]];
+        }
+    };
+    
+    [[[self.mockSyncStrategy stub] andDo:recordProcessedEvents] processUpdateEvents:OCMOCK_ANY ignoreBuffer:OCMOCK_ANY];
 
     NSURL *otrFolder = [NSFileManager keyStoreURLForAccountInDirectory:self.accountDirectory createParentIfNeeded:NO];
     [fm removeItemAtURL:otrFolder error: nil];
@@ -213,6 +234,10 @@ static ZMReachability *sharedReachabilityMock = nil;
 
 - (void)tearDown;
 {
+    [self.mockSyncStrategy stopMocking];
+    self.mockSyncStrategy = nil;
+    [self.mockOperationLoop stopMocking];
+    self.mockOperationLoop = nil;
     [(id)_mockUserSession stopMocking];
     _mockUserSession = nil;
     _mockOperationStatus = nil;
@@ -226,7 +251,7 @@ static ZMReachability *sharedReachabilityMock = nil;
     _application = nil;
     self.groupIdentifier = nil;
     self.sharedContainerURL = nil;
-
+    
     [super tearDown];
     Require([self waitForAllGroupsToBeEmptyWithTimeout:5]);
 }
@@ -416,6 +441,7 @@ static ZMReachability *sharedReachabilityMock = nil;
         [[[mockUserSession stub] andReturn:self.searchMOC] searchManagedObjectContext];
         [[[mockUserSession stub] andReturn:self.sharedContainerURL] sharedContainerURL];
         [[[mockUserSession stub] andReturn:self.mockOperationStatus] operationStatus];
+        [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockOperationLoop] operationLoop];
         [[[mockUserSession stub] andReturnValue:@(CallNotificationStylePushNotifications)] callNotificationStyle];
 
         [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockTransportSession] transportSession];
