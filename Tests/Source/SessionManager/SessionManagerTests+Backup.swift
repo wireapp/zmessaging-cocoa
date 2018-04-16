@@ -57,21 +57,6 @@ class SessionManagerTests_Backup: IntegrationTest {
         return backupURL.appendingPathComponent(UUID().uuidString)
     }
     
-    @discardableResult private func createSelfClient() -> UserClient? {
-        var client: UserClient?
-        let identifier = name!
-        guard let context = sessionManager?.activeUserSession?.managedObjectContext else { return nil }
-        context.performGroupedBlockAndWait {
-            client = UserClient.insertNewObject(in: context)
-            client?.remoteIdentifier = identifier
-            client?.user = ZMUser.selfUser(in: context)
-            context.setPersistentStoreMetadata(identifier, key: "PersistedClientId")
-            context.saveOrRollback()
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        return client
-    }
-    
     func testThatItReturnsAnErrorWhenThereIsNoSelectedAccount() {
         let result = backupActiveAcount(password: name!)
         XCTAssertEqual(result.error as? SessionManager.BackupError, .noActiveAccount)
@@ -80,9 +65,6 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItCreatesABackupIncludingMetadataAndZipsIt() throws {
         // Given
         XCTAssert(login())
-        createSelfClient()
-        
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // When
         let result = backupActiveAcount(password: "12345678")
@@ -119,9 +101,6 @@ class SessionManagerTests_Backup: IntegrationTest {
         // Given
         XCTAssert(login())
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        createSelfClient()
-        
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         let backupResult = backupActiveAcount(password: name!)
         guard let url = backupResult.value else { return XCTFail("\(backupResult.error!)") }
@@ -145,9 +124,6 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItReturnsAnErrorWhenImportingFileWithWrongPathExtension() throws {
         // Given
         XCTAssert(login())
-        createSelfClient()
-        
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         try FileManager.default.createDirectory(atPath: backupURL.path, withIntermediateDirectories: true, attributes: nil)
         let dataURL = backupURL.appendingPathComponent("invalid_backup.zip")
@@ -167,9 +143,6 @@ class SessionManagerTests_Backup: IntegrationTest {
         // Given
         XCTAssert(login())
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        createSelfClient()
-        
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         let backupResult = backupActiveAcount(password: "correctpassword")
         guard let url = backupResult.value else { return XCTFail("\(backupResult.error!)") }
@@ -192,9 +165,6 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItDeletesABackup() {
         // Given
         XCTAssert(login())
-        createSelfClient()
-        
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         let result = backupActiveAcount(password: "idontneednopassword")
         guard let url = result.value else { return XCTFail("\(result.error!)") }
@@ -214,9 +184,7 @@ class SessionManagerTests_Backup: IntegrationTest {
     func DISABLED_testThatItDeletesOldEphemeralMessagesWhenRestoringFromABackup() {
         // Given
         XCTAssert(login())
-        createSelfClient()
         
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         let nonce = UUID.create()
         
         do {
