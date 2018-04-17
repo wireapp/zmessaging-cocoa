@@ -54,7 +54,7 @@ public protocol SessionManagerType : class {
     var callNotificationStyle: CallNotificationStyle { get }
     
     func withSession(for account: Account, perform completion: @escaping (ZMUserSession)->())
-    func updateAppIconBadge()
+    func updateAppIconBadge(accountID: UUID, unreadCount: Int)
 
 }
 
@@ -843,12 +843,10 @@ extension SessionManager: ZMConversationListObserver {
         }
     }
     
-    public func updateAppIconBadge() {
+    public func updateAppIconBadge(accountID: UUID, unreadCount: Int) {
         DispatchQueue.main.async {
-            for (accountID, session) in self.backgroundUserSessions {
-                let account = self.accountManager.account(with: accountID)
-                account?.unreadConversationCount = Int(ZMConversation.unreadConversationCount(in: session.managedObjectContext))
-            }
+            let account = self.accountManager.account(with: accountID)
+            account?.unreadConversationCount = unreadCount
             self.application.applicationIconBadgeNumber = self.accountManager.totalUnreadCount
         }
     }

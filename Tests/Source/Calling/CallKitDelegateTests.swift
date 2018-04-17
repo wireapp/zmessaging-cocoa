@@ -42,7 +42,7 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
         }
     }
     
-    func updateAppIconBadge() {
+    func updateAppIconBadge(accountID: UUID, unreadCount: Int) {
         
     }
     

@@ -90,7 +90,9 @@ extension ZMUserSession: PushDispatcherOptionalClient {
         guard let syncMoc = self.syncManagedObjectContext else {
             return
         }
-        
+
+        let accountID = self.storeProvider.userIdentifier;
+
         syncMoc.performGroupedBlock {
             let notAuthenticated = !self.isAuthenticated()
             
@@ -103,7 +105,8 @@ extension ZMUserSession: PushDispatcherOptionalClient {
             // once notification processing is finished, it's safe to update the badge
             let completionHandler: ZMPushNotificationCompletionHandler = { result in
                 completion?(result)
-                self.sessionManager?.updateAppIconBadge()
+                let unreadCount = Int(ZMConversation.unreadConversationCount(in: syncMoc))
+                self.sessionManager?.updateAppIconBadge(accountID: accountID, unreadCount: unreadCount)
             }
             
             self.operationLoop.fetchEvents(fromPushChannelPayload: payload, completionHandler: completionHandler, source: source)
