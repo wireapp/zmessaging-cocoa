@@ -59,7 +59,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) NSMutableArray* observersToken;
-@property (nonatomic) id <LocalStoreProviderProtocol> storeProvider;
 @property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
 
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
@@ -149,7 +148,7 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     self = [super init];
     if(self) {
-        self.storeProvider = storeProvider;
+        _storeProvider = storeProvider;
         self.observersToken = [[NSMutableArray alloc] init];
         
         self.appVersion = appVersion;
@@ -301,7 +300,7 @@ ZM_EMPTY_ASSERTING_INIT()
     }];
     
     NSManagedObjectContext *uiMoc = self.managedObjectContext;
-    self.storeProvider = nil;
+    _storeProvider = nil;
     
     BOOL shouldWaitOnUiMoc = !([NSOperationQueue currentQueue] == [NSOperationQueue mainQueue] && uiMoc.concurrencyType == NSMainQueueConcurrencyType);
     
