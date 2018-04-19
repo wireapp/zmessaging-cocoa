@@ -32,7 +32,7 @@
 extern NSString * const ZMPushChannelIsOpenKey;
 extern NSString * const ZMPushChannelResponseStatusKey;
 
-@interface ZMOperationLoop : NSObject
+@interface ZMOperationLoop : NSObject <TearDownCapable>
 
 @property (nonatomic, readonly) id<ZMApplication> application;
 @property (nonatomic, readonly) ZMTransportSession *transportSession;

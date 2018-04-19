@@ -278,7 +278,7 @@ ZM_EMPTY_ASSERTING_INIT()
     
     [self.localNotificationDispatcher tearDown];
     self.localNotificationDispatcher = nil;
-    [self.blackList teardown];
+    [self.blackList tearDown];
     
     __block NSMutableArray *keysToRemove = [NSMutableArray array];
     [self.managedObjectContext.userInfo enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * ZM_UNUSED stop) {

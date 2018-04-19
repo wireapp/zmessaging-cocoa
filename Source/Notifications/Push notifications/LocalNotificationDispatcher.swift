@@ -39,8 +39,8 @@ public class LocalNotificationDispatcher: NSObject {
     weak var operationStatus: OperationStatus?
 
     let syncMOC: NSManagedObjectContext
-    private(set) var isTornDown: Bool
-    private var observers: [Any] = []
+    fileprivate(set) var isTornDown: Bool
+    fileprivate var observers: [Any] = []
 
     var localNotificationBuffer = [ZMLocalNotification]()
 
@@ -67,13 +67,7 @@ public class LocalNotificationDispatcher: NSObject {
         )
     }
 
-    public func tearDown() {
-        self.isTornDown = true
-        self.observers = []
-        syncMOC.performGroupedBlock { [weak self] in
-            self?.cancelAllNotifications()
-        }
-    }
+
 
     deinit {
         precondition(self.isTornDown)
@@ -124,6 +118,16 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
             let note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
             note.apply(eventNotifications.addObject)
             note.apply(scheduleLocalNotification)
+        }
+    }
+}
+
+extension LocalNotificationDispatcher: TearDownCapable {
+    public func tearDown() {
+        self.isTornDown = true
+        self.observers = []
+        syncMOC.performGroupedBlock { [weak self] in
+            self?.cancelAllNotifications()
         }
     }
 }

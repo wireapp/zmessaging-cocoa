@@ -29,7 +29,7 @@ open class AuthenticatedSessionFactory {
     var apnsEnvironment : ZMAPNSEnvironment?
     let application : ZMApplication
     let environment: ZMBackendEnvironment
-    let reachability: ReachabilityProvider & ReachabilityTearDown
+    let reachability: ReachabilityProvider & TearDownCapable
 
     public init(
         appVersion: String,
@@ -38,7 +38,7 @@ open class AuthenticatedSessionFactory {
         mediaManager: AVSMediaManager,
         flowManager: FlowManagerType,
         environment: ZMBackendEnvironment,
-        reachability: ReachabilityProvider & ReachabilityTearDown,
+        reachability: ReachabilityProvider & TearDownCapable,
         analytics: AnalyticsType? = nil
         ) {
         self.appVersion = appVersion

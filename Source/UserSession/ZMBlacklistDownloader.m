@@ -158,7 +158,7 @@ static NSString * const ExcludeVersionsKey = @"exclude";
     return self;
 }
 
-- (void)teardown
+- (void)tearDown
 {
     if (self.tornDown) {
         return;

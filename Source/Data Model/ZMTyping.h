@@ -18,6 +18,7 @@
 
 
 @import Foundation;
+@import WireUtilities;
 @class ZMUser;
 @class ZMConversation;
 
@@ -32,7 +33,7 @@ extern const NSTimeInterval ZMTypingRelativeSendTimeout;
 
 
 
-@interface ZMTyping : NSObject
+@interface ZMTyping : NSObject <TearDownCapable>
 
 @property (nonatomic) NSTimeInterval timeout;
 

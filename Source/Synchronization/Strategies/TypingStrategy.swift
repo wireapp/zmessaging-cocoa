@@ -109,7 +109,7 @@ public class TypingStrategy : AbstractRequestStrategy {
     fileprivate var typing : ZMTyping!
     fileprivate let typingEventQueue = TypingEventQueue()
     fileprivate var tornDown : Bool = false
-    private var observers: [Any] = []
+    fileprivate var observers: [Any] = []
 
     @available (*, unavailable)
     override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
@@ -146,13 +146,6 @@ public class TypingStrategy : AbstractRequestStrategy {
                                               context: self.managedObjectContext.notificationContext,
                                               using: { [weak self] in self?.shouldClearTypingForConversation(note: $0)})
         )
-    }
-    
-    public func tearDown() {
-        typing.tearDown()
-        typing = nil
-        tornDown = true
-        observers = []
     }
     
     deinit {
@@ -202,6 +195,15 @@ public class TypingStrategy : AbstractRequestStrategy {
         request.setDebugInformationTranscoder(self)
         
         return request
+    }
+}
+
+extension TypingStrategy: TearDownCapable {
+    public func tearDown() {
+        typing.tearDown()
+        typing = nil
+        tornDown = true
+        observers = []
     }
 }
 

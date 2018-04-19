@@ -52,7 +52,7 @@ typedef NS_ENUM(NSUInteger, ZMClientRegistrationPhase) {
 extern NSString *const ZMPersistedClientIdKey;
 
 
-@interface ZMClientRegistrationStatus : NSObject <ClientRegistrationDelegate>
+@interface ZMClientRegistrationStatus : NSObject <ClientRegistrationDelegate, TearDownCapable>
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                                       cookieStorage:(ZMPersistentCookieStorage *)cookieStorage

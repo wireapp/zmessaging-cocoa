@@ -78,9 +78,9 @@
     }
 }
 
-- (void)teardown
+- (void)tearDown
 {
-    [self.downloader teardown];
+    [self.downloader tearDown];
 }
 
 @end

@@ -148,7 +148,7 @@ public protocol LocalNotificationResponder : class {
     var preLoginAuthenticationToken: Any?
     var callCenterObserverToken: Any?
     var blacklistVerificator: ZMBlacklistVerificator?
-    let reachability: ReachabilityProvider & ReachabilityTearDown
+    let reachability: ReachabilityProvider & TearDownCapable
     let pushDispatcher: PushDispatcher
     let notificationsTracker: NotificationsTracker?
     
@@ -282,7 +282,7 @@ public protocol LocalNotificationResponder : class {
         authenticatedSessionFactory: AuthenticatedSessionFactory,
         unauthenticatedSessionFactory: UnauthenticatedSessionFactory,
         analytics: AnalyticsType? = nil,
-        reachability: ReachabilityProvider & ReachabilityTearDown,
+        reachability: ReachabilityProvider & TearDownCapable,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
         launchOptions: LaunchOptions,
@@ -438,6 +438,7 @@ public protocol LocalNotificationResponder : class {
         delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: { [weak self] in
             currentSession.closeAndDeleteCookie(deleteCookie)
             self?.activeUserSession = nil
+            StorageStack.reset()
             
             if deleteAccount {
                 self?.deleteAccountData(for: account)
@@ -600,7 +601,7 @@ public protocol LocalNotificationResponder : class {
     }
 
     deinit {
-        blacklistVerificator?.teardown()
+        blacklistVerificator?.tearDown()
         activeUserSession?.tearDown()
         unauthenticatedSession?.tearDown()
         reachability.tearDown()
