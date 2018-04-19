@@ -59,7 +59,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     let transportSession: ZMTransportSession
 
-    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: ZMBackendEnvironment, reachability: ReachabilityProvider & ReachabilityTearDown) {
+    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: ZMBackendEnvironment, reachability: ReachabilityProvider & TearDownCapable) {
         self.transportSession = transportSession
         super.init(
             appVersion: "0.0.0",
