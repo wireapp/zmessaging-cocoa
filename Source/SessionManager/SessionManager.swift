@@ -432,6 +432,7 @@ public protocol LocalNotificationResponder : class {
         backgroundUserSessions[account.userIdentifier] = nil
         tearDownObservers(account: account.userIdentifier)
         notifyUserSessionDestroyed(account.userIdentifier)
+        StorageStack.reset()
         
         self.createUnauthenticatedSession()
         
