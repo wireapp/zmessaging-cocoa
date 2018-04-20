@@ -48,7 +48,7 @@ public class UnauthenticatedSession: NSObject {
     let reachability: ReachabilityProvider
     private(set) var operationLoop: UnauthenticatedOperationLoop!
     private let transportSession: UnauthenticatedTransportSessionProtocol
-    private var tornDown = false
+    fileprivate var tornDown = false
 
     weak var delegate: UnauthenticatedSessionDelegate?
 
@@ -79,17 +79,19 @@ public class UnauthenticatedSession: NSObject {
         precondition(tornDown, "Need to call tearDown before deinit")
     }
 
-    func tearDown() {
-        operationLoop.tearDown()
-        tornDown = true
-    }
-
     func authenticationErrorIfNotReachable(_ block: () -> ()) {
         if self.reachability.mayBeReachable {
             block()
         } else {
             authenticationStatus.notifyAuthenticationDidFail(NSError(code: .networkError, userInfo:nil))
         }
+    }
+}
+
+extension UnauthenticatedSession: TearDownCapable {
+    public func tearDown() {
+        operationLoop.tearDown()
+        tornDown = true
     }
 }
 

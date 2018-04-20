@@ -98,7 +98,7 @@ public class PreLoginAuthenticationNotificationRecorder : NSObject {
     
 }
 
-final class TestUnauthenticatedTransportSession: UnauthenticatedTransportSessionProtocol {
+final class TestUnauthenticatedTransportSession: NSObject, UnauthenticatedTransportSessionProtocol {
 
     public var cookieStorage = ZMPersistentCookieStorage()
     var nextEnqueueResult: EnqueueResult = .nilRequest

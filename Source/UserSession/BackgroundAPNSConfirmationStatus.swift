@@ -25,8 +25,8 @@ import UIKit
     static let backgroundNameBase : String = "Sending confirmation message with nonce"
     
     let backgroundTime : TimeInterval = 25
-    private var tornDown = false
-    private var messageNonces : [UUID : ZMBackgroundActivity] = [:]
+    fileprivate var tornDown = false
+    fileprivate var messageNonces : [UUID : ZMBackgroundActivity] = [:]
     private unowned var application : ZMApplication
     private unowned var managedObjectContext : NSManagedObjectContext
     private unowned var backgroundActivityFactory : BackgroundActivityFactory
@@ -45,12 +45,6 @@ import UIKit
         super.init()
     }
 
-    public func tearDown(){
-        messageNonces.values.forEach{$0.end()}
-        messageNonces.removeAll()
-        tornDown = true
-    }
-    
     deinit {
         assert(tornDown, "Needs to tear down BackgroundAPNSConfirmationStatus")
     }
@@ -75,6 +69,14 @@ import UIKit
             guard let task = self.messageNonces.removeValue(forKey: messageNonce) else { return }
             task.end()
         }
+    }
+}
+
+extension BackgroundAPNSConfirmationStatus: TearDownCapable {
+    public func tearDown(){
+        messageNonces.values.forEach{$0.end()}
+        messageNonces.removeAll()
+        tornDown = true
     }
 }
 

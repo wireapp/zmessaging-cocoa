@@ -35,23 +35,7 @@ public class SearchDirectory : NSObject {
         self.userSession = userSession
         self.searchContext = userSession.searchManagedObjectContext
     }
-    
-    /// Tear down the SearchDirectory. 
-    /// 
-    /// NOTE: this must be called before releasing the instance
-    public func tearDown() {
-        userSession.syncManagedObjectContext.performGroupedBlock {
-            SearchDirectory.userIDsMissingProfileImage.removeDirectory(self)
-            SearchDirectory.userIDsMissingProfileImage.clear()
-            ZMSearchUser.searchUserToMediumImageCache().removeAllObjects()
-        }
 
-        // Reset search user observer center to remove unnecessarily observed search users
-        userSession.managedObjectContext.searchUserObserverCenter.reset()
-        
-        isTornDown = true
-    }
-    
     /// Perform a search request.
     ///
     /// Returns a SearchTask which should be retained until the results arrive.
@@ -81,4 +65,22 @@ public class SearchDirectory : NSObject {
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
     
+}
+
+extension SearchDirectory: TearDownCapable {
+    /// Tear down the SearchDirectory.
+    ///
+    /// NOTE: this must be called before releasing the instance
+    public func tearDown() {
+        userSession.syncManagedObjectContext.performGroupedBlock {
+            SearchDirectory.userIDsMissingProfileImage.removeDirectory(self)
+            SearchDirectory.userIDsMissingProfileImage.clear()
+            ZMSearchUser.searchUserToMediumImageCache().removeAllObjects()
+        }
+
+        // Reset search user observer center to remove unnecessarily observed search users
+        userSession.managedObjectContext.searchUserObserverCenter.reset()
+
+        isTornDown = true
+    }
 }

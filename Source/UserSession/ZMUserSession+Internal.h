@@ -71,7 +71,7 @@
 
 
 
-@interface ZMUserSession (Internal) 
+@interface ZMUserSession (Internal) <TearDownCapable>
 
 @property (nonatomic, readonly) BOOL isLoggedIn;
 @property (nonatomic, readonly) NSManagedObjectContext *managedObjectContext;
@@ -89,8 +89,6 @@
                              application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
-
-- (void)tearDown;
 
 @end
 

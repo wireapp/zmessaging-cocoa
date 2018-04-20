@@ -19,10 +19,10 @@
 
 #import <Foundation/Foundation.h>
 
-@class ZMBlacklistDownloader;
 @protocol ZMApplication;
+@import WireUtilities;
 
-@interface ZMBlacklistVerificator : NSObject
+@interface ZMBlacklistVerificator : NSObject <TearDownCapable>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
                           application:(id<ZMApplication>)application
                     blacklistCallback:(void (^)(BOOL))blacklistCallback;
 
-- (void)teardown;
+- (void)tearDown;
 
 @end
 

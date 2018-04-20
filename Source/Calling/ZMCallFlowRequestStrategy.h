@@ -28,7 +28,7 @@
 @protocol FlowManagerType;
 @protocol ZMApplication;
 
-@interface ZMCallFlowRequestStrategy : ZMAbstractRequestStrategy
+@interface ZMCallFlowRequestStrategy : ZMAbstractRequestStrategy <TearDownCapable>
 
 - (instancetype)initWithMediaManager:(id)mediaManager
                          flowManager:(id<FlowManagerType>)flowManager

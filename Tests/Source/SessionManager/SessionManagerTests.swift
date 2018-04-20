@@ -1108,7 +1108,7 @@ class SessionManagerObserverMock: SessionManagerCreatedSessionObserver, SessionM
     
 }
 
-class TestReachability: ReachabilityProvider, ReachabilityTearDown {
+class TestReachability: NSObject, ReachabilityProvider, TearDownCapable {
     var mayBeReachable = true
     var isMobileConnection = true
     var oldMayBeReachable = true
