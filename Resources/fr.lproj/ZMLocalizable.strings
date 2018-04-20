@@ -21,8 +21,8 @@
 "conversation.username.groupingSeparator" = ", ";
 
 "user_session.error.blacklisted-email" = "Cette adresse e-mail n'est pas autorisée";
-"user_session.error.email-exists" = "Cette adresse e-mail est déjà enregistrée";
-"user_session.error.invalid-email" = "Cette adresse e-mail est invalide";
-"user_session.error.invalid-code" = "Veuillez fournir un code valide";
+"user_session.error.email-exists" = "Cette adresse e-mail est déjà utilisée";
+"user_session.error.invalid-email" = "Cette adresse e-mail n'est pas valide";
+"user_session.error.invalid-code" = "Veuillez saisir un code valide";
 "user_session.error.unauthorized-email" = "Une erreur s'est produite, veuillez réessayer";
 "user_session.error.unknown" = "Une erreur s'est produite, veuillez réessayer";

@@ -17,6 +17,8 @@
         <string>New message</string>
         <key>few</key>
         <string>%2$@ messages</string>
+        <key>many</key>
+        <string>%2$@ messages</string>
         <key>other</key>
         <string>%2$@ messages</string>
       </dict>
@@ -34,6 +36,8 @@
         <key>one</key>
         <string>New message</string>
         <key>few</key>
+        <string>%1$@ messages</string>
+        <key>many</key>
         <string>%1$@ messages</string>
         <key>other</key>
         <string>%1$@ messages</string>
@@ -53,6 +57,8 @@
         <string>New message</string>
         <key>few</key>
         <string>%2$@ messages</string>
+        <key>many</key>
+        <string>%2$@ messages</string>
         <key>other</key>
         <string>%2$@ messages</string>
       </dict>
@@ -70,6 +76,8 @@
         <key>one</key>
         <string>New message</string>
         <key>few</key>
+        <string>%1$@ messages</string>
+        <key>many</key>
         <string>%1$@ messages</string>
         <key>other</key>
         <string>%1$@ messages</string>
@@ -89,6 +97,8 @@
         <string>one missed call</string>
         <key>few</key>
         <string>%2@ missed calls</string>
+        <key>many</key>
+        <string>%2@ missed calls</string>
         <key>other</key>
         <string>%2@ missed calls</string>
       </dict>
@@ -106,6 +116,8 @@
         <key>one</key>
         <string>one missed call</string>
         <key>few</key>
+        <string>%1$@ missed calls</string>
+        <key>many</key>
         <string>%1$@ missed calls</string>
         <key>other</key>
         <string>%1$@ missed calls</string>
@@ -125,6 +137,8 @@
         <string> </string>
         <key>few</key>
         <string> %2$@ times </string>
+        <key>many</key>
+        <string> %2$@ times </string>
         <key>other</key>
         <string> %2$@ times </string>
       </dict>
@@ -142,6 +156,8 @@
         <key>one</key>
         <string> </string>
         <key>few</key>
+        <string> %2$@ times </string>
+        <key>many</key>
         <string> %2$@ times </string>
         <key>other</key>
         <string> %2$@ times </string>
@@ -161,6 +177,8 @@
         <string>Ping</string>
         <key>few</key>
         <string>%1$@ pings</string>
+        <key>many</key>
+        <string>%1$@ pings</string>
         <key>other</key>
         <string>%1$@ pings</string>
       </dict>
@@ -178,6 +196,8 @@
         <key>one</key>
         <string>Ping</string>
         <key>few</key>
+        <string>%1$@ pings</string>
+        <key>many</key>
         <string>%1$@ pings</string>
         <key>other</key>
         <string>%1$@ pings</string>
@@ -197,6 +217,8 @@
         <string> </string>
         <key>few</key>
         <string> %1$@ times</string>
+        <key>many</key>
+        <string> %1$@ times</string>
         <key>other</key>
         <string> %1$@ times</string>
       </dict>
@@ -214,6 +236,8 @@
         <key>one</key>
         <string>Ping</string>
         <key>few</key>
+        <string>%2$@ pings</string>
+        <key>many</key>
         <string>%2$@ pings</string>
         <key>other</key>
         <string>%2$@ pings</string>

@@ -128,7 +128,7 @@
 "push.notification.call.started.group.nousername.noconversationname" = "有参与者在对话中来电";
 
 // MISSED CALLS
-"push.notification.call.missed.group" = "%1$@ 呼叫了您";
+"push.notification.call.missed.group" = "%1$@曾来电";
 "push.notification.call.missed.group.nousername" = "有人呼叫了您";
 "push.notification.call.missed.group.nousername.noconversationname" = "会话中的某个人呼叫了您";
 "push.notification.call.missed.group.noconversationname" = "会话中的 %1$@ 呼叫了您";

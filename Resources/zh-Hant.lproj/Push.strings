@@ -54,12 +54,12 @@
 "push.notification.add.unknown.oneonone.nousername" = "新訊息";
 
 // IMAGE
-"push.notification.add.image.group" = "%1$@分享了一張圖片";
+"push.notification.add.image.group" = "%1$@分享了一幀圖片";
 "push.notification.add.image.group.nousername" = "新圖片";
 "push.notification.add.image.group.nousername.noconversationname" = "收到新圖片";
-"push.notification.add.image.group.noconversationname" = "%1$@在對話中分享了一張圖片";
+"push.notification.add.image.group.noconversationname" = "%1$@在對話中分享了一幀圖片";
 
-"push.notification.add.image.oneonone" = "分享了一張圖片";
+"push.notification.add.image.oneonone" = "分享了一幀圖片";
 "push.notification.add.image.oneonone.nousername" = "收到新圖片";
 
 // VIDEO
@@ -183,4 +183,4 @@
 "push.notification.action.call.ignore" = "拒絕通話";
 "push.notification.action.call.message" = "訊息";
 "push.notification.action.call.callback" = "回電";
-"push.notification.action.connection.accept" = "接聽";
+"push.notification.action.connection.accept" = "接受";
