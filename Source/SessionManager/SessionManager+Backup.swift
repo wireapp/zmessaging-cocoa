@@ -51,13 +51,14 @@ extension SessionManager {
             clientIdentifier: clientId,
             applicationContainer: sharedContainerURL,
             dispatchGroup: dispatchGroup,
-            completion: { [dispatchGroup] in SessionManager.handle(result: $0, password: password, dispatchGroup: dispatchGroup, completion: completion, handle: handle) }
+            completion: { [dispatchGroup] in SessionManager.handle(result: $0, password: password, accountId: userId, dispatchGroup: dispatchGroup, completion: completion, handle: handle) }
         )
     }
     
     private static func handle(
         result: Result<StorageStack.BackupInfo>,
         password: String,
+        accountId: UUID,
         dispatchGroup: ZMSDispatchGroup? = nil,
         completion: @escaping BackupResultClosure,
         handle: String
@@ -69,7 +70,7 @@ extension SessionManager {
                 
                 // 2. Encrypt the backup
                 let url = targetBackupURL(for: info, handle: handle)
-                try encrypt(from: compressed, to: url, password: password)
+                try encrypt(from: compressed, to: url, password: password, accountId: accountId)
                 return url
             }
             
@@ -100,10 +101,12 @@ extension SessionManager {
             guard let `self` = self else { return }
             let decryptedURL = SessionManager.temporaryURL(for: location)
             do {
-                try SessionManager.decrypt(from: location, to: decryptedURL, password: password)
+                try SessionManager.decrypt(from: location, to: decryptedURL, password: password, accountId: userId)
             } catch {
                 switch error {
                 case ChaCha20Encryption.EncryptionError.decryptionFailed: return complete(.failure(BackupError.decryptionError))
+                case ChaCha20Encryption.EncryptionError.keyGenerationFailed:
+                    complete(.failure(BackupError.keyCreationFailed))
                 default: return complete(.failure(error))
                 }
             }
@@ -122,18 +125,16 @@ extension SessionManager {
     
     // MARK: - Encryption & Decryption
     
-    static func encrypt(from input: URL, to output: URL, password: String) throws {
-        guard let key = ChaCha20Encryption.Key(passphrase: password) else { throw BackupError.keyCreationFailed }
+    static func encrypt(from input: URL, to output: URL, password: String, accountId: UUID) throws {
         guard let inputStream = InputStream(url: input) else { throw BackupError.unknown }
         guard let outputStream = OutputStream(url: output, append: false) else { throw BackupError.unknown }
-        try ChaCha20Encryption.encrypt(input: inputStream, output: outputStream, key: key)
+        try ChaCha20Encryption.encrypt(input: inputStream, output: outputStream, passphrase: ChaCha20Encryption.Passphrase(password: password, uuid: accountId))
     }
     
-    static func decrypt(from input: URL, to output: URL, password: String) throws {
-        guard let key = ChaCha20Encryption.Key(passphrase: password) else { throw BackupError.keyCreationFailed }
+    static func decrypt(from input: URL, to output: URL, password: String, accountId: UUID) throws {
         guard let inputStream = InputStream(url: input) else { throw BackupError.unknown }
         guard let outputStream = OutputStream(url: output, append: false) else { throw BackupError.unknown }
-        try ChaCha20Encryption.decrypt(input: inputStream, output: outputStream, key: key)
+        try ChaCha20Encryption.decrypt(input: inputStream, output: outputStream, passphrase: ChaCha20Encryption.Passphrase(password: password, uuid: accountId))
     }
     
     // MARK: - Helper
