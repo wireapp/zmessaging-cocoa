@@ -17,6 +17,8 @@
         <string>Нове повідомлення</string>
         <key>few</key>
         <string>%2$@ повідомлення</string>
+        <key>many</key>
+        <string>%2$@ повідомлень</string>
         <key>other</key>
         <string>%2$@ повідомлень</string>
       </dict>
@@ -35,6 +37,8 @@
         <string>Нове повідомлення</string>
         <key>few</key>
         <string>%1$@ повідомлення</string>
+        <key>many</key>
+        <string>%1$@ повідомлень</string>
         <key>other</key>
         <string>%1$@ повідомлень</string>
       </dict>
@@ -53,6 +57,8 @@
         <string>Нове повідомлення</string>
         <key>few</key>
         <string>%2$@ повідомлення</string>
+        <key>many</key>
+        <string>%2$@ повідомлень</string>
         <key>other</key>
         <string>%2$@ повідомлень</string>
       </dict>
@@ -71,6 +77,8 @@
         <string>Нове повідомлення</string>
         <key>few</key>
         <string>%1$@ повідомлення</string>
+        <key>many</key>
+        <string>%1$@ повідомлень</string>
         <key>other</key>
         <string>%1$@ повідомлень</string>
       </dict>
@@ -89,6 +97,8 @@
         <string>один пропущений дзвінок</string>
         <key>few</key>
         <string>%2@ пропущені дзвінки</string>
+        <key>many</key>
+        <string>%2@ пропущених дзвінків</string>
         <key>other</key>
         <string>%2@ пропущених дзвінків</string>
       </dict>
@@ -107,6 +117,8 @@
         <string>один пропущений дзвінок</string>
         <key>few</key>
         <string>%1$@ пропущені дзвінки</string>
+        <key>many</key>
+        <string>%1$@ пропущених дзвінків</string>
         <key>other</key>
         <string>%1$@ пропущених дзвінків</string>
       </dict>
@@ -124,6 +136,8 @@
         <key>one</key>
         <string> </string>
         <key>few</key>
+        <string> %2$@ times </string>
+        <key>many</key>
         <string> %2$@ times </string>
         <key>other</key>
         <string> %2$@ times </string>
@@ -143,6 +157,8 @@
         <string> </string>
         <key>few</key>
         <string> %2$@ times </string>
+        <key>many</key>
+        <string> %2$@ times </string>
         <key>other</key>
         <string> %2$@ times </string>
       </dict>
@@ -161,6 +177,8 @@
         <string>Пінг</string>
         <key>few</key>
         <string>%1$@ пінги</string>
+        <key>many</key>
+        <string>%1$@ пінгів</string>
         <key>other</key>
         <string>%1$@ пінгів</string>
       </dict>
@@ -179,6 +197,8 @@
         <string>Пінг</string>
         <key>few</key>
         <string>%1$@ пінги</string>
+        <key>many</key>
+        <string>%1$@ пінгів</string>
         <key>other</key>
         <string>%1$@ пінгів</string>
       </dict>
@@ -196,6 +216,8 @@
         <key>one</key>
         <string> </string>
         <key>few</key>
+        <string> %1$@ times</string>
+        <key>many</key>
         <string> %1$@ times</string>
         <key>other</key>
         <string> %1$@ times</string>
@@ -215,6 +237,8 @@
         <string>Пінг</string>
         <key>few</key>
         <string>%2$@ пінги</string>
+        <key>many</key>
+        <string>%2$@ пінгів</string>
         <key>other</key>
         <string>%2$@ пінгів</string>
       </dict>
