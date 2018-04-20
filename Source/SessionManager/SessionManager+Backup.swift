@@ -105,8 +105,7 @@ extension SessionManager {
             } catch {
                 switch error {
                 case ChaCha20Encryption.EncryptionError.decryptionFailed: return complete(.failure(BackupError.decryptionError))
-                case ChaCha20Encryption.EncryptionError.keyGenerationFailed:
-                    complete(.failure(BackupError.keyCreationFailed))
+                case ChaCha20Encryption.EncryptionError.keyGenerationFailed: return complete(.failure(BackupError.keyCreationFailed))
                 default: return complete(.failure(error))
                 }
             }

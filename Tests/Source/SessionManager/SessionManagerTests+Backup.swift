@@ -71,7 +71,8 @@ class SessionManagerTests_Backup: IntegrationTest {
         guard let url = result.value else { return XCTFail("\(result.error!)") }
         
         let decryptedURL = createTemporaryURL()
-        try SessionManager.decrypt(from: url, to: decryptedURL, password: "12345678")
+        let moc = sessionManager!.activeUserSession!.managedObjectContext!
+        try SessionManager.decrypt(from: url, to: decryptedURL, password: "12345678", accountId: ZMUser.selfUser(in: moc).remoteIdentifier!)
         
         guard decryptedURL.unzip(to: unzippedURL) else { return XCTFail("Decompression failed") }
         
@@ -130,7 +131,8 @@ class SessionManagerTests_Backup: IntegrationTest {
         let randomData = Data.secureRandomData(length: 1024)
         try randomData.write(to: dataURL)
         let encryptedURL = createTemporaryURL()
-        try SessionManager.encrypt(from: dataURL, to: encryptedURL, password: "notsorandom")
+        let moc = sessionManager!.activeUserSession!.managedObjectContext!
+        try SessionManager.encrypt(from: dataURL, to: encryptedURL, password: "notsorandom", accountId: ZMUser.selfUser(in: moc).remoteIdentifier!)
 
         // When
         let result = restoreAcount(password: "notsorandom", from: encryptedURL)
