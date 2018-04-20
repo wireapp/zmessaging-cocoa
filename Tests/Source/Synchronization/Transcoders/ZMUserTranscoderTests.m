@@ -560,7 +560,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     NSDictionary *payload = [self samplePayloadForUserID:user.remoteIdentifier];
     
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventUserUpdate)] type];
+    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUserUpdate)] type];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
     
     // when
@@ -588,7 +588,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
         payload[@"user"][@"email"] = finalEmail;
         
         ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventUserUpdate)] type];
+        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUserUpdate)] type];
         (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
         
         // when
@@ -657,7 +657,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
         payload[@"user"][@"name"] = @"Name";
 
         ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventUserUpdate)] type];
+        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUserUpdate)] type];
         (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
 
         // when
@@ -703,7 +703,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
                                     ];
     
     ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventUserUpdate)] type];
+    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUserUpdate)] type];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
     
     // when
@@ -728,7 +728,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
                                   };
         
         ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventUserUpdate)] type];
+        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUserUpdate)] type];
         (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
         
         // when
@@ -753,7 +753,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
         payload[@"type"] = @"user.foobarx";
         
         ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventUserUpdate)] type];
+        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUserUpdate)] type];
         (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
         
         // when

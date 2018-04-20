@@ -314,7 +314,7 @@
     __block MockPushEvent *event;
     [receivedEvents enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(MockPushEvent *anEvent, NSUInteger idx, BOOL *stop){
         NOT_USED(idx);
-        if ([anEvent.payload[@"conversation"] isEqualToString:conversation.identifier]) {
+        if ([anEvent.payload.asDictionary[@"conversation"] isEqualToString:conversation.identifier]) {
             *stop = YES;
             event = anEvent;
         }

@@ -17,7 +17,7 @@
 // 
 
 
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 
 @class NSManagedObjectContext;
 @class NSOperationQueue;
@@ -26,7 +26,7 @@
 @class ApplicationStatusDirectory;
 @class SyncStatus;
 
-@interface ZMSelfStrategy : ZMAbstractRequestStrategy <ZMContextChangeTrackerSource>
+@interface ZMSelfStrategy : ZMAbstractRequestStrategy <ZMContextChangeTrackerSource, TearDownCapable>
 
 @property (nonatomic, readonly) BOOL isSelfUserComplete;
 

@@ -27,6 +27,8 @@ public enum PreLoginAuthenticationEventObjc : Int {
     case loginCodeRequestDidFail
     case authenticationDidSucceed
     case authenticationDidFail
+    case readyToImportBackupExistingAccount
+    case readyToImportBackupNewAccount
 }
 
 public typealias PreLoginAuthenticationObserverHandler = (_ event: PreLoginAuthenticationEventObjc, _ error : NSError?) -> Void
@@ -60,6 +62,11 @@ public class PreLoginAuthenticationObserverToken : NSObject, PreLoginAuthenticat
     public func authenticationDidFail(_ error: NSError) {
         handler(.authenticationDidFail, error)
     }
+
+    public func authenticationReadyToImportBackup(existingAccount: Bool) {
+        let value: PreLoginAuthenticationEventObjc = existingAccount ? .readyToImportBackupExistingAccount : .readyToImportBackupNewAccount
+        handler(value, nil)
+    }
 }
 
 @objc
@@ -91,7 +98,7 @@ public class PreLoginAuthenticationNotificationRecorder : NSObject {
     
 }
 
-final class TestUnauthenticatedTransportSession: UnauthenticatedTransportSessionProtocol {
+final class TestUnauthenticatedTransportSession: NSObject, UnauthenticatedTransportSessionProtocol {
 
     public var cookieStorage = ZMPersistentCookieStorage()
     var nextEnqueueResult: EnqueueResult = .nilRequest
@@ -127,6 +134,13 @@ final class TestAuthenticationObserver: NSObject, PreLoginAuthenticationObserver
 
 
 final class MockUnauthenticatedSessionDelegate: NSObject, UnauthenticatedSessionDelegate {
+
+    var existingAccounts = [Account]()
+    var existingAccountsCalled = 0
+    func session(session: UnauthenticatedSession, isExistingAccount account: Account) -> Bool {
+        existingAccountsCalled += 1
+        return existingAccounts.contains(account)
+    }
 
     var createdAccounts = [Account]()
     var didUpdateCredentials : Bool = false
@@ -198,7 +212,7 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         XCTAssertEqual(observer.authenticationDidFailEvents[0].localizedDescription, NSError(code: .needsCredentials, userInfo:nil).localizedDescription)
     }
     
-    func testThatDuringLoginItThrowsErrorWhenOffline() {
+    func testThatDuringLoginWithEmailItThrowsErrorWhenOffline() {
         let observer = TestAuthenticationObserver(unauthenticatedSession: sut)
         // given
         reachability.mayBeReachable = false
@@ -211,26 +225,68 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         XCTAssertEqual(observer.authenticationDidFailEvents[0].localizedDescription, NSError(code: .networkError, userInfo:nil).localizedDescription)
     }
 
-    func testThatItParsesCookieDataAndDoesCallTheDelegateIfTheCookieIsValidAndThereIsAUserIdKeyUser() {
+    func testThatDuringLoginWithPhoneNumberItThrowsErrorWhenOffline() {
+        let observer = TestAuthenticationObserver(unauthenticatedSession: sut)
+        // given
+        reachability.mayBeReachable = false
+        // when
+        sut.login(with: ZMPhoneCredentials(phoneNumber: "+49111111111111", verificationCode: "1234"))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        // then
+        XCTAssertEqual(observer.authenticationDidSucceedEvents, 0)
+        XCTAssertEqual(observer.authenticationDidFailEvents.count, 1)
+        XCTAssertEqual(observer.authenticationDidFailEvents[0].localizedDescription, NSError(code: .networkError, userInfo:nil).localizedDescription)
+    }
+
+    func testThatItAsksDelegateIfAccountAlreadyExists() throws {
+        // given
+        let userId = UUID.create()
+        let cookie = "zuid=wjCWn1Y1pBgYrFCwuU7WK2eHpAVY8Ocu-rUAWIpSzOcvDVmYVc9Xd6Ovyy-PktFkamLushbfKgBlIWJh6ZtbAA==.1721442805.u.7eaaa023.08326f5e-3c0f-4247-a235-2b4d93f921a4; Expires=Sun, 21-Jul-2024 09:06:45 GMT; Domain=wire.com; HttpOnly; Secure"
+        let response = try createResponse(cookie: cookie, userId: userId, userIdKey: "id")
+        mockDelegate.existingAccounts = [Account(userName: "", userIdentifier: userId)]
+
+        // when
+        let exists = sut.accountExistsLocally(from: response)
+
+        // then
+        XCTAssertTrue(exists)
+        XCTAssertEqual(mockDelegate.existingAccountsCalled, 1)
+    }
+
+    func testThatItExtractsUserIdentifierFromResponse() throws {
+        // given
+        let userId = UUID.create()
+        let cookie = "zuid=wjCWn1Y1pBgYrFCwuU7WK2eHpAVY8Ocu-rUAWIpSzOcvDVmYVc9Xd6Ovyy-PktFkamLushbfKgBlIWJh6ZtbAA==.1721442805.u.7eaaa023.08326f5e-3c0f-4247-a235-2b4d93f921a4; Expires=Sun, 21-Jul-2024 09:06:45 GMT; Domain=wire.com; HttpOnly; Secure"
+        let response = try createResponse(cookie: cookie, userId: userId, userIdKey: "id")
+
+        // when
+        let authenticatedUserID = sut.userIdentifier(from: response)
+
+        // then
+        XCTAssertEqual(authenticatedUserID, userId)
+    }
+
+    
+    func testThatItParsesCookieDataAndDoesCallTheDelegateIfTheCookieIsValidAndThereIsAUserIdKeyUser() throws {
         // given
         let userId = UUID.create()
         let cookie = "zuid=wjCWn1Y1pBgYrFCwuU7WK2eHpAVY8Ocu-rUAWIpSzOcvDVmYVc9Xd6Ovyy-PktFkamLushbfKgBlIWJh6ZtbAA==.1721442805.u.7eaaa023.08326f5e-3c0f-4247-a235-2b4d93f921a4; Expires=Sun, 21-Jul-2024 09:06:45 GMT; Domain=wire.com; HttpOnly; Secure"
 
         // when
-        guard let account = parseAccount(cookie: cookie, userId: userId, userIdKey: "id") else { return XCTFail("No Account") }
+        let account = try parseAccount(cookie: cookie, userId: userId, userIdKey: "id")
 
         // then
         XCTAssertEqual(account.userIdentifier, userId)
         XCTAssertNotNil(account.cookieStorage().authenticationCookieData)
     }
 
-    func testThatItParsesCookieDataAndDoesCallTheDelegateIfTheCookieIsValidAndThereIsAUserIdKeyId() {
+    func testThatItParsesCookieDataAndDoesCallTheDelegateIfTheCookieIsValidAndThereIsAUserIdKeyId() throws {
         // given
         let userId = UUID.create()
         let cookie = "zuid=wjCWn1Y1pBgYrFCwuU7WK2eHpAVY8Ocu-rUAWIpSzOcvDVmYVc9Xd6Ovyy-PktFkamLushbfKgBlIWJh6ZtbAA==.1721442805.u.7eaaa023.08326f5e-3c0f-4247-a235-2b4d93f921a4; Expires=Sun, 21-Jul-2024 09:06:45 GMT; Domain=wire.com; HttpOnly; Secure"
 
         // when
-        guard let account = parseAccount(cookie: cookie, userId: userId, userIdKey: "user") else { return XCTFail("No Account") }
+        let account = try parseAccount(cookie: cookie, userId: userId, userIdKey: "user")
 
         // then
         XCTAssertEqual(account.userIdentifier, userId)
@@ -243,45 +299,47 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
 
         // then
         performIgnoringZMLogError() {
-            XCTAssertNil(self.parseAccount(cookie: cookie, userIdKey: "identifier"))
+            XCTAssertNil(try? self.parseAccount(cookie: cookie, userIdKey: "identifier"))
         }
     }
 
-    func testThatItDoesNotParseAnAccountWithInvalidCookie() {
+    func testThatItDoesNotParseAnAccountWithInvalidCookie() throws {
         // given
         let cookie = "Expires=Sun, 21-Jul-2024 09:06:45 GMT; Domain=wire.com; HttpOnly; Secure"
 
         // then
         performIgnoringZMLogError() {
-            XCTAssertNil(self.parseAccount(cookie: cookie, userIdKey: "user"))
+            XCTAssertNil(try? self.parseAccount(cookie: cookie, userIdKey: "user"))
         }
     }
 
-    private func parseAccount(cookie: String, userId: UUID = .create(), userIdKey: String, line: UInt = #line) -> Account? {
-        do {
-            // given
-            let headers = [
-                "Date": "Thu, 24 Jul 2014 09:06:45 GMT",
-                "Content-Encoding": "gzip",
-                "Server": "nginx",
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "file://",
-                "Connection": "keep-alive",
-                "Content-Length": "214",
-                "Set-Cookie": cookie
-            ]
+    private func createResponse(cookie: String, userId: UUID = .create(), userIdKey: String, line: UInt = #line) throws -> ZMTransportResponse {
+        // given
+        let headers = [
+            "Date": "Thu, 24 Jul 2014 09:06:45 GMT",
+            "Content-Encoding": "gzip",
+            "Server": "nginx",
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "file://",
+            "Connection": "keep-alive",
+            "Content-Length": "214",
+            "Set-Cookie": cookie
+        ]
 
-            let response = try ZMTransportResponse(headers: headers, payload: [userIdKey: userId.transportString()])
-            // when
-            sut.parseUserInfo(from: response)
+        return try ZMTransportResponse(headers: headers, payload: [userIdKey: userId.transportString()])
+    }
 
-            // then
-            XCTAssertLessThanOrEqual(mockDelegate.createdAccounts.count, 1, line: line)
-            return mockDelegate.createdAccounts.first
-        } catch {
-            XCTFail("Unexpected error: \(error)", line: line)
-            return nil
-        }
+    private func parseAccount(cookie: String, userId: UUID = .create(), userIdKey: String, line: UInt = #line) throws -> Account {
+        // given
+        let response = try createResponse(cookie: cookie, userId: userId, userIdKey: userIdKey, line: line)
+
+        // when
+        sut.parseUserInfo(from: response)
+
+        // then
+        XCTAssertLessThanOrEqual(mockDelegate.createdAccounts.count, 1, line: line)
+        if mockDelegate.createdAccounts.isEmpty { throw NSError(domain: "No account", code: 1) }
+        return mockDelegate.createdAccounts.first!
     }
 
 }

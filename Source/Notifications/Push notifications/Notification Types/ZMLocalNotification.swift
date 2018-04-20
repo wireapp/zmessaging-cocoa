@@ -28,10 +28,9 @@ import WireDataModel
 /// have associated subtypes.
 ///
 public enum LocalNotificationType {
-    case event(ZMUpdateEventType)
+    case event(LocalNotificationEventType)
     case calling(CallState)
-    case reaction
-    case message(ZMLocalNotificationContentType)
+    case message(LocalNotificationContentType)
     case failedMessage
 }
 
@@ -39,12 +38,10 @@ public enum LocalNotificationType {
 /// a local notification. 
 ///
 protocol NotificationBuilder {
-    var conversation: ZMConversation? { get set }
+    var notificationType : LocalNotificationType { get }
     func shouldCreateNotification() -> Bool
     func titleText() -> String?
     func bodyText() -> String
-    func soundName() -> String
-    func category() -> String
     func userInfo() -> [AnyHashable: Any]?
 }
 
@@ -68,16 +65,13 @@ open class ZMLocalNotification: NSObject {
     public var messageNonce: UUID? { return uuid(for: MessageNonceIDStringKey) }
     public var conversationID: UUID? { return uuid(for: ConversationIDStringKey) }
     
-    public var isEphemeral: Bool = false
-    var shouldHideContent: Bool = false
-    
-    init?(conversation: ZMConversation?, type: LocalNotificationType, builder: NotificationBuilder) {
+    init?(conversation: ZMConversation?, builder: NotificationBuilder) {
         guard builder.shouldCreateNotification() else { return nil }
-        self.type = type
+        self.type = builder.notificationType
         self.title = builder.titleText()
         self.body = builder.bodyText().escapingPercentageSymbols()
-        self.category = builder.category()
-        self.soundName = builder.soundName()
+        self.category = builder.notificationType.category
+        self.soundName = builder.notificationType.soundName
         self.userInfo = builder.userInfo()
     }
     
@@ -86,8 +80,8 @@ open class ZMLocalNotification: NSObject {
     public lazy var uiLocalNotification: UILocalNotification = {
         let note = UILocalNotification()
         
-        let candidateTitle = (self.isEphemeral || self.shouldHideContent) ? nil : self.title
-        let candidateBody = (!self.isEphemeral && self.shouldHideContent) ? ZMPushStringDefault.localizedStringForPushNotification() : self.body
+        let candidateTitle = self.title
+        let candidateBody = self.body
         
         if #available(iOS 10, *) {
             note.alertTitle = candidateTitle
@@ -96,15 +90,15 @@ open class ZMLocalNotification: NSObject {
         else {
             // on iOS 9, the alert title is only visible in the notification center, so we
             // display all info in the body
-            if let title = candidateTitle, let body = candidateBody {
-                note.alertBody = "\(title)\n\(body)"
+            if let title = candidateTitle {
+                note.alertBody = "\(title)\n\(candidateBody)"
             } else {
                 note.alertBody = candidateBody
             }
         }
         
         note.category = self.category
-        note.soundName = self.shouldHideContent ? ZMCustomSound.notificationNewMessageSoundName() : self.soundName
+        note.soundName = self.soundName
         note.userInfo = self.userInfo
         return note
     }()
@@ -113,8 +107,23 @@ open class ZMLocalNotification: NSObject {
     ///
     public var isCallingNotification: Bool {
         switch type {
-        case .calling(_): return true
+        case .calling: return true
         default: return false
+        }
+    }
+    
+    /// Returns true if it is a ephemeral notification, else false.
+    ///
+    public var isEphemeral: Bool {
+        switch type {
+        case .message(let contentType):
+            if case .ephemeral = contentType {
+                return true
+            } else {
+                return false
+            }
+        default:
+            return false
         }
     }
     

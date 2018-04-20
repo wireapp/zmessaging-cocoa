@@ -37,7 +37,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.conversationType = .oneOnOne
             conversation.remoteIdentifier = UUID()
-            conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral: sender), isAuthoritative: true)
+            conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral: sender))
             
             self.conversation = conversation
             
@@ -134,6 +134,23 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         
         // when
         guard let note = self.note(for: state) else { return XCTFail("Did not create notification") }
+        
+        // then
+        XCTAssertEqual(note.title, "Callie")
+        XCTAssertEqual(note.body, "called")
+        XCTAssertEqual(note.category, ZMMissedCallCategory)
+        XCTAssertEqual(note.soundName, ZMCustomSound.notificationNewMessageSoundName())
+    }
+    
+    func testMissedCallFromSelfUser() {
+        
+        // given
+        let state: CallState = .terminating(reason: .timeout)
+        let caller = ZMUser.selfUser(in: uiMOC)
+        caller.name = "SelfUser"
+        
+        // when
+        guard let note = ZMLocalNotification(callState: state, conversation: conversation, caller: caller) else { return XCTFail("Did not create notification") }
         
         // then
         XCTAssertEqual(note.title, "Callie")

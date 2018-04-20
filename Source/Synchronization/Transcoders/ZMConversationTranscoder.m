@@ -28,6 +28,8 @@
 #import "ZMSimpleListRequestPaginator.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
+static NSString* ZMLogTag ZM_UNUSED = @"Conversations";
+
 static NSString *const ConversationsPath = @"/conversations";
 static NSString *const ConversationIDsPath = @"/conversations/ids";
 
@@ -40,6 +42,8 @@ static NSString *const UserInfoAddedValueKey = @"added";
 static NSString *const UserInfoRemovedValueKey = @"removed";
 
 static NSString *const ConversationTeamKey = @"team";
+static NSString *const ConversationAccessKey = @"access";
+static NSString *const ConversationAccessRoleKey = @"access_role";
 static NSString *const ConversationTeamIdKey = @"teamid";
 static NSString *const ConversationTeamManagedKey = @"managed";
 
@@ -136,10 +140,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     // They might be overwritten in a way that they don't create requests anymore whereas they previously did
     // To avoid crashes or unneccessary syncs, we should reset those when refetching the conversation from the backend
     
-    return @[ZMConversationUserDefinedNameKey,
-             ZMConversationUnsyncedInactiveParticipantsKey,
-             ZMConversationUnsyncedActiveParticipantsKey,
-             ZMConversationIsSelfAnActiveMemberKey];
+    return @[ZMConversationUserDefinedNameKey];
     
 }
 
@@ -317,18 +318,19 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (BOOL)shouldProcessUpdateEvent:(ZMUpdateEvent *)event
 {
     switch (event.type) {
-        case ZMUpdateEventConversationMessageAdd:
-        case ZMUpdateEventConversationClientMessageAdd:
-        case ZMUpdateEventConversationOtrMessageAdd:
-        case ZMUpdateEventConversationOtrAssetAdd:
-        case ZMUpdateEventConversationKnock:
-        case ZMUpdateEventConversationAssetAdd:
-        case ZMUpdateEventConversationMemberJoin:
-        case ZMUpdateEventConversationMemberLeave:
-        case ZMUpdateEventConversationRename:
-        case ZMUpdateEventConversationMemberUpdate:
-        case ZMUpdateEventConversationCreate:
-        case ZMUpdateEventConversationConnectRequest:
+        case ZMUpdateEventTypeConversationMessageAdd:
+        case ZMUpdateEventTypeConversationClientMessageAdd:
+        case ZMUpdateEventTypeConversationOtrMessageAdd:
+        case ZMUpdateEventTypeConversationOtrAssetAdd:
+        case ZMUpdateEventTypeConversationKnock:
+        case ZMUpdateEventTypeConversationAssetAdd:
+        case ZMUpdateEventTypeConversationMemberJoin:
+        case ZMUpdateEventTypeConversationMemberLeave:
+        case ZMUpdateEventTypeConversationRename:
+        case ZMUpdateEventTypeConversationMemberUpdate:
+        case ZMUpdateEventTypeConversationCreate:
+        case ZMUpdateEventTypeConversationConnectRequest:
+        case ZMUpdateEventTypeConversationAccessModeUpdate:
             return YES;
         default:
             return NO;
@@ -360,8 +362,8 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 {
     NSDate *timeStamp = event.timeStamp;
     
-    BOOL isMessageEvent = (event.type == ZMUpdateEventConversationOtrMessageAdd) ||
-                          (event.type == ZMUpdateEventConversationOtrAssetAdd);
+    BOOL isMessageEvent = (event.type == ZMUpdateEventTypeConversationOtrMessageAdd) ||
+    (event.type == ZMUpdateEventTypeConversationOtrAssetAdd);
     
     // Message events already update the conversation on insert. There is no need to do it here, since different message types (e.g. edit and delete) might have a different effect on the lastModifiedDate and unreadCount
     if (timeStamp != nil && !isMessageEvent) {
@@ -381,26 +383,15 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (BOOL)shouldUnarchiveOrUpdateLastModifiedWithEvent:(ZMUpdateEvent *)event
 {
     switch (event.type) {
-        case ZMUpdateEventConversationMemberUpdate:
-        case ZMUpdateEventConversationMemberLeave:
-        case ZMUpdateEventConversationRename:
+        case ZMUpdateEventTypeConversationMemberUpdate:
+        case ZMUpdateEventTypeConversationMemberLeave:
+        case ZMUpdateEventTypeConversationRename:
+        case ZMUpdateEventTypeConversationAccessModeUpdate:
             return NO;
 
         default:
             return YES;
     }
-}
-
-- (void)updatePropertiesOfConversation:(ZMConversation *)conversation withPostPayloadEvent:(ZMUpdateEvent *)event
-{
-    BOOL senderIsSelfUser = ([event.senderUUID isEqual:[ZMUser selfUserInContext:self.managedObjectContext].remoteIdentifier]);
-    BOOL selfUserLeft = (event.type == ZMUpdateEventConversationMemberLeave) && senderIsSelfUser;
-    if (selfUserLeft && conversation.clearedTimeStamp != nil && [conversation.clearedTimeStamp isEqualToDate:conversation.lastServerTimeStamp]) {
-        [conversation updateClearedFromPostPayloadEvent:event];
-    }
-    
-    // Self generated messages shouldn't generate unread dots
-    [conversation updateLastReadFromPostPayloadEvent:event];
 }
 
 - (BOOL)isSelfConversationEvent:(ZMUpdateEvent *)event;
@@ -425,7 +416,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 {
     for(ZMUpdateEvent *event in events) {
         
-        if (event.type == ZMUpdateEventConversationCreate) {
+        if (event.type == ZMUpdateEventTypeConversationCreate) {
             [self createConversationFromEvent:event];
             continue;
         }
@@ -464,15 +455,15 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (void)markConversationForDownloadIfNeeded:(ZMConversation *)conversation afterEvent:(ZMUpdateEvent *)event {
     
     switch(event.type) {
-        case ZMUpdateEventConversationOtrAssetAdd:
-        case ZMUpdateEventConversationOtrMessageAdd:
-        case ZMUpdateEventConversationRename:
-        case ZMUpdateEventConversationMemberLeave:
-        case ZMUpdateEventConversationKnock:
-        case ZMUpdateEventConversationMessageAdd:
-        case ZMUpdateEventConversationTyping:
-        case ZMUpdateEventConversationAssetAdd:
-        case ZMUpdateEventConversationClientMessageAdd:
+        case ZMUpdateEventTypeConversationOtrAssetAdd:
+        case ZMUpdateEventTypeConversationOtrMessageAdd:
+        case ZMUpdateEventTypeConversationRename:
+        case ZMUpdateEventTypeConversationMemberLeave:
+        case ZMUpdateEventTypeConversationKnock:
+        case ZMUpdateEventTypeConversationMessageAdd:
+        case ZMUpdateEventTypeConversationTyping:
+        case ZMUpdateEventTypeConversationAssetAdd:
+        case ZMUpdateEventTypeConversationClientMessageAdd:
             break;
         default:
             return;
@@ -491,30 +482,33 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (void)processUpdateEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation previousLastServerTimestamp:(NSDate *)previousLastServerTimestamp
 {
     switch (event.type) {
-        case ZMUpdateEventConversationRename: {
+        case ZMUpdateEventTypeConversationRename: {
             [self processConversationRenameEvent:event forConversation:conversation];
             break;
         }
-        case ZMUpdateEventConversationMemberJoin:
+        case ZMUpdateEventTypeConversationMemberJoin:
         {
             [self processMemberJoinEvent:event forConversation:conversation];
             break;
         }
-        case ZMUpdateEventConversationMemberLeave:
+        case ZMUpdateEventTypeConversationMemberLeave:
         {
             [self processMemberLeaveEvent:event forConversation:conversation];
             break;
         }
-        case ZMUpdateEventConversationMemberUpdate:
+        case ZMUpdateEventTypeConversationMemberUpdate:
         {
             [self processMemberUpdateEvent:event forConversation:conversation previousLastServerTimeStamp:previousLastServerTimestamp];
             break;
         }
-        case ZMUpdateEventConversationConnectRequest:
+        case ZMUpdateEventTypeConversationConnectRequest:
         {
             [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
             break;
         }
+        case ZMUpdateEventTypeConversationAccessModeUpdate:
+            [self processAccessModeUpdateEvent:event inConversation:conversation];
+            break;
         default: {
             break;
         }
@@ -539,16 +533,12 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
     
-    if (![users isSubsetOfSet:conversation.activeParticipants.set]
-        || (selfUser && [users intersectsSet:[NSSet setWithObject:selfUser]])
-        || [conversation.modifiedKeys intersectsSet:[NSSet setWithObjects:ZMConversationIsSelfAnActiveMemberKey, ZMConversationUnsyncedActiveParticipantsKey, nil]])
-    {
+    if (![users isSubsetOfSet:conversation.activeParticipants.set] || (selfUser && [users intersectsSet:[NSSet setWithObject:selfUser]])) {
         [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
     }
     
     for (ZMUser *user in users) {
-        [conversation internalAddParticipants:[NSSet setWithObject:user] isAuthoritative:YES];
-        [conversation synchronizeAddedUser:user];
+        [conversation internalAddParticipants:[NSSet setWithObject:user]];
     }
 }
 
@@ -558,13 +548,14 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     ZMUser *sender = [ZMUser userWithRemoteID:senderUUID createIfNeeded:YES inContext:self.managedObjectContext];
     NSSet *users = [event usersFromUserIDsInManagedObjectContext:self.managedObjectContext createIfNeeded:YES];
     
-    if ([users intersectsSet:conversation.activeParticipants.set] || [conversation.modifiedKeys intersectsSet:[NSSet setWithObjects:ZMConversationIsSelfAnActiveMemberKey, ZMConversationUnsyncedInactiveParticipantsKey, nil]]) {
+    ZMLogDebug(@"processMemberLeaveEvent (%@) leaving users.count = %lu", conversation.remoteIdentifier.transportString, (unsigned long)users.count);
+    
+    if ([users intersectsSet:conversation.activeParticipants.set]) {
         [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
     }
 
     for (ZMUser *user in users) {
         [conversation internalRemoveParticipants:[NSSet setWithObject:user] sender:sender];
-        [conversation synchronizeRemovedUser:user];
     }
 }
 
@@ -600,81 +591,21 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     return NO;
 }
 
-
 - (ZMUpstreamRequest *)requestForUpdatingObject:(ZMConversation *)updatedConversation forKeys:(NSSet *)keys;
 {
     ZMUpstreamRequest *request = nil;
     if([keys containsObject:ZMConversationUserDefinedNameKey]) {
         request = [self requestForUpdatingUserDefinedNameInConversation:updatedConversation];
     }
-    if (request == nil && [keys containsObject:ZMConversationUnsyncedInactiveParticipantsKey]) {
-        request = [self requestForUpdatingUnsyncedInactiveParticipantsInConversation:updatedConversation];
-    }
-    if (request == nil && [keys containsObject:ZMConversationUnsyncedActiveParticipantsKey]) {
-        request = [self requestForUpdatingUnsyncedActiveParticipantsInConversation:updatedConversation];
-    }
     if (request == nil && (   [keys containsObject:ZMConversationArchivedChangedTimeStampKey]
                            || [keys containsObject:ZMConversationSilencedChangedTimeStampKey])) {
         request = [self requestForUpdatingConversationSelfInfo:updatedConversation];
-    }
-    if (request == nil && [keys containsObject:ZMConversationIsSelfAnActiveMemberKey] && ! updatedConversation.isSelfAnActiveMember) {
-        request = [self requestForLeavingConversation:updatedConversation];
     }
     if (request == nil) {
         ZMTrapUnableToGenerateRequest(keys, self);
     }
     return request;
 }
-
-- (ZMUpstreamRequest *)requestForLeavingConversation:(ZMConversation *)conversation
-{
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-    RequireString(conversation.remoteIdentifier != nil, "ZMConversationTranscoder refuses request to leave conversation - conversation remoteID is nil");
-    RequireString(selfUser.remoteIdentifier != nil, "ZMConversationTranscoder refuses request to leave conversation - selfUser remoteID is nil");
-    
-    NSString *path = [NSString pathWithComponents:@[ ConversationsPath, conversation.remoteIdentifier.transportString, @"members", selfUser.remoteIdentifier.transportString]];
-    ZMTransportRequest *request = [ZMTransportRequest requestWithPath:path method:ZMMethodDELETE payload:nil];
-    return [[ZMUpstreamRequest alloc] initWithKeys:[NSSet setWithObject:ZMConversationIsSelfAnActiveMemberKey] transportRequest:request userInfo:nil];
-}
-
-- (ZMUpstreamRequest *)requestForUpdatingUnsyncedActiveParticipantsInConversation:(ZMConversation *)conversation
-{
-    NSOrderedSet *unsyncedUserIDs = [conversation.unsyncedActiveParticipants mapWithBlock:^NSString*(ZMUser *unsyncedUser) {
-        return unsyncedUser.remoteIdentifier.transportString;
-    }];
-    
-    if (unsyncedUserIDs.count == 0) {
-        return nil;
-    }
-    
-    NSString *path = [NSString pathWithComponents:@[ ConversationsPath, conversation.remoteIdentifier.transportString, @"members" ]];
-    NSDictionary *payload = @{
-                              @"users": unsyncedUserIDs.array,
-                              };
-    
-    ZMTransportRequest *request = [ZMTransportRequest requestWithPath:path method:ZMMethodPOST payload:payload];
-    [request expireAfterInterval:ZMTransportRequestDefaultExpirationInterval];
-    NSDictionary *userInfo = @{ UserInfoTypeKey : UserInfoAddedValueKey, UserInfoUserKey : conversation.unsyncedActiveParticipants };
-    return [[ZMUpstreamRequest alloc] initWithKeys:[NSSet setWithObject:ZMConversationUnsyncedActiveParticipantsKey] transportRequest:request userInfo:userInfo];
-}
-
-- (ZMUpstreamRequest *)requestForUpdatingUnsyncedInactiveParticipantsInConversation:(ZMConversation *)conversation
-{
-    ZMUser *unsyncedUser = conversation.unsyncedInactiveParticipants.firstObject;
-    
-    if (unsyncedUser == nil) {
-        return nil;
-    }
-
-    NSString *participantKind = unsyncedUser.isServiceUser ? @"bots" : @"members";
-    NSString *path = [NSString pathWithComponents:@[ ConversationsPath, conversation.remoteIdentifier.transportString, participantKind, unsyncedUser.remoteIdentifier.transportString ]];
-    
-    ZMTransportRequest *request = [ZMTransportRequest requestWithPath:path method:ZMMethodDELETE payload:nil];
-    [request expireAfterInterval:ZMTransportRequestDefaultExpirationInterval];
-    NSDictionary *userInfo = @{ UserInfoTypeKey : UserInfoRemovedValueKey, UserInfoUserKey : unsyncedUser };
-    return [[ZMUpstreamRequest alloc] initWithKeys:[NSSet setWithObject:ZMConversationUnsyncedInactiveParticipantsKey] transportRequest:request userInfo:userInfo];
-}
-
 
 - (ZMUpstreamRequest *)requestForUpdatingUserDefinedNameInConversation:(ZMConversation *)conversation
 {
@@ -729,7 +660,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     ZMTransportRequest *request = nil;
     ZMConversation *insertedConversation = (ZMConversation *) managedObject;
     
-    NSArray *participantUUIDs = [[insertedConversation.otherActiveParticipants array] mapWithBlock:^id(ZMUser *user) {
+    NSArray *participantUUIDs = [[insertedConversation.lastServerSyncedActiveParticipants array] mapWithBlock:^id(ZMUser *user) {
         return [user.remoteIdentifier transportString];
     }];
     
@@ -743,6 +674,16 @@ static NSString *const ConversationTeamManagedKey = @"managed";
                              ConversationTeamIdKey: insertedConversation.team.remoteIdentifier.transportString,
                              ConversationTeamManagedKey: @NO // FIXME:
                              };
+    }
+
+    NSArray <NSString *> *accessPayload = insertedConversation.accessPayload;
+    if (nil != accessPayload) {
+        payload[ConversationAccessKey] = accessPayload;
+    }
+
+    NSString *accessRolePayload = insertedConversation.accessRolePayload;
+    if (nil != accessRolePayload) {
+        payload[ConversationAccessRoleKey] = accessRolePayload;
     }
     
     request = [ZMTransportRequest requestWithPath:ConversationsPath method:ZMMethodPOST payload:payload];
@@ -770,11 +711,8 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
 - (ZMUpdateEvent *)conversationEventWithKeys:(NSSet *)keys responsePayload:(id<ZMTransportData>)payload;
 {
-    NSSet *keysThatGenerateEvents = [NSSet setWithObjects:ZMConversationUserDefinedNameKey,
-                                     ZMConversationUnsyncedInactiveParticipantsKey,
-                                     ZMConversationUnsyncedActiveParticipantsKey,
-                                     ZMConversationIsSelfAnActiveMemberKey,
-                                     nil];
+    NSSet *keysThatGenerateEvents = [NSSet setWithObjects:ZMConversationUserDefinedNameKey, nil];
+    
     if (! [keys intersectsSet:keysThatGenerateEvents]) {
         return nil;
         
@@ -792,61 +730,18 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 {
     ZMUpdateEvent *event = [self conversationEventWithKeys:keysToParse responsePayload:response.payload];
     if (event != nil) {
-        [self updatePropertiesOfConversation:conversation withPostPayloadEvent:event];
+        [conversation updateLastReadFromPostPayloadEvent:event];
         [self processEvents:@[event] liveEvents:YES prefetchResult:nil];
     }
-    
-    // NOTE: internal debug notification
-    if (conversation.unsyncedInactiveParticipants.count > 1) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:ZMPotentialErrorDetectedNotificationName object:nil userInfo:nil];
-        });
-    }
-    
+        
     if ([keysToParse isEqualToSet:[NSSet setWithObject:ZMConversationUserDefinedNameKey]]) {
         return NO;
     }
     
-    // When participants change, we need to update them based on userInfo, not 'keysToParse'.
-    // 'keysToParse' will not contain the participants if they've changed in the meantime, but
-    // we need to parse the result anyway.
-    NSString * const changeType = userInfo[UserInfoTypeKey];
-    BOOL const addedUsers = ([changeType isEqualToString:UserInfoAddedValueKey]);
-    BOOL const removedUsers = ([changeType isEqualToString:UserInfoRemovedValueKey]);
-    
-    if (addedUsers || removedUsers) {
-        BOOL needsAnotherRequest = NO;
-        if (removedUsers) {
-            ZMUser *syncedUser = userInfo[UserInfoUserKey];
-            [conversation synchronizeRemovedUser:syncedUser];
-            
-            needsAnotherRequest = conversation.unsyncedInactiveParticipants.count > 0;
-        }
-        else if (addedUsers) {
-            NSMutableOrderedSet *syncedUsers = userInfo[UserInfoUserKey];
-            
-            for (ZMUser *syncedUser in syncedUsers) {
-                [conversation synchronizeAddedUser:syncedUser];
-            }
-            
-            needsAnotherRequest = NO; // 1 TODO What happens if participants are changed while being updated?
-        }
-        
-        // Reset keys
-        if (! needsAnotherRequest && [keysToParse containsObject:ZMConversationUnsyncedInactiveParticipantsKey]) {
-            [conversation resetLocallyModifiedKeys:[NSSet setWithObject:ZMConversationUnsyncedInactiveParticipantsKey]];
-        }
-        if (! needsAnotherRequest && [keysToParse containsObject:ZMConversationUnsyncedActiveParticipantsKey]) {
-            [conversation resetLocallyModifiedKeys:[NSSet setWithObject:ZMConversationUnsyncedActiveParticipantsKey]];
-        }
-        
-        return needsAnotherRequest;
-    }
     if( keysToParse == nil ||
        [keysToParse isEmpty] ||
        [keysToParse containsObject:ZMConversationSilencedChangedTimeStampKey] ||
-       [keysToParse containsObject:ZMConversationArchivedChangedTimeStampKey] ||
-       [keysToParse containsObject:ZMConversationIsSelfAnActiveMemberKey])
+       [keysToParse containsObject:ZMConversationArchivedChangedTimeStampKey])
     {
         return NO;
     }
@@ -882,18 +777,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         [conversation resetLocallyModifiedKeys:[NSSet setWithObject:ZMConversationUserDefinedNameKey]];
         [remainingKeys removeObject:ZMConversationUserDefinedNameKey];
     }
-    if ([conversation hasLocalModificationsForKey:ZMConversationUnsyncedActiveParticipantsKey] && conversation.unsyncedActiveParticipants.count == 0) {
-        [conversation resetLocallyModifiedKeys:[NSSet setWithObject:ZMConversationUnsyncedActiveParticipantsKey]];
-        [remainingKeys removeObject:ZMConversationUnsyncedActiveParticipantsKey];
-    }
-    if ([conversation hasLocalModificationsForKey:ZMConversationUnsyncedInactiveParticipantsKey] && conversation.unsyncedInactiveParticipants.count == 0) {
-        [conversation resetLocallyModifiedKeys:[NSSet setWithObject:ZMConversationUnsyncedInactiveParticipantsKey]];
-        [remainingKeys removeObject:ZMConversationUnsyncedInactiveParticipantsKey];
-    }
-    if ([conversation hasLocalModificationsForKey:ZMConversationIsSelfAnActiveMemberKey] && conversation.isSelfAnActiveMember) {
-        [conversation resetLocallyModifiedKeys:[NSSet setWithObject:ZMConversationIsSelfAnActiveMemberKey]];
-        [remainingKeys removeObject:ZMConversationIsSelfAnActiveMemberKey];
-    }
     if (remainingKeys.count < keys.count) {
         [(id<ZMContextChangeTracker>)sync objectsDidChange:[NSSet setWithObject:conversation]];
         [self.managedObjectContext enqueueDelayedSave];
@@ -915,7 +798,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 /// Resets all keys that don't have a time reference and would possibly be changed with refetching of the conversation from the BE
 - (void)resetModifiedKeysWithoutReferenceInConversation:(ZMConversation*)conversation
 {
-    [conversation resetParticipantsBackToLastServerSync];
     [conversation resetLocallyModifiedKeys:[NSSet setWithArray:self.keysToSyncWithoutRef]];
     
     // since we reset all keys, we should make sure to remove the object from the modifiedSync

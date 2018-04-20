@@ -421,7 +421,7 @@ extension SearchUserImageStrategyTests {
         // given
         let searchUser = setupSearchDirectory(userCount: 1).first!
         let assetID = UUID()
-        userIDsTable.replaceUserId(searchUser.remoteIdentifier, withAsset: .legacyId(assetID))
+        userIDsTable.replaceUserId(searchUser.remoteIdentifier!, withAsset: .legacyId(assetID))
         
         // when
         guard let request = sut.nextRequest() else { return XCTFail() }
@@ -431,14 +431,14 @@ extension SearchUserImageStrategyTests {
         XCTAssertEqual(request.method, .methodGET);
         XCTAssertTrue(request.needsAuthentication);
         
-        let expectedPath = requestPath(for:assetID, of:searchUser.remoteIdentifier)
+        let expectedPath = requestPath(for:assetID, of:searchUser.remoteIdentifier!)
         XCTAssertEqual(request.path, expectedPath);
     }
     
     func testThatNextRequestDoesNotCreatesARequestForAnAssetIDIfTheFirstRequestIsStillRunning() {
         // given
         let searchUser = setupSearchDirectory(userCount: 1).first!
-        userIDsTable.replaceUserId(searchUser.remoteIdentifier, withAsset: .legacyId(UUID()))
+        userIDsTable.replaceUserId(searchUser.remoteIdentifier!, withAsset: .legacyId(UUID()))
         
         // when
         let request1 = sut.nextRequest()
@@ -457,8 +457,8 @@ extension SearchUserImageStrategyTests {
         let assetID1 = UUID()
         let assetID2 = UUID()
 
-        userIDsTable.replaceUserId(searchUser1.remoteIdentifier, withAsset: .legacyId(assetID1))
-        userIDsTable.replaceUserId(searchUser2.remoteIdentifier, withAsset: .legacyId(assetID2))
+        userIDsTable.replaceUserId(searchUser1.remoteIdentifier!, withAsset: .legacyId(assetID1))
+        userIDsTable.replaceUserId(searchUser2.remoteIdentifier!, withAsset: .legacyId(assetID2))
         
         // when
         guard let request1 = sut.nextRequest() else { return XCTFail() }
@@ -473,8 +473,8 @@ extension SearchUserImageStrategyTests {
         XCTAssertEqual(request2.method, .methodGET);
         XCTAssertTrue(request2.needsAuthentication);
         
-        let expectedPath1 = requestPath(for:assetID1, of:searchUser1.remoteIdentifier)
-        let expectedPath2 = requestPath(for:assetID2, of:searchUser2.remoteIdentifier)
+        let expectedPath1 = requestPath(for:assetID1, of:searchUser1.remoteIdentifier!)
+        let expectedPath2 = requestPath(for:assetID2, of:searchUser2.remoteIdentifier!)
         XCTAssertTrue(request1.path == expectedPath1 || request1.path == expectedPath2)
         XCTAssertTrue(request2.path == expectedPath1 || request2.path == expectedPath2)
         XCTAssertNotEqual(request2.path, request1.path)
@@ -486,20 +486,20 @@ extension SearchUserImageStrategyTests {
         let imageData = verySmallJPEGData()
         let searchUser1 = setupSearchDirectory(userCount: 1).first!
         let assetID1 = UUID()
-        userIDsTable.replaceUserId(searchUser1.remoteIdentifier, withAsset: .legacyId(assetID1))
+        userIDsTable.replaceUserId(searchUser1.remoteIdentifier!, withAsset: .legacyId(assetID1))
         
         let response = ZMTransportResponse(imageData: imageData, httpStatus: 200, transportSessionError: nil, headers: nil)
         
         // when
         guard let request = sut.nextRequest() else { return XCTFail() }
-        XCTAssertEqual(request.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier));
+        XCTAssertEqual(request.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier!));
 
         request.complete(with: response)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertNotNil(imagesCache.object(forKey: searchUser1.remoteIdentifier as NSUUID))
-        XCTAssertEqual(imagesCache.object(forKey: searchUser1.remoteIdentifier as NSUUID), imageData as NSData)
+        XCTAssertNotNil(imagesCache.object(forKey: (searchUser1.remoteIdentifier!) as NSUUID))
+        XCTAssertEqual(imagesCache.object(forKey: (searchUser1.remoteIdentifier!) as NSUUID), imageData as NSData)
     }
     
     func testThatCompletingARequestRemovesTheUserFromTheTable() {
@@ -507,13 +507,13 @@ extension SearchUserImageStrategyTests {
         let imageData = verySmallJPEGData()
         let searchUser1 = setupSearchDirectory(userCount: 1).first!
         let assetID1 = UUID()
-        userIDsTable.replaceUserId(searchUser1.remoteIdentifier, withAsset: .legacyId(assetID1))
+        userIDsTable.replaceUserId(searchUser1.remoteIdentifier!, withAsset: .legacyId(assetID1))
         
         let response = ZMTransportResponse(imageData: imageData, httpStatus: 200, transportSessionError: nil, headers: nil)
         
         // when
         guard let request = sut.nextRequest() else { return XCTFail() }
-        XCTAssertEqual(request.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier));
+        XCTAssertEqual(request.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier!));
         
         request.complete(with: response)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -531,13 +531,13 @@ extension SearchUserImageStrategyTests {
         userIDsTable.setUsers([searchUser1], forDirectory: fakeDirectory)
 
         let assetID1 = UUID()
-        userIDsTable.replaceUserId(searchUser1.remoteIdentifier, withAsset: .legacyId(assetID1))
+        userIDsTable.replaceUserId(searchUser1.remoteIdentifier!, withAsset: .legacyId(assetID1))
         
         let response = ZMTransportResponse(imageData: imageData, httpStatus: 200, transportSessionError: nil, headers: nil)
         
         // when
         guard let request = sut.nextRequest() else { return XCTFail() }
-        XCTAssertEqual(request.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier));
+        XCTAssertEqual(request.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier!));
         
         request.complete(with: response)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -553,12 +553,12 @@ extension SearchUserImageStrategyTests {
         // given
         let searchUser1 = setupSearchDirectory(userCount: 1).first!
         let assetID1 = UUID()
-        userIDsTable.replaceUserId(searchUser1.remoteIdentifier, withAsset: .legacyId(assetID1))
+        userIDsTable.replaceUserId(searchUser1.remoteIdentifier!, withAsset: .legacyId(assetID1))
         let response = ZMTransportResponse(payload: nil, httpStatus: 400, transportSessionError: nil)
         
         // when
         guard let request = sut.nextRequest() else { return XCTFail() }
-        XCTAssertEqual(request.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier));
+        XCTAssertEqual(request.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier!));
         
         request.complete(with: response)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -572,48 +572,48 @@ extension SearchUserImageStrategyTests {
         // given
         let searchUser1 = setupSearchDirectory(userCount: 1).first!
         let assetID1 = UUID()
-        userIDsTable.replaceUserId(searchUser1.remoteIdentifier, withAsset: .legacyId(assetID1))
+        userIDsTable.replaceUserId(searchUser1.remoteIdentifier!, withAsset: .legacyId(assetID1))
         
         let response = ZMTransportResponse(payload: nil, httpStatus: 500, transportSessionError: nil)
         
         // when
         guard let request1 = sut.nextRequest() else { return XCTFail() }
-        XCTAssertEqual(request1.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier));
+        XCTAssertEqual(request1.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier!));
         
         request1.complete(with: response)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // and when
         userIDsTable.setUsers([searchUser1], forDirectory: FakeSearchDirectory())
-        userIDsTable.replaceUserId(searchUser1.remoteIdentifier, withAsset: .legacyId(assetID1))
+        userIDsTable.replaceUserId(searchUser1.remoteIdentifier!, withAsset: .legacyId(assetID1))
         guard let request2 = sut.nextRequest() else { return XCTFail() }
         
         // then
-        XCTAssertEqual(request2.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier));
+        XCTAssertEqual(request2.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier!));
     }
     
     func testThatFailingARequestWithAPermanentErrorAllowsForThoseAssetIDsToBeDownloadedAgain() {
         // given
         let searchUser1 = setupSearchDirectory(userCount: 1).first!
         let assetID1 = UUID()
-        userIDsTable.replaceUserId(searchUser1.remoteIdentifier, withAsset: .legacyId(assetID1))
+        userIDsTable.replaceUserId(searchUser1.remoteIdentifier!, withAsset: .legacyId(assetID1))
     
         let response = ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil)
 
         // when
         guard let request1 = sut.nextRequest() else { return XCTFail() }
-        XCTAssertEqual(request1.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier));
+        XCTAssertEqual(request1.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier!));
         
         request1.complete(with: response)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // and when
         userIDsTable.setUsers([searchUser1], forDirectory: FakeSearchDirectory())
-        userIDsTable.replaceUserId(searchUser1.remoteIdentifier, withAsset: .legacyId(assetID1))
+        userIDsTable.replaceUserId(searchUser1.remoteIdentifier!, withAsset: .legacyId(assetID1))
         guard let request2 = sut.nextRequest() else { return XCTFail() }
         
         // then
-        XCTAssertEqual(request2.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier));
+        XCTAssertEqual(request2.path, requestPath(for:assetID1, of:searchUser1.remoteIdentifier!));
     }
     
     func testThatItNotifiesTheSearchUserWhenAnImageIsDownloaded() {
@@ -621,7 +621,7 @@ extension SearchUserImageStrategyTests {
         let imageData = verySmallJPEGData()
         let searchUser1 = setupSearchDirectory(userCount: 1).first!
         let assetID1 = UUID()
-        userIDsTable.replaceUserId(searchUser1.remoteIdentifier, withAsset: .legacyId(assetID1))
+        userIDsTable.replaceUserId(searchUser1.remoteIdentifier!, withAsset: .legacyId(assetID1))
         
         let response = ZMTransportResponse(imageData: imageData, httpStatus: 200, transportSessionError: nil, headers: nil)
         uiMOC.searchUserObserverCenter.addSearchUser(searchUser1) // This is called when the searchDirectory returns the searchUsers

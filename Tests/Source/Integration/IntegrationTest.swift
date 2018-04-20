@@ -59,7 +59,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     let transportSession: ZMTransportSession
 
-    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: ZMBackendEnvironment, reachability: ReachabilityProvider & ReachabilityTearDown) {
+    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: ZMBackendEnvironment, reachability: ReachabilityProvider & TearDownCapable) {
         self.transportSession = transportSession
         super.init(
             appVersion: "0.0.0",
@@ -120,7 +120,7 @@ extension IntegrationTest {
         application = ApplicationMock()
         mockTransportSession = MockTransportSession(dispatchGroup: self.dispatchGroup)
         mockTransportSession.cookieStorage = ZMPersistentCookieStorage(forServerName: "ztest.example.com", userIdentifier: currentUserIdentifier)
-        WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self;
+        WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self
         mockTransportSession.cookieStorage.deleteKeychainItems()
                 
         createSessionManager()
@@ -141,7 +141,11 @@ extension IntegrationTest {
         user3 = nil
         user4 = nil
         user5 = nil
+        team = nil
+        teamUser1 = nil
+        teamUser2 = nil
         serviceUser = nil
+        groupConversationWithWholeTeam = nil
         selfToUser1Conversation = nil
         selfToUser2Conversation = nil
         connectionSelfToUser1 = nil
@@ -328,7 +332,7 @@ extension IntegrationTest {
             self.selfToUser2Conversation = selfToUser2Conversation
             
             let groupConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [user1, user2, user3])
-            groupConversation.creator = user3;
+            groupConversation.creator = user3
             groupConversation.changeName(by:self.selfUser, name:"Group conversation")
             self.groupConversation = groupConversation
             
@@ -347,18 +351,36 @@ extension IntegrationTest {
     }
 
     @objc
-    func createConversationsWithServiceUser() {
+    func createTeamAndConversations() {
         mockTransportSession.performRemoteChanges({ session in
+
+            let user1 = session.insertUser(withName: "Team user1")
+            user1.accentID = 7
+            self.teamUser1 = user1
+
+            let user2 = session.insertUser(withName: "Team user2")
+            user2.accentID = 1
+            self.teamUser2 = user2
+
+            let team = session.insertTeam(withName: "A Team", isBound: true, users: [user1, user2])
+
             let bot = session.insertUser(withName: "Botty the Bot")
             bot.accentID = 3
             session.addProfilePicture(to: bot)
             session.addV3ProfilePicture(to: bot)
             self.serviceUser = bot
 
-            let groupConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [self.user1, self.user2, bot])
-            groupConversation.creator = self.user2;
+            let groupConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [user1, user2, bot])
+            groupConversation.team = team
+            groupConversation.creator = user2
             groupConversation.changeName(by:self.selfUser, name:"Group conversation with bot")
             self.groupConversationWithServiceUser = groupConversation
+
+            let teamConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [self.teamUser1, self.teamUser2])
+            teamConversation.team = team
+            teamConversation.creator = user2
+            teamConversation.changeName(by:self.selfUser, name:"Team Group conversation")
+            self.groupConversationWithWholeTeam = groupConversation
         })
     }
     
@@ -393,6 +415,9 @@ extension IntegrationTest {
         
         sessionManager?.unauthenticatedSession?.login(with: credentials)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        sessionManager?.unauthenticatedSession?.continueAfterBackupImportStep()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
         authenticationObserver = nil
         
         return didSucceed
@@ -411,7 +436,9 @@ extension IntegrationTest {
     
     @objc(userForMockUser:)
     func user(for mockUser: MockUser) -> ZMUser? {
-        let uuid = mockUser.identifier.uuid()
+        let uuid = mockUser.managedObjectContext!.performGroupedAndWait { _ in
+            return mockUser.identifier.uuid()
+        }
         let data = (uuid as NSUUID).data() as NSData
         let predicate = NSPredicate(format: "remoteIdentifier_data == %@", data)
         let request = ZMUser.sortedFetchRequest(with: predicate)
@@ -426,7 +453,9 @@ extension IntegrationTest {
     
     @objc(conversationForMockConversation:)
     func conversation(for mockConversation: MockConversation) -> ZMConversation? {
-        let uuid = mockConversation.identifier.uuid()
+        let uuid = mockConversation.managedObjectContext!.performGroupedAndWait { _ in
+            return mockConversation.identifier.uuid()
+        }
         let data = (uuid as NSUUID).data() as NSData
         let predicate = NSPredicate(format: "remoteIdentifier_data == %@", data)
         let request = ZMConversation.sortedFetchRequest(with: predicate)

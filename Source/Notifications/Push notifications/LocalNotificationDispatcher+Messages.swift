@@ -17,7 +17,7 @@
 //
 
 import Foundation
-import WireMessageStrategy
+import WireRequestStrategy
 
 extension LocalNotificationDispatcher: PushMessageHandler {
 
@@ -25,7 +25,7 @@ extension LocalNotificationDispatcher: PushMessageHandler {
     @objc(processMessage:) public func process(_ message: ZMMessage) {
         // we don't want to create duplicate notifications
         if messageNotifications.notifications.contains(where: { note in
-            return (note.userInfo?[MessageNonceIDStringKey] as? String) ==  message.nonce.transportString()
+            return (note.userInfo?[MessageNonceIDStringKey] as? String) ==  message.nonce!.transportString()
         }) { return }
         
         var note: ZMLocalNotification?

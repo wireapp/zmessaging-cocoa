@@ -16,7 +16,6 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-
 import XCTest
 import WireTesting
 import PushKit
@@ -476,50 +475,17 @@ class SessionManagerTests_Teams: IntegrationTest {
         // then
         XCTAssertEqual(NSError(code: .accountLimitReached, userInfo: nil), recorder.notifications.last!.error)
     }
-}
 
-class SessionManagerPayloadCheckerTests: MessagingTest {
-    func testThatItDetectsTheUserFromPayload() {
-        // GIVEN
-        let user = ZMUser.selfUser(in: self.uiMOC)
-        user.remoteIdentifier = UUID()
-        
-        let payload: [AnyHashable: Any] = ["data": [
-                "user": user.remoteIdentifier!.transportString()
-            ]
-        ]
-        // WHEN & THEN
-        XCTAssertTrue(payload.isPayload(for: user))
-    }
-    
-    func testThatItDiscardsThePayloadFromOtherUser() {
-        // GIVEN
-        let user = ZMUser.selfUser(in: self.uiMOC)
-        user.remoteIdentifier = UUID()
-        
-        let payload: [AnyHashable: Any] = ["data": [
-            "user": UUID().transportString()
-            ]
-        ]
-        // WHEN & THEN
-        XCTAssertFalse(payload.isPayload(for: user))
-    }
-    
-    func testThatItDetectsPayloadWithUserAsCorrect() {
-        // GIVEN
-        let payload: [AnyHashable: Any] = ["data": [
-            "user": UUID().transportString()
-            ]
-        ]
-        // WHEN
-        XCTAssertFalse(payload.isPayloadMissingUserInformation())
-    }
-    
-    func testThatItDetectsPayloadWithoutUserAsWrong() {
-        // GIVEN
-        let payload: [AnyHashable: Any] = [:]
-        // WHEN
-        XCTAssertTrue(payload.isPayloadMissingUserInformation())
+    func testThatItChecksAccountsForExistingAccount() {
+        // given
+        let account1 = Account(userName: "Account 1", userIdentifier: UUID.create())
+        let account2 = Account(userName: "Account 2", userIdentifier: UUID.create())
+
+        sessionManager?.accountManager.addOrUpdate(account1)
+
+        // then
+        XCTAssertTrue(sessionManager!.session(session: self.unauthenticatedSession!, isExistingAccount: account1))
+        XCTAssertFalse(sessionManager!.session(session: self.unauthenticatedSession!, isExistingAccount: account2))
     }
 }
 
@@ -1026,6 +992,72 @@ class SessionManagerTests_Push: IntegrationTest {
     }
 }
 
+extension NSManagedObjectContext {
+    func createSelfUserAndSelfConversation() {
+        let selfUser = ZMUser.selfUser(in: self)
+        selfUser.remoteIdentifier = UUID()
+        
+        let selfConversation = ZMConversation.insertNewObject(in: self)
+        selfConversation.remoteIdentifier = ZMConversation.selfConversationIdentifier(in: self)
+    }
+}
+
+extension SessionManagerTests {
+    func testThatItMarksConversationsAsRead() {
+        // given
+        let account1 = Account(userName: "Account 1", userIdentifier: UUID.create())
+        let account2 = Account(userName: "Account 2", userIdentifier: UUID.create())
+        
+        sessionManager?.accountManager.addOrUpdate(account1)
+        sessionManager?.accountManager.addOrUpdate(account2)
+        
+        var conversations: [ZMConversation] = []
+
+        let conversation1CreatedExpectation = self.expectation(description: "Conversation 1 created")
+
+        self.sessionManager?.withSession(for: account1, perform: { createdSession in
+            createdSession.managedObjectContext.createSelfUserAndSelfConversation()
+            
+            let conversation1 = createdSession.insertConversationWithUnreadMessage()
+            conversations.append(conversation1)
+            XCTAssertNil(conversation1.lastReadMessage)
+            createdSession.managedObjectContext.saveOrRollback()
+            conversation1CreatedExpectation.fulfill()
+        })
+        
+        let conversation2CreatedExpectation = self.expectation(description: "Conversation 2 created")
+        
+        self.sessionManager?.withSession(for: account2, perform: { createdSession in
+            createdSession.managedObjectContext.createSelfUserAndSelfConversation()
+            
+            let conversation2 = createdSession.insertConversationWithUnreadMessage()
+            XCTAssertNil(conversation2.lastReadMessage)
+            conversations.append(conversation2)
+            createdSession.managedObjectContext.saveOrRollback()
+            conversation2CreatedExpectation.fulfill()
+        })
+        
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        XCTAssertEqual(conversations.count, 2)
+        XCTAssertEqual(conversations.filter { $0.lastReadMessage == nil }.count, 2)
+        // when
+        
+        let doneExpectation = self.expectation(description: "Conversations are marked as read")
+
+        self.sessionManager?.markAllConversationsAsRead(completion: {
+            doneExpectation.fulfill()
+        })
+        
+        // then
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        
+        XCTAssertEqual(conversations.filter { $0.lastReadMessage == nil }.count, 0)
+        
+        // cleanup
+        self.sessionManager!.tearDownAllBackgroundSessions()
+    }
+}
+
 // MARK: - Mocks
 class SessionManagerTestDelegate: SessionManagerDelegate {
     
@@ -1076,7 +1108,7 @@ class SessionManagerObserverMock: SessionManagerCreatedSessionObserver, SessionM
     
 }
 
-class TestReachability: ReachabilityProvider, ReachabilityTearDown {
+class TestReachability: NSObject, ReachabilityProvider, TearDownCapable {
     var mayBeReachable = true
     var isMobileConnection = true
     var oldMayBeReachable = true

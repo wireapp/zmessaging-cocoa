@@ -183,7 +183,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
 //              @"name" : @"Mario"
 //              }
 //      };
-    if(event.type != ZMUpdateEventUserUpdate) {
+    if(event.type != ZMUpdateEventTypeUserUpdate) {
         return;
     }
     

@@ -147,6 +147,8 @@ public enum CallState : Equatable {
             return lDegraded == rDegraded
         case (.none, .none):
             fallthrough
+        case (.establishedDataChannel, .establishedDataChannel):
+            fallthrough
         case (.established, .established):
             fallthrough
         case (.terminating, .terminating):
@@ -247,13 +249,19 @@ public struct CallMember : Hashable {
 }
 
 private struct CallSnapshot {
-    let callState : CallState
-    let callStarter : UUID
-    let isVideo : Bool
+    let callState: CallState
+    let callStarter: UUID
+    let isVideo: Bool
+    let isGroup: Bool
+    let isConstantBitRate: Bool
     var conversationObserverToken : NSObjectProtocol?
     
     public func update(with callState: CallState) -> CallSnapshot {
-        return CallSnapshot(callState: callState, callStarter: callStarter, isVideo: isVideo, conversationObserverToken: conversationObserverToken)
+        return CallSnapshot(callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, isConstantBitRate: isConstantBitRate, conversationObserverToken: conversationObserverToken)
+    }
+    
+    public func updateConstantBitrate(_ enabled: Bool) -> CallSnapshot {
+        return CallSnapshot(callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, isConstantBitRate: enabled, conversationObserverToken: conversationObserverToken)
     }
 }
 
@@ -477,8 +485,11 @@ internal func constantBitRateChangeHandler(userId: UnsafePointer<Int8>?, enabled
     if let context = callCenter.uiMOC {
         context.performGroupedBlock {
             let enabled = enabled == 1 ? true : false
-            callCenter.isConstantBitRateAudioActive = enabled
-            WireCallCenterCBRNotification(enabled: enabled).post(in: context.notificationContext)
+            
+            if let establishedCall = callCenter.callSnapshots.first(where: { $0.value.callState == .established || $0.value.callState == .establishedDataChannel }) {
+                callCenter.callSnapshots[establishedCall.key] = establishedCall.value.updateConstantBitrate(enabled)
+                WireCallCenterCBRNotification(enabled: enabled).post(in: context.notificationContext)
+            }
         }
     } else {
         zmLog.error("Couldn't send CBR notification")
@@ -553,10 +564,10 @@ public struct CallEvent {
         else { return }
         
         let token = ConversationChangeInfo.add(observer: self, for: conversation)
-        callSnapshots[conversationId] = CallSnapshot(callState: callState, callStarter: callStarter ?? selfUserId, isVideo: video, conversationObserverToken: token)
+        let group = conversation.conversationType == .group
+        callSnapshots[conversationId] = CallSnapshot(callState: callState, callStarter: callStarter ?? selfUserId, isVideo: video, isGroup: group, isConstantBitRate: false, conversationObserverToken: token)
     }
     
-    public fileprivate(set) var isConstantBitRateAudioActive : Bool = false
     public var useConstantBitRateAudio: Bool = false
     
     var avsWrapper : AVSWrapperType!
@@ -682,13 +693,13 @@ public struct CallEvent {
         return answered
     }
     
-    @objc(startCallForConversationID:video:isGroup:)
-    public func startCall(conversationId: UUID, video: Bool, isGroup: Bool) -> Bool {
+    @objc(startCallForConversationID:video:)
+    public func startCall(conversationId: UUID, video: Bool) -> Bool {
         endAllCalls(exluding: conversationId)
         
         clearSnapshot(conversationId: conversationId) // make sure we don't have an old state for this conversation
         
-        let started = avsWrapper.startCall(conversationId: conversationId, video: video, isGroup: isGroup, useCBR: useConstantBitRateAudio)
+        let started = avsWrapper.startCall(conversationId: conversationId, video: video, isGroup: isGroup(conversationId: conversationId), useCBR: useConstantBitRateAudio)
         if started {
             let callState : CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
             createSnapshot(callState: callState, callStarter: selfUserId,  video: video, for: conversationId)
@@ -700,10 +711,10 @@ public struct CallEvent {
         return started
     }
     
-    @objc(closeCallForConversationID:isGroup:)
-    public func closeCall(conversationId: UUID, isGroup: Bool) {
+    @objc(closeCallForConversationID:)
+    public func closeCall(conversationId: UUID) {
         avsWrapper.endCall(conversationId: conversationId)
-        if isGroup, let previousSnapshot = callSnapshots[conversationId] { // TODO move isGroup into CallSnapshot
+        if let previousSnapshot = callSnapshots[conversationId], previousSnapshot.isGroup {
             let callState : CallState = .incoming(video: previousSnapshot.isVideo, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
             callSnapshots[conversationId] = previousSnapshot.update(with: callState)
         }
@@ -727,7 +738,7 @@ public struct CallEvent {
             case .incoming:
                 rejectCall(conversationId: key)
             default:
-                closeCall(conversationId: key, isGroup: false)
+                closeCall(conversationId: key)
             }
         }
     }
@@ -742,10 +753,20 @@ public struct CallEvent {
         return callSnapshots[conversationId]?.isVideo ?? false
     }
     
+    @objc(isConstantBitRateInConversationID:)
+    public func isContantBitRate(conversationId: UUID) -> Bool {
+        return callSnapshots[conversationId]?.isConstantBitRate ?? false
+    }
+    
     fileprivate func isDegraded(conversationId: UUID) -> Bool {
         let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: uiMOC!)
         let degraded = conversation?.securityLevel == .secureWithIgnored
         return degraded
+    }
+    
+    fileprivate func isGroup(conversationId: UUID) -> Bool {
+        let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: uiMOC!)
+        return conversation?.conversationType == .group
     }
 
     public func setVideoCaptureDevice(_ captureDevice: CaptureDevice, for conversationId: UUID) {

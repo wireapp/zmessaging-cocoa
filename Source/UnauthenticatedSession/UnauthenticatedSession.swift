@@ -24,9 +24,14 @@ public protocol UnauthenticatedSessionDelegate: class {
     func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials)  -> Bool
     func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data)
     func session(session: UnauthenticatedSession, createdAccount account: Account)
+    func session(session: UnauthenticatedSession, isExistingAccount account: Account) -> Bool
 }
 
 @objc public protocol UserInfoParser: class {
+    @objc(userIdentifierFromResponse:)
+    func userIdentifier(from response: ZMTransportResponse) -> UUID?
+    @objc(accountExistsLocallyFromResponse:)
+    func accountExistsLocally(from response: ZMTransportResponse) -> Bool
     @objc(parseUserInfoFromResponse:)
     func parseUserInfo(from response: ZMTransportResponse)
 }
@@ -38,31 +43,31 @@ private let log = ZMSLog(tag: "UnauthenticatedSession")
 public class UnauthenticatedSession: NSObject {
     
     public let groupQueue: DispatchGroupQueue
-    public let authenticationStatus: ZMAuthenticationStatus
+    private(set) public var authenticationStatus: ZMAuthenticationStatus!
     public let registrationStatus: RegistrationStatus 
     let reachability: ReachabilityProvider
     private(set) var operationLoop: UnauthenticatedOperationLoop!
     private let transportSession: UnauthenticatedTransportSessionProtocol
-    private var tornDown = false
+    fileprivate var tornDown = false
 
     weak var delegate: UnauthenticatedSessionDelegate?
 
     init(transportSession: UnauthenticatedTransportSessionProtocol, reachability: ReachabilityProvider, delegate: UnauthenticatedSessionDelegate?) {
         self.delegate = delegate
         self.groupQueue = DispatchGroupQueue(queue: .main)
-        self.authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue)
         self.registrationStatus = RegistrationStatus()
         self.transportSession = transportSession
         self.reachability = reachability
         super.init()
 
+        self.authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue, userInfoParser: self)
         self.operationLoop = UnauthenticatedOperationLoop(
             transportSession: transportSession,
             operationQueue: groupQueue,
             requestStrategies: [
-                ZMLoginTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus, userInfoParser: self),
+                ZMLoginTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus),
                 ZMLoginCodeRequestTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
-                ZMRegistrationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus, userInfoParser: self)!,
+                ZMRegistrationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
                 ZMPhoneNumberVerificationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
                 EmailVerificationStrategy(groupQueue: groupQueue, status: registrationStatus),
                 TeamRegistrationStrategy(groupQueue: groupQueue, status: registrationStatus, userInfoParser: self)
@@ -74,16 +79,42 @@ public class UnauthenticatedSession: NSObject {
         precondition(tornDown, "Need to call tearDown before deinit")
     }
 
-    func tearDown() {
+    func authenticationErrorIfNotReachable(_ block: () -> ()) {
+        if self.reachability.mayBeReachable {
+            block()
+        } else {
+            authenticationStatus.notifyAuthenticationDidFail(NSError(code: .networkError, userInfo:nil))
+        }
+    }
+}
+
+extension UnauthenticatedSession: TearDownCapable {
+    public func tearDown() {
         operationLoop.tearDown()
         tornDown = true
     }
-
 }
 
 // MARK: - UserInfoParser
 
 extension UnauthenticatedSession: UserInfoParser {
+    public func userIdentifier(from response: ZMTransportResponse) -> UUID? {
+        guard let info = response.extractUserInfo() else {
+            log.warn("Failed to parse UserInfo from response: \(response)")
+            return nil;
+        }
+        return info.identifier
+    }
+
+    public func accountExistsLocally(from response: ZMTransportResponse) -> Bool {
+        guard let info = response.extractUserInfo() else {
+            log.warn("Failed to parse UserInfo from response: \(response)")
+            return false
+        }
+        let account = Account(userName: "", userIdentifier: info.identifier)
+        guard let delegate = delegate else { return false }
+        return delegate.session(session: self, isExistingAccount: account)
+    }
 
     public func parseUserInfo(from response: ZMTransportResponse) {
         guard let info = response.extractUserInfo() else { return log.warn("Failed to parse UserInfo from response: \(response)") }

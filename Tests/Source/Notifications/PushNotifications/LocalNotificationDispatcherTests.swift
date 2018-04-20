@@ -57,9 +57,9 @@ class LocalNotificationDispatcherTests: MessagingTest {
             [self.conversation1!, self.conversation2!].forEach {
                 $0.conversationType = .group
                 $0.remoteIdentifier = UUID.create()
-                $0.addParticipant(self.user1)
+                $0.internalAddParticipants(Set(arrayLiteral: self.user1))
             }
-            self.conversation2.addParticipant(self.user2)
+            self.conversation2.internalAddParticipants(Set(arrayLiteral: self.user2))
             
             self.selfUser.remoteIdentifier = UUID.create()
         }
@@ -229,7 +229,7 @@ extension LocalNotificationDispatcherTests {
         guard self.application.scheduledLocalNotifications.count == 1 else {
             return XCTFail("Wrong number of notifications")
         }
-        XCTAssertEqual(self.application.scheduledLocalNotifications[0].alertBody, ZMPushStringDefault.localizedStringForPushNotification())
+        XCTAssertEqual(self.application.scheduledLocalNotifications[0].alertBody, "New message")
         XCTAssertEqual(self.application.scheduledLocalNotifications[0].soundName, "new_message_apns.caf")
     
     }
@@ -287,14 +287,14 @@ extension LocalNotificationDispatcherTests {
     func testThatItCreatesNotificationForSelfGroupParticipation() {
     
         // GIVEN
-        let message = ZMSystemMessage.insertNewObject(in: self.syncMOC)
+        let message = ZMSystemMessage(nonce: UUID(), managedObjectContext: syncMOC)
         message.visibleInConversation = self.conversation1
         message.sender = self.user1
         message.systemMessageType = .participantsAdded
         message.users = [self.selfUser]
         
         // notification content
-        let text = (ZMPushStringMemberJoin as NSString).localizedString(with: message.sender, conversation: message.conversation, otherUser: self.selfUser)!
+        let text = "\(message.sender!.name!) added you"
         
         // WHEN
         self.sut.process(message)
@@ -310,7 +310,7 @@ extension LocalNotificationDispatcherTests {
     func testThatItDoesNotCreateNotificationForOtherGroupParticipation() {
         
         // GIVEN
-        let message = ZMSystemMessage.insertNewObject(in: self.syncMOC)
+        let message = ZMSystemMessage(nonce: UUID(), managedObjectContext: syncMOC)
         message.visibleInConversation = self.conversation1
         message.sender = self.user1
         message.systemMessageType = .participantsAdded
@@ -332,8 +332,8 @@ extension LocalNotificationDispatcherTests {
         sender.remoteIdentifier = UUID.create()
         
         let message = conversation.appendMessage(withText: "text") as! ZMClientMessage
-        let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
-        let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce!.transportString(), nonce: UUID.create().transportString())
+        let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce!.transportString(), nonce: UUID.create().transportString())
         
         let event1 = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction1, senderID: sender.remoteIdentifier!)
         let event2 = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction2, senderID: sender.remoteIdentifier!)

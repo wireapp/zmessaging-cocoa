@@ -29,11 +29,13 @@ class UserClientRequestFactoryTests: MessagingTest {
     var sut: UserClientRequestFactory!
     var authenticationStatus: ZMAuthenticationStatus!
     var spyKeyStore: SpyUserClientKeyStore!
+    var userInfoParser: MockUserInfoParser!
     
     override func setUp() {
         super.setUp()
         self.spyKeyStore = SpyUserClientKeyStore(accountDirectory: accountDirectory, applicationContainer: sharedContainerURL)
-        self.authenticationStatus = MockAuthenticationStatus()
+        self.userInfoParser = MockUserInfoParser()
+        self.authenticationStatus = MockAuthenticationStatus(userInfoParser: self.userInfoParser)
         self.sut = UserClientRequestFactory(keysStore: self.spyKeyStore)
     }
     
@@ -42,6 +44,7 @@ class UserClientRequestFactoryTests: MessagingTest {
         self.authenticationStatus = nil
         self.sut = nil
         self.spyKeyStore = nil
+        self.userInfoParser = nil
         super.tearDown()
     }
 

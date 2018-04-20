@@ -44,7 +44,7 @@ extension SearchResult {
             return !isHandleQuery || name?.hasPrefix("@") ?? true || handle?.contains(queryWithoutAtSymbol) ?? false
         }
         
-        let searchUsers = ZMSearchUser.users(withPayloadArray: filteredDocuments, userSession: userSession) ?? []
+        let searchUsers = ZMSearchUser.users(withPayloadArray: filteredDocuments, userSession: userSession)
         
         contacts = []
         teamMembers = []
@@ -59,7 +59,7 @@ extension SearchResult {
             return nil
         }
         
-        let searchUsersServices = ZMSearchUser.users(withPayloadArray: servicesPayload, userSession: userSession) ?? []
+        let searchUsersServices = ZMSearchUser.users(withPayloadArray: servicesPayload, userSession: userSession)
         
         contacts = []
         teamMembers = []

@@ -17,7 +17,7 @@
 // 
 
 @import WireRequestStrategy;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 
 @class NSManagedObjectContext;
 @class ApplicationStatusDirectory;

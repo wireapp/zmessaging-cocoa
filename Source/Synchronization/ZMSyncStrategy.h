@@ -47,7 +47,7 @@
 @protocol ZMApplication;
 @protocol LocalStoreProviderProtocol;
 
-@interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory>
+@interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory, TearDownCapable>
 
 - (instancetype)initWithStoreProvider:(id<LocalStoreProviderProtocol>)storeProvider
                         cookieStorage:(ZMPersistentCookieStorage *)cookieStorage

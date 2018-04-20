@@ -26,7 +26,6 @@ typedef NS_ENUM(int8_t, ZMPushPayloadResult) {
     ZMPushPayloadResultFailure = 0,
     ZMPushPayloadResultSuccess = 1,
     ZMPushPayloadResultNoData = 2,
-    ZMPushPayloadResultNeedsMoreRequests = 3
 };
 
 typedef void (^ZMPushResultHandler)(ZMPushPayloadResult);

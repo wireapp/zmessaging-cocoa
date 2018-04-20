@@ -18,13 +18,17 @@
 
 
 #include "warnings.xcconfig"
-#include "../../../Resources/Configurations/version.xcconfig"
+#include "../version.xcconfig"
 
+SDKROOT = iphoneos
 
 // Swift
 //
 DEFINES_MODULE = YES
 
+// Packaging
+//
+INFOPLIST_PREPROCESS = YES
 
 // Linking
 //

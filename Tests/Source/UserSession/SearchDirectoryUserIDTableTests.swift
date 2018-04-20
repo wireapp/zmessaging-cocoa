@@ -103,12 +103,12 @@ class SearchDirectoryUserIDTableTests: MessagingTest {
         let expectedAssets = Set([SearchUserAndAsset(searchUser: user2, assetKey: assetKey)])
 
         // When
-        sut.replaceUserId(user1.remoteIdentifier, withAsset: .legacyId(legacyId1))
-        sut.replaceUserId(user2.remoteIdentifier, withAsset: .assetKey(assetKey))
-        sut.replaceUserId(user3.remoteIdentifier, withAsset: .legacyId(legacyId2))
+        sut.replaceUserId(user1.remoteIdentifier!, withAsset: .legacyId(legacyId1))
+        sut.replaceUserId(user2.remoteIdentifier!, withAsset: .assetKey(assetKey))
+        sut.replaceUserId(user3.remoteIdentifier!, withAsset: .legacyId(legacyId2))
 
         // Then
-        XCTAssertEqual(sut.allUserIds(), [user4.remoteIdentifier])
+        XCTAssertEqual(sut.allUserIds(), [user4.remoteIdentifier!])
         XCTAssertEqual(sut.allUsersWithAssets(), expectedAssets.union(expectedLegacyIds))
         XCTAssertEqual(sut.allUsersWithLegacyIds(), expectedLegacyIds)
         XCTAssertEqual(sut.allUsersWithAssetKeys(), expectedAssets)
@@ -126,7 +126,7 @@ class SearchDirectoryUserIDTableTests: MessagingTest {
 
         // Then
         XCTAssertEqual(sut.allUserIds().count, 1)
-        XCTAssertEqual(sut.allUserIds(), [user1.remoteIdentifier])
+        XCTAssertEqual(sut.allUserIds(), [user1.remoteIdentifier!])
     }
 
     func testThatReAddingAUserIDDoesNotDeleteTheAssociatedAssetID() {
@@ -137,8 +137,8 @@ class SearchDirectoryUserIDTableTests: MessagingTest {
         let directory = createSearchDirectory()
         sut.setUsers([user1, user2, user3], forDirectory: directory)
 
-        sut.replaceUserId(user1.remoteIdentifier, withAsset: .legacyId(legacyKey))
-        sut.replaceUserId(user2.remoteIdentifier, withAsset: .assetKey(assetKey))
+        sut.replaceUserId(user1.remoteIdentifier!, withAsset: .legacyId(legacyKey))
+        sut.replaceUserId(user2.remoteIdentifier!, withAsset: .assetKey(assetKey))
 
         // When
         sut.setUsers([user1, user2, user3], forDirectory: directory)

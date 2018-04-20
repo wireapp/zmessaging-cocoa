@@ -221,7 +221,7 @@
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 3u);
 }
 
-- (void)testThatItLogsInWithAPhoneNumberIfThePhoneNumberIsAlreadyRegisteredToAnotherUser
+- (void)testThatItDoesNotLogInWithAPhoneNumberIfThePhoneNumberIsAlreadyRegisteredToAnotherUser
 {
     // given
     [self createSelfUserAndConversation];
@@ -230,6 +230,9 @@
     
     NSString *phone = @"+4912345678900";
     NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
+    
+    [[self.registrationObserver expect] phoneVerificationCodeRequestDidFail:OCMOCK_ANY];
+    [[self.registrationObserver expect] phoneVerificationDidFail:OCMOCK_ANY];
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
@@ -243,13 +246,9 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(recorder.notifications.count, 1lu);
-    XCTAssertEqual(recorder.notifications.lastObject.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
-    ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
-    XCTAssertEqualObjects(selfUser.name, selfUser.name);
-    XCTAssertEqualObjects(selfUser.phoneNumber, phone);
-    XCTAssertEqual(selfUser.accentColorValue, selfUser.accentColorValue);
-    
+    // User is not logged in anymore via registration flow - it is invited to login via the classic login flow.
+    XCTAssertEqual(recorder.notifications.count, 0lu);
+    XCTAssertNil(self.userSession);
 }
 
 - (void)testThatItReturnsAPhoneVerificationFailureWithAlreadyRegisteredPhoneNumber
@@ -260,14 +259,17 @@
     NSString *phone = @"+4912345678900";
     NSString *code = self.mockTransportSession.invalidPhoneVerificationCode;
     
+    [[self.registrationObserver expect] phoneVerificationCodeRequestDidFail:OCMOCK_ANY];
+    
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
         self.selfUser.phone = phone;
     }];
     
     // expect
-    [[self.registrationObserver expect] registrationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *error) {
-        XCTAssertEqual(error.code, (int) ZMUserSessionPhoneNumberIsAlreadyRegistered);
+    [[self.registrationObserver expect] phoneVerificationDidFail:[OCMArg checkWithBlock:^BOOL(NSError *error) {
+        // User is not logged in anymore via registration flow - it is invited to login via the classic login flow.
+        XCTAssertEqual(error.code, (int) ZMUserSessionUnknownError);
         XCTAssertEqualObjects(error.domain, NSError.ZMUserSessionErrorDomain);
         return YES;
     }]];
@@ -277,7 +279,6 @@
     WaitForAllGroupsToBeEmpty(0.5);
     [self.unauthenticatedSession verifyPhoneNumberForRegistration:phone verificationCode:code];
     WaitForAllGroupsToBeEmpty(0.5);
-
 }
 
 - (void)testThatWeCanAskForThePhoneRegistrationCodeTwice

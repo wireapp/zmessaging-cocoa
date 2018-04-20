@@ -25,66 +25,6 @@
 #import "ZMHotFixDirectory.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
-@interface VersionNumberTests : MessagingTest
-@end
-
-
-@implementation VersionNumberTests
-
-- (void)setUp {
-    [super setUp];
-}
-
-- (void)tearDown
-{
-    [super tearDown];
-}
-
-- (void)testThatItComparesCorrectly
-{
-    // given
-    NSString *version1String = @"0.1";
-    NSString *version2String = @"1.0";
-    NSString *version3String = @"1.0";
-    NSString *version4String = @"1.0.1";
-    NSString *version5String = @"1.1";
-    
-    ZMVersion *version1 = [[ZMVersion alloc] initWithVersionString:version1String];
-    ZMVersion *version2 = [[ZMVersion alloc] initWithVersionString:version2String];
-    ZMVersion *version3 = [[ZMVersion alloc] initWithVersionString:version3String];
-    ZMVersion *version4 = [[ZMVersion alloc] initWithVersionString:version4String];
-    ZMVersion *version5 = [[ZMVersion alloc] initWithVersionString:version5String];
-
-    // then
-    XCTAssertEqual([version1 compareWithVersion:version2], NSOrderedAscending);
-    XCTAssertEqual([version1 compareWithVersion:version3], NSOrderedAscending);
-    XCTAssertEqual([version1 compareWithVersion:version4], NSOrderedAscending);
-    XCTAssertEqual([version1 compareWithVersion:version5], NSOrderedAscending);
-
-    XCTAssertEqual([version2 compareWithVersion:version1], NSOrderedDescending);
-    XCTAssertEqual([version2 compareWithVersion:version3], NSOrderedSame);
-    XCTAssertEqual([version2 compareWithVersion:version4], NSOrderedAscending);
-    XCTAssertEqual([version2 compareWithVersion:version5], NSOrderedAscending);
-
-    XCTAssertEqual([version3 compareWithVersion:version1], NSOrderedDescending);
-    XCTAssertEqual([version3 compareWithVersion:version2], NSOrderedSame);
-    XCTAssertEqual([version3 compareWithVersion:version4], NSOrderedAscending);
-    XCTAssertEqual([version3 compareWithVersion:version5], NSOrderedAscending);
-
-    XCTAssertEqual([version4 compareWithVersion:version1], NSOrderedDescending);
-    XCTAssertEqual([version4 compareWithVersion:version2], NSOrderedDescending);
-    XCTAssertEqual([version4 compareWithVersion:version3], NSOrderedDescending);
-    XCTAssertEqual([version4 compareWithVersion:version5], NSOrderedAscending);
-    
-    XCTAssertEqual([version5 compareWithVersion:version1], NSOrderedDescending);
-    XCTAssertEqual([version5 compareWithVersion:version2], NSOrderedDescending);
-    XCTAssertEqual([version5 compareWithVersion:version3], NSOrderedDescending);
-    XCTAssertEqual([version5 compareWithVersion:version4], NSOrderedDescending);
-}
-
-@end
-
-
 
 
 @interface FakeHotFixDirectory : ZMHotFixDirectory
@@ -170,6 +110,7 @@
 - (void)setUp {
     [super setUp];
     
+    [self createSelfClient];
     self.fakeHotFixDirectory = [[FakeHotFixDirectory alloc] init];
     self.sut = [[ZMHotFix alloc] initWithHotFixDirectory:self.fakeHotFixDirectory syncMOC:self.syncMOC];
     }
@@ -410,6 +351,7 @@
     [self saveNewVersion];
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
     conversation.conversationType = ZMConversationTypeOneOnOne;
+    conversation.remoteIdentifier = NSUUID.createUUID;
     
     ZMAssetClientMessage *uploadedImageMessage = [conversation appendOTRMessageWithImageData:self.mediumJPEGData nonce:NSUUID.createUUID];
     [uploadedImageMessage markAsSent];
@@ -638,7 +580,7 @@
 
     // then
     XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertTrue(unconnectedUser.needsToBeUpdatedFromBackend);
     XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend);
 }
 
@@ -681,9 +623,46 @@
 
     // then
     XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertTrue(unconnectedUser.needsToBeUpdatedFromBackend);
     XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend);
 }
 
-@end
+- (void)testThatItMarksConnectedUsersToBeUpdatedFromTheBackend_157_0_0
+{
+    // given
+    [self.syncMOC setPersistentStoreMetadata:@"156.0.0" forKey:@"lastSavedVersion"];
+    ZMUser *connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+    connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
+    connectedUser.connection.status = ZMConnectionStatusAccepted;
+    connectedUser.needsToBeUpdatedFromBackend = NO;
+    
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+    selfUser.needsToBeUpdatedFromBackend = NO;
+    
+    ZMUser *unconnectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+    unconnectedUser.needsToBeUpdatedFromBackend = NO;
+    
+    [self.syncMOC saveOrRollback];
+    
+    XCTAssertTrue(connectedUser.isConnected);
+    XCTAssertFalse(unconnectedUser.isConnected);
+    XCTAssertFalse(connectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
+    
+    // when
+    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+    [self performIgnoringZMLogError:^{
+        [self.sut applyPatchesForCurrentVersion:@"157.0.0"];
+        WaitForAllGroupsToBeEmpty(0.5);
+    }];
+    
+    [self.syncMOC saveOrRollback];
+    
+    // then
+    XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertTrue(unconnectedUser.needsToBeUpdatedFromBackend);
+    XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
+}
 
+@end

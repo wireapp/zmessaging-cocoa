@@ -17,10 +17,10 @@
 //
 
 import XCTest
-import WireMessageStrategy
+import WireRequestStrategy
 import WireDataModel
 
-class ZMConversationTranscoderSystemMessageTests: ObjectTranscoderTests {
+class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
     
     var sut: ZMConversationTranscoder!
     var localNotificationDispatcher: MockPushMessageHandler!
@@ -88,42 +88,12 @@ class ZMConversationTranscoderSystemMessageTests: ObjectTranscoderTests {
         }
     }
     
-    func testThatItCreatesAndNotifiesSystemMessagesIfMemberIsAlreadyPartOfConversationButNotYetSynced() {
-        
-        self.syncMOC.performAndWait {
-            
-            // GIVEN
-            conversation.setLocallyModifiedKeys(Set<AnyHashable>([ZMConversationUnsyncedActiveParticipantsKey]))
-            let payload = [
-                "from": self.user.remoteIdentifier!.transportString(),
-                "conversation": self.conversation.remoteIdentifier!.transportString(),
-                "time": NSDate().transportString(),
-                "data": [
-                    "user_ids": [self.user.remoteIdentifier!.transportString()]
-                ],
-                "type": "conversation.member-join"
-                ] as [String: Any]
-            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
-            
-            // WHEN
-            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
-            
-            // THEN
-            guard let message = self.conversation.messages.lastObject as? ZMSystemMessage else {
-                XCTFail()
-                return
-            }
-            XCTAssertEqual(message.systemMessageType, .participantsAdded)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
-        }
-    }
-    
     func testThatItIgnoresMemberJoinEventsIfMemberIsAlreadyPartOfConversation() {
         
         self.syncMOC.performAndWait {
             
             // GIVEN
-            self.conversation.internalAddParticipants(Set<ZMUser>([user]), isAuthoritative: true)
+            self.conversation.internalAddParticipants(Set<ZMUser>([user]))
             
             let payload = [
                 "from": self.user.remoteIdentifier!.transportString(),
@@ -150,7 +120,7 @@ class ZMConversationTranscoderSystemMessageTests: ObjectTranscoderTests {
         self.syncMOC.performAndWait {
             
             // GIVEN
-            self.conversation.internalAddParticipants(Set<ZMUser>([user]), isAuthoritative: true)
+            self.conversation.internalAddParticipants(Set<ZMUser>([user]))
             
             let payload = [
                 "from": self.user.remoteIdentifier!.transportString(),
@@ -158,70 +128,6 @@ class ZMConversationTranscoderSystemMessageTests: ObjectTranscoderTests {
                 "time": NSDate().transportString(),
                 "data": [
                     "user_ids": [self.user.remoteIdentifier!.transportString()]
-                ],
-                "type": "conversation.member-leave"
-                ] as [String: Any]
-            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
-            
-            // WHEN
-            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
-            
-            // THEN
-            guard let message = self.conversation.messages.lastObject as? ZMSystemMessage else {
-                XCTFail()
-                return
-            }
-            XCTAssertEqual(message.systemMessageType, .participantsRemoved)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
-        }
-    }
-    
-    func testThatItCreatesAndNotifiesSystemMessagesIfMemberIsNotPartOfConversationButYetNotSynced() {
-        
-        self.syncMOC.performAndWait {
-            
-            // GIVEN
-            conversation.setLocallyModifiedKeys(Set<AnyHashable>([ZMConversationUnsyncedInactiveParticipantsKey]))
-            let payload = [
-                "from": self.user.remoteIdentifier!.transportString(),
-                "conversation": self.conversation.remoteIdentifier!.transportString(),
-                "time": NSDate().transportString(),
-                "data": [
-                    "user_ids": [self.user.remoteIdentifier!.transportString()]
-                ],
-                "type": "conversation.member-leave"
-                ] as [String: Any]
-            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
-            
-            // WHEN
-            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
-            
-            // THEN
-            guard let message = self.conversation.messages.lastObject as? ZMSystemMessage else {
-                XCTFail()
-                return
-            }
-            XCTAssertEqual(message.systemMessageType, .participantsRemoved)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
-        }
-    }
-    
-    func testThatItCreatesAndNotifiesSystemMessagesISelfUserIsNotPartOfConversationButYetNotSynced() {
-        
-        self.syncMOC.performAndWait {
-            
-            // GIVEN
-            let selfUser = ZMUser.selfUser(in: syncMOC)
-            selfUser.remoteIdentifier = UUID()
-            conversation.internalRemoveParticipants(Set<ZMUser>([selfUser]), sender: selfUser)
-            conversation.setLocallyModifiedKeys(Set<AnyHashable>([ZMConversationIsSelfAnActiveMemberKey]))
-            
-            let payload = [
-                "from": selfUser.remoteIdentifier!.transportString(),
-                "conversation": self.conversation.remoteIdentifier!.transportString(),
-                "time": NSDate().transportString(),
-                "data": [
-                    "user_ids": [selfUser.remoteIdentifier!.transportString()]
                 ],
                 "type": "conversation.member-leave"
                 ] as [String: Any]
@@ -353,9 +259,75 @@ class ZMConversationTranscoderSystemMessageTests: ObjectTranscoderTests {
         }
     }
     
+    func testThatItIncludesTheAccessModeAndRoleInTheCreationPayload_Team_AllowGuests() {
+        assertAccessRoleAndModeWhenInserting(allowGuests: true, expectedModes: ["invite", "code"], expectedRole: "non_activated")
+    }
+    
+    func testThatItIncludesTheAccessModeAndRoleInTheCreationPayload_Team_NoGuests() {
+        assertAccessRoleAndModeWhenInserting(allowGuests: false, expectedModes: [], expectedRole: "team")
+    }
+    
+    func testThatItIncludesTheAccessModeAndRoleInTheCreationPayload_NoTeam_AllowGuests() {
+        assertAccessRoleAndModeWhenInserting(team: false, allowGuests: true, expectedModes: nil, expectedRole: nil)
+    }
+    
+    func testThatItIncludesTheAccessModeAndRoleInTheCreationPayload_NoTeam_NoGuests() {
+        assertAccessRoleAndModeWhenInserting(team: false, allowGuests: false, expectedModes: nil, expectedRole: nil)
+    }
+    
+    private func assertAccessRoleAndModeWhenInserting(
+        team: Bool = true,
+        allowGuests: Bool,
+        expectedModes: [String]?,
+        expectedRole: String?,
+        file: StaticString = #file,
+        line: UInt = #line
+        ) {
+        var request: ZMTransportRequest?
+        let moc = syncMOC
+        
+        // When
+        moc.performGroupedBlockAndWait {
+            let team: Team? = {
+                guard team else { return nil }
+                let team = Team.insertNewObject(in: moc)
+                team.remoteIdentifier = .create()
+                let member = Member.getOrCreateMember(for: .selfUser(in: moc), in: team, context: moc)
+                member.permissions = .member
+                return team
+            }()
+            
+            let conversation = ZMConversation.insertGroupConversation(into: moc, withParticipants: [], name: self.name!, in: team, allowGuests: allowGuests)
+            guard let inserted = conversation else { return XCTFail("no conversation", file: file, line: line) }
+            XCTAssert(moc.saveOrRollback())
+            
+            self.sut.contextChangeTrackers.forEach {
+                $0.objectsDidChange([inserted])
+            }
+            
+            request = self.sut.nextRequestIfAllowed()
+        }
+        
+        // Then
+        guard let payload = request?.payload as? [String: Any] else { return XCTFail("no payload", file: file, line: line) }
+        
+        if let expectedModes = expectedModes, let expectedRole = expectedRole {
+            guard let accessModes = payload["access"] as? [String] else { return XCTFail("no access modes", file: file, line: line) }
+            guard let accessRole = payload["access_role"] as? String else { return XCTFail("no access role", file: file, line: line) }
+            XCTAssertEqual(accessRole, expectedRole, "unexpected access role", file: file, line: line)
+            XCTAssertEqual(accessModes.count, expectedModes.count, "number of modes not matching", file: file, line: line)
+            expectedModes.forEach {
+                XCTAssert(accessModes.contains($0), "access mode missing: \($0)", file: file, line: line)
+            }
+        } else {
+            XCTAssertNil(payload["access_role"], file: file, line: line)
+            XCTAssertNil(payload["acces"], file: file, line: line)
+        }
+    }
+    
 }
 
-extension ZMConversationTranscoderSystemMessageTests : ZMSyncStateDelegate {
+extension ZMConversationTranscoderTests_Swift : ZMSyncStateDelegate {
     
     func didStartSync() {
         // nop
@@ -370,3 +342,39 @@ extension ZMConversationTranscoderSystemMessageTests : ZMSyncStateDelegate {
     }
     
 }
+
+// MARK: - Update events
+extension ZMConversationTranscoderTests_Swift {
+    func testThatItHandlesAccessModeUpdateEvent() {
+        self.syncMOC.performAndWait {
+
+            let newAccessMode = ConversationAccessMode(values: ["code", "invite"])
+            let newAccessRole = ConversationAccessRole.team
+
+            XCTAssertNotEqual(self.conversation.accessMode, newAccessMode)
+            XCTAssertNotEqual(self.conversation.accessRole, newAccessRole)
+
+            // GIVEN
+            let payload = [
+                "from": self.user.remoteIdentifier!.transportString(),
+                "conversation": self.conversation.remoteIdentifier!.transportString(),
+                "time": NSDate().transportString(),
+                "data": [
+                    "access": newAccessMode.stringValue,
+                    "access_role": newAccessRole.rawValue
+                ],
+                "type": "conversation.access-update"
+                ] as [String: Any]
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+
+            // WHEN
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+
+            // THEN
+            XCTAssertEqual(self.conversation.accessMode, newAccessMode)
+            XCTAssertEqual(self.conversation.accessRole, newAccessRole)
+        }
+    }
+}
+
+

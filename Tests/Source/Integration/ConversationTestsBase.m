@@ -90,13 +90,17 @@
                                                                                     otherUsers:@[self.user1, self.user2]];
         self.groupConversationWithOnlyConnected.creator = self.selfUser;
         [self.groupConversationWithOnlyConnected changeNameByUser:self.selfUser name:@"Group conversation with only connected participants"];
+        
+        self.emptyGroupConversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[]];
+        self.emptyGroupConversation.creator = self.selfUser;
+        [self.emptyGroupConversation changeNameByUser:self.selfUser name:@"Empty group conversation"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
 - (void)testThatItSendsANotificationInConversation:(MockConversation *)mockConversation
                                     ignoreLastRead:(BOOL)ignoreLastRead
-                        onRemoteMessageCreatedWith:(void(^)())createMessage
+                        onRemoteMessageCreatedWith:(void(^)(void))createMessage
                                             verify:(void(^)(ZMConversation *))verifyConversation
 {
     // given
@@ -114,7 +118,7 @@
     [observer clearNotifications];
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
-        createMessage(session);
+        createMessage();
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -137,7 +141,7 @@
 }
 
 - (void)testThatItSendsANotificationInConversation:(MockConversation *)mockConversation
-                        onRemoteMessageCreatedWith:(void(^)())createMessage
+                        onRemoteMessageCreatedWith:(void(^)(void))createMessage
                                 verifyWithObserver:(void(^)(ZMConversation *, ConversationChangeObserver *))verifyConversation;
 {
     [self testThatItSendsANotificationInConversation:mockConversation
@@ -147,8 +151,8 @@
 }
 
 - (void)testThatItSendsANotificationInConversation:(MockConversation *)mockConversation
-                                   afterLoginBlock:(void(^)())afterLoginBlock
-                        onRemoteMessageCreatedWith:(void(^)())createMessage
+                                   afterLoginBlock:(void(^)(void))afterLoginBlock
+                        onRemoteMessageCreatedWith:(void(^)(void))createMessage
                                 verifyWithObserver:(void(^)(ZMConversation *, ConversationChangeObserver *))verifyConversation;
 {
     // given
@@ -167,7 +171,7 @@
     [observer clearNotifications];
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
-        createMessage(session);
+        createMessage();
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);

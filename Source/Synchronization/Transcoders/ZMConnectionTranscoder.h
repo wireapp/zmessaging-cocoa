@@ -19,7 +19,7 @@
 
 @import CoreData;
 @import Foundation;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 
 @class SyncStatus;
 

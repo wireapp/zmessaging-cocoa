@@ -81,7 +81,7 @@ static NSString *ZMLogTag = @"Push";
     [self didReceiveLocalWithNotification:notification application:application];
 }
 
-- (void)application:(id<ZMApplication>)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo completionHandler:(void(^)())completionHandler;
+- (void)application:(id<ZMApplication>)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo completionHandler:(void(^)(void))completionHandler;
 {
     [self handleActionWithApplication:application
                                  with:identifier
@@ -100,11 +100,11 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     }];
 }
 
-- (void)application:(id<ZMApplication>)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)())completionHandler;
+- (void)application:(id<ZMApplication>)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)(void))completionHandler;
 {
     NOT_USED(application);
     NOT_USED(identifier);
-    completionHandler(UIBackgroundFetchResultFailed);
+    completionHandler();
 }
 
 - (void)applicationDidEnterBackground:(NSNotification *)note;

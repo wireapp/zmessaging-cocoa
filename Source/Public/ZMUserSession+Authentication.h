@@ -37,8 +37,6 @@
 /// Delete cookies etc. and logout the current user.
 - (void)closeAndDeleteCookie:(BOOL)deleteCookie;
 
-- (BOOL)hadHistoryAtLastLogin;
-
 @end
 
 

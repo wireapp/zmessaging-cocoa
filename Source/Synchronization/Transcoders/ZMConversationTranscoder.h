@@ -19,7 +19,7 @@
 
 @import Foundation;
 @import CoreData;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 
 @protocol ZMObjectStrategyDirectory;
 

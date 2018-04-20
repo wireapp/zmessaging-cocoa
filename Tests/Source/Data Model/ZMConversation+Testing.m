@@ -40,7 +40,7 @@
     }
 
     NSMutableSet *activeUsersUUID = [NSMutableSet set];
-    for(ZMUser *user in self.otherActiveParticipants) {
+    for(ZMUser *user in self.lastServerSyncedActiveParticipants) {
         [activeUsersUUID addObject:user.remoteIdentifier];
     }
     NSMutableSet *mockActiveUsersUUID = [NSMutableSet set];
@@ -65,7 +65,7 @@
     self.lastReadServerTimeStamp = self.lastServerTimeStamp;
     
     for (NSUInteger idx = 0; idx < count; idx++) {
-        ZMMessage *message = [ZMMessage insertNewObjectInManagedObjectContext:self.managedObjectContext];
+        ZMMessage *message = [[ZMMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.managedObjectContext];
         message.serverTimestamp = [self.lastServerTimeStamp dateByAddingTimeInterval:5];
         [self resortMessagesWithUpdatedMessage:message];
         self.lastServerTimeStamp = message.serverTimestamp;
@@ -74,7 +74,7 @@
 
 - (void)addUnreadMissedCall
 {
-    ZMSystemMessage *systemMessage = [ZMSystemMessage insertNewObjectInManagedObjectContext:self.managedObjectContext];
+    ZMSystemMessage *systemMessage = [[ZMSystemMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.managedObjectContext];
     systemMessage.systemMessageType = ZMSystemMessageTypeMissedCall;
     systemMessage.serverTimestamp = self.lastReadServerTimeStamp ?
     [self.lastReadServerTimeStamp dateByAddingTimeInterval:1000] :

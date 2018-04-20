@@ -90,6 +90,18 @@ extension ZMHotFixDirectory {
         }
     }
 
+    /// Marks all users (excluding self) to be refetched.
+    public static func refetchUsers(_ context: NSManagedObjectContext) {
+        let request = ZMUser.sortedFetchRequest()
+        let users = context.executeFetchRequestOrAssert(request) as? [ZMUser]
+
+        users?.lazy
+            .filter { !$0.isSelfUser }
+            .forEach { $0.needsToBeUpdatedFromBackend = true }
+
+        context.enqueueDelayedSave()
+    }
+    
     /// Marks all connected users (including self) to be refetched.
     /// Unconnected users are refreshed with a call to `refreshData` when information is displayed.
     /// See also the related `ZMUserSession.isPendingHotFixChanges` in `ZMHotFix+PendingChanges.swift`.
@@ -108,6 +120,19 @@ extension ZMHotFixDirectory {
 
     public static func restartSlowSync(_ context: NSManagedObjectContext) {
         NotificationInContext(name: .ForceSlowSync, context: context.notificationContext).post()
+    }
+
+    /// Marks all conversations created in a team to be refetched.
+    /// This is needed because we have introduced access levels when implementing
+    /// wireless guests feature
+    public static func refetchTeamGroupConversations(_ context: NSManagedObjectContext) {
+        // Batch update changes the underlying data in the persistent store and should be much more
+        let predicate = NSPredicate(format: "team != nil AND conversationType == %d", ZMConversationType.group.rawValue)
+        let request = ZMConversation.sortedFetchRequest(with: predicate)
+        let conversations = context.executeFetchRequestOrAssert(request) as? [ZMConversation]
+
+        conversations?.forEach { $0.needsToBeUpdatedFromBackend = true }
+        context.enqueueDelayedSave()
     }
     
 }

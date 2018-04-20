@@ -31,7 +31,6 @@
 
 @interface  ZMRegistrationTranscoder ()
 
-@property (nonatomic, weak) id<UserInfoParser> userInfoParser;
 @property (nonatomic, readonly) ZMSingleRequestSync *registrationSync;
 @property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic, weak) id<ZMSGroupQueue> groupQueue;
@@ -49,13 +48,11 @@
 
 - (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue
               authenticationStatus:(ZMAuthenticationStatus *)authenticationStatus
-                    userInfoParser:(id<UserInfoParser>)userInfoParser
 {
     self = [super init];
     
     if (self != nil) {
         self.groupQueue = groupQueue;
-        self.userInfoParser = userInfoParser;
         _registrationSync = [ZMSingleRequestSync syncWithSingleRequestTranscoder:self groupQueue:groupQueue];
         self.authenticationStatus = authenticationStatus;
         self.authenticationObserverToken = [authenticationStatus addAuthenticationCenterObserver:self];
@@ -148,11 +145,7 @@
     NOT_USED(sync);
     ZMAuthenticationStatus *authenticationStatus = self.authenticationStatus;
     if (response.result == ZMTransportResponseStatusSuccess) {
-        BOOL shouldParseUserInfo = authenticationStatus.currentPhase == ZMAuthenticationPhaseRegisterWithPhone;
-        if (shouldParseUserInfo) {
-            [self.userInfoParser parseUserInfoFromResponse:response];
-        }
-        [authenticationStatus didCompleteRegistrationSuccessfully];
+        [authenticationStatus didCompleteRegistrationSuccessfullyWithResponse:response];
     }
     else if (response.result == ZMTransportResponseStatusPermanentError) {
         // if email is duplicated backed return 400 and json with key-exists label

@@ -23,7 +23,7 @@
 
 @import WireDataModel;
 @import WireUtilities;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 
 @interface ConversationTestsOTR : ConversationTestsBase
 @end
@@ -789,7 +789,7 @@
         if(i == 0) {
             ZMAssetClientMessage *windowMessage = currentMessageSet[i];
             XCTAssertEqualObjects([windowMessage.imageAssetStorage genericMessageFor:format], message);
-            NSData *recievedImageData = [self.userSession.managedObjectContext.zm_imageAssetCache assetData:windowMessage.nonce format:format encrypted:NO];
+            NSData *recievedImageData = [self.userSession.managedObjectContext.zm_fileAssetCache assetData:windowMessage format:format encrypted:NO];
             XCTAssertEqualObjects(recievedImageData, imageData);
         }
         else {
@@ -852,7 +852,7 @@
         if(i == 0) {
             ZMAssetClientMessage *windowMessage = currentMessageSet[i];
             XCTAssertEqualObjects([windowMessage.imageAssetStorage genericMessageFor:ZMImageFormatMedium], message);
-            NSData *recievedImageData = [self.userSession.managedObjectContext.zm_imageAssetCache assetData:windowMessage.nonce format:ZMImageFormatMedium encrypted:NO];
+            NSData *recievedImageData = [self.userSession.managedObjectContext.zm_fileAssetCache assetData:windowMessage format:ZMImageFormatMedium encrypted:NO];
             XCTAssertEqualObjects(recievedImageData, imageData);
         }
         else {
@@ -886,8 +886,8 @@
 
     // WHEN
     // remove all stored data, like cache is cleared
-    [self.userSession.managedObjectContext.zm_imageAssetCache deleteAssetData:imageMessageData.nonce format:ZMImageFormatMedium encrypted:YES];
-    [self.userSession.managedObjectContext.zm_imageAssetCache deleteAssetData:imageMessageData.nonce format:ZMImageFormatMedium encrypted:NO];
+    [self.userSession.managedObjectContext.zm_fileAssetCache deleteAssetData:imageMessageData format:ZMImageFormatMedium encrypted:YES];
+    [self.userSession.managedObjectContext.zm_fileAssetCache deleteAssetData:imageMessageData format:ZMImageFormatMedium encrypted:NO];
     
     
     // THEN
@@ -924,8 +924,8 @@
     
     // WHEN
     // remove decrypted data, but keep encrypted, like we crashed during decryption
-    [self.userSession.managedObjectContext.zm_imageAssetCache storeAssetData:imageMessageData.nonce format:ZMImageFormatMedium encrypted:YES data:encryptedImageData];
-    [self.userSession.managedObjectContext.zm_imageAssetCache deleteAssetData:imageMessageData.nonce format:ZMImageFormatMedium encrypted:NO];
+    [self.userSession.managedObjectContext.zm_fileAssetCache storeAssetData:imageMessageData format:ZMImageFormatMedium encrypted:YES data:encryptedImageData];
+    [self.userSession.managedObjectContext.zm_fileAssetCache deleteAssetData:imageMessageData format:ZMImageFormatMedium encrypted:NO];
     
     // THEN
     XCTAssertNil([[imageMessageData imageMessageData] mediumData]);
@@ -1089,7 +1089,7 @@
     
     // then
     ZMUser *addedUser = [self userForMockUser:self.user5];
-    XCTAssertTrue([conversation.otherActiveParticipants containsObject:addedUser]);
+    XCTAssertTrue([conversation.lastServerSyncedActiveParticipants containsObject:addedUser]);
     XCTAssertNil(addedUser.connection);
     
     XCTAssertFalse(conversation.allUsersTrusted);

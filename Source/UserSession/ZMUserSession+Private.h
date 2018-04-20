@@ -27,6 +27,8 @@
 @class ZMStoredLocalNotification;
 @class AccountStatus;
 @class ApplicationStatusDirectory;
+@class UserExpirationObserver;
+@class AVSMediaManager;
 
 #import "ZMUserSession.h"
 
@@ -54,6 +56,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic, nullable) ManagedObjectContextChangeObserver *messageReplyObserver;
 @property (nonatomic, nullable) ManagedObjectContextChangeObserver *likeMesssageObserver;
+@property (nonatomic, nonnull)  UserExpirationObserver *userExpirationObserver;
+@property (nonatomic, readonly) AVSMediaManager *mediaManager;
 
 - (void)tearDown;
 

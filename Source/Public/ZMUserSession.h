@@ -47,23 +47,14 @@
 @protocol LocalStoreProviderProtocol;
 @protocol FlowManagerType;
 @protocol SessionManagerType;
+@protocol LocalStoreProviderProtocol;
 
 @class ManagedObjectContextDirectory;
 @class TopConversationsDirectory;
 
-@protocol ZMAVSLogObserver <NSObject>
-@required
-- (void)logMessage:(NSString *)msg;
-@end
-
-@protocol ZMAVSLogObserverToken <NSObject>
-@end
-
 extern NSString * const ZMLaunchedWithPhoneVerificationCodeNotificationName;
 extern NSString * const ZMPhoneVerificationCodeKey;
 extern NSString * const ZMUserSessionResetPushTokensNotificationName;
-extern NSString * const ZMTransportRequestLoopNotificationName;
-extern NSString * const ZMPotentialErrorDetectedNotificationName;
 
 /// The main entry point for the WireSyncEngine API.
 ///
@@ -86,6 +77,7 @@ extern NSString * const ZMPotentialErrorDetectedNotificationName;
                           appVersion:(NSString *)appVersion
                        storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
 
+@property (nonatomic, readonly) id <LocalStoreProviderProtocol> storeProvider;
 @property (nonatomic, weak) id<SessionManagerType> sessionManager;
 @property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;
@@ -140,18 +132,6 @@ extern NSString * const ZMPotentialErrorDetectedNotificationName;
 
 @end
 
-
-
-@interface ZMUserSession (AVSLogging)
-
-/// Add observer for AVS logging
-+ (id<ZMAVSLogObserverToken>)addAVSLogObserver:(id<ZMAVSLogObserver>)observer;
-/// Remove observer for AVS logging
-+ (void)removeAVSLogObserver:(id<ZMAVSLogObserverToken>)token;
-
-+ (void)appendAVSLogMessageForConversation:(ZMConversation *)conversation withMessage:(NSString *)message;
-
-@end
 
 @interface ZMUserSession (Calling)
 

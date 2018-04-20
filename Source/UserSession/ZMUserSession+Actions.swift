@@ -107,10 +107,13 @@ extension ZMUserSession {
             
             self.messageReplyObserver = nil
             self.syncManagedObjectContext.performGroupedBlock {
+                
+                let conversationOnSyncContext = notification.conversation(in: self.syncManagedObjectContext)
                 if result == .failed {
                     zmLog.warn("failed to reply via push notification action")
-                    let conversationOnSyncContext = notification.conversation(in: self.syncManagedObjectContext)
                     self.localNotificationDispatcher.didFailToSendMessage(in: conversationOnSyncContext!)
+                } else {
+                    self.syncManagedObjectContext.analytics?.tagActionOnPushNotification(conversation: conversationOnSyncContext, action: .text)
                 }
                 activity?.end()
                 completionHandler()
@@ -125,6 +128,26 @@ extension ZMUserSession {
         }
         
         
+    }
+    
+    public func handleTrackingOnCallNotification(_ notification: UILocalNotification) {
+        
+        guard let conversation = notification.conversation(in: managedObjectContext),
+            let callState = conversation.voiceChannel?.state,
+            case .incoming(video: _, shouldRing: _, degraded: _) = callState,
+            let callCenter = self.callCenter,
+            callCenter.activeCallConversations(in: self).count == 0 else{
+            return
+        }
+        
+        let type : ConversationMediaAction = callCenter.isVideoCall(conversationId: conversation.remoteIdentifier!) ? .videoCall : .audioCall
+        
+        self.syncManagedObjectContext.performGroupedBlock { [weak self] in
+            guard let `self` = self,
+                let conversationInSyncContext = notification.conversation(in: self.syncManagedObjectContext)
+                else { return }
+            self.syncManagedObjectContext.analytics?.tagActionOnPushNotification(conversation: conversationInSyncContext, action: type)
+        }
     }
     
     public func likeMessage(with notification: UILocalNotification, completionHandler: @escaping () -> Void) {
@@ -168,5 +191,15 @@ extension ZMUserSession {
             break
         }
     }
+ 
+}
 
+
+
+public extension ZMUserSession {
+    public func markAllConversationsAsRead() {
+        self.managedObjectContext.conversationListDirectory().conversationsIncludingArchived.forEach { conversation in
+            (conversation as! ZMConversation).markAsRead()
+        }
+    }
 }

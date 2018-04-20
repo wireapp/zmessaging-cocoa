@@ -87,18 +87,7 @@ extension SessionManager {
             }
         }
     }
-    
-    fileprivate func wakeAllAccounts(for payload: [AnyHashable: Any],
-                                 from source: ZMPushNotficationType,
-                                 completion: ZMPushNotificationCompletionHandler?) {
-        log.error("Push is not specifict to account, fetching all")
-        self.accountManager.accounts.forEach { account in
-            self.withSession(for: account) { userSession in
-                userSession.receivedPushNotification(with: payload, from: source, completion: completion)
-            }
-        }
-    }
-    
+        
     fileprivate func activateAccount(for session: ZMUserSession, completion: @escaping () -> ()) {
         if session == activeUserSession {
             completion()
@@ -144,25 +133,18 @@ extension SessionManager: ZMRequestsToOpenViewsDelegate {
 
 extension SessionManager: PushDispatcherClient {
     // Called by PushDispatcher when the pust notification is received. Wakes up or creates the user session for the
-    // account mentioned in the notification, or wakes all accounts when the unknown notification is received.
+    // account mentioned in the notification.
     public func receivedPushNotification(with payload: [AnyHashable: Any],
                                          from source: ZMPushNotficationType,
                                          completion: ZMPushNotificationCompletionHandler?) {
         
-        guard !payload.isPayloadMissingUserInformation() else {
-            self.wakeAllAccounts(for: payload, from: source, completion: completion)
+        guard let accountId = payload.accountId(), let account = self.accountManager.account(with: accountId) else {
+            completion?(.noData)
             return
         }
-        
-        if let userId = payload.accountId(),
-            let account = self.accountManager.account(with: userId) {
             
-            self.withSession(for: account, perform: { userSession in
-                userSession.receivedPushNotification(with: payload, from: source, completion: completion)
-            })
-        }
-        else {
-            self.wakeAllAccounts(for: payload, from: source, completion: completion)
-        }
+        withSession(for: account, perform: { userSession in
+            userSession.receivedPushNotification(with: payload, from: source, completion: completion)
+        })
     }
 }

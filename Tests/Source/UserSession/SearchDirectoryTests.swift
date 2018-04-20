@@ -128,7 +128,7 @@ class SearchDirectoryTests : MessagingTest {
     func testThatItEmptiesTheMediumImageCacheOnTeardown() {
         // given
         let uuid = UUID.create()
-        let imageCache = ZMSearchUser.searchUserToMediumImageCache()!
+        let imageCache = ZMSearchUser.searchUserToMediumImageCache()
         let sut = SearchDirectory(userSession: mockUserSession)
         
         imageCache.setObject(Data(count: 1) as NSData, forKey: uuid as NSUUID)

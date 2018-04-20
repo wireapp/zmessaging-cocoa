@@ -33,7 +33,6 @@ public protocol FlowManagerType {
     
     func setVideoCaptureDevice(_ device : CaptureDevice, for conversationId: UUID)
     func reportNetworkChanged()
-    func appendLog(for conversationId : UUID, message : String)
 }
 
 @objc
@@ -64,10 +63,6 @@ public class FlowManager : NSObject, FlowManagerType {
         avsFlowManager?.setVideoCaptureDevice(device.deviceIdentifier, forConversation: conversationId.transportString())
     }
     
-    public func appendLog(for conversationId : UUID, message : String) {
-        avsFlowManager?.appendLog(forConversation: conversationId.transportString(), message: message)
-    }
-
 }
 
 extension FlowManager : AVSFlowManagerDelegate {

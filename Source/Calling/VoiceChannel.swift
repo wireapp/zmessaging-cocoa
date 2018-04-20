@@ -43,7 +43,7 @@ public protocol CallProperties : NSObjectProtocol {
     
     var state: CallState { get }
     
-    weak var conversation : ZMConversation? { get }
+    var conversation : ZMConversation? { get }
     
     /// The date and time of current call start
     var callStartDate : Date? { get }
@@ -64,6 +64,7 @@ public protocol CallProperties : NSObjectProtocol {
 @objc
 public protocol CallActions : NSObjectProtocol {
     
+    func mute(_ muted: Bool, userSession: ZMUserSession)
     func join(video: Bool, userSession: ZMUserSession) -> Bool
     func leave(userSession: ZMUserSession)
     func ignore(userSession: ZMUserSession)

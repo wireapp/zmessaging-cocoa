@@ -16,7 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 #import "ZMSyncStateDelegate.h"
 
 @class ZMCredentials;
@@ -52,7 +52,7 @@ typedef NS_ENUM(NSUInteger, ZMClientRegistrationPhase) {
 extern NSString *const ZMPersistedClientIdKey;
 
 
-@interface ZMClientRegistrationStatus : NSObject <ClientRegistrationDelegate>
+@interface ZMClientRegistrationStatus : NSObject <ClientRegistrationDelegate, TearDownCapable>
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                                       cookieStorage:(ZMPersistentCookieStorage *)cookieStorage

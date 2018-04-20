@@ -104,11 +104,10 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
             } else {
                 // Remove member from all team conversations he was a participant of
                 team.conversations.filter {
-                    $0.otherActiveParticipants.contains(user)
+                    $0.lastServerSyncedActiveParticipants.contains(user)
                 }.forEach {
                     $0.appendTeamMemberRemovedSystemMessage(user: user, at: event.timeStamp() ?? Date())
-                    $0.removeParticipant(user)
-                    $0.synchronizeRemovedUser(user)
+                    $0.internalRemoveParticipants(Set(arrayLiteral: user), sender: user)
                 }
             }
         } else {

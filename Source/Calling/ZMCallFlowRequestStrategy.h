@@ -19,7 +19,7 @@
 
 #import <Foundation/Foundation.h>
 @import WireRequestStrategy;
-@import WireMessageStrategy;
+@import WireRequestStrategy;
 @import avs;
 
 @class ZMConversation;
@@ -28,7 +28,7 @@
 @protocol FlowManagerType;
 @protocol ZMApplication;
 
-@interface ZMCallFlowRequestStrategy : ZMAbstractRequestStrategy
+@interface ZMCallFlowRequestStrategy : ZMAbstractRequestStrategy <TearDownCapable>
 
 - (instancetype)initWithMediaManager:(id)mediaManager
                          flowManager:(id<FlowManagerType>)flowManager
@@ -36,7 +36,6 @@
                    applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                          application:(id<ZMApplication>)application;
 
-- (void)appendLogForConversationID:(NSUUID *)conversationID message:(NSString *)message;
 - (void)tearDown;
 
 @end

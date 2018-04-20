@@ -18,7 +18,7 @@
 
 import Foundation
 import CoreData
-import WireMessageStrategy
+import WireRequestStrategy
 
 public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
 
@@ -27,7 +27,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let userProfileUpdateStatus : UserProfileUpdateStatus
     public let clientRegistrationStatus : ZMClientRegistrationStatus
     public let clientUpdateStatus : ClientUpdateStatus
-    public let pingBackStatus : BackgroundAPNSPingBackStatus
+    public let pushNotificationStatus : PushNotificationStatus
     public let accountStatus : AccountStatus
     public let proxiedRequestStatus : ProxiedRequestsStatus
     public let syncStatus : SyncStatus
@@ -35,9 +35,10 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let requestCancellation: ZMRequestCancellation
     public let analytics: AnalyticsType?
     public let teamInvitationStatus: TeamInvitationStatus
+    public let assetDeletionStatus: AssetDeletionStatus
 
     public var notificationFetchStatus: BackgroundNotificationFetchStatus {
-        return pingBackStatus.status
+        return pushNotificationStatus.status
     }
     
     fileprivate var callInProgressObserverToken : Any? = nil
@@ -56,9 +57,10 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
                                                                    cookieStorage: cookieStorage,
                                                                    registrationStatusDelegate: syncStateDelegate)
         self.accountStatus = AccountStatus(managedObjectContext: managedObjectContext)
-        self.pingBackStatus = BackgroundAPNSPingBackStatus(syncManagedObjectContext: managedObjectContext, authenticationProvider: cookieStorage)
+        self.pushNotificationStatus = PushNotificationStatus(managedObjectContext: managedObjectContext)
         self.proxiedRequestStatus = ProxiedRequestsStatus(requestCancellation: requestCancellation)
         self.userProfileImageUpdateStatus = UserProfileImageUpdateStatus(managedObjectContext: managedObjectContext)
+        self.assetDeletionStatus = AssetDeletionStatus(provider: managedObjectContext, queue: managedObjectContext)
         super.init()
         
         callInProgressObserverToken = NotificationInContext.addObserver(name: CallStateObserver.CallInProgressNotification, context: managedObjectContext.notificationContext) { [weak self] (note) in

@@ -23,17 +23,6 @@
 
 extern NSString * const ZMSkipHotfix;
 
-@interface ZMVersion : NSObject
-
-@property (nonatomic, readonly) NSArray *arrayRepresentation;
-@property (nonatomic, readonly) NSString *versionString;
-
-- (instancetype)initWithVersionString:(NSString *)versionString;
-- (NSComparisonResult)compareWithVersion:(ZMVersion *)otherVersion;
-
-@end
-
-
 
 
 @interface ZMHotFix : NSObject

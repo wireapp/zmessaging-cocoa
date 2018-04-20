@@ -213,8 +213,8 @@ class CallingV3Tests : IntegrationTest {
         stateObserver.checkLastNotificationHasCallState(.outgoing(degraded: false))
         
         // when
-        participantsChanged(members: [(user: conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser, establishedFlow: false),
-                                      (user: conversationUnderTest.otherActiveParticipants.lastObject as! ZMUser, establishedFlow: false)])
+        participantsChanged(members: [(user: conversationUnderTest.lastServerSyncedActiveParticipants.firstObject as! ZMUser, establishedFlow: false),
+                                      (user: conversationUnderTest.lastServerSyncedActiveParticipants.lastObject as! ZMUser, establishedFlow: false)])
         stateObserver.changes = []
 
         // when
@@ -329,7 +329,7 @@ class CallingV3Tests : IntegrationTest {
         // (2) other party joins
         //
         // when
-        let otherUser = conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser
+        let otherUser = conversationUnderTest.lastServerSyncedActiveParticipants.firstObject as! ZMUser
         participantsChanged(members: [(user: otherUser, establishedFlow: false)])
         
         // then
@@ -408,7 +408,7 @@ class CallingV3Tests : IntegrationTest {
         stateObserver.observe(conversation: conversationUnderTest, context: userSession!.managedObjectContext)
         participantObserver.observe(conversation: conversationUnderTest, context: userSession!.managedObjectContext)
         
-        let user = conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser
+        let user = conversationUnderTest.lastServerSyncedActiveParticipants.firstObject as! ZMUser
         
         // (1) other user joins
         // when
@@ -509,7 +509,7 @@ class CallingV3Tests : IntegrationTest {
         XCTAssertTrue(login())
         useGroupConversation = true
         
-        let user = conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser
+        let user = conversationUnderTest.lastServerSyncedActiveParticipants.firstObject as! ZMUser
         let convObserver = ConversationChangeObserver(conversation: conversationUnderTest)
 
         // (1) Other user calls
@@ -549,8 +549,8 @@ class CallingV3Tests : IntegrationTest {
         XCTAssertTrue(login())
         useGroupConversation = true
         
-        let localUser1 = conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser
-        let localUser2 = conversationUnderTest.otherActiveParticipants.lastObject as! ZMUser
+        let localUser1 = conversationUnderTest.lastServerSyncedActiveParticipants.firstObject as! ZMUser
+        let localUser2 = conversationUnderTest.lastServerSyncedActiveParticipants.lastObject as! ZMUser
         let convObserver = ConversationChangeObserver(conversation: conversationUnderTest)
         
         // (1) Other user calls
@@ -604,7 +604,7 @@ class CallingV3Tests : IntegrationTest {
         // given
         XCTAssertTrue(login())
         useGroupConversation = true
-        let user = conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser
+        let user = conversationUnderTest.lastServerSyncedActiveParticipants.firstObject as! ZMUser
         
         // Other user calls
         otherStartCall(user: user)
@@ -628,7 +628,7 @@ class CallingV3Tests : IntegrationTest {
         // given
         XCTAssertTrue(login())
         useGroupConversation = true
-        let user = conversationUnderTest.otherActiveParticipants.firstObject as! ZMUser
+        let user = conversationUnderTest.lastServerSyncedActiveParticipants.firstObject as! ZMUser
         
         // Other user calls
         otherStartCall(user: user)

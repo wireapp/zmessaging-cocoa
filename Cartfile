@@ -1,2 +1,3 @@
-github "wireapp/wire-ios-message-strategy" ~> 75.0
-github "wireapp/avs-ios-binaries" "4.0.128"
+github "wireapp/wire-ios-request-strategy" ~> 85.0
+github "wireapp/avs-ios-binaries" "4.1.131"
+github "wireapp/ZipArchive" "v2.1.2"

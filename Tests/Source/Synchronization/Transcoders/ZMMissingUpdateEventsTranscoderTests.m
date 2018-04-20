@@ -38,7 +38,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 @property (nonatomic, readonly) ZMMissingUpdateEventsTranscoder *sut;
 @property (nonatomic, readonly) id syncStrategy;
 @property (nonatomic, readonly) id<PreviouslyReceivedEventIDsCollection> mockEventIDsCollection;
-@property (nonatomic, readonly) id mockPingbackStatus;
+@property (nonatomic) id mockPushNotificationStatus;
 @property (nonatomic) id requestSync;
 @property (nonatomic) MockSyncStatus *mockSyncStatus;
 @property (nonatomic) OperationStatus *mockOperationStatus;
@@ -58,20 +58,20 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
     self.mockOperationStatus = [[OperationStatus alloc] init];
     self.mockOperationStatus.isInBackground = NO;
-    _mockPingbackStatus = [OCMockObject niceMockForClass:BackgroundAPNSPingBackStatus.class];
+    self.mockPushNotificationStatus = [OCMockObject niceMockForClass:PushNotificationStatus.class];
     
     self.mockApplicationDirectory = [OCMockObject niceMockForClass:ApplicationStatusDirectory.class];
     [[[self.mockApplicationDirectory stub] andReturnValue:@(ZMSynchronizationStateSynchronizing)] synchronizationState];
     [[[self.mockApplicationDirectory stub] andReturn:self.mockOperationStatus] operationStatus];
     [[[self.mockApplicationDirectory stub] andReturn:self.mockSyncStatus] syncStatus];
-    [[[self.mockApplicationDirectory stub] andReturn:self.mockPingbackStatus] pingBackStatus];
+    [[[self.mockApplicationDirectory stub] andReturn:self.mockPushNotificationStatus] pushNotificationStatus];
     
     _syncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
     _mockEventIDsCollection = OCMProtocolMock(@protocol(PreviouslyReceivedEventIDsCollection));
 
     [[[(id) self.syncStrategy stub] andReturn:self.uiMOC] syncMOC];
     [self verifyMockLater:self.syncStrategy];
-    [self verifyMockLater:self.mockPingbackStatus];
+    [self verifyMockLater:self.mockPushNotificationStatus];
     
     _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy
                                     previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
@@ -85,8 +85,8 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     
     _mockEventIDsCollection = nil;
     
-    [_mockPingbackStatus stopMocking];
-    _mockPingbackStatus = nil;
+    [self.mockPushNotificationStatus stopMocking];
+    _mockPushNotificationStatus = nil;
 
     _requestSync = nil;
     _mockSyncStatus = nil;
@@ -156,8 +156,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)testThatItGetsRequestFromDownstreamSync
 {
     // given
-    [[[self.mockPingbackStatus stub] andReturnValue:@(YES)] hasNotificationIDs];
-    [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus stub] andReturnValue:@(BackgroundNotificationFetchStatusInProgress)] status];
+    [(PushNotificationStatus *)[[self.mockPushNotificationStatus stub] andReturnValue:@(BackgroundNotificationFetchStatusInProgress)] status];
     [self.application setBackground];
     
     id missingUpdateEventsTranscoder = [OCMockObject partialMockForObject:self.sut.listPaginator];
@@ -718,66 +717,36 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 @end
 
 
-
 @implementation ZMMissingUpdateEventsTranscoderTests (FallbackCancellation)
 
-
-- (void)expectMockPingBackStatus:(BackgroundNotificationFetchStatus)status hasNotifications:(BOOL)hasNotifications nextEvents:(EventsWithIdentifier *)nextEvents inBackground:(BOOL)backgrounded
+- (void)expectMockPushNotificationStatus:(BackgroundNotificationFetchStatus)status inBackground:(BOOL)backgrounded
 {
     self.application.applicationState = backgrounded ? UIApplicationStateBackground : UIApplicationStateActive;
-    [[[self.mockPingbackStatus stub] andReturnValue:@(hasNotifications)] hasNotificationIDs];
-    [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(status)] status];
-
-    if (nil != nextEvents) {
-        NOT_USED([[[self.mockPingbackStatus expect] andReturn:nextEvents] nextNotificationEventsWithID]);
-    }
+    [(PushNotificationStatus *)[[self.mockPushNotificationStatus stub] andReturnValue:@(status)] status];
 }
 
-- (void)testThatItDoesNotReturnARequestItselfFromAPushWhenThePingBackStatusIsNotInProgress
+- (void)testThatItDoesNotReturnARequestItselfFromAPushWhenThePushNotificationStatusIsNotInProgress
 {
     // given
-    [self expectMockPingBackStatus:BackgroundNotificationFetchStatusDone hasNotifications:YES nextEvents:nil inBackground:YES];
+    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusDone inBackground:YES];
 
     // then
     XCTAssertNil([self.sut nextRequest]);
 }
 
-- (void)testThatItDoesReturnARequestItselfFromAPushWhenThePaginatorIsNotInProgressButThereAreNewIds
+- (void)testThatItDoesReturnARequestItselfFromAPushWhen
 {
     // given
-    ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
-    EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:NSUUID.createUUID isNotice:YES];
-    [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
+    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
 
     // then
     XCTAssertNotNil([self.sut nextRequest]);
 }
 
-- (void)testThatItAddsTheCancelationQueryToItsPathWhenItHasANotificationIdToCancel
-{
-    // given
-    ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
-    EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:NSUUID.createUUID isNotice:YES];
-    [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
-
-    // when
-    ZMTransportRequest *request = [self.sut nextRequest];
-
-    // then
-    XCTAssertNotNil(request);
-    NSURLQueryItem *cancelItem = [NSURLComponents componentsWithString:request.path].queryItems.lastObject;
-    XCTAssertNotNil(cancelItem);
-
-    XCTAssertEqualObjects(cancelItem.name, @"cancel_fallback");
-    XCTAssertEqualObjects(cancelItem.value, events.identifier.transportString);
-}
-
 - (void)testThatItForcesTheRequestToTheVoIPSession
 {
     // given
-    ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
-    EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:NSUUID.createUUID isNotice:YES];
-    [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
+    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
 
     // when
     ZMTransportRequest *request = [self.sut nextRequest];
@@ -787,75 +756,48 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     XCTAssertTrue(request.shouldUseVoipSession);
 }
 
-- (void)testThatItCallsThePingBackStatusWithFetchedNotificationsIfItHasANotificationIdToCancel
+- (void)testThatItDoesNotifyThePushNotificationStatusWhenEventsAreFetched
 {
     // given
-    ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
-    EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:NSUUID.createUUID isNotice:YES];
-    [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
+    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
 
     // when
     ZMTransportResponse *response = [self responseForSettingLastUpdateEventID:NSUUID.createUUID hasMore:NO];
     ZMTransportRequest *request = [self.sut nextRequest];
-    id <ZMTransportData> payload = response.payload[@"notifications"][0];
-    NSArray <ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];
 
-    // expect
-    [(BackgroundAPNSPingBackStatus *)[self.mockPingbackStatus expect] didReceiveEncryptedEvents:expectedEvents originalEvents:events hasMore:NO];
-
-    XCTAssertNotNil(request);
-    [request completeWithResponse:response];
-    WaitForAllGroupsToBeEmpty(0.5);
-    [self expectMockPingBackStatus:BackgroundNotificationFetchStatusDone hasNotifications:NO nextEvents:nil inBackground:YES];
-
-    XCTAssertNil([self.sut nextRequest]);
-}
-
-- (void)testThatItDoesNotCallThePingBackStatusWhenNoNotificationEventsToCancel
-{
-    // given
-    ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
-    EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:NSUUID.createUUID isNotice:YES];
-    [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
-    
-    // when
-    ZMTransportResponse *response = [self responseForSettingLastUpdateEventID:NSUUID.createUUID hasMore:NO];
-    ZMTransportRequest *request = [self.sut nextRequest];
-    
     [(id)self.sut.listPaginator didReceiveResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:400 transportSessionError:nil] forSingleRequest:self.requestSync];
-    
-    id <ZMTransportData> payload = response.payload[@"notifications"][0];
-    NSArray <ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];
-    
+
+    id <ZMTransportData> payload = response.payload.asDictionary[@"notifications"][0];
+    NSArray<ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];
+    NSArray<NSUUID *> *eventIds = [expectedEvents mapWithBlock:^id(ZMUpdateEvent *event) {
+        return event.uuid;
+    }];
+
     // expect
-    id nilEvents = nil;
-    [(BackgroundAPNSPingBackStatus *)[self.mockPingbackStatus reject] didReceiveEncryptedEvents:expectedEvents originalEvents:nilEvents hasMore:NO];
-    
+    [(PushNotificationStatus *)[self.mockPushNotificationStatus expect] didFetchEventIds:eventIds finished:YES];
+
     XCTAssertNotNil(request);
 
     [(id)self.sut.listPaginator didReceiveResponse:response forSingleRequest:self.requestSync];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    XCTAssertNil([self.sut nextRequest]);
 }
 
-- (void)testThatItCallsThePingBackStatusWithFetchedNotificationsIfItHasANotificationIdToCancel_MultiplePages
+- (void)testThatItDoesNotifyThePushNotificationStatusWhenEventsAreFetched_MultiplePages
 {
-    // given
-    ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
-    EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:NSUUID.createUUID isNotice:YES];
-
     // first batch
     {
-        [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
+        [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
 
         ZMTransportResponse *response = [self responseForSettingLastUpdateEventID:NSUUID.createUUID hasMore:YES];
         ZMTransportRequest *request = [self.sut nextRequest];
-        id <ZMTransportData> payload = response.payload[@"notifications"][0];
+        id <ZMTransportData> payload = response.payload.asDictionary[@"notifications"][0];
         NSArray <ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];
+        NSArray<NSUUID *> *eventIds = [expectedEvents mapWithBlock:^id(ZMUpdateEvent *event) {
+            return event.uuid;
+        }];
 
         // expect
-        [(BackgroundAPNSPingBackStatus *)[self.mockPingbackStatus expect] didReceiveEncryptedEvents:expectedEvents originalEvents:events hasMore:YES];
+        [(PushNotificationStatus *)[self.mockPushNotificationStatus expect] didFetchEventIds:eventIds finished:NO];
 
         XCTAssertNotNil(request);
         [request completeWithResponse:response];
@@ -864,105 +806,28 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 
     // second batch
     {
-        [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:nil inBackground:YES];
+        [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
         ZMTransportResponse *response = [self responseForSettingLastUpdateEventID:NSUUID.createUUID hasMore:NO];
         ZMTransportRequest *request = [self.sut nextRequest];
-        id <ZMTransportData> payload = response.payload[@"notifications"][0];
+        id <ZMTransportData> payload = response.payload.asDictionary[@"notifications"][0];
         NSArray <ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];
+        NSArray<NSUUID *> *eventIds = [expectedEvents mapWithBlock:^id(ZMUpdateEvent *event) {
+            return event.uuid;
+        }];
 
         // expect
-        [(BackgroundAPNSPingBackStatus *)[self.mockPingbackStatus expect] didReceiveEncryptedEvents:expectedEvents originalEvents:events hasMore:NO];
+        [(PushNotificationStatus *)[self.mockPushNotificationStatus expect] didFetchEventIds:eventIds finished:YES];
 
         XCTAssertNotNil(request);
         [request completeWithResponse:response];
         WaitForAllGroupsToBeEmpty(0.5);
     }
-
-   XCTAssertNil([self.sut nextRequest]);
-}
-
-- (void)testThatItAsksForTheNextNotificationIfThereIsOneAndThePreviousFetchFinished
-{
-
-    // given
-    NSUUID *firstIdToCancel = NSUUID.createUUID;
-    EventsWithIdentifier *firstEvents = [[EventsWithIdentifier alloc] initWithEvents:@[[[ZMUpdateEvent alloc] init]]
-                                                                          identifier:firstIdToCancel
-                                                                            isNotice:YES];
-
-    NSUUID *lastNotificationIdAfterFirstPage = NSUUID.createUUID;
-    self.uiMOC.zm_lastNotificationID = NSUUID.createUUID;
-
-    // first batch
-    {
-        [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:firstEvents inBackground:YES];
-
-        ZMTransportResponse *response = [self responseForSettingLastUpdateEventID:lastNotificationIdAfterFirstPage hasMore:YES];
-        ZMTransportRequest *request = [self.sut nextRequest];
-        id <ZMTransportData> payload = response.payload[@"notifications"][0];
-        NSArray <ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];
-
-        // expect
-        [(BackgroundAPNSPingBackStatus *)[self.mockPingbackStatus expect] didReceiveEncryptedEvents:expectedEvents originalEvents:firstEvents hasMore:YES];
-
-        XCTAssertNotNil(request);
-        XCTAssertEqualObjects(request.path, [self cancelationPathWithLastNotificationID:self.uiMOC.zm_lastNotificationID cancelingID:firstIdToCancel]);
-        [request completeWithResponse:response];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }
-
-    // second batch
-    NSUUID *lastEventID = NSUUID.createUUID;
-
-    {
-        [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:nil inBackground:YES];
-        ZMTransportResponse *response = [self responseForSettingLastUpdateEventID:lastEventID hasMore:NO];
-        ZMTransportRequest *request = [self.sut nextRequest];
-        id <ZMTransportData> payload = response.payload[@"notifications"][0];
-        NSArray <ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];
-
-        // expect
-        [(BackgroundAPNSPingBackStatus *)[self.mockPingbackStatus expect] didReceiveEncryptedEvents:expectedEvents originalEvents:firstEvents hasMore:NO];
-
-        XCTAssertNotNil(request);
-        XCTAssertEqualObjects(request.path, [self cancelationPathWithLastNotificationID:lastNotificationIdAfterFirstPage cancelingID:firstIdToCancel]);
-        [request completeWithResponse:response];
-        [request completeWithResponse:response];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }
-
-    // After fetching 2 pages for the first notification, we receive another notification that we want to cancel
-
-    {
-        // when
-        ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
-        NSUUID *idToCancel = NSUUID.createUUID;
-        EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:idToCancel isNotice:YES];
-        [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
-
-        ZMTransportResponse *response = [self responseForSettingLastUpdateEventID:NSUUID.createUUID hasMore:NO];
-        ZMTransportRequest *request = [self.sut nextRequest];
-        id <ZMTransportData> payload = response.payload[@"notifications"][0];
-        NSArray <ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];
-
-        // expect
-        [(BackgroundAPNSPingBackStatus *)[self.mockPingbackStatus expect] didReceiveEncryptedEvents:expectedEvents originalEvents:events hasMore:NO];
-
-        XCTAssertNotNil(request);
-        XCTAssertEqualObjects(request.path, [self cancelationPathWithLastNotificationID:lastEventID cancelingID:idToCancel]);
-        [request completeWithResponse:response];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }
-    
-    XCTAssertNil([self.sut nextRequest]);
 }
 
 - (void)testThatItUpdatesTheLastNotificationIdWhenStartedThroughAPush
 {
     // given
-    ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
-    EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:NSUUID.createUUID isNotice:YES];
-    [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
+    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
 
     // when
     NSUUID *expectedLastUpdateEventID = NSUUID.createUUID;
@@ -980,7 +845,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)testThatItReportsWhenItIsFetchingFromAPushNotification
 {
     // given
-    [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(BackgroundNotificationFetchStatusInProgress)] status];
+    [(PushNotificationStatus *)[[self.mockPushNotificationStatus expect] andReturnValue:@(BackgroundNotificationFetchStatusInProgress)] status];
 
     // then
     XCTAssertTrue(self.sut.isFetchingStreamForAPNS);
@@ -995,27 +860,25 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     XCTAssertFalse(self.sut.isFetchingStreamForAPNS);
 }
 
-- (void)testThatItDoesNotReportThatItIsFetchingFromAPushNotificationWhenNoPingBackIsInProgress
+- (void)testThatItDoesNotReportThatItIsFetchingFromAPushNotificationWhenNoPushNotificationIsInProgress
 {
     // given
-    [(BackgroundAPNSPingBackStatus *)[[self.mockPingbackStatus expect] andReturnValue:@(BackgroundNotificationFetchStatusDone)] status];
+    [(PushNotificationStatus *)[[self.mockPushNotificationStatus expect] andReturnValue:@(BackgroundNotificationFetchStatusDone)] status];
     self.application.applicationState = UIApplicationStateBackground;
 
     // then
     XCTAssertFalse(self.sut.isFetchingStreamForAPNS);
 }
 
-- (void)testThatItNotifiesThePingBackStatusInCaseOfAFailure
+- (void)testThatItNotifiesThePushNotificationStatusInCaseOfAFailure
 {
     // given
-    ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
-    EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:NSUUID.createUUID isNotice:YES];
-    [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
+    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
 
     // when
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
     ZMTransportRequest *request = [self.sut nextRequest];
-    [(BackgroundAPNSPingBackStatus *)[self.mockPingbackStatus expect] didFailDownloadingOriginalEvents:events];
+    [(PushNotificationStatus *)[self.mockPushNotificationStatus expect] didFailToFetchEvents];
 
     [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1027,10 +890,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     NSUUID *lastID = NSUUID.createUUID;
     // sync strategy is mocked to return the uiMOC when asked for the syncMOC
     self.uiMOC.zm_lastNotificationID = lastID;
-
-    ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
-    EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:NSUUID.createUUID isNotice:YES];
-    [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
+    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
 
     // when
     ZMTransportRequest *request = [self.sut nextRequest];
@@ -1047,73 +907,6 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     }
 
     XCTAssertTrue(hasSinceQuery);
-}
-
-- (void)testThatItDoesForwardTheResponseInCaseOfA404AndDoesNotReportAFailure_MissingMessages
-{
-    // given
-    ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
-    EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:NSUUID.createUUID isNotice:YES];
-    [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
-    ZMTransportRequest *request = [self.sut nextRequest];
-    XCTAssertNotNil(request);
-
-    self.application.applicationState = UIApplicationStateBackground;
-
-    NSDictionary *payload =  @{
-                               @"id" : NSUUID.createUUID.transportString,
-                               @"payload" : @[
-                                       @{
-                                           @"type" : @"conversation.message-add",
-                                           @"time": NSDate.date.transportString
-                                           }
-                                       ]
-                               };
-
-    NSArray <ZMUpdateEvent *> *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:payload];
-    [(BackgroundAPNSPingBackStatus *)[self.mockPingbackStatus expect] didReceiveEncryptedEvents:expectedEvents originalEvents:OCMOCK_ANY hasMore:NO];
-
-    // when
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{@"notifications": @[payload]} HTTPStatus:404 transportSessionError:nil];
-    [(id)self.sut.listPaginator didReceiveResponse:response forSingleRequest:self.requestSync];
-
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
-- (void)testThatItDoesNotSetTheNotificationIdToCancelWhenTheListPaginatorIsStillInProgress
-{
-
-    // given we simulate fetching missing events
-    self.mockSyncStatus.mockPhase = SyncPhaseFetchingMissedEvents;
-    NSUUID *lastEventID = NSUUID.createUUID;
-
-    // then it should generate a request to fetch the notification stream
-    ZMTransportRequest *fetchRequest = self.sut.nextRequest;
-    XCTAssertEqualObjects(fetchRequest.path, @"/notifications?size=500");
-
-    // when
-    ZMUpdateEvent *updateEvent = [[ZMUpdateEvent alloc] init];
-    EventsWithIdentifier *events = [[EventsWithIdentifier alloc] initWithEvents:@[updateEvent] identifier:NSUUID.createUUID isNotice:YES];
-    [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
-
-    // then it should not create a request as the notificaiton stream fetch is still in progress
-    XCTAssertNil(self.sut.nextRequest);
-
-    // when
-    ZMTransportResponse *fetchResponse = [self responseForSettingLastUpdateEventID:lastEventID hasMore:NO];
-    [fetchRequest completeWithResponse:fetchResponse];
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    // then
-    [self expectMockPingBackStatus:BackgroundNotificationFetchStatusInProgress hasNotifications:YES nextEvents:events inBackground:YES];
-    ZMTransportRequest *pingBackRequest = self.sut.nextRequest;
-    XCTAssertNotNil(pingBackRequest);
-    XCTAssertEqualObjects(pingBackRequest.path, [self cancelationPathWithLastNotificationID:lastEventID cancelingID:events.identifier]);
-}
-
-- (NSString *)cancelationPathWithLastNotificationID:(NSUUID *)lastNotificationID cancelingID:(NSUUID *)idToCancel
-{
-    return [NSString stringWithFormat:@"/notifications?size=500&since=%@&cancel_fallback=%@", lastNotificationID.transportString, idToCancel.transportString];
 }
 
 @end

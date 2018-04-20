@@ -29,6 +29,11 @@ extension ZMCredentials {
 }
 
 extension UnauthenticatedSession {
+
+    @objc(continueAfterBackupImportStep)
+    public func continueAfterBackupImportStep() {
+        authenticationStatus.continueAfterBackupImportStep()
+    }
         
     /// Attempt to log in with the given credentials
     @objc(loginWithCredentials:)
@@ -39,12 +44,12 @@ extension UnauthenticatedSession {
         
         if credentials.isInvalid {
             authenticationStatus.notifyAuthenticationDidFail(NSError(code: .needsCredentials, userInfo: nil))
-        } else if !self.reachability.mayBeReachable {
-            authenticationStatus.notifyAuthenticationDidFail(NSError(code: .networkError, userInfo:nil))
         } else {
-            self.authenticationStatus.prepareForLogin(with: credentials)
+            authenticationErrorIfNotReachable {
+                self.authenticationStatus.prepareForLogin(with: credentials)
+                RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+            }
         }
-        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
     
     /// Requires a phone verification code for login. Returns NO if the phone number was invalid
@@ -56,9 +61,11 @@ extension UnauthenticatedSession {
         } catch {
             return false
         }
-        
-        authenticationStatus.prepareForRequestingPhoneVerificationCode(forLogin: phoneNumber)
-        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+
+        authenticationErrorIfNotReachable {
+            self.authenticationStatus.prepareForRequestingPhoneVerificationCode(forLogin: phoneNumber)
+            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        }
         return true
     }
     

@@ -115,6 +115,22 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(__unused NSManagedObjectContext *context) {
                          [ZMHotFixDirectory restartSlowSync:context];
                      }],
+
+                    /// We need to refetch all team conversations to get data about access levels that were
+                    /// introduced after implementing wireless users functionality.
+                    [ZMHotFixPatch
+                     patchWithVersion:@"146.0.0"
+                     patchCode:^(__unused NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory refetchTeamGroupConversations:context];
+                     }],
+                    
+                    /// We need to refetch all users after adding the persisted `teamIdentifier` property which is used
+                    /// to decide if they belong to a team or not (relevant for updated asset retention policies).
+                    [ZMHotFixPatch
+                     patchWithVersion:@"157.0.0"
+                     patchCode:^(NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory refetchUsers:context];
+                     }],
                     ];
     });
     return patches;

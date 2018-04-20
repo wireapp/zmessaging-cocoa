@@ -22,84 +22,35 @@
 
 #import "ZMOperationLoop+Background.h"
 #import "ZMOperationLoop+Private.h"
-#import "ZMSyncStrategy+EventProcessing.h"
-
-#import "ZMSyncStrategy+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *ZMLogTag ZM_UNUSED = @"Network";
 
-
 static NSString * const PushChannelDataKey = @"data";
 static NSString * const PushChannelIdentifierKey = @"id";
 static NSString * const PushChannelNotificationTypeKey = @"type";
-
+static NSString * const PushNotificationTypePlain  = @"plain";
 static NSString * const PushNotificationTypeCipher = @"cipher";
 static NSString * const PushNotificationTypeNotice = @"notice";
 
-
-
 @implementation ZMOperationLoop (Background)
 
-
-- (void)saveEventsAndSendNotificationForPayload:(NSDictionary *)payload fetchCompletionHandler:(ZMPushResultHandler)completionHandler source:(ZMPushNotficationType)source;
+- (void)fetchEventsFromPushChannelPayload:(NSDictionary *)payload completionHandler:(ZMPushResultHandler)completionHandler source:(ZMPushNotficationType)source
 {
     ZMLogDebug(@"----> Received push notification payload: %@, source: %lu", payload, (unsigned long)source);
     
     [self.syncMOC performGroupedBlock:^{
-        if (![self notificationIsForCurrentUser:payload]) {
-            ZMLogDebug(@"Push is for the different user: skipping");
-            if (nil != completionHandler) {
-                completionHandler(ZMPushPayloadResultNoData);
-            }
+        NSUUID *eventId = [self messageNonceFromFromPushChannelData:payload];
+        if (eventId == nil) {
+            completionHandler(ZMPushPayloadResultNoData);
             return;
         }
         
-        EventsWithIdentifier *eventsWithID = [self eventsFromPushChannelData:payload];
-        BOOL isValidNotification = (nil != eventsWithID) && (eventsWithID.isNotice || eventsWithID.events.count > 0);
-        
-        if ((source == ZMPushNotficationTypeVoIP) && isValidNotification) {
-            [self processNotification:eventsWithID fetchCompletionHandler:completionHandler];
-        }
-        else if (completionHandler != nil) {
-            ZMLogPushKit(@"ZMOperationLoop - calling completionHandler without creating notifications");
-            [self.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_main_queue() block:^{
-                completionHandler(ZMPushPayloadResultSuccess);
-            }];
-        }
+        [self.pushNotificationStatus fetchEventId:eventId completionHandler:completionHandler];
     }];
 }
 
-- (void)processNotification:(EventsWithIdentifier*)eventsWithID fetchCompletionHandler:(ZMPushResultHandler)completionHandler
-{
-    ZM_WEAK(self);
-    [self.backgroundAPNSPingBackStatus didReceiveVoIPNotification:eventsWithID handler:^(ZMPushPayloadResult result, NSArray<ZMUpdateEvent *> *receivedEvents) {
-        ZM_STRONG(self);
-        
-        if (result == ZMPushPayloadResultSuccess || result == ZMPushPayloadResultNeedsMoreRequests) {
-            [self forwardEvents:receivedEvents];
-        }
-        if (completionHandler != nil && result != ZMPushPayloadResultNeedsMoreRequests) {
-            [self.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_main_queue() block:^{
-                ZMLogPushKit(@"Calling CompletionHandler");
-                completionHandler(result);
-            }];
-        }
-    }];
-}
-
-- (void)forwardEvents:(NSArray *)events
-{
-    if (events.count == 0) {
-        return;
-    }
-    
-    [self.syncStrategy consumeUpdateEvents:events];
-    [self.syncMOC saveOrRollback];
-    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-}
-
-- (EventsWithIdentifier *)eventsFromPushChannelData:(NSDictionary *)userInfo
+- (NSUUID *)messageNonceFromFromPushChannelData:(NSDictionary *)userInfo
 {
     NSDictionary *userInfoData = [userInfo optionalDictionaryForKey:PushChannelDataKey];
     if (userInfoData == nil) {
@@ -107,46 +58,21 @@ static NSString * const PushNotificationTypeNotice = @"notice";
         return nil;
     }
     
-    NSArray <ZMUpdateEvent *>* events;
-    NSUUID *identifier;
-    
     id internalData = userInfoData[PushChannelDataKey];
     NSString *type = [userInfoData optionalStringForKey:PushChannelNotificationTypeKey];
     
-    if (![internalData isKindOfClass:[NSDictionary class]]) {
-        if (![internalData isKindOfClass:[NSString class]]) {
-            events = [ZMUpdateEvent eventsArrayFromTransportData:userInfoData source:ZMUpdateEventSourcePushNotification];
-            identifier = [userInfoData optionalUuidForKey:PushChannelIdentifierKey];
-            return [[EventsWithIdentifier alloc] initWithEvents:events identifier:identifier isNotice:NO];
-        }
-
-        if (![type isEqualToString:PushNotificationTypeCipher]) {
-            ZMLogError(@"Unknown payload type: %@", type);
-            return nil;
-        }
-        
-        return [self eventArrayFromEncryptedMessage:userInfoData];
+    if ([type isEqualToString:PushNotificationTypePlain]) {
+        return [internalData optionalUuidForKey:PushChannelIdentifierKey];
+    } else if ([type isEqualToString:PushNotificationTypeCipher]) {
+        return [self messageNonceFromEncryptedPushChannelData:userInfoData];
+    } else if ([type isEqualToString:PushNotificationTypeNotice]) {
+        return [internalData optionalUuidForKey:PushChannelIdentifierKey];
     }
     
-    BOOL isNotice = [type isEqualToString:PushNotificationTypeNotice];
-    if (!isNotice) {
-        events = [ZMUpdateEvent eventsArrayFromTransportData:internalData source:ZMUpdateEventSourcePushNotification];
-    }
-
-    identifier = [internalData optionalUuidForKey:PushChannelIdentifierKey];
-    return [[EventsWithIdentifier alloc] initWithEvents:events identifier:identifier isNotice:isNotice];
+    return nil;
 }
 
-- (BOOL)notificationIsForCurrentUser:(NSDictionary *)userInfo {
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-    // No reason to process the push when the user is not given
-    if (selfUser == nil) {
-        return NO;
-    }
-    return [userInfo isPayloadForUser:selfUser];
-}
-
-- (EventsWithIdentifier *)eventArrayFromEncryptedMessage:(NSDictionary *)encryptedPayload
+- (NSUUID *)messageNonceFromEncryptedPushChannelData:(NSDictionary *)encryptedPayload
 {
     VerifyStringReturnNil(self.apsSignalKeyStore != nil, "Could not initiate APSSignalingKeystore");
     //    @"aps" : @{ @"alert": @{@"loc-args": @[],
@@ -164,11 +90,7 @@ static NSString * const PushNotificationTypeNotice = @"notice";
     }
     
     NSDictionary *dataPayload = [decodedData optionalDictionaryForKey:PushChannelDataKey];
-    NSUUID *identifier = [dataPayload optionalUuidForKey:PushChannelIdentifierKey];
-    NSArray *events = [ZMUpdateEvent eventsArrayFromTransportData:dataPayload source:ZMUpdateEventSourcePushNotification];
-    VerifyReturnNil(identifier);
-
-    return [[EventsWithIdentifier alloc] initWithEvents:events identifier:identifier isNotice:NO];
+    return [dataPayload optionalUuidForKey:PushChannelIdentifierKey];
 }
 
 @end

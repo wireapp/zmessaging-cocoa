@@ -42,7 +42,7 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
         }
     }
     
-    func updateAppIconBadge() {
+    func updateAppIconBadge(accountID: UUID, unreadCount: Int) {
         
     }
     
@@ -218,7 +218,7 @@ class CallKitDelegateTest: MessagingTest {
         conversation.isSelfAnActiveMember = true
         
         if type == .group {
-            conversation.addParticipant(self.otherUser(moc: moc))
+            conversation.internalAddParticipants(Set(arrayLiteral: self.otherUser(moc: moc)))
         }
         
         return conversation
@@ -243,7 +243,6 @@ class CallKitDelegateTest: MessagingTest {
         self.sut = WireSyncEngine.CallKitDelegate(provider: callKitProvider,
                                                   callController: callKitController,
                                                   sessionManager: mockSessionManager,
-                                                  flowManager: flowManager,
                                                   mediaManager: nil)
         
         CallKitDelegateTestsMocking.mockUserSession(self.mockUserSession)
@@ -297,7 +296,6 @@ class CallKitDelegateTest: MessagingTest {
         sut = WireSyncEngine.CallKitDelegate(provider: callKitProvider,
                                              callController: callKitController,
                                              sessionManager: mockSessionManager,
-                                             flowManager: FlowManagerMock(),
                                              mediaManager: nil)
         
         // when
@@ -555,6 +553,26 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXEndCallAction)
         
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXEndCallAction
+        XCTAssertEqual(action.callUUID, callUUID)
+    }
+    
+    func testThatReportsMutingOfCall() {
+        // given
+        let conversation = self.conversation(type: .group)
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        
+        mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date())
+        let callUUID = sut.callUUID(for: conversation)
+        
+        // when
+        sut.requestMuteCall(in: conversation, muted: true)
+        
+        // then
+        XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXSetMutedCallAction)
+        
+        let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXSetMutedCallAction
         XCTAssertEqual(action.callUUID, callUUID)
     }
     

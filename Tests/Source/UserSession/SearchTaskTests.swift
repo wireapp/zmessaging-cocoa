@@ -455,9 +455,7 @@ class SearchTaskTests : MessagingTest {
         let user2 = createConnectedUser(withName: "Asuka")
         let user3 = createConnectedUser(withName: "Rëï")
         
-        conversation.addParticipant(user1)
-        conversation.addParticipant(user2)
-        conversation.addParticipant(user3)
+        conversation.internalAddParticipants(Set(arrayLiteral: user1, user2, user3))
         
         uiMOC.saveOrRollback()
         
@@ -481,7 +479,7 @@ class SearchTaskTests : MessagingTest {
         let resultArrived = expectation(description: "received result")
         let conversation = createGroupConversation(withName: "Summertime")
         let user = createConnectedUser(withName: "Rëï")
-        conversation.addParticipant(user)
+        conversation.internalAddParticipants(Set(arrayLiteral: user))
         
         uiMOC.saveOrRollback()
         
@@ -531,9 +529,8 @@ class SearchTaskTests : MessagingTest {
         let conversation3 = createGroupConversation(withName: "FooB")
         let conversation4 = createGroupConversation(withName: "Bar")
         
-        conversation2.addParticipant(user1)
-        conversation4.addParticipant(user1)
-        conversation4.addParticipant(user2)
+        conversation2.internalAddParticipants(Set(arrayLiteral: user1))
+        conversation4.internalAddParticipants(Set(arrayLiteral: user1, user2))
         
         uiMOC.saveOrRollback()
         

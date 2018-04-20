@@ -69,6 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSUUID *userIdentifier;
 @property (nonatomic, readonly) NSURL *sharedContainerURL;
 @property (nonatomic, readonly) NSURL *accountDirectory;
+@property (nonatomic, readonly) NSMutableArray<ZMUpdateEvent *> *processedUpdateEvents;
 
 /// reset ui and sync contexts
 - (void)resetUIandSyncContextsAndResetPersistentStore:(BOOL)resetPersistentStore;
@@ -124,11 +125,6 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 
 - (ZMClientMessage *)createClientTextMessage;
 - (ZMClientMessage *)createClientTextMessageWithText:(NSString *)text;
-- (ZMAssetClientMessage *)createImageMessageWithImageData:(NSData *)imageData
-                                                   format:(ZMImageFormat)format
-                                                processed:(BOOL)processed
-                                                   stored:(BOOL)stored
-                                                      moc:(NSManagedObjectContext *)moc;
 
 @end
 

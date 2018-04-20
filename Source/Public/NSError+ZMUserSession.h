@@ -84,6 +84,7 @@ FOUNDATION_EXPORT NSString * const ZMClientsKey;
 
 FOUNDATION_EXPORT NSString * const ZMPhoneCredentialKey;
 FOUNDATION_EXPORT NSString * const ZMEmailCredentialKey;
+FOUNDATION_EXPORT NSString * const ZMPasswordCredentialKey;
 
 @interface NSError (ZMUserSession)
 

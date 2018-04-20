@@ -26,18 +26,18 @@ class TeamCreationTests : IntegrationTest {
     var registrationStatus: WireSyncEngine.RegistrationStatus? {
         return sessionManager?.unauthenticatedSession?.registrationStatus
     }
-    var team: TeamToRegister!
+    var teamToRegister: TeamToRegister!
 
     override func setUp() {
         super.setUp()
         delegate = TestRegistrationStatusDelegate()
         sessionManager?.unauthenticatedSession?.registrationStatus.delegate = delegate
-        team = TeamToRegister(teamName: "A-Team", email: "ba@a-team.de", emailCode: "911", fullName: "Bosco B. A. Baracus", password: "BadAttitude", accentColor: .vividRed)
+        teamToRegister = TeamToRegister(teamName: "A-Team", email: "ba@a-team.de", emailCode: "911", fullName: "Bosco B. A. Baracus", password: "BadAttitude", accentColor: .vividRed)
     }
 
     override func tearDown() {
         delegate = nil
-        team = nil
+        teamToRegister = nil
         super.tearDown()
     }
 
@@ -112,7 +112,7 @@ class TeamCreationTests : IntegrationTest {
         XCTAssertEqual(delegate.teamRegistrationFailedCalled, 0)
 
         // When
-        registrationStatus?.create(team: team)
+        registrationStatus?.create(team: teamToRegister)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // Then
@@ -122,7 +122,7 @@ class TeamCreationTests : IntegrationTest {
 
     func testThatAfterRegisteringWeHaveAnAccountAndValidCookie() {
         // When
-        registrationStatus?.create(team: team)
+        registrationStatus?.create(team: teamToRegister)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // Then
@@ -135,10 +135,10 @@ class TeamCreationTests : IntegrationTest {
         // Given
         self.mockTransportSession.performRemoteChanges { (session) in
             let user = session.insertUser(withName: "john")
-            user.email = self.team.email
+            user.email = self.teamToRegister.email
         }
 
-        registrationStatus?.create(team: team)
+        registrationStatus?.create(team: teamToRegister)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // Then

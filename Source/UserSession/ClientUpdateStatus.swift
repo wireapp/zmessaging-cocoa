@@ -149,7 +149,7 @@ public enum ClientUpdateError : NSInteger {
     }
     
     public func deleteClients(withCredentials emailCredentials:ZMEmailCredentials) {
-        if (emailCredentials.password?.characters.count)! > 0 {
+        if let password = emailCredentials.password, !password.isEmpty {
             isWaitingToDeleteClients = true
             internalCredentials = emailCredentials
         } else {

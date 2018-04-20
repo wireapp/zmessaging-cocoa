@@ -150,7 +150,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     XCTAssertEqual(recorder.notifications.firstObject.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
 }
 
-- (void)testThatIfRegisteringWithADuplicateEmailWeLogInIfWeHaveTheRightPassword
+- (void)testThatIfRegisteringWithADuplicateEmailWeDoNotLogInIfWeHaveTheRightPassword
 {
     // given
     NSString *password = @"thePa$$w0rd";
@@ -172,8 +172,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(recorder.notifications.count, 1lu);
-    XCTAssertEqual(recorder.notifications.firstObject.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
+    XCTAssertEqual(recorder.notifications.count, 0lu);
 }
 
 - (void)testThatIfRegisteringWithADuplicateEmailWeDoNotLogInIfWeHaveTheWrongPassword

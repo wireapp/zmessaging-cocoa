@@ -22,26 +22,33 @@
 extension ZMLocalNotification {
     
     convenience init?(callState: CallState, conversation: ZMConversation, caller: ZMUser) {
-        guard conversation.remoteIdentifier != nil else { return nil }
-        let builder = CallNotificationBuilder(callState: callState, caller: caller, conversation: conversation)
-        self.init(conversation: conversation, type: .calling(callState), builder: builder)
+        guard let builder = CallNotificationBuilder(callState: callState, caller: caller, conversation: conversation) else { return nil }
+        
+        self.init(conversation: conversation, builder: builder)
     }
     
     private class CallNotificationBuilder: NotificationBuilder {
         
         let callState: CallState
         let caller: ZMUser
-        var conversation: ZMConversation?
-        private var teamName: String?
+        let conversation: ZMConversation
+        let managedObjectContext: NSManagedObjectContext
+        
+        var notificationType: LocalNotificationType {
+            return LocalNotificationType.calling(callState)
+        }
         
         let ignoredCallStates : [CallState] = [
             .established, .answered(degraded: false), .outgoing(degraded: false), .none, .unknown
         ]
         
-        init(callState: CallState, caller: ZMUser, conversation: ZMConversation) {
+        init?(callState: CallState, caller: ZMUser, conversation: ZMConversation) {
+            guard let managedObjectContext = conversation.managedObjectContext, conversation.remoteIdentifier != nil else { return nil }
+            
             self.callState = callState
             self.caller = caller
             self.conversation = conversation
+            self.managedObjectContext = managedObjectContext
         }
         
         func shouldCreateNotification() -> Bool {
@@ -58,68 +65,26 @@ extension ZMLocalNotification {
         }
         
         func titleText() -> String? {
-            if let moc = conversation?.managedObjectContext {
-                teamName = ZMUser.selfUser(in: moc).team?.name
-            }
-            
-            return ZMPushStringTitle.localizedString(withConversationName: conversation?.meaningfulDisplayName, teamName: teamName)
+            return notificationType.titleText(selfUser: ZMUser.selfUser(in: managedObjectContext), conversation: conversation)
         }
         
         func bodyText() -> String {
-            
-            var text = ""
-            var key: String?
-            
-            switch (callState) {
-            case .incoming(video: let video, shouldRing: _, degraded: _):
-                key = video ? ZMPushStringVideoCallStarts : ZMPushStringCallStarts
-            case .terminating, .none:
-                key = ZMPushStringCallMissed
-            default :
-                break
-            }
-            
-            if nil != key {
-                text = key!.localizedString(with: caller, conversation: conversation) ?? ""
-            }
-            
-            return text.escapingPercentageSymbols()
+            return notificationType.messageBodyText(sender: caller, conversation: conversation)
         }
-        
-        func category() -> String {
-            switch (callState) {
-            case .incoming:
-                return ZMIncomingCallCategory
-            case .terminating(reason: .timeout):
-                return ZMMissedCallCategory
-            default :
-                return ZMConversationCategory
-            }
-        }
-
-        func soundName() -> String {
-            if case .incoming = callState {
-                return ZMCustomSound.notificationRingingSoundName()
-            } else {
-                return ZMCustomSound.notificationNewMessageSoundName()
-            }
-        }
-        
+                
         func userInfo() -> [AnyHashable: Any]? {
             
-            guard
-                let moc = conversation?.managedObjectContext,
-                let selfUserID = ZMUser.selfUser(in: moc).remoteIdentifier,
-                let senderID = caller.remoteIdentifier,
-                let conversationID = conversation?.remoteIdentifier
-                else { return nil }
+            guard let selfUserID = ZMUser.selfUser(in: managedObjectContext).remoteIdentifier,
+                  let senderID = caller.remoteIdentifier,
+                  let conversationID = conversation.remoteIdentifier
+                  else { return nil }
             
             var userInfo = [AnyHashable: Any]()
             userInfo[SelfUserIDStringKey] = selfUserID.transportString()
             userInfo[SenderIDStringKey] = senderID.transportString()
             userInfo[ConversationIDStringKey] = conversationID.transportString()
-            userInfo[ConversationNameStringKey] = conversation?.meaningfulDisplayName
-            userInfo[TeamNameStringKey] = teamName
+            userInfo[ConversationNameStringKey] = conversation.meaningfulDisplayName
+            userInfo[TeamNameStringKey] = ZMUser.selfUser(in: managedObjectContext).name
             return userInfo
         }
     }

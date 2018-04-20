@@ -17,7 +17,7 @@
 //
 
 import Foundation
-import WireMessageStrategy
+import WireRequestStrategy
 
 class CallingRequestStrategyTests : MessagingTest {
 

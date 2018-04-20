@@ -101,7 +101,7 @@
         // save previous notification ID
         MockPushEvent *messageEvent = self.mockTransportSession.updateEvents.lastObject;
         messageAddLastNotificationID = messageEvent.uuid;
-        XCTAssertEqualObjects(messageEvent.payload[@"type"], @"conversation.otr-message-add");
+        XCTAssertEqualObjects(messageEvent.payload.asDictionary[@"type"], @"conversation.otr-message-add");
         
         // will create a transient notification
         [session sendIsTypingEventForConversation:self.groupConversation user:self.user1 started:NO];

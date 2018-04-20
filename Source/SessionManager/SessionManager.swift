@@ -54,7 +54,7 @@ public protocol SessionManagerType : class {
     var callNotificationStyle: CallNotificationStyle { get }
     
     func withSession(for account: Account, perform completion: @escaping (ZMUserSession)->())
-    func updateAppIconBadge()
+    func updateAppIconBadge(accountID: UUID, unreadCount: Int)
 
 }
 
@@ -148,7 +148,7 @@ public protocol LocalNotificationResponder : class {
     var preLoginAuthenticationToken: Any?
     var callCenterObserverToken: Any?
     var blacklistVerificator: ZMBlacklistVerificator?
-    let reachability: ReachabilityProvider & ReachabilityTearDown
+    let reachability: ReachabilityProvider & TearDownCapable
     let pushDispatcher: PushDispatcher
     let notificationsTracker: NotificationsTracker?
     
@@ -157,8 +157,8 @@ public protocol LocalNotificationResponder : class {
     
     fileprivate let sessionLoadingQueue : DispatchQueue = DispatchQueue(label: "sessionLoadingQueue")
     
-    fileprivate let sharedContainerURL: URL
-    fileprivate let dispatchGroup: ZMSDispatchGroup?
+    let sharedContainerURL: URL
+    let dispatchGroup: ZMSDispatchGroup?
     fileprivate var accountTokens : [UUID : [Any]] = [:]
     fileprivate var memoryWarningObserver: NSObjectProtocol?
     fileprivate var isSelectingAccount : Bool = false
@@ -282,7 +282,7 @@ public protocol LocalNotificationResponder : class {
         authenticatedSessionFactory: AuthenticatedSessionFactory,
         unauthenticatedSessionFactory: UnauthenticatedSessionFactory,
         analytics: AnalyticsType? = nil,
-        reachability: ReachabilityProvider & ReachabilityTearDown,
+        reachability: ReachabilityProvider & TearDownCapable,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
         launchOptions: LaunchOptions,
@@ -438,6 +438,7 @@ public protocol LocalNotificationResponder : class {
         delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: { [weak self] in
             currentSession.closeAndDeleteCookie(deleteCookie)
             self?.activeUserSession = nil
+            StorageStack.reset()
             
             if deleteAccount {
                 self?.deleteAccountData(for: account)
@@ -600,7 +601,7 @@ public protocol LocalNotificationResponder : class {
     }
 
     deinit {
-        blacklistVerificator?.teardown()
+        blacklistVerificator?.tearDown()
         activeUserSession?.tearDown()
         unauthenticatedSession?.tearDown()
         reachability.tearDown()
@@ -634,7 +635,7 @@ public protocol LocalNotificationResponder : class {
             // Should be set to true when CallKit is used. Then AVS will not start
             // the audio before the audio session is active
             authenticatedSessionFactory.mediaManager.setUiStartsAudio(true)
-            callKitDelegate = CallKitDelegate(sessionManager: self, flowManager: authenticatedSessionFactory.flowManager, mediaManager: authenticatedSessionFactory.mediaManager)
+            callKitDelegate = CallKitDelegate(sessionManager: self, mediaManager: authenticatedSessionFactory.mediaManager)
         }
     }
     
@@ -692,14 +693,25 @@ extension SessionManager: ZMUserObserver {
 
 // MARK: - UnauthenticatedSessionDelegate
 
-extension SessionManager: UnauthenticatedSessionDelegate {
+extension SessionManager {
 
-    public func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) -> Bool {
+    /// Needs to be called before we try to register another device because API requires password
+    @objc public func update(credentials: ZMCredentials) -> Bool {
         guard let userSession = activeUserSession, let emailCredentials = credentials as? ZMEmailCredentials else { return false }
-        
+
         userSession.setEmailCredentials(emailCredentials)
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         return true
+    }
+}
+
+extension SessionManager: UnauthenticatedSessionDelegate {
+    public func session(session: UnauthenticatedSession, isExistingAccount account: Account) -> Bool {
+        return accountManager.accounts.contains(account)
+    }
+
+    public func session(session: UnauthenticatedSession, updatedCredentials credentials: ZMCredentials) -> Bool {
+        return update(credentials: credentials)
     }
     
     public func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data) {
@@ -730,6 +742,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
                 userSession.syncManagedObjectContext.registeredOnThisDevice = registered
                 userSession.syncManagedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = registered
                 userSession.accountStatus.didCompleteLogin()
+                ZMMessage.deleteOldEphemeralMessages(userSession.syncManagedObjectContext)
             }
         }
     }
@@ -831,12 +844,10 @@ extension SessionManager: ZMConversationListObserver {
         }
     }
     
-    public func updateAppIconBadge() {
+    public func updateAppIconBadge(accountID: UUID, unreadCount: Int) {
         DispatchQueue.main.async {
-            for (accountID, session) in self.backgroundUserSessions {
-                let account = self.accountManager.account(with: accountID)
-                account?.unreadConversationCount = Int(ZMConversation.unreadConversationCount(in: session.managedObjectContext))
-            }
+            let account = self.accountManager.account(with: accountID)
+            account?.unreadConversationCount = unreadCount
             self.application.applicationIconBadgeNumber = self.accountManager.totalUnreadCount
         }
     }
@@ -916,5 +927,26 @@ extension SessionManager: NotificationContext {
     
     fileprivate func notifyUserSessionDestroyed(_ accountId: UUID) {
         NotificationInContext(name: sessionManagerDestroyedSessionNotificationName, context: self, object: accountId as AnyObject).post()
+    }
+}
+
+extension SessionManager {
+    public func markAllConversationsAsRead(completion: (()->())?) {
+        let group = DispatchGroup()
+        
+        self.accountManager.accounts.forEach { account in
+            group.enter()
+            self.withSession(for: account) { userSession in
+                userSession.performChanges {
+                    userSession.markAllConversationsAsRead()
+                }
+                
+                group.leave()
+            }
+        }
+        
+        group.notify(queue: DispatchQueue.main) {
+            completion?()
+        }
     }
 }

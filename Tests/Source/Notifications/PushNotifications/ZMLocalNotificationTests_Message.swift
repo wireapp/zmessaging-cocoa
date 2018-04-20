@@ -36,10 +36,9 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     }
     
     func unknownNotification(_ conversation: ZMConversation, sender: ZMUser) -> ZMLocalNotification? {
-        let message = ZMClientMessage.insertNewObject(in: self.syncMOC)
+        let message = ZMClientMessage(nonce: UUID(), managedObjectContext: syncMOC)
         message.sender = sender;
         message.visibleInConversation = conversation
-        message.nonce = UUID()
         message.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(20)
         return ZMLocalNotification(message: message)
     }
@@ -297,15 +296,20 @@ extension ZMLocalNotificationTests_Message {
     }
 
     func assetNote(_ fileType: FileType, conversation: ZMConversation, sender: ZMUser, isEphemeral: Bool = false) -> ZMLocalNotification? {
+        if isEphemeral {
+            conversation.messageDestructionTimeout = 10
+        }
+        
+        defer {
+            conversation.messageDestructionTimeout = 0
+        }
+        
         let metadata = ZMFileMetadata(fileURL: fileType.testURL)
-        if let message = ZMAssetClientMessage.assetClientMessage(with: metadata, nonce: UUID.create(), managedObjectContext: self.syncMOC, expiresAfter: isEphemeral ? 10 : 0) {
-            message.sender = sender
-            message.visibleInConversation = conversation
-            return ZMLocalNotification(message: message)
-        }
-        else {
-            return nil
-        }
+        let message = conversation.appendMessage(with: metadata) as! ZMAssetClientMessage
+        message.sender = sender
+        message.delivered = true
+        
+        return ZMLocalNotification(message: message)
     }
 
     func bodyForAssetNote(_ fileType: FileType, conversation: ZMConversation, sender: ZMUser, isEphemeral: Bool = false) -> String {

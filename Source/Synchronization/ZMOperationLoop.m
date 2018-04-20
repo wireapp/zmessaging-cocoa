@@ -64,10 +64,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 @end
 
 
-@interface ZMOperationLoop (OperationStatus) <ZMOperationStatusDelegate>
-@end
-
-
 @implementation ZMOperationLoop
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
@@ -295,9 +291,9 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     }];
 }
 
-- (BackgroundAPNSPingBackStatus *)backgroundAPNSPingBackStatus
+- (PushNotificationStatus *)pushNotificationStatus
 {
-    return self.applicationStatusDirectory.pingBackStatus;
+    return self.applicationStatusDirectory.pushNotificationStatus;
 }
 
 @end
@@ -332,9 +328,10 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     }
 }
 
-- (void)pushChannelDidClose:(ZMPushChannelConnection *)channel withResponse:(NSHTTPURLResponse *)response;
+- (void)pushChannelDidClose:(ZMPushChannelConnection *)channel withResponse:(NSHTTPURLResponse *)response error:(nullable NSError *)error;
 {
     NOT_USED(response);
+    NOT_USED(error);
     [[[NotificationInContext alloc] initWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
                                          context:self.syncMOC.notificationContext
                                           object:self userInfo:@{
@@ -360,11 +357,3 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 @end
 
-@implementation ZMOperationLoop (OperationStatus)
-
-- (void)operationStatusDidChangeState:(enum SyncEngineOperationState)state
-{
-    self.transportSession.pushChannel.keepOpen = state == SyncEngineOperationStateForeground || state == SyncEngineOperationStateBackgroundCall;
-}
-
-@end

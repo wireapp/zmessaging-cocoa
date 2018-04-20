@@ -186,97 +186,6 @@
     }
 }
 
-
-- (void)testThatRemovingParticipantsFromAConversationIsSynchronizedWithBackend
-{
-    {
-        XCTAssertTrue([self login]);
-        
-        ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-        XCTAssertNotNil(conversation);
-        
-        ZMUser *user = [self userForMockUser:self.user3];
-        
-        XCTAssertTrue([conversation.activeParticipants containsObject:user]);
-        [self.userSession performChanges:^{
-            [conversation removeParticipant:user];
-
-        }];
-        XCTAssertFalse([conversation.activeParticipants containsObject:user]);
-
-        // Wait for merge ui->sync to be done
-        WaitForAllGroupsToBeEmpty(0.5);
-    }
-
-    // Tears down context(s) &
-    // Re-create contexts
-    [self recreateSessionManagerAndDeleteLocalData];
-    XCTAssert([self login]);
-    
-    {
-        ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-        XCTAssertNotNil(conversation);
-        ZMUser *user = [self userForMockUser:self.user3];
-
-        XCTAssertFalse([conversation.activeParticipants containsObject:user]);
-    }
-    
-}
-
-
-
-- (void)testThatAddingParticipantsToAConversationIsSynchronizedWithBackend
-{
-
-    __block MockUser *connectedUserNotInConv;
-    {
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-            connectedUserNotInConv = [session insertUserWithName:@"Connected user which originally is not in conversation"];
-            connectedUserNotInConv.email = @"connectedUserNotInConv@example.com";
-            connectedUserNotInConv.phone = @"23498579";
-            
-            MockConversation *selfToConnectedNotInConvConversation = [session insertOneOnOneConversationWithSelfUser:self.selfUser otherUser:connectedUserNotInConv];
-            selfToConnectedNotInConvConversation.creator = self.selfUser;
-            
-            MockConnection *connectionSelfToConnectedUserNotInConv = [session insertConnectionWithSelfUser:self.selfUser toUser:connectedUserNotInConv];
-            connectionSelfToConnectedUserNotInConv.status = @"accepted";
-            connectionSelfToConnectedUserNotInConv.lastUpdate = [NSDate dateWithTimeIntervalSinceNow:-3];
-            connectionSelfToConnectedUserNotInConv.conversation = selfToConnectedNotInConvConversation;
-        }];
-        
-        XCTAssertTrue([self login]);
-        
-        ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-        XCTAssertNotNil(conversation);
-        
-        ZMUser *user = [self userForMockUser:connectedUserNotInConv];
-        
-        XCTAssertFalse([conversation.activeParticipants containsObject:user]);
-        [self.userSession performChanges:^{
-            [conversation addParticipant:user];
-        }];
-        XCTAssertTrue([conversation.activeParticipants containsObject:user]);
-        
-        // Wait for merge ui->sync to be done
-        WaitForAllGroupsToBeEmpty(0.5);
-    }
-    
-    // Tears down context(s) &
-    // Re-create contexts
-    [self recreateSessionManagerAndDeleteLocalData];
-    XCTAssert([self login]);
-        
-    {
-        ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-        XCTAssertNotNil(conversation);
-        
-        ZMUser *user = [self userForMockUser:connectedUserNotInConv];
-        
-        XCTAssertTrue([conversation.activeParticipants containsObject:user]);
-    }
-    
-}
-
 @end
 
 @implementation ConversationTests (DisplayName)
@@ -360,7 +269,7 @@
 - (void)testThatServiceUsersAreRemovedFromAConversationWhenTheyAreRemovedRemotely
 {
     // given
-    [self createConversationsWithServiceUser];
+    [self createTeamAndConversations];
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertTrue([self login]);
     
@@ -379,228 +288,6 @@
     XCTAssertFalse([groupConversation.activeParticipants containsObject:bot]);
     XCTAssertEqual(groupConversation.keysThatHaveLocalModifications.count, 0u);
 }
-
-
-- (void)testThatAddingAndRemovingAParticipantToAConversationSendsOutChangeNotifications
-{
-    __block MockUser *connectedUserNotInConv;
-    {
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-            connectedUserNotInConv = [session insertUserWithName:@"Connected user which originally is not in conversation"];
-            connectedUserNotInConv.email = @"connectedUserNotInConv@example.com";
-            connectedUserNotInConv.phone = @"23498579";
-            
-            MockConversation *selfToConnectedNotInConvConversation = [session insertOneOnOneConversationWithSelfUser:self.selfUser otherUser:connectedUserNotInConv];
-            selfToConnectedNotInConvConversation.creator = self.selfUser;
-            
-            MockConnection *connectionSelfToConnectedUserNotInConv = [session insertConnectionWithSelfUser:self.selfUser toUser:connectedUserNotInConv];
-            connectionSelfToConnectedUserNotInConv.status = @"accepted";
-            connectionSelfToConnectedUserNotInConv.lastUpdate = [NSDate dateWithTimeIntervalSinceNow:-3];
-            connectionSelfToConnectedUserNotInConv.conversation = selfToConnectedNotInConvConversation;
-        }];
-        
-        XCTAssertTrue([self login]);
-        
-        ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-        XCTAssertNotNil(conversation);
-        
-        ZMUser *user = [self userForMockUser:connectedUserNotInConv];
-        
-        ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
-        [observer clearNotifications];
-        
-        [self.userSession performChanges:^{
-            XCTAssertFalse([conversation.activeParticipants containsObject:user]);
-            [conversation addParticipant:user];
-            XCTAssertTrue([conversation.activeParticipants containsObject:user]);
-        }];
-        WaitForAllGroupsToBeEmpty(0.5);
-        XCTAssertFalse(conversation.hasChanges, @"Rollback?");
-        
-        // Participants changes and messages changes (System message fot the added user)
-        XCTAssertEqual(observer.notifications.count, 2u);
-        ConversationChangeInfo *note1 = observer.notifications.firstObject;
-        ConversationChangeInfo *note2 = observer.notifications.lastObject;
-        XCTAssertEqual(note1.conversation, conversation);
-        XCTAssertTrue(note1.participantsChanged);
-        XCTAssertEqual(note2.conversation, conversation);
-        XCTAssertTrue(note2.messagesChanged);
-        [observer.notifications removeAllObjects];
-        
-        [self.userSession performChanges:^{
-            XCTAssertTrue([conversation.activeParticipants containsObject:user]);
-            [conversation removeParticipant:user];
-            XCTAssertFalse([conversation.activeParticipants containsObject:user]);
-        }];
-        WaitForAllGroupsToBeEmpty(0.5);
-        XCTAssertFalse(conversation.hasChanges, @"Rollback?");
-        
-        // Participants changes and messages changes (System message fot the added user)
-        XCTAssertEqual(observer.notifications.count, 2u);
-        ConversationChangeInfo *note3 = observer.notifications.firstObject;
-        ConversationChangeInfo *note4 = observer.notifications.lastObject;
-        XCTAssertEqual(note3.conversation, conversation);
-        XCTAssertTrue(note3.participantsChanged);
-        XCTAssertEqual(note4.conversation, conversation);
-        XCTAssertTrue(note4.messagesChanged);
-        [observer.notifications removeAllObjects];
-        
-        // Wait for merge ui->sync to be done
-        WaitForAllGroupsToBeEmpty(0.5);
-        
-        XCTAssertFalse([conversation hasLocalModificationsForKey:ZMConversationUnsyncedActiveParticipantsKey]);
-    }
-}
-
-
-- (void)testThatWhenLeavingAConversationWeSetAndSynchronizeTheLastReadServerTimestamp
-{
-    // given
-    XCTAssertTrue([self login]);
-    
-    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    XCTAssertNotNil(conversation);
-    
-    ZMUser *user = [self userForMockUser:self.selfUser];
-    
-    [self.mockTransportSession resetReceivedRequests];
-    
-    NSString *lastReadPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", user.remoteIdentifier.transportString];
-    NSString *memberLeavePath = [NSString stringWithFormat:@"/conversations/%@/members/%@", conversation.remoteIdentifier.transportString, user.remoteIdentifier.transportString];
-    NSString *archivedPath = [NSString stringWithFormat:@"/conversations/%@/self", conversation.remoteIdentifier.transportString];
-    
-    __block BOOL didSendLastReadMessage = NO;
-    __block BOOL didSendFirstArchivedMessage = NO;
-    __block BOOL didSendMemberLeaveRequest = NO;
-    __block BOOL didSendSecondArchivedMessage = NO;
-    __block NSDate *firstArchivedRef;
-    __block BOOL firstIsArchived;
-    __block NSDate *secondArchivedRef;
-    __block BOOL secondIsArchived;
-    ZM_WEAK(self);
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        ZM_STRONG(self);
-        if ([request.path isEqualToString:lastReadPath] && request.method == ZMMethodPOST) {
-            didSendLastReadMessage = YES;
-        }
-        if ([request.path isEqualToString:memberLeavePath] && request.method == ZMMethodDELETE) {
-            didSendMemberLeaveRequest = YES;
-        }
-        if ([request.path isEqualToString:archivedPath] && request.method == ZMMethodPUT) {
-            if (!didSendMemberLeaveRequest) {
-                didSendFirstArchivedMessage = YES;
-                firstArchivedRef = [[request.payload asDictionary] dateForKey:@"otr_archived_ref"];
-                firstIsArchived = [request.payload[@"otr_archived"] boolValue];
-                XCTAssertEqualObjects(firstArchivedRef, conversation.lastServerTimeStamp);
-            } else {
-                didSendSecondArchivedMessage = YES;
-                secondArchivedRef = [[request.payload asDictionary] dateForKey:@"otr_archived_ref"];
-                secondIsArchived = [request.payload[@"otr_archived"] boolValue];
-            }
-        }
-        return nil;
-    };
-    
-    // when
-    [self.userSession performChanges:^{
-        XCTAssertTrue(conversation.isSelfAnActiveMember);
-        [conversation removeParticipant:user];
-        XCTAssertFalse(conversation.isSelfAnActiveMember);
-    }];
-
-    XCTAssertTrue([conversation hasLocalModificationsForKey:ZMConversationIsSelfAnActiveMemberKey]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertNotNil(conversation.lastReadServerTimeStamp);
-    XCTAssertTrue(didSendFirstArchivedMessage);
-    XCTAssertTrue(didSendLastReadMessage);
-    XCTAssertTrue(didSendMemberLeaveRequest);
-    XCTAssertTrue(didSendSecondArchivedMessage);
-    XCTAssertTrue(firstIsArchived);
-    XCTAssertTrue(secondIsArchived);
-    
-    XCTAssertTrue([firstArchivedRef compare:secondArchivedRef] == NSOrderedAscending);
-    XCTAssertEqualObjects(secondArchivedRef, conversation.lastServerTimeStamp);
-    XCTAssertEqualObjects(secondArchivedRef, conversation.lastReadServerTimeStamp);
-    
-    XCTAssertFalse([conversation hasLocalModificationsForKey:ZMConversationIsSelfAnActiveMemberKey]);
-    
-    NSUInteger unreadCount = conversation.estimatedUnreadCount;
-    
-    // and when logging in and out again lastRead is still set
-    [self recreateSessionManagerAndDeleteLocalData];
-    
-    XCTAssertTrue([self login]);
-    
-    conversation = [self conversationForMockConversation:self.groupConversation];
-    XCTAssertNotNil(conversation);
-    XCTAssertEqual(conversation.estimatedUnreadCount, unreadCount);
-}
-
-
-- (void)testThatRemovingAndAddingAParticipantToAConversationSendsOutChangeNotifications
-{
-    
-    __block MockUser *connectedUserNotInConv;
-    {
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-            connectedUserNotInConv = [session insertUserWithName:@"Connected user which originally is not in conversation"];
-            connectedUserNotInConv.email = @"connectedUserNotInConv@example.com";
-            connectedUserNotInConv.phone = @"23498579";
-            
-            MockConversation *selfToConnectedNotInConvConversation = [session insertOneOnOneConversationWithSelfUser:self.selfUser otherUser:connectedUserNotInConv];
-            selfToConnectedNotInConvConversation.creator = self.selfUser;
-            
-            MockConnection *connectionSelfToConnectedUserNotInConv = [session insertConnectionWithSelfUser:self.selfUser toUser:connectedUserNotInConv];
-            connectionSelfToConnectedUserNotInConv.status = @"accepted";
-            connectionSelfToConnectedUserNotInConv.lastUpdate = [NSDate dateWithTimeIntervalSinceNow:-3];
-            connectionSelfToConnectedUserNotInConv.conversation = selfToConnectedNotInConvConversation;
-        }];
-        
-        XCTAssertTrue([self login]);
-        
-        ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-        XCTAssertNotNil(conversation);
-        
-        ZMUser *user = [self userForMockUser:self.user1];
-        
-        ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
-        [observer clearNotifications];
-        
-        [self.userSession performChanges:^{
-            XCTAssertTrue([conversation.activeParticipants containsObject:user]);
-            [conversation removeParticipant:user];
-            XCTAssertFalse([conversation.activeParticipants containsObject:user]);
-        }];
-        XCTAssertFalse(conversation.hasChanges, @"Rollback?");
-        
-        XCTAssertEqual(observer.notifications.count, 1u);
-        ConversationChangeInfo *note1 = observer.notifications.firstObject;
-        XCTAssertEqual(note1.conversation, conversation);
-        XCTAssertTrue(note1.participantsChanged);
-        [observer.notifications removeAllObjects];
-        
-        [self.userSession performChanges:^{
-            XCTAssertFalse([conversation.activeParticipants containsObject:user]);
-            [conversation addParticipant:user];
-            XCTAssertTrue([conversation.activeParticipants containsObject:user]);
-        }];
-        XCTAssertFalse(conversation.hasChanges, @"Rollback?");
-        
-        XCTAssertEqual(observer.notifications.count, 1u);
-        ConversationChangeInfo *note2 = observer.notifications.firstObject;
-        XCTAssertEqual(note2.conversation, conversation);
-        XCTAssertTrue(note2.participantsChanged);
-        [observer.notifications removeAllObjects];
-        
-        // Wait for merge ui->sync to be done
-        WaitForAllGroupsToBeEmpty(0.5);
-        
-        XCTAssertFalse([conversation hasLocalModificationsForKey:ZMConversationUnsyncedActiveParticipantsKey]);
-    }
-}
-
 
 - (void)testThatActiveParticipantsInOneOnOneConversationsAreAllParticipants
 {
@@ -658,7 +345,7 @@
     // I am faulting conversation, will maintain the "message" relations as faulted
     ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     
-    XCTAssertEqual(conversationList.count, 4u);
+    XCTAssertEqual(conversationList.count, 5u);
     
     ConversationListChangeObserver *observer = [[ConversationListChangeObserver alloc] initWithConversationList:conversationList];
 
@@ -1239,8 +926,8 @@
         NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/self", self.groupConversation.identifier];
         XCTAssertEqualObjects(request.path, expectedPath);
         XCTAssertEqual(request.method, ZMMethodPUT);
-        XCTAssertEqualObjects(request.payload[@"otr_archived_ref"], conversation.archivedChangedTimestamp.transportString);
-        XCTAssertEqualObjects(request.payload[@"otr_archived"], @(conversation.isArchived));
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_archived_ref"], conversation.archivedChangedTimestamp.transportString);
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_archived"], @(conversation.isArchived));
     }
     
     // Tears down context(s) &
@@ -1283,8 +970,8 @@
     XCTAssertEqualObjects(request.path, expectedPath);
     XCTAssertEqual(request.method, ZMMethodPUT);
     XCTAssertEqualObjects(conversation.lastServerTimeStamp, conversation.archivedChangedTimestamp);
-    XCTAssertEqualObjects(request.payload[@"otr_archived_ref"], conversation.archivedChangedTimestamp.transportString);
-    XCTAssertEqualObjects(request.payload[@"otr_archived"], @(conversation.isArchived));
+    XCTAssertEqualObjects(request.payload.asDictionary[@"otr_archived_ref"], conversation.archivedChangedTimestamp.transportString);
+    XCTAssertEqualObjects(request.payload.asDictionary[@"otr_archived"], @(conversation.isArchived));
 }
 
 - (void)testThatSilencingAConversationIsSynchronizedToTheBackend
@@ -1308,8 +995,8 @@
         XCTAssertEqualObjects(request.path, expectedPath);
         XCTAssertEqual(request.method, ZMMethodPUT);
         XCTAssertEqualObjects(conversation.lastServerTimeStamp, conversation.silencedChangedTimestamp);
-        XCTAssertEqualObjects(request.payload[@"otr_muted_ref"], conversation.silencedChangedTimestamp.transportString);
-        XCTAssertEqualObjects(request.payload[@"otr_muted"], @(conversation.isSilenced));
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_ref"], conversation.silencedChangedTimestamp.transportString);
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted"], @(conversation.isSilenced));
     }
     
     // Tears down context(s) &
@@ -1351,8 +1038,8 @@
     NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/self", self.groupConversation.identifier];
     XCTAssertEqualObjects(request.path, expectedPath);
     XCTAssertEqual(request.method, ZMMethodPUT);
-    XCTAssertEqualObjects(request.payload[@"otr_muted"], @0);
-    XCTAssertEqualObjects(request.payload[@"otr_muted_ref"], conversation.lastServerTimeStamp.transportString);
+    XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted"], @0);
+    XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_ref"], conversation.lastServerTimeStamp.transportString);
 }
 
 - (void)testThatWhenBlockingAUserTheOneOnOneConversationIsRemovedFromTheConversationList
@@ -1373,7 +1060,7 @@
     XCTAssertEqual(conversation.conversationType, ZMConversationTypeOneOnOne);
 
     ZMConversationList *active = [ZMConversationList conversationsInUserSession:self.userSession];
-    XCTAssertEqual(active.count, 4u);
+    XCTAssertEqual(active.count, 5u);
     XCTAssertTrue([active containsObject:conversation]);
 
     ConversationListChangeObserver *observer = [[ConversationListChangeObserver alloc] initWithConversationList:active];
@@ -1389,7 +1076,7 @@
     XCTAssertTrue(user1.isBlocked);
     XCTAssertEqual(conversation.connection.status, ZMConnectionStatusBlocked);
 
-    XCTAssertEqual(active.count, 3u);
+    XCTAssertEqual(active.count, 4u);
     XCTAssertFalse([active containsObject:conversation]);
     (void)observer;
 }
@@ -1696,7 +1383,7 @@
     NSArray *pendingConversations = [ZMConversationList pendingConnectionConversationsInUserSession:self.userSession];
 
     // then
-    NSUInteger expectedRequests = (NSUInteger)(numberOfConversations * 1.f / ZMConversationTranscoderListPageSize + 0.5f);
+    NSUInteger expectedRequests = (NSUInteger)ceil(numberOfConversations * 1.f / ZMConversationTranscoderListPageSize + 0.5f);
     NSUInteger foundRequests = 0;
     for(ZMTransportRequest *request in self.mockTransportSession.receivedRequests) {
         if([request.path hasPrefix:@"/conversations/ids?size=3"]) {
@@ -1776,8 +1463,8 @@
         
         ZMTransportRequest *firstRequest = self.mockTransportSession.receivedRequests.firstObject;
         NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/self", conversation.remoteIdentifier.transportString];
-        XCTAssertEqualObjects(firstRequest.payload[@"otr_archived_ref"], conversation.lastServerTimeStamp.transportString);
-        XCTAssertEqualObjects(firstRequest.payload[@"otr_archived"], @1);
+        XCTAssertEqualObjects(firstRequest.payload.asDictionary[@"otr_archived_ref"], conversation.lastServerTimeStamp.transportString);
+        XCTAssertEqualObjects(firstRequest.payload.asDictionary[@"otr_archived"], @1);
 
         XCTAssertEqualObjects(firstRequest.path, expectedPath);
         XCTAssertEqual(firstRequest.method, ZMMethodPUT);
@@ -2189,86 +1876,6 @@
     XCTAssertEqual([conversation.clearedTimeStamp timeIntervalSince1970], [cleared timeIntervalSince1970]);
     XCTAssertEqual(conversation.messages.count, 2u);
     AssertArraysContainsSameObjects(conversation.messages.array, remainingMessages);
-}
-
-- (void)testThatItRecoversFromFailedUpdateOfIsSelfAnActiveMember
-{
-    // given
-    XCTAssertTrue([self login]);
-    
-    __block NSUInteger callCount = 0;
-    ZM_WEAK(self);
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        ZM_STRONG(self);
-        NSString *path = [NSString stringWithFormat:@"/conversations/%@/members/%@", self.groupConversation.identifier, self.selfUser.identifier];
-        if([request.path isEqualToString:path]) {
-            XCTAssertEqual(callCount, 0u);
-            callCount++;
-            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
-        }
-        return nil;
-    };
-    
-    // when
-    ZMUser *selfUser = [self userForMockUser:self.selfUser];
-    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    [self.userSession performChanges:^{
-        [conversation removeParticipant:selfUser];
-    }];
-    
-    // then
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertTrue(conversation.isSelfAnActiveMember);
-}
-
-- (void)testThatItRecoversFromAddingABlockedUserToAConversation
-{
-    // given
-    XCTAssertTrue([self login]);
-
-    __block MockUser *connectedUserNotInConv;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        connectedUserNotInConv = [session insertUserWithName:@"Connected user which originally is not in conversation"];
-        connectedUserNotInConv.email = @"connectedUserNotInConv@example.com";
-        connectedUserNotInConv.phone = @"23498579";
-        
-        MockConversation *selfToConnectedNotInConvConversation = [session insertOneOnOneConversationWithSelfUser:self.selfUser otherUser:connectedUserNotInConv];
-        selfToConnectedNotInConvConversation.creator = self.selfUser;
-        
-        MockConnection *connectionSelfToConnectedUserNotInConv = [session insertConnectionWithSelfUser:self.selfUser toUser:connectedUserNotInConv];
-        connectionSelfToConnectedUserNotInConv.status = @"accepted";
-        connectionSelfToConnectedUserNotInConv.lastUpdate = [NSDate dateWithTimeIntervalSinceNow:-3];
-        connectionSelfToConnectedUserNotInConv.conversation = selfToConnectedNotInConvConversation;
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    __block NSUInteger callCount = 0;
-    ZM_WEAK(self);
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        ZM_STRONG(self);
-        NSString *path = [NSString stringWithFormat:@"/conversations/%@/members", self.groupConversation.identifier];
-        if([request.path isEqualToString:path] && request.method == ZMMethodPOST) {
-            XCTAssertEqual(callCount, 0u);
-            callCount++;
-            return [ZMTransportResponse responseWithPayload:nil HTTPStatus:403 transportSessionError:nil];
-        }
-        return nil;
-    };
-    
-    // when
-    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    ZMUser *otherUser = [self userForMockUser:connectedUserNotInConv];
-    XCTAssertNotNil(otherUser);
-    XCTAssertFalse([conversation.activeParticipants containsObject:otherUser]);
-
-    [self.userSession performChanges:^{
-        [conversation addParticipant:otherUser];
-        XCTAssertTrue([conversation.activeParticipants containsObject:otherUser]);
-    }];
-    
-    // then
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertFalse([conversation.activeParticipants containsObject:otherUser]);
 }
 
 @end

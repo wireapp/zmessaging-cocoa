@@ -110,7 +110,7 @@ extension ConversationTests_Ephemeral {
         // other client deletes ephemeral message
         let fromClient = user1?.clients.anyObject() as! MockUserClient
         let toClient = selfUser?.clients.anyObject() as! MockUserClient
-        let deleteMessage = ZMGenericMessage(deleteMessage: ephemeral.nonce.transportString(), nonce:UUID.create().transportString())
+        let deleteMessage = ZMGenericMessage(deleteMessage: ephemeral.nonce!.transportString(), nonce:UUID.create().transportString())
         
         mockTransportSession?.performRemoteChanges { session in
             self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: deleteMessage.data())
@@ -176,7 +176,7 @@ extension ConversationTests_Ephemeral {
 
         guard let delete = conversation.hiddenMessages.firstObject as? ZMClientMessage,
               let deleteMessage = delete.genericMessage, deleteMessage.hasDeleted(),
-              deleteMessage.deleted.messageId == ephemeral.nonce.transportString()
+              deleteMessage.deleted.messageId == ephemeral.nonce!.transportString()
         else {
             return XCTFail()
         }

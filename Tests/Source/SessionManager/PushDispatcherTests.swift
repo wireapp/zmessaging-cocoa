@@ -141,25 +141,6 @@ public final class PushDispatcherTests: ZMTBaseTest {
         XCTAssertTrue(NSDictionary(dictionary: client.canHandlePayloads[0]).isEqual(to: type(of: self).payload))
     }
     
-    func testThatItInvokesFallbackObserverForPushWithoutUser() {
-        // GIVEN
-        let client = TestPushDispatcherClient()
-        sut.add(client: client)
-        let fallbackClient = TestPushDispatcherClient()
-        sut.fallbackClient = fallbackClient
-        
-        // WHEN
-        sut.didReceiveRemoteNotification(type(of: self).payloadWithoutUser, fetchCompletionHandler: { _ in })
-
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // THEN
-        XCTAssertEqual(client.canHandlePayloads.count, 0)
-        
-        XCTAssertEqual(fallbackClient.receivedPayloads.count, 1)
-        XCTAssertTrue(NSDictionary(dictionary: fallbackClient.receivedPayloads[0]).isEqual(to: type(of: self).payloadWithoutUser))
-    }
-
     func testThatItForwardsTheNotificationToTheFallbackObserverIfCannotHandle() {
         // GIVEN
         let client = TestPushDispatcherClient()

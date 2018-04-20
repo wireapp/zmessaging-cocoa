@@ -64,7 +64,7 @@
 
 - (void)stopTimers
 {
-    [self.sut teardown];
+    [self.sut tearDown];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 

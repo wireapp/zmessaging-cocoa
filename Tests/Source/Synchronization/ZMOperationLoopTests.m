@@ -37,7 +37,7 @@
 @property (nonatomic) ZMOperationLoop *sut;
 @property (nonatomic) id transportSession;
 @property (nonatomic) id syncStrategy;
-@property (nonatomic) id pingBackStatus;
+@property (nonatomic) id pushNotificationStatus;
 @property (nonatomic) id mockPushChannel;
 @property (nonatomic) NSMutableArray *pushChannelNotifications;
 @property (nonatomic) id pushChannelObserverToken;
@@ -57,14 +57,14 @@
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.transportSession];
     
-    self.pingBackStatus = [OCMockObject mockForClass:BackgroundAPNSPingBackStatus.class];
+    self.pushNotificationStatus = [OCMockObject mockForClass:PushNotificationStatus.class];
     self.mockPushChannel = [OCMockObject niceMockForClass:[ZMPushChannelConnection class]];
     
     // I expect this to be called, at least until we implement the soft sync
     [[[self.syncStrategy stub] andReturn:self.syncMOC] syncMOC];
     
     
-    [(ApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturn:self.pingBackStatus] pingBackStatus];
+    [(ApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturn:self.pushNotificationStatus] pushNotificationStatus];
     [(ZMSyncStrategy *)[[self.syncStrategy stub] andReturn:applicationStatusDirectory] applicationStatusDirectory];
 
     self.sut = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
@@ -85,8 +85,8 @@
 {
     WaitForAllGroupsToBeEmpty(0.5);
     self.pushChannelObserverToken = nil;
-    [self.pingBackStatus stopMocking];
-    self.pingBackStatus = nil;
+    [self.pushNotificationStatus stopMocking];
+    self.pushNotificationStatus = nil;
     [self.mockPushChannel stopMocking];
     self.mockPushChannel = nil;
     [self.transportSession stopMocking];
@@ -124,7 +124,7 @@
     [[(id) self.syncStrategy expect] didInterruptUpdateEventsStream];
     
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:self.mockPushChannel withResponse:nil];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:self.mockPushChannel withResponse:nil error:nil];
     
     // then
     [self.syncStrategy verify];
@@ -322,7 +322,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *resp ZM_UNUSED) {
-        [ZMClientMessage insertNewObjectInManagedObjectContext:self.syncMOC];
+        NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC]);
     }]];
     
     // when
@@ -369,7 +369,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *resp ZM_UNUSED) {
-        [ZMClientMessage insertNewObjectInManagedObjectContext:self.syncMOC];
+        NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC]);
     }]];
     
     // when
@@ -391,7 +391,7 @@
 - (void)testThatWhenThereIsAnInsertionItAsksForNextRequest
 {
     // given
-    [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC]);
     ZMTransportEnqueueResult *resultNO = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:NO];
 
     BOOL(^checkGenerator)(ZMTransportRequestGenerator) = ^BOOL(ZMTransportRequestGenerator generator) {
@@ -419,7 +419,7 @@
 
 - (void)testThatWhenThereIsAnUpdateItAsksForNextRequest
 {
-    ZMClientMessage *entity = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMClientMessage *entity = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
 
     [[[self.syncStrategy expect] andReturnValue:@YES]
      processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];
@@ -472,8 +472,8 @@
 - (void)testThatItCallsSyncStrategyDidRegisterWithInsertedObjects
 {
     // given
-    ZMClientMessage *entity1 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMClientMessage *entity2 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMClientMessage *entity1 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
+    ZMClientMessage *entity2 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
     
     NSSet *insertSet = [NSSet setWithObjects:entity1, entity2, nil];
 
@@ -497,8 +497,8 @@
 - (void)testThatItCallsSyncStrategyDidRegisterWithUpdatedObjects
 {
     // given
-    [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMClientMessage *entity2 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC]);
+    ZMClientMessage *entity2 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
 
     [[[self.syncStrategy expect] andReturnValue:@NO]
      processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];
@@ -530,8 +530,8 @@
 - (void)testThatSyncStrategyDidRegisterIsCalledWithInsertedObjectsFromTheSyncContext
 {
     // given
-    ZMClientMessage *entity1 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMClientMessage *entity2 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMClientMessage *entity1 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
+    ZMClientMessage *entity2 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
     
     NSSet *insertSet = [NSSet setWithObjects:entity1, entity2, nil];
 
@@ -570,8 +570,8 @@
 - (void)testThatSyncStrategyDidRegisterIsCalledWithUpdatedObjectsFromTheSyncContext
 {
     // given
-    [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMClientMessage *entity2 = [ZMClientMessage insertNewObjectInManagedObjectContext:self.uiMOC];
+    NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC]);
+    ZMClientMessage *entity2 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
 
     [[[self.syncStrategy expect] andReturnValue:@NO]
      processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];
@@ -711,7 +711,7 @@
     [[self.syncStrategy stub] didInterruptUpdateEventsStream];
     
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:self.mockPushChannel withResponse:fakeResponse];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:self.mockPushChannel withResponse:fakeResponse error:nil];
     
     // then
     XCTAssertEqual(self.pushChannelNotifications.count, 1u);
@@ -737,6 +737,29 @@
     XCTAssertEqualObjects(note.userInfo[ZMPushChannelResponseStatusKey], @(100));
 }
 
+- (void)testThatItInformsTransportSessionWhenEnteringForeground
+{
+    // expect
+    [[self.transportSession expect] enterForeground];
+    
+    // when
+    [self.sut operationStatusDidChangeState:SyncEngineOperationStateForeground];
+    
+    // then
+    [self.transportSession verify];
+}
+
+- (void)testThatItInformsTransportSessionWhenEnteringBackground
+{
+    // expect
+    [[self.transportSession expect] enterBackground];
+    
+    // when
+    [self.sut operationStatusDidChangeState:SyncEngineOperationStateBackground];
+    
+    // then
+    [self.transportSession verify];
+}
 
 @end
 
@@ -772,10 +795,13 @@
 - (NSDictionary *)pushPayloadForEventPayload:(NSArray *)eventPayloads identifier:(NSUUID *)identifier
 {
     return @{
-             @"aps": @{@"content-available": @1},
+             @"aps": @{ @"content-available": @1 },
              @"data": @{
-                     @"id": identifier.transportString,
-                     @"payload": eventPayloads
+                     @"type": @"plain",
+                     @"data": @{
+                             @"id": identifier.transportString,
+                             @"payload": eventPayloads
+                             }
                      }
              };
 }
@@ -792,8 +818,11 @@
                        @"alert": @{@"foo": @"bar"}
                        },
              @"data": @{
-                     @"id": [[NSUUID createUUID] transportString],
-                     @"payload": eventPayloads
+                     @"type": @"plain",
+                     @"data": @{
+                             @"id": [[NSUUID createUUID] transportString],
+                             @"payload": eventPayloads
+                             }
                      }
              };
 }
@@ -806,8 +835,8 @@
                      @"alert": @{ @"foo": @"bar" }
                      },
              @"data": @{
-                     @"data": @{ @"id": uuid.transportString },
-                     @"type": @"notice"
+                     @"type": @"notice",
+                     @"data": @{ @"id": uuid.transportString }
                      }
              };
 }
@@ -837,244 +866,87 @@
              @"aps" : @{@"alert": @{@"loc-args": @[],
                                     @"loc-key": @"push.notification.new_message"}
                         },
-             @"data": @{@"data" : @"70XpQ4qri2D4YCU7lvSjaqk+SgN/s4dDv/J8uMUel0xY8quNetPF8cMXskAZwBI9EArjMY/NupWo8Bar14GHi9ISzlOswDsoQ6BQiFsEdnv4shT+ZpJ+wghmPF+sxWhys9048ny6WiSqywUNzsUPjDrudAAiG4bPjS2FjMou2/o7FpCg7+6p8fcSYCcvQllv6P8oidVbMlpnT1Bs7fK6fz9ceq6H3L+BKZai82H7gc6nxSS5Gjf56qvDqdc3J9jTowpdjyqHGO26YahMQtDf4tn6KuTSp4OG1qLPk6jFf4xO2q/WrxV2dnoXGXWbIZ4cnohkeA85QxMhpM9pIGAbZ58fRUt9fPXm6PmX3rqQY7MSv4TV1fLyb5Zqo/yqQbcE2qS/dJKRrzwW5MWlKVWfacuNRZnansMMGUYyt7iRpD/E8PdtSfW7QO/02Evureor7MqQ8AYf6Ivt3Ksf1wplXne0zl8CT5GMeExB7DLfyr8T1xK6H+u3y29FmI9/T01la5cbIq/E83Yh2LTNo3X4eOfZ6mhC0EIC8YEyo/0x2IHsLyCAjzvIFfTSD8tOpa1yQTBSQ3mGGDWiPJ3f6OypQFj+vY13Bq9WZoL9Q+UbYbxdzkaYILaX2UakZ5OafQ7nH0WslvfzjRsdYoruTGDV+E8mXB2JOZh9ij2PT8fWsyJJ9DqKg5Iw2EPfUlXBv3pXIpZuL6+g8c2von092bV2pHTWkPE4A2yvw3LTzI8e9puOr5K87JUQHdR7mfXYifErW+9TRrmBibF5wKZtVl97UOFOps4/ZXU9i6Lr0qKKMdX3iruo7o3fYcbJTajb+sZLttDPsKnJHnnMxJUB3D+I1UuA35hL6Fy2wLj2mRNAzWuitNj9MSDUhDHU42+bZnap",
-                        @"mac": @"ZGe7fjgAEvTjfSSv2MuDHQe7BCRj2NT7qg8OAm8JZyI=",
-                        @"type": @"cipher"
-                        }
+             @"data": @{
+                     @"data" : @"70XpQ4qri2D4YCU7lvSjaqk+SgN/s4dDv/J8uMUel0xY8quNetPF8cMXskAZwBI9EArjMY/NupWo8Bar14GHi9ISzlOswDsoQ6BQiFsEdnv4shT+ZpJ+wghmPF+sxWhys9048ny6WiSqywUNzsUPjDrudAAiG4bPjS2FjMou2/o7FpCg7+6p8fcSYCcvQllv6P8oidVbMlpnT1Bs7fK6fz9ceq6H3L+BKZai82H7gc6nxSS5Gjf56qvDqdc3J9jTowpdjyqHGO26YahMQtDf4tn6KuTSp4OG1qLPk6jFf4xO2q/WrxV2dnoXGXWbIZ4cnohkeA85QxMhpM9pIGAbZ58fRUt9fPXm6PmX3rqQY7MSv4TV1fLyb5Zqo/yqQbcE2qS/dJKRrzwW5MWlKVWfacuNRZnansMMGUYyt7iRpD/E8PdtSfW7QO/02Evureor7MqQ8AYf6Ivt3Ksf1wplXne0zl8CT5GMeExB7DLfyr8T1xK6H+u3y29FmI9/T01la5cbIq/E83Yh2LTNo3X4eOfZ6mhC0EIC8YEyo/0x2IHsLyCAjzvIFfTSD8tOpa1yQTBSQ3mGGDWiPJ3f6OypQFj+vY13Bq9WZoL9Q+UbYbxdzkaYILaX2UakZ5OafQ7nH0WslvfzjRsdYoruTGDV+E8mXB2JOZh9ij2PT8fWsyJJ9DqKg5Iw2EPfUlXBv3pXIpZuL6+g8c2von092bV2pHTWkPE4A2yvw3LTzI8e9puOr5K87JUQHdR7mfXYifErW+9TRrmBibF5wKZtVl97UOFOps4/ZXU9i6Lr0qKKMdX3iruo7o3fYcbJTajb+sZLttDPsKnJHnnMxJUB3D+I1UuA35hL6Fy2wLj2mRNAzWuitNj9MSDUhDHU42+bZnap",
+                     @"mac": @"ZGe7fjgAEvTjfSSv2MuDHQe7BCRj2NT7qg8OAm8JZyI=",
+                     @"type": @"cipher"
+                     }
              };
 }
 
-- (void)testThatItForwardsEventsFromSilentPushesToTheTransportSessionAndBackgroundAPNSPingBackStatus
+- (void)testThatItForwardsEventsFromSilentPushesToThePushNotificationStatus
 {
     // given
     NSUUID *identifier = NSUUID.createUUID;
     NSDictionary *eventPayload = [self payLoadForMessageAddEvent];
     NSDictionary *pushPayload = [self pushPayloadForEventPayload:@[eventPayload] identifier:identifier];
-    NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:pushPayload[@"data"]];
+    NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:pushPayload[@"data"][@"data"]];
     XCTAssertNotNil(events);
     
     // expect
-    [(ZMSyncStrategy *)[self.syncStrategy expect] consumeUpdateEvents:events];
-
-    [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
-        handler(ZMPushPayloadResultSuccess, events);
+    [[self.pushNotificationStatus expect] fetchEventId:identifier completionHandler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult))) {
+        handler(ZMPushPayloadResultSuccess);
         return YES;
     }]];
-
+    
     // when
-    [self.sut saveEventsAndSendNotificationForPayload:pushPayload fetchCompletionHandler:^(ZMPushPayloadResult result) {
+    [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^(ZMPushPayloadResult result) {
         NOT_USED(result);
     } source:ZMPushNotficationTypeVoIP];
     WaitForAllGroupsToBeEmpty(1.0);
     
     // then
-    [self.pingBackStatus verify];
+    [self.pushNotificationStatus verify];
     [self.syncStrategy verify];
 }
 
 
-- (void)testThatItForwardsEventsFromEncryptedPushesToTheTransportSessionAndPingBackStatus
+- (void)testThatItForwardsEventsFromEncryptedPushesToThePushNotificationStatus
 {
     // given
     self.sut.apsSignalKeyStore = [self prepareSelfClientForAPSSignalingStore];
-    
-    NSUUID *nonce = NSUUID.createUUID;
-    ZMGenericMessageBuilder *builder = [[ZMGenericMessageBuilder alloc] init];
-    builder.messageId = nonce.transportString;
-    ZMGenericMessage *genericMessage = builder.build;
-
     NSDictionary *pushPayload = [self encryptedPushPayload];
-    NSDictionary *eventPayload = @{
-                                   @"payload": @[
-                                           @{
-                                               @"conversation": @"164756de-7768-4cb8-9161-17879013994c",
-                                               @"time": @"2015-10-05T15:23:42.159Z",
-                                               @"data": @{
-                                                   @"text": genericMessage.data.base64String,
-                                                   @"sender": @"2867e165364b3b2f",
-                                                   @"recipient": @"25667f739870989a"
-                                               },
-                                               @"from": @"f23aea6d-b7c6-4cfc-8df4-61905f5b71dc",
-                                               @"type": @"conversation.otr-message-add"
-                                               }
-                                           ],
-                                   @"id": NSUUID.createUUID.transportString
-                                   };
-    ZMUpdateEvent *event = [[ZMUpdateEvent eventsArrayFromPushChannelData:eventPayload] firstObject];
     
     // expect
-    [[self.syncStrategy expect] consumeUpdateEvents:OCMOCK_ANY];
-    [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
-        handler(ZMPushPayloadResultSuccess, @[event]);
+    [[self.pushNotificationStatus expect] fetchEventId:OCMOCK_ANY completionHandler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult))) {
+        handler(ZMPushPayloadResultSuccess);
         return YES;
     }]];
 
     // when
-    [self.sut saveEventsAndSendNotificationForPayload:pushPayload fetchCompletionHandler:^(ZMPushPayloadResult result) {
-        NOT_USED(result);
-    } source:ZMPushNotficationTypeVoIP];
+    [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^(ZMPushPayloadResult result) { NOT_USED(result); } source:ZMPushNotficationTypeVoIP];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     [self.syncStrategy verify];
-    [self.pingBackStatus verify];
+    [self.pushNotificationStatus verify];
     [self clearKeyChainData];
 }
 
-- (void)testThatCallsThePingBackStatusOnceForAVoIPNotificationToCancelFallBackAPNS
-{
-    // given
-    NSString *eventType = @"user.update";
-    
-    NSDictionary *payload1 = @{
-                               @"type" : eventType,
-                               @"foo" : @"bar"
-                               };
-    NSDictionary *payload2 = @{
-                               @"type" : eventType,
-                               @"bar" : @"baz"
-                               };
-    NSDictionary *pushPayload = [self pushPayloadForEventPayload:@[payload1, payload2]];
-    NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:pushPayload[@"data"]];
-    
-    // expect
-    [[self.syncStrategy expect] consumeUpdateEvents:OCMOCK_ANY];
-    [[self.pingBackStatus expect] didReceiveVoIPNotification:OCMOCK_ANY handler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult, NSArray *))) {
-        handler(ZMPushPayloadResultSuccess, events);
-        return YES;
-    }]];
-    
-    // when
-    [self.sut saveEventsAndSendNotificationForPayload:pushPayload fetchCompletionHandler:^(ZMPushPayloadResult result) {
-        NOT_USED(result);
-    } source:ZMPushNotficationTypeVoIP];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    [self.pingBackStatus verify];
-}
-
-- (void)testThatItDoesNotCreateUpdateEventsOrForwardsAPNSWithTypeNoticeToTheSyncStrategyAndLocalNotificationDispatcher
-{
-    // given
-    NSDictionary *payload = [self fallbackAPNSPayloadWithIdentifier:NSUUID.createUUID];
-    
-    // reject
-    [[self.pingBackStatus reject] didReceiveVoIPNotification:OCMOCK_ANY handler:OCMOCK_ANY];
-    
-    // when
-    [self.sut saveEventsAndSendNotificationForPayload:payload fetchCompletionHandler:nil source:ZMPushNotficationTypeAlert];
-    
-    // then
-    [self.pingBackStatus verify];
-}
-
-
-- (void)testThatItDoesNotForwardEventsFromAlertPushesToTheTransportSessionAndLocalNotificationDispatcher
-{
-    // given
-    NSDictionary *eventPayload = [self payLoadForMessageAddEvent];
-    NSDictionary *pushPayload = [self alertPushPayloadForEventPayload:@[eventPayload]];
-    NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:pushPayload[@"data"]];
-    XCTAssertNotNil(events);
-    
-    // expect
-    [(ZMSyncStrategy *)[self.syncStrategy reject] consumeUpdateEvents:events];
-
-    // when
-    [self.sut saveEventsAndSendNotificationForPayload:pushPayload fetchCompletionHandler:nil source:ZMPushNotficationTypeAlert];
-    WaitForAllGroupsToBeEmpty(1.0);
-    
-    // then
-    [self.syncStrategy verify];
-}
-
-- (void)testThatItForwardsNoticeNotificationsToTheSyncStrategyAndPingBackStatus
+- (void)testThatItForwardsNoticeNotificationsToThePushNotificationStatus
 {
     // given
     NSUUID *notificationID = NSUUID.createUUID;
-    
-    // We need to stub these for the inserting
-    [[self.syncStrategy stub] processSaveWithInsertedObjects:OCMOCK_ANY updateObjects:OCMOCK_ANY];
-    
+
     XCTAssertTrue([self.syncMOC saveOrRollback]);
     WaitForAllGroupsToBeEmpty(0.5);
-    
+
     NSDictionary *pushPayload =  @{@"aps" : @{},
                                    @"data" : @{
                                            @"data" : @{ @"id" : notificationID.transportString },
                                            @"type" : @"notice"
                                            }
                                    };
-    
+
     // expect
-    [[self.pingBackStatus expect] didReceiveVoIPNotification:[OCMArg checkWithBlock:^BOOL(EventsWithIdentifier *eventsWithID) {
-        XCTAssertEqualObjects(eventsWithID.identifier, notificationID);
-        XCTAssertTrue(eventsWithID.isNotice);
-        return YES;
-    }] handler:OCMOCK_ANY];
-    
-    
+    [[self.pushNotificationStatus expect] fetchEventId:notificationID completionHandler:OCMOCK_ANY];
+
     // when
-    [self.sut saveEventsAndSendNotificationForPayload:pushPayload fetchCompletionHandler:nil source:ZMPushNotficationTypeVoIP];
+    [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^(ZMPushPayloadResult result) { NOT_USED(result); } source:ZMPushNotficationTypeVoIP];
     WaitForAllGroupsToBeEmpty(1.0);
-    
+
     // then
-    [self.pingBackStatus verify];
-}
-
-- (void)testThatItUsesTheNotificationWithoutUserID
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // GIVEN
-        NSDictionary *pushPayload =  @{@"aps" : @{},
-                                       @"data" : @{
-                                               @"type" : @"notice"
-                                               }
-                                       };
-        // WHEN & THEN
-        XCTAssertTrue([self.sut notificationIsForCurrentUser:pushPayload]);
-    }];
-}
-
-- (void)testThatItUsesTheNotificationForCurrentUser
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // GIVEN
-        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-        selfUser.remoteIdentifier = [NSUUID UUID];
-        
-        NSDictionary *pushPayload =  @{@"aps" : @{},
-                                       @"data" : @{
-                                               @"user": selfUser.remoteIdentifier.transportString,
-                                               @"type" : @"notice"
-                                               }
-                                       };
-        // WHEN & THEN
-        XCTAssertTrue([self.sut notificationIsForCurrentUser:pushPayload]);
-    }];
-}
-
-- (void)testThatItIgnoresTheNotificationForOtherUser
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // GIVEN
-        NSDictionary *pushPayload =  @{@"aps" : @{},
-                                       @"data" : @{
-                                               @"user": [NSUUID UUID].transportString,
-                                               @"type" : @"notice"
-                                               }
-                                       };
-        // WHEN & THEN
-        XCTAssertFalse([self.sut notificationIsForCurrentUser:pushPayload]);
-    }];
-}
-
-- (NSArray *)messageAddPayloadWithNonces:(NSArray <NSUUID *>*)nonces
-{
-    return [nonces mapWithBlock:^NSDictionary *(NSUUID *nonce) {
-        return [self payLoadForMessageAddEventWithNonce:nonce];
-    }];
+    [self.pushNotificationStatus verify];
 }
 
 @end

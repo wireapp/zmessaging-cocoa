@@ -30,7 +30,7 @@
     self = [super init];
     if (self) {
         self.userIdentifier = userIdentifier;
-        self.accountContainer = [[sharedContainerDirectory URLByAppendingPathComponent:@"AccountData"] URLByAppendingPathComponent:userIdentifier.transportString];
+        self.accountContainer = [[sharedContainerDirectory URLByAppendingPathComponent:@"AccountData"] URLByAppendingPathComponent:userIdentifier.UUIDString];
         self.applicationContainer = sharedContainerDirectory;
         self.contextDirectory = contextDirectory;
     }

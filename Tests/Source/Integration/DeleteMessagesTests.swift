@@ -71,7 +71,7 @@ class DeleteMessagesTests: ConversationTestsBase {
         let messages = conversation.messages
         XCTAssertEqual(messages.count, 2) // system message & inserted message
         guard let message = messages.lastObject as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
-        let genericMessage = ZMGenericMessage(deleteMessage: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let genericMessage = ZMGenericMessage(deleteMessage: message.nonce!.transportString(), nonce: UUID.create().transportString())
         
         // when
         mockTransportSession.performRemoteChanges { session in
@@ -110,7 +110,7 @@ class DeleteMessagesTests: ConversationTestsBase {
         XCTAssertEqual(messages.count, 2) // system message & inserted message
         guard let message = messages.lastObject as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
         
-        let genericMessage = ZMGenericMessage(deleteMessage: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let genericMessage = ZMGenericMessage(deleteMessage: message.nonce!.transportString(), nonce: UUID.create().transportString())
         
         // when
         mockTransportSession.performRemoteChanges { session in
@@ -189,7 +189,7 @@ class DeleteMessagesTests: ConversationTestsBase {
         let messages = conversation.messages
         XCTAssertEqual(messages.count, 2) // system message & inserted message
         guard let message = messages.lastObject as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
-        let genericMessage = ZMGenericMessage(deleteMessage: message.nonce.transportString(), nonce: UUID.create().transportString())
+        let genericMessage = ZMGenericMessage(deleteMessage: message.nonce!.transportString(), nonce: UUID.create().transportString())
         
         // when
         mockTransportSession.performRemoteChanges { session in

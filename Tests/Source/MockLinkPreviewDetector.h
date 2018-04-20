@@ -31,6 +31,7 @@ extern NSString * const ZMTestURLInstagramLinkString;
 
 @interface MockLinkPreviewDetector : NSObject <LinkPreviewDetectorType>
 
+@property (nonatomic, weak) id<LinkPreviewDetectorDelegate> delegate;
 @property (nonatomic) NSData *testImageData;
 
 - (instancetype)initWithTestImageData:(NSData *)testImageData;

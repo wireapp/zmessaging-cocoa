@@ -43,9 +43,9 @@
 
 @protocol FlowManagerType;
 
-extern NSString * const ZMAppendAVSLogNotificationName;
 
 @interface ZMUserSession (AuthenticationStatus)
+
 @property (nonatomic, readonly) UserProfileUpdateStatus *userProfileUpdateStatus;
 @property (nonatomic, readonly) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic, readonly) ClientUpdateStatus *clientUpdateStatus;
@@ -62,6 +62,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 @property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
 @property (nonatomic) ManagedObjectContextChangeObserver *messageReplyObserver;
 @property (nonatomic) ManagedObjectContextChangeObserver *likeMesssageObserver;
+@property (nonatomic)  UserExpirationObserver *userExpirationObserver;
 @property (nonatomic, readonly) NSURL *sharedContainerURL;
 
 - (void)notifyThirdPartyServices;
@@ -70,7 +71,7 @@ extern NSString * const ZMAppendAVSLogNotificationName;
 
 
 
-@interface ZMUserSession (Internal) 
+@interface ZMUserSession (Internal) <TearDownCapable>
 
 @property (nonatomic, readonly) BOOL isLoggedIn;
 @property (nonatomic, readonly) NSManagedObjectContext *managedObjectContext;
@@ -88,8 +89,6 @@ extern NSString * const ZMAppendAVSLogNotificationName;
                              application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
-
-- (void)tearDown;
 
 @end
 

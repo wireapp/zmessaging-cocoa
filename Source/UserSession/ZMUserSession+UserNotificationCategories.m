@@ -45,31 +45,7 @@ static NSString * ZMPushActionLocalizedString(NSString *key)
 
 @implementation ZMUserSession (UserNotificationCategories)
 
-
-- (UIMutableUserNotificationAction *)mutableAction:(NSString *)actionIdentifier
-                                    activationMode:(UIUserNotificationActivationMode)activationMode
-                                 localizedTitleKey:(NSString *)localizedTitleKey
-{
-    UIMutableUserNotificationAction *action = [[UIMutableUserNotificationAction alloc] init];
-    action.identifier = actionIdentifier;
-    action.title = [NSString localizedStringWithFormat:ZMPushActionLocalizedString(localizedTitleKey), nil];;
-    action.destructive = NO;
-    action.activationMode = activationMode;
-    action.authenticationRequired = false;
-    return action;
-}
-
-- (UIMutableUserNotificationAction *)mutableBackgroundAction:(NSString *)actionIdentifier localizedTitleKey:(NSString *)localizedTitleKey
-{
-    return [self mutableAction:actionIdentifier activationMode:UIUserNotificationActivationModeBackground localizedTitleKey:localizedTitleKey];
-}
-
-
-- (UIMutableUserNotificationAction *)mutableForegroundAction:(NSString *)actionIdentifier localizedTitleKey:(NSString *)localizedTitleKey
-{
-    return [self mutableAction:actionIdentifier activationMode:UIUserNotificationActivationModeForeground localizedTitleKey:localizedTitleKey];
-}
-
+#pragma mark - Categories
 
 - (UIUserNotificationCategory *)replyCategory
 {
@@ -125,61 +101,84 @@ static NSString * ZMPushActionLocalizedString(NSString *key)
     return category;
 }
 
+#pragma mark - Actions
+
+- (UIMutableUserNotificationAction *)mutableAction:(NSString *)actionIdentifier
+                                    activationMode:(UIUserNotificationActivationMode)activationMode
+                                             title:(NSString *)title
+{
+    UIMutableUserNotificationAction *action = [[UIMutableUserNotificationAction alloc] init];
+    action.identifier = actionIdentifier;
+    action.title = title;
+    action.destructive = NO;
+    action.activationMode = activationMode;
+    action.authenticationRequired = false;
+    return action;
+}
+
+- (UIMutableUserNotificationAction *)mutableBackgroundAction:(NSString *)actionIdentifier title:(NSString *)title
+{
+    return [self mutableAction:actionIdentifier activationMode:UIUserNotificationActivationModeBackground title:title];
+}
+
+
+- (UIMutableUserNotificationAction *)mutableForegroundAction:(NSString *)actionIdentifier title:(NSString *)title
+{
+    return [self mutableAction:actionIdentifier activationMode:UIUserNotificationActivationModeForeground title:title];
+}
 
 - (UIUserNotificationAction *)openAction
 {
-    UIMutableUserNotificationAction *action = [self mutableForegroundAction:ZMConversationOpenAction localizedTitleKey:@"message.open"];
-    return action;
+    return [self mutableForegroundAction:ZMConversationOpenAction title:[NSString localizedStringWithFormat:ZMPushActionLocalizedString(@"message.open"), nil]];
 }
 
 - (UIUserNotificationAction *)replyActionDirectMessage:(BOOL)isCallContext
 {
     NSString *localizedTitleKey = isCallContext ? @"call.message" : @"message.reply";
-    UIMutableUserNotificationAction *action = [self mutableBackgroundAction:ZMConversationDirectReplyAction localizedTitleKey:localizedTitleKey];
+    NSString *title = [NSString localizedStringWithFormat:ZMPushActionLocalizedString(localizedTitleKey), nil];
+    UIMutableUserNotificationAction *action = [self mutableBackgroundAction:ZMConversationDirectReplyAction title:title];
+    
     if ([action respondsToSelector:@selector(setBehavior:)]) { // This is only available in iOS9
         action.behavior = UIUserNotificationActionBehaviorTextInput;
         NSString *sendButtonTitle = [NSString localizedStringWithFormat:ZMPushActionLocalizedString(@"message.reply.button.title"), nil];
         action.parameters = @{UIUserNotificationTextInputActionButtonTitleKey: sendButtonTitle};
     }
+    
     return action;
 }
 
 - (UIUserNotificationAction *)likeMessageAction
 {
-    return [self mutableBackgroundAction:ZMMessageLikeAction localizedTitleKey:@"message.like"];
+    return [self mutableBackgroundAction:ZMMessageLikeAction title:[NSString localizedStringWithFormat:ZMPushActionLocalizedString(@"message.like"), nil]];
 }
 
 - (UIUserNotificationAction *)acceptCallAction
 {
-    UIMutableUserNotificationAction *action = [self mutableForegroundAction:ZMCallAcceptAction localizedTitleKey:@"call.accept"];
-    return action;
+    return [self mutableForegroundAction:ZMCallAcceptAction title:[NSString localizedStringWithFormat:ZMPushActionLocalizedString(@"call.accept"), nil]];
 }
 
 - (UIUserNotificationAction *)callBackAction
 {
-    UIMutableUserNotificationAction *action = [self mutableForegroundAction:ZMCallAcceptAction localizedTitleKey:@"call.callback"];
-    return action;
+    return [self mutableForegroundAction:ZMCallAcceptAction title:[NSString localizedStringWithFormat:ZMPushActionLocalizedString(@"call.callback"), nil]];
 }
-
 
 - (UIUserNotificationAction *)ignoreCallBackgroundAction
 {
+    
     UIMutableUserNotificationAction *action = [self mutableBackgroundAction:ZMCallIgnoreAction
-                                                          localizedTitleKey:@"call.ignore"];
+                                                                      title:[NSString localizedStringWithFormat:ZMPushActionLocalizedString(@"call.ignore"), nil]];
     action.destructive = YES;
     return action;
 }
 
 - (UIUserNotificationAction *)muteConversationBackgroundAction
 {
-    UIMutableUserNotificationAction *action = [self mutableBackgroundAction:ZMConversationMuteAction localizedTitleKey:@"conversation.mute"];
-    return action;
+    return [self mutableBackgroundAction:ZMConversationMuteAction title:[NSString localizedStringWithFormat:ZMPushActionLocalizedString(@"conversation.mute"), nil]];
 }
 
 - (UIUserNotificationAction *)acceptConnectionAction
 {
-    UIMutableUserNotificationAction *action = [self mutableForegroundAction:ZMConnectAcceptAction localizedTitleKey:@"connection.accept"];
-    return action;
+    return [self mutableForegroundAction:ZMConnectAcceptAction title:[NSString localizedStringWithFormat:ZMPushActionLocalizedString(@"connection.accept"), nil]];
 }
 
 @end

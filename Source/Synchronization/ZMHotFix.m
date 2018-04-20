@@ -71,12 +71,9 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
         ZMLogDebug(@"Invalid version string, skipping HotFix");
         return;
     }
+
     ZMVersion *lastSavedVersion = [self lastSavedVersion];
     ZMVersion *currentVersion = [[ZMVersion alloc] initWithVersionString:currentVersionString];
-    if ([currentVersion compareWithVersion:lastSavedVersion] == NSOrderedSame) {
-        ZMLogDebug(@"Current version equal to last saved version (%@). Not applying any HotFix.", lastSavedVersion.versionString);
-        return;
-    }
     
     if (lastSavedVersion == nil) {
         ZMLogDebug(@"No saved last version. We assume it's a new database and don't apply any HotFix.");
@@ -84,6 +81,11 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
             [self saveNewVersion:currentVersionString];
             [self.syncMOC saveOrRollback];
         }];
+        return;
+    }
+    
+    if ([currentVersion compareWithVersion:lastSavedVersion] == NSOrderedSame) {
+        ZMLogDebug(@"Current version equal to last saved version (%@). Not applying any HotFix.", lastSavedVersion.versionString);
         return;
     }
     
@@ -99,9 +101,11 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
 - (ZMVersion *)lastSavedVersion
 {
     NSString *versionString = [self.syncMOC persistentStoreMetadataForKey:LastSavedVersionKey];
+    if (nil == versionString) {
+        return nil;
+    }
     return [[ZMVersion alloc] initWithVersionString:versionString];
 }
-
 
 - (void)saveNewVersion:(NSString *)version
 {
@@ -122,88 +126,3 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
 }
 
 @end
-
-
-
-@interface ZMVersion ()
-
-@property (nonatomic) NSArray *arrayRepresentation;
-@property (nonatomic) NSString *versionString;
-
-@end
-
-
-@implementation ZMVersion
-
-- (instancetype)initWithVersionString:(NSString *)versionString
-{
-    if (versionString == nil) {
-        return nil;
-    }
-
-    self = [super init];
-    if (self != nil) {
-        self.versionString = versionString;
-        self.arrayRepresentation = [self intComponentsOfString:versionString];
-    }
-    return self;
-}
-
-- (NSArray *)intComponentsOfString:(NSString *)versionString;
-{
-    NSArray *components = [versionString componentsSeparatedByString:@"."];
-    return [components mapWithBlock:^id(NSString *numberPresentation) {
-        return @([numberPresentation intValue]);
-    }];
-}
-
-- (NSComparisonResult)compareWithVersion:(ZMVersion *)otherVersion;
-{
-    if (otherVersion.arrayRepresentation.count == 0) {
-        return NSOrderedDescending;
-    }
-    
-    if ([self.versionString isEqualToString:otherVersion.versionString]) {
-        return NSOrderedSame;
-    }
-    
-    for (NSUInteger i = 0; i < self.arrayRepresentation.count; i++) {
-        if (otherVersion.arrayRepresentation.count == i) {
-            // 1.0.1 compare 1.0
-            return NSOrderedDescending;
-        }
-        
-        NSNumber *selfNumber = self.arrayRepresentation[i];
-        NSNumber *otherNumber = otherVersion.arrayRepresentation[i];
-        
-        if (selfNumber > otherNumber) {
-            return NSOrderedDescending;
-        } else if (selfNumber < otherNumber) {
-            return NSOrderedAscending;
-        }
-    }
-    
-    if (self.arrayRepresentation.count < otherVersion.arrayRepresentation.count) {
-        // 1.0 compare 1.0.1
-        return NSOrderedAscending;
-    }
-    
-    return NSOrderedSame;
-}
-
-- (NSString *)description
-{
-    return [self.arrayRepresentation componentsJoinedByString:@","];
-}
-
-- (NSString *)debugDescription
-{
-    return [NSString stringWithFormat:@"<%@ %p> %@",NSStringFromClass(self.class), self, self.description];
-}
-
-@end
-
-
-
-
-

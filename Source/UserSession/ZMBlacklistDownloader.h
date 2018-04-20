@@ -18,18 +18,17 @@
 
 
 @import Foundation;
+@import WireUtilities;
 
 @class ZMBackendEnvironment;
 @protocol ZMApplication;
 
-@interface ZMBlacklistDownloader : NSObject
+@interface ZMBlacklistDownloader : NSObject <TearDownCapable>
 
 /// Creates a downloader that will download the blacklist file at regular intervals and invokes the completion handler on the main queue when a blacklist is available
 - (instancetype)initWithDownloadInterval:(NSTimeInterval)downloadInterval
                             workingGroup:(ZMSDispatchGroup *)workingGroup
                              application:(id<ZMApplication>)application
                        completionHandler:(void (^)(NSString *minVersion, NSArray *excludedVersions))completionHandler;
-
-- (void)teardown;
 
 @end

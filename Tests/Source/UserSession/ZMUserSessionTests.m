@@ -931,7 +931,7 @@
 {
     // expect
     NSDictionary *remoteNotification = @{@"a": @"b"};
-    [[self.operationLoop reject] saveEventsAndSendNotificationForPayload:remoteNotification fetchCompletionHandler:OCMOCK_ANY source:ZMPushNotficationTypeAlert];
+    [[self.operationLoop reject] fetchEventsFromPushChannelPayload:remoteNotification completionHandler:OCMOCK_ANY source:ZMPushNotficationTypeAlert];
     
     // when
     [self.sut application:OCMOCK_ANY didReceiveRemoteNotification:remoteNotification fetchCompletionHandler:^(UIBackgroundFetchResult result) {
@@ -1292,8 +1292,6 @@
 @end
 
 
-
-
 @implementation ZMUserSessionTests (RequestToOpenConversation)
 
 - (void)testThatItCallsTheDelegateWhenRequestedToOpenAConversation
@@ -1330,52 +1328,6 @@
 @interface ZMCallFlowRequestStrategy (FlowManagerDelegate) <AVSFlowManagerDelegate>
 @end
 
-@implementation ZMUserSessionTests (AVSLogObserver)
-
-- (void)testThatSubscriberIsNotRetained
-{
-    // given
-    id token = nil;
-    id __weak weakLogObserver = nil;
-    @autoreleasepool {
-        id logObserver = [OCMockObject mockForProtocol:@protocol(ZMAVSLogObserver)];
-        
-        token = [ZMUserSession addAVSLogObserver:logObserver];
-        
-        // when
-        weakLogObserver = logObserver;
-        XCTAssertNotNil(weakLogObserver);
-        logObserver = nil;
-    }
-    // then
-    XCTAssertNil(weakLogObserver);
-    [ZMUserSession removeAVSLogObserver:token];
-}
-
-- (void)testThatLogCallbackIsNotTriggeredAfterUnsubscribe
-{
-    // given
-    __block ZMConversation *conversation;
-    [self.syncMOC performGroupedBlockAndWait:^{
-        conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        [self.syncMOC saveOrRollback];
-    }];
-    
-    NSString *testMessage = @"Sample AVS Log";
-    id logObserver = [OCMockObject mockForProtocol:@protocol(ZMAVSLogObserver)];
-    [[logObserver reject] logMessage:nil];
-    
-    id token = [ZMUserSession addAVSLogObserver:logObserver];
-    [ZMUserSession removeAVSLogObserver:token];
-    
-    // when
-    [ZMUserSession appendAVSLogMessageForConversation:conversation withMessage:testMessage];
-    
-    // then
-    [logObserver verify];
-}
-
-@end
 
 @implementation ZMUserSessionTests (Transport)
 

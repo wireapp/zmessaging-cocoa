@@ -61,12 +61,11 @@
     
     id classMock = [OCMockObject mockForClass:ZMSingleRequestSync.class];
     (void) [[[classMock stub] andReturn:self.registrationDownstreamSync] syncWithSingleRequestTranscoder:OCMOCK_ANY groupQueue:groupQueue];
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithGroupQueue:groupQueue];
     self.mockUserInfoParser = [[MockUserInfoParser alloc] init];
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithGroupQueue:groupQueue userInfoParser:self.mockUserInfoParser];
 
     self.sut = (id) [[ZMRegistrationTranscoder alloc] initWithGroupQueue:groupQueue
-                                                    authenticationStatus:self.authenticationStatus
-                                                          userInfoParser:self.mockUserInfoParser];
+                                                    authenticationStatus:self.authenticationStatus];
     [classMock stopMocking];
 }
 

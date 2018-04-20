@@ -42,7 +42,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
                             return nil
                     }
                     XCTAssertTrue(hiddenMessage.genericMessage!.hasConfirmation())
-                    XCTAssertEqual(hiddenMessage.genericMessage!.confirmation.firstMessageId, message.nonce.transportString())
+                    XCTAssertEqual(hiddenMessage.genericMessage!.confirmation.firstMessageId, message.nonce!.transportString())
                 }
                 return nil
             }
@@ -81,7 +81,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             
             let fromClient = user1?.clients.anyObject() as! MockUserClient
             let toClient = selfUser?.clients.anyObject() as! MockUserClient
-            let confirmationMessage = ZMGenericMessage(confirmation: message.nonce.transportString(), type: .DELIVERED, nonce:UUID.create().transportString())
+            let confirmationMessage = ZMGenericMessage(confirmation: message.nonce!.transportString(), type: .DELIVERED, nonce:UUID.create().transportString())
             
             // when
             mockTransportSession?.performRemoteChanges { session in
@@ -114,7 +114,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
 
         let fromClient = user1!.clients.anyObject() as! MockUserClient
         let toClient = selfUser!.clients.anyObject() as! MockUserClient
-        let confirmationMessage = ZMGenericMessage(confirmation: message.nonce.transportString(), type: .DELIVERED, nonce:UUID.create().transportString())
+        let confirmationMessage = ZMGenericMessage(confirmation: message.nonce!.transportString(), type: .DELIVERED, nonce:UUID.create().transportString())
 
         let convObserver = ConversationChangeObserver(conversation: conversation)
 

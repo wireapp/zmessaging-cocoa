@@ -36,11 +36,14 @@ extension ZMAuthenticationStatus : NotificationContext { } // Mark ZMAuthenticat
     /// Invoked when the authentication succeeded and the user now has a valid
     @objc optional func authenticationDidSucceed()
 
+    /// Invoked when we have provided correct credentials and have an opportunity to import backup
+    @objc optional func authenticationReadyToImportBackup(existingAccount: Bool)
 }
 
 private enum PreLoginAuthenticationEvent {
     
     case authenticationDidFail(error: NSError)
+    case authenticationReadyToImportBackup(existingAccount: Bool)
     case authenticationDidSucceed
     case loginCodeRequestDidFail(NSError)
     case loginCodeRequestDidSucceed
@@ -72,6 +75,8 @@ private enum PreLoginAuthenticationEvent {
             switch event {
             case .loginCodeRequestDidFail(let error):
                 observer.loginCodeRequestDidFail?(error)
+            case .authenticationReadyToImportBackup(let existingAccount):
+                observer.authenticationReadyToImportBackup?(existingAccount: existingAccount)
             case .loginCodeRequestDidSucceed:
                 observer.loginCodeRequestDidSucceed?()
             case .authenticationDidFail(let error):
@@ -97,6 +102,10 @@ public extension ZMAuthenticationStatus {
     
     @objc public func notifyAuthenticationDidFail(_ error: NSError) {
         PreLoginAuthenticationNotification.notify(of: .authenticationDidFail(error: error), context: self)
+    }
+
+    @objc public func notifyAuthenticationReadyToImportBackup(existingAccount: Bool) {
+        PreLoginAuthenticationNotification.notify(of: .authenticationReadyToImportBackup(existingAccount: existingAccount), context: self)
     }
     
     @objc public func notifyAuthenticationDidSucceed() {
