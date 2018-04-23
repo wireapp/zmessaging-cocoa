@@ -167,9 +167,9 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     NSMutableArray<ZMUpdateEvent *> *parsedEvents = [NSMutableArray array];
     NSMutableArray<NSUUID *> *eventIds = [NSMutableArray array];
     NSUUID *latestEventId = nil;
-    
+    ZMUpdateEventSource source = self.isFetchingStreamForAPNS || self.isFetchingStreamInBackground ? ZMUpdateEventSourcePushNotification : ZMUpdateEventSourceDownload;
     for (NSDictionary *eventDictionary in eventsDictionaries) {
-        NSArray *events = [ZMUpdateEvent eventsArrayFromTransportData:eventDictionary source:self.isFetchingStreamForAPNS ? ZMUpdateEventSourcePushNotification : ZMUpdateEventSourceDownload];
+        NSArray *events = [ZMUpdateEvent eventsArrayFromTransportData:eventDictionary source:source];
         
         for (ZMUpdateEvent *event in events) {
             [event appendDebugInformation:@"From missing update events transcoder, processUpdateEventsAndReturnLastNotificationIDFromPayload"];
@@ -299,12 +299,13 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     if (timestamp) {
         [self updateServerTimeDeltaWithTimestamp:timestamp];
     }
-    
+
+    NSUUID *latestEventId = [self processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
+
     if (operationStatus.operationState == SyncEngineOperationStateBackgroundFetch) {
         [self updateBackgroundFetchResultWithResponse:response];
     }
-
-    NSUUID *latestEventId = [self processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
+    
     if (latestEventId != nil) {
         if (response.HTTPStatus == 404 && self.isSyncing) {
             // If we fail during quick sync we need to re-enter slow sync and should not store the lastUpdateEventID until after the slowSync has been completed
