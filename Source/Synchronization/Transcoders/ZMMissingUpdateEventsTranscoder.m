@@ -303,6 +303,8 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
     NSUUID *latestEventId = [self processUpdateEventsAndReturnLastNotificationIDFromPayload:response.payload syncStrategy:self.syncStrategy];
 
     if (operationStatus.operationState == SyncEngineOperationStateBackgroundFetch) {
+        // This call affects the `isFetchingStreamInBackground` property and should never preceed
+        // the call to `processUpdateEventsAndReturnLastNotificationIDFromPayload:syncStrategy`.
         [self updateBackgroundFetchResultWithResponse:response];
     }
     
