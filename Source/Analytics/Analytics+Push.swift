@@ -26,16 +26,16 @@ extension AnalyticsType {
         attributes["action"] = action.attributeValue
         attributes["conversation_type"] = conversation.conversationType.analyticsType
         attributes["with_service"] = conversation.includesServiceUser ? "true" : "false"
-        tagEvent("contributed", attributes: attributes as [String : NSObject])
+        tagEvent("contributed", attributes: attributes as! [String : NSObject])
     }
     
 }
 
 public extension ZMConversation {
     
-    var ephemeralTrackingAttributes: [String: String] {
+    public var ephemeralTrackingAttributes: [String: Any] {
         let ephemeral = destructionTimeout != .none
-        var attributes = ["is_ephemeral": ephemeral ? "true" : "false"]
+        var attributes: [String: Any] = ["is_ephemeral": ephemeral]
         guard ephemeral else { return attributes }
         attributes["ephemeral_time"] = "\(Int(destructionTimeout.rawValue))"
         return attributes
