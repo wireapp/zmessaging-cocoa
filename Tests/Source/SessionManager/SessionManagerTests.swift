@@ -46,16 +46,19 @@ class SessionManagerTests: IntegrationTest {
             reachability: reachability
         )
         
-        return SessionManager(
+        let sessionManager = SessionManager(
             appVersion: "0.0.0",
             authenticatedSessionFactory: authenticatedSessionFactory,
             unauthenticatedSessionFactory: unauthenticatedSessionFactory,
             reachability: reachability,
             delegate: delegate,
             application: application,
-            launchOptions: [:],
             dispatchGroup: dispatchGroup
         )
+        
+        sessionManager.start(launchOptions: [:])
+        
+        return sessionManager
     }
     
     override func tearDown() {

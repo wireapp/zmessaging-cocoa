@@ -338,7 +338,7 @@ public protocol LocalNotificationResponder : class {
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
     }
     
-    public func start(with launchOptions: LaunchOptions) {
+    public func start(launchOptions: LaunchOptions) {
         if let account = accountManager.selectedAccount {
             selectInitialAccount(account, launchOptions: launchOptions)
         } else {

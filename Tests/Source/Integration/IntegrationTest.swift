@@ -226,9 +226,10 @@ extension IntegrationTest {
             reachability: reachability,
             delegate: self,
             application: application,
-            launchOptions: [:],
             dispatchGroup: self.dispatchGroup
         )
+        
+        sessionManager?.start(launchOptions: [:])
         
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
