@@ -184,7 +184,6 @@ public protocol LocalNotificationResponder : class {
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
-        launchOptions: LaunchOptions,
         blacklistDownloadInterval : TimeInterval,
         completion: @escaping (SessionManager) -> Void
         ) {

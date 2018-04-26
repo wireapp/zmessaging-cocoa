@@ -135,7 +135,6 @@ class SessionManagerTests: IntegrationTest {
                               analytics: nil,
                               delegate: nil,
                               application: application,
-                              launchOptions: [:],
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
                                 let environment = ZMBackendEnvironment(type: .staging)
@@ -151,6 +150,7 @@ class SessionManagerTests: IntegrationTest {
                                 )
                                 
                                 sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+                                sessionManager.start(launchOptions: [:])
                                 
                                 // WHEN
                                 createToken = sessionManager.addSessionManagerCreatedSessionObserver(observer)
@@ -197,7 +197,6 @@ class SessionManagerTests: IntegrationTest {
                               analytics: nil,
                               delegate: nil,
                               application: application,
-                              launchOptions: [:],
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
                                 let environment = ZMBackendEnvironment(type: .staging)
@@ -213,6 +212,7 @@ class SessionManagerTests: IntegrationTest {
                                 )
                                 
                                 sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+                                sessionManager.start(launchOptions: [:])
                                 
                                 // WHEN
                                 destroyToken = sessionManager.addSessionManagerDestroyedSessionObserver(observer)
@@ -259,7 +259,6 @@ class SessionManagerTests: IntegrationTest {
                               analytics: nil,
                               delegate: nil,
                               application: application,
-                              launchOptions: [:],
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
                                 let environment = ZMBackendEnvironment(type: .staging)
@@ -275,6 +274,7 @@ class SessionManagerTests: IntegrationTest {
                                 )
                                 
                                 sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+                                sessionManager.start(launchOptions: [:])
                                 
                                 // WHEN
                                 destroyToken = sessionManager.addSessionManagerDestroyedSessionObserver(observer)
@@ -571,7 +571,6 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                               analytics: nil,
                               delegate: nil,
                               application: application,
-                              launchOptions: [:],
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
                                 let environment = ZMBackendEnvironment(type: .staging)
@@ -587,6 +586,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                                 )
                                 
                                 sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+                                sessionManager.start(launchOptions: [:])
                                 
                                 sessionManager.loadSession(for: account) { userSession in
                                     realSessionManager = sessionManager
@@ -626,7 +626,6 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                        analytics: nil,
                        delegate: nil,
                        application: application,
-                       launchOptions: [:],
                        blacklistDownloadInterval : 60) { sessionManager in
                         
                         let environment = ZMBackendEnvironment(type: .staging)
@@ -642,6 +641,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                         )
                         
                         sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+                        sessionManager.start(launchOptions: [:])
 
             sessionManager.withSession(for: account) { userSession in
                 realSessionManager = sessionManager
