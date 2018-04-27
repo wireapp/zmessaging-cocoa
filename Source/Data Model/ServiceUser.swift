@@ -20,6 +20,31 @@ import Foundation
 
 private let zmLog = ZMSLog(tag: "Services")
 
+public struct ServiceUserData {
+    let provider: UUID
+    let service: UUID
+    
+    public init(provider: UUID, service: UUID) {
+        self.provider = provider
+        self.service = service
+    }
+}
+
+extension ServiceUser {
+    var serviceUserData: ServiceUserData? {
+        guard let providerIdentifier = self.providerIdentifier,
+              let serviceIdentifier = self.serviceIdentifier,
+              let provider = UUID(uuidString: providerIdentifier),
+              let service = UUID(uuidString: serviceIdentifier)
+        else {
+                return nil
+        }
+        
+        return ServiceUserData(provider: provider,
+                               service: service)
+    }
+}
+
 public final class ServiceProvider: NSObject {
     public let identifier: String
     
@@ -79,45 +104,40 @@ public final class ServiceDetails: NSObject {
 }
 
 
-public extension ServiceUser {
+public extension ServiceUserData {
     fileprivate func requestToAddService(to conversation: ZMConversation) -> ZMTransportRequest {
-        guard let remoteIdentifier = conversation.remoteIdentifier,
-              let providerIdentifier = self.providerIdentifier,
-              let serviceIdentifier = self.serviceIdentifier
+        guard let remoteIdentifier = conversation.remoteIdentifier
         else {
             fatal("conversation is not synced with the backend")
         }
         
         let path = "/conversations/\(remoteIdentifier.transportString())/bots"
         
-        let payload: NSDictionary = ["provider": providerIdentifier,
-                                     "service": serviceIdentifier,
+        let payload: NSDictionary = ["provider": self.provider.transportString(),
+                                     "service": self.service.transportString(),
                                      "locale": NSLocale.formattedLocaleIdentifier()]
         
         return ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
     }
     
     fileprivate func requestToFetchProvider() -> ZMTransportRequest {
-        guard let providerIdentifier = self.providerIdentifier else {
-            fatal("No serviceIdentifier or providerIdentifier")
-        }
-        let path = "/providers/\(providerIdentifier)/"
+        let path = "/providers/\(provider.transportString())/"
         return ZMTransportRequest(path: path, method: .methodGET, payload: nil)
     }
     
     fileprivate func requestToFetchDetails() -> ZMTransportRequest {
-        guard let providerIdentifier = self.providerIdentifier,
-            let serviceIdentifier = self.serviceIdentifier else {
-                fatal("No serviceIdentifier or providerIdentifier")
-        }
-        let path = "/providers/\(providerIdentifier)/services/\(serviceIdentifier)"
+        let path = "/providers/\(provider.transportString())/services/\(service.transportString())"
         return ZMTransportRequest(path: path, method: .methodGET, payload: nil)
     }
 }
 
 public extension ServiceUser {
     public func fetchProvider(in userSession: ZMUserSession, completion: @escaping (ServiceProvider?)->()) {
-        let request = self.requestToFetchProvider()
+        guard let serviceUserData = self.serviceUserData else {
+            fatal("Not a service user: \(self)")
+        }
+        
+        let request = serviceUserData.requestToFetchProvider()
         
         request.add(ZMCompletionHandler(on: userSession.managedObjectContext, block: { (response) in
             
@@ -136,7 +156,11 @@ public extension ServiceUser {
     }
     
     public func fetchDetails(in userSession: ZMUserSession, completion: @escaping (ServiceDetails?)->()) {
-        let request = self.requestToFetchDetails()
+        guard let serviceUserData = self.serviceUserData else {
+            fatal("Not a service user: \(self)")
+        }
+        
+        let request = serviceUserData.requestToFetchDetails()
         
         request.add(ZMCompletionHandler(on: userSession.managedObjectContext, block: { (response) in
             
@@ -190,13 +214,22 @@ extension AddBotError {
 }
 
 public extension ZMConversation {
+    
     public func add(serviceUser: ServiceUser, in userSession: ZMUserSession, completion: ((AddBotError?)->())?) {
+        guard let serviceUserData = serviceUser.serviceUserData else {
+            fatal("Not a service user: \(serviceUser)")
+        }
+        
+        add(serviceUser: serviceUserData, in: userSession, completion: completion)
+    }
+    
+    public func add(serviceUser serviceUserData: ServiceUserData, in userSession: ZMUserSession, completion: ((AddBotError?)->())?) {
         guard userSession.transportSession.reachability.mayBeReachable else {
             completion?(AddBotError.offline)
             return
         }
         
-        let request = serviceUser.requestToAddService(to: self)
+        let request = serviceUserData.requestToAddService(to: self)
         
         request.add(ZMCompletionHandler(on: userSession.managedObjectContext, block: { (response) in
             
@@ -223,6 +256,13 @@ public extension ZMConversation {
 
 public extension ZMUserSession {
     public func startConversation(with serviceUser: ServiceUser, completion: ((AddBotResult)->())?) {
+        guard let serviceUserData = serviceUser.serviceUserData else {
+            fatal("Not a service user: \(serviceUser)")
+        }
+        startConversation(with: serviceUserData, completion: completion)
+    }
+    
+    public func startConversation(with serviceUserData: ServiceUserData, completion: ((AddBotResult)->())?) {
         guard self.transportSession.reachability.mayBeReachable else {
             completion?(AddBotResult.failure(error: .offline))
             return
@@ -240,7 +280,7 @@ public extension ZMUserSession {
         _ = onCreatedRemotelyToken // remove warning
         
         onCreatedRemotelyToken = conversation.onCreatedRemotely {
-            conversation.add(serviceUser: serviceUser, in: self) { error in
+            conversation.add(serviceUser: serviceUserData, in: self) { error in
                 if let error = error {
                     completion?(AddBotResult.failure(error: error))
                 }
