@@ -954,7 +954,7 @@ extension SessionManager {
 extension SessionManager {
     
     public var shouldSwitchAccounts: Bool {
-        return currentCallState == .established
+        return currentCallState != .established
     }
     
 }
