@@ -147,6 +147,7 @@ public protocol LocalNotificationResponder : class {
     var postLoginAuthenticationToken: Any?
     var preLoginAuthenticationToken: Any?
     var callCenterObserverToken: Any?
+    var currentCallState: CallState?
     var blacklistVerificator: ZMBlacklistVerificator?
     let reachability: ReachabilityProvider & TearDownCapable
     let pushDispatcher: PushDispatcher
@@ -854,6 +855,7 @@ extension SessionManager : WireCallCenterCallStateObserver {
     
     public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) {
         guard let moc = conversation.managedObjectContext else { return }
+        self.currentCallState = callState
         
         switch callState {
         case .answered, .outgoing:
@@ -946,4 +948,13 @@ extension SessionManager {
             completion?()
         }
     }
+}
+
+
+extension SessionManager {
+    
+    public var shouldSwitchAccounts: Bool {
+        return currentCallState == .established
+    }
+    
 }
