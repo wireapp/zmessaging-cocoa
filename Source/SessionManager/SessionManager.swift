@@ -63,6 +63,11 @@ public protocol LocalNotificationResponder : class {
     func processLocal(_ notification: ZMLocalNotification, forSession session: ZMUserSession)
 }
 
+@objc
+public protocol SessionManagerSwitchingDelegate: class {
+    func confirmSwitchingAccount(completion: @escaping (Bool)->Void)
+}
+
 /// The `SessionManager` class handles the creation of `ZMUserSession` and `UnauthenticatedSession`
 /// objects, the handover between them as well as account switching.
 ///
@@ -141,6 +146,7 @@ public protocol LocalNotificationResponder : class {
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
     public weak var requestToOpenViewDelegate: ZMRequestsToOpenViewsDelegate?
+    public weak var switchingDelegate: SessionManagerSwitchingDelegate?
     public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
     
     let application: ZMApplication
@@ -376,27 +382,40 @@ public protocol LocalNotificationResponder : class {
     /// Select the account to be the active account.
     /// - completion: runs when the user session was loaded
     /// - tearDownCompletion: runs when the UI no longer holds any references to the previous user session.
-    public func select(_ account: Account, completion: ((ZMUserSession)->())? = nil, tearDownCompletion: (() -> Void)? = nil) {
+    public func select(_ account: Account, completion: ((ZMUserSession)->())? = nil, uiSwitchingBlock: ((@escaping ()->Void)->Void)? = nil, tearDownCompletion: (() -> Void)? = nil) {
         guard !isSelectingAccount else { return }
         
-        isSelectingAccount = true
-        
-        delegate?.sessionManagerWillOpenAccount(account, userSessionCanBeTornDown: { [weak self] in
-            self?.activeUserSession = nil
-            tearDownCompletion?()
-            self?.loadSession(for: account) { [weak self] session in
-                self?.isSelectingAccount = false
+        askCallingConfirmationIfNeeded { [weak self] in
+
+            let confirmation: ()->Void = {
+                self?.isSelectingAccount = true
                 
-                if let session = session {
-                    self?.accountManager.select(account)
-                    completion?(session)
-                }
+                self?.delegate?.sessionManagerWillOpenAccount(account, userSessionCanBeTornDown: { [weak self] in
+                    self?.activeUserSession = nil
+                    tearDownCompletion?()
+                    self?.loadSession(for: account) { [weak self] session in
+                        self?.isSelectingAccount = false
+                        
+                        if let session = session {
+                            self?.accountManager.select(account)
+                            completion?(session)
+                        }
+                    }
+                })
             }
-        })
+            
+            if let uiSwitchingBlock = uiSwitchingBlock {
+                uiSwitchingBlock(confirmation)
+            } else {
+                confirmation()
+            }
+        }
     }
     
     public func addAccount() {
-        logoutCurrentSession(deleteCookie: false, error: NSError(code: .addAccountRequested, userInfo: nil))
+        askCallingConfirmationIfNeeded { [weak self] in
+            self?.logoutCurrentSession(deleteCookie: false, error: NSError(code: .addAccountRequested, userInfo: nil))
+        }
     }
     
     public func delete(account: Account) {
@@ -950,6 +969,18 @@ extension SessionManager {
 
 
 extension SessionManager {
+    
+    public func askCallingConfirmationIfNeeded(completion: @escaping ()->Void) {
+        if shouldSwitchAccounts {
+            completion()
+        } else {
+            self.switchingDelegate?.confirmSwitchingAccount(completion: { (completed) in
+                if completed {
+                    completion()
+                }
+            })
+        }
+    }
     
     public var shouldSwitchAccounts: Bool {
         guard let userSession = self.activeUserSession else { return true }
