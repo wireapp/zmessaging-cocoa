@@ -162,19 +162,17 @@ extension VoiceChannelV3 : CallActions {
 extension VoiceChannelV3 : CallActionsInternal {
     
     public func join(video: Bool) -> Bool {
-        guard let conversation = conversation,
-              let remoteIdentifier = conversation.remoteIdentifier
-        else { return false }
+        guard let conversation = conversation else { return false }
         
         var joined = false
         
         switch state {
         case .incoming(video: _, shouldRing: _, degraded: let degraded):
             if !degraded {
-                joined = callCenter?.answerCall(conversationId: remoteIdentifier) ?? false
+                joined = callCenter?.answerCall(conversation: conversation) ?? false
             }
         default:
-            joined = self.callCenter?.startCall(conversationId: remoteIdentifier, video: video) ?? false
+            joined = self.callCenter?.startCall(conversation: conversation, video: video) ?? false
         }
         
         return joined

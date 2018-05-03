@@ -574,6 +574,7 @@ public struct CallEvent {
     weak var uiMOC : NSManagedObjectContext?
     let analytics: AnalyticsType?
     let flowManager : FlowManagerType
+    let audioOnlyParticipantLimit = 4
     
     deinit {
         avsWrapper.close()
@@ -676,10 +677,13 @@ public struct CallEvent {
 
 
     @objc(answerCallForConversationID:)
-    public func answerCall(conversationId: UUID) -> Bool {
+    public func answerCall(conversation: ZMConversation) -> Bool {
+        guard let conversationId = conversation.remoteIdentifier else { return false }
+        
         endAllCalls(exluding: conversationId)
         
-        let answered = avsWrapper.answerCall(conversationId: conversationId, useCBR: useConstantBitRateAudio)
+        let callType: AVSCallType = conversation.activeParticipants.count > audioOnlyParticipantLimit ? .audioOnly : .normal
+        let answered = avsWrapper.answerCall(conversationId: conversationId, callType: callType, useCBR: useConstantBitRateAudio)
         if answered {
             let callState : CallState = .answered(degraded: isDegraded(conversationId: conversationId))
             if let previousSnapshot = callSnapshots[conversationId] {
@@ -694,12 +698,21 @@ public struct CallEvent {
     }
     
     @objc(startCallForConversationID:video:)
-    public func startCall(conversationId: UUID, video: Bool) -> Bool {
-        endAllCalls(exluding: conversationId)
+    public func startCall(conversation: ZMConversation, video: Bool) -> Bool {
+        guard let conversationId = conversation.remoteIdentifier else { return false }
         
+        endAllCalls(exluding: conversationId)
         clearSnapshot(conversationId: conversationId) // make sure we don't have an old state for this conversation
         
-        let started = avsWrapper.startCall(conversationId: conversationId, video: video, isGroup: isGroup(conversationId: conversationId), useCBR: useConstantBitRateAudio)
+        let conversationType: AVSConversationType = conversation.conversationType == .group ? .group : .oneToOne
+        let callType: AVSCallType
+        if conversation.activeParticipants.count > audioOnlyParticipantLimit {
+            callType = .audioOnly
+        } else {
+            callType = video ? .video : .normal
+        }
+        
+        let started = avsWrapper.startCall(conversationId: conversationId, callType: callType, conversationType: conversationType, useCBR: useConstantBitRateAudio)
         if started {
             let callState : CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
             createSnapshot(callState: callState, callStarter: selfUserId,  video: video, for: conversationId)
@@ -764,11 +777,6 @@ public struct CallEvent {
         return degraded
     }
     
-    fileprivate func isGroup(conversationId: UUID) -> Bool {
-        let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: uiMOC!)
-        return conversation?.conversationType == .group
-    }
-
     public func setVideoCaptureDevice(_ captureDevice: CaptureDevice, for conversationId: UUID) {
         flowManager.setVideoCaptureDevice(captureDevice, for: conversationId)
     }

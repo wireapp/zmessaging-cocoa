@@ -20,10 +20,22 @@
 import Foundation
 import avs
 
+public enum AVSCallType: Int32 {
+    case normal = 0
+    case video = 1
+    case audioOnly = 2
+}
+
+public enum AVSConversationType: Int32 {
+    case oneToOne = 0
+    case group = 1
+    case conference = 2
+}
+
 public protocol AVSWrapperType {
     init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?)
-    func startCall(conversationId: UUID, video: Bool, isGroup: Bool, useCBR: Bool) -> Bool
-    func answerCall(conversationId: UUID, useCBR: Bool) -> Bool
+    func startCall(conversationId: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool) -> Bool
+    func answerCall(conversationId: UUID, callType: AVSCallType, useCBR: Bool) -> Bool
     func endCall(conversationId: UUID)
     func rejectCall(conversationId: UUID)
     func close()
@@ -69,13 +81,13 @@ public class AVSWrapper : AVSWrapperType {
         wcall_set_group_changed_handler(handle, groupMemberHandler, observer)
     }
     
-    public func startCall(conversationId: UUID, video: Bool, isGroup: Bool, useCBR: Bool) -> Bool {
-        let didStart = wcall_start(handle, conversationId.transportString(), video ? 1 : 0, isGroup ? 1 : 0, useCBR ? 1 : 0)
+    public func startCall(conversationId: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool) -> Bool {
+        let didStart = wcall_start(handle, conversationId.transportString(), callType.rawValue, conversationType.rawValue, useCBR ? 1 : 0)
         return didStart == 0
     }
     
-    public func answerCall(conversationId: UUID, useCBR: Bool) -> Bool {
-        let didAnswer = wcall_answer(handle, conversationId.transportString(), useCBR ? 1 : 0)
+    public func answerCall(conversationId: UUID, callType: AVSCallType, useCBR: Bool) -> Bool {
+        let didAnswer = wcall_answer(handle, conversationId.transportString(), callType.rawValue, useCBR ? 1 : 0)
         return didAnswer == 0
     }
     
