@@ -212,12 +212,7 @@ extension VoiceChannelV3 : CallObservers {
     public func addVoiceGainObserver(_ observer: VoiceGainObserver) -> Any {
         return WireCallCenterV3.addVoiceGainObserver(observer: observer, for: conversation!, context: conversation!.managedObjectContext!)
     }
-    
-    /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.
-    public func addReceivedVideoObserver(_ observer: ReceivedVideoObserver) -> Any {
-        return WireCallCenterV3.addReceivedVideoObserver(observer: observer, context: conversation!.managedObjectContext!)
-    }
-    
+        
     /// Add observer of constant bit rate audio. Returns a token which needs to be retained as long as the observer should be active.
     public func addConstantBitRateObserver(_ observer: ConstantBitRateAudioObserver) -> Any {
         return WireCallCenterV3.addConstantBitRateObserver(observer: observer, context: conversation!.managedObjectContext!)

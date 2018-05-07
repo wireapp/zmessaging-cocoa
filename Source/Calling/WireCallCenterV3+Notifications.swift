@@ -400,6 +400,36 @@ class VoiceChannelParticipantV3Snapshot {
         recalculateSet(updated: updated)
     }
     
+    func callParticpantVideoStateChanged(userId: UUID, videoState: VideoState) {
+        guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
+        
+        let updatedCallMember = AVSCallMember(userId: userId, audioEstablished: callMember.audioEstablished, videoState: videoState)
+        let updatedCallMembers: [AVSCallMember] = members.array.map({ member in
+            if member.remoteId == userId {
+                return updatedCallMember
+            } else {
+                return member
+            }
+        })
+        
+        callParticipantsChanged(newParticipants: updatedCallMembers)
+    }
+    
+    func callParticpantAudioEstablished(userId: UUID) {
+        guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
+        
+        let updatedCallMember = AVSCallMember(userId: userId, audioEstablished: true, videoState: callMember.videoState)
+        let updatedCallMembers: [AVSCallMember] = members.array.map({ member in
+            if member.remoteId == userId {
+                return updatedCallMember
+            } else {
+                return member
+            }
+        })
+        
+        callParticipantsChanged(newParticipants: updatedCallMembers)
+    }
+    
     /// calculate inserts / deletes / moves
     func recalculateSet(updated: Set<AVSCallMember>) {
         guard let newStateUpdate = state.updatedState(updated,

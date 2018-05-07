@@ -92,9 +92,6 @@ public protocol CallObservers : NSObjectProtocol {
     /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
     func addVoiceGainObserver(_ observer: VoiceGainObserver) -> Any
     
-    /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.
-    func addReceivedVideoObserver(_ observer: ReceivedVideoObserver) -> Any
-    
     /// Add observer of constant bit rate audio. Returns a token which needs to be retained as long as the observer should be active.
     func addConstantBitRateObserver(_ observer: ConstantBitRateAudioObserver) -> Any
     

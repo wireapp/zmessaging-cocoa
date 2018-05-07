@@ -435,10 +435,12 @@ internal func videoStateChangeHandler(userId: UnsafePointer<Int8>?, state: Int32
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
-    if let context = callCenter.uiMOC {
+    if let context = callCenter.uiMOC,
+       let userId = UUID(cString: userId),
+       let videoState = VideoState(rawValue: state) {
         context.performGroupedBlock {
             callCenter.nonIdleCalls.forEach({ (key, value) in
-                callCenter.callParticipantsChanged(conversationId: key, participants: callCenter.avsWrapper.members(in: key))
+                callCenter.callParticipantVideostateChanged(conversationId: key, userId: userId, videoState: videoState)
             })
         }
     } else {
@@ -598,6 +600,10 @@ public struct CallEvent {
             // group call. Until that's no longer the case we must take care to only set establishedDate once.
             if self.callState(conversationId: conversationId) != .established {
                 establishedDate = Date()
+            }
+            
+            if let userId = userId {
+                callParticipantAudioEstablished(conversationId: conversationId, userId: userId)
             }
             
             if isVideoCall(conversationId: conversationId) {
@@ -814,6 +820,18 @@ public struct CallEvent {
                                                             callCenter: self)
             participantSnapshots[conversationId] = snaphot
             snaphot.callParticipantsChanged(newParticipants: participants)
+        }
+    }
+    
+    func callParticipantVideostateChanged(conversationId: UUID, userId: UUID, videoState: VideoState) {
+        if let snapshot = participantSnapshots[conversationId] {
+            snapshot.callParticpantVideoStateChanged(userId: userId, videoState: videoState)
+        }
+    }
+    
+    func callParticipantAudioEstablished(conversationId: UUID, userId: UUID) {
+        if let snapshot = participantSnapshots[conversationId] {
+            snapshot.callParticpantAudioEstablished(userId: userId)
         }
     }
     
