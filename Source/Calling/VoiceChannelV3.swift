@@ -237,7 +237,7 @@ public extension CallState {
         case .unknown, .terminating, .incoming, .none, .establishedDataChannel:
             return .unconnected
         case .established:
-            return .connected(muted: false, sendingVideo: false)
+            return .connected(videoState: .stopped)
         case .outgoing, .answered:
             return .connecting
         }

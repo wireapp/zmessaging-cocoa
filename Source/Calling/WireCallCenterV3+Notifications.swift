@@ -60,23 +60,6 @@ struct WireCallCenterCBRNotification : SelfPostingNotification {
     public let enabled: Bool
 }
 
-/// MARK - Video call observer
-
-struct WireCallCenterV3VideoNotification : SelfPostingNotification {
-    static let notificationName = Notification.Name("WireCallCenterVideoNotification")
-    
-    let userId : UUID
-    let receivedVideoState : ReceivedVideoState
-    
-    init(userId: UUID, receivedVideoState: ReceivedVideoState) {
-        self.userId = userId
-        self.receivedVideoState = receivedVideoState
-    }
-
-}
-
-
-
 /// MARK - Call state observer
 
 public protocol WireCallCenterCallStateObserver : class {
@@ -144,15 +127,15 @@ public protocol VoiceChannelParticipantObserver : class {
 
 
 @objc public class VoiceChannelParticipantNotification : NSObject, SetChangeInfoOwner {
-    public typealias ChangeInfoContent = CallMember
+    public typealias ChangeInfoContent = AVSCallMember
     
     static let notificationName = Notification.Name("VoiceChannelParticipantNotification")
     static let userInfoKey = notificationName.rawValue
-    public let setChangeInfo : SetChangeInfo<CallMember>
+    public let setChangeInfo : SetChangeInfo<AVSCallMember>
     let conversationId : UUID
     unowned var callCenter : WireCallCenterV3
     
-    init(setChangeInfo: SetChangeInfo<CallMember>, conversationId: UUID, callCenter: WireCallCenterV3) {
+    init(setChangeInfo: SetChangeInfo<AVSCallMember>, conversationId: UUID, callCenter: WireCallCenterV3) {
         self.setChangeInfo = setChangeInfo
         self.conversationId = conversationId
         self.callCenter = callCenter
@@ -299,23 +282,6 @@ extension WireCallCenterV3 {
         }
     }
     
-    /// Register observer of the video state. This will inform you when the remote caller starts, stops sending video.
-    /// Returns a token which needs to be retained as long as the observer should be active.
-    public class func addReceivedVideoObserver(observer: ReceivedVideoObserver, userSession: ZMUserSession) -> Any {
-        return addReceivedVideoObserver(observer: observer, context: userSession.managedObjectContext)
-    }
-    
-    /// Register observer of the video state. This will inform you when the remote caller starts, stops sending video.
-    /// Returns a token which needs to be retained as long as the observer should be active.
-    internal class func addReceivedVideoObserver(observer: ReceivedVideoObserver, context: NSManagedObjectContext) -> Any {
-        return NotificationInContext.addObserver(name: WireCallCenterV3VideoNotification.notificationName, context: context.notificationContext, queue: .main) { [weak observer] note in
-            if let note = note.userInfo[WireCallCenterV3VideoNotification.userInfoKey] as? WireCallCenterV3VideoNotification,
-               let user = ZMUser(remoteID: note.userId, createIfNeeded: false, in: context) {
-                observer?.callCenterDidChange(receivedVideoState: note.receivedVideoState, user: user)
-            }
-        }
-    }
-    
     /// Register observer when constant audio bit rate is enabled/disabled
     /// Returns a token which needs to be retained as long as the observer should be active.
     public class func addConstantBitRateObserver(observer: ConstantBitRateAudioObserver, userSession: ZMUserSession) -> Any {
@@ -378,14 +344,14 @@ extension WireCallCenterV3 {
 
 class VoiceChannelParticipantV3Snapshot {
     
-    fileprivate var state : SetSnapshot<CallMember>
-    public private(set) var members : OrderedSetState<CallMember>
+    fileprivate var state : SetSnapshot<AVSCallMember>
+    public private(set) var members : OrderedSetState<AVSCallMember>
     
     fileprivate unowned var callCenter : WireCallCenterV3
     fileprivate let conversationId : UUID
     fileprivate let selfUserID : UUID
     
-    init(conversationId: UUID, selfUserID: UUID, members: [CallMember]?, callCenter: WireCallCenterV3) {
+    init(conversationId: UUID, selfUserID: UUID, members: [AVSCallMember]?, callCenter: WireCallCenterV3) {
         self.callCenter = callCenter
         self.conversationId = conversationId
         self.selfUserID = selfUserID
@@ -399,11 +365,11 @@ class VoiceChannelParticipantV3Snapshot {
         state = SetSnapshot(set: self.members, moveType: .uiCollectionView)
     }
     
-    static func filteredMembers(_ members: [CallMember]) -> OrderedSetState<CallMember> {
+    static func filteredMembers(_ members: [AVSCallMember]) -> OrderedSetState<AVSCallMember> {
         // remove duplicates see: https://wearezeta.atlassian.net/browse/ZIOS-8610
         // When a user joins with two devices, we would have a duplicate entry for this user in the member array returned from AVS
         // For now, we will keep the one with "the highest state", meaning if one entry has `audioEstablished == false` and the other one `audioEstablished == true`, we keep the one with `audioEstablished == true`
-        let callMembers = members.reduce([CallMember]()){ (filtered, member) in
+        let callMembers = members.reduce([AVSCallMember]()){ (filtered, member) in
             var newFiltered = filtered
             if let idx = newFiltered.index(of: member) {
                 if !newFiltered[idx].audioEstablished && member.audioEstablished {
@@ -418,12 +384,12 @@ class VoiceChannelParticipantV3Snapshot {
         return callMembers.toOrderedSetState()
     }
     
-    func callParticipantsChanged(newParticipants: [CallMember]) {
-        var updated : Set<CallMember> = Set()
-        var newMembers = [CallMember]()
+    func callParticipantsChanged(newParticipants: [AVSCallMember]) {
+        var updated : Set<AVSCallMember> = Set()
+        var newMembers = [AVSCallMember]()
         
         for m in newParticipants {
-            if let idx = members.order[m], (members.array[idx].audioEstablished != m.audioEstablished || members.array[idx].isReceivingVideo != m.isReceivingVideo) {
+            if let idx = members.order[m], (members.array[idx].audioEstablished != m.audioEstablished || members.array[idx].videoState != m.videoState) {
                 updated.insert(m)
             }
             newMembers.append(m)
@@ -435,7 +401,7 @@ class VoiceChannelParticipantV3Snapshot {
     }
     
     /// calculate inserts / deletes / moves
-    func recalculateSet(updated: Set<CallMember>) {
+    func recalculateSet(updated: Set<AVSCallMember>) {
         guard let newStateUpdate = state.updatedState(updated,
                                                       observedObject: conversationId as NSUUID,
                                                       newSet: members)
@@ -446,11 +412,12 @@ class VoiceChannelParticipantV3Snapshot {
     }
     
     public func callParticipantState(forUserWith userId: UUID) -> CallParticipantState {
-        let tempMember = CallMember(userId: userId, audioEstablished: false)
-        guard let idx = members.order[tempMember] else {
-            return .unconnected
+        guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return .unconnected }
+        
+        if callMember.audioEstablished {
+            return .connected(videoState: callMember.videoState)
+        } else {
+            return .connecting
         }
-        let member = members.array[idx]
-        return member.audioEstablished ? .connected(muted: false, sendingVideo: false) : .connecting
     }
 }

@@ -104,7 +104,7 @@ public enum CallParticipantState : Equatable {
     // Participant is in the process of connecting to the call
     case connecting
     /// Participant is connected to call and audio is flowing
-    case connected(muted: Bool, sendingVideo: Bool)
+    case connected(videoState: VideoState)
     
     public static func ==(lhs: CallParticipantState, rhs: CallParticipantState) -> Bool {
         switch (lhs, rhs) {
@@ -112,8 +112,8 @@ public enum CallParticipantState : Equatable {
             fallthrough
         case (.unconnected, .unconnected):
             return true
-        case (.connected(muted: let lmuted, sendingVideo: let lsendingVideo), .connected(muted: let rmuted, sendingVideo: let rsendingVideo)):
-            return lmuted == rmuted && lsendingVideo == rsendingVideo
+        case (.connected(videoState: let lvideoState), .connected(videoState: let rvideoState)):
+            return lvideoState == rvideoState
         default:
             return false
         }
@@ -217,34 +217,6 @@ public enum CallState : Equatable {
         default:
             return self
         }
-    }
-}
-
-public struct CallMember : Hashable {
-
-    let remoteId : UUID
-    let audioEstablished : Bool
-    let isReceivingVideo : Bool
-    
-    init?(wcallMember: wcall_member) {
-        guard let remoteId = UUID(cString:wcallMember.userid) else { return nil }
-        self.remoteId = remoteId
-        audioEstablished = (wcallMember.audio_estab != 0)
-        isReceivingVideo = (wcallMember.video_recv != 0)
-    }
-    
-    init(userId : UUID, audioEstablished : Bool = false, isReceivingVideo: Bool = false) {
-        self.remoteId = userId
-        self.audioEstablished = audioEstablished
-        self.isReceivingVideo = isReceivingVideo
-    }
-    
-    public var hashValue: Int {
-        return remoteId.hashValue
-    }
-    
-    public static func ==(lhs: CallMember, rhs: CallMember) -> Bool {
-        return lhs.remoteId == rhs.remoteId
     }
 }
 
@@ -463,12 +435,11 @@ internal func videoStateChangeHandler(userId: UnsafePointer<Int8>?, state: Int32
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
-    if let state = ReceivedVideoState(rawValue: UInt(state)),
-       let userId = UUID(cString: userId),
-       let context = callCenter.uiMOC {
-        
+    if let context = callCenter.uiMOC {
         context.performGroupedBlock {
-            WireCallCenterV3VideoNotification(userId: userId, receivedVideoState: state).post(in: context.notificationContext)
+            callCenter.nonIdleCalls.forEach({ (key, value) in
+                callCenter.callParticipantsChanged(conversationId: key, participants: callCenter.avsWrapper.members(in: key))
+            })
         }
     } else {
         zmLog.error("Couldn't send video state change notification")
@@ -620,7 +591,7 @@ public struct CallEvent {
             
             participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
                                                                                      selfUserID: selfUserId,
-                                                                                     members: [CallMember(userId: userId!)],
+                                                                                     members: [AVSCallMember(userId: userId!)],
                                                                                      callCenter: self)
         case .established:
             // WORKAROUND: the call established handler will is called once for every participant in a
@@ -833,7 +804,7 @@ public struct CallEvent {
     }
     
     /// Call this method when the callParticipants changed and avs calls the handler `wcall_group_changed_h`
-    func callParticipantsChanged(conversationId: UUID, participants: [CallMember]) {
+    func callParticipantsChanged(conversationId: UUID, participants: [AVSCallMember]) {
         if let snapshot = participantSnapshots[conversationId] {
             snapshot.callParticipantsChanged(newParticipants: participants)
         } else if participants.count > 0 {

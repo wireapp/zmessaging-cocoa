@@ -20,6 +20,43 @@
 import Foundation
 import avs
 
+public struct AVSCallMember : Hashable {
+    
+    let remoteId: UUID
+    let audioEstablished: Bool
+    let videoState: VideoState
+    
+    init?(wcallMember: wcall_member) {
+        guard let remoteId = UUID(cString:wcallMember.userid) else { return nil }
+        self.remoteId = remoteId
+        audioEstablished = (wcallMember.audio_estab != 0)
+        videoState = VideoState(rawValue: wcallMember.video_recv) ?? .stopped
+    }
+    
+    init(userId : UUID, audioEstablished: Bool = false, videoState: VideoState = .stopped) {
+        self.remoteId = userId
+        self.audioEstablished = audioEstablished
+        self.videoState = videoState
+    }
+    
+    public var hashValue: Int {
+        return remoteId.hashValue
+    }
+    
+    public static func ==(lhs: AVSCallMember, rhs: AVSCallMember) -> Bool {
+        return lhs.remoteId == rhs.remoteId
+    }
+}
+
+public enum VideoState : Int32 {
+    /// Sender is not sending video
+    case stopped = 0
+    /// Sender is sending video
+    case started = 1
+    /// Sender is sending video but currently has a bad connection
+    case badConnection = 2
+}
+
 public enum AVSCallType: Int32 {
     case normal = 0
     case video = 1
@@ -43,7 +80,7 @@ public protocol AVSWrapperType {
     func toggleVideo(conversationID: UUID, active: Bool)
     func setVideoSendActive(userId: UUID, active: Bool)
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
-    func members(in conversationId: UUID) -> [CallMember]
+    func members(in conversationId: UUID) -> [AVSCallMember]
     func update(callConfig: String?, httpStatusCode: Int)
 }
 
@@ -128,14 +165,14 @@ public class AVSWrapper : AVSWrapperType {
         wcall_set_video_send_active(handle, conversationID.transportString(), active ? 1 : 0)
     }
     
-    public func members(in conversationId: UUID) -> [CallMember] {
+    public func members(in conversationId: UUID) -> [AVSCallMember] {
         guard let membersRef = wcall_get_members(handle, conversationId.transportString()) else { return [] }
         
         let cMembers = membersRef.pointee
-        var callMembers = [CallMember]()
+        var callMembers = [AVSCallMember]()
         for i in 0..<cMembers.membc {
             guard let cMember = cMembers.membv?[Int(i)],
-                let member = CallMember(wcallMember: cMember)
+                let member = AVSCallMember(wcallMember: cMember)
                 else { continue }
             callMembers.append(member)
         }
