@@ -101,65 +101,31 @@ public struct WireCallCenterMissedCallNotification : SelfPostingNotification {
     let video: Bool
 }
 
+/// MARK - CallParticipantObserver
 
-
-/// MARK - ConferenceParticipantsObserver
-protocol WireCallCenterConferenceParticipantsObserver : class {
-    func callCenterConferenceParticipantsChanged(conversationId: UUID, userIds: [UUID])
-}
-
-struct WireCallCenterConferenceParticipantsChangedNotification : SelfPostingNotification {
-    static let notificationName = Notification.Name("WireCallCenterNotification")
+public protocol WireCallCenterCallParticipantObserver : class {
     
-    let conversationId : UUID
-    let userId : UUID
-    let timestamp: Date
-    let video: Bool
+    /**
+     Called when a participant of the call joins / leaves or when their call state changes
+ 
+     - parameter conversation: where the call is ongoing
+     - parameter particpants: updated list of call participants
+     */
+    func callParticipantsDidChange(conversation: ZMConversation, participants: [(UUID, CallParticipantState)])
 }
 
-
-/// MARK - VoiceChannelParticipantObserver
-
-@objc
-public protocol VoiceChannelParticipantObserver : class {
-    func voiceChannelParticipantsDidChange(_ changeInfo : VoiceChannelParticipantNotification)
-}
-
-
-@objc public class VoiceChannelParticipantNotification : NSObject, SetChangeInfoOwner {
-    public typealias ChangeInfoContent = AVSCallMember
+public struct WireCallCenterCallParticipantNotification : SelfPostingNotification {
     
     static let notificationName = Notification.Name("VoiceChannelParticipantNotification")
-    static let userInfoKey = notificationName.rawValue
-    public let setChangeInfo : SetChangeInfo<AVSCallMember>
+    
     let conversationId : UUID
-    unowned var callCenter : WireCallCenterV3
+    let participants: [(UUID, CallParticipantState)]
     
-    init(setChangeInfo: SetChangeInfo<AVSCallMember>, conversationId: UUID, callCenter: WireCallCenterV3) {
-        self.setChangeInfo = setChangeInfo
+    init(conversationId: UUID, participants: [(UUID, CallParticipantState)]) {
         self.conversationId = conversationId
-        self.callCenter = callCenter
+        self.participants = participants
     }
     
-    func post() {
-        guard let context = callCenter.uiMOC else { return }
-        
-        NotificationInContext(name: VoiceChannelParticipantNotification.notificationName,
-                              context: context.notificationContext,
-                              object: nil,
-                              userInfo: [VoiceChannelParticipantNotification.userInfoKey : self]).post()
-    }
-    
-    public var orderedSetState : OrderedSetState<ChangeInfoContent> { return setChangeInfo.orderedSetState }
-    public var insertedIndexes : IndexSet { return setChangeInfo.insertedIndexes }
-    public var deletedIndexes : IndexSet { return setChangeInfo.deletedIndexes }
-    public var deletedObjects: Set<AnyHashable> { return setChangeInfo.deletedObjects }
-    public var updatedIndexes : IndexSet { return setChangeInfo.updatedIndexes }
-    public var movedIndexPairs : [MovedIndex] { return setChangeInfo.movedIndexPairs }
-    public var zm_movedIndexPairs : [ZMMovedIndex] { return setChangeInfo.zm_movedIndexPairs }
-    public func enumerateMovedIndexes(_ block:@escaping (_ from: Int, _ to : Int) -> Void) {
-        setChangeInfo.enumerateMovedIndexes(block)
-    }
 }
 
 /// MARK - VoiceGainObserver
@@ -300,22 +266,23 @@ extension WireCallCenterV3 {
     
     /// Add observer of particpants in a voice channel. Returns a token which needs to be retained as long as the observer should be active.
     /// Returns a token which needs to be retained as long as the observer should be active.
-    public class func addVoiceChannelParticipantObserver(observer: VoiceChannelParticipantObserver, for conversation: ZMConversation, userSession: ZMUserSession) -> Any {
-        return addVoiceChannelParticipantObserver(observer: observer, for: conversation, context: userSession.managedObjectContext)
+    public class func addCallParticipantObserver(observer: WireCallCenterCallParticipantObserver, for conversation: ZMConversation, userSession: ZMUserSession) -> Any {
+        return addCallParticipantObserver(observer: observer, for: conversation, context: userSession.managedObjectContext)
     }
     
-    /// Add observer of particpants in a voice channel. Returns a token which needs to be retained as long as the observer should be active.
+    /// Add observer of call particpants in a conversation. Returns a token which needs to be retained as long as the observer should be active.
     /// Returns a token which needs to be retained as long as the observer should be active.
-    internal class func addVoiceChannelParticipantObserver(observer: VoiceChannelParticipantObserver, for conversation: ZMConversation, context: NSManagedObjectContext) -> Any {
+    internal class func addCallParticipantObserver(observer: WireCallCenterCallParticipantObserver, for conversation: ZMConversation, context: NSManagedObjectContext) -> Any {
         let remoteID = conversation.remoteIdentifier!
         
-        return NotificationInContext.addObserver(name: VoiceChannelParticipantNotification.notificationName, context: context.notificationContext, queue: .main) { [weak observer] note in
-            guard let note = note.userInfo[VoiceChannelParticipantNotification.userInfoKey] as? VoiceChannelParticipantNotification,
-                let strongObserver = observer
+        return NotificationInContext.addObserver(name: WireCallCenterCallParticipantNotification.notificationName, context: context.notificationContext, queue: .main) { [weak observer] note in
+            guard let note = note.userInfo[WireCallCenterCallParticipantNotification.userInfoKey] as? WireCallCenterCallParticipantNotification,
+                  let observer = observer,
+                  note.conversationId == conversation.remoteIdentifier
             else { return }
             
             if note.conversationId == remoteID {
-                strongObserver.voiceChannelParticipantsDidChange(note)
+                observer.callParticipantsDidChange(conversation: conversation, participants: note.participants)
             }
         }
     }
@@ -341,113 +308,3 @@ extension WireCallCenterV3 {
     
 }
 
-
-class VoiceChannelParticipantV3Snapshot {
-    
-    fileprivate var state : SetSnapshot<AVSCallMember>
-    public private(set) var members : OrderedSetState<AVSCallMember>
-    
-    fileprivate unowned var callCenter : WireCallCenterV3
-    fileprivate let conversationId : UUID
-    fileprivate let selfUserID : UUID
-    
-    init(conversationId: UUID, selfUserID: UUID, members: [AVSCallMember]?, callCenter: WireCallCenterV3) {
-        self.callCenter = callCenter
-        self.conversationId = conversationId
-        self.selfUserID = selfUserID
-        
-        if let unfilteredMembers = members {
-            self.members = type(of: self).filteredMembers(unfilteredMembers)
-        } else {
-            let unfilteredMembers = callCenter.avsWrapper.members(in: conversationId)
-            self.members = type(of: self).filteredMembers(unfilteredMembers)
-        }
-        state = SetSnapshot(set: self.members, moveType: .uiCollectionView)
-    }
-    
-    static func filteredMembers(_ members: [AVSCallMember]) -> OrderedSetState<AVSCallMember> {
-        // remove duplicates see: https://wearezeta.atlassian.net/browse/ZIOS-8610
-        // When a user joins with two devices, we would have a duplicate entry for this user in the member array returned from AVS
-        // For now, we will keep the one with "the highest state", meaning if one entry has `audioEstablished == false` and the other one `audioEstablished == true`, we keep the one with `audioEstablished == true`
-        let callMembers = members.reduce([AVSCallMember]()){ (filtered, member) in
-            var newFiltered = filtered
-            if let idx = newFiltered.index(of: member) {
-                if !newFiltered[idx].audioEstablished && member.audioEstablished {
-                    newFiltered[idx] = member
-                }
-            } else {
-                newFiltered.append(member)
-            }
-            return newFiltered
-        }
-        
-        return callMembers.toOrderedSetState()
-    }
-    
-    func callParticipantsChanged(newParticipants: [AVSCallMember]) {
-        var updated : Set<AVSCallMember> = Set()
-        var newMembers = [AVSCallMember]()
-        
-        for m in newParticipants {
-            if let idx = members.order[m], (members.array[idx].audioEstablished != m.audioEstablished || members.array[idx].videoState != m.videoState) {
-                updated.insert(m)
-            }
-            newMembers.append(m)
-        }
-        guard newMembers != members.array || updated.count > 0 else { return }
-        
-        members = type(of:self).filteredMembers(newMembers)
-        recalculateSet(updated: updated)
-    }
-    
-    func callParticpantVideoStateChanged(userId: UUID, videoState: VideoState) {
-        guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
-        
-        let updatedCallMember = AVSCallMember(userId: userId, audioEstablished: callMember.audioEstablished, videoState: videoState)
-        let updatedCallMembers: [AVSCallMember] = members.array.map({ member in
-            if member.remoteId == userId {
-                return updatedCallMember
-            } else {
-                return member
-            }
-        })
-        
-        callParticipantsChanged(newParticipants: updatedCallMembers)
-    }
-    
-    func callParticpantAudioEstablished(userId: UUID) {
-        guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
-        
-        let updatedCallMember = AVSCallMember(userId: userId, audioEstablished: true, videoState: callMember.videoState)
-        let updatedCallMembers: [AVSCallMember] = members.array.map({ member in
-            if member.remoteId == userId {
-                return updatedCallMember
-            } else {
-                return member
-            }
-        })
-        
-        callParticipantsChanged(newParticipants: updatedCallMembers)
-    }
-    
-    /// calculate inserts / deletes / moves
-    func recalculateSet(updated: Set<AVSCallMember>) {
-        guard let newStateUpdate = state.updatedState(updated,
-                                                      observedObject: conversationId as NSUUID,
-                                                      newSet: members)
-        else { return}
-        
-        state = newStateUpdate.newSnapshot
-        VoiceChannelParticipantNotification(setChangeInfo: newStateUpdate.changeInfo, conversationId: self.conversationId, callCenter: callCenter).post()
-    }
-    
-    public func callParticipantState(forUserWith userId: UUID) -> CallParticipantState {
-        guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return .unconnected }
-        
-        if callMember.audioEstablished {
-            return .connected(videoState: callMember.videoState)
-        } else {
-            return .connecting
-        }
-    }
-}

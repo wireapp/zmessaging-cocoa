@@ -221,6 +221,7 @@ public enum CallState : Equatable {
 }
 
 private struct CallSnapshot {
+    let callParticipants: CallParticipantsSnapshot
     let callState: CallState
     let callStarter: UUID
     let isVideo: Bool
@@ -229,11 +230,11 @@ private struct CallSnapshot {
     var conversationObserverToken : NSObjectProtocol?
     
     public func update(with callState: CallState) -> CallSnapshot {
-        return CallSnapshot(callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, isConstantBitRate: isConstantBitRate, conversationObserverToken: conversationObserverToken)
+        return CallSnapshot(callParticipants: callParticipants, callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, isConstantBitRate: isConstantBitRate, conversationObserverToken: conversationObserverToken)
     }
     
     public func updateConstantBitrate(_ enabled: Bool) -> CallSnapshot {
-        return CallSnapshot(callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, isConstantBitRate: enabled, conversationObserverToken: conversationObserverToken)
+        return CallSnapshot(callParticipants: callParticipants, callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, isConstantBitRate: enabled, conversationObserverToken: conversationObserverToken)
     }
 }
 
@@ -255,6 +256,18 @@ public extension UUID {
         guard let aString = String(cString: cString) else { return nil }
         self.init(uuidString: aString)
     }
+}
+
+internal extension AVSCallMember {
+    
+    var callParticipantState: CallParticipantState {
+        if audioEstablished {
+            return .connected(videoState: videoState)
+        } else {
+            return .connecting
+        }
+    }
+    
 }
 
 
@@ -519,26 +532,23 @@ public struct CallEvent {
         }
     }
     
-    /// We keep a snapshot of all participants so that we can notify the UI when a user is connected or when the stereo sorting changes
-    fileprivate var participantSnapshots : [UUID : VoiceChannelParticipantV3Snapshot] = [:]
-    
     /// We keep a snaphot of the call state for each none idle conversation
     fileprivate var callSnapshots : [UUID : CallSnapshot] = [:]
     
     /// Removes the participantSnapshot and remove the conversation from the list of ignored conversations
     fileprivate func clearSnapshot(conversationId: UUID) {
         callSnapshots.removeValue(forKey: conversationId)
-        participantSnapshots.removeValue(forKey: conversationId)
     }
     
-    fileprivate func createSnapshot(callState : CallState, callStarter: UUID?, video: Bool, for conversationId: UUID) {
+    fileprivate func createSnapshot(callState : CallState, members: [AVSCallMember], callStarter: UUID?, video: Bool, for conversationId: UUID) {
         guard let moc = uiMOC,
               let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: moc)
         else { return }
         
+        let callParticipants = CallParticipantsSnapshot(conversationId: conversationId, members: members, callCenter: self)
         let token = ConversationChangeInfo.add(observer: self, for: conversation)
         let group = conversation.conversationType == .group
-        callSnapshots[conversationId] = CallSnapshot(callState: callState, callStarter: callStarter ?? selfUserId, isVideo: video, isGroup: group, isConstantBitRate: false, conversationObserverToken: token)
+        callSnapshots[conversationId] = CallSnapshot(callParticipants: callParticipants, callState: callState, callStarter: callStarter ?? selfUserId, isVideo: video, isGroup: group, isConstantBitRate: false, conversationObserverToken: token)
     }
     
     public var useConstantBitRateAudio: Bool = false
@@ -589,12 +599,7 @@ public struct CallEvent {
         
         switch callState {
         case .incoming(video: let video, shouldRing: _, degraded: _):
-            createSnapshot(callState: callState, callStarter: userId, video: video, for: conversationId)
-            
-            participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
-                                                                                     selfUserID: selfUserId,
-                                                                                     members: [AVSCallMember(userId: userId!)],
-                                                                                     callCenter: self)
+            createSnapshot(callState: callState, members: [AVSCallMember(userId: userId!)], callStarter: userId, video: video, for: conversationId)
         case .established:
             // WORKAROUND: the call established handler will is called once for every participant in a
             // group call. Until that's no longer the case we must take care to only set establishedDate once.
@@ -692,7 +697,7 @@ public struct CallEvent {
         let started = avsWrapper.startCall(conversationId: conversationId, callType: callType, conversationType: conversationType, useCBR: useConstantBitRateAudio)
         if started {
             let callState : CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
-            createSnapshot(callState: callState, callStarter: selfUserId,  video: video, for: conversationId)
+            createSnapshot(callState: callState, members: [], callStarter: selfUserId,  video: video, for: conversationId)
             
             if let context = uiMOC {
                 WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime:nil).post(in: context.notificationContext)
@@ -798,11 +803,11 @@ public struct CallEvent {
         return callSnapshots[conversationId]?.callState ?? .none
     }
     
-    // MARK: - WireCallCenterV3 - Call Participants
+    // MARK: - Call Participants
 
     /// Returns the callParticipants currently in the conversation
     func callParticipants(conversationId: UUID) -> [UUID] {
-        return participantSnapshots[conversationId]?.members.map{ $0.remoteId } ?? []
+        return callSnapshots[conversationId]?.callParticipants.members.map { $0.remoteId } ?? []
     }
     
     func initiatorForCall(conversationId: UUID) -> UUID? {
@@ -811,37 +816,20 @@ public struct CallEvent {
     
     /// Call this method when the callParticipants changed and avs calls the handler `wcall_group_changed_h`
     func callParticipantsChanged(conversationId: UUID, participants: [AVSCallMember]) {
-        if let snapshot = participantSnapshots[conversationId] {
-            snapshot.callParticipantsChanged(newParticipants: participants)
-        } else if participants.count > 0 {
-            let snaphot = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
-                                                            selfUserID: selfUserId,
-                                                            members: [],
-                                                            callCenter: self)
-            participantSnapshots[conversationId] = snaphot
-            snaphot.callParticipantsChanged(newParticipants: participants)
-        }
+        callSnapshots[conversationId]?.callParticipants.callParticipantsChanged(participants: participants)
     }
     
     func callParticipantVideostateChanged(conversationId: UUID, userId: UUID, videoState: VideoState) {
-        if let snapshot = participantSnapshots[conversationId] {
-            snapshot.callParticpantVideoStateChanged(userId: userId, videoState: videoState)
-        }
+        callSnapshots[conversationId]?.callParticipants.callParticpantVideoStateChanged(userId: userId, videoState: videoState)
     }
     
     func callParticipantAudioEstablished(conversationId: UUID, userId: UUID) {
-        if let snapshot = participantSnapshots[conversationId] {
-            snapshot.callParticpantAudioEstablished(userId: userId)
-        }
+        callSnapshots[conversationId]?.callParticipants.callParticpantAudioEstablished(userId: userId)
     }
     
-    /// Returns the connectionState of a user in a conversation
-    /// We keep a snapshot of the callParticipants and activeFlowParticipants
-    /// If the user is contained in the callParticipants and in the activeFlowParticipants, he is connected
-    /// If the user is only contained in the callParticipants, he is connecting
-    /// Otherwise he is notConnected
+    /// Returns the state for a call participant.
     public func state(forUser userId: UUID, in conversationId: UUID) -> CallParticipantState {
-        return participantSnapshots[conversationId]?.callParticipantState(forUserWith:userId) ?? .unconnected
+        return callSnapshots[conversationId]?.callParticipants.callParticipantState(forUser: userId) ?? .unconnected
     }
 
 }

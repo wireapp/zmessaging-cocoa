@@ -87,7 +87,7 @@ public protocol CallObservers : NSObjectProtocol {
     func addCallStateObserver(_ observer: WireCallCenterCallStateObserver) -> Any
     
     /// Add observer of voice channel participants. Returns a token which needs to be retained as long as the observer should be active.
-    func addParticipantObserver(_ observer: VoiceChannelParticipantObserver) -> Any
+    func addParticipantObserver(_ observer: WireCallCenterCallParticipantObserver) -> Any
     
     /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
     func addVoiceGainObserver(_ observer: VoiceGainObserver) -> Any
