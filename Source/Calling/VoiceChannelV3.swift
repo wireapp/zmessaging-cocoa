@@ -92,13 +92,19 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         return ZMUser.fetch(withRemoteIdentifier: userId, in: context)
     }
     
-    public func toggleVideo(active: Bool) throws {
-        guard let remoteIdentifier = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.videoNotActiveError() }
+    public var videoState: VideoState {
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { return .stopped }
         
-        self.callCenter?.toogleVideo(conversationID: remoteIdentifier, active: active)
+        return self.callCenter?.videoState(conversationId: remoteIdentifier) ?? .stopped
     }
     
-    public func setVideoCaptureDevice(device: CaptureDevice) throws {
+    public func setVideoState(_ videoState: VideoState) {
+        guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
+        
+        callCenter?.setVideoState(conversationId: remoteIdentifier, videoState: videoState)
+    }
+    
+    public func setVideoCaptureDevice(_ device: CaptureDevice) throws {
         guard let conversationId = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.switchToVideoNotAllowedError() }
         
         self.callCenter?.setVideoCaptureDevice(device, for: conversationId)

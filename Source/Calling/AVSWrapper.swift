@@ -48,13 +48,15 @@ public struct AVSCallMember : Hashable {
     }
 }
 
-public enum VideoState : Int32 {
+public enum VideoState: Int32 {
     /// Sender is not sending video
     case stopped = 0
     /// Sender is sending video
     case started = 1
     /// Sender is sending video but currently has a bad connection
     case badConnection = 2
+    /// Sender has paused the video
+    case paused = 3
 }
 
 public enum AVSCallType: Int32 {
@@ -77,8 +79,7 @@ public protocol AVSWrapperType {
     func rejectCall(conversationId: UUID)
     func close()
     func received(callEvent: CallEvent)
-    func toggleVideo(conversationID: UUID, active: Bool)
-    func setVideoSendActive(userId: UUID, active: Bool)
+    func setVideoState(conversationId: UUID, videoState: VideoState)
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
     func members(in conversationId: UUID) -> [AVSCallMember]
     func update(callConfig: String?, httpStatusCode: Int)
@@ -86,7 +87,7 @@ public protocol AVSWrapperType {
 
 /// Wraps AVS calls for dependency injection and better testing
 public class AVSWrapper : AVSWrapperType {
-    
+
     private static var isInitialized = false
     private let handle : UnsafeMutableRawPointer
     
@@ -140,8 +141,8 @@ public class AVSWrapper : AVSWrapperType {
         wcall_destroy(handle)
     }
     
-    public func setVideoSendActive(userId: UUID, active: Bool) {
-        wcall_set_video_send_active(handle, userId.transportString(), active ? 1 : 0)
+    public func setVideoState(conversationId: UUID, videoState: VideoState) {
+        wcall_set_video_send_state(handle, conversationId.transportString(), videoState.rawValue)
     }
     
     public func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {
@@ -160,11 +161,7 @@ public class AVSWrapper : AVSWrapperType {
     public func update(callConfig: String?, httpStatusCode: Int) {
         wcall_config_update(handle, httpStatusCode == 200 ? 0 : EPROTO, callConfig ?? "")
     }
-    
-    public func toggleVideo(conversationID: UUID, active: Bool) {
-        wcall_set_video_send_active(handle, conversationID.transportString(), active ? 1 : 0)
-    }
-    
+        
     public func members(in conversationId: UUID) -> [AVSCallMember] {
         guard let membersRef = wcall_get_members(handle, conversationId.transportString()) else { return [] }
         

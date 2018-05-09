@@ -66,16 +66,13 @@ public class MockAVSWrapper : AVSWrapperType {
         didCallClose = true
     }
     
-    public func toggleVideo(conversationID: UUID, active: Bool) {
+
+    public func setVideoState(conversationId: UUID, videoState: VideoState) {
         // do nothing
     }
     
     public func received(callEvent: CallEvent) {
         receivedCallEvents.append(callEvent)
-    }
-    
-    public func setVideoSendActive(userId: UUID, active: Bool) {
-        // do nothing
     }
     
     public func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {

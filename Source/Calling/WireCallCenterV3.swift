@@ -227,14 +227,40 @@ private struct CallSnapshot {
     let isVideo: Bool
     let isGroup: Bool
     let isConstantBitRate: Bool
+    let videoState: VideoState
     var conversationObserverToken : NSObjectProtocol?
     
     public func update(with callState: CallState) -> CallSnapshot {
-        return CallSnapshot(callParticipants: callParticipants, callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, isConstantBitRate: isConstantBitRate, conversationObserverToken: conversationObserverToken)
+        return CallSnapshot(callParticipants: callParticipants,
+                            callState: callState,
+                            callStarter: callStarter,
+                            isVideo: isVideo,
+                            isGroup: isGroup,
+                            isConstantBitRate: isConstantBitRate,
+                            videoState: videoState,
+                            conversationObserverToken: conversationObserverToken)
     }
     
     public func updateConstantBitrate(_ enabled: Bool) -> CallSnapshot {
-        return CallSnapshot(callParticipants: callParticipants, callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, isConstantBitRate: enabled, conversationObserverToken: conversationObserverToken)
+        return CallSnapshot(callParticipants: callParticipants,
+                            callState: callState,
+                            callStarter: callStarter,
+                            isVideo: isVideo,
+                            isGroup: isGroup,
+                            isConstantBitRate: enabled,
+                            videoState: videoState,
+                            conversationObserverToken: conversationObserverToken)
+    }
+    
+    public func updateVideoState(_ videoState: VideoState) -> CallSnapshot {
+        return CallSnapshot(callParticipants: callParticipants,
+                            callState: callState,
+                            callStarter: callStarter,
+                            isVideo: isVideo,
+                            isGroup: isGroup,
+                            isConstantBitRate: isConstantBitRate,
+                            videoState: videoState,
+                            conversationObserverToken: conversationObserverToken)
     }
 }
 
@@ -548,7 +574,14 @@ public struct CallEvent {
         let callParticipants = CallParticipantsSnapshot(conversationId: conversationId, members: members, callCenter: self)
         let token = ConversationChangeInfo.add(observer: self, for: conversation)
         let group = conversation.conversationType == .group
-        callSnapshots[conversationId] = CallSnapshot(callParticipants: callParticipants, callState: callState, callStarter: callStarter ?? selfUserId, isVideo: video, isGroup: group, isConstantBitRate: false, conversationObserverToken: token)
+        callSnapshots[conversationId] = CallSnapshot(callParticipants: callParticipants,
+                                                     callState: callState,
+                                                     callStarter: callStarter ?? selfUserId,
+                                                     isVideo: video,
+                                                     isGroup: group,
+                                                     isConstantBitRate: false,
+                                                     videoState: .stopped,
+                                                     conversationObserverToken: token)
     }
     
     public var useConstantBitRateAudio: Bool = false
@@ -612,7 +645,7 @@ public struct CallEvent {
             }
             
             if isVideoCall(conversationId: conversationId) {
-                avsWrapper.setVideoSendActive(userId: conversationId, active: true)
+                setVideoState(conversationId: conversationId, videoState: .started)
             }
         case .establishedDataChannel:
             if self.callState(conversationId: conversationId) == .established {
@@ -738,9 +771,14 @@ public struct CallEvent {
         }
     }
     
-    @objc(toogleVideoForConversationID:isActive:)
-    public func toogleVideo(conversationID: UUID, active: Bool) {
-        avsWrapper.toggleVideo(conversationID: conversationID, active: active)
+    public func setVideoState(conversationId: UUID, videoState: VideoState) {
+        guard videoState != .badConnection else { return }
+        
+        if let snapshot = callSnapshots[conversationId] {
+            callSnapshots[conversationId] = snapshot.updateVideoState(videoState)
+        }
+        
+        avsWrapper.setVideoState(conversationId: conversationId, videoState: videoState)
     }
     
     @objc(isVideoCallForConversationID:)
@@ -751,6 +789,10 @@ public struct CallEvent {
     @objc(isConstantBitRateInConversationID:)
     public func isContantBitRate(conversationId: UUID) -> Bool {
         return callSnapshots[conversationId]?.isConstantBitRate ?? false
+    }
+    
+    public func videoState(conversationId: UUID) -> VideoState {
+        return callSnapshots[conversationId]?.videoState ?? .stopped
     }
     
     fileprivate func isDegraded(conversationId: UUID) -> Bool {

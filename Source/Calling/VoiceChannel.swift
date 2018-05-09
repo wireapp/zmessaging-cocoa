@@ -43,22 +43,23 @@ public protocol CallProperties : NSObjectProtocol {
     
     var state: CallState { get }
     
-    var conversation : ZMConversation? { get }
+    var conversation: ZMConversation? { get }
     
     /// The date and time of current call start
-    var callStartDate : Date? { get }
+    var callStartDate: Date? { get }
     
     /// Voice channel participants. May be a subset of conversation participants.
-    var participants : NSOrderedSet { get }
+    var participants: NSOrderedSet { get }
     
     /// Voice channel is sending audio using a contant bit rate
-    var isConstantBitRateAudioActive : Bool { get }
-    var isVideoCall : Bool { get }
-    var initiator : ZMUser? { get }
+    var isConstantBitRateAudioActive: Bool { get }
+    var isVideoCall: Bool { get }
+    var initiator: ZMUser? { get }
+    var videoState: VideoState { get }
     
     func state(forParticipant: ZMUser) -> CallParticipantState
-    func toggleVideo(active: Bool) throws
-    func setVideoCaptureDevice(device: CaptureDevice) throws
+    func setVideoState(_ videoState: VideoState)
+    func setVideoCaptureDevice(_ device: CaptureDevice) throws
 }
 
 @objc
