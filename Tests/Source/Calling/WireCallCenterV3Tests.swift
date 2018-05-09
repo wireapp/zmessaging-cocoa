@@ -631,12 +631,13 @@ extension WireCallCenterV3Tests {
     }
     
     func callBackMemberHandler(conversationIdRef: UnsafePointer<Int8>?, userId: UUID, audioEstablished: Bool, context: UnsafeMutableRawPointer?) {
-        mockAVSWrapper.mockMembers = [CallMember(userId: userId, audioEstablished: audioEstablished)]
+        mockAVSWrapper.mockMembers = [AVSCallMember(userId: userId, audioEstablished: audioEstablished)]
         WireSyncEngine.groupMemberHandler(conversationIdRef: conversationIdRef, contextRef: context)
     }
     
     func testThatItUpdatesTheParticipantsWhenGroupHandlerIsCalled() {
         // when
+        _ = sut.startCall(conversation: oneOnOneConversation, video: false)
         callBackMemberHandler(conversationIdRef: oneOnOneConversationIDRef, userId: otherUserID, audioEstablished: false, context: context)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -659,7 +660,7 @@ extension WireCallCenterV3Tests {
         
         // then
         let connectedState = sut.state(forUser: otherUserID, in: oneOnOneConversationID)
-        XCTAssertEqual(connectedState, CallParticipantState.connected(muted: false, sendingVideo: false))
+        XCTAssertEqual(connectedState, CallParticipantState.connected(videoState: .stopped))
     }
 }
 

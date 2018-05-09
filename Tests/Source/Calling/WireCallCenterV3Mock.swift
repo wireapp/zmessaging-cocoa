@@ -32,9 +32,9 @@ public class MockAVSWrapper : AVSWrapperType {
     public var didUpdateCallConfig = false
 
     public var hasOngoingCall = false
-    public var mockMembers : [CallMember] = []
+    public var mockMembers : [AVSCallMember] = []
     
-    public func members(in conversationId: UUID) -> [CallMember] {
+    public func members(in conversationId: UUID) -> [AVSCallMember] {
         return mockMembers
     }
 
@@ -104,7 +104,7 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     public let mockAVSWrapper : MockAVSWrapper
     public var mockNonIdleCalls : [UUID : CallState] = [:]
     
-    var mockMembers : [CallMember] {
+    var mockMembers : [AVSCallMember] {
         set {
             mockAVSWrapper.mockMembers = newValue
         } get {
