@@ -580,7 +580,7 @@ public struct CallEvent {
                                                      isVideo: video,
                                                      isGroup: group,
                                                      isConstantBitRate: false,
-                                                     videoState: .stopped,
+                                                     videoState: video ? .started : .stopped,
                                                      conversationObserverToken: token)
     }
     
@@ -644,8 +644,8 @@ public struct CallEvent {
                 callParticipantAudioEstablished(conversationId: conversationId, userId: userId)
             }
             
-            if isVideoCall(conversationId: conversationId) {
-                setVideoState(conversationId: conversationId, videoState: .started)
+            if videoState(conversationId: conversationId) == .started {
+                avsWrapper.setVideoState(conversationId: conversationId, videoState: .started)
             }
         case .establishedDataChannel:
             if self.callState(conversationId: conversationId) == .established {
