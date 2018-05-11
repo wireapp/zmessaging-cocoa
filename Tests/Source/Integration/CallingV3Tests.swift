@@ -343,13 +343,6 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(participantObserver.changes.count, 2)
-        if let partInfo =  participantObserver.changes.last {
-            // TODO jacob
-//            XCTAssertEqual(partInfo.insertedIndexes, [])
-//            XCTAssertEqual(partInfo.updatedIndexes, [0])
-//            XCTAssertEqual(partInfo.deletedIndexes, [])
-//            XCTAssertEqual(partInfo.movedIndexPairs, [])
-        }
         
         // (4) self user leaves
         //
