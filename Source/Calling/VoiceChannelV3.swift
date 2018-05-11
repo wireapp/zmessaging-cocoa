@@ -93,15 +93,16 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
     }
     
     public var videoState: VideoState {
-        guard let remoteIdentifier = conversation?.remoteIdentifier else { return .stopped }
-        
-        return self.callCenter?.videoState(conversationId: remoteIdentifier) ?? .stopped
-    }
-    
-    public func setVideoState(_ videoState: VideoState) {
-        guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
-        
-        callCenter?.setVideoState(conversationId: remoteIdentifier, videoState: videoState)
+        get {
+            guard let remoteIdentifier = conversation?.remoteIdentifier else { return .stopped }
+            
+            return self.callCenter?.videoState(conversationId: remoteIdentifier) ?? .stopped
+        }
+        set {
+            guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
+            
+            callCenter?.setVideoState(conversationId: remoteIdentifier, videoState: newValue)
+        }
     }
     
     public func setVideoCaptureDevice(_ device: CaptureDevice) throws {

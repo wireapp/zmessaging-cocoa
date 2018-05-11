@@ -55,10 +55,9 @@ public protocol CallProperties : NSObjectProtocol {
     var isConstantBitRateAudioActive: Bool { get }
     var isVideoCall: Bool { get }
     var initiator: ZMUser? { get }
-    var videoState: VideoState { get }
+    var videoState: VideoState { get set }
     
     func state(forParticipant: ZMUser) -> CallParticipantState
-    func setVideoState(_ videoState: VideoState)
     func setVideoCaptureDevice(_ device: CaptureDevice) throws
 }
 
