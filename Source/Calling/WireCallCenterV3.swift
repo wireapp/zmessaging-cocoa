@@ -729,8 +729,14 @@ public struct CallEvent {
         
         let started = avsWrapper.startCall(conversationId: conversationId, callType: callType, conversationType: conversationType, useCBR: useConstantBitRateAudio)
         if started {
-            let callState : CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
-            createSnapshot(callState: callState, members: [], callStarter: selfUserId,  video: video, for: conversationId)
+            let callState: CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
+            
+            let members: [AVSCallMember] = {
+                guard let user = conversation.connectedUser, conversation.conversationType == .oneOnOne else { return [] }
+                return [AVSCallMember(userId: user.remoteIdentifier)]
+            }()
+
+            createSnapshot(callState: callState, members: members, callStarter: selfUserId,  video: video, for: conversationId)
             
             if let context = uiMOC {
                 WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime:nil).post(in: context.notificationContext)
