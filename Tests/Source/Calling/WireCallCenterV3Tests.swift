@@ -391,6 +391,26 @@ class WireCallCenterV3Tests: MessagingTest {
         }
     }
     
+    func testThatItIncludesTheConnectedUserInCallParticipants_oneToOne(){
+        // given
+        let connection = ZMConnection.insertNewObject(in: uiMOC)
+        connection.status = .accepted
+        connection.to = .insertNewObject(in: uiMOC)
+        connection.to.remoteIdentifier = UUID()
+        connection.conversation = oneOnOneConversation
+        
+        
+        checkThatItPostsNotification(expectedCallState: .outgoing(degraded: false), expectedCallerId: selfUserID, expectedConversationId: oneOnOneConversationID) {
+            // when
+            _ = sut.startCall(conversation: oneOnOneConversation, video: false)
+            
+            // then
+            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.oneToOne)
+            XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.normal)
+            XCTAssertEqual(sut.callParticipants(conversationId: oneOnOneConversationID), [oneOnOneConversation.connectedUser!.remoteIdentifier])
+        }
+    }
+    
     func testThatItStartsACall_smallGroup(){
         checkThatItPostsNotification(expectedCallState: .outgoing(degraded: false), expectedCallerId: selfUserID, expectedConversationId: groupConversationID) {
             // when

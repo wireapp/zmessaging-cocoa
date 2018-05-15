@@ -736,7 +736,7 @@ public struct CallEvent {
                 return [AVSCallMember(userId: user.remoteIdentifier)]
             }()
 
-            createSnapshot(callState: callState, members: members, callStarter: selfUserId,  video: video, for: conversationId)
+            createSnapshot(callState: callState, members: members, callStarter: selfUserId, video: video, for: conversationId)
             
             if let context = uiMOC {
                 WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime:nil).post(in: context.notificationContext)
