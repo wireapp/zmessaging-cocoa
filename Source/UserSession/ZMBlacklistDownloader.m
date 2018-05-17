@@ -143,8 +143,14 @@ static NSString * const ExcludeVersionsKey = @"exclude";
         self.env = env;
         self.inBackground = NO;
         self.queue = dispatch_queue_create("ZMBlacklistDownloader", DISPATCH_QUEUE_SERIAL);
-        self.excludedVersions = [userDefaults objectForKey:ExcludeVersionsKey];
-        self.minVersion = [self.userDefaults objectForKey:MinVersionKey];
+        id excludedVersions = [userDefaults objectForKey:ExcludeVersionsKey];
+        if ([excludedVersions isKindOfClass:[NSArray class]]) {
+            self.excludedVersions = excludedVersions;
+        }
+        id minVersion = [self.userDefaults objectForKey:MinVersionKey];
+        if ([minVersion isKindOfClass:[NSString class]]) {
+            self.minVersion = minVersion;
+        }
         self.completionHandler = completionHandler;
         self.dateOfLastSuccessfulDownload = nil;
         self.dateOfLastUnsuccessfulDownload = nil;
