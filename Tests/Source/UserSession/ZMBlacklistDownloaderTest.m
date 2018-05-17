@@ -105,6 +105,11 @@
     return @{@"a": @[@1, @2], @"b": @3 };
 }
 
+- (id)invalidTypeBlackList
+{
+    return @{@"min_version": @1234, @"exclude": @[@1, @2, @3] };
+}
+
 - (void)stubRequest:(NSURLRequest *)request withResponseData:(NSData *)responseData responseError:(NSError *)responseError HTTPStatusCode:(NSUInteger)statusCode;
 {
     __block void (^completionHandler)(NSData *data, NSURLResponse *response, NSError *error);
@@ -142,16 +147,6 @@
     [self stubRequestWithResponseObject:object responseError:nil statusCode:200];
 }
 
-- (void)stubRequestWithFailedResponse
-{
-    [self stubRequestWithResponseObject:nil responseError:nil statusCode:400];
-}
-
-- (void)stubRequestWithError
-{
-    [self stubRequestWithResponseObject:nil responseError:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorDownloadDecodingFailedToComplete userInfo:nil] statusCode:0];
-}
-
 - (void)testItReturnsBlackListWhenThereIsNoError;
 {
     [self performIgnoringZMLogError:^{
@@ -179,89 +174,22 @@
 - (void)testItReturnsNilWhenThePropertyListHasTheWrongFormat
 {
     // given
-    [self stubRequestWithSuccessfulResponseObject:[self invalidBlackList]];
-    XCTestExpectation *didComplete = [self expectationWithDescription:@"did complete"];
-    
+    id json = [self invalidBlackList];
     // when
-    [self performIgnoringZMLogError:^{
-        [self createSUTWithCompletionHandler:^(NSString *minVersion, NSArray *excludeVersions) {
-            XCTAssertNil(minVersion);
-            XCTAssertNil(excludeVersions);
-            [didComplete fulfill];
-        }];
-        
-        // then
-        XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-        [self stopTimers];
-    }];
+    Blacklist *blacklist = [[Blacklist alloc] initWithJson:json];
+    // then
+    XCTAssertNil(blacklist);
 }
 
-- (void)testItReturnsNilWhenThePropertyListHasTheWrongFormatAsString
+- (void)testItReturnsNilWhenThePropertyListHasTheWrongFormat_WrongType
 {
     // given
-    NSData *data = [@"some" dataUsingEncoding:NSUTF8StringEncoding];
-    [self stubRequestWithSuccessfulResponseObject:data];
-    
-    XCTestExpectation *didComplete = [self expectationWithDescription:@"did complete"];
-    
+    id json = [self invalidTypeBlackList];
     // when
-    [self performIgnoringZMLogError:^{
-        [self createSUTWithCompletionHandler:^(NSString *minVersion, NSArray *excludeVersions) {
-            XCTAssertNil(minVersion);
-            XCTAssertNil(excludeVersions);
-            [didComplete fulfill];
-        }];
-
-        // then
-        XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-        [self stopTimers];
-    }];
-    
+    Blacklist *blacklist = [[Blacklist alloc] initWithJson:json];
+    // then
+    XCTAssertNil(blacklist);
 }
-
-- (void)testItReturnsNilWhenThePropertyListHasTheWrongFormatAsDictionary
-{
-    // given
-    [self stubRequestWithSuccessfulResponseObject:[self invalidBlackList]];
-    
-    XCTestExpectation *didComplete = [self expectationWithDescription:@"did complete"];
-    
-    // when
-    [self performIgnoringZMLogError:^{
-        [self createSUTWithCompletionHandler:^(NSString *minVersion, NSArray *excludeVersions) {
-            XCTAssertNil(minVersion);
-            XCTAssertNil(excludeVersions);
-            [didComplete fulfill];
-        }];
-        
-        // then
-        XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-        [self stopTimers];
-    }];
-}
-
-- (void)testItReturnsNilWhenResponseDataHasTheWrongFormat
-{
-    // given
-    NSData *wrongData = [NSData dataWithBytes:(unsigned char[]){0x0f} length:1];
-    [self stubRequestWithSuccessfulResponseObject:wrongData];
-
-    XCTestExpectation *didComplete = [self expectationWithDescription:@"did complete"];
-    
-    // when
-    [self performIgnoringZMLogError:^{
-        [self createSUTWithCompletionHandler:^(NSString *minVersion, NSArray *excludeVersions) {
-            XCTAssertNil(minVersion);
-            XCTAssertNil(excludeVersions);
-            [didComplete fulfill];
-        }];
-        
-        // then
-        XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-        [self stopTimers];
-    }];
-}
-
 
 - (void)testThatItDownloadsAgainAfterCheckInterval
 {
