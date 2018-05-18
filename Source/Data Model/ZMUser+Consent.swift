@@ -36,31 +36,32 @@ extension ZMUser {
         fetchConsent(for: .marketing, in: userSession, completion: completion)
     }
     
+    static func parse(consentPayload: ZMTransportData) -> [ConsentType: Bool] {
+        guard let payloadDict = consentPayload.asDictionary(),
+            let resultArray = payloadDict["results"] as? [[String: Any]] else {
+                return [:]
+        }
+        
+        var result: [ConsentType: Bool] = [:]
+        
+        resultArray.forEach {
+            guard let type = $0["type"] as? Int,
+                let value = $0["value"] as? Int,
+                let consentType = ConsentType(rawValue: type) else {
+                    return
+            }
+            
+            let valueBool = (value == 1)
+            result[consentType] = valueBool
+        }
+        
+        return result
+    }
+    
     func fetchConsent(for consentType: ConsentType,
                       in userSession: ZMUserSession,
                       completion: @escaping CompletionFetch) {
         
-        func parse(payload: ZMTransportData) -> [ConsentType: Bool] {
-            guard let payloadDict = payload.asDictionary(),
-                    let resultArray = payloadDict["results"] as? [[String: Any]] else {
-                return [:]
-            }
-            
-            var result: [ConsentType: Bool] = [:]
-            
-            resultArray.forEach {
-                guard let type = $0["type"] as? Int,
-                      let value = $0["value"] as? Int,
-                      let consentType = ConsentType(rawValue: type) else {
-                    return
-                }
-                
-                let valueBool = (value == 1)
-                result[consentType] = valueBool
-            }
-            
-            return result
-        }
         
         let request = ConsentRequestFactory.fetchConsentRequest()
         
@@ -75,7 +76,7 @@ extension ZMUser {
                 return
             }
             
-            let parsedPayload = parse(payload: payload)
+            let parsedPayload = ZMUser.parse(consentPayload: payload)
             let status: Bool = parsedPayload[consentType] ?? false
             completion(.success(status))
         })
