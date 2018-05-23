@@ -44,24 +44,25 @@ class CallStateTestObserver : WireCallCenterCallStateObserver {
     
 }
 
-class VoiceChannelParticipantTestObserver : VoiceChannelParticipantObserver {
+class CallParticipantTestObserver : WireCallCenterCallParticipantObserver {
     
-    var changes : [VoiceChannelParticipantNotification] = []
+    var changes : [[(UUID, CallParticipantState)]] = []
     var token : Any?
     
     func observe(conversation: ZMConversation, context: NSManagedObjectContext) {
-        token = WireCallCenterV3.addVoiceChannelParticipantObserver(observer: self, for: conversation, context: context)
+        token = WireCallCenterV3.addCallParticipantObserver(observer: self, for: conversation, context: context)
     }
     
-    func voiceChannelParticipantsDidChange(_ changeInfo: VoiceChannelParticipantNotification) {
-        changes.append(changeInfo)
+    func callParticipantsDidChange(conversation: ZMConversation, participants: [(UUID, CallParticipantState)]) {
+        changes.append(participants)
     }
+    
 }
 
 class CallingV3Tests : IntegrationTest {
     
     var stateObserver : CallStateTestObserver!
-    var participantObserver : VoiceChannelParticipantTestObserver!
+    var participantObserver : CallParticipantTestObserver!
     
     override func setUp() {
         super.setUp()
@@ -70,7 +71,7 @@ class CallingV3Tests : IntegrationTest {
         createExtraUsersAndConversations()
         
         stateObserver = CallStateTestObserver()
-        participantObserver = VoiceChannelParticipantTestObserver()
+        participantObserver = CallParticipantTestObserver()
     }
     
     override func tearDown() {
@@ -144,7 +145,7 @@ class CallingV3Tests : IntegrationTest {
     }
     
     func participantsChanged(members: [(user: ZMUser, establishedFlow: Bool)]) {
-        let mappedMembers = members.map{CallMember(userId: $0.user.remoteIdentifier!, audioEstablished: $0.establishedFlow)}
+        let mappedMembers = members.map{AVSCallMember(userId: $0.user.remoteIdentifier!, audioEstablished: $0.establishedFlow)}
         (userSession!.managedObjectContext.zm_callCenter as! WireCallCenterV3IntegrationMock).mockAVSWrapper.mockMembers = mappedMembers
 
         WireSyncEngine.groupMemberHandler(conversationIdRef: conversationIdRef, contextRef: wireCallCenterRef)
@@ -342,12 +343,6 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(participantObserver.changes.count, 2)
-        if let partInfo =  participantObserver.changes.last {
-            XCTAssertEqual(partInfo.insertedIndexes, [])
-            XCTAssertEqual(partInfo.updatedIndexes, [0])
-            XCTAssertEqual(partInfo.deletedIndexes, [])
-            XCTAssertEqual(partInfo.movedIndexPairs, [])
-        }
         
         // (4) self user leaves
         //

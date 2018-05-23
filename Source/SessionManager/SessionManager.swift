@@ -32,14 +32,22 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
     case callKit
 }
 
-@objc public protocol SessionManagerDelegate : class {
+@objc public protocol SessionActivationObserver: class {
     func sessionManagerActivated(userSession : ZMUserSession)
+}
+
+@objc public protocol SessionManagerDelegate : SessionActivationObserver {
     func sessionManagerDidFailToLogin(account: Account?, error : Error)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillMigrateAccount(_ account: Account)
     func sessionManagerWillMigrateLegacyAccount()
     func sessionManagerDidBlacklistCurrentVersion()
+}
+
+@objc
+public protocol UserSessionSource: class {
+    var activeUserSession: ZMUserSession? { get }
 }
 
 @objc
@@ -131,7 +139,7 @@ public protocol SessionManagerSwitchingDelegate: class {
 ///
 
 
-@objc public class SessionManager : NSObject, SessionManagerType {
+@objc public class SessionManager : NSObject, SessionManagerType, UserSessionSource {
 
     /// Maximum number of accounts which can be logged in simultanously
     public static let maxNumberAccounts = 3
@@ -142,6 +150,7 @@ public protocol SessionManagerSwitchingDelegate: class {
     public weak var localNotificationResponder: LocalNotificationResponder?
     public let accountManager: AccountManager
     public fileprivate(set) var activeUserSession: ZMUserSession?
+    public var urlHandler: SessionManagerURLHandler!
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
@@ -302,7 +311,7 @@ public protocol SessionManagerSwitchingDelegate: class {
 
         self.sharedContainerURL = sharedContainerURL
         self.accountManager = AccountManager(sharedDirectory: sharedContainerURL)
-        
+
         log.debug("Starting the session manager:")
         
         if self.accountManager.accounts.count > 0 {
@@ -338,7 +347,8 @@ public protocol SessionManagerSwitchingDelegate: class {
         super.init()
         
         self.pushDispatcher.fallbackClient = self
-        
+        self.urlHandler = SessionManagerURLHandler(userSessionSource: self)
+
         postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
     }
@@ -506,6 +516,7 @@ public protocol SessionManagerSwitchingDelegate: class {
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
             completion(session)
             self.delegate?.sessionManagerActivated(userSession: session)
+            self.urlHandler.sessionManagerActivated(userSession: session)
         }
     }
 

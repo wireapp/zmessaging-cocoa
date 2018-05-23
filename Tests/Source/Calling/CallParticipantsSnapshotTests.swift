@@ -20,7 +20,7 @@
 import Foundation
 @testable import WireSyncEngine
 
-class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
+class CallParticipantsSnapshotTests : MessagingTest {
 
     var mockWireCallCenterV3 : WireCallCenterV3Mock!
     var mockFlowManager : FlowManagerMock!
@@ -40,14 +40,13 @@ class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
     func testThatItDoesNotCrashWhenInitializedWithDuplicateCallMembers(){
         // given
         let userId = UUID()
-        let callMember1 = CallMember(userId: userId, audioEstablished: true)
-        let callMember2 = CallMember(userId: userId, audioEstablished: false)
+        let callMember1 = AVSCallMember(userId: userId, audioEstablished: true)
+        let callMember2 = AVSCallMember(userId: userId, audioEstablished: false)
 
         // when
-        let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(conversationId: UUID(),
-                                                                   selfUserID: UUID(),
-                                                                   members: [callMember1, callMember2],
-                                                                   callCenter: mockWireCallCenterV3)
+        let sut = WireSyncEngine.CallParticipantsSnapshot(conversationId: UUID(),
+                                                          members: [callMember1, callMember2],
+                                                          callCenter: mockWireCallCenterV3)
         
         // then
         // it does not crash and
@@ -60,15 +59,14 @@ class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
     func testThatItDoesNotCrashWhenUpdatedWithDuplicateCallMembers(){
         // given
         let userId = UUID()
-        let callMember1 = CallMember(userId: userId, audioEstablished: true)
-        let callMember2 = CallMember(userId: userId, audioEstablished: false)
-        let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(conversationId: UUID(),
-                                                                   selfUserID: UUID(),
-                                                                   members: [],
-                                                                   callCenter: mockWireCallCenterV3)
+        let callMember1 = AVSCallMember(userId: userId, audioEstablished: true)
+        let callMember2 = AVSCallMember(userId: userId, audioEstablished: false)
+        let sut = WireSyncEngine.CallParticipantsSnapshot(conversationId: UUID(),
+                                                          members: [],
+                                                          callCenter: mockWireCallCenterV3)
 
         // when
-        sut.callParticipantsChanged(newParticipants: [callMember1, callMember2])
+        sut.callParticipantsChanged(participants: [callMember1, callMember2])
         
         // then
         // it does not crash and
@@ -81,15 +79,14 @@ class VoiceChannelParticipantV3SnapshotTests : MessagingTest {
     func testThatItKeepsTheMemberWithAudioEstablished(){
         // given
         let userId = UUID()
-        let callMember1 = CallMember(userId: userId, audioEstablished: false)
-        let callMember2 = CallMember(userId: userId, audioEstablished: true)
-        let sut = WireSyncEngine.VoiceChannelParticipantV3Snapshot(conversationId: UUID(),
-                                                                   selfUserID: UUID(),
-                                                                   members: [],
-                                                                   callCenter: mockWireCallCenterV3)
+        let callMember1 = AVSCallMember(userId: userId, audioEstablished: false)
+        let callMember2 = AVSCallMember(userId: userId, audioEstablished: true)
+        let sut = WireSyncEngine.CallParticipantsSnapshot(conversationId: UUID(),
+                                                          members: [],
+                                                          callCenter: mockWireCallCenterV3)
         
         // when
-        sut.callParticipantsChanged(newParticipants: [callMember1, callMember2])
+        sut.callParticipantsChanged(participants: [callMember1, callMember2])
         
         // then
         // it does not crash and

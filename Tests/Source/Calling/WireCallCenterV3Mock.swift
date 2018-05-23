@@ -22,19 +22,19 @@ import Foundation
 
 public class MockAVSWrapper : AVSWrapperType {
     
-    public var didCallStartCall = false
-    public var didCallAnswerCall = false
+    public var startCallArguments: (uuid: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool)?
+    public var answerCallArguments: (uuid: UUID, callType: AVSCallType, useCBR: Bool)?
     public var didCallEndCall = false
     public var didCallRejectCall = false
     public var didCallClose = false
-    public var answerCallShouldFail : Bool = false
-    public var startCallShouldFail : Bool = false
+    public var answerCallShouldFail = false
+    public var startCallShouldFail = false
     public var didUpdateCallConfig = false
 
-    public var hasOngoingCall: Bool = false
-    public var mockMembers : [CallMember] = []
+    public var hasOngoingCall = false
+    public var mockMembers : [AVSCallMember] = []
     
-    public func members(in conversationId: UUID) -> [CallMember] {
+    public func members(in conversationId: UUID) -> [AVSCallMember] {
         return mockMembers
     }
 
@@ -44,13 +44,13 @@ public class MockAVSWrapper : AVSWrapperType {
         // do nothing
     }
     
-    public func startCall(conversationId: UUID, video: Bool, isGroup: Bool, useCBR: Bool) -> Bool {
-        didCallStartCall = true
+    public func startCall(conversationId: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool) -> Bool {
+        startCallArguments = (conversationId, callType, conversationType, useCBR)
         return !startCallShouldFail
     }
     
-    public func answerCall(conversationId: UUID, useCBR: Bool) -> Bool {
-        didCallAnswerCall = true
+    public func answerCall(conversationId: UUID, callType: AVSCallType, useCBR: Bool) -> Bool {
+        answerCallArguments = (conversationId, callType, useCBR)
         return !answerCallShouldFail
     }
     
@@ -66,16 +66,13 @@ public class MockAVSWrapper : AVSWrapperType {
         didCallClose = true
     }
     
-    public func toggleVideo(conversationID: UUID, active: Bool) {
+
+    public func setVideoState(conversationId: UUID, videoState: VideoState) {
         // do nothing
     }
     
     public func received(callEvent: CallEvent) {
         receivedCallEvents.append(callEvent)
-    }
-    
-    public func setVideoSendActive(userId: UUID, active: Bool) {
-        // do nothing
     }
     
     public func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {
@@ -104,7 +101,7 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     public let mockAVSWrapper : MockAVSWrapper
     public var mockNonIdleCalls : [UUID : CallState] = [:]
     
-    var mockMembers : [CallMember] {
+    var mockMembers : [AVSCallMember] {
         set {
             mockAVSWrapper.mockMembers = newValue
         } get {
@@ -129,12 +126,12 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     
     @objc
     public var didCallStartCall : Bool {
-        return (avsWrapper as! MockAVSWrapper).didCallStartCall
+        return (avsWrapper as! MockAVSWrapper).startCallArguments != nil
     }
     
     @objc
     public var didCallAnswerCall : Bool {
-        return (avsWrapper as! MockAVSWrapper).didCallAnswerCall
+        return (avsWrapper as! MockAVSWrapper).answerCallArguments != nil
     }
     public var didCallRejectCall : Bool {
         return (avsWrapper as! MockAVSWrapper).didCallRejectCall

@@ -43,22 +43,22 @@ public protocol CallProperties : NSObjectProtocol {
     
     var state: CallState { get }
     
-    var conversation : ZMConversation? { get }
+    var conversation: ZMConversation? { get }
     
     /// The date and time of current call start
-    var callStartDate : Date? { get }
+    var callStartDate: Date? { get }
     
     /// Voice channel participants. May be a subset of conversation participants.
-    var participants : NSOrderedSet { get }
+    var participants: NSOrderedSet { get }
     
     /// Voice channel is sending audio using a contant bit rate
-    var isConstantBitRateAudioActive : Bool { get }
-    var isVideoCall : Bool { get }
-    var initiator : ZMUser? { get }
+    var isConstantBitRateAudioActive: Bool { get }
+    var isVideoCall: Bool { get }
+    var initiator: ZMUser? { get }
+    var videoState: VideoState { get set }
     
     func state(forParticipant: ZMUser) -> CallParticipantState
-    func toggleVideo(active: Bool) throws
-    func setVideoCaptureDevice(device: CaptureDevice) throws
+    func setVideoCaptureDevice(_ device: CaptureDevice) throws
 }
 
 @objc
@@ -87,13 +87,10 @@ public protocol CallObservers : NSObjectProtocol {
     func addCallStateObserver(_ observer: WireCallCenterCallStateObserver) -> Any
     
     /// Add observer of voice channel participants. Returns a token which needs to be retained as long as the observer should be active.
-    func addParticipantObserver(_ observer: VoiceChannelParticipantObserver) -> Any
+    func addParticipantObserver(_ observer: WireCallCenterCallParticipantObserver) -> Any
     
     /// Add observer of voice gain. Returns a token which needs to be retained as long as the observer should be active.
     func addVoiceGainObserver(_ observer: VoiceGainObserver) -> Any
-    
-    /// Add observer of received video. Returns a token which needs to be retained as long as the observer should be active.
-    func addReceivedVideoObserver(_ observer: ReceivedVideoObserver) -> Any
     
     /// Add observer of constant bit rate audio. Returns a token which needs to be retained as long as the observer should be active.
     func addConstantBitRateObserver(_ observer: ConstantBitRateAudioObserver) -> Any
