@@ -392,38 +392,29 @@ public protocol SessionManagerSwitchingDelegate: class {
     /// Select the account to be the active account.
     /// - completion: runs when the user session was loaded
     /// - tearDownCompletion: runs when the UI no longer holds any references to the previous user session.
-    public func select(_ account: Account, completion: ((ZMUserSession)->())? = nil, uiSwitchingBlock: ((@escaping ()->Void)->Void)? = nil, tearDownCompletion: (() -> Void)? = nil) {
+    public func select(_ account: Account, completion: ((ZMUserSession)->())? = nil, tearDownCompletion: (() -> Void)? = nil) {
         guard !isSelectingAccount else { return }
         
-        askCallingConfirmationIfNeeded { [weak self] in
-
-            let confirmation: ()->Void = {
-                self?.isSelectingAccount = true
-                
-                self?.delegate?.sessionManagerWillOpenAccount(account, userSessionCanBeTornDown: { [weak self] in
-                    self?.activeUserSession = nil
-                    tearDownCompletion?()
-                    self?.loadSession(for: account) { [weak self] session in
-                        self?.isSelectingAccount = false
-                        
-                        if let session = session {
-                            self?.accountManager.select(account)
-                            completion?(session)
-                        }
-                    }
-                })
-            }
+        confirmSwitchingAccount { [weak self] in
+            self?.isSelectingAccount = true
             
-            if let uiSwitchingBlock = uiSwitchingBlock {
-                uiSwitchingBlock(confirmation)
-            } else {
-                confirmation()
-            }
+            self?.delegate?.sessionManagerWillOpenAccount(account, userSessionCanBeTornDown: { [weak self] in
+                self?.activeUserSession = nil
+                tearDownCompletion?()
+                self?.loadSession(for: account) { [weak self] session in
+                    self?.isSelectingAccount = false
+                    
+                    if let session = session {
+                        self?.accountManager.select(account)
+                        completion?(session)
+                    }
+                }
+            })
         }
     }
     
     public func addAccount() {
-        askCallingConfirmationIfNeeded { [weak self] in
+        confirmSwitchingAccount { [weak self] in
             self?.logoutCurrentSession(deleteCookie: false, error: NSError(code: .addAccountRequested, userInfo: nil))
         }
     }
@@ -981,21 +972,14 @@ extension SessionManager {
 
 extension SessionManager {
     
-    public func askCallingConfirmationIfNeeded(completion: @escaping ()->Void) {
-        if shouldSwitchAccounts {
-            completion()
-        } else {
-            self.switchingDelegate?.confirmSwitchingAccount(completion: { (completed) in
-                if completed {
-                    completion()
-                }
-            })
-        }
-    }
-    
-    public var shouldSwitchAccounts: Bool {
-        guard let userSession = self.activeUserSession else { return true }
-        return userSession.callCenter?.activeCallConversations(in: userSession).isEmpty ?? true
+    public func confirmSwitchingAccount(completion: @escaping ()->Void) {
+        guard let switchingDelegate = switchingDelegate else { return completion() }
+        
+        switchingDelegate.confirmSwitchingAccount(completion: { (confirmed) in
+            if confirmed {
+                completion()
+            }
+        })
     }
     
 }
