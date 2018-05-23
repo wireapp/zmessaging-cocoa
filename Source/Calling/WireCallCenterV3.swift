@@ -748,9 +748,13 @@ public struct CallEvent {
     @objc(closeCallForConversationID:)
     public func closeCall(conversationId: UUID) {
         avsWrapper.endCall(conversationId: conversationId)
-        if let previousSnapshot = callSnapshots[conversationId], previousSnapshot.isGroup {
-            let callState : CallState = .incoming(video: previousSnapshot.isVideo, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
-            callSnapshots[conversationId] = previousSnapshot.update(with: callState)
+        if let previousSnapshot = callSnapshots[conversationId] {
+            if previousSnapshot.isGroup {
+                let callState : CallState = .incoming(video: previousSnapshot.isVideo, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
+                callSnapshots[conversationId] = previousSnapshot.update(with: callState)
+            } else {
+                callSnapshots[conversationId] = previousSnapshot.update(with: .terminating(reason: .normal))
+            }
         }
     }
     
@@ -764,9 +768,9 @@ public struct CallEvent {
         }
     }
     
-    fileprivate func endAllCalls(exluding: UUID) {
+    public func endAllCalls(exluding: UUID? = nil) {
         nonIdleCalls.forEach { (key: UUID, callState: CallState) in
-            guard key != exluding else { return }
+            guard exluding == nil || key != exluding else { return }
             
             switch callState {
             case .incoming:
