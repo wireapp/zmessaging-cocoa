@@ -501,16 +501,10 @@ extension ZMConversation {
 extension VoiceChannel {
     
     func endCall() {
-        
         switch state {
-        case .incoming(video: _, shouldRing: true, degraded: false):
-            ignore()
-        case .established, .answered(degraded: false), .outgoing(degraded: false):
-            leave()
-        default:
-            break
+        case .incoming: ignore()
+        default: leave()
         }
-        
     }
 }
 
