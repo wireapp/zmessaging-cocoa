@@ -643,6 +643,41 @@ class CallingV3Tests : IntegrationTest {
         XCTAssertEqual(conversationUnderTest.voiceChannel?.state, .incoming(video: false, shouldRing: true, degraded: false))
     }
     
+    func testThatCallIsTerminatedIfConversationSecurityDegrades() {
+        
+        // given
+        XCTAssertTrue(login())
+        
+        let remoteUser = user(for: user2)!
+        
+        // Make conversation secure
+        establishSession(with: user2)
+        let selfClient = ZMUser.selfUser(inUserSession: userSession!).selfClient()!
+        userSession?.performChanges {
+            remoteUser.clients.forEach({ selfClient.trustClient($0) })
+        }
+        XCTAssertEqual(conversationUnderTest.securityLevel, .secure)
+        
+        // Other user calls
+        otherStartCall(user: remoteUser)
+        
+        // Self joins the call
+        selfJoinCall(isStart: true)
+        
+        // Call is established
+        establishedFlow(user: remoteUser)
+        XCTAssertEqual(conversationUnderTest.voiceChannel?.state, .established)
+        
+        // when
+        mockTransportSession.performRemoteChanges { session in
+            session.registerClient(for: self.selfUser, label: "Foo client", type: "permanent")
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(conversationUnderTest.voiceChannel?.state, .terminating(reason: .securityDegraded))
+    }
+    
 }
 
 

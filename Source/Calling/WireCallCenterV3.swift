@@ -45,6 +45,8 @@ public enum CallClosedReason : Int32 {
     case inputOutputError
     /// Call left by the selfUser but continues until everyone else leaves or AVS closes it
     case stillOngoing
+    /// Call was dropped due to the security level degrading
+    case securityDegraded
     /// Call was closed for an unknown reason. This is most likely a bug.
     case unknown
     
@@ -89,6 +91,8 @@ public enum CallClosedReason : Int32 {
             return WCALL_REASON_IO_ERROR
         case .stillOngoing:
             return WCALL_REASON_STILL_ONGOING
+        case .securityDegraded:
+            return WCALL_REASON_ERROR
         case .unknown:
             return WCALL_REASON_ERROR
         }
@@ -745,15 +749,14 @@ public struct CallEvent {
         return started
     }
     
-    @objc(closeCallForConversationID:)
-    public func closeCall(conversationId: UUID) {
+    public func closeCall(conversationId: UUID, reason: CallClosedReason = .normal) {
         avsWrapper.endCall(conversationId: conversationId)
         if let previousSnapshot = callSnapshots[conversationId] {
             if previousSnapshot.isGroup {
                 let callState : CallState = .incoming(video: previousSnapshot.isVideo, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
                 callSnapshots[conversationId] = previousSnapshot.update(with: callState)
             } else {
-                callSnapshots[conversationId] = previousSnapshot.update(with: .terminating(reason: .normal))
+                callSnapshots[conversationId] = previousSnapshot.update(with: .terminating(reason: reason))
             }
         }
     }
@@ -803,6 +806,15 @@ public struct CallEvent {
     
     public func videoState(conversationId: UUID) -> VideoState {
         return callSnapshots[conversationId]?.videoState ?? .stopped
+    }
+    
+    fileprivate func isActive(conversationId: UUID) -> Bool {
+        switch callState(conversationId: conversationId) {
+        case .established, .establishedDataChannel:
+            return true
+        default:
+            return false
+        }
     }
     
     fileprivate func isDegraded(conversationId: UUID) -> Bool {
@@ -894,6 +906,11 @@ extension WireCallCenterV3 : ZMConversationObserver {
             let conversationId = changeInfo.conversation.remoteIdentifier,
             let previousSnapshot = callSnapshots[conversationId]
         else { return }
+        
+        if changeInfo.conversation.securityLevel == .secureWithIgnored, isActive(conversationId: conversationId) {
+            // If an active call degrades we end it immediately
+            return closeCall(conversationId: conversationId, reason: .securityDegraded)
+        }
         
         let updatedCallState = previousSnapshot.callState.update(withSecurityLevel: changeInfo.conversation.securityLevel)
         
