@@ -87,7 +87,7 @@ class CallingV3Tests : IntegrationTest {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
-    func selfDropCall(){
+    func selfLeaveCall(){
         let convIdRef = self.conversationIdRef
         let userIdRef = self.selfUser.identifier.cString(using: .utf8)
         userSession?.enqueueChanges {
@@ -99,20 +99,6 @@ class CallingV3Tests : IntegrationTest {
                                              contextRef: self.wireCallCenterRef)
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-    }
-    
-    func selfIgnoreCall(){
-        let convIdRef = self.conversationIdRef
-        let userIdRef = self.selfUser.identifier.cString(using: .utf8)
-        userSession?.performChanges{
-            self.conversationUnderTest.voiceChannel?.ignore()
-            WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
-                                             conversationId: convIdRef,
-                                             messageTime: 0,
-                                             userId: userIdRef,
-                                             contextRef: self.wireCallCenterRef)
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout:0.5))
     }
     
     func otherStartCall(user: ZMUser, isVideoCall: Bool = false, shouldRing: Bool = true) {
@@ -192,7 +178,7 @@ class CallingV3Tests : IntegrationTest {
         stateObserver.checkLastNotificationHasCallState(.outgoing(degraded: false))
         
         // when
-        selfDropCall()
+        selfLeaveCall()
         closeCall(user: self.localSelfUser, reason: .canceled)
         
         // then
@@ -219,7 +205,7 @@ class CallingV3Tests : IntegrationTest {
         stateObserver.changes = []
 
         // when
-        selfDropCall()
+        selfLeaveCall()
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
@@ -247,7 +233,7 @@ class CallingV3Tests : IntegrationTest {
         stateObserver.changes = []
         
         // when
-        selfDropCall()
+        selfLeaveCall()
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
@@ -298,7 +284,7 @@ class CallingV3Tests : IntegrationTest {
         // (4) self user leaves
         //
         // when
-        selfDropCall()
+        selfLeaveCall()
         closeCall(user: self.localSelfUser, reason: .canceled)
         
         // then
@@ -347,7 +333,7 @@ class CallingV3Tests : IntegrationTest {
         // (4) self user leaves
         //
         // when
-        selfDropCall()
+        selfLeaveCall()
         closeCall(user: self.localSelfUser, reason: .canceled)
         
         // then
@@ -458,7 +444,7 @@ class CallingV3Tests : IntegrationTest {
         
         // (2) we ignore
         // when
-        selfIgnoreCall()
+        selfLeaveCall()
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 2)
@@ -483,7 +469,7 @@ class CallingV3Tests : IntegrationTest {
         // (1) other user joins and we ignore
         // when
         otherStartCall(user: user)
-        selfIgnoreCall()
+        selfLeaveCall()
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 2)
@@ -518,7 +504,7 @@ class CallingV3Tests : IntegrationTest {
         
         // (2) Self ignores call
         // and when
-        selfIgnoreCall()
+        selfLeaveCall()
         
         // then
         XCTAssertEqual(convObserver!.notifications.count, 1)
@@ -574,7 +560,7 @@ class CallingV3Tests : IntegrationTest {
         
         // (3) selfUser user ends call
         // and when
-        selfDropCall()
+        selfLeaveCall()
         
         // then
         XCTAssertEqual(convObserver!.notifications.count, 2)
@@ -605,7 +591,7 @@ class CallingV3Tests : IntegrationTest {
         otherStartCall(user: user)
         
         // Self ignores call
-        selfIgnoreCall()
+        selfLeaveCall()
         
         // Other user ends call
         closeCall(user: user, reason: .canceled)
@@ -629,7 +615,7 @@ class CallingV3Tests : IntegrationTest {
         otherStartCall(user: user)
         
         // Self ignores call
-        selfIgnoreCall()
+        selfLeaveCall()
         
         // Other user ends call
         closeCall(user: user, reason: .canceled)

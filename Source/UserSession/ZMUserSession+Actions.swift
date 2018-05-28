@@ -74,7 +74,7 @@ extension ZMUserSession {
         let conversation = notification.conversation(in: managedObjectContext)
         
         managedObjectContext.perform { 
-            conversation?.voiceChannel?.ignore(userSession: self)
+            conversation?.voiceChannel?.leave(userSession: self)
             activity?.end()
             completionHandler()
         }

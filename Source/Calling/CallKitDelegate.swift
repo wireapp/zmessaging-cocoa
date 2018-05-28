@@ -266,7 +266,7 @@ extension CallKitDelegate {
         callController.request(transaction) { [weak self] (error) in
             if let error = error {
                 self?.log("Cannot end call: \(error)")
-                conversation.voiceChannel?.endCall()
+                conversation.voiceChannel?.leave()
             }
         }
     }
@@ -399,7 +399,7 @@ extension CallKitDelegate : CXProviderDelegate {
         }
         
         calls.removeValue(forKey: action.callUUID)
-        call.conversation.voiceChannel?.endCall()
+        call.conversation.voiceChannel?.leave()
         action.fulfill()
     }
     
@@ -496,16 +496,6 @@ extension ZMConversation {
         }
     }
     
-}
-
-extension VoiceChannel {
-    
-    func endCall() {
-        switch state {
-        case .incoming: ignore()
-        default: leave()
-        }
-    }
 }
 
 @available(iOS 10.0, *)

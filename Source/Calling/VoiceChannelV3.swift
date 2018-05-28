@@ -156,14 +156,6 @@ extension VoiceChannelV3 : CallActions {
         }
     }
     
-    public func ignore(userSession: ZMUserSession) {
-        if userSession.callNotificationStyle == .callKit, #available(iOS 10.0, *) {
-            userSession.callKitDelegate?.requestEndCall(in: conversation!)
-        } else {
-            return ignore()
-        }
-    }
-    
 }
 
 extension VoiceChannelV3 : CallActionsInternal {
@@ -190,15 +182,12 @@ extension VoiceChannelV3 : CallActionsInternal {
               let remoteID = conv.remoteIdentifier
         else { return }
         
-        self.callCenter?.closeCall(conversationId: remoteID)
-    }
-    
-    public func ignore() {
-        guard let conv = conversation,
-              let remoteID = conv.remoteIdentifier
-        else { return }
-        
-        self.callCenter?.rejectCall(conversationId: remoteID)
+        switch state {
+        case .incoming:
+            callCenter?.rejectCall(conversationId: remoteID)
+        default:
+            callCenter?.closeCall(conversationId: remoteID)
+        }
     }
     
 }
