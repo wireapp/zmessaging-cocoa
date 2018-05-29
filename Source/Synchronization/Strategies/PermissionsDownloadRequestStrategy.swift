@@ -16,6 +16,8 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+import WireUtilities
+import WireDataModel
 
 fileprivate extension Member {
 
@@ -58,8 +60,8 @@ public final class PermissionsDownloadRequestStrategy: AbstractRequestStrategy, 
 extension PermissionsDownloadRequestStrategy: ZMDownstreamTranscoder {
 
     public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
-        guard let member = object as? Member, downstreamSync as? ZMDownstreamObjectSync == sync else { fatal("Wrong object: \(object)") }
-        guard let identifier = member.remoteIdentifier, let teamId = member.team?.remoteIdentifier else { fatal("No ids to sync: \(object)") }
+        guard let member = object as? Member, downstreamSync as? ZMDownstreamObjectSync == sync else { fatal("Wrong object: \(object.privateDescription)") }
+        guard let identifier = member.remoteIdentifier, let teamId = member.team?.remoteIdentifier else { fatal("No ids to sync: \(object.privateDescription)") }
         return TeamDownloadRequestFactory.getSingleMemberRequest(for: identifier, in: teamId)
     }
 

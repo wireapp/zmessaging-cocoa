@@ -134,7 +134,7 @@ public extension ServiceUserData {
 public extension ServiceUser {
     public func fetchProvider(in userSession: ZMUserSession, completion: @escaping (ServiceProvider?)->()) {
         guard let serviceUserData = self.serviceUserData else {
-            fatal("Not a service user: \(self)")
+            fatal("Not a service user")
         }
         
         let request = serviceUserData.requestToFetchProvider()
@@ -157,7 +157,7 @@ public extension ServiceUser {
     
     public func fetchDetails(in userSession: ZMUserSession, completion: @escaping (ServiceDetails?)->()) {
         guard let serviceUserData = self.serviceUserData else {
-            fatal("Not a service user: \(self)")
+            fatal("Not a service user")
         }
         
         let request = serviceUserData.requestToFetchDetails()
@@ -217,7 +217,7 @@ public extension ZMConversation {
     
     public func add(serviceUser: ServiceUser, in userSession: ZMUserSession, completion: ((AddBotError?)->())?) {
         guard let serviceUserData = serviceUser.serviceUserData else {
-            fatal("Not a service user: \(serviceUser)")
+            fatal("Not a service user")
         }
         
         add(serviceUser: serviceUserData, in: userSession, completion: completion)
@@ -257,7 +257,7 @@ public extension ZMConversation {
 public extension ZMUserSession {
     public func startConversation(with serviceUser: ServiceUser, completion: ((AddBotResult)->())?) {
         guard let serviceUserData = serviceUser.serviceUserData else {
-            fatal("Not a service user: \(serviceUser)")
+            fatal("Not a service user")
         }
         startConversation(with: serviceUserData, completion: completion)
     }

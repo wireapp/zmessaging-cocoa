@@ -206,7 +206,7 @@ extension UserImageAssetUpdateStrategy: ZMSingleRequestTranscoder {
             imageUploadStatus?.uploadingFailed(imageSize: size, error: error)
             return
         }
-        guard let payload = response.payload?.asDictionary(), let assetId = payload["key"] as? String else { fatal("No asset ID present in payload: \(String(describing: response.payload))") }
+        guard let payload = response.payload?.asDictionary(), let assetId = payload["key"] as? String else { fatal("No asset ID present in payload") }
         imageUploadStatus?.uploadingDone(imageSize: size, assetId: assetId)
     }
 }
