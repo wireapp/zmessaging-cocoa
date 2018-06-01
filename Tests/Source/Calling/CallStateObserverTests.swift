@@ -263,4 +263,28 @@ class CallStateObserverTests : MessagingTest {
         // then
         XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0)
     }
+    
+    func testThatClearedConversationsGetUnarchivedForIncomingCalls() {
+        // Given
+        conversation.lastServerTimeStamp = Date()
+        conversation.appendMessage(withText: "test")
+        conversation.clearMessageHistory()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssert(conversation.isArchived)
+        XCTAssertNotNil(conversation.clearedTimeStamp)
+        
+        // When
+        syncMOC.performGroupedBlockAndWait {
+            self.sut.callCenterDidChange(
+                callState: .incoming(video: false, shouldRing: true, degraded: false),
+                conversation: self.conversation,
+                caller: self.sender,
+                timestamp: nil
+            )
+        }
+   
+        // Then
+        XCTAssertFalse(conversation.isArchived)
+    }
+
 }
