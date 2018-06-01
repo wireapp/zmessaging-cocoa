@@ -274,7 +274,7 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertNotNil(conversation.clearedTimeStamp)
         
         // When
-        syncMOC.performGroupedBlockAndWait {
+        syncMOC.performGroupedBlock {
             self.sut.callCenterDidChange(
                 callState: .incoming(video: false, shouldRing: true, degraded: false),
                 conversation: self.conversation,
@@ -282,7 +282,9 @@ class CallStateObserverTests : MessagingTest {
                 timestamp: nil
             )
         }
-   
+
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+            
         // Then
         XCTAssertFalse(conversation.isArchived)
     }
