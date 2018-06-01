@@ -82,6 +82,9 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                 }
             }
             
+            // This will unarchive the conversation when there is an incoming call
+            self.updateConversation(conversation, with: callState)
+
             if (self.userSession?.callNotificationStyle ?? .callKit) == .pushNotifications {
                 self.localNotificationDispatcher.process(callState: callState, in: conversation, caller: caller)
             }
@@ -156,6 +159,13 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             conversation.appendMissedCallMessage(fromUser: caller, at: timestamp)
             self.syncManagedObjectContext.enqueueDelayedSave()
+        }
+    }
+    
+    private func updateConversation(_ conversation: ZMConversation, with callState: CallState) {
+        switch (callState, nil != conversation.clearedTimeStamp) {
+        case (.incoming(_, shouldRing: true, degraded: _), true): conversation.isArchived = false
+        default: break
         }
     }
 
