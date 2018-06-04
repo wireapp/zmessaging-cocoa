@@ -312,5 +312,32 @@ class CallStateObserverTests : MessagingTest {
         // Then
         XCTAssertFalse(conversation.isArchived)
     }
+    
+    func testThatArchivedAndMutedConversationsDoesNotGetUnarchivedForIncomingCalls() {
+        // Given
+        conversation.lastServerTimeStamp = Date()
+        conversation.isArchived = true
+        conversation.isSilenced = true
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssert(conversation.isArchived)
+        XCTAssert(conversation.isSilenced)
+        XCTAssertNil(conversation.clearedTimeStamp)
+        
+        // When
+        syncMOC.performGroupedBlock {
+            self.sut.callCenterDidChange(
+                callState: .incoming(video: false, shouldRing: true, degraded: false),
+                conversation: self.conversation,
+                caller: self.sender,
+                timestamp: nil
+            )
+        }
+        
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // Then
+        XCTAssert(conversation.isArchived)
+        XCTAssert(conversation.isSilenced)
+    }
 
 }
