@@ -168,7 +168,7 @@ extension VoiceChannelV3 : CallActionsInternal {
         switch state {
         case .incoming(video: _, shouldRing: _, degraded: let degraded):
             if !degraded {
-                joined = callCenter?.answerCall(conversation: conversation) ?? false
+                joined = callCenter?.answerCall(conversation: conversation, video: video) ?? false
             }
         default:
             joined = self.callCenter?.startCall(conversation: conversation, video: video) ?? false
