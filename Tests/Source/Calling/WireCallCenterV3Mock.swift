@@ -24,6 +24,7 @@ public class MockAVSWrapper : AVSWrapperType {
     
     public var startCallArguments: (uuid: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool)?
     public var answerCallArguments: (uuid: UUID, callType: AVSCallType, useCBR: Bool)?
+    public var setVideoStateArguments: (uuid: UUID, videoState: VideoState)?
     public var didCallEndCall = false
     public var didCallRejectCall = false
     public var didCallClose = false
@@ -68,7 +69,7 @@ public class MockAVSWrapper : AVSWrapperType {
     
 
     public func setVideoState(conversationId: UUID, videoState: VideoState) {
-        // do nothing
+        setVideoStateArguments = (conversationId, videoState)
     }
     
     public func received(callEvent: CallEvent) {

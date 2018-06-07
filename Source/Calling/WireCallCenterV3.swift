@@ -695,13 +695,17 @@ public struct CallEvent {
     // MARK: - Call state methods
 
 
-    @objc(answerCallForConversationID:)
-    public func answerCall(conversation: ZMConversation) -> Bool {
+    @objc(answerCallForConversationID:video:)
+    public func answerCall(conversation: ZMConversation, video: Bool) -> Bool {
         guard let conversationId = conversation.remoteIdentifier else { return false }
         
         endAllCalls(exluding: conversationId)
         
         let callType: AVSCallType = conversation.activeParticipants.count > audioOnlyParticipantLimit ? .audioOnly : .normal
+        
+        if !video {
+            setVideoState(conversationId: conversationId, videoState: VideoState.stopped)
+        }
         let answered = avsWrapper.answerCall(conversationId: conversationId, callType: callType, useCBR: useConstantBitRateAudio)
         if answered {
             let callState : CallState = .answered(degraded: isDegraded(conversationId: conversationId))
@@ -713,6 +717,7 @@ public struct CallEvent {
                 WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: callerId, messageTime:nil).post(in: context.notificationContext)
             }
         }
+        
         return answered
     }
     
