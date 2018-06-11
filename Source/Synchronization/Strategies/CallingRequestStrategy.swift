@@ -48,11 +48,11 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     }
     
     public func nextRequest() -> ZMTransportRequest? {
-        if let request = self.callConfigRequestSync.nextRequest() {
-            return request
-        }
+        let request = self.callConfigRequestSync.nextRequest() ?? genericMessageStrategy.nextRequest()
         
-        return genericMessageStrategy.nextRequest()
+        request?.forceToVoipSession()
+       
+        return request
     }
     
     public func dropPendingCallMessages(for conversation: ZMConversation) {
