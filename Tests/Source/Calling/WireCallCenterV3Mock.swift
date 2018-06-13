@@ -20,6 +20,7 @@ import Foundation
 
 @testable import WireSyncEngine
 
+@objcMembers
 public class MockAVSWrapper : AVSWrapperType {
     
     public var startCallArguments: (uuid: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool)?
@@ -96,7 +97,7 @@ public class WireCallCenterV3IntegrationMock : WireCallCenterV3 {
     
 }
 
-@objc
+@objcMembers
 public class WireCallCenterV3Mock : WireCallCenterV3 {
     
     public let mockAVSWrapper : MockAVSWrapper
@@ -124,16 +125,15 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
             (avsWrapper as! MockAVSWrapper).answerCallShouldFail = answerCallShouldFail
         }
     }
-    
-    @objc
+
     public var didCallStartCall : Bool {
         return (avsWrapper as! MockAVSWrapper).startCallArguments != nil
     }
     
-    @objc
     public var didCallAnswerCall : Bool {
         return (avsWrapper as! MockAVSWrapper).answerCallArguments != nil
     }
+    
     public var didCallRejectCall : Bool {
         return (avsWrapper as! MockAVSWrapper).didCallRejectCall
     }

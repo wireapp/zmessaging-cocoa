@@ -119,7 +119,7 @@ public extension ZMConversation {
 }
 
 
-@objc public class ZMConnectionLimitNotification : NSObject {
+@objcMembers public class ZMConnectionLimitNotification : NSObject {
 
     private static let name = Notification.Name(rawValue: "ZMConnectionLimitReachedNotification")
     

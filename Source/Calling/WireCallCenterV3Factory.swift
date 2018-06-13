@@ -19,7 +19,7 @@
 import Foundation
 import WireDataModel
 
-@objc
+@objcMembers
 public class WireCallCenterV3Factory : NSObject {
     
     public static var wireCallCenterClass : WireCallCenterV3.Type = WireCallCenterV3.self

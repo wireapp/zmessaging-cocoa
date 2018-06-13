@@ -173,7 +173,7 @@ final class ZMUserConsentTests: MessagingTest {
             case .failure(let error):
                 XCTAssertEqual(error as! WireSyncEngine.ConsentRequestError, WireSyncEngine.ConsentRequestError.unknown)
                 receivedError.fulfill()
-            case .success(_):
+            case .success:
                 XCTFail()
             }
         }

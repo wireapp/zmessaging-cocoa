@@ -52,7 +52,7 @@ private func ZMLogPushKit_swift( _ text:  @autoclosure () -> String) -> Void {
 /// A simple wrapper for PushKit remote push notifications
 ///
 /// Simple closures for push events.
-@objc(ZMPushRegistrant)
+@objcMembers @objc(ZMPushRegistrant)
 public final class PushKitRegistrant : NSObject, PushNotificationSource {
     
     public var pushToken: Data? {
@@ -135,7 +135,7 @@ public final class ApplicationRemoteNotification : NSObject, PushNotificationSou
 }
 
 
-extension ApplicationRemoteNotification {
+@objc extension ApplicationRemoteNotification {
     public func application(_ application: ZMApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         pushToken = deviceToken
         didUpdateCredentials(deviceToken)

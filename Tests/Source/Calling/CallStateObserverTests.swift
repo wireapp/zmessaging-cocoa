@@ -218,7 +218,7 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // expect
-        expectation(forNotification: CallStateObserver.CallInProgressNotification.rawValue, object: nil) { (note) -> Bool in
+        expectation(forNotification: CallStateObserver.CallInProgressNotification, object: nil) { (note) -> Bool in
             if let open = note.userInfo?[CallStateObserver.CallInProgressKey] as? Bool, open == false {
                 return true
             } else {

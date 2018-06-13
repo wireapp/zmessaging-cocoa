@@ -69,7 +69,7 @@ public final class PushDispatcherTests: ZMTBaseTest {
     func testThatItDoesNotRetainTheObservers() {
         weak var observerWeakReference: TestPushDispatcherClient?
         var observer: TestPushDispatcherClient?
-        autoreleasepool { _ in
+        autoreleasepool {
             // GIVEN
             observer = TestPushDispatcherClient()
             observerWeakReference = observer
@@ -85,7 +85,7 @@ public final class PushDispatcherTests: ZMTBaseTest {
     func testThatItDoesNotRetainTheFallbackObserver() {
         weak var observerWeakReference: TestPushDispatcherClient?
         var observer: TestPushDispatcherClient?
-        autoreleasepool { _ in
+        autoreleasepool {
             // GIVEN
             observer = TestPushDispatcherClient()
             observerWeakReference = observer

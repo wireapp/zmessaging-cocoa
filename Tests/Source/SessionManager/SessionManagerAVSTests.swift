@@ -55,7 +55,7 @@ class SessionManagerAVSTests: ZMTBaseTest {
         let logMessage = "123"
         
         // expect
-        expectation(forNotification: "AVSLogMessageNotification", object: nil) { (note) -> Bool in
+        expectation(forNotification: NSNotification.Name("AVSLogMessageNotification"), object: nil) { (note) -> Bool in
             let message = note.userInfo?["message"] as? String
             return message == logMessage
         }

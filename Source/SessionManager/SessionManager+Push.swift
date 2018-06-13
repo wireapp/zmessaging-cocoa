@@ -20,7 +20,7 @@ import Foundation
 
 private let log = ZMSLog(tag: "SessionManager")
 
-extension SessionManager {
+@objc extension SessionManager {
     public func registerSessionForRemoteNotificationsIfNeeded(_ session: ZMUserSession) {
         session.managedObjectContext.performGroupedBlock {
             // Refresh the tokens if needed

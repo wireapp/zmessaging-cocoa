@@ -84,7 +84,7 @@ extension ZMUserSession: PushDispatcherOptionalClient {
         return accountId == ZMUser.selfUser(in: moc).remoteIdentifier
     }
     
-    public func receivedPushNotification(with payload: [AnyHashable: Any],
+    @objc public func receivedPushNotification(with payload: [AnyHashable: Any],
                                          from source: ZMPushNotficationType,
                                          completion: ZMPushNotificationCompletionHandler?) {
         guard let syncMoc = self.syncManagedObjectContext else {

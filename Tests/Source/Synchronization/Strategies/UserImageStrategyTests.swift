@@ -253,7 +253,7 @@ extension UserImageStrategyTests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     
         // when
-        expectation(forNotification: "ZMRequestUserProfileAssetNotification", object: nil, handler: nil)
+        expectation(forNotification: NSNotification.Name("ZMRequestUserProfileAssetNotification"), object: nil, handler: nil)
         UserImageStrategy.requestAsset(for: self.user1)
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 1.5))

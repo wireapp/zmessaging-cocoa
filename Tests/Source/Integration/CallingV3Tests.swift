@@ -688,7 +688,7 @@ extension CallingV3Tests {
         let messageCount = conversationUnderTest.messages.count;
         
         // expect
-        expectation(forNotification: WireSyncEngine.WireCallCenterMissedCallNotification.notificationName.rawValue, object: nil)
+        expectation(forNotification: WireSyncEngine.WireCallCenterMissedCallNotification.notificationName, object: nil)
 
         // when
         simulateMissedCall(user: user)
@@ -720,7 +720,7 @@ extension CallingV3Tests {
         let messageCount = conversationUnderTest.messages.count;
 
         // expect
-        expectation(forNotification: WireSyncEngine.WireCallCenterMissedCallNotification.notificationName.rawValue, object: nil)
+        expectation(forNotification: WireSyncEngine.WireCallCenterMissedCallNotification.notificationName, object: nil)
         
         // when
         simulateMissedCall(user: user)

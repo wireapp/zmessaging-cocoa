@@ -24,7 +24,7 @@ let StatusKey = "status"
 let StoppedKey = "stopped"
 let StartedKey = "started"
 
-extension ZMConversation {
+@objc extension ZMConversation {
     
     // Used for handling remote notifications
     public static let typingNotificationName = Notification.Name(rawValue: "ZMTypingNotification")
