@@ -55,13 +55,13 @@ import Foundation
         self.application.unregisterObserverForStateChange(self)
     }
     
-    public func didBecomeActive(_ note: Notification) {
+    @objc public func didBecomeActive(_ note: Notification) {
         self.moc.performGroupedBlock { () -> Void in
             self.isInBackground = false
         }
     }
 
-    public func willResignActive(_ note: Notification) {
+    @objc public func willResignActive(_ note: Notification) {
         self.moc.performGroupedBlock { () -> Void in
             self.isInBackground = true
         }

@@ -19,7 +19,7 @@
 
 import Foundation
 
-extension ZMHotFixDirectory {
+@objc extension ZMHotFixDirectory {
 
     public static func moveOrUpdateSignalingKeysInContext(_ context: NSManagedObjectContext) {
         guard let selfClient = ZMUser.selfUser(in: context).selfClient()

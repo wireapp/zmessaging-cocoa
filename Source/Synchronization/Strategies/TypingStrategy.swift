@@ -152,7 +152,7 @@ public class TypingStrategy : AbstractRequestStrategy {
         assert(tornDown, "Need to tearDown TypingStrategy")
     }
     
-    fileprivate dynamic func addConversationForNextRequest(note : NotificationInContext) {
+    @objc fileprivate func addConversationForNextRequest(note : NotificationInContext) {
         guard let conversation = note.object as? ZMConversation, conversation.remoteIdentifier != nil
         else { return }
 
@@ -161,7 +161,7 @@ public class TypingStrategy : AbstractRequestStrategy {
         }
     }
     
-    fileprivate dynamic func shouldClearTypingForConversation(note: NotificationInContext) {
+    @objc fileprivate func shouldClearTypingForConversation(note: NotificationInContext) {
         guard let conversation = note.object as? ZMConversation, conversation.remoteIdentifier != nil
         else { return }
         

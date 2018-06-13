@@ -24,7 +24,7 @@ import Foundation
 }
 
 /// Creates and cancels local notifications
-public class LocalNotificationDispatcher: NSObject {
+@objcMembers public class LocalNotificationDispatcher: NSObject {
 
     public static let ZMShouldHideNotificationContentKey = "ZMShouldHideNotificationContentKey"
 

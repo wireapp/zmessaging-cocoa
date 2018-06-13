@@ -20,7 +20,7 @@ import Foundation
 import WireRequestStrategy
 import WireDataModel
 
-@objc
+@objcMembers
 public final class CallingRequestStrategy : NSObject, RequestStrategy {
     
     fileprivate let zmLog = ZMSLog(tag: "calling")

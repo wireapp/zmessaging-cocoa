@@ -33,7 +33,7 @@ public struct SignalingKeys {
 }
 
 
-@objc
+@objcMembers
 public final class APSSignalingKeysStore: NSObject {
     public var apsDecoder: ZMAPSMessageDecoder!
     internal var verificationKey : Data!

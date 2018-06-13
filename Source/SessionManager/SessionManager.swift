@@ -822,7 +822,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
 }
 
 extension SessionManager {
-    dynamic fileprivate func applicationDidBecomeActive(_ note: Notification) {
+    @objc dynamic fileprivate func applicationDidBecomeActive(_ note: Notification) {
         notificationsTracker?.dispatchEvent()
     }
 }

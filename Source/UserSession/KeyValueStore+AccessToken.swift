@@ -21,7 +21,7 @@ import Foundation
 private let lastAccessTokenKey = "ZMLastAccessToken";
 private let lastAccessTokenTypeKey = "ZMLastAccessTokenType";
 
-extension NSManagedObjectContext {
+@objc extension NSManagedObjectContext {
     
     public var accessToken : ZMAccessToken? {
         get {

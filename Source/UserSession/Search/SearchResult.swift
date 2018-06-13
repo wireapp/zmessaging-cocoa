@@ -71,9 +71,9 @@ extension SearchResult {
     
     func copy(on context: NSManagedObjectContext) -> SearchResult {
         
-        let copiedContacts = contacts.flatMap({ context.object(with: $0.objectID) as? ZMUser })
-        let copiedTeamMembers = teamMembers.flatMap({ context.object(with: $0.objectID) as? Member })
-        let copiedConversations = conversations.flatMap({ context.object(with: $0.objectID) as? ZMConversation })
+        let copiedContacts = contacts.compactMap { context.object(with: $0.objectID) as? ZMUser }
+        let copiedTeamMembers = teamMembers.compactMap { context.object(with: $0.objectID) as? Member }
+        let copiedConversations = conversations.compactMap { context.object(with: $0.objectID) as? ZMConversation }
         
         return SearchResult(contacts: copiedContacts, teamMembers: copiedTeamMembers, addressBook: addressBook, directory: directory, conversations: copiedConversations, services: services)
     }

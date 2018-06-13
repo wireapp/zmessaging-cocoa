@@ -56,9 +56,7 @@ private func ZMLogPushKit_swift( _ text:  @autoclosure () -> String) -> Void {
 public final class PushKitRegistrant : NSObject, PushNotificationSource {
     
     public var pushToken: Data? {
-        get {
-            return registry.pushToken(forType: PKPushType.voIP)
-        }
+        return registry.pushToken(for: .voIP)
     }
     
     public var notificationsTracker: NotificationsTracker?
@@ -90,7 +88,7 @@ public final class PushKitRegistrant : NSObject, PushNotificationSource {
 }
 
 extension PushKitRegistrant : PKPushRegistryDelegate {
-    public func pushRegistry(_ registry: PKPushRegistry, didUpdate credentials: PKPushCredentials, forType type: PKPushType) {
+    public func pushRegistry(_ registry: PKPushRegistry, didUpdate credentials: PKPushCredentials, for type: PKPushType) {
         ZMLogPushKit_swift("Registry \(self.registry.description) updated credentials for type '\(type)'.")
         if type != PKPushType.voIP {
             return
@@ -98,7 +96,7 @@ extension PushKitRegistrant : PKPushRegistryDelegate {
         didUpdateCredentials(credentials.token)
     }
     
-    public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, forType type: PKPushType) {
+    public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
         ZMLogPushKit_swift("Registry \(self.registry.description) did receive '\(payload.type)' payload: \(payload.dictionaryPayload)")
         guard let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Process PushKit payload", expirationHandler: { [weak self] in
             self?.notificationsTracker?.registerProcessingExpired()
@@ -112,7 +110,7 @@ extension PushKitRegistrant : PKPushRegistryDelegate {
         }
     }
 
-    public func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenForType type: PKPushType) {
+    public func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenFor type: PKPushType) {
         ZMLogPushKit_swift("Registry \(self.registry.description) did invalide push token for type '\(type)'.")
         didInvalidateToken()
     }

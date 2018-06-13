@@ -235,7 +235,7 @@ extension LocalNotificationType {
             arguments.append(conversationName)
         }
         
-        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey].flatMap({ $0 }).joined(separator: ".")
+        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey].compactMap({ $0 }).joined(separator: ".")
         return String.localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
     }
     

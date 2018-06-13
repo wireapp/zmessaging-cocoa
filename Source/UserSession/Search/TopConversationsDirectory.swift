@@ -21,7 +21,7 @@ import WireDataModel
 
 /// Directory of various conversation lists
 /// This object is expected to be used on the UI context only
-@objc public class TopConversationsDirectory : NSObject {
+@objcMembers public class TopConversationsDirectory : NSObject {
 
     fileprivate let uiMOC : NSManagedObjectContext
     fileprivate let syncMOC : NSManagedObjectContext
@@ -42,7 +42,7 @@ import WireDataModel
 // MARK: - Top conversation
 private let topConversationsObjectIDKey = "WireTopConversationsObjectIDKey"
 
-extension TopConversationsDirectory {
+@objc extension TopConversationsDirectory {
 
     public func refreshTopConversations() {
         syncMOC.performGroupedBlock {
@@ -51,14 +51,14 @@ extension TopConversationsDirectory {
             // Mapping from conversation to message count in the last month
             let countByConversation = conversations.mapToDictionary { $0.lastMonthMessageCount() }
             let sorted = countByConversation.filter { $0.1 > 0 }.sorted {  $0.1 > $1.1 }.prefix(TopConversationsDirectory.topConversationSize)
-            let identifiers = sorted.flatMap { $0.0.objectID }
+            let identifiers = sorted.compactMap { $0.0.objectID }
             self.updateUIList(with: identifiers)
         }
     }
 
     private func updateUIList(with identifiers: [NSManagedObjectID]) {
         uiMOC.performGroupedBlock {
-            self.topConversationsCache = identifiers.flatMap {
+            self.topConversationsCache = identifiers.compactMap {
                 (try? self.uiMOC.existingObject(with: $0)) as? ZMConversation
             }
             self.persistList()
@@ -87,8 +87,8 @@ extension TopConversationsDirectory {
         guard let ids = self.uiMOC.persistentStoreMetadata(forKey: topConversationsObjectIDKey) as? [String] else {
             return
         }
-        let managedObjectIDs = ids.flatMap(URL.init).flatMap { self.uiMOC.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: $0) }
-        self.topConversationsCache = managedObjectIDs.flatMap { self.uiMOC.object(with: $0) as? ZMConversation }
+        let managedObjectIDs = ids.compactMap(URL.init).flatMap { self.uiMOC.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: $0) }
+        self.topConversationsCache = managedObjectIDs.compactMap { self.uiMOC.object(with: $0) as? ZMConversation }
     }
 }
 

@@ -54,7 +54,7 @@ extension ZMUserSession {
 }
 
 // MARK: - Network Availability
-@objc public class ZMNetworkAvailabilityChangeNotification : NSObject {
+@objcMembers public class ZMNetworkAvailabilityChangeNotification : NSObject {
 
     private static let name = Notification.Name(rawValue: "ZMNetworkAvailabilityChangeNotification")
     

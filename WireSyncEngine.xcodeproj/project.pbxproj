@@ -3021,6 +3021,7 @@
 				INFOPLIST_FILE = "Tests/iOS Test Host/Test-Host-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.0;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -3035,6 +3036,7 @@
 				INFOPLIST_FILE = "Tests/iOS Test Host/Test-Host-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.0;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -3048,6 +3050,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.WireSyncEngine-Test-Host";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/Tests/Source/Test-Bridging-Header.h";
+				SWIFT_VERSION = 4.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WireSyncEngine Test Host.app/WireSyncEngine Test Host";
 				WRAPPER_EXTENSION = xctest;
 			};
@@ -3062,6 +3065,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.WireSyncEngine-Test-Host";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/Tests/Source/Test-Bridging-Header.h";
+				SWIFT_VERSION = 4.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WireSyncEngine Test Host.app/WireSyncEngine Test Host";
 				WRAPPER_EXTENSION = xctest;
 			};
@@ -3071,6 +3075,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0994E1E31B835C4900A51721 /* project-debug.xcconfig */;
 			buildSettings = {
+				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 			};
 			name = Debug;
 		};
@@ -3078,6 +3083,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0994E1E41B835C4900A51721 /* project.xcconfig */;
 			buildSettings = {
+				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 			};
 			name = Release;
 		};
@@ -3089,6 +3095,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/Resources/WireSyncEngine-ios-Info.plist";
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.$(PRODUCT_NAME:rfc1034identifier)";
+				SWIFT_VERSION = 4.0;
 			};
 			name = Debug;
 		};
@@ -3100,6 +3107,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/Resources/WireSyncEngine-ios-Info.plist";
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.$(PRODUCT_NAME:rfc1034identifier)";
+				SWIFT_VERSION = 4.0;
 			};
 			name = Release;
 		};

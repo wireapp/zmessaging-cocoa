@@ -77,7 +77,7 @@ import WireDataModel
 extension Array where Element: NSManagedObject {
     
     var objectIDs: [NSManagedObjectID] {
-        return self.flatMap { obj in
+        return self.compactMap { obj in
             guard !obj.objectID.isTemporaryID else { return nil }
             return obj.objectID
         }

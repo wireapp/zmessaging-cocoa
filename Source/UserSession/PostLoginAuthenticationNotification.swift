@@ -130,7 +130,7 @@ enum PostLoginAuthenticationEvent {
     }
 }
 
-public extension PostLoginAuthenticationNotification {
+@objc public extension PostLoginAuthenticationNotification {
     
     static func notifyAuthenticationInvalidated(error: NSError, context: NSManagedObjectContext) {
         self.notify(event: .authenticationInvalidated(error: error), context: context)

@@ -23,7 +23,7 @@ private let registeredOnThisDeviceKey = "ZMRegisteredOnThisDevice"
 private let registeredOnThisDeviceBeforeConversationInitializationKey = "ZMRegisteredOnThisDeviceBeforeConversationInitialization"
 
 
-extension NSManagedObjectContext {
+@objc extension NSManagedObjectContext {
     
     public var registeredOnThisDevice: Bool {
         get {

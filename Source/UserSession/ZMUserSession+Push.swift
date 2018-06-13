@@ -115,7 +115,7 @@ extension ZMUserSession: PushDispatcherOptionalClient {
     
 }
 
-extension ZMUserSession: ForegroundNotificationsDelegate {
+@objc extension ZMUserSession: ForegroundNotificationsDelegate {
     
     public func didReceieveLocal(notification: ZMLocalNotification, application: ZMApplication) {
         managedObjectContext.performGroupedBlock {

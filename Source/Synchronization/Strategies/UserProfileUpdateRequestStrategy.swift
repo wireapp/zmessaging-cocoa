@@ -275,7 +275,7 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
             return nil
         }
         
-        let existingHandles = Set(usersPayload.flatMap { $0["handle"] as? String })
+        let existingHandles = Set(usersPayload.compactMap { $0["handle"] as? String })
         for handle in possibleHandles {
             if !existingHandles.contains(handle) {
                 return handle

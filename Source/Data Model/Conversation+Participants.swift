@@ -139,7 +139,7 @@ internal struct ConversationParticipantRequestFactory {
         
         let path = "/conversations/\(conversation.remoteIdentifier!.transportString())/members"
         let payload = [
-            "users": participants.flatMap({ $0.remoteIdentifier?.transportString() })
+            "users": participants.compactMap { $0.remoteIdentifier?.transportString() }
         ]
         
         return ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
