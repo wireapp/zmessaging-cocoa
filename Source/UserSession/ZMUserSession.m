@@ -435,16 +435,8 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     // instead of relying on the tokens we have cached locally we should always ask the OS about the latest tokens
     [self.managedObjectContext performGroupedBlock:^{
-        
-        // (2) Refresh "normal" remote notification token
-        // we need to set the current push token to nil,
-        // otherwise if the push token didn't change it would not resend the request to the backend
-        self.managedObjectContext.pushToken = nil;
-        
-        // according to Apple's documentation, calling [registerForRemoteNotifications] should not cause additional overhead
-        // and should return the *existing* device token to the app delegate via [didRegisterForRemoteNotifications:] immediately
-        // this call is forwarded to the ZMUserSession+Background where the new token is set
-        [self.application registerForRemoteNotifications];
+                
+        // TODO jacob - trigger re-upload of pushkit token
         
         // (3) reset the preKeys for encrypting and decrypting
         [UserClient resetSignalingKeysInContext:self.managedObjectContext];
@@ -520,33 +512,13 @@ ZM_EMPTY_ASSERTING_INIT()
 
 @implementation ZMUserSession (PushToken)
 
-
-- (void)setPushToken:(NSData *)deviceToken;
-{
-    NSString *transportType = [self.apnsEnvironment transportTypeForTokenType:ZMAPNSTypeNormal];
-    NSString *appIdentifier = self.apnsEnvironment.appIdentifier;
-    ZMPushToken *token = nil;
-    if (transportType != nil && deviceToken != nil && appIdentifier != nil) {
-        token = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:appIdentifier transportType:transportType fallback:nil isRegistered:NO];
-    }
-    
-    if ((self.managedObjectContext.pushToken != token) && ! [self.managedObjectContext.pushToken isEqual:token]) {
-        self.managedObjectContext.pushToken = token;
-        if (![self.managedObjectContext forceSaveOrRollback]) {
-            ZMLogError(@"Failed to save push token");
-        }
-    }
-}
-
 - (void)setPushKitToken:(NSData *)deviceToken;
 {
-    ZMAPNSType apnsType = ZMAPNSTypeVoIP;
-    NSString *transportType = [self.apnsEnvironment transportTypeForTokenType:apnsType];
+    NSString *transportType = [self.apnsEnvironment transportTypeForTokenType:ZMAPNSTypeVoIP];
     NSString *appIdentifier = self.apnsEnvironment.appIdentifier;
     ZMPushToken *token = nil;
     if (transportType != nil && deviceToken != nil && appIdentifier != nil) {
-        NSString *fallback = [self.apnsEnvironment fallbackForTransportType:apnsType];
-        token = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:appIdentifier transportType:transportType fallback:fallback isRegistered:NO];
+        token = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:appIdentifier transportType:transportType isRegistered:NO];
     }
     if ((self.managedObjectContext.pushKitToken != token) && ! [self.managedObjectContext.pushKitToken isEqual:token]) {
         self.managedObjectContext.pushKitToken = token;

@@ -28,37 +28,28 @@ extension ZMSingleRequestSync : ZMRequestGenerator {}
 
 public class PushTokenStrategy : AbstractRequestStrategy, ZMSingleRequestTranscoder {
     
-    fileprivate var applicationTokenSync : ZMSingleRequestSync!
-    fileprivate var applicationTokenDeletionSync : ZMSingleRequestSync!
-
     fileprivate var pushKitTokenSync : ZMSingleRequestSync!
     fileprivate var pushKitTokenDeletionSync : ZMSingleRequestSync!
     
     var allRequestGenerators : [ZMRequestGenerator] {
-        return [applicationTokenSync, pushKitTokenSync, applicationTokenDeletionSync, pushKitTokenDeletionSync]
+        return [pushKitTokenSync, pushKitTokenDeletionSync]
     }
 
     public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
-        self.applicationTokenSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
-        self.applicationTokenDeletionSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
         self.pushKitTokenSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
         self.pushKitTokenDeletionSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
     }
     
     func pushToken(forSingleRequestSync sync:ZMSingleRequestSync) -> ZMPushToken? {
-        if (sync == applicationTokenSync || sync == applicationTokenDeletionSync) {
-            return managedObjectContext.pushToken
-        } else if (sync == pushKitTokenSync || sync == pushKitTokenDeletionSync) {
+        if (sync == pushKitTokenSync || sync == pushKitTokenDeletionSync) {
             return managedObjectContext.pushKitToken
         }
         preconditionFailure("Unknown sync")
     }
     
     func storePushToken(token: ZMPushToken?, forSingleRequestSync sync:ZMSingleRequestSync) {
-        if (sync == applicationTokenSync || sync == applicationTokenDeletionSync) {
-            managedObjectContext.pushToken = token;
-        } else if (sync == pushKitTokenSync || sync == pushKitTokenDeletionSync) {
+        if (sync == pushKitTokenSync || sync == pushKitTokenDeletionSync) {
             managedObjectContext.pushKitToken = token;
         } else {
             preconditionFailure("Unknown sync")
@@ -89,7 +80,7 @@ public class PushTokenStrategy : AbstractRequestStrategy, ZMSingleRequestTransco
         }
         
         if (token.isMarkedForDeletion) {
-            if (sync == pushKitTokenDeletionSync || sync == applicationTokenDeletionSync) {
+            if (sync == pushKitTokenDeletionSync) {
                 let path = PushTokenPath+"/"+encodedToken
                 return ZMTransportRequest(path:path, method:.methodDELETE, payload:nil)
             }
@@ -98,9 +89,6 @@ public class PushTokenStrategy : AbstractRequestStrategy, ZMSingleRequestTransco
             payload["token"] = encodedToken
             payload["app"] = token.appIdentifier
             payload["transport"] = token.transportType
-            if (nil != token.fallback) {
-                payload["fallback"] = token.fallback
-            }
             
             let selfUser = ZMUser.selfUser(in: managedObjectContext)
             if let userClientID = selfUser.selfClient()?.remoteIdentifier {
@@ -113,7 +101,7 @@ public class PushTokenStrategy : AbstractRequestStrategy, ZMSingleRequestTransco
     }
         
     public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
-        if (sync == pushKitTokenDeletionSync || sync == applicationTokenDeletionSync){
+        if (sync == pushKitTokenDeletionSync) {
             finishDeletion(with: response, sync: sync)
         } else {
             finishUpdate(with: response, sync: sync)
@@ -148,9 +136,7 @@ public class PushTokenStrategy : AbstractRequestStrategy, ZMSingleRequestTransco
               let transportType = payloadDictionary["transport"] as? String
         else { return nil }
         
-        let fallback = payloadDictionary["fallback"] as? String
-
-        return ZMPushToken(deviceToken:deviceToken, identifier:identifier, transportType:transportType, fallback:fallback, isRegistered:true)
+        return ZMPushToken(deviceToken:deviceToken, identifier:identifier, transportType:transportType, isRegistered:true)
     }
 }
 
@@ -161,13 +147,6 @@ extension PushTokenStrategy : ZMContextChangeTracker, ZMContextChangeTrackerSour
     }
     
     public func objectsDidChange(_ object: Set<NSManagedObject>) {
-        if let token = managedObjectContext.pushToken {
-            if token.isMarkedForDeletion {
-                prepareNextRequestIfNeeded(for: applicationTokenDeletionSync)
-            } else if !token.isRegistered {
-                prepareNextRequestIfNeeded(for: applicationTokenSync)
-            }
-        }
         if let token = managedObjectContext.pushKitToken {
             if (token.isMarkedForDeletion){
                 prepareNextRequestIfNeeded(for: pushKitTokenDeletionSync)
@@ -215,7 +194,6 @@ extension PushTokenStrategy : ZMEventConsumer {
         //    }
         // }
         // we ignore the payload and reregister both tokens whenever we receive a user.push-remove event
-        managedObjectContext.pushToken = managedObjectContext.pushToken?.unregisteredCopy()
         managedObjectContext.pushKitToken = managedObjectContext.pushKitToken?.unregisteredCopy()
     }
 }

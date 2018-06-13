@@ -18,14 +18,8 @@
 
 import Foundation
 
-@objc public enum PushTokenType: Int {
-    case voip
-    case regular
-}
-
 public struct PushToken {
-    let type: PushTokenType
-    let data: Data?
+    let data: Data
 }
 
 // Non-optional push client.
@@ -35,7 +29,7 @@ public protocol PushDispatcherClient: NSObjectProtocol {
 
 // Optional push client.
 public protocol PushDispatcherOptionalClient: PushDispatcherClient {
-    func updatedPushToken(to: PushToken)
+    func updatedPushToken(to: PushToken?)
     
     // Returns true if it must handle the given payload.
     func mustHandle(payload: [AnyHashable: Any]) -> Bool
@@ -69,9 +63,8 @@ public final class PushDispatcher: NSObject {
 
     private let clients = WeakSet<PushDispatcherOptionalClient>()
     public weak var fallbackClient: PushDispatcherClient? = nil
-    private var remoteNotificationHandler: ApplicationRemoteNotification!
     internal var pushRegistrant: PushKitRegistrant!
-    private(set) var lastKnownPushTokens: [PushTokenType: Data] = [:]
+    private(set) var lastKnownPushToken: PushToken?
     private let callbackQueue: DispatchQueue = DispatchQueue.main
     private let notificationsTracker: NotificationsTracker?
     
@@ -109,22 +102,17 @@ public final class PushDispatcher: NSObject {
             }
         }
         
-        self.enableAlertPushNotifications(with: didReceivePayload)
         self.enableVoIPPushNotifications(with: didReceivePayload)
     }
     
     // Adds one more consumer @c client. The consumer is not retained and is removed from the pool when being deallocated.
     func add(client: PushDispatcherOptionalClient) {
-        lastKnownPushTokens.forEach { type, data in
-            client.updatedPushToken(to: PushToken(type: type, data: data))
-        }
+        client.updatedPushToken(to: lastKnownPushToken)
         clients.add(client)
     }
     
-    private func updatePushToken(to token: PushToken) {
-        if let data = token.data {
-            self.lastKnownPushTokens[token.type] = data
-        }
+    internal func updatePushToken(to token: PushToken?) {
+        lastKnownPushToken = token
         
         self.clients.forEach { client in
             self.callbackQueue.async {
@@ -133,22 +121,13 @@ public final class PushDispatcher: NSObject {
         }
     }
     
-    private func enableAlertPushNotifications(with callback: @escaping DidReceivePushCallback) {
-        let didUpdateToken: (Data) -> () = { [weak self] (data: Data) in
-            self?.updatePushToken(to: PushToken(type: .regular, data: data))
-        }
-        remoteNotificationHandler = ApplicationRemoteNotification(didUpdateCredentials: didUpdateToken,
-                                                                  didReceivePayload: callback,
-                                                                  didInvalidateToken: {})
-    }
-    
     private func enableVoIPPushNotifications(with callback: @escaping DidReceivePushCallback) {
         let didUpdateToken: (Data) -> () = { [weak self] (data: Data) in
-            self?.updatePushToken(to: PushToken(type: .voip, data: data))
+            self?.updatePushToken(to: PushToken(data: data))
         }
         
         let didInvalidateToken: () -> () = { [weak self] in
-            self?.updatePushToken(to: PushToken(type: .voip, data: nil))
+            self?.updatePushToken(to: nil)
         }
         
         pushRegistrant = PushKitRegistrant(didUpdateCredentials: didUpdateToken,
@@ -156,21 +135,9 @@ public final class PushDispatcher: NSObject {
                                            didInvalidateToken: didInvalidateToken)
         pushRegistrant.notificationsTracker = self.notificationsTracker
         if let token = pushRegistrant.pushToken {
-            self.lastKnownPushTokens[.voip] = token
+            self.lastKnownPushToken = PushToken(data: token)
         }
     }
     
-    // Called to update the consumers with the new available `.regular` push token data.
-    public func didRegisteredForRemoteNotifications(with token: Data) {
-        self.updatePushToken(to: PushToken(type: .regular, data: token))
-    }
-    
-    // Can be called to dispatch the newcoming notification to the consumers. Usually used from the AppDelegate's
-    // -application:didReceiveRemoteNotification:completionHandler:
-    public func didReceiveRemoteNotification(_ payload: [AnyHashable: Any],
-                                             fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
-        self.remoteNotificationHandler.didReceiveRemoteNotification(payload,
-                                                                    fetchCompletionHandler: fetchCompletionHandler)
-    }
 }
 

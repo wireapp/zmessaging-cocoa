@@ -36,7 +36,7 @@ static NSString *ZMLogTag = @"Push";
 
 - (void)setupPushNotificationsForApplication:(id<ZMApplication>)application
 {
-    [application registerForRemoteNotifications];
+    NOT_USED(application);
     
 #if TARGET_OS_SIMULATOR
     ZMLogInfo(@"Skipping request for remote notification permission on simulator.");    

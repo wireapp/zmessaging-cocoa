@@ -24,37 +24,17 @@ extension SessionManager {
     public func registerSessionForRemoteNotificationsIfNeeded(_ session: ZMUserSession) {
         session.managedObjectContext.performGroupedBlock {
             // Refresh the tokens if needed
-            self.pushDispatcher.lastKnownPushTokens.forEach { type, actualToken in
-                switch type {
-                case .voip:
-                    if actualToken != session.managedObjectContext.pushKitToken?.deviceToken {
-                        session.managedObjectContext.pushKitToken = nil
-                        session.setPushKitToken(actualToken)
-                    }
-                case .regular:
-                    if actualToken != session.managedObjectContext.pushToken?.deviceToken {
-                        session.managedObjectContext.pushToken = nil
-                        session.setPushToken(actualToken)
-                    }
+            if let token = self.pushDispatcher.lastKnownPushToken {
+                if token.data != session.managedObjectContext.pushKitToken?.deviceToken {
+                    session.managedObjectContext.pushKitToken = nil
+                    session.setPushKitToken(token.data)
                 }
             }
-            
+                        
             session.registerForRemoteNotifications()
         }
     }
-    
-    // Must be called when the AppDelegate receives the new push token.
-    public func didRegisteredForRemoteNotifications(with token: Data) {
-        self.pushDispatcher.didRegisteredForRemoteNotifications(with: token)
-    }
-    
-    // Must be called when the AppDelegate receives the new push notification.
-    @objc(didReceiveRemoteNotification:fetchCompletionHandler:)
-    public func didReceiveRemote(notification: [AnyHashable: Any],
-                                fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
-        self.pushDispatcher.didReceiveRemoteNotification(notification, fetchCompletionHandler: fetchCompletionHandler)
-    }
-    
+        
     // Must be called when the AppDelegate receives the new local push notification.
     @objc(didReceiveLocalNotification:application:)
     public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {

@@ -43,35 +43,23 @@ extension Dictionary {
 
 extension ZMUserSession: PushDispatcherOptionalClient {
     
-    public func updatedPushToken(to newToken: PushToken) {
+    public func updatedPushToken(to newToken: PushToken?) {
         
         guard let managedObjectContext = self.managedObjectContext else {
             return
         }
         
-        switch newToken.type {
-        case .regular:
-            if let data = newToken.data {
-                let oldToken = self.managedObjectContext.pushToken?.deviceToken
-                if oldToken == nil || oldToken != data {
-                    managedObjectContext.pushToken = nil
-                    self.setPushToken(data)
-                    managedObjectContext.forceSaveOrRollback()
-                }
-            }
-        case .voip:
-            if let data = newToken.data {
-                // Check if token is changed before triggering the request
-                if managedObjectContext.pushKitToken == nil || managedObjectContext.pushKitToken?.deviceToken != data {
-                    managedObjectContext.pushKitToken = nil
-                    self.setPushKitToken(data)
-                    managedObjectContext.forceSaveOrRollback()
-                }
-            }
-            else {
-                self.deletePushKitToken()
+        if let data = newToken?.data {
+            // Check if token is changed before triggering the request
+            if managedObjectContext.pushKitToken == nil || managedObjectContext.pushKitToken?.deviceToken != data {
+                managedObjectContext.pushKitToken = nil
+                self.setPushKitToken(data)
                 managedObjectContext.forceSaveOrRollback()
             }
+        }
+        else {
+            self.deletePushKitToken()
+            managedObjectContext.forceSaveOrRollback()
         }
     }
 
@@ -183,9 +171,9 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
 
 // Testing
 extension ZMUserSession {
-    @objc(updatePushKitTokenTo:forType:)
-    public func updatedPushToken(to data: Data, for type: PushTokenType) {
-        self.updatedPushToken(to: PushToken(type: type, data: data))
+    @objc(updatePushKitTokenTo:)
+    public func updatedPushToken(to data: Data) {
+        self.updatedPushToken(to: PushToken(data: data))
     }
 }
 

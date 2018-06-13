@@ -22,13 +22,13 @@ import WireTesting
 @testable import WireSyncEngine
 
 final class TestPushDispatcherClient: NSObject, PushDispatcherOptionalClient {
-    var pushTokens: [PushToken] = []
+    var pushTokens: [PushToken?] = []
     var canHandlePayloads: [[AnyHashable: Any]] = []
     var receivedPayloads: [[AnyHashable: Any]] = []
     
     var canHandleNext: Bool = true
     
-    func updatedPushToken(to token: PushToken) {
+    func updatedPushToken(to token: PushToken?) {
         pushTokens.append(token)
     }
     
@@ -103,18 +103,17 @@ public final class PushDispatcherTests: ZMTBaseTest {
         let client = TestPushDispatcherClient()
         sut.add(client: client)
         // WHEN
-        sut.didRegisteredForRemoteNotifications(with: type(of: self).token)
+        sut.updatePushToken(to: PushToken(data: type(of: self).token))
         
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         // THEN
         XCTAssertEqual(client.pushTokens.count, 1)
-        XCTAssertEqual(client.pushTokens[0].data, type(of: self).token)
-        XCTAssertEqual(client.pushTokens[0].type, .regular)
+        XCTAssertEqual(client.pushTokens[0]?.data, type(of: self).token)
     }
     
     func testThatItForwardsThePushTokenToNewObserver() {
         // GIVEN
-        sut.didRegisteredForRemoteNotifications(with: type(of: self).token)
+        sut.updatePushToken(to: PushToken(data: type(of: self).token))
         let client = TestPushDispatcherClient()
         
         // WHEN
@@ -122,8 +121,7 @@ public final class PushDispatcherTests: ZMTBaseTest {
         
         // THEN
         XCTAssertEqual(client.pushTokens.count, 1)
-        XCTAssertEqual(client.pushTokens[0].data, type(of: self).token)
-        XCTAssertEqual(client.pushTokens[0].type, .regular)
+        XCTAssertEqual(client.pushTokens[0]?.data, type(of: self).token)
     }
     
     func testThatItAsksObserverIfItCanHandleThePush() {

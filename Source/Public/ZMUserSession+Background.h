@@ -55,7 +55,6 @@
 // PRIVATE
 @interface ZMUserSession (PushToken)
 
-- (void)setPushToken:(NSData *)deviceToken;
 - (void)setPushKitToken:(NSData *)deviceToken;
 
 /// deletes the pushKit token from the backend
