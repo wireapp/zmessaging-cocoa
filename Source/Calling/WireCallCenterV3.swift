@@ -846,22 +846,22 @@ public struct CallEvent {
     
     /// Returns conversations with active calls
     public func activeCallConversations(in userSession: ZMUserSession) -> [ZMConversation] {
-        let conversations = nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
+        let conversations = nonIdleCalls.compactMap { (key: UUID, value: CallState) -> ZMConversation? in
             if value == CallState.established {
                 return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
             } else {
                 return nil
             }
-        })
+        }
         
         return conversations
     }
     
     // Returns conversations with a non idle call state
     public func nonIdleCallConversations(in userSession: ZMUserSession) -> [ZMConversation] {
-        let conversations = nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
+        let conversations = nonIdleCalls.compactMap { (key: UUID, value: CallState) -> ZMConversation? in
             return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
-        })
+        }
         
         return conversations
     }

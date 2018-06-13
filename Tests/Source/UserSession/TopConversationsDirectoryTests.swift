@@ -175,7 +175,7 @@ class TopConversationsDirectoryTests : MessagingTest {
         
         // THEN
         XCTAssertEqual(self.sut.topConversations.map { $0.objectID }, expectedConversationsIds)
-        XCTAssertEqual(self.sut.topConversations.flatMap { $0.managedObjectContext }, [self.uiMOC, self.uiMOC])
+        XCTAssertEqual(self.sut.topConversations.compactMap { $0.managedObjectContext }, [self.uiMOC, self.uiMOC])
     }
     
     func testThatItDoesNotReturnConversationsIfTheyAreDeleted() {

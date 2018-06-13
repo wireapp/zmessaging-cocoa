@@ -152,7 +152,7 @@ extension AddressBookUploadRequestStrategyTest {
         requests.append(sut.nextRequest())
         
         // then
-        XCTAssertEqual(requests.flatMap { $0 }.count, 1)
+        XCTAssertEqual(requests.compactMap { $0 }.count, 1)
     }
     
     func testThatItReturnsARequestWhenTheABIsMarkedForUploadAgain() {

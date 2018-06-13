@@ -87,7 +87,7 @@ private let topConversationsObjectIDKey = "WireTopConversationsObjectIDKey"
         guard let ids = self.uiMOC.persistentStoreMetadata(forKey: topConversationsObjectIDKey) as? [String] else {
             return
         }
-        let managedObjectIDs = ids.compactMap(URL.init).flatMap { self.uiMOC.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: $0) }
+        let managedObjectIDs = ids.compactMap(URL.init).compactMap { self.uiMOC.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: $0) }
         self.topConversationsCache = managedObjectIDs.compactMap { self.uiMOC.object(with: $0) as? ZMConversation }
     }
 }

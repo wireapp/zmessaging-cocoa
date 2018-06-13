@@ -112,7 +112,7 @@ class SessionManagerTests: IntegrationTest {
         XCTAssertNotNil(delegate.userSession)
         XCTAssertNil(sut?.unauthenticatedSession)
         withExtendedLifetime(token) {
-            XCTAssertEqual([delegate.userSession].flatMap { $0 }, observer.createdUserSession)
+            XCTAssertEqual([delegate.userSession].compactMap { $0 }, observer.createdUserSession)
         }
     }
     

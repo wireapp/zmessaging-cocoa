@@ -35,8 +35,8 @@ extension SearchResult {
         }
         
         let isHandleQuery = query.hasPrefix("@")
-        let queryWithoutAtSymbol = (isHandleQuery ? query.substring(from: query.index(after: query.startIndex)) : query).lowercased()
-        
+        let queryWithoutAtSymbol = (isHandleQuery ? String(query[query.index(after: query.startIndex)...]) : query).lowercased()
+
         let filteredDocuments = documents.filter { (document) -> Bool in
             let name = document["name"] as? String
             let handle = document["handle"] as? String

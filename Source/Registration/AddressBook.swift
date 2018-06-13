@@ -59,7 +59,7 @@ extension AddressBookAccessor {
     /// Returns valid contacts matching the search query, with normalized email and phone numbers
     func contacts(matchingQuery: String) -> [ZMAddressBookContact] {
         return self.rawContacts(matchingQuery: matchingQuery)
-            .flatMap { ZMAddressBookContact(contact: $0, phoneNumberNormalizer: self.phoneNumberNormalizer) }
+            .compactMap { ZMAddressBookContact(contact: $0, phoneNumberNormalizer: self.phoneNumberNormalizer) }
     }
     
     /// Encodes an arbitraty part the address book asynchronously. Will invoke the completion handler when done.
@@ -332,9 +332,9 @@ extension ZMAddressBookContact {
         self.middleName = contact.middleName
         self.nickname = contact.nickname
         self.organization = contact.organization
-        self.emailAddresses = contact.rawEmails.flatMap { $0.validatedEmail }
+        self.emailAddresses = contact.rawEmails.compactMap { $0.validatedEmail }
         self.rawPhoneNumbers = contact.rawPhoneNumbers
-        self.phoneNumbers = self.rawPhoneNumbers.flatMap { phoneNumberNormalizer($0) }
+        self.phoneNumbers = self.rawPhoneNumbers.compactMap { phoneNumberNormalizer($0) }
         self.localIdentifier = contact.localIdentifier
         
         // ignore contacts with no email nor phones

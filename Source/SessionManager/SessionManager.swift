@@ -235,7 +235,7 @@ public protocol SessionManagerSwitchingDelegate: class {
         let group = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
         let flowManager = FlowManager(mediaManager: mediaManager)
 
-        let serverNames = [environment.backendURL, environment.backendWSURL].flatMap{ $0.host }
+        let serverNames = [environment.backendURL, environment.backendWSURL].compactMap { $0.host }
         let reachability = ZMReachability(serverNames: serverNames, group: group)
         let unauthenticatedSessionFactory = UnauthenticatedSessionFactory(environment: environment, reachability: reachability)
         let authenticatedSessionFactory = AuthenticatedSessionFactory(
