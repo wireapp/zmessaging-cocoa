@@ -18,7 +18,7 @@
 
 import Foundation
 
-extension ZMUserSession {
+@objc extension ZMUserSession {
     
     public var callCenter : WireCallCenterV3? {
         return managedObjectContext.zm_callCenter
