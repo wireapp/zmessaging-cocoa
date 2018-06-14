@@ -71,7 +71,7 @@ enum PostLoginAuthenticationEvent {
     case accountDeleted
 }
 
-@objc public class PostLoginAuthenticationNotification : NSObject {
+@objcMembers public class PostLoginAuthenticationNotification : NSObject {
     
     static private let name = Notification.Name(rawValue: "PostLoginAuthenticationNotification")
     static private let eventKey = "event"

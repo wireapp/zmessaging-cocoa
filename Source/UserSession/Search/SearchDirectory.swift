@@ -19,7 +19,7 @@
 import Foundation
 
 
-public class SearchDirectory : NSObject {
+@objcMembers public class SearchDirectory : NSObject {
     
     static let userIDsMissingProfileImage = SearchDirectoryUserIDTable()
     

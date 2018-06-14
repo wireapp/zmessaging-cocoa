@@ -139,7 +139,7 @@ public protocol SessionManagerSwitchingDelegate: class {
 ///
 
 
-@objc public class SessionManager : NSObject, SessionManagerType, UserSessionSource {
+@objcMembers public class SessionManager : NSObject, SessionManagerType, UserSessionSource {
 
     /// Maximum number of accounts which can be logged in simultanously
     public static let maxNumberAccounts = 3

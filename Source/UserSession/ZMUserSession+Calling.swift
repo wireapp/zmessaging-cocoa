@@ -33,7 +33,7 @@ import Foundation
         return sessionManager.callKitDelegate
     }
     
-    var useConstantBitRateAudio : Bool {
+    @objc var useConstantBitRateAudio : Bool {
         set {
             managedObjectContext.zm_useConstantBitRateAudio = newValue
             callCenter?.useConstantBitRateAudio = newValue
