@@ -24,7 +24,6 @@
 #include "ZMUserSessionTestsBase.h"
 #import "ZMPushToken.h"
 #import "UILocalNotification+UserInfo.h"
-#import "ZMUserSession+UserNotificationCategories.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @interface ZMUserSessionTests : ZMUserSessionTestsBase
@@ -892,20 +891,6 @@
     // then
     XCTAssertFalse(self.uiMOC.pushKitToken.isRegistered);
 }
-
-//- (void)testThatIt_DoesNot_ForwardsRemoteNotificationsWhileRunning_WhenNotLoggedIn;
-//{
-//    // expect
-//    NSDictionary *remoteNotification = @{@"a": @"b"};
-//    [[self.operationLoop reject] fetchEventsFromPushChannelPayload:remoteNotification completionHandler:OCMOCK_ANY source:ZMPushNotficationTypeAlert];
-//    
-//    // when
-//    [self.sut application:OCMOCK_ANY didReceiveRemoteNotification:remoteNotification fetchCompletionHandler:^(UIBackgroundFetchResult result) {
-//        XCTAssertNotEqual(result, UIBackgroundFetchResultFailed);
-//    }];
-//    
-//    [self.operationLoop verify];
-//}
 
 - (void)checkThatItCallsTheDelegateForNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo actionIdentifier:(NSString *)actionIdentifier withBlock:(void (^)(id mockDelegate))block
 {

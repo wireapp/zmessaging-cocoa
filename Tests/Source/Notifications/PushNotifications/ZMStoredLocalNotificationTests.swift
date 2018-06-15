@@ -64,7 +64,7 @@ class ZMStoredLocalNotificationTests: MessagingTest {
         // then
         XCTAssertEqual(storedNote.conversation, conversation)
         XCTAssertEqual(storedNote.senderUUID, sender.remoteIdentifier)
-        XCTAssertEqual(storedNote.category, ZMConversationCategoryIncludingLike)
+        XCTAssertEqual(storedNote.category, WireSyncEngine.PushNotificationCategory.conversationIncludingLike.rawValue)
         XCTAssertEqual(storedNote.textInput, textInput)
     }
 }

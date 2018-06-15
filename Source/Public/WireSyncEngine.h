@@ -45,7 +45,6 @@
 #import <WireSyncEngine/ZMHotFixDirectory.h>
 #import <WireSyncEngine/ZMUserSessionRegistrationNotification.h>
 #import <WireSyncEngine/UILocalNotification+UserInfo.h>
-#import <WireSyncEngine/ZMUserSession+UserNotificationCategories.h>
 #import <WireSyncEngine/ZMStoredLocalNotification.h>
 #import <WireSyncEngine/ZMPushToken.h>
 #import <WireSyncEngine/ZMTyping.h>

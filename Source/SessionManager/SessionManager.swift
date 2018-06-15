@@ -351,6 +351,8 @@ public protocol SessionManagerSwitchingDelegate: class {
         
         super.init()
         
+        // Configure push notification categories and register for voIP push notifications
+        self.application.registerUserNotificationSettings(UIUserNotificationSettings(types: [.alert, .badge, .sound], categories: PushNotificationCategory.allCategories))
         self.pushRegistry.delegate = self
         self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
         self.urlHandler = SessionManagerURLHandler(userSessionSource: self)

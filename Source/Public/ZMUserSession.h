@@ -108,9 +108,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 /// The sync has been completed as least once
 @property (nonatomic, readonly) BOOL hasCompletedInitialSync;
 
-/// Request the push token from iOS and send it to the backend.
-- (void)registerForRemoteNotifications;
-
 @end
 
 

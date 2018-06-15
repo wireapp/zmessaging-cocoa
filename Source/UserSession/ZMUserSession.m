@@ -423,14 +423,6 @@ ZM_EMPTY_ASSERTING_INIT()
     }];
 }
 
-- (void)registerForRemoteNotifications
-{
-    [self.managedObjectContext performGroupedBlock:^{
-        // Request the current token, the rest is taken care of
-        [self setupPushNotificationsForApplication:self.application];
-    }];
-}
-
 - (void)resetPushTokens
 {
     // instead of relying on the tokens we have cached locally we should always ask the OS about the latest tokens

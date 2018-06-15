@@ -82,7 +82,7 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
 
     public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
         
-        if let category = notification.category, category == ZMIncomingCallCategory {
+        if let category = notification.category, category == PushNotificationCategory.incomingCall.rawValue {
             self.handleTrackingOnCallNotification(notification)
         }
         
@@ -106,16 +106,16 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
 
         if let concreteIdentifier = identifier {
             switch concreteIdentifier {
-            case ZMCallIgnoreAction:
+            case PushNotificationCategory.CallAction.ignore.rawValue:
                 self.ignoreCall(with: localNotification, completionHandler: completionHandler)
                 return
-            case ZMConversationMuteAction:
+            case PushNotificationCategory.ConversationAction.mute.rawValue:
                 self.muteConversation(with: localNotification, completionHandler: completionHandler)
                 return
-            case ZMMessageLikeAction:
+            case PushNotificationCategory.ConversationAction.like.rawValue:
                 self.likeMessage(with: localNotification, completionHandler: completionHandler)
                 return
-            case ZMConversationDirectReplyAction:
+            case PushNotificationCategory.ConversationAction.reply.rawValue:
                 self.reply(with: localNotification, message: textInput, completionHandler: completionHandler)
                 return
             default:
