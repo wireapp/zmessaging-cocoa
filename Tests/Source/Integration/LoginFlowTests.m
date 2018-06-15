@@ -379,13 +379,18 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
 @implementation LoginFlowTests (PushToken)
 
-- (void)testThatItRegisteresThePushTokenWithTheBackend;
+- (void)testThatItRegistersThePushTokenWithTheBackend;
 {
+    // given
     NSData *deviceToken = [@"asdfasdf" dataUsingEncoding:NSUTF8StringEncoding];
     NSString *deviceTokenAsHex = @"6173646661736466";
     XCTAssertTrue([self login]);
     
-    [self.userSession setPushToken:deviceToken];
+    // then
+    XCTAssertTrue([self.pushRegistry.desiredPushTypes containsObject:PKPushTypeVoIP]);
+    
+    // when
+    [self.pushRegistry updatePushToken:deviceToken];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

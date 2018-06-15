@@ -46,6 +46,10 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
         
     }
     
+    func updatePushToken(for session: ZMUserSession) {
+        
+    }
+    
     deinit {
         try? FileManager.default.removeItem(at: MockSessionManager.accountManagerURL)
     }

@@ -435,16 +435,17 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     // instead of relying on the tokens we have cached locally we should always ask the OS about the latest tokens
     [self.managedObjectContext performGroupedBlock:^{
-                
-        // TODO jacob - trigger re-upload of pushkit token
         
-        // (3) reset the preKeys for encrypting and decrypting
+        // (1) Remove stored token so that we always attempt to upload current token to BE
+        self.managedObjectContext.pushKitToken = nil;
+        [self.sessionManager updatePushTokenFor:self];
+        
+        // (2) reset the preKeys for encrypting and decrypting
         [UserClient resetSignalingKeysInContext:self.managedObjectContext];
 
         if (![self.managedObjectContext forceSaveOrRollback]) {
             ZMLogError(@"Failed to save push token after refresh");
         }
-        
     }];
 }
 

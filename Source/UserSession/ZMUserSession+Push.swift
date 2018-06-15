@@ -41,40 +41,9 @@ extension Dictionary {
     }
 }
 
-extension ZMUserSession: PushDispatcherOptionalClient {
+extension ZMUserSession {
     
-    public func updatedPushToken(to newToken: PushToken?) {
-        
-        guard let managedObjectContext = self.managedObjectContext else {
-            return
-        }
-        
-        if let data = newToken?.data {
-            // Check if token is changed before triggering the request
-            if managedObjectContext.pushKitToken == nil || managedObjectContext.pushKitToken?.deviceToken != data {
-                managedObjectContext.pushKitToken = nil
-                self.setPushKitToken(data)
-                managedObjectContext.forceSaveOrRollback()
-            }
-        }
-        else {
-            self.deletePushKitToken()
-            managedObjectContext.forceSaveOrRollback()
-        }
-    }
-
-    public func mustHandle(payload: [AnyHashable: Any]) -> Bool {
-        requireInternal(Thread.isMainThread, "Should be on main thread")
-        guard let moc = self.managedObjectContext, let accountId = payload.accountId() else {
-            return false
-        }
-        
-        return accountId == ZMUser.selfUser(in: moc).remoteIdentifier
-    }
-    
-    public func receivedPushNotification(with payload: [AnyHashable: Any],
-                                         from source: ZMPushNotficationType,
-                                         completion: ZMPushNotificationCompletionHandler?) {
+    public func receivedPushNotification(with payload: [AnyHashable: Any], completion: @escaping () -> Void) {
         guard let syncMoc = self.syncManagedObjectContext else {
             return
         }
@@ -86,18 +55,18 @@ extension ZMUserSession: PushDispatcherOptionalClient {
             
             if notAuthenticated {
                 log.debug("Not displaying notification because app is not authenticated")
-                completion?(.success)
+                completion()
                 return
             }
             
             // once notification processing is finished, it's safe to update the badge
-            let completionHandler: ZMPushNotificationCompletionHandler = { result in
-                completion?(result)
+            let completionHandler = {
+                completion()
                 let unreadCount = Int(ZMConversation.unreadConversationCount(in: syncMoc))
                 self.sessionManager?.updateAppIconBadge(accountID: accountID, unreadCount: unreadCount)
             }
             
-            self.operationLoop.fetchEvents(fromPushChannelPayload: payload, completionHandler: completionHandler, source: source)
+            self.operationLoop.fetchEvents(fromPushChannelPayload: payload, completionHandler: completionHandler)
         }
     }
     
@@ -168,12 +137,3 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
         completionHandler();
     }
 }
-
-// Testing
-extension ZMUserSession {
-    @objc(updatePushKitTokenTo:)
-    public func updatedPushToken(to data: Data) {
-        self.updatedPushToken(to: PushToken(data: data))
-    }
-}
-

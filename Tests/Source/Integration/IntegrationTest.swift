@@ -117,6 +117,7 @@ extension IntegrationTest {
         ZMPersistentCookieStorage.setDoNotPersistToKeychain(!useRealKeychain)
         StorageStack.shared.createStorageAsInMemory = useInMemoryStore
         
+        pushRegistry = PushRegistryMock(queue: nil)
         application = ApplicationMock()
         mockTransportSession = MockTransportSession(dispatchGroup: self.dispatchGroup)
         mockTransportSession.cookieStorage = ZMPersistentCookieStorage(forServerName: "ztest.example.com", userIdentifier: currentUserIdentifier)
@@ -226,6 +227,7 @@ extension IntegrationTest {
             reachability: reachability,
             delegate: self,
             application: application,
+            pushRegistry: pushRegistry,
             dispatchGroup: self.dispatchGroup
         )
         

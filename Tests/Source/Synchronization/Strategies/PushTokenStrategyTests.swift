@@ -155,8 +155,7 @@ extension PushTokenStrategyTests {
         guard let request = req else {return XCTFail()}
         let expectedPayload = ["token": "0c11633011485c4558615009045b022d565e0c380a5330444d3a0f4b185a014a",
                                "app": "com.wire.zclient",
-                               "transport": "APNS_VOIP",
-                               "fallback" : "APNS"]
+                               "transport": "APNS_VOIP"]
         
         XCTAssertEqual(request.method, .methodPOST)
         XCTAssertEqual(request.path, "/push/tokens")
@@ -197,7 +196,6 @@ extension PushTokenStrategyTests {
         let expectedPayload = ["token": "0c11633011485c4558615009045b022d565e0c380a5330444d3a0f4b185a014a",
                                "app": "com.wire.zclient",
                                "transport": "APNS_VOIP",
-                               "fallback" : "APNS",
                                "client": client.remoteIdentifier!]
         
         XCTAssertEqual(request.method, .methodPOST)
