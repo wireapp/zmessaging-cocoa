@@ -186,7 +186,7 @@ extension SearchTask {
         var query = query
         
         if query.hasPrefix("@") {
-            query = query.substring(from: query.index(after: query.startIndex))
+            query = String(query[query.index(after: query.startIndex)...])
         }
         
         let url = NSURLComponents()
@@ -269,7 +269,7 @@ extension SearchTask {
         var handle = handle.lowercased()
         
         if handle.hasPrefix("@") {
-            handle = handle.substring(from: handle.index(after: handle.startIndex))
+            handle = String(handle[handle.index(after: handle.startIndex)...])
         }
         
         let url = NSURLComponents()

@@ -52,7 +52,7 @@ class SearchDirectoryUserIDTableTests: MessagingTest {
     }
 
     func extractIds(_ users: Set<ZMSearchUser>) -> Set<UUID> {
-        return Set(users.flatMap { $0.remoteIdentifier })
+        return Set(users.compactMap { $0.remoteIdentifier })
     }
 
     func testThatItRetrievesAllUserIds() {

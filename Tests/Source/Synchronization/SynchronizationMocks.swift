@@ -24,7 +24,7 @@ import avs
 @testable import WireSyncEngine
 
 
-@objc(MockApplicationStatus)
+@objcMembers
 public class MockApplicationStatus : NSObject, ApplicationStatus, DeliveryConfirmationDelegate, ClientRegistrationDelegate, ZMRequestCancellation {
 
 
@@ -117,6 +117,7 @@ class MockAuthenticationStatus: ZMAuthenticationStatus {
 
 }
 
+@objcMembers
 class ZMMockClientRegistrationStatus: ZMClientRegistrationStatus {
     var mockPhase : ZMClientRegistrationPhase?
     var mockReadiness :Bool = true

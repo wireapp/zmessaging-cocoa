@@ -18,7 +18,7 @@
 
 import Foundation
 
-@objc public class UserExpirationObserver: NSObject, ZMTimerClient {
+@objcMembers public class UserExpirationObserver: NSObject, ZMTimerClient {
     internal private(set) var expiringUsers: Set<ZMUser> = Set()
     private var timerForUser: [ZMTimer: ZMUser] = [:]
     private let managedObjectContext: NSManagedObjectContext

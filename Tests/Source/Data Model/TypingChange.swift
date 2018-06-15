@@ -18,7 +18,7 @@
 
 import Foundation
 
-@objc
+@objcMembers
 public class TypingChange : NSObject {
     
     let conversation : ZMConversation

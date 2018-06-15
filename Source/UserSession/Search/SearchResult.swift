@@ -35,8 +35,8 @@ extension SearchResult {
         }
         
         let isHandleQuery = query.hasPrefix("@")
-        let queryWithoutAtSymbol = (isHandleQuery ? query.substring(from: query.index(after: query.startIndex)) : query).lowercased()
-        
+        let queryWithoutAtSymbol = (isHandleQuery ? String(query[query.index(after: query.startIndex)...]) : query).lowercased()
+
         let filteredDocuments = documents.filter { (document) -> Bool in
             let name = document["name"] as? String
             let handle = document["handle"] as? String
@@ -71,9 +71,9 @@ extension SearchResult {
     
     func copy(on context: NSManagedObjectContext) -> SearchResult {
         
-        let copiedContacts = contacts.flatMap({ context.object(with: $0.objectID) as? ZMUser })
-        let copiedTeamMembers = teamMembers.flatMap({ context.object(with: $0.objectID) as? Member })
-        let copiedConversations = conversations.flatMap({ context.object(with: $0.objectID) as? ZMConversation })
+        let copiedContacts = contacts.compactMap { context.object(with: $0.objectID) as? ZMUser }
+        let copiedTeamMembers = teamMembers.compactMap { context.object(with: $0.objectID) as? Member }
+        let copiedConversations = conversations.compactMap { context.object(with: $0.objectID) as? ZMConversation }
         
         return SearchResult(contacts: copiedContacts, teamMembers: copiedTeamMembers, addressBook: addressBook, directory: directory, conversations: copiedConversations, services: services)
     }

@@ -20,7 +20,7 @@ import Foundation
 
 private let log = ZMSLog(tag: "SessionManager")
 
-extension SessionManager {
+@objc extension SessionManager {
     public func registerSessionForRemoteNotificationsIfNeeded(_ session: ZMUserSession) {
         session.managedObjectContext.performGroupedBlock {
             // Refresh the tokens if needed
@@ -97,7 +97,7 @@ extension SessionManager {
         var foundSession: Bool = false
         self.backgroundUserSessions.forEach { accountId, backgroundSession in
             if session == backgroundSession, let account = self.accountManager.account(with: accountId) {
-                self.select(account) { _ in
+                self.select(account) {
                     completion()
                 }
                 foundSession = true

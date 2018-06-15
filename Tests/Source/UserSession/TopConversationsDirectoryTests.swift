@@ -175,7 +175,7 @@ class TopConversationsDirectoryTests : MessagingTest {
         
         // THEN
         XCTAssertEqual(self.sut.topConversations.map { $0.objectID }, expectedConversationsIds)
-        XCTAssertEqual(self.sut.topConversations.flatMap { $0.managedObjectContext }, [self.uiMOC, self.uiMOC])
+        XCTAssertEqual(self.sut.topConversations.compactMap { $0.managedObjectContext }, [self.uiMOC, self.uiMOC])
     }
     
     func testThatItDoesNotReturnConversationsIfTheyAreDeleted() {
@@ -296,7 +296,7 @@ extension TopConversationsDirectoryTests {
     func testTopConversationFetchingPerformance() {
 //        measured [Time, seconds] average: 0.002, relative standard deviation: 41.686%, values: [0.005234, 0.001380, 0.001704, 0.001740, 0.002017, 0.002177, 0.002234, 0.002532, 0.002773, 0.003041], performanceMetricID:com.apple.XCTPerformanceMetric_WallClockTime, baselineName: "Local Baseline", baselineAverage: 0.011, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.100, maxStandardDeviation: 0.100
 
-        measureMetrics(type(of: self).defaultPerformanceMetrics(), automaticallyStartMeasuring: false) {
+        measureMetrics(Swift.type(of: self).defaultPerformanceMetrics, automaticallyStartMeasuring: false) {
             // given
             (0..<20).forEach {
                 self.createConversation(in: self.uiMOC, fillWithNew: $0, old: 5)

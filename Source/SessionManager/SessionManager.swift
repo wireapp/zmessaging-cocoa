@@ -139,7 +139,7 @@ public protocol SessionManagerSwitchingDelegate: class {
 ///
 
 
-@objc public class SessionManager : NSObject, SessionManagerType, UserSessionSource {
+@objcMembers public class SessionManager : NSObject, SessionManagerType, UserSessionSource {
 
     /// Maximum number of accounts which can be logged in simultanously
     public static let maxNumberAccounts = 3
@@ -235,7 +235,7 @@ public protocol SessionManagerSwitchingDelegate: class {
         let group = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
         let flowManager = FlowManager(mediaManager: mediaManager)
 
-        let serverNames = [environment.backendURL, environment.backendWSURL].flatMap{ $0.host }
+        let serverNames = [environment.backendURL, environment.backendWSURL].compactMap { $0.host }
         let reachability = ZMReachability(serverNames: serverNames, group: group)
         let unauthenticatedSessionFactory = UnauthenticatedSessionFactory(environment: environment, reachability: reachability)
         let authenticatedSessionFactory = AuthenticatedSessionFactory(
@@ -822,7 +822,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
 }
 
 extension SessionManager {
-    dynamic fileprivate func applicationDidBecomeActive(_ note: Notification) {
+    @objc dynamic fileprivate func applicationDidBecomeActive(_ note: Notification) {
         notificationsTracker?.dispatchEvent()
     }
 }

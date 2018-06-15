@@ -143,7 +143,7 @@ internal enum AssetTransportError: Error {
             return deleteRequestSync?.nextRequest()
         }
         
-        let sync = ProfileImageSize.allSizes.filter(updateStatus.hasImageToUpload).flatMap { upstreamRequestSyncs[$0] }.first
+        let sync = ProfileImageSize.allSizes.filter(updateStatus.hasImageToUpload).compactMap { upstreamRequestSyncs[$0] }.first
         sync?.readyForNextRequestIfNotBusy()
         return sync?.nextRequest()
     }

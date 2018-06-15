@@ -112,7 +112,7 @@ class SessionManagerTests: IntegrationTest {
         XCTAssertNotNil(delegate.userSession)
         XCTAssertNil(sut?.unauthenticatedSession)
         withExtendedLifetime(token) {
-            XCTAssertEqual([delegate.userSession].flatMap { $0 }, observer.createdUserSession)
+            XCTAssertEqual([delegate.userSession].compactMap { $0 }, observer.createdUserSession)
         }
     }
     
@@ -829,9 +829,13 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         
         // WHEN
         let completionExpectation = self.expectation(description: "Completed action")
-        self.sessionManager?.handleAction(with: nil, for: localNotification, with: [:], completionHandler: {_ in
-            completionExpectation.fulfill()
-        }, application: self.application!)
+        self.sessionManager?.handleAction(
+            with: nil,
+            for: localNotification,
+            with: [:],
+            completionHandler: completionExpectation.fulfill,
+            application: self.application!
+        )
 
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
@@ -945,7 +949,7 @@ class SessionManagerTests_Push: IntegrationTest {
         XCTAssertFalse(session.managedObjectContext.pushKitToken!.isMarkedForDeletion)
         
         // AND WHEN
-        self.sessionManager?.pushDispatcher.pushRegistrant.pushRegistry(PKPushRegistry.init(queue: nil), didInvalidatePushTokenForType:.voIP)
+        sessionManager?.pushDispatcher.pushRegistrant.pushRegistry(PKPushRegistry.init(queue: nil), didInvalidatePushTokenFor: .voIP)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -972,7 +976,7 @@ class SessionManagerTests_Push: IntegrationTest {
         
         let credentials = MockPushCredentials()
         // WHEN
-        self.sessionManager?.pushDispatcher.pushRegistrant.pushRegistry(PKPushRegistry.init(queue: nil), didUpdate: credentials, forType: .voIP)
+        sessionManager?.pushDispatcher.pushRegistrant.pushRegistry(PKPushRegistry.init(queue: nil), didUpdate: credentials, for: .voIP)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN

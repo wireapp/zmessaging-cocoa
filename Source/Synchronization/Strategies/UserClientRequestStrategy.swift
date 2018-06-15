@@ -28,7 +28,7 @@ private let zmLog = ZMSLog(tag: "userClientRS")
 
 
 // Register new client, update it with new keys, deletes clients.
-@objc
+@objcMembers
 public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, ZMUpstreamTranscoder, ZMSingleRequestTranscoder {
     
     weak var clientRegistrationStatus: ZMClientRegistrationStatus?
@@ -310,13 +310,13 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
             return client
         }
         
-        let clients = clients.flatMap(createSelfUserClient)
+        let clients = clients.compactMap(createSelfUserClient)
     
         // remove all clients that are not there, with the exception of the self client
         // in theory we should also remove the self client and log out, but this will happen
         // next time the user sends a message or when we will receive the "deleted" event
         // for that client
-        let foundClientsIdentifier = Set(clients.flatMap { $0.remoteIdentifier })
+        let foundClientsIdentifier = Set(clients.compactMap { $0.remoteIdentifier })
         let selfUser = ZMUser.selfUser(in: moc)
         let selfClient = selfUser.selfClient()
         let otherClients = selfUser.clients ?? Set()

@@ -23,8 +23,8 @@ import CoreData
 @objc(ZMCallStateObserver)
 public final class CallStateObserver : NSObject {
     
-    static public let CallInProgressNotification = Notification.Name(rawValue: "ZMCallInProgressNotification")
-    static public let CallInProgressKey = "callInProgress"
+    @objc static public let CallInProgressNotification = Notification.Name(rawValue: "ZMCallInProgressNotification")
+    @objc static public let CallInProgressKey = "callInProgress"
     
     fileprivate weak var userSession: ZMUserSession?
     fileprivate let localNotificationDispatcher : LocalNotificationDispatcher
@@ -33,7 +33,7 @@ public final class CallStateObserver : NSObject {
     fileprivate var missedCalltoken : Any? = nil
     fileprivate let systemMessageGenerator = CallSystemMessageGenerator()
     
-    public init(localNotificationDispatcher : LocalNotificationDispatcher, userSession: ZMUserSession) {
+    @objc public init(localNotificationDispatcher : LocalNotificationDispatcher, userSession: ZMUserSession) {
         self.userSession = userSession
         self.localNotificationDispatcher = localNotificationDispatcher
         self.syncManagedObjectContext = userSession.syncManagedObjectContext

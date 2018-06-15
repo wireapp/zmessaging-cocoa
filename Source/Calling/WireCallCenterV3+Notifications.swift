@@ -135,7 +135,7 @@ public protocol VoiceGainObserver : class {
     func voiceGainDidChange(forParticipant participant: ZMUser, volume: Float)
 }
 
-@objc
+@objcMembers
 public class VoiceGainNotification : NSObject  {
     
     public static let notificationName = Notification.Name("VoiceGainNotification")

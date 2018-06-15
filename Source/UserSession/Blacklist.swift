@@ -18,7 +18,7 @@
 
 import Foundation
 
-@objc public class Blacklist: NSObject {
+@objcMembers public class Blacklist: NSObject {
     public let minVersion: String
     public let excludedVersions: [String]
     

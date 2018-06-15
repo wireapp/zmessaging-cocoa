@@ -20,7 +20,7 @@ import Foundation
 
 private let zmLog = ZMSLog(tag: "Push")
 
-extension ZMUserSession {
+@objc extension ZMUserSession {
     
     // MARK: - Foreground Actions
     

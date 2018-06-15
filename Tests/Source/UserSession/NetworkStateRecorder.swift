@@ -18,7 +18,7 @@
 
 import Foundation
 
-@objc
+@objcMembers
 public class NetworkStateRecorder : NSObject, ZMNetworkAvailabilityObserver {
     
     var stateChanges : [NSNumber] = []

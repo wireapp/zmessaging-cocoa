@@ -29,7 +29,7 @@ extension ZMUserSession {
     /// Checks the Library/Caches folder in the shared container directory for files that have not been assigned to a user account 
     /// and moves them to a folder named `wire-account-{accountIdentifier}` if there is no user-account folder yet
     /// It asserts if the caches folder contains unassigned files even though there is already an existing user account folder as this would be considered a programmer error
-    public static func moveCachesIfNeededForAccount(with accountIdentifier: UUID?, in sharedContainerURL: URL) {
+    @objc public static func moveCachesIfNeededForAccount(with accountIdentifier: UUID?, in sharedContainerURL: URL) {
         // FIXME: accountIdentifier should be non-nullable
         guard let accountIdentifier = accountIdentifier else { return }
         

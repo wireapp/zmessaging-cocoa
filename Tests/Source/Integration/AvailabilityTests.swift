@@ -80,9 +80,8 @@ class AvailabilityTests: IntegrationTest {
         // then
         let request = mockTransportSession.receivedRequests().last!
         let message = ZMNewOtrMessage.parse(from: request.binaryData)
-        let connectedAndTeamMemberUUIDs = [user1, user2, user3, user4].flatMap({ self.user(for: $0)?.remoteIdentifier })
-        let recipientsUUIDs = message!.recipients.flatMap({ $0.user.uuid.withUnsafeBytes({ (bytes: UnsafePointer<UInt8>) in
-            return NSUUID.init(uuidBytes: bytes) as UUID
+        let connectedAndTeamMemberUUIDs = [user1, user2, user3, user4].compactMap { user(for: $0)?.remoteIdentifier }
+        let recipientsUUIDs = message!.recipients.compactMap ({ $0.user.uuid.withUnsafeBytes({ (bytes: UnsafePointer<UInt8>) in NSUUID(uuidBytes: bytes) as UUID
         }) })
         
         XCTAssertEqual(Set(connectedAndTeamMemberUUIDs), Set(recipientsUUIDs))

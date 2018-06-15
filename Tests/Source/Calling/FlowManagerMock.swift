@@ -20,7 +20,7 @@ import Foundation
 
 @testable import WireSyncEngine
 
-@objc
+@objcMembers
 public class FlowManagerMock : NSObject, FlowManagerType {
     
     public var callConfigContext : UnsafeRawPointer? = nil
