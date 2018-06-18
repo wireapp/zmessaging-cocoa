@@ -121,7 +121,7 @@ extension SessionManager: ZMRequestsToOpenViewsDelegate {
 
 extension SessionManager: PKPushRegistryDelegate {
     
-    public func pushRegistry(_ registry: PKPushRegistry, didUpdate pushCredentials: PKPushCredentials, forType type: PKPushType) {
+    public func pushRegistry(_ registry: PKPushRegistry, didUpdate pushCredentials: PKPushCredentials, for type: PKPushType) {
         guard type == .voIP else { return }
         
         log.debug("PushKit token was updated: \(pushCredentials.token)")
@@ -132,7 +132,7 @@ extension SessionManager: PKPushRegistryDelegate {
         })
     }
     
-    public func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenForType type: PKPushType) {
+    public func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenFor type: PKPushType) {
         guard type == .voIP else { return }
         
         log.debug("PushKit token was invalidated")
@@ -143,7 +143,7 @@ extension SessionManager: PKPushRegistryDelegate {
         })
     }
     
-    public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, forType type: PKPushType) {
+    public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
         self.pushRegistry(registry, didReceiveIncomingPushWith: payload, for: type, completion: {})
     }
     

@@ -64,17 +64,8 @@ class PushCredentialsMock: PKPushCredentials {
 @objcMembers
 class PushRegistryMock: PKPushRegistry {
     
-//    var mock
     var mockPushToken: Data?
-//    var desiredPushTypes: Set<PKPushType>?
-//    weak var delegate: PKPushRegistryDelegate?
     
-//    override var desiredPushTypes: Set<PKPushType>? {
-//        didSet {
-//            
-//        }
-//    }
-        
     func mockIncomingPushPayload(_ payload: [AnyHashable : Any], completion: (() -> Void)? = nil) {
         
         if #available(iOS 11.0, *) {
@@ -86,15 +77,15 @@ class PushRegistryMock: PKPushRegistry {
     
     func invalidatePushToken() {
         mockPushToken = nil
-        delegate?.pushRegistry?(self, didInvalidatePushTokenForType: .voIP)
+        delegate?.pushRegistry?(self, didInvalidatePushTokenFor: .voIP)
     }
     
     func updatePushToken(_ token: Data) {
         mockPushToken = token
-        delegate?.pushRegistry(self, didUpdate: PushCredentialsMock(token: token, type: .voIP), forType: .voIP)
+        delegate?.pushRegistry(self, didUpdate: PushCredentialsMock(token: token, type: .voIP), for: .voIP)
     }
     
-    override func pushToken(forType type: PKPushType) -> Data? {
+    override func pushToken(for type: PKPushType) -> Data? {
         return mockPushToken
     }
     
