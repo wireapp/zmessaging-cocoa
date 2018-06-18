@@ -85,4 +85,6 @@
 @property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 @property (nonatomic) id<LocalStoreProviderProtocol> storeProvider;
 
+- (void)simulateLoggedInUser;
+
 @end

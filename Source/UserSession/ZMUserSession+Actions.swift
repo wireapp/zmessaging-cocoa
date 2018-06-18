@@ -185,7 +185,10 @@ extension ZMUserSession {
         }
         
         enqueueChanges {
-            guard let reaction = ZMMessage.addReaction(.like, toMessage: message) else { return }
+            guard let reaction = ZMMessage.addReaction(.like, toMessage: message) else {
+                print("AAAaaaahahhhhh")
+                return
+            }
             self.likeMesssageObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { [weak self] in
                 self?.updateBackgroundTask(with: reaction)
             })
