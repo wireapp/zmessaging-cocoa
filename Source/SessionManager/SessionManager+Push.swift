@@ -148,19 +148,21 @@ extension SessionManager: PKPushRegistryDelegate {
     }
     
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
-        log.debug("Received push payload: \(payload.dictionaryPayload)")
+        guard type == .voIP else { return completion() }
         
-        guard type == .voIP,
-            let accountId = payload.dictionaryPayload.accountId(),
-            let account = self.accountManager.account(with: accountId),
-            let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Process PushKit payload", expirationHandler: { [weak self] in
+        log.debug("Received push payload: \(payload.dictionaryPayload)")
+        notificationsTracker?.registerReceivedPush()
+        
+        guard let accountId = payload.dictionaryPayload.accountId(),
+              let account = self.accountManager.account(with: accountId),
+              let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Process PushKit payload", expirationHandler: { [weak self] in
                 log.debug("Processing push payload expired")
                 self?.notificationsTracker?.registerProcessingExpired()
-            }) else {
-            return completion()
+              }) else {
+                log.debug("Aborted processing of payload: \(payload.dictionaryPayload)")
+                notificationsTracker?.registerProcessingAborted()
+                return completion()
         }
-        
-        notificationsTracker?.registerReceivedPush()
         
         withSession(for: account, perform: { userSession in
             log.debug("Forwarding push payload to user session with account \(account.userIdentifier)")

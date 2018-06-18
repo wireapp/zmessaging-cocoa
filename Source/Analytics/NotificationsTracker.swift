@@ -29,6 +29,7 @@ import WireDataModel
         case finishedFetchingStream
         case finishedProcessing
         case processingExpired
+        case abortedProcessing
 
         var identifier: String {
             return "notifications_" + rawValue
@@ -59,6 +60,10 @@ import WireDataModel
 
     @objc public func registerProcessingExpired() {
         increment(attribute: .processingExpired)
+    }
+    
+    @objc public func registerProcessingAborted() {
+        increment(attribute: .abortedProcessing)
     }
 
     private func increment(attribute: Attributes, by amount: Double = 1) {
