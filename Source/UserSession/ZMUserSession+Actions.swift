@@ -187,10 +187,7 @@ private let zmLog = ZMSLog(tag: "Push")
         }
         
         enqueueChanges {
-            guard let reaction = ZMMessage.addReaction(.like, toMessage: message) else {
-                print("AAAaaaahahhhhh")
-                return
-            }
+            guard let reaction = ZMMessage.addReaction(.like, toMessage: message) else { return }
             self.likeMesssageObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { [weak self] in
                 self?.updateBackgroundTask(with: reaction)
             })

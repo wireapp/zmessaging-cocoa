@@ -116,7 +116,7 @@
     [self.mockTransportSession resetReceivedRequests];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    // when]
+    // when
     [self.pushRegistry setMockPushToken:newToken];
     [self recreateSessionManager];
     WaitForAllGroupsToBeEmpty(0.5);
