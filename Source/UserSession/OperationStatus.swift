@@ -61,7 +61,7 @@ public enum BackgroundTaskResult : UInt {
     }
 }
 
-@objc
+@objcMembers
 public class OperationStatus : NSObject {
         
     public weak var delegate : OperationStatusDelegate?
@@ -126,11 +126,11 @@ public class OperationStatus : NSObject {
         backgroundTaskTimer = Timer.scheduledTimer(timeInterval: timeout, target: self, selector: #selector(backgroundTaskTimeout), userInfo: nil, repeats: false)
     }
     
-    dynamic func backgroundFetchTimeout() {
+    @objc func backgroundFetchTimeout() {
         finishBackgroundFetch(withFetchResult: .failed)
     }
     
-    dynamic func backgroundTaskTimeout() {
+    @objc func backgroundTaskTimeout() {
         finishBackgroundTask(withTaskResult: .failed)
     }
     

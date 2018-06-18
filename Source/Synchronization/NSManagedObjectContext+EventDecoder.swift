@@ -23,7 +23,7 @@ import WireDataModel
 
 private let zmLog = ZMSLog(tag: "EventDecoder")
 
-extension NSManagedObjectContext {
+@objc extension NSManagedObjectContext {
     
     fileprivate static var eventPersistentStoreCoordinator: NSPersistentStoreCoordinator?
     
@@ -85,7 +85,7 @@ extension NSManagedObjectContext {
             try! persistentStoreCoordinator?.remove(store)
         }
         
-        type(of: self).eventPersistentStoreCoordinator = nil
+        Swift.type(of: self).eventPersistentStoreCoordinator = nil
     }
 
     var isEventMOC: Bool {

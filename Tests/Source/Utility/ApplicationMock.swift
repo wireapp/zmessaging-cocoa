@@ -20,7 +20,7 @@ import Foundation
 import WireSyncEngine
 
 /// A mock of Application that records the calls
-@objc public final class ApplicationMock : NSObject {
+@objcMembers public final class ApplicationMock : NSObject {
     
     public var applicationState: UIApplicationState = .active
     
@@ -45,7 +45,7 @@ import WireSyncEngine
     public var minimumBackgroundFetchInverval : TimeInterval = UIApplicationBackgroundFetchIntervalNever
     
     /// Callback invoked when `registerUserNotificationSettings` is invoked
-    public var registerForRemoteNotificationsCallback : ()->() = { _ in }
+    public var registerForRemoteNotificationsCallback : () -> Void = { }
 }
 
 // MARK: - Application protocol

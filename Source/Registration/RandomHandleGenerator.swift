@@ -166,7 +166,7 @@ extension String {
     
     /// Returns a truncated version of the string
     func truncated(at position: Int) -> String {
-        return self.substring(to: self.index(self.startIndex, offsetBy: min(position, self.count)))
+        return String(self[..<index(startIndex, offsetBy: min(position, count))])
     }
     
     /// Returns the string if its a valid handle, or nil

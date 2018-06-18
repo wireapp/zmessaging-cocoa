@@ -297,7 +297,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
                 return team
             }()
             
-            let conversation = ZMConversation.insertGroupConversation(into: moc, withParticipants: [], name: self.name!, in: team, allowGuests: allowGuests)
+            let conversation = ZMConversation.insertGroupConversation(into: moc, withParticipants: [], name: self.name, in: team, allowGuests: allowGuests)
             guard let inserted = conversation else { return XCTFail("no conversation", file: file, line: line) }
             XCTAssert(moc.saveOrRollback())
             

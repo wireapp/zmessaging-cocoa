@@ -18,7 +18,7 @@
 
 import Foundation
 
-extension ZMUserSession {
+@objc extension ZMUserSession {
     
     public var callCenter : WireCallCenterV3? {
         return managedObjectContext.zm_callCenter
@@ -33,7 +33,7 @@ extension ZMUserSession {
         return sessionManager.callKitDelegate
     }
     
-    var useConstantBitRateAudio : Bool {
+    @objc var useConstantBitRateAudio : Bool {
         set {
             managedObjectContext.zm_useConstantBitRateAudio = newValue
             callCenter?.useConstantBitRateAudio = newValue

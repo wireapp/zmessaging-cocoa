@@ -34,6 +34,7 @@ extension PostLoginAuthenticationObserver {
     
 }
 
+@objcMembers
 class PostLoginAuthenticationObserverToken : NSObject, PostLoginAuthenticationObserver {
     
     var token : Any?
@@ -82,7 +83,7 @@ public enum PostLoginAuthenticationEventObjC : Int {
 
 public typealias PostLoginAuthenticationObjCHandler = (_ event : PostLoginAuthenticationEventObjC, _ accountId: UUID, _ error: NSError?) -> Void
 
-@objc
+@objcMembers
 public class PostLoginAuthenticationObserverObjCToken : NSObject {
     
     var token : Any?
@@ -116,7 +117,7 @@ public class PostLoginAuthenticationObserverObjCToken : NSObject {
     }
 }
 
-@objc
+@objcMembers
 public class PostLoginAuthenticationNotificationEvent : NSObject {
     
     let event : PostLoginAuthenticationEventObjC
@@ -131,7 +132,7 @@ public class PostLoginAuthenticationNotificationEvent : NSObject {
     
 }
 
-@objc
+@objcMembers
 public class PostLoginAuthenticationNotificationRecorder : NSObject {
     
     private var token : Any?

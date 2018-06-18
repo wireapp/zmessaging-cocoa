@@ -41,7 +41,7 @@ public enum ClientUpdateError : NSInteger {
     }
 }
 
-@objc open class ClientUpdateStatus: NSObject {
+@objcMembers open class ClientUpdateStatus: NSObject {
     
     var syncManagedObjectContext: NSManagedObjectContext
 
@@ -195,7 +195,7 @@ public enum ClientUpdateError : NSInteger {
         let selfUser = ZMUser.selfUser(in: self.syncManagedObjectContext);
         let selfClient = selfUser.selfClient()
         let remainingClients = selfUser.clients.filter{$0 != selfClient && !$0.isZombieObject}
-        return remainingClients
+        return Array(remainingClients)
     }
     
     var hasClientsToDelete : Bool {

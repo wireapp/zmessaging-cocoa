@@ -56,7 +56,7 @@ class SearchUserImageStrategyTests : MessagingTest {
     }
     
     func userIDs(from searchUsers: Set<ZMSearchUser>) -> Set<UUID> {
-        return Set(searchUsers.flatMap{$0.remoteIdentifier})
+        return Set(searchUsers.compactMap { $0.remoteIdentifier })
     }
     
     func userData(smallProfilePictureID: UUID?, mediumPictureID: UUID? = nil, for userID: UUID, assetPayload: [[String: Any]] = []) -> [String : Any] {
@@ -103,8 +103,8 @@ class SearchUserImageStrategyTests : MessagingTest {
         if !getRequest.path.hasPrefix(UserRequestURL) {
             return Set()
         }
-        let userIDs = getRequest.path.substring(from: UserRequestURL.endIndex)
-        let tokens = userIDs.components(separatedBy: ",").flatMap{UUID(uuidString:$0)}
+        let userIDs = String(getRequest.path[UserRequestURL.endIndex...])
+        let tokens = userIDs.components(separatedBy: ",").compactMap { UUID(uuidString:$0) }
         return Set(tokens)
     }
     

@@ -99,8 +99,8 @@ final public class SearchUserAndAsset: NSObject {
     private func mapUsersAndAssets<Result>(_ block: @escaping (SearchUserAndAsset) -> Result?) -> Set<Result> {
         var result = Set<Result>()
         isolation.sync {
-            let allSearchUsers = entries.values.reduce(Set<SearchUserAndAsset>(), { $0.1.union($0.0) })
-            result = Set(allSearchUsers.flatMap(block))
+            let allSearchUsers = entries.values.reduce(Set<SearchUserAndAsset>(), { $1.union($0) })
+            result = Set(allSearchUsers.compactMap(block))
         }
         return result
     }

@@ -39,7 +39,7 @@ extension BackgroundNotificationFetchStatus: CustomStringConvertible {
 
 }
 
-@objc
+@objcMembers
 open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusProvider {
 
     private var eventIdRanking = NSMutableOrderedSet()

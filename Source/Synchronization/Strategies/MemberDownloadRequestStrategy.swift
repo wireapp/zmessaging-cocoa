@@ -30,7 +30,7 @@ fileprivate extension Team {
         let existingMembers = members
         
         // Update or insert new members
-        let newMembers = membersPayload.flatMap {Member.createOrUpdate(with: $0, in: self, context: managedObjectContext!)}
+        let newMembers = membersPayload.compactMap { Member.createOrUpdate(with: $0, in: self, context: managedObjectContext!) }
         
         // Delete removed members
         let membersToDelete = existingMembers.subtracting(newMembers)

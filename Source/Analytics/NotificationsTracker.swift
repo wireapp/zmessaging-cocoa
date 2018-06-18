@@ -19,7 +19,7 @@
 import Foundation
 import WireDataModel
 
-@objc public class NotificationsTracker: NSObject {
+@objcMembers public class NotificationsTracker: NSObject {
 
     let eventName = "notifications.processing"
 

@@ -43,7 +43,7 @@ extension Dictionary {
 
 extension ZMUserSession {
     
-    public func receivedPushNotification(with payload: [AnyHashable: Any], completion: @escaping () -> Void) {
+    @objc public func receivedPushNotification(with payload: [AnyHashable: Any], completion: @escaping () -> Void) {
         guard let syncMoc = self.syncManagedObjectContext else {
             return
         }
@@ -72,7 +72,7 @@ extension ZMUserSession {
     
 }
 
-extension ZMUserSession: ForegroundNotificationsDelegate {
+@objc extension ZMUserSession: ForegroundNotificationsDelegate {
     
     public func didReceieveLocal(notification: ZMLocalNotification, application: ZMApplication) {
         managedObjectContext.performGroupedBlock {

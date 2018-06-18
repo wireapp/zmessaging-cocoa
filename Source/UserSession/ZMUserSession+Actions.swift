@@ -20,7 +20,7 @@ import Foundation
 
 private let zmLog = ZMSLog(tag: "Push")
 
-extension ZMUserSession {
+@objc extension ZMUserSession {
     
     public func handleCategoryNotification(_ note: ZMStoredLocalNotification) {
         guard let categoryIdentifier = note.category, let category = PushNotificationCategory(rawValue: categoryIdentifier) else {

@@ -154,7 +154,7 @@ class MemberDownloadRequestStrategyTests: MessagingTest {
             XCTAssertFalse(team.needsToRedownloadMembers)
 
 
-            let users = team.members.flatMap { $0.user }
+            let users = team.members.compactMap { $0.user }
             XCTAssertEqual(users.count, 2)
             users.forEach {
                 if $0.remoteIdentifier == member1UserId {
@@ -223,7 +223,7 @@ class MemberDownloadRequestStrategyTests: MessagingTest {
             XCTAssertFalse(team.needsToBeUpdatedFromBackend)
             XCTAssertFalse(team.needsToRedownloadMembers)
             
-            let users = team.members.flatMap { $0.user }
+            let users = team.members.compactMap { $0.user }
             XCTAssertEqual(users.count, 1)
             guard let user1 = users.first, user1.remoteIdentifier == member1UserId  else { return XCTFail() }
             XCTAssertEqual(user1.permissions, [.createConversation, .removeConversationMember])

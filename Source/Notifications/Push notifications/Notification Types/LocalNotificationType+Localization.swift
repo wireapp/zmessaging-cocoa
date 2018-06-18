@@ -149,7 +149,7 @@ extension LocalNotificationType {
     
     fileprivate func messageBodyText(eventType: LocalNotificationEventType, senderName: String?) -> String {
         let senderKey = senderName == nil ? NoUserNameKey : nil
-        let localizationKey = [baseKey, senderKey].flatMap({ $0 }).joined(separator: ".")
+        let localizationKey = [baseKey, senderKey].compactMap { $0 }.joined(separator: ".")
         var arguments : [CVarArg] = []
         
         if let senderName = senderName {
@@ -235,7 +235,7 @@ extension LocalNotificationType {
             arguments.append(conversationName)
         }
         
-        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey].flatMap({ $0 }).joined(separator: ".")
+        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey].compactMap({ $0 }).joined(separator: ".")
         return String.localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
     }
     

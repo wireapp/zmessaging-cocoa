@@ -39,7 +39,7 @@ public protocol UnauthenticatedSessionDelegate: class {
 private let log = ZMSLog(tag: "UnauthenticatedSession")
 
 
-@objc
+@objcMembers
 public class UnauthenticatedSession: NSObject {
     
     public let groupQueue: DispatchGroupQueue

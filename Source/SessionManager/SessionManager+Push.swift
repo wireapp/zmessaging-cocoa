@@ -32,7 +32,7 @@ protocol PushRegistry {
 
 extension PKPushRegistry: PushRegistry {}
 
-extension SessionManager {
+@objc extension SessionManager {
     
     public func updatePushToken(for session: ZMUserSession) {
         session.managedObjectContext.performGroupedBlock {
@@ -85,7 +85,7 @@ extension SessionManager {
         var foundSession: Bool = false
         self.backgroundUserSessions.forEach { accountId, backgroundSession in
             if session == backgroundSession, let account = self.accountManager.account(with: accountId) {
-                self.select(account) { _ in
+                self.select(account) {
                     completion()
                 }
                 foundSession = true
