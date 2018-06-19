@@ -135,7 +135,7 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     }
     
     [self.managedObjectContext performGroupedBlock: ^{
-        [self handleCategoryNotification:self.pendingLocalNotification];
+        [self handleNotification:self.pendingLocalNotification];
         self.pendingLocalNotification = nil;
     }];
     
