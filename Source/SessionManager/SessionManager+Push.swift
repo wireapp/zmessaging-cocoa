@@ -153,6 +153,7 @@ extension SessionManager: PKPushRegistryDelegate {
     }
     
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
+        // We only care about voIP pushes, other types are not related to push notifications (watch complications and files)
         guard type == .voIP else { return completion() }
         
         log.debug("Received push payload: \(payload.dictionaryPayload)")
