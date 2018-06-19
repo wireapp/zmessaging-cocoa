@@ -70,7 +70,7 @@
         // given
         NSData * const deviceToken = [NSData dataWithBytes:(uint8_t[]){1, 0, 128, 255} length:4];
         BOOL const isRegistered = (i == 1);
-        ZMPushToken *token = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:self.identifier transportType:self.transportType fallback:@"APNS" isRegistered:isRegistered];
+        ZMPushToken *token = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:self.identifier transportType:self.transportType isRegistered:isRegistered];
         
         // when
         NSMutableData *archive = [NSMutableData data];
@@ -97,42 +97,7 @@
     NSData * const deviceToken = [NSData dataWithBytes:(uint8_t[]){1, 0, 128, 255} length:4];
     
     // when
-    self.uiMOC.pushToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:self.identifier transportType:self.transportType fallback:@"APNS" isRegistered:NO];
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    // then
-    [self.syncMOC performGroupedBlockAndWait:^{
-        ZMPushToken *tokenA = self.syncMOC.pushToken;
-        
-        XCTAssertNotNil(tokenA);
-        XCTAssertEqualObjects(tokenA.deviceToken, deviceToken);
-        XCTAssertEqualObjects(tokenA.appIdentifier, self.identifier);
-        XCTAssertEqualObjects(tokenA.transportType, self.transportType);
-        XCTAssertFalse(tokenA.isRegistered);
-    }];
-    
-    // and when
-    self.uiMOC.pushToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:self. identifier transportType:self.transportType fallback:@"APNS" isRegistered:YES];
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    // then
-    [self.syncMOC performGroupedBlockAndWait:^{
-        ZMPushToken *tokenB = self.syncMOC.pushToken;
-        
-        XCTAssertNotNil(tokenB);
-        XCTAssertEqualObjects(tokenB.deviceToken, deviceToken);
-        XCTAssertEqualObjects(tokenB.appIdentifier, self.identifier);
-        XCTAssertEqualObjects(tokenB.transportType, self.transportType);
-        XCTAssertTrue(tokenB.isRegistered);
-    }];
-}
-
-- (void)testThatItCanBeStoredInsideAManagedObjectContextAsPushKitToken;
-{
-    NSData * const deviceToken = [NSData dataWithBytes:(uint8_t[]){1, 0, 128, 255} length:4];
-    
-    // when
-    self.uiMOC.pushKitToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:self.identifier transportType:self.transportType fallback:@"APNS" isRegistered:NO];
+    self.uiMOC.pushKitToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:self.identifier transportType:self.transportType isRegistered:NO];
     XCTAssert([self.uiMOC saveOrRollback]);
     
     // then
@@ -147,7 +112,42 @@
     }];
     
     // and when
-    self.uiMOC.pushKitToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:self.identifier transportType:self.transportType fallback:@"APNS" isRegistered:YES];
+    self.uiMOC.pushKitToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:self. identifier transportType:self.transportType isRegistered:YES];
+    XCTAssert([self.uiMOC saveOrRollback]);
+    
+    // then
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMPushToken *tokenB = self.syncMOC.pushKitToken;
+        
+        XCTAssertNotNil(tokenB);
+        XCTAssertEqualObjects(tokenB.deviceToken, deviceToken);
+        XCTAssertEqualObjects(tokenB.appIdentifier, self.identifier);
+        XCTAssertEqualObjects(tokenB.transportType, self.transportType);
+        XCTAssertTrue(tokenB.isRegistered);
+    }];
+}
+
+- (void)testThatItCanBeStoredInsideAManagedObjectContextAsPushKitToken;
+{
+    NSData * const deviceToken = [NSData dataWithBytes:(uint8_t[]){1, 0, 128, 255} length:4];
+    
+    // when
+    self.uiMOC.pushKitToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:self.identifier transportType:self.transportType isRegistered:NO];
+    XCTAssert([self.uiMOC saveOrRollback]);
+    
+    // then
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMPushToken *tokenA = self.syncMOC.pushKitToken;
+        
+        XCTAssertNotNil(tokenA);
+        XCTAssertEqualObjects(tokenA.deviceToken, deviceToken);
+        XCTAssertEqualObjects(tokenA.appIdentifier, self.identifier);
+        XCTAssertEqualObjects(tokenA.transportType, self.transportType);
+        XCTAssertFalse(tokenA.isRegistered);
+    }];
+    
+    // and when
+    self.uiMOC.pushKitToken = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:self.identifier transportType:self.transportType isRegistered:YES];
     XCTAssert([self.uiMOC saveOrRollback]);
     
     // then
@@ -168,8 +168,8 @@
     NSData * const token = [@"whoa!" dataUsingEncoding:NSUTF8StringEncoding];
     
     // when
-    ZMPushToken *tokenA = [[ZMPushToken alloc] initWithDeviceToken:token identifier:self.identifier transportType:self.transportType  fallback:@"APNS" isRegistered:NO];
-    ZMPushToken *tokenB = [[ZMPushToken alloc] initWithDeviceToken:token identifier:self.identifier transportType:self.transportType fallback:@"APNS" isRegistered:YES];
+    ZMPushToken *tokenA = [[ZMPushToken alloc] initWithDeviceToken:token identifier:self.identifier transportType:self.transportType isRegistered:NO];
+    ZMPushToken *tokenB = [[ZMPushToken alloc] initWithDeviceToken:token identifier:self.identifier transportType:self.transportType isRegistered:YES];
     
     XCTAssertEqualObjects(tokenA, tokenB);
 }
@@ -179,7 +179,7 @@
     // given
     NSData * const token = [@"whoa!" dataUsingEncoding:NSUTF8StringEncoding];
     
-    ZMPushToken *tokenA = [[ZMPushToken alloc] initWithDeviceToken:token identifier:self.identifier transportType:self.transportType fallback:@"APNS" isRegistered:YES];
+    ZMPushToken *tokenA = [[ZMPushToken alloc] initWithDeviceToken:token identifier:self.identifier transportType:self.transportType isRegistered:YES];
     
     // when
     ZMPushToken *tokenB = [tokenA unregisteredCopy];

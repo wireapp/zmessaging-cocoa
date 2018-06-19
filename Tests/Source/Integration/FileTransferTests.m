@@ -445,7 +445,7 @@
     NSUInteger initialMessageCount = conversation.messages.count;
     
     NSURL *fileURL = self.testVideoFileURL;
-    NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages?report_missing=%@", conversation.remoteIdentifier.transportString, self.user1.identifier];
+    NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     // Used for uploading the thumbnail and the full asset
     NSString *expectedAssetUploadPath = @"/assets/v3";
     

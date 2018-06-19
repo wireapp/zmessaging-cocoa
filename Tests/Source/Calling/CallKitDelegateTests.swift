@@ -26,7 +26,7 @@ import OCMock
 
 @available(iOS 10.0, *)
 class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
-    
+
     static let accountManagerURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("MockSessionManager.accounts")
     
     var localNotificationResponder: LocalNotificationResponder? = nil
@@ -43,6 +43,14 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
     }
     
     func updateAppIconBadge(accountID: UUID, unreadCount: Int) {
+        
+    }
+    
+    func configureUserNotifications() {
+        
+    }
+    
+    func updatePushToken(for session: ZMUserSession) {
         
     }
     

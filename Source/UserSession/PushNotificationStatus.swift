@@ -43,7 +43,7 @@ extension BackgroundNotificationFetchStatus: CustomStringConvertible {
 open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusProvider {
 
     private var eventIdRanking = NSMutableOrderedSet()
-    private var completionHandlers: [UUID: ZMPushResultHandler] = [:]
+    private var completionHandlers: [UUID: () -> Void] = [:]
     private let managedObjectContext: NSManagedObjectContext
     
     public var status: BackgroundNotificationFetchStatus {
@@ -59,14 +59,14 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
     /// - parameter eventId: UUID of the event to fetch
     /// - parameter completionHandler: The completion handler will be run when event has been downloaded and when there's no more events to fetch
     @objc(fetchEventId:completionHandler:)
-    public func fetch(eventId: UUID, completionHandler: @escaping (ZMPushPayloadResult) -> Void) {
+    public func fetch(eventId: UUID, completionHandler: @escaping () -> Void) {
         guard eventId.isType1UUID else {
             return zmLog.error("Attempt to fetch event id not conforming to UUID type1: \(eventId)")
         }
         
         if lastEventIdIsNewerThan(eventId: eventId){
             // We have already fetched the event and will therefore immediately call the completion handler
-            return completionHandler(.success)
+            return completionHandler()
         }
         
         eventIdRanking.add(eventId)
@@ -90,14 +90,14 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
         
         for eventId in completionHandlers.keys.filter({  self.lastEventIdIsNewerThan(eventId: $0) || highestRankingEventId == $0 }) {
             let completionHandler = completionHandlers.removeValue(forKey: eventId)
-            completionHandler?(.success)
+            completionHandler?()
         }
     }
     
     /// Report that events couldn't be fetched due to a permanent error
     public func didFailToFetchEvents() {
         for completionHandler in completionHandlers.values {
-            completionHandler(.failure)
+            completionHandler()
         }
         
         eventIdRanking.removeAllObjects()

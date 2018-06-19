@@ -88,6 +88,17 @@ final class NotificationsTrackerTests: XCTestCase {
         XCTAssertNotNil(attributes)
         XCTAssertEqual(attributes?[identifier] as? Int, 1)
     }
+    
+    func testThatItDoesIncrementCounters_aborted() {
+        // WHEN
+        sut.registerProcessingAborted()
+        
+        // THEN
+        let attributes = mockAnalytics.persistedAttributes(for: sut.eventName)
+        let identifier = NotificationsTracker.Attributes.abortedProcessing.identifier
+        XCTAssertNotNil(attributes)
+        XCTAssertEqual(attributes?[identifier] as? Int, 1)
+    }
 
     func testThatItIncrementsCounterTwice() {
         // WHEN
@@ -107,6 +118,7 @@ final class NotificationsTrackerTests: XCTestCase {
         sut.registerStartStreamFetching()
         sut.registerFinishStreamFetching()
         sut.registerNotificationProcessingCompleted()
+        sut.registerProcessingAborted()
 
         // WHEN
         sut.dispatchEvent()
@@ -116,7 +128,8 @@ final class NotificationsTrackerTests: XCTestCase {
             NotificationsTracker.Attributes.startedProcessing.identifier: 1 as NSObject,
             NotificationsTracker.Attributes.startedFetchingStream.identifier: 1 as NSObject,
             NotificationsTracker.Attributes.finishedFetchingStream.identifier: 1 as NSObject,
-            NotificationsTracker.Attributes.finishedProcessing.identifier: 1 as NSObject
+            NotificationsTracker.Attributes.finishedProcessing.identifier: 1 as NSObject,
+            NotificationsTracker.Attributes.abortedProcessing.identifier: 1 as NSObject
         ]
         guard let attributes = mockAnalytics.taggedEventsWithAttributes.first?.attributes else {
             XCTFail(); return

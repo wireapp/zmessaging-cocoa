@@ -22,12 +22,27 @@ private let zmLog = ZMSLog(tag: "Push")
 
 @objc extension ZMUserSession {
     
+    public func handleNotification(_ note: ZMStoredLocalNotification) {
+        guard let categoryIdentifier = note.category, let category = PushNotificationCategory(rawValue: categoryIdentifier) else {
+            return handleDefaultCategoryNotification(note)
+        }
+        
+        switch category {
+        case .connect:
+            handleConnectionRequestCategoryNotification(note)
+        case .incomingCall, .missedCall:
+            handleCallCategoryNotification(note)
+        default:
+            handleDefaultCategoryNotification(note)
+        }
+    }
+    
     // MARK: - Foreground Actions
     
     public func handleConnectionRequestCategoryNotification(_ note : ZMStoredLocalNotification) {
         guard let sender = ZMUser.fetch(withRemoteIdentifier: note.senderUUID, in: managedObjectContext) else { return }
         
-        if note.actionIdentifier == ZMConnectAcceptAction {
+        if note.actionIdentifier == PushNotificationCategory.ConversationAction.connect.rawValue {
             sender.accept()
             managedObjectContext.saveOrRollback()
         }
@@ -36,7 +51,7 @@ private let zmLog = ZMSLog(tag: "Push")
     }
     
     public func handleCallCategoryNotification(_ note : ZMStoredLocalNotification) {
-        guard let actionIdentifier = note.actionIdentifier, actionIdentifier == ZMCallAcceptAction,
+        guard let actionIdentifier = note.actionIdentifier, actionIdentifier == PushNotificationCategory.CallAction.accept.rawValue,
             let callState = note.conversation?.voiceChannel?.state
         else {
             open(note.conversation, at: nil)

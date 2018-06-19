@@ -24,7 +24,6 @@
 #import "MessagingTest.h"
 #import "ZMUserSession+Internal.h"
 # import "ZMUserSession+Background.h"
-# import "ZMUserSession+UserNotificationCategories.h"
 # import "ZMUserSession+Authentication.h"
 # import "ZMUserSession+Registration.h"
 # import "ZMUserSessionRegistrationNotification.h"
@@ -85,5 +84,7 @@
 @property (nonatomic) ZMClientRegistrationStatus * clientRegistrationStatus;
 @property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 @property (nonatomic) id<LocalStoreProviderProtocol> storeProvider;
+
+- (void)simulateLoggedInUser;
 
 @end

@@ -21,6 +21,7 @@ import avs
 import WireTransport
 import WireUtilities
 import CallKit
+import PushKit
 
 
 private let log = ZMSLog(tag: "SessionManager")
@@ -63,6 +64,12 @@ public protocol SessionManagerType : class {
     
     func withSession(for account: Account, perform completion: @escaping (ZMUserSession)->())
     func updateAppIconBadge(accountID: UUID, unreadCount: Int)
+    
+    /// Will update the push token for the session if it has changed
+    func updatePushToken(for session: ZMUserSession)
+    
+    /// Configure user notification settings. This will ask the user for permission to display notifications.
+    func configureUserNotifications()
 
 }
 
@@ -164,7 +171,7 @@ public protocol SessionManagerSwitchingDelegate: class {
     var callCenterObserverToken: Any?
     var blacklistVerificator: ZMBlacklistVerificator?
     let reachability: ReachabilityProvider & TearDownCapable
-    let pushDispatcher: PushDispatcher
+    var pushRegistry: PushRegistry
     let notificationsTracker: NotificationsTracker?
     
     internal var authenticatedSessionFactory: AuthenticatedSessionFactory
@@ -256,7 +263,8 @@ public protocol SessionManagerSwitchingDelegate: class {
             analytics: analytics,
             reachability: reachability,
             delegate: delegate,
-            application: application
+            application: application,
+            pushRegistry: PKPushRegistry(queue: nil)
         )
         
         self.blacklistVerificator = ZMBlacklistVerificator(checkInterval: blacklistDownloadInterval,
@@ -296,6 +304,7 @@ public protocol SessionManagerSwitchingDelegate: class {
         reachability: ReachabilityProvider & TearDownCapable,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
+        pushRegistry: PushRegistry,
         dispatchGroup: ZMSDispatchGroup? = nil
         ) {
 
@@ -331,22 +340,25 @@ public protocol SessionManagerSwitchingDelegate: class {
         self.authenticatedSessionFactory = authenticatedSessionFactory
         self.unauthenticatedSessionFactory = unauthenticatedSessionFactory
         self.reachability = reachability
+        self.pushRegistry = pushRegistry
         
         // we must set these before initializing the PushDispatcher b/c if the app
         // received a push from terminated state, it requires these properties to be
         // non nil in order to process the notification
         BackgroundActivityFactory.sharedInstance().application = UIApplication.shared
         BackgroundActivityFactory.sharedInstance().mainGroupQueue = groupQueue
-        self.pushDispatcher = PushDispatcher(analytics: analytics)
+        
         if let analytics = analytics {
             self.notificationsTracker = NotificationsTracker(analytics: analytics)
         } else {
             self.notificationsTracker = nil
         }
-
+        
         super.init()
         
-        self.pushDispatcher.fallbackClient = self
+        // register for voIP push notifications
+        self.pushRegistry.delegate = self
+        self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
         self.urlHandler = SessionManagerURLHandler(userSessionSource: self)
 
         postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
@@ -477,11 +489,8 @@ public protocol SessionManagerSwitchingDelegate: class {
             delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: nil))
             return
         }
-
-        self.activateSession(for: authenticatedAccount) { session in
-            self.registerSessionForRemoteNotificationsIfNeeded(session)
-            completion(session)
-        }
+        
+        activateSession(for: authenticatedAccount, completion: completion)
     }
  
     public func deleteAccountData(for account: Account) {
@@ -508,6 +517,9 @@ public protocol SessionManagerSwitchingDelegate: class {
             completion(session)
             self.delegate?.sessionManagerActivated(userSession: session)
             self.urlHandler.sessionManagerActivated(userSession: session)
+            
+            // Configure user notifications if they weren't already previously configured.
+            self.configureUserNotifications()
         }
     }
 
@@ -543,11 +555,10 @@ public protocol SessionManagerSwitchingDelegate: class {
     fileprivate func configure(session userSession: ZMUserSession, for account: Account) {
         userSession.requestToOpenViewDelegate = self
         userSession.sessionManager = self
-        require(self.backgroundUserSessions[account.userIdentifier] == nil, "User session is already loaded")
-        self.backgroundUserSessions[account.userIdentifier] = userSession
-        pushDispatcher.add(client: userSession)
+        require(backgroundUserSessions[account.userIdentifier] == nil, "User session is already loaded")
+        backgroundUserSessions[account.userIdentifier] = userSession
         userSession.useConstantBitRateAudio = useConstantBitRateAudio
-
+        updatePushToken(for: userSession)
         registerObservers(account: account, session: userSession)
     }
     
@@ -745,7 +756,6 @@ extension SessionManager: UnauthenticatedSessionDelegate {
         accountManager.addAndSelect(account)
         
         self.activateSession(for: account) { userSession in
-            self.registerSessionForRemoteNotificationsIfNeeded(userSession)
             self.updateCurrentAccount(in: userSession.managedObjectContext)
             
             if let profileImageData = session.authenticationStatus.profileImageData {
