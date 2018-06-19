@@ -34,6 +34,11 @@ extension PKPushRegistry: PushRegistry {}
 
 @objc extension SessionManager {
     
+    @objc public func configureUserNotifications() {
+        // Configure push notification categories
+        self.application.registerUserNotificationSettings(UIUserNotificationSettings(types: [.alert, .badge, .sound], categories: PushNotificationCategory.allCategories))
+    }
+    
     public func updatePushToken(for session: ZMUserSession) {
         session.managedObjectContext.performGroupedBlock {
             // Refresh the tokens if needed

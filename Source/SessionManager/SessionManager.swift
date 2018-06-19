@@ -64,7 +64,12 @@ public protocol SessionManagerType : class {
     
     func withSession(for account: Account, perform completion: @escaping (ZMUserSession)->())
     func updateAppIconBadge(accountID: UUID, unreadCount: Int)
+    
+    /// Will update the push token for the session if it has changed
     func updatePushToken(for session: ZMUserSession)
+    
+    /// Configure user notification settings. This will ask the user for permission to display notifications.
+    func configureUserNotifications()
 
 }
 
@@ -351,8 +356,7 @@ public protocol SessionManagerSwitchingDelegate: class {
         
         super.init()
         
-        // Configure push notification categories and register for voIP push notifications
-        self.application.registerUserNotificationSettings(UIUserNotificationSettings(types: [.alert, .badge, .sound], categories: PushNotificationCategory.allCategories))
+        // register for voIP push notifications
         self.pushRegistry.delegate = self
         self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
         self.urlHandler = SessionManagerURLHandler(userSessionSource: self)
@@ -513,6 +517,9 @@ public protocol SessionManagerSwitchingDelegate: class {
             completion(session)
             self.delegate?.sessionManagerActivated(userSession: session)
             self.urlHandler.sessionManagerActivated(userSession: session)
+            
+            // Configure user notifications if they weren't already previously configured.
+            self.configureUserNotifications()
         }
     }
 
