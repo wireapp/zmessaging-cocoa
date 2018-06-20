@@ -23,7 +23,7 @@ import Foundation
 fileprivate extension String {
     
     var localizedPushAction: String {
-        return Bundle(for: ZMUserSession.self).localizedString(forKey: "push.notification.action\(self)", value: "", table: "Push")
+        return Bundle(for: ZMUserSession.self).localizedString(forKey: "push.notification.action.\(self)", value: "", table: "Push")
     }
     
 }
