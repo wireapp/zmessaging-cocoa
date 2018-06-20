@@ -371,7 +371,7 @@
     
     NSString *text = ZMTestURLArticleWithoutPictureString;
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    conversation.messageDestructionTimeout = 10;
+    conversation.localMessageDestructionTimeout = 10;
     
     ZMLinkPreview *expectedLinkPreview = [self.mockLinkPreviewDetector linkPreviewFromURLString:text includeAsset:NO includingTweet:NO];
     

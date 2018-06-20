@@ -437,7 +437,7 @@
     XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    conversation.messageDestructionTimeout = 10;
+    conversation.localMessageDestructionTimeout = 10;
     XCTAssertNotNil(conversation);
     XCTAssertEqual(conversation.messages.count, 1lu);
     

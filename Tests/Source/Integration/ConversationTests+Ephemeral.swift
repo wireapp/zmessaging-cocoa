@@ -44,7 +44,7 @@ extension ConversationTests_Ephemeral {
         mockTransportSession?.resetReceivedRequests()
         
         // when
-        conversation.messageDestructionTimeout = 100
+        conversation.messageDestructionTimeout = .local(100)
         var message : ZMClientMessage!
         self.userSession?.performChanges {
             message = conversation.appendMessage(withText: "Hello") as! ZMClientMessage
@@ -72,7 +72,7 @@ extension ConversationTests_Ephemeral {
         mockTransportSession?.resetReceivedRequests()
         
         // when
-        conversation.messageDestructionTimeout = 100
+        conversation.messageDestructionTimeout = .local(100)
         var message : ZMAssetClientMessage!
         self.userSession?.performChanges{
             message = conversation.appendMessage(withImageData: self.verySmallJPEGData()) as! ZMAssetClientMessage
@@ -96,7 +96,7 @@ extension ConversationTests_Ephemeral {
         let messageCount = conversation.messages.count
 
         // insert ephemeral message
-        conversation.messageDestructionTimeout = 0.1
+        conversation.messageDestructionTimeout = .local(0.1)
         var ephemeral : ZMClientMessage!
         self.userSession?.performChanges{
             ephemeral = conversation.appendMessage(withText: "Hello") as! ZMClientMessage
@@ -189,7 +189,7 @@ extension ConversationTests_Ephemeral {
         let conversation = self.conversation(for: selfToUser1Conversation!)!
         
         // when
-        conversation.messageDestructionTimeout = 1.0
+        conversation.messageDestructionTimeout = .local(1)
         var ephemeral : ZMClientMessage!
         self.userSession?.performChanges {
             ephemeral = conversation.appendMessage(withText: "Hello") as! ZMClientMessage

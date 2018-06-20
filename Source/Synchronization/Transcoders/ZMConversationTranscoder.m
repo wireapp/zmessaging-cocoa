@@ -482,36 +482,29 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (void)processUpdateEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation previousLastServerTimestamp:(NSDate *)previousLastServerTimestamp
 {
     switch (event.type) {
-        case ZMUpdateEventTypeConversationRename: {
+        case ZMUpdateEventTypeConversationRename:
             [self processConversationRenameEvent:event forConversation:conversation];
             break;
-        }
         case ZMUpdateEventTypeConversationMemberJoin:
-        {
             [self processMemberJoinEvent:event forConversation:conversation];
             break;
-        }
         case ZMUpdateEventTypeConversationMemberLeave:
-        {
             [self processMemberLeaveEvent:event forConversation:conversation];
             break;
-        }
         case ZMUpdateEventTypeConversationMemberUpdate:
-        {
             [self processMemberUpdateEvent:event forConversation:conversation previousLastServerTimeStamp:previousLastServerTimestamp];
             break;
-        }
         case ZMUpdateEventTypeConversationConnectRequest:
-        {
             [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
             break;
-        }
         case ZMUpdateEventTypeConversationAccessModeUpdate:
             [self processAccessModeUpdateEvent:event inConversation:conversation];
+            break;       
+        case ZMUpdateEventTypeConversationMessageTimerUpdate:
+            [self processDestructionTimerUpdateEvent:event inConversation:conversation];
             break;
-        default: {
+        default:
             break;
-        }
     }
 }
 
