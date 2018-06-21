@@ -2881,8 +2881,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                                    @(ZMUpdateEventTypeConversationAccessModeUpdate),
                                                    @(ZMUpdateEventTypeTeamMemberUpdate),
                                                    @(ZMUpdateEventTypeTeamMemberLeave),
-                                                   @(ZMUpdateEventTypeConversationRename),
-                                                   @(ZMUpdateEventTypeConversationAccessModeUpdate)
+                                                   @(ZMUpdateEventTypeConversationRename)
                                                    ];
         NSMutableArray<ZMUpdateEvent *> *events = @[].mutableCopy;
         

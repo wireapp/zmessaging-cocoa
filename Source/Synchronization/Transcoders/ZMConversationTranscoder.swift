@@ -22,7 +22,7 @@ extension ZMConversationTranscoder {
 
     @objc (processAccessModeUpdateEvent:inConversation:)
     public func processAccessModeUpdate(event: ZMUpdateEvent, in conversation: ZMConversation) {
-        precondition(event.type == .conversationAccessModeUpdate, "invlid update event type")
+        precondition(event.type == .conversationAccessModeUpdate, "invalid update event type")
         guard let payload = event.payload["data"] as? [String : AnyHashable] else { return }
         guard let access = payload["access"] as? [String] else { return }
         guard let accessRole = payload["access_role"] as? String else { return }
@@ -33,7 +33,7 @@ extension ZMConversationTranscoder {
     
     @objc (processDestructionTimerUpdateEvent:inConversation:)
     public func processDestructionTimerUpdate(event: ZMUpdateEvent, in conversation: ZMConversation) {
-        precondition(event.type == .conversationMessageTimerUpdate, "invlid update event type")
+        precondition(event.type == .conversationMessageTimerUpdate, "invalid update event type")
         guard let payload = event.payload["data"] as? [String : AnyHashable] else { return }
         if let timeoutIntegerValue = payload["message_timer"] as? Int {
             let timeoutValue = MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue))

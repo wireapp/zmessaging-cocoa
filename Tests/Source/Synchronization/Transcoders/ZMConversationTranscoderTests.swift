@@ -375,6 +375,51 @@ extension ZMConversationTranscoderTests_Swift {
             XCTAssertEqual(self.conversation.accessRole, newAccessRole)
         }
     }
+    
+    func testThatItHandlesMessageTimerUpdateEvent_Value() {
+        syncMOC.performGroupedAndWait { [sut, user, conversation] moc in
+            XCTAssertNil(conversation?.messageDestructionTimeout)
+            
+            // Given
+            let payload: [String: Any] = [
+                "from": user!.remoteIdentifier!.transportString(),
+                "conversation": conversation!.remoteIdentifier!.transportString(),
+                "time": NSDate().transportString(),
+                "data": ["message_timer": 86400],
+                "type": "conversation.message-timer-update"
+                ]
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+            
+            // WHEN
+            sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN
+            XCTAssertEqual(conversation?.messageDestructionTimeout, .synced(.oneDay))
+        }
+    }
+    
+    func testThatItHandlesMessageTimerUpdateEvent_NoValue() {
+        syncMOC.performGroupedAndWait { [sut, user, conversation] moc in
+            conversation?.messageDestructionTimeout = .synced(300)
+            XCTAssertEqual(conversation?.messageDestructionTimeout, .synced(.fiveMinutes))
+            
+            // Given
+            let payload: [String: Any] = [
+                "from": user!.remoteIdentifier!.transportString(),
+                "conversation": conversation!.remoteIdentifier!.transportString(),
+                "time": NSDate().transportString(),
+                "data": ["message_timer": NSNull()],
+                "type": "conversation.message-timer-update"
+            ]
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+
+            // WHEN
+            sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN
+            XCTAssertNil(conversation?.messageDestructionTimeout)
+        }
+    }
 }
 
 
