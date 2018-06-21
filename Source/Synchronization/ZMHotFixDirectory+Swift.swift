@@ -135,4 +135,13 @@ import Foundation
         context.enqueueDelayedSave()
     }
     
+    /// Marks all group conversations to be refetched.
+    public static func refetchGroupConversations(_ context: NSManagedObjectContext) {
+        let predicate = NSPredicate(format: "conversationType == %d", ZMConversationType.group.rawValue)
+        let request = ZMConversation.sortedFetchRequest(with: predicate)
+        let conversations = context.executeFetchRequestOrAssert(request) as? [ZMConversation]
+        
+        conversations?.forEach { $0.needsToBeUpdatedFromBackend = true }
+        context.enqueueDelayedSave()
+    }
 }
