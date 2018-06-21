@@ -90,7 +90,7 @@ class TextSearchTests: ConversationTestsBase {
         verifyThatItCanSearch(for: "Hello", in: convo, andFinds: nil)
     }
 
-    func testThatItDoesNotFindAnEphemeralMessageSentRemotely() {
+    func testThatItDoesFindAnEphemeralMessageSentRemotely() {
         // Given
         XCTAssertTrue(login())
 
@@ -115,7 +115,7 @@ class TextSearchTests: ConversationTestsBase {
         XCTAssertEqual(lastMessage?.textMessageData?.messageText, text)
 
         // Then
-        verifyThatItCanSearch(for: "ephemeral", in: convo, andFinds: nil)
+        verifyThatItCanSearch(for: "ephemeral", in: convo, andFinds: lastMessage)
     }
 
     func testThatItDoesNotFindAMessageDeletedRemotely() {
