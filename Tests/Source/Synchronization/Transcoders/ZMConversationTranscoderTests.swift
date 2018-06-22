@@ -20,19 +20,6 @@ import XCTest
 import WireRequestStrategy
 import WireDataModel
 
-extension MessageDestructionTimeout: Equatable {}
-
-public func ==(lhs: MessageDestructionTimeout, rhs: MessageDestructionTimeout) -> Bool {
-    switch (lhs, rhs) {
-    case (.synced(let valueL), .synced(let valueR)):
-        return valueL == valueR
-    case (.local(let valueL), .local(let valueR)):
-        return valueL == valueR
-    default:
-        return false
-    }
-}
-
 class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
     
     var sut: ZMConversationTranscoder!
