@@ -128,16 +128,16 @@ import Foundation
     public static func refetchTeamGroupConversations(_ context: NSManagedObjectContext) {
         // Batch update changes the underlying data in the persistent store and should be much more
         let predicate = NSPredicate(format: "team != nil AND conversationType == %d", ZMConversationType.group.rawValue)
-        let request = ZMConversation.sortedFetchRequest(with: predicate)
-        let conversations = context.executeFetchRequestOrAssert(request) as? [ZMConversation]
-
-        conversations?.forEach { $0.needsToBeUpdatedFromBackend = true }
-        context.enqueueDelayedSave()
+        refetchConversations(matching: predicate, in: context)
     }
     
     /// Marks all group conversations to be refetched.
     public static func refetchGroupConversations(_ context: NSManagedObjectContext) {
         let predicate = NSPredicate(format: "conversationType == %d", ZMConversationType.group.rawValue)
+        refetchConversations(matching: predicate, in: context)
+    }
+    
+    private static func refetchConversations(matching predicate: NSPredicate, in context: NSManagedObjectContext) {
         let request = ZMConversation.sortedFetchRequest(with: predicate)
         let conversations = context.executeFetchRequestOrAssert(request) as? [ZMConversation]
         
