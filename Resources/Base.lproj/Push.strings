@@ -109,6 +109,12 @@
 "push.notification.member.leave.self.nousername.noconversationname" = "You were removed from a conversation";
 "push.notification.member.leave.self.nousername" = "You were removed";
 
+// EPHEMERAL MESSAGE TIMER UPDATE
+"push.notification.message-timer.update" = "%@ set the timed messages to %@";
+"push.notification.message-timer.update.nousername" = "Someone set the timed messages to %@";
+"push.notification.message-timer.update.noconversationname" = "%@ set the timed messages to %@ in a conversation";
+"push.notification.message-timer.update.nousername.noconversationname" = "Someone set the timed messages to %@ in a conversation";
+
 // VIDEO CALLS
 "push.notification.call.started.video.oneonone" = "is video calling";
 "push.notification.call.started.video.oneonone.nousername" = "Someone is video calling";
