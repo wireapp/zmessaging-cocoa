@@ -27,7 +27,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     // MARK: Helpers
     
     func textNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, isEphemeral: Bool = false) -> ZMLocalNotification? {
-        if isEphemeral { conversation.messageDestructionTimeout = 0.5 }
+        if isEphemeral { conversation.messageDestructionTimeout = .local(0.5) }
         let message = conversation.appendMessage(withText: text ?? "Hello Hello!") as! ZMOTRMessage
         message.sender = sender
         conversation.lastReadServerTimeStamp = Date()
@@ -211,7 +211,7 @@ extension ZMLocalNotificationTests_Message {
     // MARK: Helpers
     
     func imageNote(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, isEphemeral : Bool = false) -> ZMLocalNotification? {
-        if isEphemeral { conversation.messageDestructionTimeout = 10 }
+        if isEphemeral { conversation.messageDestructionTimeout = .local(10) }
         let message = conversation.appendMessage(withImageData: verySmallJPEGData()) as! ZMAssetClientMessage
         message.sender = sender
         return ZMLocalNotification(message: message)
@@ -297,11 +297,11 @@ extension ZMLocalNotificationTests_Message {
 
     func assetNote(_ fileType: FileType, conversation: ZMConversation, sender: ZMUser, isEphemeral: Bool = false) -> ZMLocalNotification? {
         if isEphemeral {
-            conversation.messageDestructionTimeout = 10
+            conversation.messageDestructionTimeout = .local(10)
         }
         
         defer {
-            conversation.messageDestructionTimeout = 0
+            conversation.messageDestructionTimeout = nil
         }
         
         let metadata = ZMFileMetadata(fileURL: fileType.testURL)
@@ -382,7 +382,7 @@ extension ZMLocalNotificationTests_Message {
     // MARK: Helpers
     
     func knockNote(_ conversation: ZMConversation, sender: ZMUser, isEphemeral : Bool = false) -> ZMLocalNotification? {
-        if isEphemeral { conversation.messageDestructionTimeout = 10 }
+        if isEphemeral { conversation.messageDestructionTimeout = .local(10) }
         let message = conversation.appendKnock() as! ZMClientMessage
         message.sender = sender
         return ZMLocalNotification(message: message)

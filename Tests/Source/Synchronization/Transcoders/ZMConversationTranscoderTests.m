@@ -2877,7 +2877,13 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.remoteIdentifier = conversationID;
         conversation.lastModifiedDate = lastModifiedDate;
     
-        NSArray<NSNumber *> *ignoredEventTypes = @[@(ZMUpdateEventTypeConversationAccessModeUpdate), @(ZMUpdateEventTypeTeamMemberUpdate), @(ZMUpdateEventTypeTeamMemberLeave), @(ZMUpdateEventTypeConversationRename)];
+        NSArray<NSNumber *> *ignoredEventTypes = @[
+                                                   @(ZMUpdateEventTypeConversationAccessModeUpdate),
+                                                   @(ZMUpdateEventTypeConversationMessageTimerUpdate),
+                                                   @(ZMUpdateEventTypeTeamMemberUpdate),
+                                                   @(ZMUpdateEventTypeTeamMemberLeave),
+                                                   @(ZMUpdateEventTypeConversationRename)
+                                                   ];
         NSMutableArray<ZMUpdateEvent *> *events = @[].mutableCopy;
         
         for (NSNumber *eventType in ignoredEventTypes) {

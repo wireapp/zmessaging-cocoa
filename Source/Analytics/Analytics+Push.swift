@@ -34,10 +34,10 @@ extension AnalyticsType {
 public extension ZMConversation {
     
     @objc public var ephemeralTrackingAttributes: [String: Any] {
-        let ephemeral = destructionTimeout != .none
+        let ephemeral = messageDestructionTimeout != nil
         var attributes: [String: Any] = ["is_ephemeral": ephemeral]
         guard ephemeral else { return attributes }
-        attributes["ephemeral_time"] = "\(Int(destructionTimeout.rawValue))"
+        attributes["ephemeral_time"] = "\(Int(messageDestructionTimeoutValue))"
         return attributes
     }
     

@@ -25,7 +25,7 @@ public enum LocalNotificationEventType {
 }
 
 public enum LocalNotificationContentType : Equatable {
-    case undefined, image, video, audio, location, fileUpload, knock, text(String), reaction(emoji: String), ephemeral, hidden, participantsRemoved, participantsAdded
+    case undefined, image, video, audio, location, fileUpload, knock, text(String), reaction(emoji: String), ephemeral, hidden, participantsRemoved, participantsAdded, messageTimerUpdate(String)
     
     static func typeForMessage(_ message: ZMConversationMessage) -> LocalNotificationContentType? {
         
@@ -65,6 +65,9 @@ public enum LocalNotificationContentType : Equatable {
                 return .participantsAdded
             case .participantsRemoved:
                 return .participantsRemoved
+            case .messageTimerUpdate:
+                let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(systemMessageData.messageTimer.doubleValue))
+                return .messageTimerUpdate(value.displayString ?? "")
             default:
                 return nil
             }
@@ -79,7 +82,7 @@ public func ==(rhs: LocalNotificationContentType, lhs: LocalNotificationContentT
     switch (rhs, lhs) {
     case (.text(let left), .text(let right)):
         return left == right
-    case (.image, .image), (.video, .video), (.audio, .audio), (.location, .location), (.fileUpload, .fileUpload), (.knock, .knock), (.undefined, .undefined), (.reaction, .reaction):
+    case (.image, .image), (.video, .video), (.audio, .audio), (.location, .location), (.fileUpload, .fileUpload), (.knock, .knock), (.undefined, .undefined), (.reaction, .reaction), (.messageTimerUpdate, .messageTimerUpdate):
         return true
     default:
         return false
