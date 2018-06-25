@@ -348,7 +348,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     
     func testThatItCreatesANotificationForMessageTimerUpdateSystemMessages() {
         // given
-        let message = groupConversation.appendMessageTimerUpdateMessage(fromUser: otherUser1, timer: 86400)
+        let message = groupConversation.appendMessageTimerUpdateMessage(fromUser: otherUser1, timer: 86400, timestamp: Date())
         message.sender = otherUser1
 
         // when
@@ -362,7 +362,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     func testThatItCreatesANotificationForMessageTimerUpdateSystemMessages_NoUserName() {
         // given
         otherUser1.name = ""
-        let message = groupConversation.appendMessageTimerUpdateMessage(fromUser: otherUser1, timer: 86400)
+        let message = groupConversation.appendMessageTimerUpdateMessage(fromUser: otherUser1, timer: 86400, timestamp: Date())
         message.sender = otherUser1
         
         // when
@@ -375,7 +375,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     
     func testThatItCreatesANotificationForMessageTimerUpdateSystemMessages_NoConversationName() {
         // given
-        let message = groupConversationWithoutName.appendMessageTimerUpdateMessage(fromUser: otherUser1, timer: 86400)
+        let message = groupConversationWithoutName.appendMessageTimerUpdateMessage(fromUser: otherUser1, timer: 86400, timestamp: Date())
         message.sender = otherUser1
         
         // when
@@ -389,7 +389,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     func testThatItCreatesANotificationForMessageTimerUpdateSystemMessages_NoUserName_NoConversationName() {
         // given
         otherUser1.name = ""
-        let message = groupConversationWithoutName.appendMessageTimerUpdateMessage(fromUser: otherUser1, timer: 86400)
+        let message = groupConversationWithoutName.appendMessageTimerUpdateMessage(fromUser: otherUser1, timer: 86400, timestamp: Date())
         message.sender = otherUser1
         
         // when
