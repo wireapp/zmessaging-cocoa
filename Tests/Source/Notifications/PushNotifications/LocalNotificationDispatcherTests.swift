@@ -99,6 +99,27 @@ extension LocalNotificationDispatcherTests {
         XCTAssertTrue(notification.alertBody!.contains(text))
     }
     
+    func testThatItCreatesNotificationFromSystemMessagesIfNotActive() {
+        // GIVEN
+        conversation1.messageDestructionTimeout = .synced(.fiveMinutes)
+        let message = conversation1.appendMessageTimerUpdateMessage(
+            fromUser: user1,
+            timer: conversation1.messageDestructionTimeoutValue,
+            timestamp: .init()
+        )
+        message.sender = user1
+        
+        // WHEN
+        sut.process(message)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(application.scheduledLocalNotifications.count, 1)
+        XCTAssertEqual(notificationDelegate.receivedLocalNotifications.count, 0)
+        guard let notification = application.scheduledLocalNotifications.first else { return XCTFail() }
+        XCTAssertTrue(notification.alertBody!.contains("User 1 set the timed messages to"))
+    }
+
     func testThatItForwardsNotificationFromMessagesIfActive() {
         // GIVEN
         let text = UUID.create().transportString()

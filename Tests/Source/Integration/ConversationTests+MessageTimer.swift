@@ -29,7 +29,7 @@ class ConversationMessageTimerTests: IntegrationTest {
     
     private func responsePayload(for conversation: ZMConversation, timeout: MessageDestructionTimeoutValue) -> ZMTransportData {
         var payload: [String: Any] = [
-            "from": UUID.create().transportString(),
+            "from": user1.identifier,
             "conversation": conversation.remoteIdentifier!.transportString(),
             "time": NSDate().transportString(),
             "type": "conversation.message-timer-update"
@@ -126,9 +126,9 @@ class ConversationMessageTimerTests: IntegrationTest {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1), file: file, line: line)
         
         // then
-        XCTAssertEqual(mockTransportSession.receivedRequests().count, 1, file: file, line: line)
+        XCTAssertEqual(mockTransportSession.receivedRequests().count, 1, "wrong request count", file: file, line: line)
         guard let request = mockTransportSession.receivedRequests().first else { return }
-        XCTAssertEqual(request.path, "/conversations/\(identifier)/message-timer", file: file, line: line)
-        XCTAssertEqual(request.method, .methodPUT, file: file, line: line)
+        XCTAssertEqual(request.path, "/conversations/\(identifier)/message-timer", "wrong path \(request.path)", file: file, line: line)
+        XCTAssertEqual(request.method, .methodPUT, "wrong method", file: file, line: line)
     }
 }

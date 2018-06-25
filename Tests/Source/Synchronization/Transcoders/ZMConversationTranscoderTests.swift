@@ -377,13 +377,13 @@ extension ZMConversationTranscoderTests_Swift {
     }
     
     func testThatItHandlesMessageTimerUpdateEvent_Value() {
-        syncMOC.performGroupedAndWait { [sut, user, conversation] moc in
-            XCTAssertNil(conversation?.messageDestructionTimeout)
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertNil(self.conversation.messageDestructionTimeout)
             
             // Given
             let payload: [String: Any] = [
-                "from": user!.remoteIdentifier!.transportString(),
-                "conversation": conversation!.remoteIdentifier!.transportString(),
+                "from": self.user!.remoteIdentifier!.transportString(),
+                "conversation": self.conversation!.remoteIdentifier!.transportString(),
                 "time": NSDate().transportString(),
                 "data": ["message_timer": 86400],
                 "type": "conversation.message-timer-update"
@@ -391,22 +391,25 @@ extension ZMConversationTranscoderTests_Swift {
             let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
             
             // WHEN
-            sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
+            self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
             
             // THEN
-            XCTAssertEqual(conversation?.messageDestructionTimeout!, MessageDestructionTimeout.synced(.oneDay))
+            XCTAssertEqual(self.conversation?.messageDestructionTimeout!, MessageDestructionTimeout.synced(.oneDay))
+            guard let message = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            XCTAssertEqual(message.systemMessageType, .messageTimerUpdate)
+            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
         }
     }
     
     func testThatItHandlesMessageTimerUpdateEvent_NoValue() {
-        syncMOC.performGroupedAndWait { [sut, user, conversation] moc in
-            conversation?.messageDestructionTimeout = .synced(300)
-            XCTAssertEqual(conversation?.messageDestructionTimeout!, MessageDestructionTimeout.synced(.fiveMinutes))
+        syncMOC.performGroupedBlockAndWait {
+            self.conversation.messageDestructionTimeout = .synced(300)
+            XCTAssertEqual(self.conversation.messageDestructionTimeout!, MessageDestructionTimeout.synced(.fiveMinutes))
             
             // Given
             let payload: [String: Any] = [
-                "from": user!.remoteIdentifier!.transportString(),
-                "conversation": conversation!.remoteIdentifier!.transportString(),
+                "from": self.user!.remoteIdentifier!.transportString(),
+                "conversation": self.conversation!.remoteIdentifier!.transportString(),
                 "time": NSDate().transportString(),
                 "data": ["message_timer": NSNull()],
                 "type": "conversation.message-timer-update"
@@ -414,10 +417,13 @@ extension ZMConversationTranscoderTests_Swift {
             let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
 
             // WHEN
-            sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
+            self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
             
             // THEN
-            XCTAssertNil(conversation?.messageDestructionTimeout)
+            XCTAssertNil(self.conversation.messageDestructionTimeout)
+            guard let message = self.conversation.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            XCTAssertEqual(message.systemMessageType, .messageTimerUpdate)
+            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
         }
     }
 }
