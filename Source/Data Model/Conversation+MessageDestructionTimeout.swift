@@ -76,7 +76,9 @@ fileprivate struct MessageDestructionTimeoutRequestFactory {
     
     static func set(timeout: Int, for conversation: ZMConversation) -> ZMTransportRequest {
         guard let identifier = conversation.remoteIdentifier?.transportString() else { fatal("conversation inserted on backend") }
-        let payload = ["message_timer": timeout]
+        // Backend expects the timer to be in miliseconds, we store it in seconds.
+        let timeoutInMS: Int64 = Int64(timeout) * 1000
+        let payload = ["message_timer": timeoutInMS]
         return .init(path: "/conversations/\(identifier)/message-timer", method: .methodPUT, payload: payload as ZMTransportData)
     }
 
