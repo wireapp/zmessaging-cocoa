@@ -36,8 +36,9 @@ extension ZMConversationTranscoder {
         precondition(event.type == .conversationMessageTimerUpdate, "invalid update event type")
         guard let payload = event.payload["data"] as? [String : AnyHashable],
             let senderUUID = event.senderUUID() else { return }
-        if let timeoutIntegerValue = payload["message_timer"] as? Int {
-            let timeoutValue = MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue))
+        if let timeoutIntegerValue = payload["message_timer"] as? Int64 {
+            // Backend is sending the miliseconds, we need to convert to seconds.
+            let timeoutValue = MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue / 1000))
             conversation.messageDestructionTimeout = .synced(timeoutValue)
         } else {
             conversation.messageDestructionTimeout = nil
