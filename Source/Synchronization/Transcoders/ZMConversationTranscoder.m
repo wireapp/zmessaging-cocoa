@@ -504,7 +504,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
             break;       
         case ZMUpdateEventTypeConversationMessageTimerUpdate:
             [self processDestructionTimerUpdateEvent:event inConversation:conversation];
-            [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
             break;
         default:
             break;
