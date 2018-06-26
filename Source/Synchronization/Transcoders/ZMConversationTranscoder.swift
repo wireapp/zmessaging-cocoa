@@ -46,7 +46,7 @@ extension ZMConversationTranscoder {
         
         if let user = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext),
             let timestamp = event.timeStamp() {
-            let timer = conversation.messageDestructionTimeoutValue
+            let timer = conversation.hasSyncedMessageDestructionTimeout ? conversation.messageDestructionTimeoutValue : 0
             let message = conversation.appendMessageTimerUpdateMessage(fromUser: user, timer: timer, timestamp: timestamp)
             localNotificationDispatcher.process(message)
         }
