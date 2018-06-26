@@ -426,6 +426,44 @@ extension ZMConversationTranscoderTests_Swift {
             XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
         }
     }
+    
+    func testThatItGeneratesCorrectSystemMessageWhenSyncedTimeoutTurnedOff() {
+        // GIVEN: local & synced timeouts exist
+        syncMOC.performGroupedBlockAndWait {
+            self.conversation.messageDestructionTimeout = .local(.fiveMinutes)
+        }
+        
+        syncMOC.performGroupedBlockAndWait {
+            self.conversation.messageDestructionTimeout = .synced(.oneHour)
+        }
+        
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertNotNil(self.conversation.messageDestructionTimeout)
+            
+            // "turn off" synced timeout
+            let payload: [String: Any] = [
+                "from": self.user!.remoteIdentifier!.transportString(),
+                "conversation": self.conversation!.remoteIdentifier!.transportString(),
+                "time": NSDate().transportString(),
+                "data": ["message_timer": 0],
+                "type": "conversation.message-timer-update"
+            ]
+            
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+            
+            // WHEN
+            self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN: the local timeout still exists
+            XCTAssertEqual(self.conversation?.messageDestructionTimeout!, MessageDestructionTimeout.local(.fiveMinutes))
+            guard let message = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            XCTAssertEqual(message.systemMessageType, .messageTimerUpdate)
+            
+            // but the system message timer reflects the update to the synced timeout
+            XCTAssertEqual(0, message.messageTimer)
+            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
+        }
+    }
 }
 
 

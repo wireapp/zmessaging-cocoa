@@ -54,7 +54,17 @@ extension ZMConversationTranscoder {
         conversation.messageDestructionTimeout = timeout
         
         if let timestamp = event.timeStamp() {
-            let timer = conversation.messageDestructionTimeoutValue
+            
+            let timer: TimeInterval
+            
+            // system message timer should reflect the synced value, not local
+            if let timeout = conversation.messageDestructionTimeout,
+             case let .synced(value) = timeout {
+                timer = value.rawValue
+            } else {
+                timer = 0
+            }
+            
             let message = conversation.appendMessageTimerUpdateMessage(fromUser: user, timer: timer, timestamp: timestamp)
             localNotificationDispatcher.process(message)
         }
