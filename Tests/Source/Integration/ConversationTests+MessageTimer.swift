@@ -50,7 +50,7 @@ class ConversationMessageTimerTests: IntegrationTest {
         XCTAssertNil(sut.messageDestructionTimeout)
         
         // when
-        setGlobalTimeout(for: sut, timeout: 86400)
+        setGlobalTimeout(for: sut, timeout: 86400000)
         
         // then
         XCTAssertEqual(sut.messageDestructionTimeout, .synced(.oneDay))
@@ -88,7 +88,7 @@ class ConversationMessageTimerTests: IntegrationTest {
         XCTAssertEqual(sut.messageDestructionTimeout, .local(86400))
         
         // when
-        setGlobalTimeout(for: sut, timeout: 10)
+        setGlobalTimeout(for: sut, timeout: 10000)
         
         // then
         XCTAssertEqual(sut.messageDestructionTimeout, .synced(10))

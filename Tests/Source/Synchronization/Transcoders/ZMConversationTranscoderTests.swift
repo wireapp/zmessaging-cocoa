@@ -385,7 +385,7 @@ extension ZMConversationTranscoderTests_Swift {
                 "from": self.user!.remoteIdentifier!.transportString(),
                 "conversation": self.conversation!.remoteIdentifier!.transportString(),
                 "time": NSDate().transportString(),
-                "data": ["message_timer": 86400],
+                "data": ["message_timer": 31536000000],
                 "type": "conversation.message-timer-update"
                 ]
             let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
@@ -394,7 +394,7 @@ extension ZMConversationTranscoderTests_Swift {
             self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
             
             // THEN
-            XCTAssertEqual(self.conversation?.messageDestructionTimeout!, MessageDestructionTimeout.synced(.oneDay))
+            XCTAssertEqual(self.conversation?.messageDestructionTimeout!, MessageDestructionTimeout.synced(31536000))
             guard let message = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(message.systemMessageType, .messageTimerUpdate)
             XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
