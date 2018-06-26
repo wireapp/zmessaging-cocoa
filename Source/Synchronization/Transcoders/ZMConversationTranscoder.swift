@@ -35,17 +35,25 @@ extension ZMConversationTranscoder {
     public func processDestructionTimerUpdate(event: ZMUpdateEvent, in conversation: ZMConversation) {
         precondition(event.type == .conversationMessageTimerUpdate, "invalid update event type")
         guard let payload = event.payload["data"] as? [String : AnyHashable],
-            let senderUUID = event.senderUUID() else { return }
+            let senderUUID = event.senderUUID(),
+            let user = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext) else { return }
+        
+        var timeout: MessageDestructionTimeout?
+        
         if let timeoutIntegerValue = payload["message_timer"] as? Int64 {
             // Backend is sending the miliseconds, we need to convert to seconds.
-            let timeoutValue = MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue / 1000))
-            conversation.messageDestructionTimeout = .synced(timeoutValue)
+            timeout = .synced(MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue / 1000)))
         } else {
-            conversation.messageDestructionTimeout = nil
+            timeout = nil
         }
         
-        if let user = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext),
-            let timestamp = event.timeStamp() {
+        if user.isSelfUser && conversation.messageDestructionTimeout == timeout {
+            return
+        }
+        
+        conversation.messageDestructionTimeout = timeout
+        
+        if let timestamp = event.timeStamp() {
             let timer = conversation.messageDestructionTimeoutValue
             let message = conversation.appendMessageTimerUpdateMessage(fromUser: user, timer: timer, timestamp: timestamp)
             localNotificationDispatcher.process(message)
