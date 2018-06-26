@@ -72,6 +72,11 @@ class ConversationMessageTimerTests: IntegrationTest {
         setGlobalTimeout(for: sut, timeout: .none)
 
         // then
+        guard let request = mockTransportSession.receivedRequests().first else {
+            XCTFail()
+            return
+        }
+        XCTAssertNotNil(request.payload?.asDictionary()?["message_timer"] as? NSNull)
         XCTAssertNil(sut.messageDestructionTimeout)
     }
     
