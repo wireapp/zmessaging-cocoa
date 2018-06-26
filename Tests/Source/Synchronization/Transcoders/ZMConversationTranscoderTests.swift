@@ -439,8 +439,6 @@ extension ZMConversationTranscoderTests_Swift {
         
         syncMOC.performGroupedBlockAndWait {
             XCTAssertNotNil(self.conversation.messageDestructionTimeout)
-            XCTAssertTrue(self.conversation.hasLocalMessageDestructionTimeout)
-            XCTAssertTrue(self.conversation.hasSyncedMessageDestructionTimeout)
             
             // "turn off" synced timeout
             let payload: [String: Any] = [
