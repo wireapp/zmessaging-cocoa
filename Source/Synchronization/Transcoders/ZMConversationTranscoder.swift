@@ -47,7 +47,8 @@ extension ZMConversationTranscoder {
             timeout = nil
         }
         
-        if user.isSelfUser && conversation.messageDestructionTimeout == timeout {
+        if user.isSelfUser && (conversation.messageDestructionTimeout == timeout
+            || (conversation.messageDestructionTimeout == nil && timeout == .synced(.none))) {
             return
         }
         
