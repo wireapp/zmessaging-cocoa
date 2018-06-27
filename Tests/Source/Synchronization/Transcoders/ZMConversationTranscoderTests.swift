@@ -465,7 +465,7 @@ extension ZMConversationTranscoderTests_Swift {
         }
     }
     
-    func testThatItDiscardsDoubleSystemMessageWhenSyncedTumeoutChanges_Value() {
+    func testThatItDiscardsDoubleSystemMessageWhenSyncedTimeoutChanges_Value() {
         
         syncMOC.performGroupedBlockAndWait {
             XCTAssertNil(self.conversation.messageDestructionTimeout)
@@ -503,7 +503,7 @@ extension ZMConversationTranscoderTests_Swift {
         }
     }
     
-    func testThatItDiscardsDoubleSystemMessageWhenSyncedTumeoutChanges_NoValue() {
+    func testThatItDiscardsDoubleSystemMessageWhenSyncedTimeoutChanges_NoValue() {
         
         syncMOC.performGroupedBlockAndWait {
             XCTAssertNil(self.conversation.messageDestructionTimeout)
