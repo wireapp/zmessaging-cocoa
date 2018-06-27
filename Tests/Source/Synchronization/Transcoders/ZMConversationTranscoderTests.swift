@@ -464,6 +464,99 @@ extension ZMConversationTranscoderTests_Swift {
             XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
         }
     }
+    
+    func testThatItDiscardsDoubleSystemMessageWhenSyncedTumeoutChanges_Value() {
+        
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertNil(self.conversation.messageDestructionTimeout)
+            
+            // Given
+            let messageTimerMillis = 31536000000
+            let messageTimer = MessageDestructionTimeoutValue(rawValue: TimeInterval(messageTimerMillis / 1000))
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            selfUser.remoteIdentifier = UUID.create()
+            
+            let payload: [String: Any] = [
+                "from": selfUser.remoteIdentifier!.transportString(),
+                "conversation": self.conversation!.remoteIdentifier!.transportString(),
+                "time": NSDate().transportString(),
+                "data": ["message_timer": messageTimerMillis],
+                "type": "conversation.message-timer-update"
+            ]
+            
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+            
+            // WHEN
+            self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil) //First event
+            
+            XCTAssertEqual(self.conversation?.messageDestructionTimeout!, MessageDestructionTimeout.synced(messageTimer))
+            guard let firstMessage = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            XCTAssertEqual(firstMessage.systemMessageType, .messageTimerUpdate)
+            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, firstMessage)
+            
+            self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil) //Second duplicated event
+            
+            // THEN
+            XCTAssertEqual(self.conversation?.messageDestructionTimeout!, MessageDestructionTimeout.synced(messageTimer))
+            guard let secondMessage = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            XCTAssertEqual(firstMessage, secondMessage) //Check that no other messages are appended in the conversation
+        }
+    }
+    
+    func testThatItDiscardsDoubleSystemMessageWhenSyncedTumeoutChanges_NoValue() {
+        
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertNil(self.conversation.messageDestructionTimeout)
+            
+            // Given
+            let valuedMessageTimerMillis = 31536000000
+            let valuedMessageTimer = MessageDestructionTimeoutValue(rawValue: TimeInterval(valuedMessageTimerMillis / 1000))
+            
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            selfUser.remoteIdentifier = UUID.create()
+            
+            let valuedPayload: [String: Any] = [
+                "from": selfUser.remoteIdentifier!.transportString(),
+                "conversation": self.conversation!.remoteIdentifier!.transportString(),
+                "time": NSDate().transportString(),
+                "data": ["message_timer": valuedMessageTimerMillis],
+                "type": "conversation.message-timer-update"
+            ]
+            
+            let payload: [String: Any] = [
+                "from": selfUser.remoteIdentifier!.transportString(),
+                "conversation": self.conversation!.remoteIdentifier!.transportString(),
+                "time": NSDate().transportString(),
+                "data": ["message_timer": 0],
+                "type": "conversation.message-timer-update"
+            ]
+            
+            let valuedEvent = ZMUpdateEvent(fromEventStreamPayload: valuedPayload as ZMTransportData, uuid: nil)!
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+            
+            // WHEN
+            
+            //First event with valued timer
+            self.sut?.processEvents([valuedEvent], liveEvents: true, prefetchResult: nil)
+            XCTAssertEqual(self.conversation?.messageDestructionTimeout!, MessageDestructionTimeout.synced(valuedMessageTimer))
+            
+            //Second event with timer = nil
+            self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
+            XCTAssertNil(self.conversation?.messageDestructionTimeout)
+        
+            guard let firstMessage = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            XCTAssertEqual(firstMessage.systemMessageType, .messageTimerUpdate)
+            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, firstMessage)
+        
+            //Third event with timer = nil
+            self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN
+            XCTAssertNil(self.conversation?.messageDestructionTimeout)
+            guard let secondMessage = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            XCTAssertEqual(firstMessage, secondMessage) //Check that no other messages are appended in the conversation
+        }
+    }
 }
 
 
