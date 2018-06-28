@@ -39,33 +39,24 @@ extension ZMConversationTranscoder {
             let user = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext) else { return }
         
         var timeout: MessageDestructionTimeout?
+        let timeoutIntegerValue = (payload["message_timer"] as? Int64) ?? 0
         
-        if let timeoutIntegerValue = payload["message_timer"] as? Int64 {
-            // Backend is sending the miliseconds, we need to convert to seconds.
-            timeout = .synced(MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue / 1000)))
-        } else {
-            timeout = nil
-        }
+        // Backend is sending the miliseconds, we need to convert to seconds.
+        timeout = .synced(MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue / 1000)))
         
-        if user.isSelfUser && (conversation.messageDestructionTimeout == timeout
-            || (conversation.messageDestructionTimeout == nil && timeout == .synced(.none))) {
-            return
-        }
+        let fromSelf = user.isSelfUser
+        let fromOffToOff = !conversation.hasSyncedDestructionTimeout && timeout == .synced(.none)
+        let noChange = fromOffToOff || conversation.messageDestructionTimeout == timeout
         
+        // We seem to get duplicate update events for timeout changes, returning
+        // early will avoid duplicate system messages.
+        if fromSelf && noChange { return }
+
         conversation.messageDestructionTimeout = timeout
         
         if let timestamp = event.timeStamp() {
-            
-            let timer: TimeInterval
-            
-            // system message timer should reflect the synced value, not local
-            if let timeout = conversation.messageDestructionTimeout,
-             case let .synced(value) = timeout {
-                timer = value.rawValue
-            } else {
-                timer = 0
-            }
-            
+            // system message should reflect the synced timer value, not local
+            let timer = conversation.hasSyncedDestructionTimeout ? conversation.messageDestructionTimeoutValue : 0
             let message = conversation.appendMessageTimerUpdateMessage(fromUser: user, timer: timer, timestamp: timestamp)
             localNotificationDispatcher.process(message)
         }
