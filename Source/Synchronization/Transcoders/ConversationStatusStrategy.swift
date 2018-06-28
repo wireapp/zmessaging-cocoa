@@ -32,7 +32,6 @@ public final class ConversationStatusStrategy : ZMObjectSyncStrategy, ZMContextC
             if let conv = $0 as? ZMConversation {
                 if conv.hasLocalModifications(forKey: lastReadKey){
                     conv.resetLocallyModifiedKeys(Set(arrayLiteral: lastReadKey))
-                    conv.updateUnread()
                     ZMConversation.appendSelfConversation(withLastReadOf: conv)
                     didUpdateConversation = true
                 }

@@ -513,12 +513,12 @@ class CallingV3Tests : IntegrationTest {
         }
         XCTAssertEqual(conversationUnderTest.conversationListIndicator, .inactiveCall)
         
-        // (2) Other user ends call
+        // (3) Other user ends call
         // and when
         closeCall(user: user, reason: .canceled)
         
         // then
-        XCTAssertEqual(convObserver!.notifications.count, 2)
+        XCTAssertEqual(convObserver!.notifications.count, 3)
         if let change = convObserver!.notifications.lastObject as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }
@@ -552,7 +552,6 @@ class CallingV3Tests : IntegrationTest {
                                       (user: localUser2, establishedFlow: false)])
 
         // then
-        XCTAssertEqual(convObserver!.notifications.count, 1)
         if let change = convObserver!.notifications.lastObject as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }
@@ -563,7 +562,6 @@ class CallingV3Tests : IntegrationTest {
         selfLeaveCall()
         
         // then
-        XCTAssertEqual(convObserver!.notifications.count, 2)
         if let change = convObserver!.notifications.lastObject as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }
@@ -574,7 +572,6 @@ class CallingV3Tests : IntegrationTest {
         closeCall(user: localUser1, reason: .canceled)
         
         // then
-        XCTAssertEqual(convObserver!.notifications.count, 3)
         if let change = convObserver!.notifications[2] as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }

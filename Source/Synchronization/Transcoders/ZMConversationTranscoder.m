@@ -359,43 +359,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     return conversation;
 }
 
-- (void)updatePropertiesOfConversation:(ZMConversation *)conversation fromEvent:(ZMUpdateEvent *)event
-{
-    NSDate *timeStamp = event.timeStamp;
-    
-    BOOL isMessageEvent = (event.type == ZMUpdateEventTypeConversationOtrMessageAdd) ||
-    (event.type == ZMUpdateEventTypeConversationOtrAssetAdd);
-    
-    // Message events already update the conversation on insert. There is no need to do it here, since different message types (e.g. edit and delete) might have a different effect on the lastModifiedDate and unreadCount
-    if (timeStamp != nil && !isMessageEvent) {
-        [conversation updateLastServerTimeStampIfNeeded:timeStamp];
-        if ([self shouldUnarchiveOrUpdateLastModifiedWithEvent:event]) {
-            conversation.lastModifiedDate = [NSDate lastestOfDate:conversation.lastModifiedDate and:timeStamp];
-        }
-    }
-    
-    // Unarchive conversations when applicable
-    // Message events are parsed separately since they might contain "invisible" messages
-    if (!isMessageEvent && [self shouldUnarchiveOrUpdateLastModifiedWithEvent:event]) {
-        [conversation unarchiveConversationFromEvent:event];
-    }
-}
-
-- (BOOL)shouldUnarchiveOrUpdateLastModifiedWithEvent:(ZMUpdateEvent *)event
-{
-    switch (event.type) {
-        case ZMUpdateEventTypeConversationMemberUpdate:
-        case ZMUpdateEventTypeConversationMemberLeave:
-        case ZMUpdateEventTypeConversationRename:
-        case ZMUpdateEventTypeConversationAccessModeUpdate:
-        case ZMUpdateEventTypeConversationMessageTimerUpdate:
-            return NO;
-
-        default:
-            return YES;
-    }
-}
-
 - (BOOL)isSelfConversationEvent:(ZMUpdateEvent *)event;
 {
     NSUUID * const conversationID = event.conversationUUID;
@@ -437,8 +400,9 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         if (![self shouldProcessUpdateEvent:event]) {
             continue;
         }
+        
         NSDate * const currentLastTimestamp = conversation.lastServerTimeStamp;
-        [self updatePropertiesOfConversation:conversation fromEvent:event];
+        [conversation updateWithUpdateEvent:event];
         
         if (liveEvents) {
             [self processUpdateEvent:event forConversation:conversation previousLastServerTimestamp:currentLastTimestamp];
@@ -723,9 +687,10 @@ static NSString *const ConversationTeamManagedKey = @"managed";
                    response:(ZMTransportResponse *)response
                 keysToParse:(NSSet *)keysToParse
 {
+    NOT_USED(conversation);
+    
     ZMUpdateEvent *event = [self conversationEventWithKeys:keysToParse responsePayload:response.payload];
     if (event != nil) {
-        [conversation updateLastReadFromPostPayloadEvent:event];
         [self processEvents:@[event] liveEvents:YES prefetchResult:nil];
     }
         

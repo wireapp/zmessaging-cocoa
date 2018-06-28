@@ -220,19 +220,22 @@ extension LocalNotificationDispatcherTests {
     
     func testThatItCancelsReadNotificationsIfTheLastReadChanges() {
         // GIVEN
-        let message = self.conversation1.appendMessage(withText: "foo") as! ZMClientMessage
-        message.sender = self.user1
+        let message = conversation1.appendMessage(withText: "foo") as! ZMClientMessage
+        message.sender = user1
         let note1 = ZMLocalNotification(expiredMessage: message)!
         let note2 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
-        self.sut.eventNotifications.addObject(note1)
-        self.sut.eventNotifications.addObject(note2)
+        sut.eventNotifications.addObject(note1)
+        sut.eventNotifications.addObject(note2)
+        conversation1.lastServerTimeStamp = Date.distantFuture
+        syncMOC.saveOrRollback()
         
         // WHEN
-        self.conversation1.updateLastReadServerTimeStampIfNeeded(withTimeStamp: Date(timeIntervalSinceNow: 1000), andSync: false)
+        let conversationOnUI = uiMOC.object(with: conversation1.objectID) as? ZMConversation
+        conversationOnUI?.markAsRead()
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
-        XCTAssertEqual(Set(self.application.cancelledLocalNotifications), Set([note2.uiLocalNotification, note1.uiLocalNotification]))
+        XCTAssertEqual(Set(application.cancelledLocalNotifications), Set([note2.uiLocalNotification, note1.uiLocalNotification]))
     }
     
     func testThatItSchedulesADefaultNotificationIfContentShouldNotBeVisible() {

@@ -900,7 +900,7 @@
     
     // then
     XCTAssertTrue([conversations containsObject:conversation]);
-    XCTAssertEqual(observer.notifications.count, 3u);
+    XCTAssertEqual(observer.notifications.count, 2u);
 }
 
 
