@@ -117,7 +117,7 @@ extension LocalNotificationDispatcherTests {
         XCTAssertEqual(application.scheduledLocalNotifications.count, 1)
         XCTAssertEqual(notificationDelegate.receivedLocalNotifications.count, 0)
         guard let notification = application.scheduledLocalNotifications.first else { return XCTFail() }
-        XCTAssertTrue(notification.alertBody!.contains("User 1 set the timed messages to"))
+        XCTAssertTrue(notification.alertBody!.contains("User 1 set the message timer to"))
     }
 
     func testThatItForwardsNotificationFromMessagesIfActive() {
