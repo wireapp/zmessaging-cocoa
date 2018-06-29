@@ -103,9 +103,9 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                 default:
                     break
                 }
+                
+                self.syncManagedObjectContext.enqueueDelayedSave()
             }
-            
-            self.syncManagedObjectContext.enqueueDelayedSave()
         }
     }
     
@@ -170,6 +170,8 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             if let timestamp = timestamp {
                 conversation.updateLastModified(timestamp)
             }
+            
+            self.syncManagedObjectContext.enqueueDelayedSave()
         default: break
         }
     }

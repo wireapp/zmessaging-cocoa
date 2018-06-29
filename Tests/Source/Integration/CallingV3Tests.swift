@@ -81,23 +81,19 @@ class CallingV3Tests : IntegrationTest {
     }
     
     func selfJoinCall(isStart: Bool) {
-        userSession?.enqueueChanges {
-            _ = self.conversationUnderTest.voiceChannel?.join(video: false)
-        }
+        _ = self.conversationUnderTest.voiceChannel?.join(video: false)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     func selfLeaveCall(){
         let convIdRef = self.conversationIdRef
         let userIdRef = self.selfUser.identifier.cString(using: .utf8)
-        userSession?.enqueueChanges {
-            self.conversationUnderTest.voiceChannel?.leave()
-            WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
-                                             conversationId: convIdRef,
-                                             messageTime: 0,
-                                             userId: userIdRef,
-                                             contextRef: self.wireCallCenterRef)
-        }
+        self.conversationUnderTest.voiceChannel?.leave()
+        WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
+                                         conversationId: convIdRef,
+                                         messageTime: 0,
+                                         userId: userIdRef,
+                                         contextRef: self.wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
@@ -518,7 +514,7 @@ class CallingV3Tests : IntegrationTest {
         closeCall(user: user, reason: .canceled)
         
         // then
-        XCTAssertEqual(convObserver!.notifications.count, 3)
+        XCTAssertEqual(convObserver!.notifications.count, 2)
         if let change = convObserver!.notifications.lastObject as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }
@@ -547,11 +543,12 @@ class CallingV3Tests : IntegrationTest {
         selfJoinCall(isStart: false)
         establishedFlow(user: localSelfUser)
         
-        // second user joins        
+        // second user joins
         participantsChanged(members: [(user: localUser1, establishedFlow: false),
                                       (user: localUser2, establishedFlow: false)])
 
         // then
+        XCTAssertEqual(convObserver!.notifications.count, 1)
         if let change = convObserver!.notifications.lastObject as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }
@@ -562,6 +559,7 @@ class CallingV3Tests : IntegrationTest {
         selfLeaveCall()
         
         // then
+        XCTAssertEqual(convObserver!.notifications.count, 2)
         if let change = convObserver!.notifications.lastObject as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }
@@ -572,6 +570,7 @@ class CallingV3Tests : IntegrationTest {
         closeCall(user: localUser1, reason: .canceled)
         
         // then
+        XCTAssertEqual(convObserver!.notifications.count, 3)
         if let change = convObserver!.notifications[2] as? ConversationChangeInfo {
             XCTAssertTrue(change.conversationListIndicatorChanged)
         }
