@@ -44,8 +44,8 @@ private let ZMPushStringFailedToSend        = "failed.message"       // "Unable 
 
 private let ZMPushStringMemberJoin          = "member.join"          // "[senderName] added you"
 private let ZMPushStringMemberLeave         = "member.leave"         // "[senderName] removed you"
-private let ZMPushStringMessageTimerUpdate  = "message-timer.update" // "[senderName] set the timed messages to [duration]
-private let ZMPushStringMessageTimerOff     = "message-timer.off"    // "[senderName] set the timed messages to [duration]
+private let ZMPushStringMessageTimerUpdate  = "message-timer.update" // "[senderName] set the message timer to [duration]
+private let ZMPushStringMessageTimerOff     = "message-timer.off"    // "[senderName] turned off the message timer
 
 private let ZMPushStringKnock               = "knock"                // "pinged"
 private let ZMPushStringReaction            = "reaction"             // "[emoji] your message"
