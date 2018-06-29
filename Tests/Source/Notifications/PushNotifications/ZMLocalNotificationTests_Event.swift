@@ -356,7 +356,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
 
         // then
         XCTAssertNotNil(note)
-        XCTAssertEqual(note?.body, "Other User1 set the timed messages to 1 day")
+        XCTAssertEqual(note?.body, "Other User1 set the message timer to 1 day")
     }
     
     func testThatItCreatesANotificationForMessageTimerUpdateSystemMessages_NoUserName() {
@@ -370,7 +370,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         
         // then
         XCTAssertNotNil(note)
-        XCTAssertEqual(note?.body, "Someone set the timed messages to 1 day")
+        XCTAssertEqual(note?.body, "Someone set the message timer to 1 day")
     }
     
     func testThatItCreatesANotificationForMessageTimerUpdateSystemMessages_NoConversationName() {
@@ -383,7 +383,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         
         // then
         XCTAssertNotNil(note)
-        XCTAssertEqual(note?.body, "Other User1 set the timed messages to 1 day in a conversation")
+        XCTAssertEqual(note?.body, "Other User1 set the message timer to 1 day in a conversation")
     }
     
     func testThatItCreatesANotificationForMessageTimerUpdateSystemMessages_NoUserName_NoConversationName() {
@@ -397,9 +397,63 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         
         // then
         XCTAssertNotNil(note)
-        XCTAssertEqual(note?.body, "Someone set the timed messages to 1 day in a conversation")
+        XCTAssertEqual(note?.body, "Someone set the message timer to 1 day in a conversation")
     }
+    
+    func testThatItCreatesANotificationForMessageTimerUpdateSystemMessages_Off() {
+        // given
+        let message = groupConversation.appendMessageTimerUpdateMessage(fromUser: otherUser1, timer: 0, timestamp: Date())
+        message.sender = otherUser1
         
+        // when
+        let note = ZMLocalNotification(systemMessage: message)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note?.body, "Other User1 turned off the message timer")
+    }
+    
+    func testThatItCreatesANotificationForMessageTimerUpdateSystemMessages_NoUserName_Off() {
+        // given
+        otherUser1.name = ""
+        let message = groupConversation.appendMessageTimerUpdateMessage(fromUser: otherUser1, timer: 0, timestamp: Date())
+        message.sender = otherUser1
+        
+        // when
+        let note = ZMLocalNotification(systemMessage: message)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note?.body, "Someone turned off the message timer")
+    }
+    
+    func testThatItCreatesANotificationForMessageTimerUpdateSystemMessages_NoConversationName_Off() {
+        // given
+        let message = groupConversationWithoutName.appendMessageTimerUpdateMessage(fromUser: otherUser1, timer: 0, timestamp: Date())
+        message.sender = otherUser1
+        
+        // when
+        let note = ZMLocalNotification(systemMessage: message)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note?.body, "Other User1 turned off the message timer in a conversation")
+    }
+    
+    func testThatItCreatesANotificationForMessageTimerUpdateSystemMessages_NoUserName_NoConversationName_Off() {
+        // given
+        otherUser1.name = ""
+        let message = groupConversationWithoutName.appendMessageTimerUpdateMessage(fromUser: otherUser1, timer: 0, timestamp: Date())
+        message.sender = otherUser1
+        
+        // when
+        let note = ZMLocalNotification(systemMessage: message)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note?.body, "Someone turned off the message timer in a conversation")
+    }
+
     func testThatItAddsATitleIfTheUserIsPartOfATeam() {
         self.syncMOC.performGroupedBlockAndWait {
             
