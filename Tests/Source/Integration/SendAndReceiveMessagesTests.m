@@ -289,11 +289,11 @@
                                            return @[nonce1, nonce2];
                                        } verify:^(ZMConversation *conversation) {
                                            ZMClientMessage *msg1 = conversation.messages[conversation.messages.count - 2];
-                                           XCTAssertEqualObjects(msg1.nonce, nonce1);
+                                           XCTAssertEqualObjects(msg1.nonce, nonce1, @"msg1 timestamp %f", msg1.serverTimestamp.timeIntervalSince1970);
                                            XCTAssertEqualObjects(msg1.genericMessage.text.content, expectedText1);
                                            
                                            ZMClientMessage *msg2 = conversation.messages[conversation.messages.count - 1];
-                                           XCTAssertEqualObjects(msg2.nonce, nonce2);
+                                           XCTAssertEqualObjects(msg2.nonce, nonce2, @"msg2 timestamp %f", msg2.serverTimestamp.timeIntervalSince1970);
                                            XCTAssertEqualObjects(msg2.genericMessage.text.content, expectedText2);
                                        }];
 }
