@@ -37,7 +37,6 @@ class ZMHotFixDirectoryTests: MessagingTest {
             
             // when
             ZMHotFixDirectory.refetchTeamGroupConversations(self.syncMOC)
-            //        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             
             // then
             XCTAssertFalse(g1.needsToBeUpdatedFromBackend)
@@ -68,7 +67,6 @@ class ZMHotFixDirectoryTests: MessagingTest {
             
             // when
             ZMHotFixDirectory.refetchTeamGroupConversations(self.syncMOC)
-            //        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             
             // then
             XCTAssertFalse(c1.needsToBeUpdatedFromBackend)
@@ -94,7 +92,6 @@ class ZMHotFixDirectoryTests: MessagingTest {
             
             // when
             ZMHotFixDirectory.refetchGroupConversations(self.syncMOC)
-//            XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             
             // then
             XCTAssertFalse(c1.needsToBeUpdatedFromBackend)
