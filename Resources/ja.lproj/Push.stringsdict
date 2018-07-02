@@ -14,11 +14,7 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>From: One
-新規メッセージ
-
-From: Other
-%2$@ メッセージ</string>
+        <string>%2$@ messages</string>
       </dict>
     </dict>
     <key>push.notification.add.message.many.group.noconversationname</key>
@@ -32,11 +28,7 @@ From: Other
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>From: One
-新規メッセージ
-
-From: Other
-%1$@ メッセージ</string>
+        <string>%1$@ messages</string>
       </dict>
     </dict>
     <key>push.notification.add.message.many.oneonone</key>
@@ -50,11 +42,7 @@ From: Other
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>From: One
-新規メッセージ
-
-From: Other
-%2$@ メッセージ</string>
+        <string>%2$@ messages</string>
       </dict>
     </dict>
     <key>push.notification.add.message.many.oneonone.nousername</key>
@@ -68,11 +56,7 @@ From: Other
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>From: One
-新規メッセージ
-
-From: Other
-%1$@ メッセージ</string>
+        <string>%1$@ messages</string>
       </dict>
     </dict>
     <key>push.notification.call.missed.many</key>
@@ -86,11 +70,7 @@ From: Other
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>From: One
-1 件の不在着信
-
-From: Other
-%2@ 件の不在着信</string>
+        <string>%2@ missed calls</string>
       </dict>
     </dict>
     <key>push.notification.call.missed.many.noconversationname</key>
@@ -104,11 +84,7 @@ From: Other
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>From: One
-1 件の不在着信
-
-From: Other
-%1$@ 件の不在着信</string>
+        <string>%1$@ missed calls</string>
       </dict>
     </dict>
     <key>push.notification.knock.group</key>
@@ -150,11 +126,7 @@ From: Other
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>From: One
-Pingしました
-
-From: Other
-%1$@ 回 Pingしました</string>
+        <string>%1$@ pings</string>
       </dict>
     </dict>
     <key>push.notification.knock.group.nousername.noconversationname</key>
@@ -168,11 +140,7 @@ From: Other
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>From: One
-Pingしました
-
-From: Other
-%1$@ 回 Pingしました</string>
+        <string>%1$@ pings</string>
       </dict>
     </dict>
     <key>push.notification.knock.oneonone</key>
@@ -200,11 +168,7 @@ From: Other
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>From: One
-Pingしました
-
-From: Other
-%2$@ 回 Pingしました</string>
+        <string>%2$@ pings</string>
       </dict>
     </dict>
   </dict>
