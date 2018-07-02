@@ -68,7 +68,7 @@
 "push.notification.add.video.group.nousername.noconversationname" = "Jemand hat ein Video in einer Unterhaltung geteilt";
 "push.notification.add.video.group.noconversationname" = "%1$@ hat ein Video in einer Unterhaltung geteilt";
 
-"push.notification.add.video.oneonone" = "hat eine Video geteilt";
+"push.notification.add.video.oneonone" = "hat ein Video geteilt";
 "push.notification.add.video.oneonone.nousername" = "Jemand hat ein Video in einer Unterhaltung geteilt";
 
 // AUDIO
@@ -119,6 +119,7 @@
 "push.notification.message-timer.off.nousername" = "Jemand hat temporäre Nachrichten ausgeschaltet";
 "push.notification.message-timer.off.noconversationname" = "%@ hat temporäre Nachrichten in einer Unterhaltung ausgeschaltet";
 "push.notification.message-timer.off.nousername.noconversationname" = "Jemand hat temporäre Nachrichten in einer Unterhaltung ausgeschaltet";
+
 // VIDEO CALLS
 "push.notification.call.started.video.oneonone" = "ruft mit Video an";
 "push.notification.call.started.video.oneonone.nousername" = "Jemand ruft mit Video an";

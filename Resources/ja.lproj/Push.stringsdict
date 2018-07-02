@@ -14,7 +14,11 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>%2$@ messages</string>
+        <string>From: One
+新規メッセージ
+
+From: Other
+%2$@ メッセージ</string>
       </dict>
     </dict>
     <key>push.notification.add.message.many.group.noconversationname</key>
@@ -28,7 +32,11 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>%1$@ messages</string>
+        <string>From: One
+新規メッセージ
+
+From: Other
+%1$@ メッセージ</string>
       </dict>
     </dict>
     <key>push.notification.add.message.many.oneonone</key>
@@ -42,7 +50,11 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>%2$@ messages</string>
+        <string>From: One
+新規メッセージ
+
+From: Other
+%2$@ メッセージ</string>
       </dict>
     </dict>
     <key>push.notification.add.message.many.oneonone.nousername</key>
@@ -56,13 +68,17 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>%1$@ messages</string>
+        <string>From: One
+新規メッセージ
+
+From: Other
+%1$@ メッセージ</string>
       </dict>
     </dict>
     <key>push.notification.call.missed.many</key>
     <dict>
       <key>NSStringLocalizedFormatKey</key>
-      <string>You have %2$#@new_calls@ in %1@</string>
+      <string>%1@ で%2$#@new_calls@ があります</string>
       <key>new_calls</key>
       <dict>
         <key>NSStringFormatSpecTypeKey</key>
@@ -70,13 +86,17 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>%2@ missed calls</string>
+        <string>From: One
+1 件の不在着信
+
+From: Other
+%2@ 件の不在着信</string>
       </dict>
     </dict>
     <key>push.notification.call.missed.many.noconversationname</key>
     <dict>
       <key>NSStringLocalizedFormatKey</key>
-      <string>You have %1$#@new_calls@ in a conversation</string>
+      <string>会話において %1$#@new_calls@ があります</string>
       <key>new_calls</key>
       <dict>
         <key>NSStringFormatSpecTypeKey</key>
@@ -84,13 +104,17 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>%1$@ missed calls</string>
+        <string>From: One
+1 件の不在着信
+
+From: Other
+%1$@ 件の不在着信</string>
       </dict>
     </dict>
     <key>push.notification.knock.group</key>
     <dict>
       <key>NSStringLocalizedFormatKey</key>
-      <string>%1$@ pinged%2$#@new_knocks@</string>
+      <string>%1$@ が %2$#@new_knocks@ Pingしました</string>
       <key>new_knocks</key>
       <dict>
         <key>NSStringFormatSpecTypeKey</key>
@@ -104,7 +128,7 @@
     <key>push.notification.knock.group.noconversationname</key>
     <dict>
       <key>NSStringLocalizedFormatKey</key>
-      <string>%1$@ pinged%2$#@new_knocks@in a conversation</string>
+      <string>%1$@ が会話において %2$#@new_knocks@ Pingしました</string>
       <key>new_knocks</key>
       <dict>
         <key>NSStringFormatSpecTypeKey</key>
@@ -126,13 +150,17 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>%1$@ pings</string>
+        <string>From: One
+Pingしました
+
+From: Other
+%1$@ 回 Pingしました</string>
       </dict>
     </dict>
     <key>push.notification.knock.group.nousername.noconversationname</key>
     <dict>
       <key>NSStringLocalizedFormatKey</key>
-      <string>%1$#@new_knocks@ in a conversation</string>
+      <string>会話において %1$#@new_knocks@</string>
       <key>new_knocks</key>
       <dict>
         <key>NSStringFormatSpecTypeKey</key>
@@ -140,13 +168,17 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>%1$@ pings</string>
+        <string>From: One
+Pingしました
+
+From: Other
+%1$@ 回 Pingしました</string>
       </dict>
     </dict>
     <key>push.notification.knock.oneonone</key>
     <dict>
       <key>NSStringLocalizedFormatKey</key>
-      <string>pinged%1$#@new_knocks@</string>
+      <string>%1$#@new_knocks@ Pingしました</string>
       <key>new_knocks</key>
       <dict>
         <key>NSStringFormatSpecTypeKey</key>
@@ -168,7 +200,11 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string>%2$@ pings</string>
+        <string>From: One
+Pingしました
+
+From: Other
+%2$@ 回 Pingしました</string>
       </dict>
     </dict>
   </dict>
