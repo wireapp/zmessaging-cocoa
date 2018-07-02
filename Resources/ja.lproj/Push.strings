@@ -29,7 +29,7 @@
 
 
 "push.notification.default" = "新しいメッセージ";
-"push.notification.ephemeral" = "Someone sent you a message";
+"push.notification.ephemeral" = "メッセージを受信しました";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%2$@ に%1$@ 人";
@@ -45,7 +45,7 @@
 "push.notification.add.message.oneonone.nousername" = "新しいメッセージ：%1$@";
 
 // UNKNOWN MESSAGE
-"push.notification.add.unknown.group" = "%1$@: new message";
+"push.notification.add.unknown.group" = "%1$@ 件の新しいメッセージ";
 "push.notification.add.unknown.group.nousername" = "新着メッセージ";
 "push.notification.add.unknown.group.nousername.noconversationname" = "新着メッセージ";
 "push.notification.add.unknown.group.noconversationname" = "%1$@ がメッセージを送信しました";
@@ -54,8 +54,8 @@
 "push.notification.add.unknown.oneonone.nousername" = "新着メッセージ";
 
 // IMAGE
-"push.notification.add.image.group" = "%1$@ shared a picture";
-"push.notification.add.image.group.nousername" = "New picture";
+"push.notification.add.image.group" = "%1$@が写真をシェアしました";
+"push.notification.add.image.group.nousername" = "新しい写真";
 "push.notification.add.image.group.nousername.noconversationname" = "会話での新しい写真";
 "push.notification.add.image.group.noconversationname" = "%1$@が新しい写真をシェアしました";
 
@@ -63,8 +63,8 @@
 "push.notification.add.image.oneonone.nousername" = "新しい写真";
 
 // VIDEO
-"push.notification.add.video.group" = "%1$@ shared a video";
-"push.notification.add.video.group.nousername" = "New video";
+"push.notification.add.video.group" = "%1$@がビデオをシェアしました";
+"push.notification.add.video.group.nousername" = "新しいビデオ";
 "push.notification.add.video.group.nousername.noconversationname" = "新しいビデオ";
 "push.notification.add.video.group.noconversationname" = "%1$@が新しいビデオをシェアしました";
 
@@ -72,17 +72,17 @@
 "push.notification.add.video.oneonone.nousername" = "新しいビデオ";
 
 // AUDIO
-"push.notification.add.audio.group" = "%1$@ shared an audio message";
-"push.notification.add.audio.group.nousername" = "New audio message";
+"push.notification.add.audio.group" = "%1$@が音声メッセージをシェアしました";
+"push.notification.add.audio.group.nousername" = "新しいオーディオメッセージ";
 "push.notification.add.audio.group.nousername.noconversationname" = "新しい音声メッセージ";
 "push.notification.add.audio.group.noconversationname" = "%1$@が音声メッセージをシェアしました";
 
-"push.notification.add.audio.oneonone" = "shared an audio message";
+"push.notification.add.audio.oneonone" = "音声メッセージを共有しました";
 "push.notification.add.audio.oneonone.nousername" = "新しい音声メッセージ";
 
 // FILE
-"push.notification.add.file.group" = "%1$@ shared a file";
-"push.notification.add.file.group.nousername" = "New file";
+"push.notification.add.file.group" = "%1$@がファイルをシェアしました";
+"push.notification.add.file.group.nousername" = "新しいファイル";
 "push.notification.add.file.group.nousername.noconversationname" = "新しいファイル";
 "push.notification.add.file.group.noconversationname" = "%1$@が新しいファイルをシェアしました";
 
@@ -90,8 +90,8 @@
 "push.notification.add.file.oneonone.nousername" = "新しいファイル";
 
 // LOCATION
-"push.notification.add.location.group" = "%1$@ shared a location";
-"push.notification.add.location.group.nousername" = "New location";
+"push.notification.add.location.group" = "%1$@が位置情報をシェアしました";
+"push.notification.add.location.group.nousername" = "新しい場所";
 "push.notification.add.location.group.nousername.noconversationname" = "新しい位置情報";
 "push.notification.add.location.group.noconversationname" = "%1$@が位置情報をシェアしました";
 
@@ -99,42 +99,53 @@
 "push.notification.add.location.oneonone.nousername" = "新しい位置情報";
 
 // SELF ADDED/REMOVED TO GROUP
-"push.notification.member.join.self" = "%1$@ added you";
+"push.notification.member.join.self" = "%1$@ はあなたを追加しました";
 "push.notification.member.join.self.noconversationname" = "%1$@はあなたを会話に追加しました";
 "push.notification.member.join.self.nousername.noconversationname" = "あなたは会話に追加されました";
-"push.notification.member.join.self.nousername" = "You were added";
+"push.notification.member.join.self.nousername" = "あなたは追加されました";
 
-"push.notification.member.leave.self" = "%1$@ removed you";
+"push.notification.member.leave.self" = "%1$@はあなたを削除しました";
 "push.notification.member.leave.self.noconversationname" = "%1$@があなたを会話から削除しました";
 "push.notification.member.leave.self.nousername.noconversationname" = "あなたは会話から削除されました";
 "push.notification.member.leave.self.nousername" = "あなたは削除されました";
 
+// EPHEMERAL MESSAGE TIMER UPDATE
+"push.notification.message-timer.update" = "%@ set the message timer to %@";
+"push.notification.message-timer.update.nousername" = "Someone set the message timer to %@";
+"push.notification.message-timer.update.noconversationname" = "%@ set the message timer to %@ in a conversation";
+"push.notification.message-timer.update.nousername.noconversationname" = "Someone set the message timer to %@ in a conversation";
+
+"push.notification.message-timer.off" = "%@ turned off the message timer";
+"push.notification.message-timer.off.nousername" = "Someone turned off the message timer";
+"push.notification.message-timer.off.noconversationname" = "%@ turned off the message timer in a conversation";
+"push.notification.message-timer.off.nousername.noconversationname" = "Someone turned off the message timer in a conversation";
+
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "is video calling";
+"push.notification.call.started.video.oneonone" = "ビデオ着信中";
 "push.notification.call.started.video.oneonone.nousername" = "ビデオ通話です";
 
-"push.notification.call.started.video.group" = "%1$@ is video calling";
+"push.notification.call.started.video.group" = "%1$@からのビデオ通話";
 "push.notification.call.started.video.group.nousername" = "ビデオ通話です";
 "push.notification.call.started.video.group.noconversationname" = "%1$@からのビデオ通話です";
 "push.notification.call.started.video.group.nousername.noconversationname" = "ビデオ通話です";
 
 // VOICE CALLS
-"push.notification.call.started.oneonone" = "is calling";
+"push.notification.call.started.oneonone" = "呼び出し中";
 "push.notification.call.started.oneonone.nousername" = "着信中";
 
-"push.notification.call.started.group" = "%1$@ is calling";
+"push.notification.call.started.group" = "%1$@からの着信中";
 "push.notification.call.started.group.nousername" = "着信中";
 "push.notification.call.started.group.noconversationname" = "%1$@からの着信中です";
 "push.notification.call.started.group.nousername.noconversationname" = "着信中です";
 
 // MISSED CALLS
-"push.notification.call.missed.group" = "%1$@ called";
-"push.notification.call.missed.group.nousername" = "Someone called";
-"push.notification.call.missed.group.nousername.noconversationname" = "Someone called in a conversation";
-"push.notification.call.missed.group.noconversationname" = "%1$@ called in a conversation";
+"push.notification.call.missed.group" = "%1$@ から着信あり";
+"push.notification.call.missed.group.nousername" = "誰かから着信あり";
+"push.notification.call.missed.group.nousername.noconversationname" = "会話内で誰かからの着信あり";
+"push.notification.call.missed.group.noconversationname" = "会話内で %1$@ からの着信あり";
 
-"push.notification.call.missed.oneonone" = "called";
-"push.notification.call.missed.oneonone.nousername" = "Someone called";
+"push.notification.call.missed.oneonone" = "着信あり";
+"push.notification.call.missed.oneonone.nousername" = "誰かから着信あり";
 
 // CALLKIT
 "push.notification.callkit.call.started.group" = "%2$@ に%1$@ 人";
@@ -143,8 +154,8 @@
 "push.notification.callkit.call.started.group.noconversationname" = "%@ からの着信中";
 
 // CONVERSATION CREATE
-"push.notification.conversation.create" = "%1$@ created a group";
-"push.notification.conversation.create.nousername" = "Someone created a group";
+"push.notification.conversation.create" = "%1$@ がグループを作成しました";
+"push.notification.conversation.create.nousername" = "誰かがグループを作成しました";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@がつながりをリクエストしています";
@@ -161,12 +172,12 @@
 "push.notification.failed.message.group.noconversationname" = "メッセージを送ることができません";
 
 // REACTIONS
-"push.notification.reaction.group" = "%1$@ %2$@ your message";
+"push.notification.reaction.group" = "%1$@ があなたのメッセージを%2$@";
 "push.notification.reaction.group.nousername.noconversationname" = "あなたのメッセージが%@ されました";
 "push.notification.reaction.group.nousername" = "だれかがあなたのメッセージを%@";
-"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ your message in a conversation";
+"push.notification.reaction.group.noconversationname" = "%1$@が会話でのあなたのメッセージを%2$@";
 
-"push.notification.reaction.oneonone" = "%1$@ your message";
+"push.notification.reaction.oneonone" = "%1$@があなたのメッセージを";
 "push.notification.reaction.oneonone.nousername" = "だれかがあなたのメッセージを%@";
 
 // NEW USER (no alert title for this)

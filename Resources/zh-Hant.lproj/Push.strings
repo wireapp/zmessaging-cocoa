@@ -109,6 +109,17 @@
 "push.notification.member.leave.self.nousername.noconversationname" = "您從對話中被移除了";
 "push.notification.member.leave.self.nousername" = "您被移除了";
 
+// EPHEMERAL MESSAGE TIMER UPDATE
+"push.notification.message-timer.update" = "%@ set the message timer to %@";
+"push.notification.message-timer.update.nousername" = "Someone set the message timer to %@";
+"push.notification.message-timer.update.noconversationname" = "%@ set the message timer to %@ in a conversation";
+"push.notification.message-timer.update.nousername.noconversationname" = "Someone set the message timer to %@ in a conversation";
+
+"push.notification.message-timer.off" = "%@ turned off the message timer";
+"push.notification.message-timer.off.nousername" = "Someone turned off the message timer";
+"push.notification.message-timer.off.noconversationname" = "%@ turned off the message timer in a conversation";
+"push.notification.message-timer.off.nousername.noconversationname" = "Someone turned off the message timer in a conversation";
+
 // VIDEO CALLS
 "push.notification.call.started.video.oneonone" = "視訊來電";
 "push.notification.call.started.video.oneonone.nousername" = "您接到一個視訊來電";
