@@ -21,24 +21,25 @@
 
 
 /// A push token used to register the app with the backend + APNS.
+__deprecated
 @interface ZMPushToken : NSObject <NSSecureCoding>
 
 - (instancetype _Nonnull)initWithDeviceToken:(NSData * _Nonnull)deviceToken
                          identifier:(NSString * _Nonnull)appIdentifier
                       transportType:(NSString * _Nonnull)transportType
-                       isRegistered:(BOOL)isRegistered;
+                       isRegistered:(BOOL)isRegistered __deprecated;
 
-@property (nonatomic, copy, readonly, nonnull) NSData *deviceToken;
-@property (nonatomic, copy, readonly, nonnull) NSString *appIdentifier;
-@property (nonatomic, copy, readonly, nonnull) NSString *transportType;
-@property (nonatomic, readonly) BOOL isRegistered;
-@property (nonatomic, readonly) BOOL isMarkedForDeletion;
+@property (nonatomic, copy, readonly, nonnull) NSData *deviceToken __deprecated;
+@property (nonatomic, copy, readonly, nonnull) NSString *appIdentifier __deprecated;
+@property (nonatomic, copy, readonly, nonnull) NSString *transportType __deprecated;
+@property (nonatomic, readonly) BOOL isRegistered __deprecated;
+@property (nonatomic, readonly) BOOL isMarkedForDeletion __deprecated;
 
 /// Returns a copy of the receiver with @c isRegistered set to @c NO
-- (instancetype _Nonnull)unregisteredCopy;
+- (instancetype _Nonnull)unregisteredCopy __deprecated;
 
 /// Returns a copy of the receiver is @c isMarkedForDeletion set to @c YES or nil if the token is not registered
-- (instancetype _Nullable)forDeletionMarkedCopy;
+- (instancetype _Nullable)forDeletionMarkedCopy __deprecated;
 
 @end
 
@@ -47,7 +48,7 @@
 @interface NSManagedObjectContext (PushToken)
 
 /// The token used for PushKit based remote push notifications. PushKit also refers to the token as ‘credentials’.
-@property (nonatomic, copy, nullable) ZMPushToken *pushKitToken;
+@property (nonatomic, copy, nullable) ZMPushToken *pushKitToken __deprecated;
 
 @end
 
@@ -55,6 +56,6 @@
 
 @interface NSString (ZMPushToken)
 
-- (nullable NSData *)zmDeviceTokenData;
+- (nullable NSData *)zmDeviceTokenData __deprecated;
 
 @end
