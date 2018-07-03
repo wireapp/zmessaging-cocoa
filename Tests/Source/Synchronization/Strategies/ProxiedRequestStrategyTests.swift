@@ -65,7 +65,7 @@ class ProxiedRequestStrategyTests: MessagingTest {
     }
 
     func testThatItGeneratesASoundcloudRequest() {
-        
+
         // given
         requestsStatus.add(request: ProxyRequest(type: .soundcloud, path: "/foo/bar", method:.methodGET, callback: { (_,_,_) -> Void in return}))
         
@@ -78,6 +78,24 @@ class ProxiedRequestStrategyTests: MessagingTest {
             XCTAssertEqual(request.path, "/proxy/soundcloud/foo/bar")
             XCTAssertTrue(request.needsAuthentication)
             XCTAssertTrue(request.doesNotFollowRedirects)
+        } else {
+            XCTFail("Empty request")
+        }
+    }
+
+    func testThatItGeneratesAYouTubeRequest() {
+
+        // given
+        requestsStatus.add(request: ProxyRequest(type: .youTube, path: "/foo/bar", method:.methodGET, callback: { (_,_,_) -> Void in return}))
+
+        // when
+        let request : ZMTransportRequest? = self.sut.nextRequest()
+
+        // then
+        if let request = request {
+            XCTAssertEqual(request.method, ZMTransportRequestMethod.methodGET)
+            XCTAssertEqual(request.path, "/proxy/youtube/foo/bar")
+            XCTAssertTrue(request.needsAuthentication)
         } else {
             XCTFail("Empty request")
         }

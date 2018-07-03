@@ -159,7 +159,8 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 
 typedef NS_ENUM (NSInteger, ProxiedRequestType) {
     ProxiedRequestTypeGiphy,
-    ProxiedRequestTypeSoundcloud
+    ProxiedRequestTypeSoundcloud,
+    ProxiedRequestTypeYouTube
 };
 
 @interface ZMUserSession (Proxy)

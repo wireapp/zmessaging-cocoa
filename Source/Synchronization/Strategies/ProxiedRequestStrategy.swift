@@ -28,6 +28,8 @@ extension ProxiedRequestType {
             return "/giphy"
         case .soundcloud:
             return "/soundcloud"
+        case .youTube:
+            return "/youtube"
         }
     }
 }
