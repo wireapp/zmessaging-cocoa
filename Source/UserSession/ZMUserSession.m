@@ -504,32 +504,6 @@ ZM_EMPTY_ASSERTING_INIT()
 
 @implementation ZMUserSession (PushToken)
 
-- (void)setPushKitToken:(NSData *)deviceToken;
-{
-    NSString *transportType = [self.apnsEnvironment transportTypeForTokenType:ZMAPNSTypeVoIP];
-    NSString *appIdentifier = self.apnsEnvironment.appIdentifier;
-    ZMPushToken *token = nil;
-    if (transportType != nil && deviceToken != nil && appIdentifier != nil) {
-        token = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:appIdentifier transportType:transportType isRegistered:NO];
-    }
-    if ((self.managedObjectContext.pushKitToken != token) && ! [self.managedObjectContext.pushKitToken isEqual:token]) {
-        self.managedObjectContext.pushKitToken = token;
-        if (![self.managedObjectContext forceSaveOrRollback]) {
-            ZMLogError(@"Failed to save pushKit token");
-        }
-    }
-}
-
-- (void)deletePushKitToken
-{
-    if(self.managedObjectContext.pushKitToken) {
-        self.managedObjectContext.pushKitToken = [self.managedObjectContext.pushKitToken forDeletionMarkedCopy];
-        if (![self.managedObjectContext forceSaveOrRollback]) {
-            ZMLogError(@"Failed to save pushKit token marked for deletion");
-        }
-    }
-}
-
 - (BOOL)isAuthenticated
 {
     return self.authenticationStatus.isAuthenticated;

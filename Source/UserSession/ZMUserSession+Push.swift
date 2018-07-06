@@ -42,6 +42,32 @@ extension Dictionary {
 }
 
 extension ZMUserSession {
+    func setPushKitToken(_ data: Data) {
+        guard let transportType = apnsEnvironment.transportType(forTokenType: .voIP) else { return }
+        guard let appIdentifier = apnsEnvironment.appIdentifier else { return }
+        guard let selfClient = selfUserClient() else { return }
+        let token = PushToken(deviceToken: data, appIdentifier: appIdentifier, transportType: transportType, isRegistered: false)
+
+        if selfClient.pushToken != token {
+            enqueueChanges {
+                selfClient.pushToken = token
+            }
+        }
+    }
+
+    func deletePushKitToken() {
+        guard let selfClient = selfUserClient() else { return }
+        guard let pushToken = selfClient.pushToken else { return }
+        var token = pushToken
+        token.isMarkedForDeletion = true
+        enqueueChanges {
+            selfClient.pushToken = token
+        }
+    }
+
+}
+
+extension ZMUserSession {
     
     @objc public func receivedPushNotification(with payload: [AnyHashable: Any], completion: @escaping () -> Void) {
         guard let syncMoc = self.syncManagedObjectContext else {
