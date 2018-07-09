@@ -104,6 +104,16 @@
     return (didContainVOIPRequest);
 }
 
+- (void)testThatItRegistersPushToken
+{
+    XCTAssertTrue([self login]);
+
+    // given
+    NSData *token = [NSData dataWithBytes:@"abc" length:3];
+
+    XCTAssertTrue([self registerForPushNotificationsWithToken:token]);
+}
+
 - (void)testThatItUpdatesNewTokensIfNeeded
 {
     XCTAssertTrue([self login]);
@@ -117,45 +127,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    [self.pushRegistry setMockPushToken:newToken];
-    [self recreateSessionManager];
+    XCTAssertTrue([self registerForPushNotificationsWithToken:newToken]);
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue([self lastRequestsContainedTokenRequests], @"Did receive: %@", self.mockTransportSession.receivedRequests);
-}
-
-- (void)testThatItReregistersPushTokensOnDemand
-{
-    XCTAssertTrue([self login]);
-    
-    // given
-    NSData *token = [NSData dataWithBytes:@"abc" length:3];
-    NSData *newToken = [NSData dataWithBytes:@"def" length:6];
-    
-    // when
-    XCTAssertTrue([self registerForPushNotificationsWithToken:token]);
-    
-    // then
-    ZMTransportRequest *request = self.mockTransportSession.receivedRequests.lastObject;
-    XCTAssertEqualObjects(request.path, @"/push/tokens");
-    [self.mockTransportSession resetReceivedRequests];
-    
-    // when
-    [self.pushRegistry setMockPushToken:newToken];
-    [self.userSession resetPushTokens];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    BOOL didContainSignalingKeyRequest = NO;
-    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
-    for (ZMTransportRequest *aRequest in self.mockTransportSession.receivedRequests) {
-        if ([aRequest.path containsString:@"/clients/"] && [aRequest.payload asDictionary][@"sigkeys"] != nil) {
-            didContainSignalingKeyRequest = YES;
-        }
-    }
-    XCTAssertTrue(didContainSignalingKeyRequest);
-    XCTAssertTrue([self lastRequestsContainedTokenRequests]);
 }
 
 - (void)testThatItFetchesTheNotificationStreamWhenReceivingNotificationOfTypeNotice
