@@ -30,7 +30,7 @@ public struct SearchResult {
 extension SearchResult {
     
     public init?(payload: [AnyHashable : Any], query: String, userSession: ZMUserSession) {
-        guard let documents = payload["documents"] as? [[AnyHashable : Any]] else {
+        guard let documents = payload["documents"] as? [[String : Any]] else {
             return nil
         }
         
@@ -44,7 +44,7 @@ extension SearchResult {
             return !isHandleQuery || name?.hasPrefix("@") ?? true || handle?.contains(queryWithoutAtSymbol) ?? false
         }
         
-        let searchUsers = ZMSearchUser.users(withPayloadArray: filteredDocuments, userSession: userSession)
+        let searchUsers = ZMSearchUser.searchUsers(from: filteredDocuments, contextProvider: userSession)
         
         contacts = []
         teamMembers = []
@@ -55,11 +55,11 @@ extension SearchResult {
     }
     
     public init?(servicesPayload servicesFullPayload: [AnyHashable : Any], query: String, userSession: ZMUserSession) {
-        guard let servicesPayload = servicesFullPayload["services"] as? [[AnyHashable : Any]] else {
+        guard let servicesPayload = servicesFullPayload["services"] as? [[String : Any]] else {
             return nil
         }
         
-        let searchUsersServices = ZMSearchUser.users(withPayloadArray: servicesPayload, userSession: userSession)
+        let searchUsersServices = ZMSearchUser.searchUsers(from: servicesPayload, contextProvider: userSession)
         
         contacts = []
         teamMembers = []

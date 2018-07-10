@@ -66,12 +66,12 @@ internal enum AssetTransportError: Error {
         deleteRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
         
         observers.append(NotificationInContext.addObserver(
-            name: ZMUser.completeAssetFetchNotification,
+            name: .userDidRequestCompleteAsset,
             context: managedObjectContext.notificationContext,
             using: { [weak self] in self?.requestAssetForNotification(note: $0) })
         )
         observers.append(NotificationInContext.addObserver(
-            name: ZMUser.previewAssetFetchNotification,
+            name: .userDidRequestPreviewAsset,
             context: managedObjectContext.notificationContext,
             using: { [weak self] in self?.requestAssetForNotification(note: $0) })
         )
@@ -117,9 +117,9 @@ internal enum AssetTransportError: Error {
                 else { return }
             
             switch note.name {
-            case ZMUser.previewAssetFetchNotification:
+            case .userDidRequestPreviewAsset:
                 self.downstreamRequestSyncs[.preview]?.whiteListObject(object)
-            case ZMUser.completeAssetFetchNotification:
+            case .userDidRequestCompleteAsset:
                 self.downstreamRequestSyncs[.complete]?.whiteListObject(object)
             default:
                 break

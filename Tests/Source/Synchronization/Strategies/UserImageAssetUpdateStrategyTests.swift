@@ -237,9 +237,12 @@ extension UserImageAssetUpdateStrategyTests {
         user.previewProfileAssetIdentifier = "fooo"
         let sync = self.sut.downstreamRequestSyncs[.preview]!
         XCTAssertFalse(sync.hasOutstandingItems)
+        syncMOC.saveOrRollback()
         
         // WHEN
-        user.requestPreviewAsset()
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: user.objectID) as? ZMUser)?.requestPreviewProfileImage()
+        }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -252,9 +255,12 @@ extension UserImageAssetUpdateStrategyTests {
         user.completeProfileAssetIdentifier = "fooo"
         let sync = self.sut.downstreamRequestSyncs[.complete]!
         XCTAssertFalse(sync.hasOutstandingItems)
+        syncMOC.saveOrRollback()
         
         // WHEN
-        user.requestCompleteAsset()
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: user.objectID) as? ZMUser)?.requestCompleteProfileImage()
+        }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -266,9 +272,12 @@ extension UserImageAssetUpdateStrategyTests {
         let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
         let assetId = "foo-bar"
         user.previewProfileAssetIdentifier = assetId
+        syncMOC.saveOrRollback()
         
         // WHEN
-        user.requestPreviewAsset()
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: user.objectID) as? ZMUser)?.requestPreviewProfileImage()
+        }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -283,9 +292,12 @@ extension UserImageAssetUpdateStrategyTests {
         let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
         let assetId = "foo-bar"
         user.completeProfileAssetIdentifier = assetId
+        syncMOC.saveOrRollback()
         
         // WHEN
-        user.requestCompleteAsset()
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: user.objectID) as? ZMUser)?.requestCompleteProfileImage()
+        }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -330,9 +342,12 @@ extension UserImageAssetUpdateStrategyTests {
         let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: syncMOC)!
         let assetId = UUID.create().transportString()
         user.previewProfileAssetIdentifier = assetId
+        syncMOC.saveOrRollback()
         
         // When
-        user.requestPreviewAsset()
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: user.objectID) as? ZMUser)?.requestPreviewProfileImage()
+        }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         guard let request = sut.nextRequestIfAllowed() else { return XCTFail("nil request generated") }
         XCTAssertEqual(request.path, "/assets/v3/\(assetId)")
@@ -343,7 +358,7 @@ extension UserImageAssetUpdateStrategyTests {
         request.complete(with: response)
         
         // THEN
-        user.requestPreviewAsset()
+        user.requestPreviewProfileImage()
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNil(user.previewProfileAssetIdentifier)
         XCTAssertNil(sut.nextRequestIfAllowed())
@@ -354,9 +369,12 @@ extension UserImageAssetUpdateStrategyTests {
         let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: syncMOC)!
         let assetId = UUID.create().transportString()
         user.completeProfileAssetIdentifier = assetId
+        syncMOC.saveOrRollback()
         
         // When
-        user.requestCompleteAsset()
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: user.objectID) as? ZMUser)?.requestCompleteProfileImage()
+        }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         guard let request = sut.nextRequestIfAllowed() else { return XCTFail("nil request generated") }
         XCTAssertEqual(request.path, "/assets/v3/\(assetId)")
@@ -367,7 +385,7 @@ extension UserImageAssetUpdateStrategyTests {
         request.complete(with: response)
         
         // THEN
-        user.requestCompleteAsset()
+        user.requestCompleteProfileImage()
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNil(user.completeProfileAssetIdentifier)
         XCTAssertNil(sut.nextRequestIfAllowed())

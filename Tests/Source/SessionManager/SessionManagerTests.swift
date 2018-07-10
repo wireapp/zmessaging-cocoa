@@ -679,7 +679,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
             
             XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             
-            let selfUser = ZMUser.selfUser(inUserSession: session)!
+            let selfUser = ZMUser.selfUser(inUserSession: session)
             selfUser.remoteIdentifier = currentUserIdentifier
         
             self.sessionManager!.tearDownAllBackgroundSessions()

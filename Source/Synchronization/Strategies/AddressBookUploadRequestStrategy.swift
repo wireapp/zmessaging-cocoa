@@ -163,8 +163,8 @@ extension AddressBookUploadRequestStrategy : ZMSingleRequestTranscoder {
                 if user.addressBookEntry == nil {
                     user.addressBookEntry = AddressBookEntry.insertNewObject(in: self.managedObjectContext)
                 }
-                user.addressBookEntry.localIdentifier = contactId
-                user.addressBookEntry.cachedName = addressBook.contact(identifier: contactId)?.displayName
+                user.addressBookEntry?.localIdentifier = contactId
+                user.addressBookEntry?.cachedName = addressBook.contact(identifier: contactId)?.displayName
             }
         }
         

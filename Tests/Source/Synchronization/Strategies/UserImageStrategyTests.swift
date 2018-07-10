@@ -250,13 +250,14 @@ extension UserImageStrategyTests {
             self.user1.localSmallProfileRemoteIdentifier = nil;
             self.user1.imageSmallProfileData = nil;
         }
+        syncMOC.saveOrRollback()
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     
-        // when
-        expectation(forNotification: NSNotification.Name("ZMRequestUserProfileAssetNotification"), object: nil, handler: nil)
-        UserImageStrategy.requestAsset(for: self.user1)
-        XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 1.5))
+        // when        
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: self.user1.objectID) as? ZMUser)?.requestCompleteProfileImage()
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         syncMOC.performGroupedBlockAndWait {
             self.forwardChanges(for:self.user1)

@@ -188,6 +188,8 @@ ZM_EMPTY_ASSERTING_INIT()
         CTCallCenter *callCenter = [[CTCallCenter alloc] init];
         self.managedObjectContext.zm_coreTelephonyCallCenter = callCenter;
         
+        self.managedObjectContext.zm_searchUserCache = [[NSCache alloc] init];
+        
         [self.syncManagedObjectContext performBlockAndWait:^{
             self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncManagedObjectContext
                                                                                                    cookieStorage:session.cookieStorage
