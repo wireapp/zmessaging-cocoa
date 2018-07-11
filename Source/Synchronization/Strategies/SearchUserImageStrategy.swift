@@ -179,20 +179,21 @@ public class SearchUserImageStrategy : AbstractRequestStrategy {
                 userIDsTable.removeAllEntries(with: [userAssetID.userId])
             }
         }
-        else if (response.result == .permanentError) {
+        else if response.result == .permanentError {
             userIDsTable.removeAllEntries(with: [userAssetID.userId])
         }
     }
     
     func fetchUsersRequest() -> ZMTransportRequest? {
         let userIDsToDownload = userIDsTable.allUserIds().subtracting(userIDsBeingRequested)
-        guard userIDsToDownload.count > 0
-        else { return nil}
+        guard userIDsToDownload.count > 0 else { return nil }
+        
         userIDsBeingRequested.formUnion(userIDsToDownload)
         
-        let completionHandler = ZMCompletionHandler(on :managedObjectContext){ [weak self] (response) in
+        let completionHandler = ZMCompletionHandler(on: managedObjectContext) { [weak self] response in
             self?.processUserProfile(response:response, for:userIDsToDownload)
         }
+
         return SearchUserImageStrategy.requestForFetchingAssets(for:userIDsToDownload, completionHandler:completionHandler)
     }
     

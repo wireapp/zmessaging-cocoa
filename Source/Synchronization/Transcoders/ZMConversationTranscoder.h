@@ -36,5 +36,6 @@
                                   syncStatus:(SyncStatus *)syncStatus;
 
 @property (nonatomic) NSUInteger conversationPageSize;
+@property (nonatomic, weak, readonly) id<PushMessageHandler> localNotificationDispatcher;
 
 @end

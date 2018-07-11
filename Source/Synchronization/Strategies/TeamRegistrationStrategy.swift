@@ -20,7 +20,7 @@ import Foundation
 
 final class TeamRegistrationStrategy : NSObject {
     let registrationStatus: RegistrationStatusProtocol
-    let userInfoParser: UserInfoParser
+    weak var userInfoParser: UserInfoParser?
     var registrationSync: ZMSingleRequestSync!
 
     init(groupQueue: ZMSGroupQueue, status : RegistrationStatusProtocol, userInfoParser: UserInfoParser) {
@@ -43,7 +43,7 @@ extension TeamRegistrationStrategy : ZMSingleRequestTranscoder {
 
     func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         if response.result == .success {
-            userInfoParser.parseUserInfo(from: response)
+            userInfoParser?.parseUserInfo(from: response)
             registrationStatus.success()
         } else {
             let error = NSError.blacklistedEmail(with: response) ??

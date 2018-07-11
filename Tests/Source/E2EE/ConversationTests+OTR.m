@@ -92,7 +92,7 @@
     
     // then
     MockEvent *lastEvent = self.selfToUser1Conversation.events.lastObject;
-    XCTAssertEqual(lastEvent.eventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertEqual(lastEvent.eventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMGenericMessage *genericMessage = (ZMGenericMessage *)[[[[ZMGenericMessageBuilder alloc] init] mergeFromData:lastEvent.decryptedOTRData] build];
@@ -118,9 +118,9 @@
     
     
     NSDictionary *lastEventPayload = lastEvent.payload.asDictionary;
-    ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
+    ZMUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
-    XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertEqual(lastEventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.userSession.syncManagedObjectContext];
@@ -157,9 +157,9 @@
     
     MockPushEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
     NSDictionary *lastEventPayload = lastEvent.payload.asDictionary;
-    ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
+    ZMUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
-    XCTAssertNotEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertNotEqual(lastEventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStatePending);
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.userSession.syncManagedObjectContext];
@@ -250,7 +250,7 @@
     
     // then
     MockEvent *lastEvent = self.selfToUser1Conversation.events.lastObject;
-    XCTAssertEqual(lastEvent.eventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertEqual(lastEvent.eventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMGenericMessage *genericMessage = (ZMGenericMessage *)[[[[ZMGenericMessageBuilder alloc] init] mergeFromData:lastEvent.decryptedOTRData] build];
@@ -276,9 +276,9 @@
     MockPushEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
     //check that recipient can read this message
     NSDictionary *lastEventPayload = lastEvent.payload.asDictionary;
-    ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
+    ZMUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
-    XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertEqual(lastEventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.userSession.syncManagedObjectContext];
@@ -314,9 +314,9 @@
     // then
     MockPushEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
     NSDictionary *lastEventPayload = lastEvent.payload.asDictionary;
-    ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
+    ZMUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
-    XCTAssertNotEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertNotEqual(lastEventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStatePending);
     
     XCTAssertFalse([message hasLocalModificationsForKey:@"uploadState"]);
@@ -734,7 +734,7 @@
     
     // then
     MockEvent *lastEvent = self.selfToUser1Conversation.events.lastObject;
-    XCTAssertEqual(lastEvent.eventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertEqual(lastEvent.eventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMGenericMessage *genericMessage = (ZMGenericMessage *)[[[[ZMGenericMessageBuilder alloc] init] mergeFromData:lastEvent.decryptedOTRData] build];
@@ -1150,9 +1150,9 @@
     
     MockPushEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
     NSDictionary *lastEventPayload = lastEvent.payload.asDictionary;
-    ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
+    ZMUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
-    XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertEqual(lastEventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     XCTAssertEqual(message.conversation.securityLevel, ZMConversationSecurityLevelSecure);

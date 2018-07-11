@@ -201,4 +201,11 @@
     ++self.dataChangeNotificationsCount;
 }
 
+- (void)simulateLoggedInUser
+{
+    [self.syncMOC setPersistentStoreMetadata:@"foooooo" forKey:ZMPersistedClientIdKey];
+    [ZMUser selfUserInContext:self.syncMOC].remoteIdentifier = [NSUUID createUUID];
+    [self.cookieStorage setAuthenticationCookieData:self.validCookie];
+}
+
 @end

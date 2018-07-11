@@ -164,7 +164,6 @@
     ZMConversation *conversation =  [self conversationForMockConversation:self.groupConversation];
     NSString *convIDString = conversation.remoteIdentifier.transportString;
     
-    NSDate *pastDate = [[NSDate date] dateByAddingTimeInterval:-100];
     XCTAssertEqual(conversation.messages.count, 6u);
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request){
@@ -179,30 +178,21 @@
     // when
     ZMMessage *previousMessage =  conversation.messages.lastObject;
     
-    __block ZMMessage *message;
+    __block ZMMessage *failedToSendMessage;
     [self.userSession performChanges:^{
-        message = (id)[conversation appendMessageWithText:@"test"];
-        [message setServerTimestamp:pastDate];
+        failedToSendMessage = (id)[conversation appendMessageWithText:@"test"];
     }];
     WaitForAllGroupsToBeEmpty(0.1);
     
-    [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
-        insertMessage();
-    }];
-    WaitForAllGroupsToBeEmpty(0.1);
+    XCTAssertEqual(failedToSendMessage.deliveryState, ZMDeliveryStateFailedToSend);
     
-    XCTAssertEqualObjects(message.serverTimestamp, pastDate);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStateFailedToSend);
-    
-    [self.userSession performChanges:^{
-        [conversation setVisibleWindowFromMessage:nil toMessage:message];
-    }];
+    [conversation markMessagesAsReadUntil:failedToSendMessage];
     WaitForAllGroupsToBeEmpty(0.1);
 
     // then
     XCTAssertNotNil(conversation.lastReadServerTimeStamp);
-    XCTAssertNotEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [message.serverTimestamp timeIntervalSince1970], 0.5);
-    XCTAssertEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [previousMessage.serverTimestamp timeIntervalSince1970], 0.5);
+    XCTAssertNotEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [failedToSendMessage.serverTimestamp timeIntervalSince1970], 0.01);
+    XCTAssertEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [previousMessage.serverTimestamp timeIntervalSince1970], 0.01);
 }
 
 - (void)testThatItSetsTheLastReadWhenInsertingAnImage
@@ -299,11 +289,11 @@
                                            return @[nonce1, nonce2];
                                        } verify:^(ZMConversation *conversation) {
                                            ZMClientMessage *msg1 = conversation.messages[conversation.messages.count - 2];
-                                           XCTAssertEqualObjects(msg1.nonce, nonce1);
+                                           XCTAssertEqualObjects(msg1.nonce, nonce1, @"msg1 timestamp %f", msg1.serverTimestamp.timeIntervalSince1970);
                                            XCTAssertEqualObjects(msg1.genericMessage.text.content, expectedText1);
                                            
                                            ZMClientMessage *msg2 = conversation.messages[conversation.messages.count - 1];
-                                           XCTAssertEqualObjects(msg2.nonce, nonce2);
+                                           XCTAssertEqualObjects(msg2.nonce, nonce2, @"msg2 timestamp %f", msg2.serverTimestamp.timeIntervalSince1970);
                                            XCTAssertEqualObjects(msg2.genericMessage.text.content, expectedText2);
                                        }];
 }

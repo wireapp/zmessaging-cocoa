@@ -21,7 +21,6 @@
 @import WireDataModel;
 
 #import "ZMStoredLocalNotification.h"
-#import "ZMUserSession+UserNotificationCategories.h"
 #import "ZMOperationLoop+Background.h"
 #import "UILocalNotification+UserInfo.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
@@ -45,40 +44,6 @@
                              category:notification.category
                      actionIdentifier:identifier
                             textInput:textInput];
-}
-
-- (instancetype)createStoredLocalNotificationsFromDataDictionary:(NSDictionary *)dataDictionary managedObjectContext:(NSManagedObjectContext *)context
-{
-    if (dataDictionary.count == 0) {
-        return nil;
-    }
-    
-    NSDictionary *internalData = [dataDictionary optionalDictionaryForKey:@"data"];
-    if (internalData.count != 0) {
-        dataDictionary = internalData;
-    }
-    
-    ZMUpdateEvent *event = [[ZMUpdateEvent eventsArrayFromPushChannelData:(id<ZMTransportData>)dataDictionary] firstObject];
-    if (event == nil) {
-        return nil;
-    }
-    
-    ZMConversation *conversation;
-    ZMMessage *message;
-    
-    NSString *category = (event.type == ZMUpdateEventTypeUserConnection) ? ZMConnectCategory : ZMConversationCategory;
-    NSUUID *senderUUID = [event senderUUID];
-    
-    NSUUID *conversationID = [event conversationUUID];
-    if (conversationID != nil) {
-        conversation = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:NO inContext:context];
-        NSUUID *messageNonce = [event messageNonce];
-        if (messageNonce != nil) {
-            message = [ZMMessage fetchMessageWithNonce:messageNonce forConversation:conversation inManagedObjectContext:context];
-        }
-    }
-    
-    return [self initWithConversation:conversation message:message senderUUID:senderUUID category:category actionIdentifier:nil textInput:nil];
 }
 
 - (instancetype)initWithConversation:(ZMConversation *)conversation

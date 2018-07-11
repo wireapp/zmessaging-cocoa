@@ -93,7 +93,7 @@ extension IntegrationTest {
         let localUser = ZMUser(remoteID: remoteUserIdentifier, createIfNeeded: true, in: self.userSession!.syncManagedObjectContext)!
         
         // create client
-        let localClient = localUser.clients.first(where: { $0.remoteIdentifier == remoteClientIdentifier }) ?? { _ -> UserClient in
+        let localClient = localUser.clients.first(where: { $0.remoteIdentifier == remoteClientIdentifier }) ?? { () -> UserClient in
             let newClient = UserClient.insertNewObject(in: self.userSession!.syncManagedObjectContext)
             newClient.user = localUser
             newClient.remoteIdentifier = remoteClientIdentifier

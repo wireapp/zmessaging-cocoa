@@ -68,7 +68,7 @@
 "push.notification.add.video.group.nousername.noconversationname" = "Jemand hat ein Video in einer Unterhaltung geteilt";
 "push.notification.add.video.group.noconversationname" = "%1$@ hat ein Video in einer Unterhaltung geteilt";
 
-"push.notification.add.video.oneonone" = "hat eine Video geteilt";
+"push.notification.add.video.oneonone" = "hat ein Video geteilt";
 "push.notification.add.video.oneonone.nousername" = "Jemand hat ein Video in einer Unterhaltung geteilt";
 
 // AUDIO
@@ -108,6 +108,17 @@
 "push.notification.member.leave.self.noconversationname" = "%1$@ hat dich aus einer Unterhaltung entfernt";
 "push.notification.member.leave.self.nousername.noconversationname" = "Du wurdest aus einer Unterhaltung entfernt";
 "push.notification.member.leave.self.nousername" = "Du wurdest entfernt";
+
+// EPHEMERAL MESSAGE TIMER UPDATE
+"push.notification.message-timer.update" = "%@ hat temporäre Nachrichten auf %@ gestellt";
+"push.notification.message-timer.update.nousername" = "Jemand hat temporäre Nachrichten auf %@ gestellt";
+"push.notification.message-timer.update.noconversationname" = "%@ hat temporäre Nachrichten in einer Unterhaltung auf %@ gestellt";
+"push.notification.message-timer.update.nousername.noconversationname" = "Jemand hat temporäre Nachrichten in einer Unterhaltung auf %@ gestellt";
+
+"push.notification.message-timer.off" = "%@ hat temporäre Nachrichten ausgeschaltet";
+"push.notification.message-timer.off.nousername" = "Jemand hat temporäre Nachrichten ausgeschaltet";
+"push.notification.message-timer.off.noconversationname" = "%@ hat temporäre Nachrichten in einer Unterhaltung ausgeschaltet";
+"push.notification.message-timer.off.nousername.noconversationname" = "Jemand hat temporäre Nachrichten in einer Unterhaltung ausgeschaltet";
 
 // VIDEO CALLS
 "push.notification.call.started.video.oneonone" = "ruft mit Video an";

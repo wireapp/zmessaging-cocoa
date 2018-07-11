@@ -24,42 +24,44 @@ private let ZMPushStringDefault             = "default"
 private let ZMPushStringEphemeral           = "ephemeral"
 
 // Title with team name
-private let ZMPushStringTitle               = "title"          // "[conversationName] in [teamName]
+private let ZMPushStringTitle               = "title"                // "[conversationName] in [teamName]
 
 // 1 user, 1 conversation, 1 string
 // %1$@    %2$@            %3$@
 //
-private let ZMPushStringMessageAdd          = "add.message"         // "[senderName]: [messageText]"
-private let ZMPushStringImageAdd            = "add.image"           // "[senderName] shared a picture"
-private let ZMPushStringVideoAdd            = "add.video"           // "[senderName] shared a video"
-private let ZMPushStringAudioAdd            = "add.audio"           // "[senderName] shared an audio message"
-private let ZMPushStringFileAdd             = "add.file"            // "[senderName] shared a file"
-private let ZMPushStringLocationAdd         = "add.location"        // "[senderName] shared a location"
-private let ZMPushStringUnknownAdd          = "add.unknown"         // "[senderName] sent a message"
+private let ZMPushStringMessageAdd          = "add.message"          // "[senderName]: [messageText]"
+private let ZMPushStringImageAdd            = "add.image"            // "[senderName] shared a picture"
+private let ZMPushStringVideoAdd            = "add.video"            // "[senderName] shared a video"
+private let ZMPushStringAudioAdd            = "add.audio"            // "[senderName] shared an audio message"
+private let ZMPushStringFileAdd             = "add.file"             // "[senderName] shared a file"
+private let ZMPushStringLocationAdd         = "add.location"         // "[senderName] shared a location"
+private let ZMPushStringUnknownAdd          = "add.unknown"          // "[senderName] sent a message"
 
 // currently disabled
 //public let ZMPushStringMessageAddMany      = "add.message.many"    // "x new messages in [conversationName] / from [senderName]"
 
-private let ZMPushStringFailedToSend        = "failed.message"      // "Unable to send a message"
+private let ZMPushStringFailedToSend        = "failed.message"       // "Unable to send a message"
 
-private let ZMPushStringMemberJoin          = "member.join"         // "[senderName] added you"
-private let ZMPushStringMemberLeave         = "member.leave"        // "[senderName] removed you"
+private let ZMPushStringMemberJoin          = "member.join"          // "[senderName] added you"
+private let ZMPushStringMemberLeave         = "member.leave"         // "[senderName] removed you"
+private let ZMPushStringMessageTimerUpdate  = "message-timer.update" // "[senderName] set the message timer to [duration]
+private let ZMPushStringMessageTimerOff     = "message-timer.off"    // "[senderName] turned off the message timer
 
-private let ZMPushStringKnock               = "knock"               // "pinged"
-private let ZMPushStringReaction            = "reaction"            // "[emoji] your message"
+private let ZMPushStringKnock               = "knock"                // "pinged"
+private let ZMPushStringReaction            = "reaction"             // "[emoji] your message"
 
-private let ZMPushStringVideoCallStarts     = "call.started.video"  // "is video calling"
-private let ZMPushStringCallStarts          = "call.started"        // "is calling"
-private let ZMPushStringCallMissed          = "call.missed"         // "called"
+private let ZMPushStringVideoCallStarts     = "call.started.video"   // "is video calling"
+private let ZMPushStringCallStarts          = "call.started"         // "is calling"
+private let ZMPushStringCallMissed          = "call.missed"          // "called"
 
 // currently disabled
 //public let ZMPushStringCallMissedMany      = "call.missed.many"    // "You have x missed calls in a conversation"
 
-private let ZMPushStringConnectionRequest   = "connection.request"  // "[senderName] wants to connect"
-private let ZMPushStringConnectionAccepted  = "connection.accepted" // "You and [senderName] are now connected"
+private let ZMPushStringConnectionRequest   = "connection.request"   // "[senderName] wants to connect"
+private let ZMPushStringConnectionAccepted  = "connection.accepted"  // "You and [senderName] are now connected"
 
-private let ZMPushStringConversationCreate  = "conversation.create" // "[senderName] created a group conversation with you"
-private let ZMPushStringNewConnection       = "new_user"            // "[senderName] just joined Wire"
+private let ZMPushStringConversationCreate  = "conversation.create"  // "[senderName] created a group conversation with you"
+private let ZMPushStringNewConnection       = "new_user"             // "[senderName] just joined Wire"
 
 private let OneOnOneKey = "oneonone"
 private let GroupKey = "group"
@@ -99,6 +101,10 @@ extension LocalNotificationType {
                 return ZMPushStringMemberJoin
             case .participantsRemoved:
                 return ZMPushStringMemberLeave
+            case .messageTimerUpdate(nil):
+                return ZMPushStringMessageTimerOff
+            case .messageTimerUpdate:
+                return ZMPushStringMessageTimerUpdate
             }
         case .calling(let callState):
             switch callState {
@@ -149,7 +155,7 @@ extension LocalNotificationType {
     
     fileprivate func messageBodyText(eventType: LocalNotificationEventType, senderName: String?) -> String {
         let senderKey = senderName == nil ? NoUserNameKey : nil
-        let localizationKey = [baseKey, senderKey].flatMap({ $0 }).joined(separator: ".")
+        let localizationKey = [baseKey, senderKey].compactMap { $0 }.joined(separator: ".")
         var arguments : [CVarArg] = []
         
         if let senderName = senderName {
@@ -222,6 +228,11 @@ extension LocalNotificationType {
                 arguments.append(NSNumber(value: 1))
             case .ephemeral, .hidden:
                 return String.localizedStringWithFormat(baseKey.pushFormatString)
+            case .messageTimerUpdate(let timerString):
+                if let string = timerString {
+                    arguments.append(string)
+                }
+                conversationTypeKey = nil
             case .participantsAdded, .participantsRemoved:
                 conversationTypeKey = nil // System messages don't follow the template and is missing the `group` suffix
                 senderKey = SelfKey
@@ -235,7 +246,7 @@ extension LocalNotificationType {
             arguments.append(conversationName)
         }
         
-        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey].flatMap({ $0 }).joined(separator: ".")
+        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey].compactMap({ $0 }).joined(separator: ".")
         return String.localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
     }
     

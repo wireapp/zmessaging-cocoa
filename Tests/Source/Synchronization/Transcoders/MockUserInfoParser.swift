@@ -17,7 +17,7 @@
 //
 
 
-@objc public class MockUserInfoParser: NSObject, UserInfoParser {
+@objcMembers public class MockUserInfoParser: NSObject, UserInfoParser {
 
     public var accountExistsLocallyCalled = 0
     public var existingAccounts = [ZMTransportResponse]()

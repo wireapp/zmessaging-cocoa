@@ -18,7 +18,7 @@
 
 
 public extension Bundle {
-    var appGroupIdentifier: String? {
+    @objc var appGroupIdentifier: String? {
         return bundleIdentifier.map { "group." + $0 }
     }
 }

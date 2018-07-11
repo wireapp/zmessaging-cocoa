@@ -35,14 +35,14 @@ static NSString * const PushNotificationTypeNotice = @"notice";
 
 @implementation ZMOperationLoop (Background)
 
-- (void)fetchEventsFromPushChannelPayload:(NSDictionary *)payload completionHandler:(ZMPushResultHandler)completionHandler source:(ZMPushNotficationType)source
+- (void)fetchEventsFromPushChannelPayload:(NSDictionary *)payload completionHandler:(dispatch_block_t)completionHandler
 {
-    ZMLogDebug(@"----> Received push notification payload: %@, source: %lu", payload, (unsigned long)source);
+    ZMLogDebug(@"----> Received push notification payload: %@", payload);
     
     [self.syncMOC performGroupedBlock:^{
         NSUUID *eventId = [self messageNonceFromFromPushChannelData:payload];
         if (eventId == nil) {
-            completionHandler(ZMPushPayloadResultNoData);
+            completionHandler();
             return;
         }
         

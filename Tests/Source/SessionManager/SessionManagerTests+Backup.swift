@@ -58,7 +58,7 @@ class SessionManagerTests_Backup: IntegrationTest {
     }
     
     func testThatItReturnsAnErrorWhenThereIsNoSelectedAccount() {
-        let result = backupActiveAcount(password: name!)
+        let result = backupActiveAcount(password: name)
         XCTAssertEqual(result.error as? SessionManager.BackupError, .noActiveAccount)
     }
     
@@ -94,7 +94,7 @@ class SessionManagerTests_Backup: IntegrationTest {
 
     func testThatItReturnsAnErrorWhenUserIsNotAuthenticated() {
         sessionManager?.logoutCurrentSession()
-        let result = restoreAcount(password: name!, from: createTemporaryURL())
+        let result = restoreAcount(password: name, from: createTemporaryURL())
         XCTAssertEqual(result.error as? SessionManager.BackupError, .notAuthenticated)
     }
     
@@ -103,7 +103,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssert(login())
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
         
-        let backupResult = backupActiveAcount(password: name!)
+        let backupResult = backupActiveAcount(password: name)
         guard let url = backupResult.value else { return XCTFail("\(backupResult.error!)") }
         
         let moc = sessionManager!.activeUserSession!.managedObjectContext!
@@ -115,7 +115,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssertFalse(fm.fileExists(atPath: storePath))
         
         // When
-        let result = restoreAcount(password: name!, from: url)
+        let result = restoreAcount(password: name, from: url)
         
         // Then
         XCTAssertNil(result.error, "\(result.error!)")
@@ -191,7 +191,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         
         do {
             let conversation = self.conversation(for: selfToUser1Conversation)!
-            conversation.messageDestructionTimeout = 0.5
+            conversation.messageDestructionTimeout = .local(0.5)
             let moc = sessionManager!.activeUserSession!.managedObjectContext!
             
             let message = conversation.appendMessage(withText: "foo") as! ZMClientMessage

@@ -24,7 +24,7 @@ import Foundation
 }
 
 /// Creates and cancels local notifications
-public class LocalNotificationDispatcher: NSObject {
+@objcMembers public class LocalNotificationDispatcher: NSObject {
 
     public static let ZMShouldHideNotificationContentKey = "ZMShouldHideNotificationContentKey"
 
@@ -97,7 +97,7 @@ public class LocalNotificationDispatcher: NSObject {
 extension LocalNotificationDispatcher: ZMEventConsumer {
 
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
-        let eventsToForward = events.filter { return [.pushNotification, .webSocket].contains($0.source) }
+        let eventsToForward = events.filter { $0.source.isOne(of: .pushNotification, .webSocket) } 
         self.didReceive(events: eventsToForward, conversationMap: prefetchResult?.conversationsByRemoteIdentifier ?? [:])
     }
 

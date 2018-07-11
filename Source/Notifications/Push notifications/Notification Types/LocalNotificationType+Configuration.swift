@@ -21,33 +21,37 @@ import Foundation
 extension LocalNotificationType {
     
     var category: String {
+        let category: PushNotificationCategory
+        
         switch self {
         case .calling(let callState):
             switch (callState) {
             case .incoming:
-                return ZMIncomingCallCategory
+                category = .incomingCall
             case .terminating(reason: .timeout):
-                return ZMMissedCallCategory
+                category = .missedCall
             default :
-                return ZMConversationCategory
+                category = .conversation
             }
         case .event(let eventType):
             switch eventType {
             case .connectionRequestPending, .conversationCreated:
-                return ZMConnectCategory
+                category = .connect
             default:
-                return ZMConversationCategory
+                category = .conversation
             }
         case .message(let contentType):
             switch contentType {
             case .audio, .video, .fileUpload, .image, .text, .location:
-                return ZMConversationCategoryIncludingLike
+                category = .conversationIncludingLike
             default:
-                return ZMConversationCategory
+                category = .conversation
             }
         case .failedMessage:
-            return ZMConversationCategory
+            category = .conversation
         }
+        
+        return category.rawValue
     }
     
     var soundName: String {

@@ -31,15 +31,15 @@ extension ZMUserSession : NotificationContext { } // Mark ZMUserSession as valid
 
 extension ZMUserSession {
     
-    static func notifyInitialSyncCompleted(context: NSManagedObjectContext) {
+    @objc static func notifyInitialSyncCompleted(context: NSManagedObjectContext) {
         NotificationInContext(name: initialSyncCompletionNotificationName, context: context.notificationContext).post()
     }
     
-    public func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver) -> Any {
+    @objc public func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver) -> Any {
         return ZMUserSession.addInitialSyncCompletionObserver(observer, context: managedObjectContext)
     }
     
-    public static func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver, context: NSManagedObjectContext) -> Any {
+    @objc public static func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver, context: NSManagedObjectContext) -> Any {
         return NotificationInContext.addObserver(name: initialSyncCompletionNotificationName, context: context.notificationContext) {
             [weak observer] _ in
             context.performGroupedBlock {
@@ -48,13 +48,13 @@ extension ZMUserSession {
         }
     }
     
-    public static func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver, userSession: ZMUserSession) -> Any {
+    @objc public static func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver, userSession: ZMUserSession) -> Any {
         return self.addInitialSyncCompletionObserver(observer, context: userSession.managedObjectContext)
     }
 }
 
 // MARK: - Network Availability
-@objc public class ZMNetworkAvailabilityChangeNotification : NSObject {
+@objcMembers public class ZMNetworkAvailabilityChangeNotification : NSObject {
 
     private static let name = Notification.Name(rawValue: "ZMNetworkAvailabilityChangeNotification")
     
@@ -119,7 +119,7 @@ public extension ZMConversation {
 }
 
 
-@objc public class ZMConnectionLimitNotification : NSObject {
+@objcMembers public class ZMConnectionLimitNotification : NSObject {
 
     private static let name = Notification.Name(rawValue: "ZMConnectionLimitReachedNotification")
     

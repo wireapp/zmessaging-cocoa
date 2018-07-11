@@ -20,7 +20,7 @@ import Foundation
 import WireRequestStrategy
 import WireDataModel
 
-@objc
+@objcMembers
 public final class CallingRequestStrategy : NSObject, RequestStrategy {
     
     fileprivate let zmLog = ZMSLog(tag: "calling")
@@ -48,11 +48,11 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     }
     
     public func nextRequest() -> ZMTransportRequest? {
-        if let request = self.callConfigRequestSync.nextRequest() {
-            return request
-        }
+        let request = self.callConfigRequestSync.nextRequest() ?? genericMessageStrategy.nextRequest()
         
-        return genericMessageStrategy.nextRequest()
+        request?.forceToVoipSession()
+       
+        return request
     }
     
     public func dropPendingCallMessages(for conversation: ZMConversation) {

@@ -82,7 +82,7 @@ public class CallKitDelegate : NSObject {
         
         let localizedName = Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "Wire"
         let configuration = CXProviderConfiguration(localizedName: localizedName)
-        
+
         configuration.supportsVideo = true
         configuration.maximumCallGroups = 1
         configuration.maximumCallsPerCallGroup = 1
@@ -100,19 +100,12 @@ public class CallKitDelegate : NSObject {
         let messageWithLineNumber = String(format: "%@:%ld: %@", URL(fileURLWithPath: file).lastPathComponent, line, message)
         SessionManager.logAVS(message: messageWithLineNumber)
     }
-    
-    fileprivate func endAllOngoingCallKitCalls(exceptIn conversation: ZMConversation) {
-        
-        for call in calls where call.value.conversation != conversation {
-            let endCallAction = CXEndCallAction(call: call.key)
-            let transaction = CXTransaction(action: endCallAction)
-            
-            callController.request(transaction, completion: { (error) in
-                if let error = error {
-                    zmLog.error("Coudn't end all ongoing calls: \(error)")
-                }
-            })
-        }
+
+    fileprivate func actionsToEndAllOngoingCalls(exceptIn conversation: ZMConversation) -> [CXAction] {
+        return calls
+            .lazy
+            .filter { $0.value.conversation != conversation }
+            .map { CXEndCallAction(call: $0.key) }
     }
     
     internal func callUUID(for conversation: ZMConversation) -> UUID? {
@@ -123,7 +116,7 @@ public class CallKitDelegate : NSObject {
 
 @available(iOS 10.0, *)
 extension CallKitDelegate {
-    
+
     func callIdentifiers(from customIdentifier : String) -> (UUID, UUID)? {
         let identifiers = customIdentifier.split(separator: identifierSeparator)
         
@@ -211,9 +204,6 @@ extension CallKitDelegate {
     }
     
     func requestStartCall(in conversation: ZMConversation, video: Bool) {
-        
-        endAllOngoingCallKitCalls(exceptIn: conversation)
-        
         guard
             let managedObjectContext = conversation.managedObjectContext,
             let handle = conversation.callKitHandle
@@ -228,8 +218,9 @@ extension CallKitDelegate {
         let action = CXStartCallAction(call: callUUID, handle: handle)
         action.isVideo = video
         action.contactIdentifier = conversation.localizedCallerName(with: ZMUser.selfUser(in: managedObjectContext))
-        let transaction = CXTransaction(action: action)
-        
+
+        let endCallActions = actionsToEndAllOngoingCalls(exceptIn: conversation)
+        let transaction = CXTransaction(actions: endCallActions + [action])
         
         callController.request(transaction) { [weak self] (error) in
             if let error = error as? CXErrorCodeRequestTransactionError, error.code == .callUUIDAlreadyExists {
@@ -242,13 +233,11 @@ extension CallKitDelegate {
     }
     
     func requestAnswerCall(in conversation: ZMConversation, video: Bool) {
-        
-        endAllOngoingCallKitCalls(exceptIn: conversation)
-        
         guard let callUUID = callUUID(for: conversation) else { return }
         
         let action = CXAnswerCallAction(call: callUUID)
-        let transaction = CXTransaction(action: action)
+        let endPreviousActions = actionsToEndAllOngoingCalls(exceptIn: conversation)
+        let transaction = CXTransaction(actions: endPreviousActions + [action])
         
         callController.request(transaction) { [weak self] (error) in
             if let error = error {
@@ -266,7 +255,7 @@ extension CallKitDelegate {
         callController.request(transaction) { [weak self] (error) in
             if let error = error {
                 self?.log("Cannot end call: \(error)")
-                conversation.voiceChannel?.endCall()
+                conversation.voiceChannel?.leave()
             }
         }
     }
@@ -399,7 +388,7 @@ extension CallKitDelegate : CXProviderDelegate {
         }
         
         calls.removeValue(forKey: action.callUUID)
-        call.conversation.voiceChannel?.endCall()
+        call.conversation.voiceChannel?.leave()
         action.fulfill()
     }
     
@@ -496,22 +485,6 @@ extension ZMConversation {
         }
     }
     
-}
-
-extension VoiceChannel {
-    
-    func endCall() {
-        
-        switch state {
-        case .incoming(video: _, shouldRing: true, degraded: false):
-            ignore()
-        case .established, .answered(degraded: false), .outgoing(degraded: false):
-            leave()
-        default:
-            break
-        }
-        
-    }
 }
 
 @available(iOS 10.0, *)

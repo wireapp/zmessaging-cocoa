@@ -29,34 +29,44 @@
         [failureRecorder recordFailure:@"ZMConversation is <nil>"];
         return;
     }
-
-    if (!(self.userDefinedName == conversation.name || [self.userDefinedName isEqualToString:conversation.name])) {
+    
+    __block NSString *mockMame;
+    __block NSString *mockCreatorIdentifier;
+    __block NSString *mockIdentifier;
+    __block NSMutableSet<NSString *> *mockActiveUsersUUID;
+    [conversation.managedObjectContext performBlockAndWait:^{
+        mockMame = conversation.name;
+        mockCreatorIdentifier = conversation.creator.identifier;
+        mockIdentifier = conversation.identifier;
+        mockActiveUsersUUID = [NSMutableSet setWithArray:[conversation.activeUsers mapWithBlock:^id(MockUser *activeUser) {
+            return activeUser.identifier;
+        }].array];
+        [mockActiveUsersUUID removeObject:conversation.selfIdentifier];
+    }];
+    
+    if (!(self.userDefinedName == mockMame || [self.userDefinedName isEqualToString:mockMame])) {
         [failureRecorder recordFailure:@"Name doesn't match '%@' != '%@'",
-         self.userDefinedName, conversation.name];
+         self.userDefinedName, mockMame];
     }
-    if (!([self.creator.remoteIdentifier isEqual:[conversation.creator.identifier UUID]])) {
+    if (!([self.creator.remoteIdentifier isEqual:[mockCreatorIdentifier UUID]])) {
         [failureRecorder recordFailure:@"Creator doesn't match '%@' != '%@'",
-                       self.creator.remoteIdentifier.transportString, conversation.creator.identifier];
+                       self.creator.remoteIdentifier.transportString, mockCreatorIdentifier];
     }
 
     NSMutableSet *activeUsersUUID = [NSMutableSet set];
     for(ZMUser *user in self.lastServerSyncedActiveParticipants) {
-        [activeUsersUUID addObject:user.remoteIdentifier];
+        [activeUsersUUID addObject:user.remoteIdentifier.transportString];
     }
-    NSMutableSet *mockActiveUsersUUID = [NSMutableSet set];
-    for (MockUser *mockUser in conversation.activeUsers) {
-        [mockActiveUsersUUID addObject:[mockUser.identifier UUID]];
-    }
-    [mockActiveUsersUUID removeObject:conversation.selfIdentifier.UUID];
+    
     if (![activeUsersUUID isEqual:mockActiveUsersUUID]) {
         [failureRecorder recordFailure:@"Active users don't match {%@} != {%@}",
          [[activeUsersUUID.allObjects valueForKey:@"transportString"] componentsJoinedByString:@", "],
          [[mockActiveUsersUUID.allObjects valueForKey:@"transportString"] componentsJoinedByString:@", "]];
     }
     
-    if (![self.remoteIdentifier isEqual:[conversation.identifier UUID]]) {
+    if (![self.remoteIdentifier isEqual:[mockIdentifier UUID]]) {
         [failureRecorder recordFailure:@"Remote ID doesn't match '%@' != '%@'",
-         self.remoteIdentifier.transportString, conversation.identifier];
+         self.remoteIdentifier.transportString, mockIdentifier];
     }
 }
 - (void)setUnreadCount:(NSUInteger)count;
@@ -79,7 +89,7 @@
     systemMessage.serverTimestamp = self.lastReadServerTimeStamp ?
     [self.lastReadServerTimeStamp dateByAddingTimeInterval:1000] :
     [NSDate dateWithTimeIntervalSince1970:1231234];
-    [self updateUnreadMessagesWithMessage:systemMessage];
+    [self sortedAppendMessage:systemMessage];
 }
 
 - (void)setHasExpiredMessage:(BOOL)hasUnreadUnsentMessage

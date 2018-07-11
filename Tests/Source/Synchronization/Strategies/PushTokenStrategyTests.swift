@@ -51,18 +51,12 @@ class PushTokenStrategyTests: MessagingTest {
         super.tearDown()
     }
     
-    func insertApplicationToken(isRegistered: Bool) {
-        uiMOC.pushToken = ZMPushToken(deviceToken:deviceToken, identifier:identifier, transportType:transportTypeNormal, fallback:nil, isRegistered:isRegistered)
-        try! uiMOC.save()
-    }
-    
     func insertPushKitToken(isRegistered: Bool) {
-        uiMOC.pushKitToken = ZMPushToken(deviceToken:deviceTokenB, identifier:identifier, transportType:transportTypeVOIP, fallback:"APNS", isRegistered:isRegistered)
+        uiMOC.pushKitToken = ZMPushToken(deviceToken:deviceTokenB, identifier:identifier, transportType:transportTypeVOIP, isRegistered:isRegistered)
         try! uiMOC.save()
     }
     
     func simulateRegisteredPushTokens(){
-        insertApplicationToken(isRegistered: true)
         insertPushKitToken(isRegistered: true)
     }
     
@@ -81,7 +75,6 @@ extension PushTokenStrategyTests {
     
     func testThatItDoesNotReturnARequestWhenThereIsNoPushToken() {
         // given
-        uiMOC.pushToken = nil;
         uiMOC.pushKitToken = nil;
         
         // when
@@ -132,10 +125,6 @@ extension PushTokenStrategyTests {
         }
         
         // then
-        XCTAssertNotNil(uiMOC.pushToken);
-        XCTAssertEqual(uiMOC.pushToken!.deviceToken, deviceToken);
-        XCTAssertFalse(uiMOC.pushToken!.isRegistered);
-        
         XCTAssertNotNil(uiMOC.pushKitToken);
         XCTAssertEqual(uiMOC.pushKitToken!.deviceToken, deviceTokenB);
         XCTAssertFalse(uiMOC.pushKitToken!.isRegistered);
@@ -150,96 +139,6 @@ extension PushTokenStrategyTests {
     }
     
 }
-
-
-// MARK: ApplicationToken
-extension PushTokenStrategyTests {
-    
-    func testThatItReturnsARequestWhenThePushTokenIsNotRegistered() {
-        // given
-        insertApplicationToken(isRegistered: false)
-        sut.contextChangeTrackers.forEach{$0.objectsDidChange(Set())}
-        
-        // when
-        let req = sut.nextRequest()
-        
-        // then
-        guard let request = req else {return XCTFail()}
-        let expectedPayload = ["token": "c5e24e41e4d4329037928449349487547ef14f162c77aee3aa8e12a39c8db1d5",
-                               "app": "com.wire.zclient",
-                               "transport": "APNS"]
-        
-        XCTAssertEqual(request.method, .methodPOST)
-        XCTAssertEqual(request.path, "/push/tokens")
-        XCTAssertEqual(request.payload as! [String : String], expectedPayload)
-    }
-    
-    func testThatItAddsTheClientIDIfTheClientIsSpecified_Application(){
-        // given
-        let client = setupSelfClient(inMoc: uiMOC)
-        insertApplicationToken(isRegistered: false)
-        sut.contextChangeTrackers.forEach{$0.objectsDidChange(Set())}
-        
-        // when
-        let req = sut.nextRequest()
-        
-        // then
-        guard let request = req else {return XCTFail()}
-        let expectedPayload = ["token": "c5e24e41e4d4329037928449349487547ef14f162c77aee3aa8e12a39c8db1d5",
-                               "app": "com.wire.zclient",
-                               "transport": "APNS",
-                               "client": client.remoteIdentifier!]
-        
-        XCTAssertEqual(request.method, .methodPOST)
-        XCTAssertEqual(request.path, "/push/tokens")
-        XCTAssertEqual(request.payload as! [String : String], expectedPayload)
-    }
-    
-    func testThatItMarksThePushTokenAsRegisteredWhenTheRequestCompletes() {
-        // given
-        _ = setupSelfClient(inMoc: uiMOC)
-        insertApplicationToken(isRegistered: false)
-        sut.contextChangeTrackers.forEach{$0.objectsDidChange(Set())}
-
-        let response = fakeResponse(transport: transportTypeNormal)
-        
-        // when
-        let request = sut.nextRequest()
-        request?.complete(with:response)
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertNotNil(uiMOC.pushToken)
-        XCTAssertTrue(uiMOC.pushToken!.isRegistered)
-        XCTAssertEqual(uiMOC.pushToken!.appIdentifier, "foo.bar")
-        let newDeviceToken = Data(bytes: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])
-        XCTAssertEqual(uiMOC.pushToken!.deviceToken, newDeviceToken)
-    }
-    
-    func testThatItDoesNotRegisterThePushTokenAgainAfterTheRequestCompletes() {
-        
-        // given
-        _ = setupSelfClient(inMoc: uiMOC)
-        insertApplicationToken(isRegistered: false)
-        sut.contextChangeTrackers.forEach{$0.objectsDidChange(Set())}
-        let response = fakeResponse(transport: transportTypeNormal)
-        
-        // when
-        let request = sut.nextRequest()
-        request?.complete(with:response)
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertNotNil(uiMOC.pushToken)
-        sut.contextChangeTrackers.forEach{$0.objectsDidChange(Set())}
-        
-        // and when
-        let request2 = sut.nextRequest()
-        XCTAssertNil(request2);
-    }
-    
-}
-
 
 // MARK: - PushKit
 extension PushTokenStrategyTests {
@@ -256,8 +155,7 @@ extension PushTokenStrategyTests {
         guard let request = req else {return XCTFail()}
         let expectedPayload = ["token": "0c11633011485c4558615009045b022d565e0c380a5330444d3a0f4b185a014a",
                                "app": "com.wire.zclient",
-                               "transport": "APNS_VOIP",
-                               "fallback" : "APNS"]
+                               "transport": "APNS_VOIP"]
         
         XCTAssertEqual(request.method, .methodPOST)
         XCTAssertEqual(request.path, "/push/tokens")
@@ -266,7 +164,7 @@ extension PushTokenStrategyTests {
     
     func testThatItDoesNotIncludeFallbackInRequestWhenNotSet() {
         // given
-        uiMOC.pushKitToken = ZMPushToken(deviceToken:deviceTokenB, identifier:identifier, transportType:transportTypeVOIP, fallback:nil, isRegistered:false)
+        uiMOC.pushKitToken = ZMPushToken(deviceToken:deviceTokenB, identifier:identifier, transportType:transportTypeVOIP, isRegistered:false)
         try! uiMOC.save()
         sut.contextChangeTrackers.forEach{$0.objectsDidChange(Set())}
         
@@ -298,7 +196,6 @@ extension PushTokenStrategyTests {
         let expectedPayload = ["token": "0c11633011485c4558615009045b022d565e0c380a5330444d3a0f4b185a014a",
                                "app": "com.wire.zclient",
                                "transport": "APNS_VOIP",
-                               "fallback" : "APNS",
                                "client": client.remoteIdentifier!]
         
         XCTAssertEqual(request.method, .methodPOST)
@@ -353,25 +250,15 @@ extension PushTokenStrategyTests {
 // MARK: - Deleting Tokens
 extension PushTokenStrategyTests {
     
-    func insertTokenMarkedForDeletion(transport: String) {
-        if transport == transportTypeVOIP {
-            uiMOC.pushKitToken = ZMPushToken(deviceToken:deviceToken, identifier:identifier, transportType:transport, fallback:nil, isRegistered:true)
-            uiMOC.pushKitToken = uiMOC.pushKitToken?.forDeletionMarkedCopy()
-        } else {
-            uiMOC.pushToken = ZMPushToken(deviceToken:deviceToken, identifier:identifier, transportType:transport, fallback:nil, isRegistered:true)
-            uiMOC.pushToken = uiMOC.pushToken?.forDeletionMarkedCopy()
-        }
+    func insertTokenMarkedForDeletion() {
+        uiMOC.pushKitToken = ZMPushToken(deviceToken:deviceToken, identifier:identifier, transportType:transportTypeVOIP, isRegistered:true)
+        uiMOC.pushKitToken = uiMOC.pushKitToken?.forDeletionMarkedCopy()
         try! uiMOC.save()
     }
     
-    func checkThatItSyncsTokensThatWereMarkedToDeleteAndDeletesThem(transport: String) {
+    func testThatItSyncsTokensThatWereMarkedToDeleteAndDeletesThem() {
         // given
-        insertTokenMarkedForDeletion(transport: transport)
-        if transport == transportTypeVOIP {
-            insertApplicationToken(isRegistered: true)
-        } else {
-            insertPushKitToken(isRegistered: true)
-        }
+        insertTokenMarkedForDeletion()
         sut.contextChangeTrackers.forEach{$0.objectsDidChange(Set())}
         let response = ZMTransportResponse(payload:nil, httpStatus:200, transportSessionError:nil, headers:[:])
         
@@ -387,13 +274,8 @@ extension PushTokenStrategyTests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        if transport == transportTypeVOIP {
-            XCTAssertNil(uiMOC.pushKitToken)
-            XCTAssertNotNil(uiMOC.pushToken)
-        } else {
-            XCTAssertNil(uiMOC.pushToken)
-            XCTAssertNotNil(uiMOC.pushKitToken)
-        }
+        XCTAssertNil(uiMOC.pushKitToken)
+
         sut.contextChangeTrackers.forEach{$0.objectsDidChange(Set())}
 
         // and when
@@ -401,17 +283,9 @@ extension PushTokenStrategyTests {
         XCTAssertNil(request2);
     }
     
-    func testThatItSyncsTokensThatWereMarkedToDeleteAndDeletesThem_PushKit() {
-        checkThatItSyncsTokensThatWereMarkedToDeleteAndDeletesThem(transport: transportTypeVOIP)
-    }
-    
-    func testThatItSyncsTokensThatWereMarkedToDeleteAndDeletesThem_ApplicationToken() {
-        checkThatItSyncsTokensThatWereMarkedToDeleteAndDeletesThem(transport: transportTypeNormal)
-    }
-
     func testThatItDoesNotDeleteTokensThatAreNotMarkedForDeletion() {
         // given
-        insertTokenMarkedForDeletion(transport: transportTypeVOIP)
+        insertTokenMarkedForDeletion()
         XCTAssertNotNil(uiMOC.pushKitToken);
         sut.contextChangeTrackers.forEach{$0.objectsDidChange(Set())}
         let response = ZMTransportResponse(payload:nil, httpStatus:200, transportSessionError:nil, headers:[:])

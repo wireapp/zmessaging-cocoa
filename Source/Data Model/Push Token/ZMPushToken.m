@@ -28,13 +28,10 @@
 static NSString * const DeviceTokenKey = @"deviceToken";
 static NSString * const IdentifierKey = @"identifier";
 static NSString * const TransportKey = @"transportType";
-static NSString * const FallbackKey = @"fallback";
 static NSString * const IsRegisteredKey = @"isRegistered";
 static NSString * const IsMarkedForDeletionKey = @"isMarkedForDeletion";
 
-static NSString * const PushTokenKey = @"pushToken";
 static NSString * const PushKitTokenKey = @"ZMPushKitToken";
-static NSString * const PushTokenDataKey = @"pushTokenData";
 static NSString * const PushKitTokenDataKey = @"ZMPushTokenData";
 
 
@@ -44,7 +41,6 @@ static NSString * const PushKitTokenDataKey = @"ZMPushTokenData";
 @property (nonatomic, copy) NSData *deviceToken;
 @property (nonatomic, copy) NSString *appIdentifier;
 @property (nonatomic, copy) NSString *transportType;
-@property (nonatomic, copy) NSString *fallback;
 
 @property (nonatomic) BOOL isRegistered;
 @property (nonatomic) BOOL isMarkedForDeletion;
@@ -55,19 +51,18 @@ static NSString * const PushKitTokenDataKey = @"ZMPushTokenData";
 
 @implementation ZMPushToken
 
-- (instancetype)initWithDeviceToken:(NSData *)deviceToken identifier:(NSString *)appIdentifier transportType:(NSString *)transportType fallback:(NSString *)fallback isRegistered:(BOOL)isRegistered
+- (instancetype)initWithDeviceToken:(NSData *)deviceToken identifier:(NSString *)appIdentifier transportType:(NSString *)transportType isRegistered:(BOOL)isRegistered
 {
-    return [self initWithDeviceToken:deviceToken identifier:appIdentifier transportType:transportType fallback:fallback isRegistered:isRegistered isMarkedForDeletion:NO];
+    return [self initWithDeviceToken:deviceToken identifier:appIdentifier transportType:transportType isRegistered:isRegistered isMarkedForDeletion:NO];
 }
 
-- (instancetype)initWithDeviceToken:(NSData *)deviceToken identifier:(NSString *)appIdentifier transportType:(NSString *)transportType fallback:(NSString *)fallback isRegistered:(BOOL)isRegistered isMarkedForDeletion:(BOOL)isMarkedForDeletion;
+- (instancetype)initWithDeviceToken:(NSData *)deviceToken identifier:(NSString *)appIdentifier transportType:(NSString *)transportType isRegistered:(BOOL)isRegistered isMarkedForDeletion:(BOOL)isMarkedForDeletion;
 {
     self = [super init];
     if (self) {
         self.deviceToken = deviceToken;
         self.appIdentifier = appIdentifier;
         self.transportType = transportType;
-        self.fallback = fallback;
         self.isRegistered = isRegistered;
         self.isMarkedForDeletion = isMarkedForDeletion;
     }
@@ -85,9 +80,6 @@ static NSString * const PushKitTokenDataKey = @"ZMPushTokenData";
     if (self.transportType != nil) {
         [coder encodeObject:self.transportType forKey:TransportKey];
     }
-    if (self.fallback != nil) {
-        [coder encodeObject:self.fallback forKey:FallbackKey];
-    }
     [coder encodeBool:self.isRegistered forKey:IsRegisteredKey];
     [coder encodeBool:self.isMarkedForDeletion forKey:IsMarkedForDeletionKey];
 }
@@ -101,8 +93,7 @@ static NSString * const PushKitTokenDataKey = @"ZMPushTokenData";
     return (((self.deviceToken == other.deviceToken) || [self.deviceToken isEqual:other.deviceToken]) &&
             ((self.appIdentifier == other.appIdentifier) || [self.appIdentifier isEqualToString:other.appIdentifier]) &&
             ((self.transportType == other.transportType) || [self.transportType isEqualToString:other.transportType]) &&
-            (self.isMarkedForDeletion == other.isMarkedForDeletion)) &&
-            ((self.fallback == other.fallback) || [self.fallback isEqualToString:other.fallback]);
+            (self.isMarkedForDeletion == other.isMarkedForDeletion));
 }
 
 - (id)initWithCoder:(NSCoder *)coder;
@@ -112,7 +103,6 @@ static NSString * const PushKitTokenDataKey = @"ZMPushTokenData";
         self.deviceToken = [coder decodeObjectOfClass:NSData.class forKey:DeviceTokenKey];
         self.appIdentifier = [coder decodeObjectOfClass:NSString.class forKey:IdentifierKey];
         self.transportType = [coder decodeObjectOfClass:NSString.class forKey:TransportKey];
-        self.fallback = [coder decodeObjectOfClass:NSString.class forKey:FallbackKey];
         self.isRegistered = [coder decodeBoolForKey:IsRegisteredKey];
         self.isMarkedForDeletion = [coder decodeBoolForKey:IsMarkedForDeletionKey];
     }
@@ -121,14 +111,13 @@ static NSString * const PushKitTokenDataKey = @"ZMPushTokenData";
 
 - (NSString *)description;
 {
-    return [NSString stringWithFormat:@"<%@: %p> %@, %@ \"%@\" - %@ - device token: %@ - fallback: %@",
+    return [NSString stringWithFormat:@"<%@: %p> %@, %@ \"%@\" - %@ - device token: %@",
             self.class, self,
             self.isRegistered ? @"registered" : @"not registered",
             self.isMarkedForDeletion ? @"markedForDeletion" : @"valid",
             self.appIdentifier,
             self.transportType,
-            self.deviceToken,
-            self.fallback];
+            self.deviceToken];
 }
 
 + (BOOL)supportsSecureCoding;
@@ -138,7 +127,7 @@ static NSString * const PushKitTokenDataKey = @"ZMPushTokenData";
 
 - (instancetype)unregisteredCopy;
 {
-    return [[self.class alloc] initWithDeviceToken:self.deviceToken identifier:self.appIdentifier transportType:self.transportType fallback:self.fallback isRegistered:NO];
+    return [[self.class alloc] initWithDeviceToken:self.deviceToken identifier:self.appIdentifier transportType:self.transportType isRegistered:NO];
 }
 
 - (instancetype)forDeletionMarkedCopy
@@ -146,7 +135,7 @@ static NSString * const PushKitTokenDataKey = @"ZMPushTokenData";
     if (!self.isRegistered) {
         return nil;
     }
-    return [[self.class alloc] initWithDeviceToken:self.deviceToken identifier:self.appIdentifier transportType:self.transportType fallback:self.fallback isRegistered:YES isMarkedForDeletion:YES];
+    return [[self.class alloc] initWithDeviceToken:self.deviceToken identifier:self.appIdentifier transportType:self.transportType isRegistered:YES isMarkedForDeletion:YES];
 }
 
 @end
@@ -154,52 +143,6 @@ static NSString * const PushKitTokenDataKey = @"ZMPushTokenData";
 
 
 @implementation NSManagedObjectContext (PushToken)
-
-- (ZMPushToken *)pushToken;
-{
-    NSData *data = [self persistentStoreMetadataForKey:PushTokenKey];
-    if (data == nil) {
-        return nil;
-    }
-    if (! [data isEqualToData:self.userInfo[PushTokenDataKey]]) {
-        [self.userInfo removeObjectForKey:PushTokenKey];
-    } else {
-        ZMPushToken *token = self.userInfo[PushTokenKey];
-        if (token != nil) {
-            return token;
-        }
-    }
-    NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:data];
-    unarchiver.requiresSecureCoding = YES;
-    ZMPushToken *token = [unarchiver decodeObjectOfClass:ZMPushToken.class forKey:PushTokenKey];
-    
-    self.userInfo[PushTokenDataKey] = data;
-    self.userInfo[PushTokenKey] = token;
-    
-    return token;
-}
-
-- (void)setPushToken:(ZMPushToken *)pushToken;
-{
-    NSData *data = nil;
-    if (pushToken != nil) {
-        NSMutableData *archive = [NSMutableData data];
-        NSKeyedArchiver *archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData:archive];
-        archiver.requiresSecureCoding = YES;
-        [archiver encodeObject:pushToken forKey:PushTokenKey];
-        [archiver finishEncoding];
-        data = archive;
-    }
-    [self setPersistentStoreMetadata:data forKey:PushTokenKey];
-    
-    if ((data != nil) && (pushToken != nil)) {
-        self.userInfo[PushTokenDataKey] = data;
-        self.userInfo[PushTokenKey] = pushToken;
-    } else {
-        [self.userInfo removeObjectForKey:PushTokenDataKey];
-        [self.userInfo removeObjectForKey:PushTokenKey];
-    }
-}
 
 - (ZMPushToken *)pushKitToken;
 {

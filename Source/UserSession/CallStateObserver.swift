@@ -23,8 +23,8 @@ import CoreData
 @objc(ZMCallStateObserver)
 public final class CallStateObserver : NSObject {
     
-    static public let CallInProgressNotification = Notification.Name(rawValue: "ZMCallInProgressNotification")
-    static public let CallInProgressKey = "callInProgress"
+    @objc static public let CallInProgressNotification = Notification.Name(rawValue: "ZMCallInProgressNotification")
+    @objc static public let CallInProgressKey = "callInProgress"
     
     fileprivate weak var userSession: ZMUserSession?
     fileprivate let localNotificationDispatcher : LocalNotificationDispatcher
@@ -33,7 +33,7 @@ public final class CallStateObserver : NSObject {
     fileprivate var missedCalltoken : Any? = nil
     fileprivate let systemMessageGenerator = CallSystemMessageGenerator()
     
-    public init(localNotificationDispatcher : LocalNotificationDispatcher, userSession: ZMUserSession) {
+    @objc public init(localNotificationDispatcher : LocalNotificationDispatcher, userSession: ZMUserSession) {
         self.userSession = userSession
         self.localNotificationDispatcher = localNotificationDispatcher
         self.syncManagedObjectContext = userSession.syncManagedObjectContext
@@ -82,6 +82,9 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                 }
             }
             
+            // This will unarchive the conversation when there is an incoming call
+            self.updateConversation(conversation, with: callState, timestamp: timestamp)
+
             if (self.userSession?.callNotificationStyle ?? .callKit) == .pushNotifications {
                 self.localNotificationDispatcher.process(callState: callState, in: conversation, caller: caller)
             }
@@ -100,12 +103,9 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                 default:
                     break
                 }
+                
+                self.syncManagedObjectContext.enqueueDelayedSave()
             }
-            
-            if let timestamp = timestamp {
-                conversation.updateLastModifiedDateIfNeeded(timestamp)
-            }
-            self.syncManagedObjectContext.enqueueDelayedSave()
         }
     }
     
@@ -156,6 +156,23 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             conversation.appendMissedCallMessage(fromUser: caller, at: timestamp)
             self.syncManagedObjectContext.enqueueDelayedSave()
+        }
+    }
+    
+    private func updateConversation(_ conversation: ZMConversation, with callState: CallState, timestamp: Date?) {
+        guard !conversation.isSilenced else { return }
+        switch callState {
+        case .incoming(_, shouldRing: true, degraded: _):
+            if conversation.isArchived {
+                conversation.isArchived = false
+            }
+            
+            if let timestamp = timestamp {
+                conversation.updateLastModified(timestamp)
+            }
+            
+            self.syncManagedObjectContext.enqueueDelayedSave()
+        default: break
         }
     }
 

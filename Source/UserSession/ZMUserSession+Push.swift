@@ -41,52 +41,9 @@ extension Dictionary {
     }
 }
 
-extension ZMUserSession: PushDispatcherOptionalClient {
+extension ZMUserSession {
     
-    public func updatedPushToken(to newToken: PushToken) {
-        
-        guard let managedObjectContext = self.managedObjectContext else {
-            return
-        }
-        
-        switch newToken.type {
-        case .regular:
-            if let data = newToken.data {
-                let oldToken = self.managedObjectContext.pushToken?.deviceToken
-                if oldToken == nil || oldToken != data {
-                    managedObjectContext.pushToken = nil
-                    self.setPushToken(data)
-                    managedObjectContext.forceSaveOrRollback()
-                }
-            }
-        case .voip:
-            if let data = newToken.data {
-                // Check if token is changed before triggering the request
-                if managedObjectContext.pushKitToken == nil || managedObjectContext.pushKitToken?.deviceToken != data {
-                    managedObjectContext.pushKitToken = nil
-                    self.setPushKitToken(data)
-                    managedObjectContext.forceSaveOrRollback()
-                }
-            }
-            else {
-                self.deletePushKitToken()
-                managedObjectContext.forceSaveOrRollback()
-            }
-        }
-    }
-
-    public func mustHandle(payload: [AnyHashable: Any]) -> Bool {
-        requireInternal(Thread.isMainThread, "Should be on main thread")
-        guard let moc = self.managedObjectContext, let accountId = payload.accountId() else {
-            return false
-        }
-        
-        return accountId == ZMUser.selfUser(in: moc).remoteIdentifier
-    }
-    
-    public func receivedPushNotification(with payload: [AnyHashable: Any],
-                                         from source: ZMPushNotficationType,
-                                         completion: ZMPushNotificationCompletionHandler?) {
+    @objc public func receivedPushNotification(with payload: [AnyHashable: Any], completion: @escaping () -> Void) {
         guard let syncMoc = self.syncManagedObjectContext else {
             return
         }
@@ -98,24 +55,24 @@ extension ZMUserSession: PushDispatcherOptionalClient {
             
             if notAuthenticated {
                 log.debug("Not displaying notification because app is not authenticated")
-                completion?(.success)
+                completion()
                 return
             }
             
             // once notification processing is finished, it's safe to update the badge
-            let completionHandler: ZMPushNotificationCompletionHandler = { result in
-                completion?(result)
+            let completionHandler = {
+                completion()
                 let unreadCount = Int(ZMConversation.unreadConversationCount(in: syncMoc))
                 self.sessionManager?.updateAppIconBadge(accountID: accountID, unreadCount: unreadCount)
             }
             
-            self.operationLoop.fetchEvents(fromPushChannelPayload: payload, completionHandler: completionHandler, source: source)
+            self.operationLoop.fetchEvents(fromPushChannelPayload: payload, completionHandler: completionHandler)
         }
     }
     
 }
 
-extension ZMUserSession: ForegroundNotificationsDelegate {
+@objc extension ZMUserSession: ForegroundNotificationsDelegate {
     
     public func didReceieveLocal(notification: ZMLocalNotification, application: ZMApplication) {
         managedObjectContext.performGroupedBlock {
@@ -125,7 +82,7 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
 
     public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
         
-        if let category = notification.category, category == ZMIncomingCallCategory {
+        if let category = notification.category, category == PushNotificationCategory.incomingCall.rawValue {
             self.handleTrackingOnCallNotification(notification)
         }
         
@@ -149,16 +106,16 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
 
         if let concreteIdentifier = identifier {
             switch concreteIdentifier {
-            case ZMCallIgnoreAction:
+            case PushNotificationCategory.CallAction.ignore.rawValue:
                 self.ignoreCall(with: localNotification, completionHandler: completionHandler)
                 return
-            case ZMConversationMuteAction:
+            case PushNotificationCategory.ConversationAction.mute.rawValue:
                 self.muteConversation(with: localNotification, completionHandler: completionHandler)
                 return
-            case ZMMessageLikeAction:
+            case PushNotificationCategory.ConversationAction.like.rawValue:
                 self.likeMessage(with: localNotification, completionHandler: completionHandler)
                 return
-            case ZMConversationDirectReplyAction:
+            case PushNotificationCategory.ConversationAction.reply.rawValue:
                 self.reply(with: localNotification, message: textInput, completionHandler: completionHandler)
                 return
             default:
@@ -180,12 +137,3 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
         completionHandler();
     }
 }
-
-// Testing
-extension ZMUserSession {
-    @objc(updatePushKitTokenTo:forType:)
-    public func updatedPushToken(to data: Data, for type: PushTokenType) {
-        self.updatedPushToken(to: PushToken(type: type, data: data))
-    }
-}
-

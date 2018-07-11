@@ -26,13 +26,11 @@
 - (instancetype _Nonnull)initWithDeviceToken:(NSData * _Nonnull)deviceToken
                          identifier:(NSString * _Nonnull)appIdentifier
                       transportType:(NSString * _Nonnull)transportType
-                           fallback:(NSString * _Nullable)fallback
                        isRegistered:(BOOL)isRegistered;
 
 @property (nonatomic, copy, readonly, nonnull) NSData *deviceToken;
 @property (nonatomic, copy, readonly, nonnull) NSString *appIdentifier;
 @property (nonatomic, copy, readonly, nonnull) NSString *transportType;
-@property (nonatomic, copy, readonly, nullable) NSString *fallback;
 @property (nonatomic, readonly) BOOL isRegistered;
 @property (nonatomic, readonly) BOOL isMarkedForDeletion;
 
@@ -48,8 +46,6 @@
 
 @interface NSManagedObjectContext (PushToken)
 
-/// The token used for @c UIApplication based remote push notifications.
-@property (nonatomic, copy, nullable) ZMPushToken *pushToken;
 /// The token used for PushKit based remote push notifications. PushKit also refers to the token as ‘credentials’.
 @property (nonatomic, copy, nullable) ZMPushToken *pushKitToken;
 

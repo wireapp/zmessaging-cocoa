@@ -45,6 +45,8 @@ public enum CallClosedReason : Int32 {
     case inputOutputError
     /// Call left by the selfUser but continues until everyone else leaves or AVS closes it
     case stillOngoing
+    /// Call was dropped due to the security level degrading
+    case securityDegraded
     /// Call was closed for an unknown reason. This is most likely a bug.
     case unknown
     
@@ -89,6 +91,8 @@ public enum CallClosedReason : Int32 {
             return WCALL_REASON_IO_ERROR
         case .stillOngoing:
             return WCALL_REASON_STILL_ONGOING
+        case .securityDegraded:
+            return WCALL_REASON_ERROR
         case .unknown:
             return WCALL_REASON_ERROR
         }
@@ -104,7 +108,7 @@ public enum CallParticipantState : Equatable {
     // Participant is in the process of connecting to the call
     case connecting
     /// Participant is connected to call and audio is flowing
-    case connected(muted: Bool, sendingVideo: Bool)
+    case connected(videoState: VideoState)
     
     public static func ==(lhs: CallParticipantState, rhs: CallParticipantState) -> Bool {
         switch (lhs, rhs) {
@@ -112,8 +116,8 @@ public enum CallParticipantState : Equatable {
             fallthrough
         case (.unconnected, .unconnected):
             return true
-        case (.connected(muted: let lmuted, sendingVideo: let lsendingVideo), .connected(muted: let rmuted, sendingVideo: let rsendingVideo)):
-            return lmuted == rmuted && lsendingVideo == rsendingVideo
+        case (.connected(videoState: let lvideoState), .connected(videoState: let rvideoState)):
+            return lvideoState == rvideoState
         default:
             return false
         }
@@ -220,48 +224,47 @@ public enum CallState : Equatable {
     }
 }
 
-public struct CallMember : Hashable {
-
-    let remoteId : UUID
-    let audioEstablished : Bool
-    let isReceivingVideo : Bool
-    
-    init?(wcallMember: wcall_member) {
-        guard let remoteId = UUID(cString:wcallMember.userid) else { return nil }
-        self.remoteId = remoteId
-        audioEstablished = (wcallMember.audio_estab != 0)
-        isReceivingVideo = (wcallMember.video_recv != 0)
-    }
-    
-    init(userId : UUID, audioEstablished : Bool = false, isReceivingVideo: Bool = false) {
-        self.remoteId = userId
-        self.audioEstablished = audioEstablished
-        self.isReceivingVideo = isReceivingVideo
-    }
-    
-    public var hashValue: Int {
-        return remoteId.hashValue
-    }
-    
-    public static func ==(lhs: CallMember, rhs: CallMember) -> Bool {
-        return lhs.remoteId == rhs.remoteId
-    }
-}
-
 private struct CallSnapshot {
+    let callParticipants: CallParticipantsSnapshot
     let callState: CallState
     let callStarter: UUID
     let isVideo: Bool
     let isGroup: Bool
     let isConstantBitRate: Bool
+    let videoState: VideoState
     var conversationObserverToken : NSObjectProtocol?
     
     public func update(with callState: CallState) -> CallSnapshot {
-        return CallSnapshot(callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, isConstantBitRate: isConstantBitRate, conversationObserverToken: conversationObserverToken)
+        return CallSnapshot(callParticipants: callParticipants,
+                            callState: callState,
+                            callStarter: callStarter,
+                            isVideo: isVideo,
+                            isGroup: isGroup,
+                            isConstantBitRate: isConstantBitRate,
+                            videoState: videoState,
+                            conversationObserverToken: conversationObserverToken)
     }
     
     public func updateConstantBitrate(_ enabled: Bool) -> CallSnapshot {
-        return CallSnapshot(callState: callState, callStarter: callStarter, isVideo: isVideo, isGroup: isGroup, isConstantBitRate: enabled, conversationObserverToken: conversationObserverToken)
+        return CallSnapshot(callParticipants: callParticipants,
+                            callState: callState,
+                            callStarter: callStarter,
+                            isVideo: isVideo,
+                            isGroup: isGroup,
+                            isConstantBitRate: enabled,
+                            videoState: videoState,
+                            conversationObserverToken: conversationObserverToken)
+    }
+    
+    public func updateVideoState(_ videoState: VideoState) -> CallSnapshot {
+        return CallSnapshot(callParticipants: callParticipants,
+                            callState: callState,
+                            callStarter: callStarter,
+                            isVideo: isVideo,
+                            isGroup: isGroup,
+                            isConstantBitRate: isConstantBitRate,
+                            videoState: videoState,
+                            conversationObserverToken: conversationObserverToken)
     }
 }
 
@@ -283,6 +286,18 @@ public extension UUID {
         guard let aString = String(cString: cString) else { return nil }
         self.init(uuidString: aString)
     }
+}
+
+internal extension AVSCallMember {
+    
+    var callParticipantState: CallParticipantState {
+        if audioEstablished {
+            return .connected(videoState: videoState)
+        } else {
+            return .connecting
+        }
+    }
+    
 }
 
 
@@ -463,12 +478,13 @@ internal func videoStateChangeHandler(userId: UnsafePointer<Int8>?, state: Int32
     
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     
-    if let state = ReceivedVideoState(rawValue: UInt(state)),
+    if let context = callCenter.uiMOC,
        let userId = UUID(cString: userId),
-       let context = callCenter.uiMOC {
-        
+       let videoState = VideoState(rawValue: state) {
         context.performGroupedBlock {
-            WireCallCenterV3VideoNotification(userId: userId, receivedVideoState: state).post(in: context.notificationContext)
+            callCenter.nonIdleCalls.forEach({ (key, value) in
+                callCenter.callParticipantVideostateChanged(conversationId: key, userId: userId, videoState: videoState)
+            })
         }
     } else {
         zmLog.error("Couldn't send video state change notification")
@@ -546,26 +562,30 @@ public struct CallEvent {
         }
     }
     
-    /// We keep a snapshot of all participants so that we can notify the UI when a user is connected or when the stereo sorting changes
-    fileprivate var participantSnapshots : [UUID : VoiceChannelParticipantV3Snapshot] = [:]
-    
     /// We keep a snaphot of the call state for each none idle conversation
     fileprivate var callSnapshots : [UUID : CallSnapshot] = [:]
     
     /// Removes the participantSnapshot and remove the conversation from the list of ignored conversations
     fileprivate func clearSnapshot(conversationId: UUID) {
         callSnapshots.removeValue(forKey: conversationId)
-        participantSnapshots.removeValue(forKey: conversationId)
     }
     
-    fileprivate func createSnapshot(callState : CallState, callStarter: UUID?, video: Bool, for conversationId: UUID) {
+    fileprivate func createSnapshot(callState : CallState, members: [AVSCallMember], callStarter: UUID?, video: Bool, for conversationId: UUID) {
         guard let moc = uiMOC,
               let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: moc)
         else { return }
         
+        let callParticipants = CallParticipantsSnapshot(conversationId: conversationId, members: members, callCenter: self)
         let token = ConversationChangeInfo.add(observer: self, for: conversation)
         let group = conversation.conversationType == .group
-        callSnapshots[conversationId] = CallSnapshot(callState: callState, callStarter: callStarter ?? selfUserId, isVideo: video, isGroup: group, isConstantBitRate: false, conversationObserverToken: token)
+        callSnapshots[conversationId] = CallSnapshot(callParticipants: callParticipants,
+                                                     callState: callState,
+                                                     callStarter: callStarter ?? selfUserId,
+                                                     isVideo: video,
+                                                     isGroup: group,
+                                                     isConstantBitRate: false,
+                                                     videoState: video ? .started : .stopped,
+                                                     conversationObserverToken: token)
     }
     
     public var useConstantBitRateAudio: Bool = false
@@ -574,6 +594,7 @@ public struct CallEvent {
     weak var uiMOC : NSManagedObjectContext?
     let analytics: AnalyticsType?
     let flowManager : FlowManagerType
+    let audioOnlyParticipantLimit = 4
     
     deinit {
         avsWrapper.close()
@@ -615,12 +636,7 @@ public struct CallEvent {
         
         switch callState {
         case .incoming(video: let video, shouldRing: _, degraded: _):
-            createSnapshot(callState: callState, callStarter: userId, video: video, for: conversationId)
-            
-            participantSnapshots[conversationId] = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
-                                                                                     selfUserID: selfUserId,
-                                                                                     members: [CallMember(userId: userId!)],
-                                                                                     callCenter: self)
+            createSnapshot(callState: callState, members: [AVSCallMember(userId: userId!)], callStarter: userId, video: video, for: conversationId)
         case .established:
             // WORKAROUND: the call established handler will is called once for every participant in a
             // group call. Until that's no longer the case we must take care to only set establishedDate once.
@@ -628,8 +644,12 @@ public struct CallEvent {
                 establishedDate = Date()
             }
             
-            if isVideoCall(conversationId: conversationId) {
-                avsWrapper.setVideoSendActive(userId: conversationId, active: true)
+            if let userId = userId {
+                callParticipantAudioEstablished(conversationId: conversationId, userId: userId)
+            }
+            
+            if videoState(conversationId: conversationId) == .started {
+                avsWrapper.setVideoState(conversationId: conversationId, videoState: .started)
             }
         case .establishedDataChannel:
             if self.callState(conversationId: conversationId) == .established {
@@ -675,11 +695,18 @@ public struct CallEvent {
     // MARK: - Call state methods
 
 
-    @objc(answerCallForConversationID:)
-    public func answerCall(conversationId: UUID) -> Bool {
+    @objc(answerCallForConversationID:video:)
+    public func answerCall(conversation: ZMConversation, video: Bool) -> Bool {
+        guard let conversationId = conversation.remoteIdentifier else { return false }
+        
         endAllCalls(exluding: conversationId)
         
-        let answered = avsWrapper.answerCall(conversationId: conversationId, useCBR: useConstantBitRateAudio)
+        let callType: AVSCallType = conversation.activeParticipants.count > audioOnlyParticipantLimit ? .audioOnly : .normal
+        
+        if !video {
+            setVideoState(conversationId: conversationId, videoState: VideoState.stopped)
+        }
+        let answered = avsWrapper.answerCall(conversationId: conversationId, callType: callType, useCBR: useConstantBitRateAudio)
         if answered {
             let callState : CallState = .answered(degraded: isDegraded(conversationId: conversationId))
             if let previousSnapshot = callSnapshots[conversationId] {
@@ -690,19 +717,35 @@ public struct CallEvent {
                 WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: callerId, messageTime:nil).post(in: context.notificationContext)
             }
         }
+        
         return answered
     }
     
     @objc(startCallForConversationID:video:)
-    public func startCall(conversationId: UUID, video: Bool) -> Bool {
-        endAllCalls(exluding: conversationId)
+    public func startCall(conversation: ZMConversation, video: Bool) -> Bool {
+        guard let conversationId = conversation.remoteIdentifier else { return false }
         
+        endAllCalls(exluding: conversationId)
         clearSnapshot(conversationId: conversationId) // make sure we don't have an old state for this conversation
         
-        let started = avsWrapper.startCall(conversationId: conversationId, video: video, isGroup: isGroup(conversationId: conversationId), useCBR: useConstantBitRateAudio)
+        let conversationType: AVSConversationType = conversation.conversationType == .group ? .group : .oneToOne
+        let callType: AVSCallType
+        if conversation.activeParticipants.count > audioOnlyParticipantLimit {
+            callType = .audioOnly
+        } else {
+            callType = video ? .video : .normal
+        }
+        
+        let started = avsWrapper.startCall(conversationId: conversationId, callType: callType, conversationType: conversationType, useCBR: useConstantBitRateAudio)
         if started {
-            let callState : CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
-            createSnapshot(callState: callState, callStarter: selfUserId,  video: video, for: conversationId)
+            let callState: CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
+            
+            let members: [AVSCallMember] = {
+                guard let user = conversation.connectedUser, conversation.conversationType == .oneOnOne else { return [] }
+                return [AVSCallMember(userId: user.remoteIdentifier)]
+            }()
+
+            createSnapshot(callState: callState, members: members, callStarter: selfUserId, video: video, for: conversationId)
             
             if let context = uiMOC {
                 WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime:nil).post(in: context.notificationContext)
@@ -711,12 +754,15 @@ public struct CallEvent {
         return started
     }
     
-    @objc(closeCallForConversationID:)
-    public func closeCall(conversationId: UUID) {
+    public func closeCall(conversationId: UUID, reason: CallClosedReason = .normal) {
         avsWrapper.endCall(conversationId: conversationId)
-        if let previousSnapshot = callSnapshots[conversationId], previousSnapshot.isGroup {
-            let callState : CallState = .incoming(video: previousSnapshot.isVideo, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
-            callSnapshots[conversationId] = previousSnapshot.update(with: callState)
+        if let previousSnapshot = callSnapshots[conversationId] {
+            if previousSnapshot.isGroup {
+                let callState : CallState = .incoming(video: previousSnapshot.isVideo, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
+                callSnapshots[conversationId] = previousSnapshot.update(with: callState)
+            } else {
+                callSnapshots[conversationId] = previousSnapshot.update(with: .terminating(reason: reason))
+            }
         }
     }
     
@@ -730,9 +776,9 @@ public struct CallEvent {
         }
     }
     
-    fileprivate func endAllCalls(exluding: UUID) {
+    public func endAllCalls(exluding: UUID? = nil) {
         nonIdleCalls.forEach { (key: UUID, callState: CallState) in
-            guard key != exluding else { return }
+            guard exluding == nil || key != exluding else { return }
             
             switch callState {
             case .incoming:
@@ -743,9 +789,14 @@ public struct CallEvent {
         }
     }
     
-    @objc(toogleVideoForConversationID:isActive:)
-    public func toogleVideo(conversationID: UUID, active: Bool) {
-        avsWrapper.toggleVideo(conversationID: conversationID, active: active)
+    public func setVideoState(conversationId: UUID, videoState: VideoState) {
+        guard videoState != .badConnection else { return }
+        
+        if let snapshot = callSnapshots[conversationId] {
+            callSnapshots[conversationId] = snapshot.updateVideoState(videoState)
+        }
+        
+        avsWrapper.setVideoState(conversationId: conversationId, videoState: videoState)
     }
     
     @objc(isVideoCallForConversationID:)
@@ -758,17 +809,25 @@ public struct CallEvent {
         return callSnapshots[conversationId]?.isConstantBitRate ?? false
     }
     
+    public func videoState(conversationId: UUID) -> VideoState {
+        return callSnapshots[conversationId]?.videoState ?? .stopped
+    }
+    
+    fileprivate func isActive(conversationId: UUID) -> Bool {
+        switch callState(conversationId: conversationId) {
+        case .established, .establishedDataChannel:
+            return true
+        default:
+            return false
+        }
+    }
+    
     fileprivate func isDegraded(conversationId: UUID) -> Bool {
         let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: uiMOC!)
         let degraded = conversation?.securityLevel == .secureWithIgnored
         return degraded
     }
     
-    fileprivate func isGroup(conversationId: UUID) -> Bool {
-        let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: uiMOC!)
-        return conversation?.conversationType == .group
-    }
-
     public func setVideoCaptureDevice(_ captureDevice: CaptureDevice, for conversationId: UUID) {
         flowManager.setVideoCaptureDevice(captureDevice, for: conversationId)
     }
@@ -787,22 +846,22 @@ public struct CallEvent {
     
     /// Returns conversations with active calls
     public func activeCallConversations(in userSession: ZMUserSession) -> [ZMConversation] {
-        let conversations = nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
+        let conversations = nonIdleCalls.compactMap { (key: UUID, value: CallState) -> ZMConversation? in
             if value == CallState.established {
                 return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
             } else {
                 return nil
             }
-        })
+        }
         
         return conversations
     }
     
     // Returns conversations with a non idle call state
     public func nonIdleCallConversations(in userSession: ZMUserSession) -> [ZMConversation] {
-        let conversations = nonIdleCalls.flatMap({ (key: UUID, value: CallState) -> ZMConversation? in
+        let conversations = nonIdleCalls.compactMap { (key: UUID, value: CallState) -> ZMConversation? in
             return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
-        })
+        }
         
         return conversations
     }
@@ -813,11 +872,11 @@ public struct CallEvent {
         return callSnapshots[conversationId]?.callState ?? .none
     }
     
-    // MARK: - WireCallCenterV3 - Call Participants
+    // MARK: - Call Participants
 
     /// Returns the callParticipants currently in the conversation
     func callParticipants(conversationId: UUID) -> [UUID] {
-        return participantSnapshots[conversationId]?.members.map{ $0.remoteId } ?? []
+        return callSnapshots[conversationId]?.callParticipants.members.map { $0.remoteId } ?? []
     }
     
     func initiatorForCall(conversationId: UUID) -> UUID? {
@@ -825,26 +884,21 @@ public struct CallEvent {
     }
     
     /// Call this method when the callParticipants changed and avs calls the handler `wcall_group_changed_h`
-    func callParticipantsChanged(conversationId: UUID, participants: [CallMember]) {
-        if let snapshot = participantSnapshots[conversationId] {
-            snapshot.callParticipantsChanged(newParticipants: participants)
-        } else if participants.count > 0 {
-            let snaphot = VoiceChannelParticipantV3Snapshot(conversationId: conversationId,
-                                                            selfUserID: selfUserId,
-                                                            members: [],
-                                                            callCenter: self)
-            participantSnapshots[conversationId] = snaphot
-            snaphot.callParticipantsChanged(newParticipants: participants)
-        }
+    func callParticipantsChanged(conversationId: UUID, participants: [AVSCallMember]) {
+        callSnapshots[conversationId]?.callParticipants.callParticipantsChanged(participants: participants)
     }
     
-    /// Returns the connectionState of a user in a conversation
-    /// We keep a snapshot of the callParticipants and activeFlowParticipants
-    /// If the user is contained in the callParticipants and in the activeFlowParticipants, he is connected
-    /// If the user is only contained in the callParticipants, he is connecting
-    /// Otherwise he is notConnected
+    func callParticipantVideostateChanged(conversationId: UUID, userId: UUID, videoState: VideoState) {
+        callSnapshots[conversationId]?.callParticipants.callParticpantVideoStateChanged(userId: userId, videoState: videoState)
+    }
+    
+    func callParticipantAudioEstablished(conversationId: UUID, userId: UUID) {
+        callSnapshots[conversationId]?.callParticipants.callParticpantAudioEstablished(userId: userId)
+    }
+    
+    /// Returns the state for a call participant.
     public func state(forUser userId: UUID, in conversationId: UUID) -> CallParticipantState {
-        return participantSnapshots[conversationId]?.callParticipantState(forUserWith:userId) ?? .unconnected
+        return callSnapshots[conversationId]?.callParticipants.callParticipantState(forUser: userId) ?? .unconnected
     }
 
 }
@@ -857,6 +911,11 @@ extension WireCallCenterV3 : ZMConversationObserver {
             let conversationId = changeInfo.conversation.remoteIdentifier,
             let previousSnapshot = callSnapshots[conversationId]
         else { return }
+        
+        if changeInfo.conversation.securityLevel == .secureWithIgnored, isActive(conversationId: conversationId) {
+            // If an active call degrades we end it immediately
+            return closeCall(conversationId: conversationId, reason: .securityDegraded)
+        }
         
         let updatedCallState = previousSnapshot.callState.update(withSecurityLevel: changeInfo.conversation.securityLevel)
         

@@ -77,7 +77,7 @@ class TeamInvitationStatusTests: ZMTBaseTest {
         let email2 = sut.nextEmail()
         
         // then
-        let emails = Set([email1, email2].flatMap({ $0 }))
+        let emails = Set([email1, email2].compactMap { $0 })
         let expectedEmails = Set([exampleEmailAddress1, exampleEmailAddress2])
         XCTAssertEqual(emails, expectedEmails)
     }

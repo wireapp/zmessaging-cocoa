@@ -33,7 +33,7 @@ public enum PreLoginAuthenticationEventObjc : Int {
 
 public typealias PreLoginAuthenticationObserverHandler = (_ event: PreLoginAuthenticationEventObjc, _ error : NSError?) -> Void
 
-@objc
+@objcMembers
 public class PreLoginAuthenticationObserverToken : NSObject, PreLoginAuthenticationObserver {
     
     private var token : Any?
@@ -69,7 +69,7 @@ public class PreLoginAuthenticationObserverToken : NSObject, PreLoginAuthenticat
     }
 }
 
-@objc
+@objcMembers
 public class PreLoginAuthenticationNotificationEvent : NSObject {
     
     let event : PreLoginAuthenticationEventObjc
@@ -82,7 +82,7 @@ public class PreLoginAuthenticationNotificationEvent : NSObject {
     
 }
 
-@objc
+@objcMembers
 public class PreLoginAuthenticationNotificationRecorder : NSObject {
     
     private var token : Any?

@@ -57,67 +57,7 @@ class ConversationTests_Participants: ConversationTestsBase {
         
         observer?.notifications.removeAllObjects()
     }
-    
-    func testThatWhenLeavingAConversationWeSetAndSynchronizeTheLastReadServerTimestamp() {
         
-        // given
-        XCTAssert(login())
-        
-        let conversation = self.conversation(for: groupConversation)!
-        let selfUser = user(for: self.selfUser)!
-        
-        mockTransportSession.resetReceivedRequests()
-        
-        let lastReadPath = "/conversations/\(selfUser.remoteIdentifier!.transportString())/otr/messages"
-        let memberLeavePath = "/conversations/\(conversation.remoteIdentifier!.transportString())/members/\(selfUser.remoteIdentifier!.transportString())"
-        let archivedPath = "/conversations/\(conversation.remoteIdentifier!.transportString())/self"
-        
-        var didSendLastReadMessage = false
-        var didSendMemberLeaveRequest = false
-        var didSendArchivedMessage = false
-        var archivedRef: Date? = nil
-        var isArchived: Bool?
-        
-        mockTransportSession.responseGeneratorBlock = { request in
-            switch (request.path, request.method) {
-            case (lastReadPath, ZMTransportRequestMethod.methodPOST):
-                didSendLastReadMessage = true
-            case (memberLeavePath, ZMTransportRequestMethod.methodDELETE):
-                didSendMemberLeaveRequest = true
-            case (archivedPath, ZMTransportRequestMethod.methodPUT):
-                didSendArchivedMessage = true
-                archivedRef = (request.payload as? NSDictionary)?.date(forKey: "otr_archived_ref")
-                isArchived = request.payload?.asDictionary()?["otr_archived"] as? Bool
-            default: break
-            }
-            
-            return nil
-        }
-        
-        // when
-        conversation.removeParticipant(selfUser, userSession: userSession!, completion: { _ in })
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertNotNil(conversation.lastReadServerTimeStamp);
-        XCTAssertTrue(didSendArchivedMessage)
-        XCTAssertTrue(didSendLastReadMessage)
-        XCTAssertTrue(didSendMemberLeaveRequest)
-        XCTAssertTrue(isArchived ?? false)
-        XCTAssertEqual(archivedRef, conversation.lastServerTimeStamp);
-        XCTAssertEqual(archivedRef, conversation.lastReadServerTimeStamp);
-        
-        // given
-        let unreadCount = conversation.estimatedUnreadCount;
-        
-        // when - logging in and out again lastRead is still set
-        recreateSessionManagerAndDeleteLocalData()
-        XCTAssertTrue(login());
-        
-        // then
-        XCTAssertEqual(self.conversation(for: groupConversation)!.estimatedUnreadCount, unreadCount);
-    }
-    
     func testThatAddingParticipantsToAConversationIsSynchronizedWithBackend() {
         // given
         XCTAssert(login())

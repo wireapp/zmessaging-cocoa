@@ -26,28 +26,25 @@ extension ZMContextChangeTrackerSource {
 
 
 class RequestStrategyTestBase : MessagingTest {
-    
-    func createClients() -> (UserClient, UserClient) {
-        let selfClient = self.createSelfClient()
-        return (selfClient, createRemoteClient())
-    }
-    
+        
     func createRemoteClient() -> UserClient {
         
-        var mockUser: MockUser!
-        var mockClient: MockUserClient!
+        var mockUserIdentifier: String!
+        var mockClientIdentifier: String!
         
         self.mockTransportSession.performRemoteChanges { (session) -> Void in
-            mockUser = session.insertUser(withName: "foo")
-            mockClient = session.registerClient(for: mockUser, label: mockUser.name!, type: "permanent")
+            let mockUser = session.insertUser(withName: "foo")
+            let mockClient = session.registerClient(for: mockUser, label: mockUser.name!, type: "permanent")
+            mockClientIdentifier = mockClient.identifier
+            mockUserIdentifier = mockUser.identifier
         }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        let client = UserClient.insertNewObject(in: syncMOC)
-        client.remoteIdentifier = mockClient.identifier
-        let user = ZMUser.insertNewObject(in: syncMOC)
-        user.remoteIdentifier = UUID(uuidString: mockUser.identifier)
+
+        let client = UserClient.insertNewObject(in: self.syncMOC)
+        client.remoteIdentifier = mockClientIdentifier
+        let user = ZMUser.insertNewObject(in: self.syncMOC)
+        user.remoteIdentifier = UUID(uuidString: mockUserIdentifier)
         client.user = user
+        
         return client
     }
 }

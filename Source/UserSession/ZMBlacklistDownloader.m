@@ -143,8 +143,14 @@ static NSString * const ExcludeVersionsKey = @"exclude";
         self.env = env;
         self.inBackground = NO;
         self.queue = dispatch_queue_create("ZMBlacklistDownloader", DISPATCH_QUEUE_SERIAL);
-        self.excludedVersions = [userDefaults objectForKey:ExcludeVersionsKey];
-        self.minVersion = [self.userDefaults objectForKey:MinVersionKey];
+        id excludedVersions = [userDefaults objectForKey:ExcludeVersionsKey];
+        if ([excludedVersions isKindOfClass:[NSArray class]]) {
+            self.excludedVersions = excludedVersions;
+        }
+        id minVersion = [self.userDefaults objectForKey:MinVersionKey];
+        if ([minVersion isKindOfClass:[NSString class]]) {
+            self.minVersion = minVersion;
+        }
         self.completionHandler = completionHandler;
         self.dateOfLastSuccessfulDownload = nil;
         self.dateOfLastUnsuccessfulDownload = nil;
@@ -317,6 +323,9 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 
 - (void)storeMinVersion:(NSString *)minVersion excludedVersions:(NSArray *)excludedVersions
 {
+    NSParameterAssert([minVersion isKindOfClass:[NSString class]]);
+    NSParameterAssert([excludedVersions isKindOfClass:[NSArray class]]);
+    
     if(self.minVersion != minVersion || ![self.minVersion isEqualToString:minVersion]) {
         self.minVersion = minVersion;
         [self.userDefaults setObject:self.minVersion forKey:MinVersionKey];
@@ -345,10 +354,18 @@ static NSString * const ExcludeVersionsKey = @"exclude";
         ZMLogError(@"Blacklist download returned status code %ld", (long)httpResponse.statusCode);
     }
     else {
-        NSDictionary *blackList = [self responseObjectWithData:data];
-        ZMLogInfo(@"Blacklist minimum version: %@, excluded versions: %@", blackList[MinVersionKey], blackList[ExcludeVersionsKey]);
-        [self didDownloadBlacklistWithMinVersion:blackList[MinVersionKey] exclude:blackList[ExcludeVersionsKey]];
-        isSuccess = YES;
+        NSDictionary *blackListJSON = [self responseObjectWithData:data];
+        if ([blackListJSON isKindOfClass:[NSDictionary class]]) {
+            Blacklist *blacklist = [[Blacklist alloc] initWithJson:blackListJSON];
+            
+            if (nil != blacklist) {
+                ZMLogInfo(@"Blacklist minimum version: %@, excluded versions: %@", blacklist.minVersion, blacklist.excludedVersions);
+
+                [self didDownloadBlacklistWithMinVersion:blacklist.minVersion
+                                                 exclude:blacklist.excludedVersions];
+                isSuccess = YES;
+            }
+        }
     }
     
     if(isSuccess) {

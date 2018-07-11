@@ -20,6 +20,7 @@ import Foundation
 import CoreData
 import WireRequestStrategy
 
+@objcMembers
 public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
 
     public let apnsConfirmationStatus : BackgroundAPNSConfirmationStatus
