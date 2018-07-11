@@ -110,15 +110,15 @@
 "push.notification.member.leave.self.nousername" = "Vous avez été exclu";
 
 // EPHEMERAL MESSAGE TIMER UPDATE
-"push.notification.message-timer.update" = "%@ set the message timer to %@";
-"push.notification.message-timer.update.nousername" = "Someone set the message timer to %@";
-"push.notification.message-timer.update.noconversationname" = "%@ set the message timer to %@ in a conversation";
-"push.notification.message-timer.update.nousername.noconversationname" = "Someone set the message timer to %@ in a conversation";
+"push.notification.message-timer.update" = "%@ a réglé la minuterie sur %@";
+"push.notification.message-timer.update.nousername" = "Quelqu'un a réglé la minuterie sur %@";
+"push.notification.message-timer.update.noconversationname" = "%@ a réglé la minuterie sur %@ dans une conversation";
+"push.notification.message-timer.update.nousername.noconversationname" = "Quelqu'un a réglé la minuterie sur %@ dans une conversation";
 
-"push.notification.message-timer.off" = "%@ turned off the message timer";
-"push.notification.message-timer.off.nousername" = "Someone turned off the message timer";
-"push.notification.message-timer.off.noconversationname" = "%@ turned off the message timer in a conversation";
-"push.notification.message-timer.off.nousername.noconversationname" = "Someone turned off the message timer in a conversation";
+"push.notification.message-timer.off" = "%@ a désactivé les messages éphémères";
+"push.notification.message-timer.off.nousername" = "Quelqu'un a désactivé les messages éphémères";
+"push.notification.message-timer.off.noconversationname" = "%@ a désactivé les messages éphémères dans une conversation";
+"push.notification.message-timer.off.nousername.noconversationname" = "Quelqu'un a désactivé les messages éphémères dans une conversation";
 
 // VIDEO CALLS
 "push.notification.call.started.video.oneonone" = "appelle en vidéo";
