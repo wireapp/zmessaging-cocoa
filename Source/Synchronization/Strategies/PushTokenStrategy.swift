@@ -48,124 +48,35 @@ public class PushTokenStrategy : AbstractRequestStrategy {
     }
 
     private func modifiedPredicate() -> NSPredicate {
-        return UserClient.predicateForObjectsThatNeedToBeUpdatedUpstream()
+        let basePredicate = UserClient.predicateForObjectsThatNeedToBeUpdatedUpstream()
+        let nonNilPushToken = NSPredicate(format: "%K != nil", Keys.UserClientPushTokenKey)
+
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [basePredicate, nonNilPushToken])
     }
 
     public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         self.pushKitTokenSync = ZMUpstreamModifiedObjectSync(transcoder: self, entityName: UserClient.entityName(), update: modifiedPredicate(), filter: nil, keysToSync: [Keys.UserClientPushTokenKey], managedObjectContext: managedObjectContext)
     }
-    
-//    func pushToken(forSingleRequestSync sync: ZMSingleRequestSync) -> ZMPushToken? {
-//        if (sync == pushKitTokenSync || sync == pushKitTokenDeletionSync) {
-//            return managedObjectContext.pushKitToken
-//        }
-//        preconditionFailure("Unknown sync")
-//    }
-
-//    func storePushToken(token: ZMPushToken?, forSingleRequestSync sync: ZMSingleRequestSync) {
-//        if (sync == pushKitTokenSync || sync == pushKitTokenDeletionSync) {
-//            managedObjectContext.pushKitToken = token;
-//        } else {
-//            preconditionFailure("Unknown sync")
-//        }
-//    }
 
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         return pushKitTokenSync.nextRequest()
     }
 
-//    public func request(forUpdating managedObject: ZMManagedObject, forKeys keys: Set<String>) -> ZMUpstreamRequest? {
-//        guard let client = managedObject as? UserClient else { return nil }
-//        guard client.isSelfClient() else { return nil }
-//        guard let pushToken = client.pushToken else { return nil }
-//
-//        if pushToken.isMarkedForDeletion {
-//            let request = ZMTransportRequest(path: "\(PushTokenPath)/\(pushToken.transportString)", method: .methodDELETE, payload: nil)
-//            return ZMUpstreamRequest(transportRequest: request)
-//        }
-//
-//    }
+}
 
-    public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
-//        if sync === pushKitTokensDownloadSync {
-//            return ZMTransportRequest(path:PushTokenPath, method:.methodGET, payload:nil)
-//        }
-//
-//        guard let token = pushToken(forSingleRequestSync: sync) else { return nil }
-//
-//        if (token.isRegistered && !token.isMarkedForDeletion) {
-//            sync.resetCompletionState()
-//            return nil
-//        }
-//
-//        // hex encode the token:
-//        let encodedToken = token.deviceToken.reduce(""){$0 + String(format: "%02hhx", $1)}
-//        if encodedToken.isEmpty {
-//            return nil
-//        }
-//
-//        if (token.isMarkedForDeletion) {
-//            if (sync == pushKitTokenDeletionSync) {
-//                let path = PushTokenPath+"/"+encodedToken
-//                return ZMTransportRequest(path:path, method:.methodDELETE, payload:nil)
-//            }
-//        } else {
-//            var payload = [String: Any]()
-//            payload["token"] = encodedToken
-//            payload["app"] = token.appIdentifier
-//            payload["transport"] = token.transportType
-//
-//            let selfUser = ZMUser.selfUser(in: managedObjectContext)
-//            if let userClientID = selfUser.selfClient()?.remoteIdentifier {
-//                payload["client"] = userClientID;
-//            }
-//            return ZMTransportRequest(path:PushTokenPath, method:.methodPOST, payload:payload as ZMTransportData?)
-//        }
+extension PushTokenStrategy: ZMContextChangeTrackerSource {
+    public func objectsDidChange(_ object: Set<NSManagedObject>) {
 
-        return nil;
     }
-        
-//    public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
-//        if (sync == pushKitTokensDownloadSync) {
-//
-//        } else if (sync == pushKitTokenDeletionSync) {
-//            finishDeletion(with: response, sync: sync)
-//        } else {
-//            finishUpdate(with: response, sync: sync)
-//        }
-//        // Need to call -save: to force a save, since nothing in the context will change:
-//        if !managedObjectContext.forceSaveOrRollback() {
-//            zmLog.error("Failed to save push token")
-//        }
-//        sync.resetCompletionState()
-//    }
-//
-//    func finishDeletion(with response: ZMTransportResponse, sync: ZMSingleRequestSync) {
-//        if response.result == .success {
-//            if let token = pushToken(forSingleRequestSync:sync), token.isMarkedForDeletion {
-//                storePushToken(token:nil, forSingleRequestSync:sync)
-//            }
-//        } else if response.result == .permanentError {
-//            storePushToken(token:nil, forSingleRequestSync:sync)
-//        }
-//    }
-//
-//    func finishUpdate(with response: ZMTransportResponse, sync: ZMSingleRequestSync) {
-//        let token = (response.result == .success) ? pushToken(with:response) : nil
-//        storePushToken(token:token, forSingleRequestSync:sync)
-//    }
-//
-//    func pushToken(with response:ZMTransportResponse) -> ZMPushToken? {
-//        guard let payloadDictionary = response.payload as? [String: Any],
-//              let encodedToken = payloadDictionary["token"] as? String,
-//              let deviceToken = encodedToken.zmDeviceTokenData(),
-//              let identifier = payloadDictionary["app"] as? String,
-//              let transportType = payloadDictionary["transport"] as? String
-//        else { return nil }
-//
-//        return ZMPushToken(deviceToken:deviceToken, identifier:identifier, transportType:transportType, isRegistered:true)
-//    }
+
+    public func fetchRequestForTrackedObjects() -> NSFetchRequest<NSFetchRequestResult>? {
+        return nil
+    }
+
+    public func addTrackedObjects(_ objects: Set<NSManagedObject>) {
+
+    }
 }
 
 extension PushTokenStrategy : ZMUpstreamTranscoder {
@@ -187,9 +98,11 @@ extension PushTokenStrategy : ZMUpstreamTranscoder {
             requestType = .getToken
         } else if !pushToken.isRegistered {
             let tokenPayload = PushTokenPayload(pushToken: pushToken, clientIdentifier: clientIdentifier)
-            let payload = try! JSONEncoder().encode(tokenPayload)
-            let payloadString = String(data: payload, encoding: .utf8) as NSString?
-            request = ZMTransportRequest(path: "\(PushTokenPath)", method: .methodPOST, payload: payloadString)
+            let payloadData = try! JSONEncoder().encode(tokenPayload)
+
+            // In various places (MockTransport for example) the payload is expected to be dictionary
+            let payload = ((try? JSONDecoder().decode([String : String].self, from: payloadData)) ?? [:]) as NSDictionary
+            request = ZMTransportRequest(path: "\(PushTokenPath)", method: .methodPOST, payload: payload)
             requestType = .postToken
         } else {
             return nil
@@ -220,7 +133,7 @@ extension PushTokenStrategy : ZMUpstreamTranscoder {
             client.pushToken = token
             return false
         case .deleteToken:
-            // The token might have changed in the meantime, check if it's still up for deletion"xeJOQeTUMpA3koRJNJSHVH7xTxYsd67jqo4So5yNsdU=
+            // The token might have changed in the meantime, check if it's still up for deletion
             if let token = client.pushToken, token.isMarkedForDeletion {
                 client.pushToken = nil
             }
@@ -239,20 +152,20 @@ extension PushTokenStrategy : ZMUpstreamTranscoder {
                 client.pushToken = pushToken.resetFlags()
                 return false
             } else {
-                // There is something wrong, delete the current token and sync it up
-                var token = pushToken.resetFlags()
-                token.isMarkedForDeletion = true
-                client.pushToken = token
-                return true
+                // There is something wrong, local token doesn't match the remotely registered
+
+                // We should remove the local token
+                client.pushToken = nil
+
+                // Make sure UI tries to get re-register a new one
+                NotificationInContext(name: ZMUserSession.resetPushTokenNotificationName,
+                                      context: managedObjectContext.notificationContext,
+                                      object: nil,
+                                      userInfo: nil).post()
+
+                return false
             }
         }
-    }
-
-    func resetTokenFetching(_ pushToken: PushToken) -> PushToken {
-        var token = pushToken
-        token.isMarkedForDeletion = false
-        token.isMarkedForDownload = false
-        return token
     }
 
     public func objectToRefetchForFailedUpdate(of managedObject: ZMManagedObject) -> ZMManagedObject? {

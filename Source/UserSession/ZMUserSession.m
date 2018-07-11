@@ -243,7 +243,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.commonContactsCache = [[NSCache alloc] init];
         self.commonContactsCache.name = @"ZMUserSession commonContactsCache";
         
-        [self registerForResetPushTokensNotification];
+        [self registerForPushTokenResetNotification];
         [self registerForBackgroundNotifications];
         [self registerForRequestToOpenConversationNotification];
         
@@ -348,11 +348,6 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     [self.application registerObserverForDidEnterBackground:self selector:@selector(applicationDidEnterBackground:)];
     [self.application registerObserverForWillEnterForeground:self selector:@selector(applicationWillEnterForeground:)];
-}
-
-- (void)registerForResetPushTokensNotification
-{
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetPushTokens) name:ZMUserSessionResetPushTokensNotificationName object:nil];
 }
 
 - (NSManagedObjectContext *)managedObjectContext

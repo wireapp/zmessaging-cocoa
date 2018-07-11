@@ -81,56 +81,6 @@
     
 }
 
-- (BOOL)registerForPushNotificationsWithToken:(NSData *)token
-{
-    [self.pushRegistry updatePushToken:token];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    return [self lastRequestsContainedTokenRequests];
-}
-
-- (BOOL)lastRequestsContainedTokenRequests
-{
-    BOOL didContainVOIPRequest = NO;
-    for (ZMTransportRequest *aRequest in self.mockTransportSession.receivedRequests) {
-        if (![aRequest.path isEqualToString: @"/push/tokens"]) {
-            continue;
-        }
-        NSString *transportType = aRequest.payload.asDictionary[@"transport"];
-        if ([transportType isEqualToString:@"APNS_VOIP"]) {
-            didContainVOIPRequest = YES;
-        }
-    }
-    return (didContainVOIPRequest);
-}
-
-- (void)testThatItRegistersPushToken
-{
-    XCTAssertTrue([self login]);
-
-    // given
-    NSData *token = [NSData dataWithBytes:@"abc" length:3];
-
-    XCTAssertTrue([self registerForPushNotificationsWithToken:token]);
-}
-
-- (void)testThatItUpdatesNewTokensIfNeeded
-{
-    XCTAssertTrue([self login]);
-    
-    // given
-    NSData *token = [NSData dataWithBytes:@"abc" length:3];
-    NSData *newToken = [NSData dataWithBytes:@"def" length:6];
-    
-    XCTAssertTrue([self registerForPushNotificationsWithToken:token]);
-    [self.mockTransportSession resetReceivedRequests];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // when
-    XCTAssertTrue([self registerForPushNotificationsWithToken:newToken]);
-    WaitForAllGroupsToBeEmpty(0.5);
-}
-
 - (void)testThatItFetchesTheNotificationStreamWhenReceivingNotificationOfTypeNotice
 {
     XCTAssertTrue([self login]);
@@ -300,7 +250,6 @@
         WaitForAllGroupsToBeEmpty(0.2);
     }
 }
-
 
 #pragma mark - Helper
 
