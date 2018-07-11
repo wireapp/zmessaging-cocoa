@@ -319,7 +319,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
         let foundClientsIdentifier = Set(clients.compactMap { $0.remoteIdentifier })
         let selfUser = ZMUser.selfUser(in: moc)
         let selfClient = selfUser.selfClient()
-        let otherClients = selfUser.clients ?? Set()
+        let otherClients = selfUser.clients
         
         otherClients.forEach {
             guard $0 != selfClient, // not current client
