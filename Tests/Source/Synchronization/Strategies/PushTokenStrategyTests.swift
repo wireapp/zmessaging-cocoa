@@ -54,13 +54,20 @@ class PushTokenStrategyTests: MessagingTest {
         super.tearDown()
     }
     
-    func insertPushKitToken(isRegistered: Bool, shouldBeDeleted: Bool = false) {
+    @discardableResult func insertPushKitToken(isRegistered: Bool, shouldBeDeleted: Bool = false, shouldBeDownloaded: Bool = false) -> [String : String] {
         let client = ZMUser.selfUser(in: self.syncMOC).selfClient()
         var token = PushToken(deviceToken: deviceTokenB, appIdentifier: identifier, transportType: transportTypeVOIP, isRegistered: isRegistered)
         token.isMarkedForDeletion = shouldBeDeleted
+        token.isMarkedForDownload = shouldBeDownloaded
         client?.pushToken = token
         self.syncMOC.saveOrRollback()
         self.notifyChangeTrackers()
+        return [
+            "token": token.deviceTokenString,
+            "app": token.appIdentifier,
+            "transport": token.transportType,
+            "client" : client!.remoteIdentifier!
+        ]
     }
 
     func notifyChangeTrackers() {
@@ -270,6 +277,65 @@ extension PushTokenStrategyTests {
             XCTAssertNotNil(self.pushKitToken())
         }
     }
+}
+
+// MARK: - Getting Tokens
+extension PushTokenStrategyTests {
+    func testThatItDownloadsTokensAndChecksIfItMatches() {
+        self.syncMOC.performGroupedAndWait { _ in
+            // given
+            let payload = self.insertPushKitToken(isRegistered: true, shouldBeDeleted: false, shouldBeDownloaded: true)
+            XCTAssertNotNil(self.pushKitToken())
+            let response = ZMTransportResponse(payload: ["tokens" : [payload]] as NSDictionary, httpStatus:200, transportSessionError:nil, headers:[:])
+
+            // when
+            let req = self.sut.nextRequest()
+
+            guard let request = req else { XCTFail(); return }
+            XCTAssertEqual(request.method, .methodGET)
+            XCTAssertEqual(request.path, "/push/tokens")
+            XCTAssertNil(request.payload)
+
+            request.complete(with: response)
+        }
+
+        self.syncMOC.performGroupedAndWait { _ in
+            // then
+            guard let token = self.pushKitToken() else { XCTFail(); return }
+            XCTAssertFalse(token.isMarkedForDownload)
+        }
+    }
+
+    func testThatItDownloadsTokensAndResetsIfNotValid() {
+        // Should be fired when we have to reupload the token
+        expectation(forNotification: ZMUserSession.resetPushTokenNotificationName, object: nil, handler: nil)
+
+        self.syncMOC.performGroupedAndWait { _ in
+            // given
+            var payload = self.insertPushKitToken(isRegistered: true, shouldBeDeleted: false, shouldBeDownloaded: true)
+            // Token for this client is different
+            payload["token"] = "something else"
+            XCTAssertNotNil(self.pushKitToken())
+            let response = ZMTransportResponse(payload: ["tokens" : [payload]] as NSDictionary, httpStatus:200, transportSessionError:nil, headers:[:])
+
+            // when
+            let req = self.sut.nextRequest()
+
+            guard let request = req else { XCTFail(); return }
+            XCTAssertEqual(request.method, .methodGET)
+            XCTAssertEqual(request.path, "/push/tokens")
+            XCTAssertNil(request.payload)
+
+            request.complete(with: response)
+        }
+        self.syncMOC.performGroupedAndWait { _ in
+            // then
+            XCTAssertNil(self.pushKitToken())
+        }
+
+        XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
+    }
+
 }
 
 

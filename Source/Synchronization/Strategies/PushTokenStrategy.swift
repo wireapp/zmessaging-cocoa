@@ -140,7 +140,8 @@ extension PushTokenStrategy : ZMUpstreamTranscoder {
             return false
         case .getToken:
             guard let responseData = response.rawData else { return false }
-            guard let tokens = try? JSONDecoder().decode([PushTokenPayload].self, from: responseData) else { return false }
+            guard let payload = try? JSONDecoder().decode([String : [PushTokenPayload]].self, from: responseData) else { return false }
+            guard let tokens = payload["tokens"] else { return false }
 
             // Find tokens belonging to self client
             let current = tokens.filter { $0.client == client.remoteIdentifier }
