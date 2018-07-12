@@ -46,7 +46,6 @@
 #import <WireSyncEngine/ZMUserSessionRegistrationNotification.h>
 #import <WireSyncEngine/UILocalNotification+UserInfo.h>
 #import <WireSyncEngine/ZMStoredLocalNotification.h>
-#import <WireSyncEngine/ZMPushToken.h>
 #import <WireSyncEngine/ZMTyping.h>
 #import <WireSyncEngine/ZMSyncStateDelegate.h>
 #import <WireSyncEngine/ZMUserSession+OperationLoop.h>
@@ -63,3 +62,4 @@
 #import <WireSyncEngine/ZMObjectStrategyDirectory.h>
 #import <WireSyncEngine/ZMUpdateEventsBuffer.h>
 #import <WireSyncEngine/ZMConversationTranscoder.h>
+#import <WireSyncEngine/NSManagedObjectContext+ZMPushToken.h>

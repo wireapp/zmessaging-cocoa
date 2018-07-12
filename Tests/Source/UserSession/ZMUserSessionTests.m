@@ -22,7 +22,6 @@
 @import WireSyncEngine;
 
 #include "ZMUserSessionTestsBase.h"
-#import "ZMPushToken.h"
 #import "UILocalNotification+UserInfo.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 

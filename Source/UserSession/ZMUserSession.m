@@ -32,7 +32,6 @@
 #import "ZMCredentials.h"
 #import <libkern/OSAtomic.h>
 #import "ZMAuthenticationStatus.h"
-#import "ZMPushToken.h"
 #import "ZMBlacklistVerificator.h"
 #import "NSURL+LaunchOptions.h"
 #import "WireSyncEngineLogs.h"
@@ -40,6 +39,7 @@
 #import "ZMOperationLoop+Private.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMClientRegistrationStatus.h"
+#import "NSManagedObjectContext+ZMPushToken.h"
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSNotificationName const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
