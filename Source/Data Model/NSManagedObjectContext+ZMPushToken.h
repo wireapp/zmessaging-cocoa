@@ -22,7 +22,8 @@
 @class ZMPushToken;
 @interface NSManagedObjectContext (PushToken)
 
-/// The token used for PushKit based remote push notifications. PushKit also refers to the token as ‘credentials’.
+/// This is a legacy push token that is superseeded by PushToken stored on UserClient.
+/// Used only for migration
 @property (nonatomic, copy, nullable) ZMPushToken *pushKitToken;
 
 @end
