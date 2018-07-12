@@ -144,4 +144,13 @@ import Foundation
         conversations?.forEach { $0.needsToBeUpdatedFromBackend = true }
         context.enqueueDelayedSave()
     }
+
+    // Migrate from push token stored in NSManagedObjectContext to selfClient
+    public static func migrateLegacyPushToken(_ context: NSManagedObjectContext) {
+        guard let legacyToken = context.pushKitToken else { return }
+        guard let selfClient = ZMUser.selfUser(in: context).selfClient() else { return }
+        selfClient.pushToken = PushToken(pushToken: legacyToken)
+        context.pushKitToken = nil
+        context.enqueueDelayedSave()
+    }
 }

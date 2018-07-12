@@ -80,4 +80,38 @@ class ZMHotFixTests_Integration: MessagingTest {
         XCTAssertFalse(g2.needsToBeUpdatedFromBackend)
         XCTAssertFalse(g3.needsToBeUpdatedFromBackend)
     }
+
+    func testThatPushTokenIsMigrated() {
+        // given
+        createSelfClient()
+        let token = Data(bytes: [0x01, 0x02, 0x03])
+        let identifier = "com.identifier"
+        let transport = "APNS"
+        let registered = true
+        let toDelete = false
+        let legacyToken = ZMPushToken(deviceToken: token, identifier: identifier, transportType: transport, isRegistered: registered, isMarkedForDeletion: toDelete)
+        self.syncMOC.pushKitToken = legacyToken
+
+
+        self.syncMOC.setPersistentStoreMetadata("175.0", key: "lastSavedVersion")
+        let sut = ZMHotFix(syncMOC: self.syncMOC)
+
+        self.performIgnoringZMLogError {
+            sut?.applyPatches(forCurrentVersion: "178.0")
+            XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        }
+
+        guard let client = ZMUser.selfUser(in: self.syncMOC).selfClient() else { XCTFail(); return }
+        guard let pushToken = client.pushToken else { XCTFail(); return }
+        XCTAssertNil(self.syncMOC.pushKitToken)
+
+        XCTAssertEqual(pushToken.deviceToken, token)
+        XCTAssertEqual(pushToken.appIdentifier, identifier)
+        XCTAssertEqual(pushToken.transportType, transport)
+        XCTAssertEqual(pushToken.isRegistered, registered)
+        XCTAssertEqual(pushToken.isMarkedForDeletion, toDelete)
+
+        // We need to re-download it to make sure it is still valid
+        XCTAssertTrue(pushToken.isMarkedForDownload)
+    }
 }
