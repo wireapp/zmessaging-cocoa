@@ -1140,45 +1140,6 @@ extension UserProfileUpdateStatusTests {
     }
 }
 
-// MARK: - Analytics
-extension UserProfileUpdateStatusTests {
-
-    func testThatItTracksFindingASuggestedHandleOnTheFirstTry() {
-        // GIVEN
-        sut.suggestHandles()
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-
-        // WHEN
-        sut.didFindHandleSuggestion(handle: "handle")
-
-        // THEN
-        XCTAssertEqual(mockAnalytics.taggedEventsWithAttributes.count, 1)
-        guard let event = mockAnalytics.taggedEventsWithAttributes.first else { return XCTFail() }
-        XCTAssertEqual(event.event, "onboarding.generated_username")
-        XCTAssertEqual(event.attributes["outcome"] as? String, "success")
-        XCTAssertEqual(event.attributes["num_of_attempts"] as? Int, 1)
-    }
-
-    func testThatItTracksFindingASuggestedHandleAfterMultipleAttempts() {
-        // GIVEN
-        sut.suggestHandles()
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-
-        // WHEN
-        sut.didNotFindAvailableHandleSuggestion()
-        sut.didNotFindAvailableHandleSuggestion()
-        sut.didFindHandleSuggestion(handle: "handle")
-
-        // THEN
-        XCTAssertEqual(mockAnalytics.taggedEventsWithAttributes.count, 1)
-        guard let event = mockAnalytics.taggedEventsWithAttributes.first else { return XCTFail() }
-        XCTAssertEqual(event.event, "onboarding.generated_username")
-        XCTAssertEqual(event.attributes["outcome"] as? String, "success")
-        XCTAssertEqual(event.attributes["num_of_attempts"] as? Int, 3)
-    }
-
-}
-
 // MARK: - Helpers
 class TestUserProfileUpdateObserver : NSObject, UserProfileUpdateObserver {
     
