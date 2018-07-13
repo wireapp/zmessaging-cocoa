@@ -79,7 +79,7 @@ extension ZMUserSession {
         }
     }
 
-    func validatePushToken() {
+    public func validatePushToken() {
         let syncMOC = managedObjectContext.zm_sync!
         syncMOC.performGroupedBlock {
             guard let selfClient = ZMUser.selfUser(in: syncMOC).selfClient() else { return }
