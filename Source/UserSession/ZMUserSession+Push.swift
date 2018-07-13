@@ -79,6 +79,8 @@ extension ZMUserSession {
         }
     }
 
+    /// Will compare the push token registered on backend with the local one
+    /// and re-register it if they don't match
     public func validatePushToken() {
         let syncMOC = managedObjectContext.zm_sync!
         syncMOC.performGroupedBlock {
