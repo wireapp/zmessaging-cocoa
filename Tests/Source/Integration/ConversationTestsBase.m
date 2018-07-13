@@ -239,7 +239,6 @@
     
     const int MESSAGES = 10;
     const NSUInteger WINDOW_SIZE = 5;
-    NSMutableArray *insertedMessages = [NSMutableArray array];
     for(int i = 0; i < MESSAGES; ++i)
     {
         [self.userSession performChanges:^{ // I save multiple times so that it is inserted in the mocktransportsession in the order I expect
@@ -249,7 +248,7 @@
         WaitForAllGroupsToBeEmpty(0.5);
     }
     
-    [conversation setVisibleWindowFromMessage:insertedMessages.firstObject toMessage:insertedMessages.lastObject];
+    [conversation markAsRead];
     MockConversationWindowObserver *observer = [[MockConversationWindowObserver alloc] initWithConversation:conversation size:WINDOW_SIZE];
     
     return observer;

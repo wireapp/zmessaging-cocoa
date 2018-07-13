@@ -109,6 +109,17 @@
 "push.notification.member.leave.self.nousername.noconversationname" = "Você foi removido de uma conversa";
 "push.notification.member.leave.self.nousername" = "Você foram removido";
 
+// EPHEMERAL MESSAGE TIMER UPDATE
+"push.notification.message-timer.update" = "%@ definiu o tempo da mensagem para %@";
+"push.notification.message-timer.update.nousername" = "Alguém definiu o tempo da mensagem para %@";
+"push.notification.message-timer.update.noconversationname" = "%@ definiu o tempo da mensagem para %@ em uma conversa";
+"push.notification.message-timer.update.nousername.noconversationname" = "Alguém definiu o tempo da mensagem para %@ em uma conversa";
+
+"push.notification.message-timer.off" = "%@ desligou o tempo da mensagem";
+"push.notification.message-timer.off.nousername" = "Alguém desligou o tempo da mensagem";
+"push.notification.message-timer.off.noconversationname" = "%@ desligou o tempo da mensagem em uma conversa";
+"push.notification.message-timer.off.nousername.noconversationname" = "Alguém desligou o tempo da mensagem em uma conversa";
+
 // VIDEO CALLS
 "push.notification.call.started.video.oneonone" = "está te chamando em vídeo";
 "push.notification.call.started.video.oneonone.nousername" = "Alguém está chamando em vídeo";

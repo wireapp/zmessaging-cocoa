@@ -214,6 +214,7 @@ extension UserImageAssetUpdateStrategyTests {
 
 // MARK: - Profile image download
 extension UserImageAssetUpdateStrategyTests {
+
     func testThatItCreatesDownstreamRequestSyncs() {
         XCTAssertNotNil(sut.downstreamRequestSyncs[.preview])
         XCTAssertNotNil(sut.downstreamRequestSyncs[.complete])
@@ -322,6 +323,54 @@ extension UserImageAssetUpdateStrategyTests {
         
         // THEN
         XCTAssertEqual(user.imageMediumData, imageData)
+    }
+    
+    func testThatItDeletesPreviewProfileAssetIdentifierWhenReceivingAPermanentErrorForPreviewImage() {
+        // Given
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: syncMOC)!
+        let assetId = UUID.create().transportString()
+        user.previewProfileAssetIdentifier = assetId
+        
+        // When
+        user.requestPreviewAsset()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        guard let request = sut.nextRequestIfAllowed() else { return XCTFail("nil request generated") }
+        XCTAssertEqual(request.path, "/assets/v3/\(assetId)")
+        XCTAssertEqual(request.method, .methodGET)
+        
+        // Given
+        let response = ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil)
+        request.complete(with: response)
+        
+        // THEN
+        user.requestPreviewAsset()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertNil(user.previewProfileAssetIdentifier)
+        XCTAssertNil(sut.nextRequestIfAllowed())
+    }
+    
+    func testThatItDeletesCompleteProfileAssetIdentifierWhenReceivingAPermanentErrorForCompleteImage() {
+        // Given
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: syncMOC)!
+        let assetId = UUID.create().transportString()
+        user.completeProfileAssetIdentifier = assetId
+        
+        // When
+        user.requestCompleteAsset()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        guard let request = sut.nextRequestIfAllowed() else { return XCTFail("nil request generated") }
+        XCTAssertEqual(request.path, "/assets/v3/\(assetId)")
+        XCTAssertEqual(request.method, .methodGET)
+        
+        // Given
+        let response = ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil)
+        request.complete(with: response)
+        
+        // THEN
+        user.requestCompleteAsset()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertNil(user.completeProfileAssetIdentifier)
+        XCTAssertNil(sut.nextRequestIfAllowed())
     }
 
 }

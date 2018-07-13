@@ -167,8 +167,17 @@ extension UserImageAssetUpdateStrategy: ZMDownstreamTranscoder {
         return ZMTransportRequest.imageGet(fromPath: path)
     }
     
-    public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {}
-    
+    public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
+        guard let whitelistSync = downstreamSync as? ZMDownstreamObjectSyncWithWhitelist else { return }
+        guard let user = object as? ZMUser else { return }
+
+        switch size(for: whitelistSync) {
+        case .preview?: user.previewProfileAssetIdentifier = nil
+        case .complete?: user.completeProfileAssetIdentifier = nil
+        default: break
+        }
+    }
+
     public func update(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
         guard let whitelistSync = downstreamSync as? ZMDownstreamObjectSyncWithWhitelist else { return }
         guard let user = object as? ZMUser else { return }

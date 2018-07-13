@@ -109,6 +109,17 @@
 "push.notification.member.leave.self.nousername.noconversationname" = "Ви були видалені з розмови";
 "push.notification.member.leave.self.nousername" = "Вас видалили";
 
+// EPHEMERAL MESSAGE TIMER UPDATE
+"push.notification.message-timer.update" = "%@ встановив(-ла) таймер повідомлень на %@";
+"push.notification.message-timer.update.nousername" = "Хтось встановив таймер повідомлень на %@";
+"push.notification.message-timer.update.noconversationname" = "%@ встановив(-ла) таймер повідомлень на %@ в розмові";
+"push.notification.message-timer.update.nousername.noconversationname" = "Хтось встановив таймер повідомлень на %@ в розмові";
+
+"push.notification.message-timer.off" = "%@ вимкнув(-ла) таймер повідомлень";
+"push.notification.message-timer.off.nousername" = "Хтось вимкнув таймер повідомлень";
+"push.notification.message-timer.off.noconversationname" = "%@ вимкнув(-ла) таймер повідомлень в розмові";
+"push.notification.message-timer.off.nousername.noconversationname" = "Хтось вимкнув таймер повідомлень в розмові";
+
 // VIDEO CALLS
 "push.notification.call.started.video.oneonone" = "дзвонить з відео";
 "push.notification.call.started.video.oneonone.nousername" = "Хтось дзвонить з відео";

@@ -109,6 +109,17 @@
 "push.notification.member.leave.self.nousername.noconversationname" = "Sind eemaldati vestlusest";
 "push.notification.member.leave.self.nousername" = "Sind eemaldati vestlusest";
 
+// EPHEMERAL MESSAGE TIMER UPDATE
+"push.notification.message-timer.update" = "%@ määras sõnumi taimeriks: %@";
+"push.notification.message-timer.update.nousername" = "Keegi määras sõnumi taimeriks %@";
+"push.notification.message-timer.update.noconversationname" = "%@ määras vestluses sõnumi taimeriks %@";
+"push.notification.message-timer.update.nousername.noconversationname" = "Keegi määras vestluses sõnumi taimeriks %@";
+
+"push.notification.message-timer.off" = "%@ lülitas sõnumi taimeri välja";
+"push.notification.message-timer.off.nousername" = "Keegi lülitas sõnumi taimeri välja";
+"push.notification.message-timer.off.noconversationname" = "%@ lülitas vestluses sõnumi taimeri välja";
+"push.notification.message-timer.off.nousername.noconversationname" = "Keegi lülitas vestluses sõnumi taimeri välja";
+
 // VIDEO CALLS
 "push.notification.call.started.video.oneonone" = "helistab videoga";
 "push.notification.call.started.video.oneonone.nousername" = "Keegi helistab videoga";

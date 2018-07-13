@@ -122,7 +122,7 @@
 {
     if(response.result == ZMTransportResponseStatusSuccess) {
         NSData *imageData = response.imageData ?: response.rawData;
-        if(imageData != 0) {
+        if (imageData != 0) {
             [[ZMSearchUser searchUserToMediumImageCache] setObject:imageData forKey:remoteIdentifier];
             [userSession.managedObjectContext performGroupedBlock:^{
                 [self setAndNotifyNewMediumImageData:imageData searchUserObserverCenter:userSession.managedObjectContext.searchUserObserverCenter];

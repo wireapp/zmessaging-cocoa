@@ -222,12 +222,13 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 
 - (NSMutableDictionary *)responsePayloadForUserEventInConversationID:(NSUUID *)conversationID userIDs:(NSArray *)userIDs eventType:(NSString *)eventType;
 {
-    return [self responsePayloadForUserEventInConversationID:conversationID lastTimeStamp:[NSDate date] userIDs:userIDs eventType:eventType];
+    return [self responsePayloadForUserEventInConversationID:conversationID lastTimeStamp:[NSDate date] userIDs:userIDs from:self.selfUserID eventType:eventType];
 }
 
 - (NSMutableDictionary *)responsePayloadForUserEventInConversationID:(NSUUID *)conversationID
                                                        lastTimeStamp:(NSDate *)lastServerTimeStamp
                                                              userIDs:(NSArray *)userIDs
+                                                                from:(NSUUID *)fromUserID
                                                            eventType:(NSString *)eventType;
 {
     NSArray *userIDStrings = [userIDs mapWithBlock:^id(NSUUID *userID) {
@@ -236,7 +237,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }];
     return [@{@"conversation": conversationID.transportString,
               @"data": @{@"user_ids": userIDStrings},
-              @"from": self.selfUserID.transportString,
+              @"from": fromUserID,
               @"time": [lastServerTimeStamp dateByAddingTimeInterval:5].transportString,
               @"type": eventType} mutableCopy];
 }
@@ -1976,21 +1977,21 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 }
 
 
-- (void)testThatItDoesNotArchiveAConversationAfterAPushEventWhenRemovingTheSelfUser
+- (void)testThatItDoesNotArchiveAConversationAfterAPushEventWhenTheSelfUserIsRemovedByAnotherUser
 {
     // given
     NSUUID* conversationID = [NSUUID createUUID];
     NSDate *lastModifiedDate = [NSDate dateWithTimeIntervalSinceNow:-1000];
     
     __block ZMConversation *conversation;
-    __block NSUUID* userID;
-    __block ZMUser *selfUser;
+    __block NSUUID* otherUserID;
+    __block ZMUser *otherUser;
     
     [self.syncMOC performGroupedBlockAndWait:^{
-        selfUser = [ZMUser selfUserInContext:self.syncMOC];
-        selfUser.remoteIdentifier = [NSUUID createUUID];
-        userID = selfUser.remoteIdentifier;
-
+        otherUserID = [NSUUID createUUID];
+        otherUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        otherUser.remoteIdentifier = otherUserID;
+        
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeGroup;
         conversation.remoteIdentifier = conversationID;
@@ -2001,7 +2002,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertFalse(conversation.isArchived);
     }];
     
-    NSDictionary *payload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[userID] eventType:@"conversation.member-leave"];
+    NSDictionary *payload = [self responsePayloadForUserEventInConversationID:conversationID lastTimeStamp:[NSDate date] userIDs:@[self.selfUserID] from:otherUserID eventType:@"conversation.member-leave"];
     
     // when
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -2012,7 +2013,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [self.syncMOC performGroupedBlockAndWait:^{
         XCTAssertFalse(conversation.isSelfAnActiveMember);
         XCTAssertFalse(conversation.isArchived);
-        XCTAssertEqualObjects(conversation.lastModifiedDate, lastModifiedDate);
     }];
 }
 
@@ -2160,34 +2160,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [self checkThatItSendsARequestForIsSilenced:NO];
 }
 
-
-- (void)testThatItSendsARequestWithANewTimestampWhenConversationIsSilencedWithNoSilencedTimestamp
-{
-    // given
-    ZMConversation *conversation = [self setupConversation];
-    
-    // when
-    conversation.isSilenced = YES;
-    conversation.silencedChangedTimestamp = nil;
-    [self.uiMOC saveOrRollback];
-
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
-    ZMTransportRequest *request = [self requestToSyncConversation:conversation andCompleteWithResponse:response];
-    
-    [self.uiMOC refreshObject:conversation mergeChanges:NO];
-    XCTAssertNotNil(request);
-    XCTAssertNotNil(conversation.silencedChangedTimestamp);
-    
-    // then
-    XCTAssertEqual(request.method, ZMMethodPUT);
-    NSString *expectedPath = [NSString pathWithComponents:@[ @"/", @"conversations", conversation.remoteIdentifier.transportString, @"self" ]];
-    XCTAssertEqualObjects(request.path, expectedPath);
-    
-    NSDictionary *expected = @{ @"otr_muted_ref": conversation.silencedChangedTimestamp.transportString,
-                                @"otr_muted" : @(YES)};
-    XCTAssertEqualObjects(request.payload, expected);
-}
-
 - (void)checkThatItSendsARequestForIsSilenced:(BOOL)isSilenced
 {
     // given
@@ -2196,8 +2168,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     
     ZMConversation *conversation =  [self setupConversation];
     conversation.isSilenced = isSilenced;
-    XCTAssertEqualObjects(conversation.keysThatHaveLocalModifications, keys);
     [self.uiMOC saveOrRollback];
+    XCTAssertEqualObjects(conversation.keysThatHaveLocalModifications, keys);
     
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil];
     ZMTransportRequest *request = [self requestToSyncConversation:conversation andCompleteWithResponse:response];
@@ -2230,36 +2202,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 {
     [self checkThatItSendsARequestForIsArchived:NO];
 }
-
-- (void)testThatItSendsARequestWithANewTimestampWhenConversationIsArchivedWithNoArchivedTimestamp
-{
-    // given
-    ZMConversation *conversation = [self setupConversation];
-    
-    // when
-    conversation.isArchived = YES;
-    conversation.archivedChangedTimestamp = nil;
-    [self.uiMOC saveOrRollback];
-    
-    
-    ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
-    ZMTransportRequest *request = [self requestToSyncConversation:conversation andCompleteWithResponse:response];
-    
-    [self.uiMOC refreshObject:conversation mergeChanges:NO];
-    XCTAssertNotNil(request);
-    XCTAssertNotNil(conversation.archivedChangedTimestamp);
-
-    // then
-    [self.uiMOC refreshObject:conversation mergeChanges:NO];
-    XCTAssertEqual(request.method, ZMMethodPUT);
-    NSString *expectedPath = [NSString pathWithComponents:@[ @"/", @"conversations", conversation.remoteIdentifier.transportString, @"self" ]];
-    XCTAssertEqualObjects(request.path, expectedPath);
-    
-    NSDictionary *expected = @{ @"otr_archived_ref": conversation.archivedChangedTimestamp.transportString,
-                                @"otr_archived" : @(YES)};
-    XCTAssertEqualObjects(request.payload, expected);
-}
-
 
 - (void)checkThatItSendsARequestForIsArchived:(BOOL)isArchived
 {
@@ -2656,8 +2598,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:user3.remoteIdentifier] senderUUID];
     (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:conversation.remoteIdentifier] conversationUUID];
 
-    [(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(NO)] canUnarchiveConversation:conversation];
-
     // when
     [self.syncMOC performGroupedBlockAndWait:^{
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
@@ -2832,38 +2772,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
-
-- (void)testThatItSetsLastModifiedDateFromPushPayload
-{
-    // given
-    __block ZMConversation *conversation;
-    NSUUID* conversationID = [NSUUID createUUID];
-    NSDate *lastModifiedDate = [NSDate dateWithTimeIntervalSinceReferenceDate:417002300];
-    
-    [self.syncMOC performGroupedBlockAndWait:^{
-        conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        conversation.remoteIdentifier = conversationID;
-        
-        NSDictionary *payload = @{@"conversation": conversation.remoteIdentifier.transportString,
-                                  @"data": @{
-                                          @"content": @"http://www.youtube.com/watch?v=CRbWeUN1n7k#t=544",
-                                          @"nonce": [NSUUID createUUID].transportString,
-                                          },
-                                  @"from": @"6185dc93-aabd-4ece-bf75-372a6dd3592b",
-                                  @"time": lastModifiedDate.transportString,
-                                  @"type": @"conversation.message-add"};
-        
-        ZMUpdateEvent *updateEvent = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-        XCTAssertNotNil(updateEvent);
-        
-        // when
-        [self.sut processEvents:@[updateEvent] liveEvents:YES prefetchResult:nil];
-        
-        // then
-        XCTAssertEqualWithAccuracy(conversation.lastModifiedDate.timeIntervalSinceReferenceDate, lastModifiedDate.timeIntervalSinceReferenceDate, 0.1);
-    }];
-}
-
 - (void)testThatItDoesNotSetLastModifiedDateFromPushPayloadIfForIgnoredEvents
 {
     // given
@@ -2993,42 +2901,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     
 }
 
-- (void)testThatItUnArchivesConversations
-{
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // given
-        NSDate *oldDate = [NSDate date];
-        NSDate *newDate = [oldDate dateByAddingTimeInterval:10];
-        
-        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        conversation.remoteIdentifier = NSUUID.createUUID;
-        conversation.lastServerTimeStamp = oldDate;
-        conversation.isArchived = YES;
-        
-        XCTAssertNotNil(conversation);
-        XCTAssertTrue(conversation.isArchived);
-        XCTAssertEqualObjects(conversation.archivedChangedTimestamp, oldDate);
-        
-        NSDictionary *payload = @{
-                                  @"conversation" : conversation.remoteIdentifier.transportString,
-                                  @"data" : @{},
-                                  @"from" : @"08316f5e-3c0a-4847-a235-2b4d93f291a4",
-                                  @"time" : newDate.transportString,
-                                  @"type" : @"conversation.member-join",
-                                  };
-        
-        ZMUpdateEvent *updateEvent = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
-        XCTAssertNotNil(updateEvent);
-        
-        // when
-        [self.sut processEvents:@[updateEvent] liveEvents:YES prefetchResult:nil];
-        
-        // then
-        XCTAssertFalse(conversation.isArchived);
-        XCTAssertTrue([conversation.keysThatHaveLocalModifications containsObject:ZMConversationArchivedChangedTimeStampKey]);
-    }];
-}
-
 - (void)testThatItDoesNotUnArchiveAConversations_WhenTheConversationsArchivedChangeTimeStampIsNewer
 {
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -3095,9 +2967,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     // when
     ZMConversation *conversation = (id) [self.uiMOC objectWithID:syncConversation.objectID];
     conversation.lastReadTimestampSaveDelay = 0.2;
-    ZMMessage *fromMessage = conversation.messages[42];
-    ZMMessage *toMessage = conversation.messages[56];
-    [conversation setVisibleWindowFromMessage:fromMessage toMessage:toMessage];
+    ZMMessage *toMessage = conversation.messages[42];
+    [conversation markMessagesAsReadUntil:toMessage];
     XCTAssert([self.uiMOC saveOrRollback]);
     WaitForAllGroupsToBeEmpty(conversation.lastReadTimestampSaveDelay + 0.2);
     

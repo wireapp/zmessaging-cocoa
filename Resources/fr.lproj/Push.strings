@@ -109,6 +109,17 @@
 "push.notification.member.leave.self.nousername.noconversationname" = "Vous avez été exclu d’une conversation";
 "push.notification.member.leave.self.nousername" = "Vous avez été exclu";
 
+// EPHEMERAL MESSAGE TIMER UPDATE
+"push.notification.message-timer.update" = "%@ a réglé la minuterie sur %@";
+"push.notification.message-timer.update.nousername" = "Quelqu'un a réglé la minuterie sur %@";
+"push.notification.message-timer.update.noconversationname" = "%@ a réglé la minuterie sur %@ dans une conversation";
+"push.notification.message-timer.update.nousername.noconversationname" = "Quelqu'un a réglé la minuterie sur %@ dans une conversation";
+
+"push.notification.message-timer.off" = "%@ a désactivé les messages éphémères";
+"push.notification.message-timer.off.nousername" = "Quelqu'un a désactivé les messages éphémères";
+"push.notification.message-timer.off.noconversationname" = "%@ a désactivé les messages éphémères dans une conversation";
+"push.notification.message-timer.off.nousername.noconversationname" = "Quelqu'un a désactivé les messages éphémères dans une conversation";
+
 // VIDEO CALLS
 "push.notification.call.started.video.oneonone" = "appelle en vidéo";
 "push.notification.call.started.video.oneonone.nousername" = "Quelqu'un appelle en vidéo";
