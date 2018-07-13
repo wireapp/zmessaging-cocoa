@@ -242,8 +242,6 @@
 		54A3F24F1C08523500FE3A6B /* ZMOperationLoop.h in Headers */ = {isa = PBXBuildFile; fileRef = 85D85F3EC8565FD102AC0E5B /* ZMOperationLoop.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		54AB428E1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AB428D1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift */; };
 		54ADA7631E3B3D8E00B90C7D /* IntegrationTest+Encryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54ADA7611E3B3CBE00B90C7D /* IntegrationTest+Encryption.swift */; };
-		54B2A0891DAE71F100BB40B1 /* AddressBookTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54B2A0831DAE71F100BB40B1 /* AddressBookTracker.swift */; };
-		54B2A08C1DAE71F100BB40B1 /* Clusterizer+VOIP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54B2A0861DAE71F100BB40B1 /* Clusterizer+VOIP.swift */; };
 		54BFDF681BDA6F9A0034A3DB /* HistorySynchronizationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54BFDF671BDA6F9A0034A3DB /* HistorySynchronizationStatus.swift */; };
 		54BFDF6A1BDA87D20034A3DB /* HistorySynchronizationStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54BFDF691BDA87D20034A3DB /* HistorySynchronizationStatusTests.swift */; };
 		54C11BAD19D1EB7500576A96 /* ZMLoginTranscoderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 54C11BAB19D1EB7500576A96 /* ZMLoginTranscoderTests.m */; };
@@ -782,8 +780,6 @@
 		54A3ACC21A261603008AF8DF /* BackgroundTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BackgroundTests.m; sourceTree = "<group>"; };
 		54AB428D1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TopConversationsDirectoryTests.swift; sourceTree = "<group>"; };
 		54ADA7611E3B3CBE00B90C7D /* IntegrationTest+Encryption.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "IntegrationTest+Encryption.swift"; sourceTree = "<group>"; };
-		54B2A0831DAE71F100BB40B1 /* AddressBookTracker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookTracker.swift; sourceTree = "<group>"; };
-		54B2A0861DAE71F100BB40B1 /* Clusterizer+VOIP.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Clusterizer+VOIP.swift"; sourceTree = "<group>"; };
 		54BAF1B119212E51008042FB /* ZMUserSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMUserSession.h; sourceTree = "<group>"; };
 		54BAF1BC19212EBA008042FB /* ZMUserSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMUserSession.m; sourceTree = "<group>"; };
 		54BD32D01A5ACCF9008EB1B0 /* Test-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Test-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -1649,8 +1645,6 @@
 		54B2A0821DAE71F100BB40B1 /* Analytics */ = {
 			isa = PBXGroup;
 			children = (
-				54B2A0831DAE71F100BB40B1 /* AddressBookTracker.swift */,
-				54B2A0861DAE71F100BB40B1 /* Clusterizer+VOIP.swift */,
 				CEF2DE7E1DB778F300451642 /* RequestLoopAnalyticsTracker.swift */,
 				F1EB0E77200501C70040D73E /* NotificationsTracker.swift */,
 				7C1F4BF4203C4F67000537A8 /* Analytics+Push.swift */,
@@ -2711,7 +2705,6 @@
 				164C29A71ED2D7B00026562A /* SearchResult.swift in Sources */,
 				F98EDCF51D82B924001E65CB /* ZMSpellOutSmallNumbersFormatter.m in Sources */,
 				1660AA091ECCAC900056D403 /* SearchDirectory.swift in Sources */,
-				54B2A08C1DAE71F100BB40B1 /* Clusterizer+VOIP.swift in Sources */,
 				161681352077721600BCF33A /* ZMOperationLoop+OperationStatus.swift in Sources */,
 				F19F1D3A1EFBFD2B00275E27 /* ZMBackendEnvironment+setup.swift in Sources */,
 				F9ABE84E1EFD568B00D83214 /* MemberDownloadRequestStrategy.swift in Sources */,
@@ -2853,7 +2846,6 @@
 				165D3A151E1D3EF30052E654 /* WireCallCenterV3.swift in Sources */,
 				1634958B1F0254CB004E80DB /* SessionManager+ServerConnection.swift in Sources */,
 				54034F381BB1A6D900F4ED62 /* ZMUserSession+Logs.swift in Sources */,
-				54B2A0891DAE71F100BB40B1 /* AddressBookTracker.swift in Sources */,
 				549816471A432BC800A7CE2E /* ZMSyncStrategy.m in Sources */,
 				5498161B1A432BC800A7CE2E /* ZMTyping.m in Sources */,
 				54BFDF681BDA6F9A0034A3DB /* HistorySynchronizationStatus.swift in Sources */,
