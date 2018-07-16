@@ -139,14 +139,6 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory refetchGroupConversations:context];
                      }],
-
-                    /// We changed the place where notification token is stored
-                    [ZMHotFixPatch
-                     patchWithVersion:@"178.0.0"
-                     patchCode:^(NSManagedObjectContext *context) {
-                         [ZMHotFixDirectory migrateLegacyPushToken:context];
-                     }],
-
                     ];
     });
     return patches;

@@ -62,4 +62,3 @@
 #import <WireSyncEngine/ZMObjectStrategyDirectory.h>
 #import <WireSyncEngine/ZMUpdateEventsBuffer.h>
 #import <WireSyncEngine/ZMConversationTranscoder.h>
-#import <WireSyncEngine/NSManagedObjectContext+ZMPushToken.h>

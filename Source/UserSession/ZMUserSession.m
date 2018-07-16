@@ -39,7 +39,6 @@
 #import "ZMOperationLoop+Private.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMClientRegistrationStatus.h"
-#import "NSManagedObjectContext+ZMPushToken.h"
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSNotificationName const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
