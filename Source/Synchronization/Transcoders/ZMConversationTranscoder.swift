@@ -20,9 +20,9 @@ import Foundation
 
 extension ZMConversationTranscoder {
 
-    @objc func conversation(fromEventPayload event: ZMUpdateEvent?, conversationMap prefetchedMapping: [UUID: ZMConversation]?) -> ZMConversation? {
+    @objc(conversationFromEventPayload:conversationMap:)
+    public func conversation(fromEventPayload event: ZMUpdateEvent?, conversationMap prefetchedMapping: [UUID: ZMConversation]?) -> ZMConversation? {
         guard let conversationID = ((event?.payload) as NSDictionary?)?.optionalUuid(forKey: "conversation") else { return nil }
-
         
         if let prefetchedMappingConversation = prefetchedMapping?[conversationID] {
             return prefetchedMappingConversation
