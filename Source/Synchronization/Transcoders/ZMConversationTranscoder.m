@@ -338,6 +338,27 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     }
 }
 
+- (ZMConversation *)conversationFromEventPayload:(ZMUpdateEvent *)event conversationMap:(ZMConversationMapping *)prefetchedMapping
+{
+    NSUUID * const conversationID = [event.payload optionalUuidForKey:@"conversation"];
+    
+    if (nil == conversationID) {
+        return nil;
+    }
+    
+    if (nil != prefetchedMapping[conversationID]) {
+        return prefetchedMapping[conversationID];
+    }
+    
+    ZMConversation *conversation = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:NO inContext:self.managedObjectContext];
+    if (conversation == nil) {
+        conversation = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:YES inContext:self.managedObjectContext];
+        // if we did not have this conversation before, refetch it
+        conversation.needsToBeUpdatedFromBackend = YES;
+    }
+    return conversation;
+}
+
 - (BOOL)isSelfConversationEvent:(ZMUpdateEvent *)event;
 {
     NSUUID * const conversationID = event.conversationUUID;

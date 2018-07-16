@@ -20,23 +20,6 @@ import Foundation
 
 extension ZMConversationTranscoder {
 
-    @objc(conversationFromEventPayload:conversationMap:)
-    public func conversation(fromEventPayload event: ZMUpdateEvent?, conversationMap prefetchedMapping: [UUID: ZMConversation]?) -> ZMConversation? {
-        guard let conversationID = ((event?.payload) as NSDictionary?)?.optionalUuid(forKey: "conversation") else { return nil }
-        
-        if let prefetchedMappingConversation = prefetchedMapping?[conversationID] {
-            return prefetchedMappingConversation
-        }
-
-        var conversation = ZMConversation(remoteID: conversationID, createIfNeeded: false, in: managedObjectContext)
-        if conversation == nil {
-            conversation = ZMConversation(remoteID: conversationID, createIfNeeded: true, in: managedObjectContext)
-            // if we did not have this conversation before, refetch it
-            conversation?.needsToBeUpdatedFromBackend = true
-        }
-        return conversation
-    }
-
     @objc (processAccessModeUpdateEvent:inConversation:)
     public func processAccessModeUpdate(event: ZMUpdateEvent, in conversation: ZMConversation) {
         precondition(event.type == .conversationAccessModeUpdate, "invalid update event type")
