@@ -25,6 +25,7 @@ class PushTokenStrategyTests: MessagingTest {
 
     var sut : PushTokenStrategy!
     var mockApplicationStatus : MockApplicationStatus!
+    var mockAnalytics: MockAnalytics!
     let deviceToken = Data(base64Encoded: "xeJOQeTUMpA3koRJNJSHVH7xTxYsd67jqo4So5yNsdU=")!
     var deviceTokenString: String {
         return deviceToken.zmHexEncodedString()
@@ -43,8 +44,9 @@ class PushTokenStrategyTests: MessagingTest {
         super.setUp()
         mockApplicationStatus = MockApplicationStatus()
         mockApplicationStatus.mockSynchronizationState = .eventProcessing
+        mockAnalytics = MockAnalytics()
         syncMOC.performGroupedAndWait { moc in
-            self.sut = PushTokenStrategy(withManagedObjectContext: moc, applicationStatus: self.mockApplicationStatus)
+            self.sut = PushTokenStrategy(withManagedObjectContext: moc, applicationStatus: self.mockApplicationStatus, analytics: self.mockAnalytics)
             self.setupSelfClient(inMoc: moc)
         }
     }
@@ -303,6 +305,9 @@ extension PushTokenStrategyTests {
             // then
             guard let token = self.pushKitToken() else { XCTFail(); return }
             XCTAssertFalse(token.isMarkedForDownload)
+
+            // Nothing is tracked if everything is fine
+            XCTAssertTrue(self.mockAnalytics.taggedEvents.isEmpty)
         }
     }
 
@@ -331,6 +336,12 @@ extension PushTokenStrategyTests {
         self.syncMOC.performGroupedAndWait { _ in
             // then
             XCTAssertNil(self.pushKitToken())
+
+            let payload: [String : NSObject] = [
+                NotificationsTracker.Attributes.tokenMismatch.identifier: 1 as NSObject,
+            ]
+            guard let attributes = self.mockAnalytics.eventAttributes.first else { XCTFail(); return }
+            XCTAssertEqual(attributes.value, payload)
         }
 
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))

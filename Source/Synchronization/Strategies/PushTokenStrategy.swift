@@ -27,7 +27,7 @@ private let zmLog = ZMSLog(tag: "Push")
 
 extension ZMSingleRequestSync : ZMRequestGenerator {}
 
-public class PushTokenStrategy : AbstractRequestStrategy {
+@objc public class PushTokenStrategy : AbstractRequestStrategy {
 
     enum Keys {
         static let UserClientPushTokenKey = "pushToken"
@@ -42,6 +42,7 @@ public class PushTokenStrategy : AbstractRequestStrategy {
 
 
     fileprivate var pushKitTokenSync : ZMUpstreamModifiedObjectSync!
+    fileprivate var notificationsTracker: NotificationsTracker?
 
     var allRequestGenerators : [ZMRequestGenerator] {
         return [pushKitTokenSync]
@@ -54,9 +55,12 @@ public class PushTokenStrategy : AbstractRequestStrategy {
         return NSCompoundPredicate(andPredicateWithSubpredicates: [basePredicate, nonNilPushToken])
     }
 
-    public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
+    @objc public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus, analytics: AnalyticsType?) {
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         self.pushKitTokenSync = ZMUpstreamModifiedObjectSync(transcoder: self, entityName: UserClient.entityName(), update: modifiedPredicate(), filter: nil, keysToSync: [Keys.UserClientPushTokenKey], managedObjectContext: managedObjectContext)
+        if let analytics = analytics {
+            self.notificationsTracker = NotificationsTracker(analytics: analytics)
+        }
     }
 
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
@@ -157,6 +161,8 @@ extension PushTokenStrategy : ZMUpstreamTranscoder {
 
                 // We should remove the local token
                 client.pushToken = nil
+
+                notificationsTracker?.registerTokenMismatch()
 
                 // Make sure UI tries to get re-register a new one
                 NotificationInContext(name: ZMUserSession.resetPushTokenNotificationName,
