@@ -32,11 +32,12 @@ extension ZMConversationTranscoder {
     }
     
     @objc (processDestructionTimerUpdateEvent:inConversation:)
-    public func processDestructionTimerUpdate(event: ZMUpdateEvent, in conversation: ZMConversation) {
+    public func processDestructionTimerUpdate(event: ZMUpdateEvent, in conversation: ZMConversation?) {
         precondition(event.type == .conversationMessageTimerUpdate, "invalid update event type")
         guard let payload = event.payload["data"] as? [String : AnyHashable],
             let senderUUID = event.senderUUID(),
-            let user = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext) else { return }
+            let user = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext),
+            let conversation = conversation else { return }
         
         var timeout: MessageDestructionTimeout?
         let timeoutIntegerValue = (payload["message_timer"] as? Int64) ?? 0
