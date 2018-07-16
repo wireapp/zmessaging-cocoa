@@ -36,8 +36,7 @@ extension ZMConversationTranscoder {
         precondition(event.type == .conversationMessageTimerUpdate, "invalid update event type")
         guard let payload = event.payload["data"] as? [String : AnyHashable],
             let senderUUID = event.senderUUID(),
-            let user = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext),
-            let conversation = conversation else { return }
+            let user = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext) else { return }
         
         var timeout: MessageDestructionTimeout?
         let timeoutIntegerValue = (payload["message_timer"] as? Int64) ?? 0
@@ -46,16 +45,17 @@ extension ZMConversationTranscoder {
         timeout = .synced(MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue / 1000)))
         
         let fromSelf = user.isSelfUser
-        let fromOffToOff = !conversation.hasSyncedDestructionTimeout && timeout == .synced(.none)
-        let noChange = fromOffToOff || conversation.messageDestructionTimeout == timeout
+        let fromOffToOff = !(conversation?.hasSyncedDestructionTimeout ?? false) && timeout == .synced(.none)
+        
+        let noChange = fromOffToOff || conversation?.messageDestructionTimeout == timeout
         
         // We seem to get duplicate update events for timeout changes, returning
         // early will avoid duplicate system messages.
         if fromSelf && noChange { return }
 
-        conversation.messageDestructionTimeout = timeout
+        conversation?.messageDestructionTimeout = timeout
         
-        if let timestamp = event.timeStamp() {
+        if let timestamp = event.timeStamp(), let conversation = conversation {
             // system message should reflect the synced timer value, not local
             let timer = conversation.hasSyncedDestructionTimeout ? conversation.messageDestructionTimeoutValue : 0
             let message = conversation.appendMessageTimerUpdateMessage(fromUser: user, timer: timer, timestamp: timestamp)
