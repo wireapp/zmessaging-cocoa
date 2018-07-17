@@ -40,6 +40,6 @@ public protocol SharedIdentitySessionRequester {
 
     /// Asks the provider to authenticate the user with the given SSO code.
     /// The result from the provider is passed to the completion handler after the request has completed.
-    func requestIdentity(for token: UUID, _ completion: @escaping (SharedIdentitySessionResponse) -> Void)
+    func requestIdentity(for token: String, _ completion: @escaping (SharedIdentitySessionResponse) -> Void)
 
 }
