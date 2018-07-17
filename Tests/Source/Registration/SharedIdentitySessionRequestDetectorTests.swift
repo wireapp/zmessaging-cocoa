@@ -44,7 +44,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         var detectedCode: UUID?
         let detectionExpectation = expectation(description: "Detector returns a result")
 
-        detector.detectRequestCode {
+        detector.detectCopiedRequestCode {
             detectedCode = $0
             detectionExpectation.fulfill()
         }
@@ -63,7 +63,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         var detectedCode: UUID?
         let detectionExpectation = expectation(description: "Detector returns a result")
 
-        detector.detectRequestCode {
+        detector.detectCopiedRequestCode {
             detectedCode = $0
             detectionExpectation.fulfill()
         }
@@ -74,6 +74,17 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         XCTAssertEqual(detectedCode?.uuidString, "70488875-13DD-4BA7-9636-A983E1831F5F")
     }
 
+    func testThatItDetectsValidCode_UserInput() {
+        // GIVEN
+        let text = "wire-81DD91BA-B3D0-46F0-BC29-E491938F0A54"
+
+        // WHEN
+        let detectedCode = detector.detectRequestCode(in: text)
+
+        // THEN
+        XCTAssertEqual(detectedCode?.uuidString, "81DD91BA-B3D0-46F0-BC29-E491938F0A54")
+    }
+
     func testThatItDetectsInvalidCode_MissingPrefix() {
         // GIVEN
         pasteboard.string = "8FBF187C-2039-409B-B16F-5FCF485514E1"
@@ -82,7 +93,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         var detectedCode: UUID?
         let detectionExpectation = expectation(description: "Detector returns a result")
 
-        detector.detectRequestCode {
+        detector.detectCopiedRequestCode {
             detectedCode = $0
             detectionExpectation.fulfill()
         }
@@ -101,7 +112,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         var detectedCode: UUID?
         let detectionExpectation = expectation(description: "Detector returns a result")
 
-        detector.detectRequestCode {
+        detector.detectCopiedRequestCode {
             detectedCode = $0
             detectionExpectation.fulfill()
         }
@@ -120,7 +131,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         var detectedCode: UUID?
         let detectionExpectation = expectation(description: "Detector returns a result")
 
-        detector.detectRequestCode {
+        detector.detectCopiedRequestCode {
             detectedCode = $0
             detectionExpectation.fulfill()
         }
