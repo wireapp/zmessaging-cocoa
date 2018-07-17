@@ -41,19 +41,26 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         pasteboard.text = "wire-46A17D7F-2351-495E-AEDA-E7C96AC74994"
 
         // WHEN
-        var detectedRequest: SharedIdentitySessionRequest?
+<<<<<<< HEAD
+        var detectedCode: String?
+=======
+        var detectedCode: UUID?
+>>>>>>> develop
         let detectionExpectation = expectation(description: "Detector returns a result")
 
-        detector.detectCopiedRequest {
-            detectedRequest = $0
+        detector.detectCopiedRequestCode {
+            detectedCode = $0
             detectionExpectation.fulfill()
         }
 
         waitForExpectations(timeout: 1, handler: nil)
 
         // THEN
-        XCTAssertEqual(detectedRequest?.displayString, "wire-46A17D7F-2351-495E-AEDA-E7C96AC74994")
-        XCTAssertEqual(detectedRequest?.identifier.uuidString, "46A17D7F-2351-495E-AEDA-E7C96AC74994")
+<<<<<<< HEAD
+        XCTAssertEqual(detectedCode, "wire-46A17D7F-2351-495E-AEDA-E7C96AC74994")
+=======
+        XCTAssertEqual(detectedCode?.uuidString, "46A17D7F-2351-495E-AEDA-E7C96AC74994")
+>>>>>>> develop
     }
 
     func testThatItDetectsValidWireCode_Lowercase() {
@@ -61,19 +68,26 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         pasteboard.text = "wire-70488875-13dd-4ba7-9636-a983e1831f5f"
 
         // WHEN
-        var detectedRequest: SharedIdentitySessionRequest?
+<<<<<<< HEAD
+        var detectedCode: String?
+=======
+        var detectedCode: UUID?
+>>>>>>> develop
         let detectionExpectation = expectation(description: "Detector returns a result")
 
-        detector.detectCopiedRequest {
-            detectedRequest = $0
+        detector.detectCopiedRequestCode {
+            detectedCode = $0
             detectionExpectation.fulfill()
         }
 
         waitForExpectations(timeout: 1, handler: nil)
 
         // THEN
-        XCTAssertEqual(detectedRequest?.displayString, "wire-70488875-13dd-4ba7-9636-a983e1831f5f")
-        XCTAssertEqual(detectedRequest?.identifier.uuidString, "70488875-13DD-4BA7-9636-A983E1831F5F")
+<<<<<<< HEAD
+        XCTAssertEqual(detectedCode, "wire-70488875-13dd-4ba7-9636-a983e1831f5f")
+=======
+        XCTAssertEqual(detectedCode?.uuidString, "70488875-13DD-4BA7-9636-A983E1831F5F")
+>>>>>>> develop
     }
 
     func testThatItDetectsValidCode_UserInput() {
@@ -81,10 +95,17 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         let text = "wire-81DD91BA-B3D0-46F0-BC29-E491938F0A54"
 
         // WHEN
+<<<<<<< HEAD
+        let isDetectedCodeValid = SharedIdentitySessionRequestDetector.isValidRequestCode(in: text)
+
+        // THEN
+        XCTAssertTrue(isDetectedCodeValid)
+=======
         let detectedCode = detector.detectRequestCode(in: text)
 
         // THEN
         XCTAssertEqual(detectedCode?.uuidString, "81DD91BA-B3D0-46F0-BC29-E491938F0A54")
+>>>>>>> develop
     }
 
     func testThatItDetectsInvalidCode_MissingPrefix() {
@@ -92,18 +113,22 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         pasteboard.text = "8FBF187C-2039-409B-B16F-5FCF485514E1"
 
         // WHEN
-        var detectedRequest: SharedIdentitySessionRequest?
+<<<<<<< HEAD
+        var detectedCode: String?
+=======
+        var detectedCode: UUID?
+>>>>>>> develop
         let detectionExpectation = expectation(description: "Detector returns a result")
 
-        detector.detectCopiedRequest {
-            detectedRequest = $0
+        detector.detectCopiedRequestCode {
+            detectedCode = $0
             detectionExpectation.fulfill()
         }
 
         waitForExpectations(timeout: 1, handler: nil)
 
         // THEN
-        XCTAssertNil(detectedRequest)
+        XCTAssertNil(detectedCode)
     }
 
     func testThatItDetectsInvalidCode_WrongUUIDFormat() {
@@ -111,18 +136,22 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         pasteboard.text = "wire-D82916EA"
 
         // WHEN
-        var detectedRequest: SharedIdentitySessionRequest?
+<<<<<<< HEAD
+        var detectedCode: String?
+=======
+        var detectedCode: UUID?
+>>>>>>> develop
         let detectionExpectation = expectation(description: "Detector returns a result")
 
-        detector.detectCopiedRequest {
-            detectedRequest = $0
+        detector.detectCopiedRequestCode {
+            detectedCode = $0
             detectionExpectation.fulfill()
         }
 
         waitForExpectations(timeout: 1, handler: nil)
 
         // THEN
-        XCTAssertNil(detectedRequest)
+        XCTAssertNil(detectedCode)
     }
 
     func testThatItFailsWhenPasteboardIsEmpty() {
@@ -130,18 +159,22 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         pasteboard.text = nil
 
         // WHEN
-        var detectedRequest: SharedIdentitySessionRequest?
+<<<<<<< HEAD
+        var detectedCode: String?
+=======
+        var detectedCode: UUID?
+>>>>>>> develop
         let detectionExpectation = expectation(description: "Detector returns a result")
 
-        detector.detectCopiedRequest {
-            detectedRequest = $0
+        detector.detectCopiedRequestCode {
+            detectedCode = $0
             detectionExpectation.fulfill()
         }
 
         waitForExpectations(timeout: 1, handler: nil)
 
         // THEN
-        XCTAssertNil(detectedRequest)
+        XCTAssertNil(detectedCode)
     }
 
 }
