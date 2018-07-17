@@ -71,16 +71,24 @@ import UIKit
     }
 
     /**
+     * Tries to extract the request ID from the contents of the text.
+     */
+
+    @objc public static func requestCode(in string: String) -> UUID? {
+        guard let prefixRange = string.range(of: "wire-") else {
+            return nil
+        }
+
+        let codeString = string[prefixRange.upperBound ..< string.endIndex]
+        return UUID(uuidString: String(codeString))
+    }
+
+    /**
      * Validates the session request code from the user input.
      */
 
     @objc public static func isValidRequestCode(in string: String) -> Bool {
-        guard let prefixRange = string.range(of: "wire-") else {
-            return false
-        }
-
-        let codeString = string[prefixRange.upperBound ..< string.endIndex]
-        return UUID(uuidString: String(codeString)) != nil
+        return requestCode(in: string) != nil
     }
 
 }
