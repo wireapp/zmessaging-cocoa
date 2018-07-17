@@ -83,7 +83,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         
         // then
         XCTAssertEqual(note.title, "Callie")
-        XCTAssertEqual(note.body, "is video calling")
+        XCTAssertEqual(note.body, "is calling with video")
         XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.incomingCall.rawValue)
         XCTAssertEqual(note.soundName, ZMCustomSound.notificationRingingSoundName())
     }

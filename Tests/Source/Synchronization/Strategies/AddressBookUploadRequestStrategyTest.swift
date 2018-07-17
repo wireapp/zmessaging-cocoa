@@ -25,12 +25,10 @@ class AddressBookUploadRequestStrategyTest : MessagingTest {
     var sut : WireSyncEngine.AddressBookUploadRequestStrategy!
     var mockApplicationStatus : MockApplicationStatus!
     var addressBook : AddressBookFake!
-    var trackerFake : AddressBookTrackerFake!
     
     override func setUp() {
         super.setUp()
         self.addressBook = AddressBookFake()
-        self.trackerFake = AddressBookTrackerFake()
         
         let ab = self.addressBook // I don't want to capture self in closure later
         ab?.fillWithContacts(5)
@@ -38,14 +36,12 @@ class AddressBookUploadRequestStrategyTest : MessagingTest {
         mockApplicationStatus.mockSynchronizationState = .eventProcessing
         self.sut = WireSyncEngine.AddressBookUploadRequestStrategy(managedObjectContext: self.syncMOC,
                                                                applicationStatus: mockApplicationStatus,
-                                                               addressBookGenerator: { return ab },
-                                                               tracker: self.trackerFake)
+                                                               addressBookGenerator: { return ab })
     }
     
     override func tearDown() {
         self.mockApplicationStatus = nil
         self.sut = nil
-        self.trackerFake = nil
         self.addressBook = nil
         super.tearDown()
     }
@@ -333,65 +329,6 @@ extension AddressBookUploadRequestStrategyTest {
             XCTFail()
         }
         
-    }
-}
-
-// MARK: - Tracking
-extension AddressBookUploadRequestStrategyTest {
-    
-    func testThatItTagsTheEventWhenStartingToUpload() {
-        
-        // given
-        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
-        _ = sut.nextRequest() // this will return nil and start async processing
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // when
-        let request = sut.nextRequest()
-        XCTAssertNotNil(request)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [UInt(self.addressBook.fakeContacts.count)])
-        XCTAssertEqual(self.trackerFake.taggedEndEventCount, 0)
-    }
-    
-    func testThatItTagsTheEventWhenUploadingSuccessfully() {
-        
-        // given
-        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
-        _ = sut.nextRequest() // this will return nil and start async processing
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        let request = sut.nextRequest()
-        
-        XCTAssertNotNil(request)
-        
-        // when
-        request?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [UInt(self.addressBook.fakeContacts.count)])
-        XCTAssertEqual(self.trackerFake.taggedEndEventCount, 1)
-    }
-    
-    func testThatItDoesNotTagTheEventWhenUploadingUnsuccessfully() {
-        
-        // given
-        WireSyncEngine.AddressBook.markAddressBookAsNeedingToBeUploaded(self.syncMOC)
-        _ = sut.nextRequest() // this will return nil and start async processing
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        let request = sut.nextRequest()
-        
-        XCTAssertNotNil(request)
-        
-        // when
-        request?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 400, transportSessionError: nil))
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertEqual(self.trackerFake.taggedStartEventParameters, [UInt(self.addressBook.fakeContacts.count)])
-        XCTAssertEqual(self.trackerFake.taggedEndEventCount, 0)
     }
 }
 
@@ -744,21 +681,5 @@ extension ZMTransportData {
         } catch {
             return nil
         }
-    }
-}
-
-/// Fake tracker to test upload tracking
-final class AddressBookTrackerFake : WireSyncEngine.AddressBookTracker {
-    
-    var taggedStartEventParameters : [UInt] = []
-    
-    var taggedEndEventCount : UInt = 0
-    
-    func tagAddressBookUploadSuccess() {
-        self.taggedEndEventCount += 1
-    }
-    
-    func tagAddressBookUploadStarted(_ entireABsize: UInt) {
-        self.taggedStartEventParameters.append(entireABsize)
     }
 }

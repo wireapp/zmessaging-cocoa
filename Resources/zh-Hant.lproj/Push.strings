@@ -110,15 +110,15 @@
 "push.notification.member.leave.self.nousername" = "您被移除了";
 
 // EPHEMERAL MESSAGE TIMER UPDATE
-"push.notification.message-timer.update" = "%@ set the message timer to %@";
-"push.notification.message-timer.update.nousername" = "Someone set the message timer to %@";
-"push.notification.message-timer.update.noconversationname" = "%@ set the message timer to %@ in a conversation";
-"push.notification.message-timer.update.nousername.noconversationname" = "Someone set the message timer to %@ in a conversation";
+"push.notification.message-timer.update" = "%@將訊息時限設置為%@";
+"push.notification.message-timer.update.nousername" = "某人將訊息時限設置為%@";
+"push.notification.message-timer.update.noconversationname" = "%@將對話訊息時限設置為%@";
+"push.notification.message-timer.update.nousername.noconversationname" = "某人將對話訊息時限設置為%@";
 
-"push.notification.message-timer.off" = "%@ turned off the message timer";
-"push.notification.message-timer.off.nousername" = "Someone turned off the message timer";
-"push.notification.message-timer.off.noconversationname" = "%@ turned off the message timer in a conversation";
-"push.notification.message-timer.off.nousername.noconversationname" = "Someone turned off the message timer in a conversation";
+"push.notification.message-timer.off" = "%@關閉了訊息時限";
+"push.notification.message-timer.off.nousername" = "某人關閉了訊息時限";
+"push.notification.message-timer.off.noconversationname" = "%@關閉了對話訊息時限";
+"push.notification.message-timer.off.nousername.noconversationname" = "某人關閉了對話訊息時限";
 
 // VIDEO CALLS
 "push.notification.call.started.video.oneonone" = "視訊來電";

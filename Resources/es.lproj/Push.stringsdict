@@ -30,9 +30,9 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>one</key>
-        <string>New message</string>
+        <string>Nuevo mensaje</string>
         <key>other</key>
-        <string>%1$@ messages</string>
+        <string>%1$@ mensajes</string>
       </dict>
     </dict>
     <key>push.notification.add.message.many.oneonone</key>
@@ -62,9 +62,9 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>one</key>
-        <string>New message</string>
+        <string>Nuevo mensaje</string>
         <key>other</key>
-        <string>%1$@ messages</string>
+        <string>%1$@ mensajes</string>
       </dict>
     </dict>
     <key>push.notification.call.missed.many</key>
@@ -78,9 +78,9 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>one</key>
-        <string>one missed call</string>
+        <string>una llamada perdida</string>
         <key>other</key>
-        <string>%2@ missed calls</string>
+        <string>%2@ llamadas perdidas</string>
       </dict>
     </dict>
     <key>push.notification.call.missed.many.noconversationname</key>
@@ -94,9 +94,9 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>one</key>
-        <string>one missed call</string>
+        <string>una llamada perdida</string>
         <key>other</key>
-        <string>%1$@ missed calls</string>
+        <string>%1$@ llamadas perdidas</string>
       </dict>
     </dict>
     <key>push.notification.knock.group</key>
@@ -192,7 +192,7 @@
         <key>one</key>
         <string>Ping</string>
         <key>other</key>
-        <string>%2$@ pings</string>
+        <string>%2$@ hizo ping</string>
       </dict>
     </dict>
   </dict>
