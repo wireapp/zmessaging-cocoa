@@ -41,7 +41,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         pasteboard.text = "wire-46A17D7F-2351-495E-AEDA-E7C96AC74994"
 
         // WHEN
-        var detectedCode: UUID?
+        var detectedCode: String?
         let detectionExpectation = expectation(description: "Detector returns a result")
 
         detector.detectCopiedRequestCode {
@@ -52,7 +52,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         waitForExpectations(timeout: 1, handler: nil)
 
         // THEN
-        XCTAssertEqual(detectedCode?.uuidString, "46A17D7F-2351-495E-AEDA-E7C96AC74994")
+        XCTAssertEqual(detectedCode, "wire-46A17D7F-2351-495E-AEDA-E7C96AC74994")
     }
 
     func testThatItDetectsValidWireCode_Lowercase() {
@@ -60,7 +60,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         pasteboard.text = "wire-70488875-13dd-4ba7-9636-a983e1831f5f"
 
         // WHEN
-        var detectedCode: UUID?
+        var detectedCode: String?
         let detectionExpectation = expectation(description: "Detector returns a result")
 
         detector.detectCopiedRequestCode {
@@ -71,7 +71,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         waitForExpectations(timeout: 1, handler: nil)
 
         // THEN
-        XCTAssertEqual(detectedCode?.uuidString, "70488875-13DD-4BA7-9636-A983E1831F5F")
+        XCTAssertEqual(detectedCode, "wire-70488875-13dd-4ba7-9636-a983e1831f5f")
     }
 
     func testThatItDetectsValidCode_UserInput() {
@@ -79,10 +79,10 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         let text = "wire-81DD91BA-B3D0-46F0-BC29-E491938F0A54"
 
         // WHEN
-        let detectedCode = detector.detectRequestCode(in: text)
+        let isDetectedCodeValid = SharedIdentitySessionRequestDetector.isValidRequestCode(in: text)
 
         // THEN
-        XCTAssertEqual(detectedCode?.uuidString, "81DD91BA-B3D0-46F0-BC29-E491938F0A54")
+        XCTAssertTrue(isDetectedCodeValid)
     }
 
     func testThatItDetectsInvalidCode_MissingPrefix() {
@@ -90,7 +90,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         pasteboard.text = "8FBF187C-2039-409B-B16F-5FCF485514E1"
 
         // WHEN
-        var detectedCode: UUID?
+        var detectedCode: String?
         let detectionExpectation = expectation(description: "Detector returns a result")
 
         detector.detectCopiedRequestCode {
@@ -109,7 +109,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         pasteboard.text = "wire-D82916EA"
 
         // WHEN
-        var detectedCode: UUID?
+        var detectedCode: String?
         let detectionExpectation = expectation(description: "Detector returns a result")
 
         detector.detectCopiedRequestCode {
@@ -128,7 +128,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         pasteboard.text = nil
 
         // WHEN
-        var detectedCode: UUID?
+        var detectedCode: String?
         let detectionExpectation = expectation(description: "Detector returns a result")
 
         detector.detectCopiedRequestCode {
