@@ -38,7 +38,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
 
     func testThatItDetectsValidWireCode_Uppercase() {
         // GIVEN
-        pasteboard.string = "wire-46A17D7F-2351-495E-AEDA-E7C96AC74994"
+        pasteboard.text = "wire-46A17D7F-2351-495E-AEDA-E7C96AC74994"
 
         // WHEN
         var detectedCode: UUID?
@@ -57,7 +57,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
 
     func testThatItDetectsValidWireCode_Lowercase() {
         // GIVEN
-        pasteboard.string = "wire-70488875-13dd-4ba7-9636-a983e1831f5f"
+        pasteboard.text = "wire-70488875-13dd-4ba7-9636-a983e1831f5f"
 
         // WHEN
         var detectedCode: UUID?
@@ -87,7 +87,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
 
     func testThatItDetectsInvalidCode_MissingPrefix() {
         // GIVEN
-        pasteboard.string = "8FBF187C-2039-409B-B16F-5FCF485514E1"
+        pasteboard.text = "8FBF187C-2039-409B-B16F-5FCF485514E1"
 
         // WHEN
         var detectedCode: UUID?
@@ -106,7 +106,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
 
     func testThatItDetectsInvalidCode_WrongUUIDFormat() {
         // GIVEN
-        pasteboard.string = "wire-D82916EA"
+        pasteboard.text = "wire-D82916EA"
 
         // WHEN
         var detectedCode: UUID?
@@ -125,7 +125,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
 
     func testThatItFailsWhenPasteboardIsEmpty() {
         // GIVEN
-        pasteboard.string = nil
+        pasteboard.text = nil
 
         // WHEN
         var detectedCode: UUID?

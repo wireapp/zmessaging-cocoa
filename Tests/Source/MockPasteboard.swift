@@ -19,11 +19,5 @@
 @testable import WireSyncEngine
 
 class MockPasteboard: Pasteboard {
-
-    var string: String?
-
-    var hasString: Bool {
-        return string != nil
-    }
-
+    var text: String?
 }

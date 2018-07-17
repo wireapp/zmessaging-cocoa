@@ -56,19 +56,12 @@ import UIKit
         }
 
         processQueue.async {
-            if #available(iOS 10, *) {
-                guard self.pasteboard.hasString else {
-                    complete(nil)
-                    return
-                }
-            }
-
-            guard let string = self.pasteboard.string else {
+            guard let text = self.pasteboard.text else {
                 complete(nil)
                 return
             }
 
-            let code = self.detectRequestCode(in: string)
+            let code = self.detectRequestCode(in: text)
             complete(code)
         }
     }

@@ -22,26 +22,22 @@ import Foundation
  * An object that provides
  */
 
-public protocol Pasteboard {
+public protocol Pasteboard: class {
 
-    /// Whether the pasteboard contains a text.
-    var hasString: Bool { get }
-
-    /// The text copied by the user.
-    /// Always check `hasString` before accessing this value, to avoid.
-    /// unnecessary resource consumption.
-    var string: String? { get }
+    /// The text copied by the user, if any.
+    var text: String? { get }
 
 }
 
 extension UIPasteboard: Pasteboard {
 
-    public var hasString: Bool {
+    public var text: String? {
         if #available(iOS 10, *) {
-            return self.hasStrings
-        } else {
-            return self.string != nil
+            guard self.hasStrings else {
+                return nil
+            }
         }
+        return self.string
     }
 
 }

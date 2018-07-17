@@ -27,7 +27,7 @@ public enum SharedIdentitySessionResponse {
     /// A session was created, but the user still needs to provide information.
     case pendingAdditionalInformation(Data)
 
-    /// A failure occured when
+    /// A failure occured.
     case error(LocalizedError)
 
 }
