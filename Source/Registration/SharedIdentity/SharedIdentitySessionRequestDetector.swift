@@ -61,12 +61,13 @@ import UIKit
                 return
             }
 
-            guard SharedIdentitySessionRequestDetector.isValidRequestCode(in: text) else {
+            guard let code = SharedIdentitySessionRequestDetector.requestCode(in: text) else {
                 complete(nil)
                 return
             }
 
-            complete(text)
+            let validText = "wire-" + code.uuidString
+            complete(validText)
         }
     }
 
@@ -79,7 +80,11 @@ import UIKit
             return nil
         }
 
-        let codeString = string[prefixRange.upperBound ..< string.endIndex]
+        guard let endIndex = string.index(prefixRange.upperBound, offsetBy: 36, limitedBy: string.endIndex) else {
+            return nil
+        }
+
+        let codeString = string[prefixRange.upperBound ..< endIndex]
         return UUID(uuidString: String(codeString))
     }
 

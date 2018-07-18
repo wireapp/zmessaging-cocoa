@@ -71,7 +71,31 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         waitForExpectations(timeout: 1, handler: nil)
 
         // THEN
-        XCTAssertEqual(detectedCode, "wire-70488875-13dd-4ba7-9636-a983e1831f5f")
+        XCTAssertEqual(detectedCode, "wire-70488875-13DD-4BA7-9636-A983E1831F5F")
+    }
+
+    func testThatItDetectsCodeInComplexText() {
+        // GIVEN
+        pasteboard.text = """
+        <html>
+            This is your code: ohwowwire-A6AAA905-E42D-4220-A455-CFE8822DB690&nbsp;
+        </html>
+        """
+
+        // WHEN
+        var detectedCode: String?
+        let detectionExpectation = expectation(description: "Detector returns a result")
+
+        detector.detectCopiedRequestCode {
+            detectedCode = $0
+            detectionExpectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 1, handler: nil)
+
+
+        // THEN
+        XCTAssertEqual(detectedCode, "wire-A6AAA905-E42D-4220-A455-CFE8822DB690")
     }
 
     func testThatItDetectsValidCode_UserInput() {
