@@ -18,7 +18,7 @@
 
 import WireSystem
 
-enum BuildType {
+internal enum BuildType {
     case production
     case alpha
     case development
@@ -59,15 +59,6 @@ enum BuildType {
             return "com.wearezeta.zclient.ios-internal"
         }
         
-    }
-
-    var urlScheme: String {
-        switch self {
-        case .production: return "wire"
-        case .alpha: return "wire-alpha"
-        case .development: return "wire-development"
-        case .internal: return "wire-internal"
-        }
     }
 }
 

@@ -19,7 +19,7 @@
 import XCTest
 @testable import WireSyncEngine
 
-class SharedIdentitySessionRequestDetectorTests: XCTestCase {
+class CompanyLoginRequestDetectorTests: XCTestCase {
 
     var pasteboard: MockPasteboard!
     var detector: CompanyLoginRequestDetector!

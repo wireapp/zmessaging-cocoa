@@ -38,32 +38,41 @@ public protocol CompanyLoginRequesterDelegate: class {
 
 public class CompanyLoginRequester {
 
-    let environment: ZMBackendEnvironment
+    /// The URL scheme that where the callback will be provided.
+    public let callbackScheme: String
 
     /// The object that observes events and performs the required actions.
     public weak var delegate: CompanyLoginRequesterDelegate?
 
-    /// Creates a session requester that targets the specified Backend environment.
-    public init(environment: ZMBackendEnvironment) {
-        self.environment = environment
+    let backendHost: String
+
+    /// Creates a session requester that uses the specified parameters.
+    public init(backendHost: String, callbackScheme: String) {
+        self.backendHost = backendHost
+        self.callbackScheme = callbackScheme
     }
 
-    public func requestIdentity(for token: UUID, bundleIdentifier: String) {
-        guard let buildType = BuildType(bundleID: bundleIdentifier) else {
-            fatalError("This unofficial build of Wire doesn't support company login.")
-        }
+    // MARK: - Identity Request
 
+    /**
+     * Starts the company login flow for the user with the given login token.
+     *
+     * This method constructs the login URL, and calls the `delegate`, that will
+     * handle opening the URL. Typically, this initiates the login flow, which will
+     * open Safari. The `SessionManager` will handle the callback URL.
+     *
+     * - parameter token: The user login token, constructed from the request code.
+     */
+
+    public func requestIdentity(for token: UUID) {
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
-        urlComponents.host = environment.type.backendHost
+        urlComponents.host = backendHost
         urlComponents.path = "/sso/initiate-login/\(token.uuidString)"
 
-        let successCallback = "\(buildType.urlScheme)://login/success/$cookie"
-        let failureCallback = "\(buildType.urlScheme)://login/failure/$label"
-
         urlComponents.queryItems = [
-            URLQueryItem(name: "success_redirect", value: successCallback),
-            URLQueryItem(name: "error_redirect", value: failureCallback)
+            URLQueryItem(name: "success_redirect", value: makeSuccessCallbackString()),
+            URLQueryItem(name: "error_redirect", value: makeFailureCallbackString())
         ]
 
         guard let url = urlComponents.url else {
@@ -71,6 +80,34 @@ public class CompanyLoginRequester {
         }
 
         delegate?.companyLoginSessionRequester(self, didRequestIdentityValidationAtURL: url)
+    }
+
+    // MARK: - Utilities
+
+    private func makeSuccessCallbackString() -> String {
+        var components = URLComponents()
+        components.scheme = callbackScheme
+        components.host = "login"
+        components.path = "/success"
+
+        components.queryItems = [
+            URLQueryItem(name: "cookie", value: "$cookie")
+        ]
+
+        return components.url!.absoluteString
+    }
+
+    private func makeFailureCallbackString() -> String {
+        var components = URLComponents()
+        components.scheme = callbackScheme
+        components.host = "login"
+        components.path = "/failure"
+
+        components.queryItems = [
+            URLQueryItem(name: "label", value: "$label")
+        ]
+
+        return components.url!.absoluteString
     }
 
 }

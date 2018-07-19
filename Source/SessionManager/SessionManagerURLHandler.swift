@@ -55,14 +55,14 @@ extension URLComponents {
 
 extension URLAction {
     init?(url: URL) {
-        guard let host = url.host else {
+        guard let components = URLComponents(string: url.absoluteString),
+            let host = components.host else {
             return nil
         }
         
         switch host {
         case "connect":
-            guard let components = URLComponents(string: url.absoluteString),
-                let service = components.query(for: "service"),
+            guard let service = components.query(for: "service"),
                 let provider = components.query(for: "provider"),
                 let serviceUUID = UUID(uuidString: service),
                 let providerUUID = UUID(uuidString: provider) else {
@@ -71,20 +71,23 @@ extension URLAction {
             self = .connectBot(serviceUser: ServiceUserData(provider: providerUUID, service: serviceUUID))
 
         case "login":
-            let pathComponents = url.pathComponents
-
-            guard pathComponents.count >= 3 else {
+            guard let result = url.pathComponents.first else {
                 return nil
             }
 
-            let result = pathComponents[1]
-            let data = pathComponents[2]
-
             switch result {
             case "success":
-                self = .companyLoginSuccess(cookie: data)
+                guard let cookie = components.query(for: "cookie") else {
+                    return nil
+                }
+
+                self = .companyLoginSuccess(cookie: cookie)
             case "failure":
-                self = .companyLoginFailure(errorLabel: data)
+                guard let label = components.query(for: "label") else {
+                    return nil
+                }
+
+                self = .companyLoginFailure(errorLabel: label)
             default:
                 return nil
             }
