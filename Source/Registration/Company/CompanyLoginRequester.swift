@@ -21,14 +21,13 @@ import Foundation
 public protocol CompanyLoginRequesterDelegate: class {
 
     /**
-     * The session requester asks the user to verify their identity on the given website.
+     * The login requester asks the user to verify their identity on the given website.
      *
-     * - parameter requester: The session requester asking for validation.
+     * - parameter requester: The requester asking for validation.
      * - parameter url: The URL where the user should be taken to perform validation.
-     * - parameter completionHandler: The block of code to call with the validation result.
      */
 
-    func companyLoginSessionRequester(_ requester: CompanyLoginRequester, didRequestIdentityValidationAtURL url: URL)
+    func companyLoginSRequester(_ requester: CompanyLoginRequester, didRequestIdentityValidationAtURL url: URL)
 
 }
 
