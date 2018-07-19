@@ -24,15 +24,25 @@ import UIKit
  * A session request is a string formatted as `wire-[UUID]`.
  */
 
-@objc public final class SharedIdentitySessionRequestDetector: NSObject {
+public final class SharedIdentitySessionRequestDetector: NSObject {
+
+    /**
+     * A struct that describes the result of a login code detection operation..
+     */
+
+    public struct DetectorResult: Equatable {
+        public let code: String // The detected shared identity login code.
+        public let isNew: Bool  // Weather or not the code changed since the last check.
+    }
 
     private let pasteboard: Pasteboard
     private let processQueue = DispatchQueue(label: "WireSyncEngine.SharedIdentitySessionRequestDetector")
-
+    private var previousChangeCount: Int?
+    
     // MARK: - Initialization
 
     /// Returns the detector that uses the system pasteboard to detect session requests.
-    @objc public static let shared = SharedIdentitySessionRequestDetector(pasteboard: UIPasteboard.general)
+    public static let shared = SharedIdentitySessionRequestDetector(pasteboard: UIPasteboard.general)
 
     /// Creates a detector that uses the specified pasteboard to detect session requests.
     public init(pasteboard: Pasteboard) {
@@ -48,26 +58,21 @@ import UIKit
      * handler will be called on the main thread with the result.
      */
 
-    @objc public func detectCopiedRequestCode(_ completionHandler: @escaping (String?) -> Void) {
-        func complete(_ code: String?) {
+    public func detectCopiedRequestCode(_ completionHandler: @escaping (DetectorResult?) -> Void) {
+        func complete(_ result: DetectorResult?) {
+            previousChangeCount = pasteboard.changeCount
             DispatchQueue.main.async {
-                completionHandler(code)
+                completionHandler(result)
             }
         }
 
-        processQueue.async {
-            guard let text = self.pasteboard.text else {
-                complete(nil)
-                return
-            }
-
-            guard let code = SharedIdentitySessionRequestDetector.requestCode(in: text) else {
-                complete(nil)
-                return
-            }
+        processQueue.async { [pasteboard, previousChangeCount] in
+            guard let text = pasteboard.text else { return complete(nil) }
+            guard let code = SharedIdentitySessionRequestDetector.requestCode(in: text) else { return complete(nil) }
 
             let validText = "wire-" + code.uuidString
-            complete(validText)
+            let isNew = pasteboard.changeCount != previousChangeCount
+            complete(.init(code: validText, isNew: isNew))
         }
     }
 
@@ -75,7 +80,7 @@ import UIKit
      * Tries to extract the request ID from the contents of the text.
      */
 
-    @objc public static func requestCode(in string: String) -> UUID? {
+    public static func requestCode(in string: String) -> UUID? {
         guard let prefixRange = string.range(of: "wire-") else {
             return nil
         }
@@ -92,7 +97,7 @@ import UIKit
      * Validates the session request code from the user input.
      */
 
-    @objc public static func isValidRequestCode(in string: String) -> Bool {
+    public static func isValidRequestCode(in string: String) -> Bool {
         return requestCode(in: string) != nil
     }
 

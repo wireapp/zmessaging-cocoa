@@ -26,6 +26,7 @@ public protocol Pasteboard: class {
 
     /// The text copied by the user, if any.
     var text: String? { get }
+    var changeCount: Int { get }
 
 }
 

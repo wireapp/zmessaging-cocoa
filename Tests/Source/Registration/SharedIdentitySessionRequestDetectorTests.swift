@@ -45,7 +45,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         let detectionExpectation = expectation(description: "Detector returns a result")
 
         detector.detectCopiedRequestCode {
-            detectedCode = $0
+            detectedCode = $0?.code
             detectionExpectation.fulfill()
         }
 
@@ -64,7 +64,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         let detectionExpectation = expectation(description: "Detector returns a result")
 
         detector.detectCopiedRequestCode {
-            detectedCode = $0
+            detectedCode = $0?.code
             detectionExpectation.fulfill()
         }
 
@@ -87,7 +87,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         let detectionExpectation = expectation(description: "Detector returns a result")
 
         detector.detectCopiedRequestCode {
-            detectedCode = $0
+            detectedCode = $0?.code
             detectionExpectation.fulfill()
         }
 
@@ -118,7 +118,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         let detectionExpectation = expectation(description: "Detector returns a result")
 
         detector.detectCopiedRequestCode {
-            detectedCode = $0
+            detectedCode = $0?.code
             detectionExpectation.fulfill()
         }
 
@@ -137,7 +137,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         let detectionExpectation = expectation(description: "Detector returns a result")
 
         detector.detectCopiedRequestCode {
-            detectedCode = $0
+            detectedCode = $0?.code
             detectionExpectation.fulfill()
         }
 
@@ -156,7 +156,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         let detectionExpectation = expectation(description: "Detector returns a result")
 
         detector.detectCopiedRequestCode {
-            detectedCode = $0
+            detectedCode = $0?.code
             detectionExpectation.fulfill()
         }
 
@@ -164,6 +164,99 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
 
         // THEN
         XCTAssertNil(detectedCode)
+    }
+    
+    func testThatItSetsIsNewOnTheResultIfTheChangeCountIncreased() {
+        // GIVEN
+        let code = "wire-81DD91BA-B3D0-46F0-BC29-E491938F0A54"
+        pasteboard.text = code
+        pasteboard.changeCount = 41
+        
+        do {
+            let detectionExpectation = expectation(description: "Detector returns a result")
+            
+            detector.detectCopiedRequestCode {
+                XCTAssertEqual($0?.isNew, true)
+                XCTAssertEqual($0?.code, code)
+                detectionExpectation.fulfill()
+            }
+            
+            waitForExpectations(timeout: 1, handler: nil)
+        }
+
+        do {
+            let detectionExpectation = expectation(description: "Detector returns a result")
+            
+            detector.detectCopiedRequestCode {
+                XCTAssertEqual($0?.isNew, false)
+                XCTAssertEqual($0?.code, code)
+                detectionExpectation.fulfill()
+            }
+            
+            waitForExpectations(timeout: 1, handler: nil)
+        }
+
+        // WHEN
+        pasteboard.changeCount = 42
+        
+        // THEN
+        do {
+            let detectionExpectation = expectation(description: "Detector returns a result")
+            
+            detector.detectCopiedRequestCode {
+                XCTAssertEqual($0?.isNew, true)
+                XCTAssertEqual($0?.code, code)
+                detectionExpectation.fulfill()
+            }
+            
+            waitForExpectations(timeout: 1, handler: nil)
+        }
+    }
+    
+    func testThatItDoesNotSetIsNewOnTheResultIfTheChangeCountDidNotIncrease() {
+        // GIVEN
+        let code = "wire-81DD91BA-B3D0-46F0-BC29-E491938F0A54"
+        pasteboard.text = code
+        pasteboard.changeCount = 42
+        
+        // WHEN
+        do {
+            let detectionExpectation = expectation(description: "Detector returns a result")
+            
+            detector.detectCopiedRequestCode {
+                XCTAssertEqual($0?.isNew, true)
+                XCTAssertEqual($0?.code, code)
+                detectionExpectation.fulfill()
+            }
+            
+            waitForExpectations(timeout: 1, handler: nil)
+        }
+        
+        // WHEN
+        do {
+            let detectionExpectation = expectation(description: "Detector returns a result")
+            
+            detector.detectCopiedRequestCode {
+                XCTAssertEqual($0?.isNew, false)
+                XCTAssertEqual($0?.code, code)
+                detectionExpectation.fulfill()
+            }
+            
+            waitForExpectations(timeout: 1, handler: nil)
+        }
+        
+        // THEN
+        do {
+            let detectionExpectation = expectation(description: "Detector returns a result")
+            
+            detector.detectCopiedRequestCode {
+                XCTAssertEqual($0?.isNew, false)
+                XCTAssertEqual($0?.code, code)
+                detectionExpectation.fulfill()
+            }
+            
+            waitForExpectations(timeout: 1, handler: nil)
+        }
     }
 
 }
