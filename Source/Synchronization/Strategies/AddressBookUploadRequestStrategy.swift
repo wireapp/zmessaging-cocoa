@@ -43,24 +43,20 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
     /// Is the payload being generated? This is an async operation
     fileprivate var isGeneratingPayload : Bool = false
     
-    /// Address book analytics events tracker
-    fileprivate let tracker : AddressBookTracker
-    
     /// Address book
     fileprivate let addressBookGenerator : ()->(AddressBookAccessor?)
     
     public override convenience init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
-        self.init(managedObjectContext: moc, applicationStatus: applicationStatus, addressBookGenerator: { return AddressBook.factory() }, tracker: nil)
+        self.init(managedObjectContext: moc, applicationStatus: applicationStatus, addressBookGenerator: { return AddressBook.factory() })
     }
     
     /// Use for testing only
-    internal init(managedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus, addressBookGenerator: @escaping ()->(AddressBookAccessor?) = { return AddressBook.factory() }, tracker: AddressBookTracker? = nil) {
+    internal init(managedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus, addressBookGenerator: @escaping ()->(AddressBookAccessor?) = { return AddressBook.factory() }) {
         // notify of denied access
         if addressBookGenerator() == nil {
             NotificationInContext(name: failedToAccessAddressBookNotificationName, context: moc.notificationContext).post()
         }
         self.addressBookGenerator = addressBookGenerator
-        self.tracker = tracker ?? AddressBookAnalytics(analytics: moc.analytics, managedObjectContext: moc)
         super.init(withManagedObjectContext: moc, applicationStatus: applicationStatus)
         self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
     }
@@ -97,7 +93,6 @@ extension AddressBookUploadRequestStrategy : ZMSingleRequestTranscoder {
         
         let allLocalContactIDs = Set(encodedChunk.otherContactsHashes.keys)
         let payload : [String: Any] = ["cards" : contactCards]
-        self.tracker.tagAddressBookUploadStarted(encodedChunk.numberOfTotalContacts)
         let request = ZMTransportRequest(path: onboardingEndpoint, method: .methodPOST, payload: payload as ZMTransportData?, shouldCompress: true)
         request.add(ZMCompletionHandler(on: self.managedObjectContext, block: {
             [weak self] response in
@@ -122,9 +117,6 @@ extension AddressBookUploadRequestStrategy : ZMSingleRequestTranscoder {
             
             self.addressBookNeedsToBeUploaded = false
             self.encodedAddressBookChunkToUpload = nil
-            
-            // tracking
-            self.tracker.tagAddressBookUploadSuccess()
         }
     }
     
