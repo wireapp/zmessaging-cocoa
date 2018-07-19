@@ -27,7 +27,7 @@ public protocol CompanyLoginRequesterDelegate: class {
      * - parameter url: The URL where the user should be taken to perform validation.
      */
 
-    func companyLoginSRequester(_ requester: CompanyLoginRequester, didRequestIdentityValidationAtURL url: URL)
+    func companyLoginRequester(_ requester: CompanyLoginRequester, didRequestIdentityValidationAtURL url: URL)
 
 }
 
@@ -78,7 +78,7 @@ public class CompanyLoginRequester {
             fatalError("Invalid company login URL. This is a developer error.")
         }
 
-        delegate?.companyLoginSessionRequester(self, didRequestIdentityValidationAtURL: url)
+        delegate?.companyLoginRequester(self, didRequestIdentityValidationAtURL: url)
     }
 
     // MARK: - Utilities
