@@ -23,6 +23,16 @@ enum BuildType {
     case alpha
     case development
     case `internal`
+
+    init?(bundleID: String) {
+        switch bundleID {
+        case "com.wearezeta.zclient.ios": self = .production
+        case "com.wearezeta.zclient-alpha": self = .alpha
+        case "com.wearezeta.zclient.ios-development": self = .development
+        case "com.wearezeta.zclient.ios-internal": self = .internal
+        default: return nil
+        }
+    }
     
     var certificateName: String {
         switch self {
@@ -49,6 +59,15 @@ enum BuildType {
             return "com.wearezeta.zclient.ios-internal"
         }
         
+    }
+
+    var urlScheme: String {
+        switch self {
+        case .production: return "wire"
+        case .alpha: return "wire-alpha"
+        case .development: return "wire-development"
+        case .internal: return "wire-internal"
+        }
     }
 }
 

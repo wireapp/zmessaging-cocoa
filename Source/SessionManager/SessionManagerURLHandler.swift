@@ -37,10 +37,14 @@ private struct URLWithOptions {
 
 private enum URLAction {
     case connectBot(serviceUser: ServiceUserData)
+    case companyLoginSuccess(cookie: String)
+    case companyLoginFailure(errorLabel: String)
 }
 
 @objc public enum RawURLAction: Int {
     case connectBot
+    case companyLoginSuccess
+    case companyLoginFailure
 }
 
 extension URLComponents {
@@ -65,6 +69,26 @@ extension URLAction {
                     return nil
             }
             self = .connectBot(serviceUser: ServiceUserData(provider: providerUUID, service: serviceUUID))
+
+        case "login":
+            let pathComponents = url.pathComponents
+
+            guard pathComponents.count >= 3 else {
+                return nil
+            }
+
+            let result = pathComponents[1]
+            let data = pathComponents[2]
+
+            switch result {
+            case "success":
+                self = .companyLoginSuccess(cookie: data)
+            case "failure":
+                self = .companyLoginFailure(errorLabel: data)
+            default:
+                return nil
+            }
+
         default:
             return nil
         }
@@ -72,8 +96,12 @@ extension URLAction {
     
     var rawAction: RawURLAction {
         switch self {
-        case .connectBot(_):
+        case .connectBot:
             return .connectBot
+        case .companyLoginFailure:
+            return .companyLoginFailure
+        case .companyLoginSuccess:
+            return .companyLoginSuccess
         }
     }
     
@@ -82,6 +110,12 @@ extension URLAction {
         switch self {
         case .connectBot(let serviceUserData):
             session.startConversation(with: serviceUserData, completion: nil)
+
+        case .companyLoginSuccess(_):
+            fatalError("unimplemented -- we should start the session for the user")
+
+        case .companyLoginFailure(_):
+            fatalError("unimplemented -- we should notify the error")
         }
     }
 }
