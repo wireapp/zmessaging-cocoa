@@ -20,7 +20,7 @@ import Foundation
 
 private let zmLog = ZMSLog(tag: "Services")
 
-public struct ServiceUserData {
+public struct ServiceUserData: Equatable {
     let provider: UUID
     let service: UUID
     

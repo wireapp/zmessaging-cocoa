@@ -35,16 +35,10 @@ private struct URLWithOptions {
     }
 }
 
-private enum URLAction {
+public enum URLAction: Equatable {
     case connectBot(serviceUser: ServiceUserData)
     case companyLoginSuccess(cookie: String)
     case companyLoginFailure(errorLabel: String)
-}
-
-@objc public enum RawURLAction: Int {
-    case connectBot
-    case companyLoginSuccess
-    case companyLoginFailure
 }
 
 extension URLComponents {
@@ -96,18 +90,7 @@ extension URLAction {
             return nil
         }
     }
-    
-    var rawAction: RawURLAction {
-        switch self {
-        case .connectBot:
-            return .connectBot
-        case .companyLoginFailure:
-            return .companyLoginFailure
-        case .companyLoginSuccess:
-            return .companyLoginSuccess
-        }
-    }
-    
+
     func execute(in session: ZMUserSession) {
         
         switch self {
@@ -124,7 +107,7 @@ extension URLAction {
 }
 
 public protocol SessionManagerURLHandlerDelegate: class {
-    func sessionManagerShouldExecute(URLAction: RawURLAction, callback: @escaping (Bool)->(Void))
+    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void)
 }
 
 public final class SessionManagerURLHandler: NSObject {
@@ -157,7 +140,7 @@ public final class SessionManagerURLHandler: NSObject {
         guard let action = URLAction(url: urlWithOptions.url) else {
             return
         }
-        delegate?.sessionManagerShouldExecute(URLAction: action.rawAction) { shouldExecute in
+        delegate?.sessionManagerShouldExecuteURLAction(action) { shouldExecute in
             if shouldExecute {
                 action.execute(in: userSession)
             }

@@ -26,7 +26,7 @@ class MockCompanyLoginRequesterDelegate: CompanyLoginRequesterDelegate {
         self.verificationBlock = verificationBlock
     }
 
-    func companyLoginSessionRequester(_ requester: CompanyLoginRequester, didRequestIdentityValidationAtURL url: URL) {
+    func companyLoginRequester(_ requester: CompanyLoginRequester, didRequestIdentityValidationAtURL url: URL) {
         verificationBlock(url)
     }
 

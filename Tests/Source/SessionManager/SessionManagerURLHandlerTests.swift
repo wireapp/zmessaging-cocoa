@@ -26,9 +26,9 @@ class UserSessionSourceDummy: UserSessionSource {
 }
 
 class OpenerDelegate: SessionManagerURLHandlerDelegate {
-    var calls: [(RawURLAction, (Bool) -> (Void))] = []
-    func sessionManagerShouldExecute(URLAction: RawURLAction, callback: @escaping (Bool) -> (Void)) {
-        calls.append((URLAction, callback))
+    var calls: [(URLAction, (Bool) -> Void)] = []
+    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) {
+        calls.append((action, callback))
     }
 }
 
@@ -78,9 +78,12 @@ final class SessionManagerURLHandlerTests: MessagingTest {
         let canOpen = opener.openURL(URL(string: "wire://connect?service=2e1863a6-4a12-11e8-842f-0ed5f89f718b&provider=3879b1ec-4a12-11e8-842f-0ed5f89f718b")!, options: [:])
         
         // then
+        let expectedUserData = ServiceUserData(provider: UUID(uuidString: "3879b1ec-4a12-11e8-842f-0ed5f89f718b")!,
+                                           service: UUID(uuidString: "2e1863a6-4a12-11e8-842f-0ed5f89f718b")!)
+
         XCTAssertTrue(canOpen)
         XCTAssertEqual(delegate.calls.count, 1)
-        XCTAssertEqual(delegate.calls[0].0, .connectBot)
+        XCTAssertEqual(delegate.calls[0].0, .connectBot(serviceUser: expectedUserData))
     }
     
     func testThatItSavesCallWhenUserSessionNotAvailable_AndCallsItLater() {
@@ -95,7 +98,10 @@ final class SessionManagerURLHandlerTests: MessagingTest {
         opener.sessionManagerActivated(userSession: self.mockUserSession)
         
         // then
+        let expectedUserData = ServiceUserData(provider: UUID(uuidString: "3879b1ec-4a12-11e8-842f-0ed5f89f718b")!,
+                                               service: UUID(uuidString: "2e1863a6-4a12-11e8-842f-0ed5f89f718b")!)
+
         XCTAssertEqual(delegate.calls.count, 1)
-        XCTAssertEqual(delegate.calls[0].0, .connectBot)
+        XCTAssertEqual(delegate.calls[0].0, .connectBot(serviceUser: expectedUserData))
     }
 }
