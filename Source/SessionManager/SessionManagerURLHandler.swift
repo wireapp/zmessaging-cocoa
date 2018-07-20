@@ -86,8 +86,7 @@ extension URLAction {
 
             switch pathComponents[1] {
             case "success":
-                guard let cookieString = components.query(for: "cookie"),
-                let cookieData = Data(base64Encoded: cookieString, options: []) else {
+                guard let cookieString = components.query(for: "cookie") else {
                     return nil
                 }
 
@@ -96,6 +95,13 @@ extension URLAction {
                     return nil
                 }
 
+                let fakeResp = [
+                    "Set-Cookie": "zuid=\(cookieString); Path=/access; Expires=Fri, 14-Sep-2018 12:45:35 GMT; Domain=zinfra.io; HttpOnly; Secure"
+                ]
+
+                let cookie = HTTPCookie.cookies(withResponseHeaderFields: <#T##[String : String]#>, for: <#T##URL#>)
+
+                let cookieData = Data(cookieString.utf8)
                 let userInfo = UserInfo(identifier: userID, cookieData: cookieData)
                 self = .companyLoginSuccess(userInfo: userInfo)
 
@@ -209,3 +215,29 @@ extension SessionManagerURLHandler: SessionActivationObserver {
         }
     }
 }
+
+/*
+extension HTTPCookie {
+
+    static func zmCookieData(from cookieString: String) {
+        let fakeResponseHeaders = [
+            "Set-Cookie": "zuid=\(cookieString); Path=/access; Expires=Fri, 14-Sep-2018 12:45:35 GMT; Domain=zinfra.io; HttpOnly; Secure"
+        ]
+
+        let cookies = HTTPCookie.cookies(withResponseHeaderFields: fakeResponseHeaders, for: response.url!)
+        guard !cookies.isEmpty else { return nil }
+        let properties = cookies.compactMap { $0.properties }
+        guard (properties.first?[.name] as? String) == CookieKey.zetaId.rawValue else { return nil }
+        let data = NSMutableData()
+        let archiver = NSKeyedArchiver(forWritingWith: data)
+        archiver.requiresSecureCoding = true
+        archiver.encode(properties, forKey: CookieKey.properties.rawValue)
+        archiver.finishEncoding()
+        let key = UserDefaults.cookiesKey()
+        return data.zmEncryptPrefixingIV(withKey: key).base64EncodedData()
+
+
+    }
+
+}
+*/
