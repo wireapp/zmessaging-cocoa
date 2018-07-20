@@ -65,11 +65,13 @@ extension URLAction {
             self = .connectBot(serviceUser: ServiceUserData(provider: providerUUID, service: serviceUUID))
 
         case "login":
-            guard let result = url.pathComponents.first else {
+            let pathComponents = url.pathComponents
+
+            guard url.pathComponents.count >= 2 else {
                 return nil
             }
 
-            switch result {
+            switch pathComponents[1] {
             case "success":
                 guard let cookie = components.query(for: "cookie") else {
                     return nil
