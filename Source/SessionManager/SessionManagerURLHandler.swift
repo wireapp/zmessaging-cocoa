@@ -100,8 +100,9 @@ extension URLAction {
         case .companyLoginSuccess(_):
             fatalError("unimplemented -- we should start the session for the user")
 
-        case .companyLoginFailure(_):
-            fatalError("unimplemented -- we should notify the error")
+        case .companyLoginFailure:
+            // no-op (error should be handled in UI)
+            break
         }
     }
 }
