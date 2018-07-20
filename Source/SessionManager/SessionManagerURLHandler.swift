@@ -35,12 +35,10 @@ private struct URLWithOptions {
     }
 }
 
-private enum URLAction {
+public enum URLAction: Equatable {
     case connectBot(serviceUser: ServiceUserData)
-}
-
-@objc public enum RawURLAction: Int {
-    case connectBot
+    case companyLoginSuccess(cookie: String)
+    case companyLoginFailure(errorLabel: String)
 }
 
 extension URLComponents {
@@ -51,43 +49,68 @@ extension URLComponents {
 
 extension URLAction {
     init?(url: URL) {
-        guard let host = url.host else {
+        guard let components = URLComponents(string: url.absoluteString),
+            let host = components.host else {
             return nil
         }
         
         switch host {
         case "connect":
-            guard let components = URLComponents(string: url.absoluteString),
-                let service = components.query(for: "service"),
+            guard let service = components.query(for: "service"),
                 let provider = components.query(for: "provider"),
                 let serviceUUID = UUID(uuidString: service),
                 let providerUUID = UUID(uuidString: provider) else {
                     return nil
             }
             self = .connectBot(serviceUser: ServiceUserData(provider: providerUUID, service: serviceUUID))
+
+        case "login":
+            let pathComponents = url.pathComponents
+
+            guard url.pathComponents.count >= 2 else {
+                return nil
+            }
+
+            switch pathComponents[1] {
+            case "success":
+                guard let cookie = components.query(for: "cookie") else {
+                    return nil
+                }
+
+                self = .companyLoginSuccess(cookie: cookie)
+            case "failure":
+                guard let label = components.query(for: "label") else {
+                    return nil
+                }
+
+                self = .companyLoginFailure(errorLabel: label)
+            default:
+                return nil
+            }
+
         default:
             return nil
         }
     }
-    
-    var rawAction: RawURLAction {
-        switch self {
-        case .connectBot(_):
-            return .connectBot
-        }
-    }
-    
+
     func execute(in session: ZMUserSession) {
         
         switch self {
         case .connectBot(let serviceUserData):
             session.startConversation(with: serviceUserData, completion: nil)
+
+        case .companyLoginSuccess(_):
+            fatalError("unimplemented -- we should start the session for the user")
+
+        case .companyLoginFailure:
+            // no-op (error should be handled in UI)
+            break
         }
     }
 }
 
 public protocol SessionManagerURLHandlerDelegate: class {
-    func sessionManagerShouldExecute(URLAction: RawURLAction, callback: @escaping (Bool)->(Void))
+    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void)
 }
 
 public final class SessionManagerURLHandler: NSObject {
@@ -120,7 +143,7 @@ public final class SessionManagerURLHandler: NSObject {
         guard let action = URLAction(url: urlWithOptions.url) else {
             return
         }
-        delegate?.sessionManagerShouldExecute(URLAction: action.rawAction) { shouldExecute in
+        delegate?.sessionManagerShouldExecuteURLAction(action) { shouldExecute in
             if shouldExecute {
                 action.execute(in: userSession)
             }

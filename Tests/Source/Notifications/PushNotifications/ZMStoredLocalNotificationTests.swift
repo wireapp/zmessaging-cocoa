@@ -53,6 +53,7 @@ class ZMStoredLocalNotificationTests: MessagingTest {
         let textInput = "Foobar"
         let message = conversation.appendMessage(withText: textInput) as! ZMClientMessage
         message.sender = sender
+        message.serverTimestamp = Date.distantFuture
         uiMOC.saveOrRollback()
         
         let note = ZMLocalNotification(message: message)

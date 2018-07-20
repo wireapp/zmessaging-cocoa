@@ -2,7 +2,7 @@ defaults: &defaults
   environment:
     - DEPENDENCIES_BASE_URL: "https://raw.githubusercontent.com/wireapp/wire-ios-shared-resources/master"
   macos:
-    xcode: "9.3.0"
+    xcode: "9.4.1"
   shell: /bin/bash --login -eo pipefail
 
 # ----------------CACHING----------------
@@ -17,76 +17,38 @@ carthage_cache: &carthage_cache
   key: v2-{{ checksum "Cartfile.resolved" }}
   paths: Carthage/Build
 
-# DerivedData
-buildfiles_cache: &buildfiles_cache
-  key: v2-{{ .Revision }}
-  paths: DerivedData
-
 # -------------GEMS----------------
-
-# Download .ruby_version and Gemfile.lock
-setup_gems: &setup_gems
-  name: "Setup gems"
-  command: |
-    curl -O "${DEPENDENCIES_BASE_URL}/Gemfile"
-    curl -O "${DEPENDENCIES_BASE_URL}/Gemfile.lock"
-    curl -O "${DEPENDENCIES_BASE_URL}/.ruby-version"
-
-# Install gems
-install_gems: &install_gems
-  name: "Install gems"
-  command: |
-    bundle install --path ~/.gem
 
 version: 2
 jobs:
       
   build:
     <<: *defaults
+    branches:
+      ignore:
+        - develop
     steps:
     - checkout
-    - run: *setup_gems
+    - run: 
+        name: "Setup gems"
+        command: |
+          curl -O "${DEPENDENCIES_BASE_URL}/Gemfile"
+          curl -O "${DEPENDENCIES_BASE_URL}/Gemfile.lock"
+          curl -O "${DEPENDENCIES_BASE_URL}/.ruby-version"
     - restore_cache: *gems_cache
     - restore_cache: *carthage_cache
-    - run: *install_gems
+    - run: 
+        name: "Install gems"
+        command: bundle install --path ~/.gem
     - run: 
         name: "Build"
         command: bundle exec fastlane build
-    - save_cache: *gems_cache
-    - save_cache: *carthage_cache
-    - persist_to_workspace:
-        root: .
-        paths: 
-          - DerivedData/Build/Products
-          - build
-
-  test:
-    <<: *defaults
-    steps:
-    - checkout
-    - attach_workspace:
-        at: .
-    - run: *setup_gems
-    - restore_cache: *gems_cache
-    - run: *install_gems
     - run: 
         name: "Test"
         command: bundle exec fastlane test
     - run: 
         name: "Post test"
         command: bundle exec fastlane post_test
-    - store_artifacts:
-        path: SnapshotResults
     - store_test_results:
         path: test
 
-
-# ----------------WORKFLOWS----------------
-workflows:
-  version: 2
-  build-and-test:
-    jobs:
-      - build
-      - test:
-          requires:
-            - build

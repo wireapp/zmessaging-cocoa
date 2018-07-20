@@ -54,7 +54,6 @@ extension ZMConversation {
     public func addParticipants(_ participants: Set<ZMUser>, userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
         
         guard conversationType == .group,
-              let conversationId = remoteIdentifier,
               !participants.isEmpty,
               !participants.contains(ZMUser.selfUser(inUserSession: userSession))
         else { return completion(.failure(ConversationAddParticipantsError.invalidOperation)) }
@@ -65,7 +64,6 @@ extension ZMConversation {
             if response.httpStatus == 200 {
                 if let payload = response.payload, let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
                     userSession.syncManagedObjectContext.performGroupedBlock {
-                        ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.syncManagedObjectContext)?.updateLastRead(fromPostPayloadEvent: event)
                         userSession.operationLoop.syncStrategy.processUpdateEvents([event], ignoreBuffer: true)
                     }
                 }
@@ -103,7 +101,6 @@ extension ZMConversation {
                             conversation?.updateCleared(fromPostPayloadEvent: event)
                         }
                         
-                        conversation?.updateLastRead(fromPostPayloadEvent: event)
                         userSession.operationLoop.syncStrategy.processUpdateEvents([event], ignoreBuffer: true)
                     }
                 }

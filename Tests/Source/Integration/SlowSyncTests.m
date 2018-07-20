@@ -52,18 +52,24 @@
     
     // then
     NSFetchRequest *fetchRequest = [ZMConnection sortedFetchRequest];
-
+    
+    __block NSString *user1Identifier;
+    __block NSString *user2Identifier;
+    [self.mockTransportSession.managedObjectContext performGroupedBlockAndWait:^{
+        user1Identifier = self.user1.identifier;
+        user2Identifier = self.user2.identifier;
+    }];
 
     NSArray *connections = [self.userSession.managedObjectContext executeFetchRequestOrAssert:fetchRequest];
     XCTAssertNotNil(connections);
     XCTAssertEqual(connections.count, 2u);
 
     XCTAssertTrue([connections containsObjectMatchingWithBlock:^BOOL(ZMConnection *obj){
-        return [obj.to.remoteIdentifier.transportString isEqual:self.user1.identifier];
+        return [obj.to.remoteIdentifier.transportString isEqual:user1Identifier];
     }]);
     
     XCTAssertTrue([connections containsObjectMatchingWithBlock:^BOOL(ZMConnection *obj){
-        return [obj.to.remoteIdentifier.transportString isEqual:self.user2.identifier];
+        return [obj.to.remoteIdentifier.transportString isEqual:user2Identifier];
     }]);
 }
 
@@ -75,8 +81,6 @@
     
     // then
     NSFetchRequest *fetchRequest = [ZMUser sortedFetchRequest];
-
-    
     NSArray *users = [self.userSession.managedObjectContext executeFetchRequestOrAssert:fetchRequest];
     ZMUser *fetchedSelfUser = [ZMUser selfUserInContext:self.userSession.managedObjectContext];
     
@@ -96,6 +100,18 @@
 
 - (void)testThatWeCanGetConversations
 {
+    // given
+    __block NSString *selfConversationIdentifier;
+    __block NSString *selfToUser1ConversationIdentifier;
+    __block NSString *selfToUser2ConversationIdentifier;
+    __block NSString *groupConversationIdentifier;
+    
+    [self.mockTransportSession.managedObjectContext performGroupedBlockAndWait:^{
+        selfConversationIdentifier =  self.selfConversation.identifier;
+        selfToUser1ConversationIdentifier = self.selfToUser1Conversation.identifier;
+        selfToUser2ConversationIdentifier = self.selfToUser2Conversation.identifier;
+        groupConversationIdentifier = self.groupConversation.identifier;
+    }];
     
     // when
     XCTAssertTrue([self login]);
@@ -108,31 +124,50 @@
     XCTAssertEqual(conversations.count, 3u);
     
     
-    ZMConversation *actualSelfConversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:self.selfConversation.identifier] createIfNeeded:NO inContext:self.userSession.managedObjectContext];
+    ZMConversation *actualSelfConversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:selfConversationIdentifier] createIfNeeded:NO inContext:self.userSession.managedObjectContext];
     [actualSelfConversation assertMatchesConversation:self.selfConversation failureRecorder:NewFailureRecorder()];
     
-    ZMConversation *actualSelfToUser1Conversation = [self findConversationWithIdentifier:self.selfToUser1Conversation.identifier inMoc:self.userSession.managedObjectContext];
+    ZMConversation *actualSelfToUser1Conversation = [self findConversationWithIdentifier:selfToUser1ConversationIdentifier inMoc:self.userSession.managedObjectContext];
     [actualSelfToUser1Conversation assertMatchesConversation:self.selfToUser1Conversation failureRecorder:NewFailureRecorder()];
     
-    ZMConversation *actualSelfToUser2Conversation = [self findConversationWithIdentifier:self.selfToUser2Conversation.identifier inMoc:self.userSession.managedObjectContext];
+    ZMConversation *actualSelfToUser2Conversation = [self findConversationWithIdentifier:selfToUser2ConversationIdentifier inMoc:self.userSession.managedObjectContext];
     [actualSelfToUser2Conversation assertMatchesConversation:self.selfToUser2Conversation failureRecorder:NewFailureRecorder()];
     
-    ZMConversation *actualGroupConversation = [self findConversationWithIdentifier:self.groupConversation.identifier inMoc:self.userSession.managedObjectContext];
+    ZMConversation *actualGroupConversation = [self findConversationWithIdentifier:groupConversationIdentifier inMoc:self.userSession.managedObjectContext];
     [actualGroupConversation assertMatchesConversation:self.groupConversation failureRecorder:NewFailureRecorder()];
 }
 
-- (NSArray *)commonRequestsOnLogin {
+- (NSArray *)commonRequestsOnLogin
+{
+    __block NSString *selfConversationIdentifier;
+    __block NSString *selfToUser1ConversationIdentifier;
+    __block NSString *selfToUser2ConversationIdentifier;
+    __block NSString *groupConversationIdentifier;
+    __block NSString *user1Identifier;
+    __block NSString *user2Identifier;
+    __block NSString *user3Identifier;
+    
+    [self.mockTransportSession.managedObjectContext performGroupedBlockAndWait:^{
+        selfConversationIdentifier =  self.selfConversation.identifier;
+        selfToUser1ConversationIdentifier = self.selfToUser1Conversation.identifier;
+        selfToUser2ConversationIdentifier = self.selfToUser2Conversation.identifier;
+        groupConversationIdentifier = self.groupConversation.identifier;
+        user1Identifier = self.user1.identifier;
+        user2Identifier = self.user2.identifier;
+        user3Identifier = self.user3.identifier;
+    }];
+    
     return @[
-             [[ZMTransportRequest alloc] initWithPath:ZMLoginURL method:ZMMethodPOST payload:@{@"email":[self.selfUser.email copy], @"password":[self.selfUser.password copy], @"label": CookieLabel.current.value} authentication:ZMTransportRequestAuthCreatesCookieAndAccessToken],
+             [[ZMTransportRequest alloc] initWithPath:ZMLoginURL method:ZMMethodPOST payload:@{@"email":[IntegrationTest.SelfUserEmail copy], @"password":[IntegrationTest.SelfUserPassword copy], @"label": CookieLabel.current.value} authentication:ZMTransportRequestAuthCreatesCookieAndAccessToken],
              [ZMTransportRequest requestGetFromPath:@"/self"],
              [ZMTransportRequest requestGetFromPath:@"/self"], // second request during slow sync
              [ZMTransportRequest requestGetFromPath:@"/clients"],
-             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/notifications/last?client=%@",  [ZMUser selfUserInContext:self.userSession.syncManagedObjectContext].selfClient.remoteIdentifier]],
+             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/notifications/last?client=%@",  [ZMUser selfUserInContext:self.userSession.managedObjectContext].selfClient.remoteIdentifier]],
              [ZMTransportRequest requestGetFromPath:@"/connections?size=90"],
              [ZMTransportRequest requestGetFromPath:@"/conversations/ids?size=100"],
-             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/conversations?ids=%@,%@,%@,%@", self.selfConversation.identifier,self.selfToUser1Conversation.identifier,self.selfToUser2Conversation.identifier,self.groupConversation.identifier]],
-             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@", self.user1.identifier, self.user2.identifier]],
-             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@", self.user3.identifier]],
+             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/conversations?ids=%@,%@,%@,%@", selfConversationIdentifier, selfToUser1ConversationIdentifier, selfToUser2ConversationIdentifier, groupConversationIdentifier]],
+             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@", user1Identifier, user2Identifier]],
+             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@", user3Identifier]],
              [ZMTransportRequest requestGetFromPath:@"/teams?size=50"],
              ];
 
@@ -147,17 +182,24 @@
         self.selfUser.previewProfileAssetIdentifier = nil;
     }];
     XCTAssertTrue([self login]);
-    [NSThread sleepForTimeInterval:0.2]; // sleep to wait for spurious calls
     
-    NSDictionary *assetsUpdatePayload = @{
-                                          @"assets":
-                                              @[
-                                                  @{@"key" : self.selfUser.previewProfileAssetIdentifier, @"type" : @"image", @"size" : @"preview"},
-                                                  @{@"key" : self.selfUser.completeProfileAssetIdentifier, @"type" : @"image", @"size" : @"complete"},
-                                                  ]
-                                          };
+    __block NSString *selfUserIdentifier = nil;
+    __block NSString *previewProfileAssetIdentifier = nil;
+    __block NSString *completeProfileAssetIdentifier = nil;
+    __block NSString *smallProfileImageIdentifier = nil;
+    __block NSString *mediumImageIdentifier = nil;
+    [self.mockTransportSession.managedObjectContext performGroupedBlockAndWait:^{
+        selfUserIdentifier = self.selfUser.identifier;
+        previewProfileAssetIdentifier = self.selfUser.previewProfileAssetIdentifier;
+        completeProfileAssetIdentifier = self.selfUser.completeProfileAssetIdentifier;
+        smallProfileImageIdentifier = self.selfUser.smallProfileImageIdentifier;
+        mediumImageIdentifier = self.selfUser.mediumImageIdentifier;
+    }];
     
-    ZMUser *localUser = [ZMUser selfUserInContext:self.userSession.syncManagedObjectContext];
+    NSDictionary *assetsUpdatePayload = @{ @"assets": @[ @{@"key" : previewProfileAssetIdentifier, @"type" : @"image", @"size" : @"preview"},
+                                                         @{@"key" : completeProfileAssetIdentifier, @"type" : @"image", @"size" : @"complete"}] };
+    
+    ZMUser *localUser = [ZMUser selfUserInContext:self.userSession.managedObjectContext];
     AssetRequestFactory *factory = [[AssetRequestFactory alloc] init];
 
     // given
@@ -165,8 +207,8 @@
                                   [factory profileImageAssetRequestWithData:localUser.imageMediumData],
                                   [factory profileImageAssetRequestWithData:localUser.imageSmallProfileData],
                                   [ZMTransportRequest requestWithPath:@"/self" method:ZMMethodPUT payload:assetsUpdatePayload],
-                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@",self.selfUser.smallProfileImageIdentifier,self.selfUser.identifier]],
-                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@",self.selfUser.mediumImageIdentifier, self.selfUser.identifier]]
+                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@", smallProfileImageIdentifier, selfUserIdentifier]],
+                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@", mediumImageIdentifier, selfUserIdentifier]]
                                   ]];
     
     // then
@@ -195,13 +237,19 @@
 {
     // when
     XCTAssertTrue([self login]);
-    [NSThread sleepForTimeInterval:0.2]; // sleep to wait for spurious calls
+
+    __block NSString *previewProfileAssetIdentifier = nil;
+    __block NSString *completeProfileAssetIdentifier = nil;
+    [self.mockTransportSession.managedObjectContext performGroupedBlockAndWait:^{
+        previewProfileAssetIdentifier = self.selfUser.previewProfileAssetIdentifier;
+        completeProfileAssetIdentifier = self.selfUser.completeProfileAssetIdentifier;
+    }];
     
     // given
     NSArray *expectedRequests = [[self commonRequestsOnLogin] arrayByAddingObjectsFromArray: @[
                                   [ZMTransportRequest requestGetFromPath:@"/self"],
-                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@",self.selfUser.previewProfileAssetIdentifier]],
-                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@",self.selfUser.completeProfileAssetIdentifier]],
+                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@", previewProfileAssetIdentifier]],
+                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@", completeProfileAssetIdentifier]],
                                   ]];
     
     // then
@@ -236,7 +284,6 @@
     
     // when
     [self recreateSessionManager];
-//    XCTAssertTrue([self login]);
     
     // then
     BOOL hasNotificationsRequest = NO;

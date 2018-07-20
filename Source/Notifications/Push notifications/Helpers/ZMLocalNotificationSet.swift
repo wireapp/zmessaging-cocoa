@@ -69,7 +69,7 @@ import WireTransport
         keyValueStore.enqueueDelayedSave() // we need to save otherwiese changes might not be stored
     }
     
-    public func remove(_ notification: ZMLocalNotification) -> ZMLocalNotification? {
+    @discardableResult public func remove(_ notification: ZMLocalNotification) -> ZMLocalNotification? {
         return notifications.remove(notification)
     }
     

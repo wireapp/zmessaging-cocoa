@@ -1000,7 +1000,7 @@ extension SessionManagerTests {
             
             let conversation1 = createdSession.insertConversationWithUnreadMessage()
             conversations.append(conversation1)
-            XCTAssertNil(conversation1.lastReadMessage)
+            XCTAssertNotNil(conversation1.firstUnreadMessage)
             createdSession.managedObjectContext.saveOrRollback()
             conversation1CreatedExpectation.fulfill()
         })
@@ -1011,7 +1011,7 @@ extension SessionManagerTests {
             createdSession.managedObjectContext.createSelfUserAndSelfConversation()
             
             let conversation2 = createdSession.insertConversationWithUnreadMessage()
-            XCTAssertNil(conversation2.lastReadMessage)
+            XCTAssertNotNil(conversation2.firstUnreadMessage)
             conversations.append(conversation2)
             createdSession.managedObjectContext.saveOrRollback()
             conversation2CreatedExpectation.fulfill()
@@ -1019,7 +1019,7 @@ extension SessionManagerTests {
         
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         XCTAssertEqual(conversations.count, 2)
-        XCTAssertEqual(conversations.filter { $0.lastReadMessage == nil }.count, 2)
+        XCTAssertEqual(conversations.filter { $0.firstUnreadMessage != nil }.count, 2)
         // when
         
         let doneExpectation = self.expectation(description: "Conversations are marked as read")
@@ -1031,7 +1031,7 @@ extension SessionManagerTests {
         // then
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
-        XCTAssertEqual(conversations.filter { $0.lastReadMessage == nil }.count, 0)
+        XCTAssertEqual(conversations.filter { $0.firstUnreadMessage != nil }.count, 0)
         
         // cleanup
         self.sessionManager!.tearDownAllBackgroundSessions()

@@ -22,78 +22,81 @@ import WireTesting
 @testable import WireSyncEngine
 
 class ZMHotFixDirectoryTests: MessagingTest {
-
+    
     func testThatOnlyTeamConversationsAreUpdated() {
-        // given
-        let g1 = ZMConversation.insertNewObject(in: self.syncMOC)
-        g1.conversationType = .group
-        XCTAssertFalse(g1.needsToBeUpdatedFromBackend)
-
-        let g2 = ZMConversation.insertNewObject(in: self.syncMOC)
-        g2.conversationType = .group
-        g2.team = Team.insertNewObject(in: self.syncMOC)
-        XCTAssertFalse(g2.needsToBeUpdatedFromBackend)
-
-        // when
-        ZMHotFixDirectory.refetchTeamGroupConversations(self.syncMOC)
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // then
-        XCTAssertFalse(g1.needsToBeUpdatedFromBackend)
-        XCTAssertTrue(g2.needsToBeUpdatedFromBackend)
+        syncMOC.performGroupedBlockAndWait {
+            // given
+            let g1 = ZMConversation.insertNewObject(in: self.syncMOC)
+            g1.conversationType = .group
+            XCTAssertFalse(g1.needsToBeUpdatedFromBackend)
+            
+            let g2 = ZMConversation.insertNewObject(in: self.syncMOC)
+            g2.conversationType = .group
+            g2.team = Team.insertNewObject(in: self.syncMOC)
+            XCTAssertFalse(g2.needsToBeUpdatedFromBackend)
+            
+            // when
+            ZMHotFixDirectory.refetchTeamGroupConversations(self.syncMOC)
+            
+            // then
+            XCTAssertFalse(g1.needsToBeUpdatedFromBackend)
+            XCTAssertTrue(g2.needsToBeUpdatedFromBackend)
+        }
     }
-
+    
     func testThatOnlyGroupTeamConversationsAreUpdated() {
-        // given
-        let team = Team.insertNewObject(in: self.syncMOC)
-
-        let c1 = ZMConversation.insertNewObject(in: self.syncMOC)
-        c1.conversationType = .oneOnOne
-        c1.team = team
-        XCTAssertFalse(c1.needsToBeUpdatedFromBackend)
-
-        let c2 = ZMConversation.insertNewObject(in: self.syncMOC)
-        c2.conversationType = .connection
-        c2.team = team
-        XCTAssertFalse(c2.needsToBeUpdatedFromBackend)
-
-
-        let c3 = ZMConversation.insertNewObject(in: self.syncMOC)
-        c3.conversationType = .group
-        c3.team = team
-        XCTAssertFalse(c3.needsToBeUpdatedFromBackend)
-
-        // when
-        ZMHotFixDirectory.refetchTeamGroupConversations(self.syncMOC)
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // then
-        XCTAssertFalse(c1.needsToBeUpdatedFromBackend)
-        XCTAssertFalse(c2.needsToBeUpdatedFromBackend)
-        XCTAssertTrue(c3.needsToBeUpdatedFromBackend)
+        syncMOC.performGroupedBlockAndWait {
+            // given
+            let team = Team.insertNewObject(in: self.syncMOC)
+            
+            let c1 = ZMConversation.insertNewObject(in: self.syncMOC)
+            c1.conversationType = .oneOnOne
+            c1.team = team
+            XCTAssertFalse(c1.needsToBeUpdatedFromBackend)
+            
+            let c2 = ZMConversation.insertNewObject(in: self.syncMOC)
+            c2.conversationType = .connection
+            c2.team = team
+            XCTAssertFalse(c2.needsToBeUpdatedFromBackend)
+            
+            
+            let c3 = ZMConversation.insertNewObject(in: self.syncMOC)
+            c3.conversationType = .group
+            c3.team = team
+            XCTAssertFalse(c3.needsToBeUpdatedFromBackend)
+            
+            // when
+            ZMHotFixDirectory.refetchTeamGroupConversations(self.syncMOC)
+            
+            // then
+            XCTAssertFalse(c1.needsToBeUpdatedFromBackend)
+            XCTAssertFalse(c2.needsToBeUpdatedFromBackend)
+            XCTAssertTrue(c3.needsToBeUpdatedFromBackend)
+        }
     }
     
     func testThatOnlyGroupConversationsAreUpdated() {
-        // given
-        let c1 = ZMConversation.insertNewObject(in: self.syncMOC)
-        c1.conversationType = .oneOnOne
-        XCTAssertFalse(c1.needsToBeUpdatedFromBackend)
-        
-        let c2 = ZMConversation.insertNewObject(in: self.syncMOC)
-        c2.conversationType = .connection
-        XCTAssertFalse(c2.needsToBeUpdatedFromBackend)
-        
-        let c3 = ZMConversation.insertNewObject(in: self.syncMOC)
-        c3.conversationType = .group
-        XCTAssertFalse(c3.needsToBeUpdatedFromBackend)
-        
-        // when
-        ZMHotFixDirectory.refetchGroupConversations(self.syncMOC)
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertFalse(c1.needsToBeUpdatedFromBackend)
-        XCTAssertFalse(c2.needsToBeUpdatedFromBackend)
-        XCTAssertTrue(c3.needsToBeUpdatedFromBackend)
+        syncMOC.performGroupedBlockAndWait {
+            // given
+            let c1 = ZMConversation.insertNewObject(in: self.syncMOC)
+            c1.conversationType = .oneOnOne
+            XCTAssertFalse(c1.needsToBeUpdatedFromBackend)
+            
+            let c2 = ZMConversation.insertNewObject(in: self.syncMOC)
+            c2.conversationType = .connection
+            XCTAssertFalse(c2.needsToBeUpdatedFromBackend)
+            
+            let c3 = ZMConversation.insertNewObject(in: self.syncMOC)
+            c3.conversationType = .group
+            XCTAssertFalse(c3.needsToBeUpdatedFromBackend)
+            
+            // when
+            ZMHotFixDirectory.refetchGroupConversations(self.syncMOC)
+            
+            // then
+            XCTAssertFalse(c1.needsToBeUpdatedFromBackend)
+            XCTAssertFalse(c2.needsToBeUpdatedFromBackend)
+            XCTAssertTrue(c3.needsToBeUpdatedFromBackend)
+        }
     }
 }

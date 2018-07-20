@@ -1,28 +1,44 @@
-// 
+//
 // Wire
-// Copyright (C) 2016 Wire Swiss GmbH
-// 
+// Copyright (C) 2018 Wire Swiss GmbH
+//
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+import Foundation
 
+/**
+ * An object that provides
+ */
 
-"conversation.username.groupingSeparator" = ", ";
+public protocol Pasteboard: class {
 
-"user_session.error.blacklisted-email" = "This email address is not allowed";
-"user_session.error.email-exists" = "This email address has already been registered";
-"user_session.error.invalid-email" = "عنوان بريد غير صحيح";
-"user_session.error.invalid-code" = "الرجاء ادخال رمز صحيح";
-"user_session.error.unauthorized-email" = "حدث خطأ ما، برجاء إعادة المحاولة";
-"user_session.error.unknown" = "حدث خطأ ما، برجاء إعادة المحاولة";
+    /// The text copied by the user, if any.
+    var text: String? { get }
+    var changeCount: Int { get }
+
+}
+
+extension UIPasteboard: Pasteboard {
+
+    public var text: String? {
+        if #available(iOS 10, *) {
+            guard self.hasStrings else {
+                return nil
+            }
+        }
+        return self.string
+    }
+
+}

@@ -258,7 +258,7 @@ extension UserImageStrategyTests {
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 1.5))
 
-        syncMOC.performGroupedBlockAndWait{
+        syncMOC.performGroupedBlockAndWait {
             self.forwardChanges(for:self.user1)
             let request = self.sut.nextRequest()
 
@@ -366,6 +366,101 @@ extension UserImageStrategyTests {
             XCTAssertEqual(self.user1.imageSmallProfileData, imageData);
             XCTAssertEqual(self.user1.smallProfileRemoteIdentifier, imageID);
             XCTAssertEqual(self.user1.localSmallProfileRemoteIdentifier, imageID);
+        }
+    }
+    
+    func testThatItHandlesMediumImageNotBeingPresentOnTheRemote() {
+        func prepareForMediumAssetRequest() {
+            forwardChanges(for: user1)
+            UserImageStrategy.requestAsset(for: user1)
+            XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        }
+        
+        // given
+        syncMOC.performGroupedBlockAndWait { [user1] in
+            user1?.mediumRemoteIdentifier = .create()
+        }
+        
+        prepareForMediumAssetRequest()
+
+        syncMOC.performGroupedBlockAndWait {
+            guard let request = self.sut.nextRequest() else { return XCTFail() }
+            
+            let response = ZMTransportResponse(
+                payload: nil,
+                httpStatus: 404,
+                transportSessionError: nil
+            )
+            
+            // when
+            request.complete(with: response)
+        }
+        
+        // when
+        prepareForMediumAssetRequest()
+        
+        // then
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertNil(self.sut.nextRequest())
+            XCTAssertNil(self.user1.mediumRemoteIdentifier)
+            XCTAssertNil(self.user1.localMediumRemoteIdentifier)
+        }
+        
+        // when
+        prepareForMediumAssetRequest()
+        
+        // then
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertNil(self.sut.nextRequest())
+            XCTAssertNil(self.user1.mediumRemoteIdentifier)
+            XCTAssertNil(self.user1.localMediumRemoteIdentifier)
+        }
+    }
+
+    func testThatItHandlesSmallImageNotBeingPresentOnTheRemote() {
+        func prepareForSmallAssetRequest() {
+            forwardChanges(for: user1)
+            UserImageStrategy.requestSmallAsset(for: user1)
+            XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        }
+        
+        // given
+        syncMOC.performGroupedBlockAndWait { [user1] in
+            user1?.smallProfileRemoteIdentifier = .create()
+        }
+        
+        prepareForSmallAssetRequest()
+        
+        syncMOC.performGroupedBlockAndWait {
+            guard let request = self.sut.nextRequest() else { return XCTFail() }
+            
+            let response = ZMTransportResponse(
+                payload: nil,
+                httpStatus: 404,
+                transportSessionError: nil
+            )
+            
+            // when
+            request.complete(with: response)
+        }
+        
+        // when
+        prepareForSmallAssetRequest()
+        
+        // then
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertNil(self.sut.nextRequest())
+            XCTAssertNil(self.user1.smallProfileRemoteIdentifier)
+            XCTAssertNil(self.user1.localSmallProfileRemoteIdentifier)
+        }
+        
+        // when
+        prepareForSmallAssetRequest()
+        
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertNil(self.sut.nextRequest())
+            XCTAssertNil(self.user1.smallProfileRemoteIdentifier)
+            XCTAssertNil(self.user1.localSmallProfileRemoteIdentifier)
         }
     }
 }

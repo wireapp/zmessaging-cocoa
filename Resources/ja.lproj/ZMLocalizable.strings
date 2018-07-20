@@ -20,9 +20,9 @@
 
 "conversation.username.groupingSeparator" = ", ";
 
-"user_session.error.blacklisted-email" = "This email address is not allowed";
-"user_session.error.email-exists" = "This email address has already been registered";
-"user_session.error.invalid-email" = "This email address is invalid";
+"user_session.error.blacklisted-email" = "このメールアドレスは許可されていません";
+"user_session.error.email-exists" = "このメールアドレスは既に登録されています";
+"user_session.error.invalid-email" = "このメールアドレスは無効です";
 "user_session.error.invalid-code" = "有効なコードを入力してください。";
 "user_session.error.unauthorized-email" = "問題が生じたようです。もう一度やり直してください。";
 "user_session.error.unknown" = "問題が生じたようです。もう一度やり直してください。";

@@ -75,8 +75,8 @@ extension LocalNotificationDispatcher {
     fileprivate func cancelNotificationForMessageID(_ messageID: UUID) {
         for note in messageNotifications.notifications {
             if note.messageNonce == messageID {
-                self.application.cancelLocalNotification(note.uiLocalNotification)
-                _ = messageNotifications.remove(note);
+                application.cancelLocalNotification(note.uiLocalNotification)
+                messageNotifications.remove(note)
             }
         }
     }

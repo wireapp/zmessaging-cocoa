@@ -25,7 +25,7 @@ public enum LocalNotificationEventType {
 }
 
 public enum LocalNotificationContentType : Equatable {
-    case undefined, image, video, audio, location, fileUpload, knock, text(String), reaction(emoji: String), ephemeral, hidden, participantsRemoved, participantsAdded, messageTimerUpdate(String)
+    case undefined, image, video, audio, location, fileUpload, knock, text(String), reaction(emoji: String), ephemeral, hidden, participantsRemoved, participantsAdded, messageTimerUpdate(String?)
     
     static func typeForMessage(_ message: ZMConversationMessage) -> LocalNotificationContentType? {
         
@@ -67,7 +67,11 @@ public enum LocalNotificationContentType : Equatable {
                 return .participantsRemoved
             case .messageTimerUpdate:
                 let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(systemMessageData.messageTimer.doubleValue))
-                return .messageTimerUpdate(value.displayString ?? "")
+                if value == .none {
+                    return .messageTimerUpdate(nil)
+                } else {
+                    return .messageTimerUpdate(value.displayString)
+                }
             default:
                 return nil
             }
