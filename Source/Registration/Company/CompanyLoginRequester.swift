@@ -90,7 +90,8 @@ public class CompanyLoginRequester {
         components.path = "/success"
 
         components.queryItems = [
-            URLQueryItem(name: "cookie", value: "$cookie")
+            URLQueryItem(name: "cookie", value: "$cookie"),
+            URLQueryItem(name: "user_id", value: "$userid")
         ]
 
         return components.url!.absoluteString

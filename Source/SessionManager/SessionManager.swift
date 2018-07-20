@@ -49,6 +49,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 @objc
 public protocol UserSessionSource: class {
     var activeUserSession: ZMUserSession? { get }
+    var unauthenticatedSession: UnauthenticatedSession? { get }
 }
 
 @objc
