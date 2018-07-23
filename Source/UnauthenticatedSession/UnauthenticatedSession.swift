@@ -119,10 +119,14 @@ extension UnauthenticatedSession: UserInfoParser {
     public func parseUserInfo(from response: ZMTransportResponse) {
         guard let info = response.extractUserInfo() else { return log.warn("Failed to parse UserInfo from response: \(response)") }
         log.debug("Parsed UserInfo from response: \(info)")
-        let account = Account(userName: "", userIdentifier: info.identifier)
+        self.upgradeToAuthenticatedSession(with: info)
+    }
+
+    public func upgradeToAuthenticatedSession(with userInfo: UserInfo) {
+        let account = Account(userName: "", userIdentifier: userInfo.identifier)
         let cookieStorage = account.cookieStorage()
-        cookieStorage.authenticationCookieData = info.cookieData
-        self.authenticationStatus.authenticationCookieData = info.cookieData
+        cookieStorage.authenticationCookieData = userInfo.cookieData
+        self.authenticationStatus.authenticationCookieData = userInfo.cookieData
         self.delegate?.session(session: self, createdAccount: account)
     }
 

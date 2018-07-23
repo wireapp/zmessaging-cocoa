@@ -19,15 +19,15 @@
 import XCTest
 @testable import WireSyncEngine
 
-class SharedIdentitySessionRequestDetectorTests: XCTestCase {
+class CompanyLoginRequestDetectorTests: XCTestCase {
 
     var pasteboard: MockPasteboard!
-    var detector: SharedIdentitySessionRequestDetector!
+    var detector: CompanyLoginRequestDetector!
 
     override func setUp() {
         super.setUp()
         pasteboard = MockPasteboard()
-        detector = SharedIdentitySessionRequestDetector(pasteboard: pasteboard)
+        detector = CompanyLoginRequestDetector(pasteboard: pasteboard)
     }
 
     override func tearDown() {
@@ -103,7 +103,7 @@ class SharedIdentitySessionRequestDetectorTests: XCTestCase {
         let text = "wire-81DD91BA-B3D0-46F0-BC29-E491938F0A54"
 
         // WHEN
-        let isDetectedCodeValid = SharedIdentitySessionRequestDetector.isValidRequestCode(in: text)
+        let isDetectedCodeValid = CompanyLoginRequestDetector.isValidRequestCode(in: text)
 
         // THEN
         XCTAssertTrue(isDetectedCodeValid)

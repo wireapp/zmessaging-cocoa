@@ -18,29 +18,23 @@
 
 import Foundation
 
-private struct URLWithOptions {
-    private static let wireURLScheme = "wire"
-
-    typealias Options = [UIApplicationOpenURLOptionsKey: AnyObject]
-    let url: URL
-    let options: Options
-    
-    init?(url: URL, options: Options) {
-        guard url.scheme == URLWithOptions.wireURLScheme else {
-            return nil
-        }
-        
-        self.url = url
-        self.options = options
+extension UserInfo: Equatable {
+    public static func == (lhs: UserInfo, rhs: UserInfo) -> Bool {
+        return (lhs.identifier == rhs.identifier) && (lhs.cookieData == rhs.cookieData)
     }
 }
 
-private enum URLAction {
+public enum URLAction: Equatable {
     case connectBot(serviceUser: ServiceUserData)
-}
+    case companyLoginSuccess(userInfo: UserInfo)
+    case companyLoginFailure(errorLabel: String)
 
-@objc public enum RawURLAction: Int {
-    case connectBot
+    var requiresAuthentication: Bool {
+        switch self {
+        case .connectBot: return true
+        default: return false
+        }
+    }
 }
 
 extension URLComponents {
@@ -51,50 +45,95 @@ extension URLComponents {
 
 extension URLAction {
     init?(url: URL) {
-        guard let host = url.host else {
+        guard let components = URLComponents(string: url.absoluteString),
+            let host = components.host else {
             return nil
         }
         
         switch host {
         case "connect":
-            guard let components = URLComponents(string: url.absoluteString),
-                let service = components.query(for: "service"),
+            guard let service = components.query(for: "service"),
                 let provider = components.query(for: "provider"),
                 let serviceUUID = UUID(uuidString: service),
                 let providerUUID = UUID(uuidString: provider) else {
                     return nil
             }
             self = .connectBot(serviceUser: ServiceUserData(provider: providerUUID, service: serviceUUID))
+
+        case "login":
+            let pathComponents = url.pathComponents
+
+            guard url.pathComponents.count >= 2 else {
+                return nil
+            }
+
+            switch pathComponents[1] {
+            case "success":
+                guard let cookieString = components.query(for: "cookie") else {
+                    return nil
+                }
+
+                guard let userIDString = components.query(for: "user_id"),
+                    let userID = UUID(uuidString: userIDString) else {
+                    return nil
+                }
+
+                guard let cookieData = HTTPCookie.extractCookieData(from: cookieString, url: url) else {
+                    return nil
+                }
+
+                let userInfo = UserInfo(identifier: userID, cookieData: cookieData)
+                self = .companyLoginSuccess(userInfo: userInfo)
+
+            case "failure":
+                guard let label = components.query(for: "label") else {
+                    return nil
+                }
+
+                self = .companyLoginFailure(errorLabel: label)
+            default:
+                return nil
+            }
+
         default:
             return nil
         }
     }
-    
-    var rawAction: RawURLAction {
-        switch self {
-        case .connectBot(_):
-            return .connectBot
-        }
-    }
-    
+
     func execute(in session: ZMUserSession) {
-        
         switch self {
         case .connectBot(let serviceUserData):
             session.startConversation(with: serviceUserData, completion: nil)
+
+        default:
+            fatalError("This action cannot be executed with an authenticated session.")
+        }
+    }
+
+    func execute(in unauthenticatedSession: UnauthenticatedSession) {
+        switch self {
+        case .companyLoginSuccess(let userInfo):
+            unauthenticatedSession.authenticationStatus.notifyAuthenticationDidSucceed()
+            unauthenticatedSession.upgradeToAuthenticatedSession(with: userInfo)
+
+        case .companyLoginFailure:
+            break // no-op (error should be handled in UI)
+
+        default:
+            fatalError("This action cannot be executed with an unauthenticated session.")
         }
     }
 }
 
 public protocol SessionManagerURLHandlerDelegate: class {
-    func sessionManagerShouldExecute(URLAction: RawURLAction, callback: @escaping (Bool)->(Void))
+    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void)
 }
 
 public final class SessionManagerURLHandler: NSObject {
     private weak var userSessionSource: UserSessionSource?
     public weak var delegate: SessionManagerURLHandlerDelegate?
     
-    fileprivate var pendingOpenURL: URLWithOptions? = nil
+    fileprivate var pendingAction: URLAction? = nil
     
     internal init(userSessionSource: UserSessionSource) {
         self.userSessionSource = userSessionSource
@@ -102,27 +141,44 @@ public final class SessionManagerURLHandler: NSObject {
     
     @objc @discardableResult
     public func openURL(_ url: URL, options: [UIApplicationOpenURLOptionsKey: AnyObject]) -> Bool {
-        guard let urlWithOptions = URLWithOptions(url: url, options: options) else {
+        guard let action = URLAction(url: url) else {
             return false
         }
-        
-        guard let userSession = userSessionSource?.activeUserSession else {
-            pendingOpenURL = urlWithOptions
-            return true
+
+        if action.requiresAuthentication {
+
+            guard let userSession = userSessionSource?.activeUserSession else {
+                pendingAction = action
+                return true
+            }
+
+            handle(action: action, in: userSession)
+
+        } else {
+
+            guard let unauthenticatedSession = userSessionSource?.unauthenticatedSession else {
+                return false
+            }
+
+            handle(action: action, in: unauthenticatedSession)
+
         }
-        
-        handle(urlWithOptions: urlWithOptions, in: userSession)
-        
+
         return true
     }
 
-    fileprivate func handle(urlWithOptions: URLWithOptions, in userSession: ZMUserSession) {
-        guard let action = URLAction(url: urlWithOptions.url) else {
-            return
-        }
-        delegate?.sessionManagerShouldExecute(URLAction: action.rawAction) { shouldExecute in
+    fileprivate func handle(action: URLAction, in userSession: ZMUserSession) {
+        delegate?.sessionManagerShouldExecuteURLAction(action) { shouldExecute in
             if shouldExecute {
                 action.execute(in: userSession)
+            }
+        }
+    }
+
+    fileprivate func handle(action: URLAction, in unauthenticatedSessio: UnauthenticatedSession) {
+        delegate?.sessionManagerShouldExecuteURLAction(action) { shouldExecute in
+            if shouldExecute {
+                action.execute(in: unauthenticatedSessio)
             }
         }
     }
@@ -130,9 +186,9 @@ public final class SessionManagerURLHandler: NSObject {
 
 extension SessionManagerURLHandler: SessionActivationObserver {
     public func sessionManagerActivated(userSession: ZMUserSession) {
-        if let pendingOpenURL = self.pendingOpenURL {
-            self.handle(urlWithOptions: pendingOpenURL, in: userSession)
-            self.pendingOpenURL = nil
+        if let pendingAction = self.pendingAction {
+            self.handle(action: pendingAction, in: userSession)
+            self.pendingAction = nil
         }
     }
 }
