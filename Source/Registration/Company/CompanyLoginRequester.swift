@@ -18,6 +18,23 @@
 
 import Foundation
 
+extension URLQueryItem {
+    enum Key {
+        static let successRedirect = "success_redirect"
+        static let errorRedirect = "error_redirect"
+        static let cookie = "cookie"
+        static let userIdentifier = "userid"
+        static let errorLabel = "label"
+        static let validationToken = "validation_token"
+    }
+    
+    enum Template {
+        static let cookie = "$cookie"
+        static let userIdentifier = "$userid"
+        static let errorLabel = "$label"
+    }
+}
+
 public protocol CompanyLoginRequesterDelegate: class {
 
     /**
@@ -37,22 +54,7 @@ public protocol CompanyLoginRequesterDelegate: class {
 
 public class CompanyLoginRequester {
     
-    private enum Query {
-        enum Key {
-            static let successRedirect = "success_redirect"
-            static let errorRedirect = "error_redirect"
-            static let cookie = "cookie"
-            static let userIdentifier = "userid"
-            static let errorLabel = "label"
-            static let validationToken = "validation_token"
-        }
-        
-        enum Template {
-            static let cookie = "$cookie"
-            static let userIdentifier = "$userid"
-            static let errorLabel = "$label"
-        }
-    }
+    
 
     /// The URL scheme that where the callback will be provided.
     public let callbackScheme: String
@@ -91,8 +93,8 @@ public class CompanyLoginRequester {
         let validationToken = CompanyLoginVerificationToken()
 
         urlComponents.queryItems = [
-            URLQueryItem(name: Query.Key.successRedirect, value: makeSuccessCallbackString(using: validationToken)),
-            URLQueryItem(name: Query.Key.errorRedirect, value: makeFailureCallbackString(using: validationToken))
+            URLQueryItem(name: URLQueryItem.Key.successRedirect, value: makeSuccessCallbackString(using: validationToken)),
+            URLQueryItem(name: URLQueryItem.Key.errorRedirect, value: makeFailureCallbackString(using: validationToken))
         ]
 
         guard let url = urlComponents.url else {
@@ -112,9 +114,9 @@ public class CompanyLoginRequester {
         components.path = "/success"
 
         components.queryItems = [
-            URLQueryItem(name: Query.Key.cookie, value: Query.Template.cookie),
-            URLQueryItem(name: Query.Key.userIdentifier, value: Query.Template.userIdentifier),
-            URLQueryItem(name: Query.Key.validationToken, value: token.uuid.transportString())
+            URLQueryItem(name: URLQueryItem.Key.cookie, value: URLQueryItem.Template.cookie),
+            URLQueryItem(name: URLQueryItem.Key.userIdentifier, value: URLQueryItem.Template.userIdentifier),
+            URLQueryItem(name: URLQueryItem.Key.validationToken, value: token.uuid.transportString())
         ]
 
         return components.url!.absoluteString
@@ -127,8 +129,8 @@ public class CompanyLoginRequester {
         components.path = "/failure"
 
         components.queryItems = [
-            URLQueryItem(name: Query.Key.errorLabel, value: Query.Template.errorLabel),
-            URLQueryItem(name: Query.Key.validationToken, value: token.uuid.transportString())
+            URLQueryItem(name: URLQueryItem.Key.errorLabel, value: URLQueryItem.Template.errorLabel),
+            URLQueryItem(name: URLQueryItem.Key.validationToken, value: token.uuid.transportString())
         ]
 
         return components.url!.absoluteString

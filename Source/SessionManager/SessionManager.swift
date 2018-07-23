@@ -49,6 +49,7 @@ public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
 @objc
 public protocol UserSessionSource: class {
     var activeUserSession: ZMUserSession? { get }
+    var unauthenticatedSession: UnauthenticatedSession? { get }
 }
 
 @objc
@@ -843,6 +844,9 @@ extension SessionManager: ZMConversationListObserver {
     
     @objc fileprivate func applicationWillEnterForeground(_ note: Notification) {
         updateAllUnreadCounts()
+        
+        // Delete expired url scheme verification tokens
+        CompanyLoginVerificationToken.flushIfNeeded()
     }
     
     public func conversationListDidChange(_ changeInfo: ConversationListChangeInfo) {
