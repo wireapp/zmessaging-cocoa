@@ -78,7 +78,7 @@ extension URLAction {
                     return nil
                 }
 
-                guard let cookieData = HTTPCookie.zmCookieData(from: cookieString, url: url) else {
+                guard let cookieData = HTTPCookie.extractCookieData(from: cookieString, url: url) else {
                     return nil
                 }
 
@@ -191,25 +191,4 @@ extension SessionManagerURLHandler: SessionActivationObserver {
             self.pendingAction = nil
         }
     }
-}
-
-extension HTTPCookie {
-
-    static func zmCookieData(from cookieString: String, url: URL) -> Data? {
-        let cookieProperties: [HTTPCookiePropertyKey: Any] = [
-            .value : cookieString,
-            .name: "zuid",
-            .path: "/access",
-            .domain: "zinfra.io"
-        ]
-
-        let data = NSMutableData()
-        let archiver = NSKeyedArchiver(forWritingWith: data)
-        archiver.requiresSecureCoding = true
-        archiver.encode([cookieProperties], forKey: "properties")
-        archiver.finishEncoding()
-        let key = UserDefaults.cookiesKey()
-        return data.zmEncryptPrefixingIV(withKey: key).base64EncodedData()
-    }
-
 }
