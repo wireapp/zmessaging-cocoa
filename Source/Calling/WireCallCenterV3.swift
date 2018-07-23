@@ -380,8 +380,6 @@ internal func closedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8
     let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
     callCenter.uiMOC?.performGroupedBlock {
         let time = (messageTime == 0) ? nil : Date(timeIntervalSince1970: TimeInterval(messageTime))
-        
-        
         callCenter.handleCallState(callState: .terminating(reason: CallClosedReason(wcall_reason: reason)), conversationId: convID, userId: userID, messageTime: time)
     }
 }
@@ -752,10 +750,11 @@ public struct CallEvent {
                 return [AVSCallMember(userId: user.remoteIdentifier)]
             }()
 
+            let previousCallState = callSnapshots[conversationId]?.callState
             createSnapshot(callState: callState, members: members, callStarter: selfUserId, video: video, for: conversationId)
             
             if let context = uiMOC {
-                WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime: nil, previousCallState: nil).post(in: context.notificationContext)
+                WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime: nil, previousCallState: previousCallState).post(in: context.notificationContext)
             }
         }
         return started
@@ -930,7 +929,7 @@ extension WireCallCenterV3 : ZMConversationObserver {
             callSnapshots[conversationId] = previousSnapshot.update(with: updatedCallState)
             
             if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId) {
-                WireCallCenterCallStateNotification(context: context, callState: updatedCallState, conversationId: conversationId, callerId: callerId, messageTime: Date(), previousCallState: nil).post(in: context.notificationContext)
+                WireCallCenterCallStateNotification(context: context, callState: updatedCallState, conversationId: conversationId, callerId: callerId, messageTime: Date(), previousCallState: previousSnapshot.callState).post(in: context.notificationContext)
             }
         }
     }
