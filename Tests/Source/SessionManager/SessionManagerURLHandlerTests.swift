@@ -23,6 +23,7 @@ import XCTest
 
 class UserSessionSourceDummy: UserSessionSource {
     weak var activeUserSession: ZMUserSession? = nil
+    weak var unauthenticatedSession: UnauthenticatedSession? = nil
 }
 
 class OpenerDelegate: SessionManagerURLHandlerDelegate {

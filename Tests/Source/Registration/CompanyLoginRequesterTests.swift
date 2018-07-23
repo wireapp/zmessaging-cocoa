@@ -30,7 +30,7 @@ class CompanyLoginRequesterTests: XCTestCase {
         var url: URL?
         let callbackExpectation = expectation(description: "Requester calls delegate to handle URL")
 
-        let expectedURL = URL(string: "https://localhost/sso/initiate-login/\(userID)?success_redirect=wire://login/success?cookie=$cookie&error_redirect=wire://login/failure?label=$label")!
+        let expectedURL = URL(string: "https://localhost/sso/initiate-login/\(userID)?success_redirect=wire://login/success?cookie=$cookie&user_id=$userid&error_redirect=wire://login/failure?label=$label")!
 
         let delegate = MockCompanyLoginRequesterDelegate {
             url = $0
@@ -52,7 +52,7 @@ class CompanyLoginRequesterTests: XCTestCase {
             return
         }
 
-        XCTAssertEqual(components.query(for: "success_redirect"), "wire://login/success?cookie=$cookie")
+        XCTAssertEqual(components.query(for: "success_redirect"), "wire://login/success?cookie=$cookie&user_id=$userid")
         XCTAssertEqual(components.query(for: "error_redirect"), "wire://login/failure?label=$label")
         XCTAssertEqual(validationURL.absoluteString.removingPercentEncoding, expectedURL.absoluteString)
     }
