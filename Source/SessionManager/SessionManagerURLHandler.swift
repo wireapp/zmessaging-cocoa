@@ -18,23 +18,6 @@
 
 import Foundation
 
-private struct URLWithOptions {
-    private static let wireURLScheme = "wire"
-
-    typealias Options = [UIApplicationOpenURLOptionsKey: AnyObject]
-    let url: URL
-    let options: Options
-    
-    init?(url: URL, options: Options) {
-        guard url.scheme == URLWithOptions.wireURLScheme else {
-            return nil
-        }
-        
-        self.url = url
-        self.options = options
-    }
-}
-
 extension UserInfo: Equatable {
     public static func == (lhs: UserInfo, rhs: UserInfo) -> Bool {
         return (lhs.identifier == rhs.identifier) && (lhs.cookieData == rhs.cookieData)
@@ -95,13 +78,10 @@ extension URLAction {
                     return nil
                 }
 
-                let fakeResp = [
-                    "Set-Cookie": "zuid=\(cookieString); Path=/access; Expires=Fri, 14-Sep-2018 12:45:35 GMT; Domain=zinfra.io; HttpOnly; Secure"
-                ]
+                guard let cookieData = HTTPCookie.zmCookieData(from: cookieString, url: url) else {
+                    return nil
+                }
 
-                let cookie = HTTPCookie.cookies(withResponseHeaderFields: <#T##[String : String]#>, for: <#T##URL#>)
-
-                let cookieData = Data(cookieString.utf8)
                 let userInfo = UserInfo(identifier: userID, cookieData: cookieData)
                 self = .companyLoginSuccess(userInfo: userInfo)
 
@@ -133,6 +113,7 @@ extension URLAction {
     func execute(in unauthenticatedSession: UnauthenticatedSession) {
         switch self {
         case .companyLoginSuccess(let userInfo):
+            unauthenticatedSession.authenticationStatus.notifyAuthenticationDidSucceed()
             unauthenticatedSession.upgradeToAuthenticatedSession(with: userInfo)
 
         case .companyLoginFailure:
@@ -160,11 +141,7 @@ public final class SessionManagerURLHandler: NSObject {
     
     @objc @discardableResult
     public func openURL(_ url: URL, options: [UIApplicationOpenURLOptionsKey: AnyObject]) -> Bool {
-        guard let urlWithOptions = URLWithOptions(url: url, options: options) else {
-            return false
-        }
-
-        guard let action = URLAction(url: urlWithOptions.url) else {
+        guard let action = URLAction(url: url) else {
             return false
         }
 
@@ -216,28 +193,23 @@ extension SessionManagerURLHandler: SessionActivationObserver {
     }
 }
 
-/*
 extension HTTPCookie {
 
-    static func zmCookieData(from cookieString: String) {
-        let fakeResponseHeaders = [
-            "Set-Cookie": "zuid=\(cookieString); Path=/access; Expires=Fri, 14-Sep-2018 12:45:35 GMT; Domain=zinfra.io; HttpOnly; Secure"
+    static func zmCookieData(from cookieString: String, url: URL) -> Data? {
+        let cookieProperties: [HTTPCookiePropertyKey: Any] = [
+            .value : cookieString,
+            .name: "zuid",
+            .path: "/access",
+            .domain: "zinfra.io"
         ]
 
-        let cookies = HTTPCookie.cookies(withResponseHeaderFields: fakeResponseHeaders, for: response.url!)
-        guard !cookies.isEmpty else { return nil }
-        let properties = cookies.compactMap { $0.properties }
-        guard (properties.first?[.name] as? String) == CookieKey.zetaId.rawValue else { return nil }
         let data = NSMutableData()
         let archiver = NSKeyedArchiver(forWritingWith: data)
         archiver.requiresSecureCoding = true
-        archiver.encode(properties, forKey: CookieKey.properties.rawValue)
+        archiver.encode([cookieProperties], forKey: "properties")
         archiver.finishEncoding()
         let key = UserDefaults.cookiesKey()
         return data.zmEncryptPrefixingIV(withKey: key).base64EncodedData()
-
-
     }
 
 }
-*/

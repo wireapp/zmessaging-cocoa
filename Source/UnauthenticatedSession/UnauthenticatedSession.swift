@@ -123,7 +123,6 @@ extension UnauthenticatedSession: UserInfoParser {
     }
 
     public func upgradeToAuthenticatedSession(with userInfo: UserInfo) {
-
         let account = Account(userName: "", userIdentifier: userInfo.identifier)
         let cookieStorage = account.cookieStorage()
         cookieStorage.authenticationCookieData = userInfo.cookieData
