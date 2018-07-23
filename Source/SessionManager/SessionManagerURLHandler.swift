@@ -167,14 +167,7 @@ public final class SessionManagerURLHandler: NSObject {
         return true
     }
 
-<<<<<<< HEAD
     fileprivate func handle(action: URLAction, in userSession: ZMUserSession) {
-=======
-    fileprivate func handle(urlWithOptions: URLWithOptions, in userSession: ZMUserSession) {
-        guard let action = URLAction(url: urlWithOptions.url) else {
-            return
-        }
->>>>>>> develop
         delegate?.sessionManagerShouldExecuteURLAction(action) { shouldExecute in
             if shouldExecute {
                 action.execute(in: userSession)
