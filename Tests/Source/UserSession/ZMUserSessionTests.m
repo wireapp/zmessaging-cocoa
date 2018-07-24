@@ -22,7 +22,6 @@
 @import WireSyncEngine;
 
 #include "ZMUserSessionTestsBase.h"
-#import "ZMPushToken.h"
 #import "UILocalNotification+UserInfo.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
@@ -388,50 +387,6 @@
 }
 
 @end
-
-
-@implementation ZMUserSessionTests (PushToken)
-
-- (void)testThatItSetsThePushToken;
-{
-    // given
-    uint8_t const tokenData[] = {
-        0xc5, 0xe2, 0x4e, 0x41, 0xe4, 0xd4, 0x32, 0x90, 0x37, 0x92, 0x84, 0x49, 0x34, 0x94, 0x87, 0x54, 0x7e, 0xf1, 0x4f, 0x16, 0x2c, 0x77, 0xae, 0xe3, 0xaa, 0x8e, 0x12, 0xa3, 0x9c, 0x8d, 0xb1, 0xd5,
-    };
-    NSData * const deviceToken = [NSData dataWithBytes:tokenData length:sizeof(tokenData)];
-    XCTAssertNil(self.sut.managedObjectContext.pushKitToken);
-    [[self.transportSession stub] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
-    
-    // when
-    [self.sut setPushKitToken:deviceToken];
-    ZMPushToken *pushToken = self.sut.managedObjectContext.pushKitToken;
-    
-    // then
-    XCTAssertNotNil(pushToken);
-    XCTAssertEqualObjects(pushToken.deviceToken, deviceToken);
-    XCTAssertNotNil(pushToken.appIdentifier);
-    XCTAssertTrue([pushToken.appIdentifier hasPrefix:@"com.wire."]);
-    XCTAssertFalse(pushToken.isRegistered);
-}
-
-- (void)testThatItResetsThePushTokensWhenNotificationIsFired
-{
-    // given
-    id partialSessionMock = [OCMockObject partialMockForObject:self.sut];
-    
-    // expect
-    [[partialSessionMock expect] resetPushTokens];
-    
-    // when
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMUserSessionResetPushTokensNotificationName object:nil];
-    
-    // then
-    [partialSessionMock verify];
-    [partialSessionMock stopMocking];
-}
-
-@end
-
 
 @implementation ZMUserSessionTests (NetworkState)
 

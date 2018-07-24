@@ -110,15 +110,15 @@
 "push.notification.member.leave.self.nousername" = "Você foram removido";
 
 // EPHEMERAL MESSAGE TIMER UPDATE
-"push.notification.message-timer.update" = "%@ set the message timer to %@";
-"push.notification.message-timer.update.nousername" = "Someone set the message timer to %@";
-"push.notification.message-timer.update.noconversationname" = "%@ set the message timer to %@ in a conversation";
-"push.notification.message-timer.update.nousername.noconversationname" = "Someone set the message timer to %@ in a conversation";
+"push.notification.message-timer.update" = "%@ definiu o tempo da mensagem para %@";
+"push.notification.message-timer.update.nousername" = "Alguém definiu o tempo da mensagem para %@";
+"push.notification.message-timer.update.noconversationname" = "%@ definiu o tempo da mensagem para %@ em uma conversa";
+"push.notification.message-timer.update.nousername.noconversationname" = "Alguém definiu o tempo da mensagem para %@ em uma conversa";
 
-"push.notification.message-timer.off" = "%@ turned off the message timer";
-"push.notification.message-timer.off.nousername" = "Someone turned off the message timer";
-"push.notification.message-timer.off.noconversationname" = "%@ turned off the message timer in a conversation";
-"push.notification.message-timer.off.nousername.noconversationname" = "Someone turned off the message timer in a conversation";
+"push.notification.message-timer.off" = "%@ desligou o tempo da mensagem";
+"push.notification.message-timer.off.nousername" = "Alguém desligou o tempo da mensagem";
+"push.notification.message-timer.off.noconversationname" = "%@ desligou o tempo da mensagem em uma conversa";
+"push.notification.message-timer.off.nousername.noconversationname" = "Alguém desligou o tempo da mensagem em uma conversa";
 
 // VIDEO CALLS
 "push.notification.call.started.video.oneonone" = "está te chamando em vídeo";

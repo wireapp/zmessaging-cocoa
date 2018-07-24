@@ -32,7 +32,6 @@
 #import "ZMCredentials.h"
 #import <libkern/OSAtomic.h>
 #import "ZMAuthenticationStatus.h"
-#import "ZMPushToken.h"
 #import "ZMBlacklistVerificator.h"
 #import "NSURL+LaunchOptions.h"
 #import "WireSyncEngineLogs.h"
@@ -243,7 +242,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.commonContactsCache = [[NSCache alloc] init];
         self.commonContactsCache.name = @"ZMUserSession commonContactsCache";
         
-        [self registerForResetPushTokensNotification];
+        [self registerForPushTokenResetNotification];
         [self registerForBackgroundNotifications];
         [self registerForRequestToOpenConversationNotification];
         
@@ -350,11 +349,6 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.application registerObserverForWillEnterForeground:self selector:@selector(applicationWillEnterForeground:)];
 }
 
-- (void)registerForResetPushTokensNotification
-{
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetPushTokens) name:ZMUserSessionResetPushTokensNotificationName object:nil];
-}
-
 - (NSManagedObjectContext *)managedObjectContext
 {
     return self.storeProvider.contextDirectory.uiContext;
@@ -423,24 +417,6 @@ ZM_EMPTY_ASSERTING_INIT()
     }];
 }
 
-- (void)resetPushTokens
-{
-    // instead of relying on the tokens we have cached locally we should always ask the OS about the latest tokens
-    [self.managedObjectContext performGroupedBlock:^{
-        
-        // (1) Remove stored token so that we always attempt to upload current token to BE
-        self.managedObjectContext.pushKitToken = nil;
-        [self.sessionManager updatePushTokenFor:self];
-        
-        // (2) reset the preKeys for encrypting and decrypting
-        [UserClient resetSignalingKeysInContext:self.managedObjectContext];
-
-        if (![self.managedObjectContext forceSaveOrRollback]) {
-            ZMLogError(@"Failed to save push token after refresh");
-        }
-    }];
-}
-
 - (void)initiateUserDeletion
 {
     [self.syncManagedObjectContext performGroupedBlock:^{
@@ -503,32 +479,6 @@ ZM_EMPTY_ASSERTING_INIT()
 
 
 @implementation ZMUserSession (PushToken)
-
-- (void)setPushKitToken:(NSData *)deviceToken;
-{
-    NSString *transportType = [self.apnsEnvironment transportTypeForTokenType:ZMAPNSTypeVoIP];
-    NSString *appIdentifier = self.apnsEnvironment.appIdentifier;
-    ZMPushToken *token = nil;
-    if (transportType != nil && deviceToken != nil && appIdentifier != nil) {
-        token = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:appIdentifier transportType:transportType isRegistered:NO];
-    }
-    if ((self.managedObjectContext.pushKitToken != token) && ! [self.managedObjectContext.pushKitToken isEqual:token]) {
-        self.managedObjectContext.pushKitToken = token;
-        if (![self.managedObjectContext forceSaveOrRollback]) {
-            ZMLogError(@"Failed to save pushKit token");
-        }
-    }
-}
-
-- (void)deletePushKitToken
-{
-    if(self.managedObjectContext.pushKitToken) {
-        self.managedObjectContext.pushKitToken = [self.managedObjectContext.pushKitToken forDeletionMarkedCopy];
-        if (![self.managedObjectContext forceSaveOrRollback]) {
-            ZMLogError(@"Failed to save pushKit token marked for deletion");
-        }
-    }
-}
 
 - (BOOL)isAuthenticated
 {
