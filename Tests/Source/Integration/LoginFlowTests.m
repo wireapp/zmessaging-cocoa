@@ -394,7 +394,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    NSArray *registeredTokens = self.mockTransportSession.pushTokens;
+    NSArray *registeredTokens = [self.mockTransportSession.pushTokens allValues];
     XCTAssertEqual(registeredTokens.count, 1u);
     NSDictionary *registeredToken = registeredTokens.firstObject;
     XCTAssertEqualObjects(registeredToken[@"token"], deviceTokenAsHex);

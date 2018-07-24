@@ -19,12 +19,12 @@
 import UIKit
 
 /**
- * An object that detects shared identity session request wihtin the pasteboard.
+ * An object that detects company login request wihtin the pasteboard.
  *
  * A session request is a string formatted as `wire-[UUID]`.
  */
 
-public final class SharedIdentitySessionRequestDetector: NSObject {
+public final class CompanyLoginRequestDetector: NSObject {
 
     /**
      * A struct that describes the result of a login code detection operation..
@@ -42,7 +42,7 @@ public final class SharedIdentitySessionRequestDetector: NSObject {
     // MARK: - Initialization
 
     /// Returns the detector that uses the system pasteboard to detect session requests.
-    public static let shared = SharedIdentitySessionRequestDetector(pasteboard: UIPasteboard.general)
+    public static let shared = CompanyLoginRequestDetector(pasteboard: UIPasteboard.general)
 
     /// Creates a detector that uses the specified pasteboard to detect session requests.
     public init(pasteboard: Pasteboard) {
@@ -68,7 +68,7 @@ public final class SharedIdentitySessionRequestDetector: NSObject {
 
         processQueue.async { [pasteboard, previousChangeCount] in
             guard let text = pasteboard.text else { return complete(nil) }
-            guard let code = SharedIdentitySessionRequestDetector.requestCode(in: text) else { return complete(nil) }
+            guard let code = CompanyLoginRequestDetector.requestCode(in: text) else { return complete(nil) }
 
             let validText = "wire-" + code.uuidString
             let isNew = pasteboard.changeCount != previousChangeCount
