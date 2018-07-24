@@ -58,6 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) ManagedObjectContextChangeObserver *likeMesssageObserver;
 @property (nonatomic, nonnull)  UserExpirationObserver *userExpirationObserver;
 @property (nonatomic, readonly) AVSMediaManager *mediaManager;
+@property (nonatomic, readonly) ZMAPNSEnvironment *apnsEnvironment;
 
 - (void)tearDown;
 

@@ -67,7 +67,7 @@ final class CallSystemMessageGenerator: NSObject {
                     isRelevant = false
                 }
                 
-                systemMessage = conversation.appendMissedCallMessage(fromUser: caller, at: timestamp ?? Date(), isRelevant: isRelevant)
+                systemMessage = conversation.appendMissedCallMessage(fromUser: caller, at: timestamp ?? Date(), relevantForStatus: isRelevant)
             }
         }
         

@@ -34,7 +34,6 @@
 #import "ZMSyncStrategy.h"
 #import "ZMOperationLoop.h"
 #import "ZMCallFlowRequestStrategy.h"
-#import "ZMPushToken.h"
 
 #import "ZMCredentials.h"
 #import "NSURL+LaunchOptions.h"

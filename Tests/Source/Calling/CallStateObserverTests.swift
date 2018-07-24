@@ -103,7 +103,7 @@ class CallStateObserverTests : MessagingTest {
         // then
         if let message =  conversationUI.messages.lastObject as? ZMSystemMessage {
             XCTAssertEqual(message.systemMessageType, .missedCall)
-            XCTAssertFalse(message.isRelevant)
+            XCTAssertFalse(message.relevantForConversationStatus)
             XCTAssertEqual(message.sender, senderUI)
         } else {
             XCTFail()
@@ -121,7 +121,7 @@ class CallStateObserverTests : MessagingTest {
             // then
             if let message = self.conversationUI.messages.lastObject as? ZMSystemMessage {
                 XCTAssertEqual(message.systemMessageType, .missedCall)
-                XCTAssertTrue(message.isRelevant)
+                XCTAssertTrue(message.relevantForConversationStatus)
                 XCTAssertEqual(message.sender, self.senderUI)
             } else {
                 XCTFail()
@@ -163,7 +163,7 @@ class CallStateObserverTests : MessagingTest {
         // then
         if let message =  conversationUI.messages.lastObject as? ZMSystemMessage {
             XCTAssertEqual(message.systemMessageType, .missedCall)
-            XCTAssertTrue(message.isRelevant)
+            XCTAssertTrue(message.relevantForConversationStatus)
             XCTAssertEqual(message.sender, senderUI)
         } else {
             XCTFail()
