@@ -42,6 +42,57 @@ extension Dictionary {
 }
 
 extension ZMUserSession {
+
+    static let resetPushTokenNotificationName = Notification.Name(rawValue: "ZMUserSessionResetPushTokensNotification")
+
+    @objc public func registerForPushTokenResetNotification() {
+        NotificationCenter.default.addObserver(self, selector: #selector(ZMUserSession.resetPushToken), name: ZMUserSession.resetPushTokenNotificationName, object: nil)
+    }
+
+    func setPushKitToken(_ data: Data) {
+        guard let transportType = self.apnsEnvironment.transportType(forTokenType: .voIP) else { return }
+        guard let appIdentifier = self.apnsEnvironment.appIdentifier else { return }
+
+        let syncMOC = managedObjectContext.zm_sync!
+        syncMOC.performGroupedBlock {
+            guard let selfClient = ZMUser.selfUser(in: syncMOC).selfClient() else { return }
+            if selfClient.pushToken?.deviceToken != data {
+                selfClient.pushToken = PushToken(deviceToken: data, appIdentifier: appIdentifier, transportType: transportType, isRegistered: false)
+                syncMOC.saveOrRollback()
+            }
+        }
+    }
+
+    func deletePushKitToken() {
+        let syncMOC = managedObjectContext.zm_sync!
+        syncMOC.performGroupedBlock {
+            guard let selfClient = ZMUser.selfUser(in: syncMOC).selfClient() else { return }
+            guard let pushToken = selfClient.pushToken else { return }
+            selfClient.pushToken = pushToken.markToDelete()
+            syncMOC.saveOrRollback()
+        }
+    }
+
+    @objc func resetPushToken() {
+        managedObjectContext.performGroupedBlock {
+            self.sessionManager.updatePushToken(for: self)
+        }
+    }
+
+    /// Will compare the push token registered on backend with the local one
+    /// and re-register it if they don't match
+    public func validatePushToken() {
+        let syncMOC = managedObjectContext.zm_sync!
+        syncMOC.performGroupedBlock {
+            guard let selfClient = ZMUser.selfUser(in: syncMOC).selfClient() else { return }
+            guard let pushToken = selfClient.pushToken else { return }
+            selfClient.pushToken = pushToken.markToDownload()
+            syncMOC.saveOrRollback()
+        }
+    }
+}
+
+extension ZMUserSession {
     
     @objc public func receivedPushNotification(with payload: [AnyHashable: Any], completion: @escaping () -> Void) {
         guard let syncMoc = self.syncManagedObjectContext else {

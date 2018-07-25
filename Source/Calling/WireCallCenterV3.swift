@@ -663,6 +663,8 @@ public struct CallEvent {
         
         let callerId = initiatorForCall(conversationId: conversationId)
         
+        let previousCallState = callSnapshots[conversationId]?.callState
+        
         if case .terminating = callState {
             clearSnapshot(conversationId: conversationId)
         } else if let previousSnapshot = callSnapshots[conversationId] {
@@ -670,7 +672,7 @@ public struct CallEvent {
         }
         
         if let context = uiMOC, let callerId = callerId  {
-            WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: callerId, messageTime: messageTime).post(in: context.notificationContext)
+            WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: callerId, messageTime: messageTime, previousCallState:previousCallState).post(in: context.notificationContext)
         }
     }
     
@@ -709,12 +711,15 @@ public struct CallEvent {
         let answered = avsWrapper.answerCall(conversationId: conversationId, callType: callType, useCBR: useConstantBitRateAudio)
         if answered {
             let callState : CallState = .answered(degraded: isDegraded(conversationId: conversationId))
-            if let previousSnapshot = callSnapshots[conversationId] {
-                callSnapshots[conversationId] = previousSnapshot.update(with: callState)
+            
+            let previousSnapshot = callSnapshots[conversationId]
+            
+            if previousSnapshot != nil {
+                callSnapshots[conversationId] = previousSnapshot!.update(with: callState)
             }
             
             if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId) {
-                WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: callerId, messageTime:nil).post(in: context.notificationContext)
+                WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: callerId, messageTime:nil, previousCallState: previousSnapshot?.callState).post(in: context.notificationContext)
             }
         }
         
@@ -745,10 +750,11 @@ public struct CallEvent {
                 return [AVSCallMember(userId: user.remoteIdentifier)]
             }()
 
+            let previousCallState = callSnapshots[conversationId]?.callState
             createSnapshot(callState: callState, members: members, callStarter: selfUserId, video: video, for: conversationId)
             
             if let context = uiMOC {
-                WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime:nil).post(in: context.notificationContext)
+                WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime: nil, previousCallState: previousCallState).post(in: context.notificationContext)
             }
         }
         return started
@@ -923,7 +929,7 @@ extension WireCallCenterV3 : ZMConversationObserver {
             callSnapshots[conversationId] = previousSnapshot.update(with: updatedCallState)
             
             if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId) {
-                WireCallCenterCallStateNotification(context: context, callState: updatedCallState, conversationId: conversationId, callerId: callerId, messageTime: Date()).post(in: context.notificationContext)
+                WireCallCenterCallStateNotification(context: context, callState: updatedCallState, conversationId: conversationId, callerId: callerId, messageTime: Date(), previousCallState: previousSnapshot.callState).post(in: context.notificationContext)
             }
         }
     }

@@ -109,11 +109,13 @@
 
 - (void)setUp {
     [super setUp];
-    
-    [self createSelfClient];
-    self.fakeHotFixDirectory = [[FakeHotFixDirectory alloc] init];
-    self.sut = [[ZMHotFix alloc] initWithHotFixDirectory:self.fakeHotFixDirectory syncMOC:self.syncMOC];
-    }
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self createSelfClient];
+        self.fakeHotFixDirectory = [[FakeHotFixDirectory alloc] init];
+        self.sut = [[ZMHotFix alloc] initWithHotFixDirectory:self.fakeHotFixDirectory syncMOC:self.syncMOC];
+    }];
+}
 
 - (void)tearDown {
     self.fakeHotFixDirectory = nil;
@@ -128,65 +130,80 @@
 
 - (void)testThatItOnlyCallsMethodsForVersionsNewerThanTheLastSavedVersion
 {
-    // given
-    [self saveNewVersion];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [self saveNewVersion];
 
-    // when
-    [self.sut applyPatchesForCurrentVersion:@"1.0"];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqual(self.fakeHotFixDirectory.method1CallCount, 1u);
-    XCTAssertEqual(self.fakeHotFixDirectory.method3CallCount, 1u);
-    XCTAssertEqual(self.fakeHotFixDirectory.method2CallCount, 0u);
+        // when
+        [self.sut applyPatchesForCurrentVersion:@"1.0"];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        XCTAssertEqual(self.fakeHotFixDirectory.method1CallCount, 1u);
+        XCTAssertEqual(self.fakeHotFixDirectory.method3CallCount, 1u);
+        XCTAssertEqual(self.fakeHotFixDirectory.method2CallCount, 0u);
+    }];
 }
 
 - (void)testThatItDoesntCallAnyMethodsIfThereIsNoLastSavedVersionButUpdateLastSavedVersion
 {
-    // when
-    [self.sut applyPatchesForCurrentVersion:@"1.0"];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
-    XCTAssertEqualObjects(newVersion, @"1.0");
-    XCTAssertEqual(self.fakeHotFixDirectory.method1CallCount, 0u);
-    XCTAssertEqual(self.fakeHotFixDirectory.method2CallCount, 0u);
-    XCTAssertEqual(self.fakeHotFixDirectory.method3CallCount, 0u);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // when
+        [self.sut applyPatchesForCurrentVersion:@"1.0"];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
+        XCTAssertEqualObjects(newVersion, @"1.0");
+        XCTAssertEqual(self.fakeHotFixDirectory.method1CallCount, 0u);
+        XCTAssertEqual(self.fakeHotFixDirectory.method2CallCount, 0u);
+        XCTAssertEqual(self.fakeHotFixDirectory.method3CallCount, 0u);
+    }];
 }
 
 - (void)testThatItRunsFixesOnlyOnce
 {
-    // given
-    [self saveNewVersion];
-    
-    // when
-    [self.sut applyPatchesForCurrentVersion:@"1.0"];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqual(self.fakeHotFixDirectory.method1CallCount, 1u);
-    
-    // and when
-    [self.sut applyPatchesForCurrentVersion:@"1.0"];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqual(self.fakeHotFixDirectory.method1CallCount, 1u);
+    [self.syncMOC performGroupedBlockAndWait:^{
+
+        // given
+        [self saveNewVersion];
+
+        // when
+        [self.sut applyPatchesForCurrentVersion:@"1.0"];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+
+        // then
+        XCTAssertEqual(self.fakeHotFixDirectory.method1CallCount, 1u);
+
+        // and when
+        [self.sut applyPatchesForCurrentVersion:@"1.0"];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        XCTAssertEqual(self.fakeHotFixDirectory.method1CallCount, 1u);
+    }];
 }
 
 - (void)testThatItSetsTheCurrentVersionAfterApplyingTheFixes
 {
-    // given
-    [self saveNewVersion];
-    
-    // when
-    [self.sut applyPatchesForCurrentVersion:@"1.2"];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
-    XCTAssertEqualObjects(newVersion, @"1.2");
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [self saveNewVersion];
+
+        // when
+        [self.sut applyPatchesForCurrentVersion:@"1.2"];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
+        XCTAssertEqualObjects(newVersion, @"1.2");
+    }];
 }
 
 
@@ -199,31 +216,37 @@
 
 - (void)testThatItSendsOutResetPushTokenNotificationVersion_40_4
 {
-    // given
-    [self saveNewVersion];
     PushTokenNotificationObserver *observer = [[PushTokenNotificationObserver alloc] init];
-    
-    // when
-    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"40.4"];
-        WaitForAllGroupsToBeEmpty(0.5);
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+
+        // given
+        [self saveNewVersion];
+
+        // when
+        self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"40.4"];
+        }];
+
     }];
 
-    NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
-    XCTAssertEqualObjects(newVersion, @"40.4");
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"40.4"];
-        WaitForAllGroupsToBeEmpty(0.5);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
+        XCTAssertEqualObjects(newVersion, @"40.4");
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"40.4"];
+        }];
     }];
     
     // then
     XCTAssertEqual(observer.notificationCount, 1lu);
-    
-    // when
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"40.5"];
-        WaitForAllGroupsToBeEmpty(0.5);
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // when
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"40.5"];
+        }];
     }];
     
     // then
@@ -232,309 +255,351 @@
 
 - (void)testThatItRemovesTheSharingExtensionURLs
 {
-    // given
-    [self saveNewVersion];
     NSURL *directoryURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:[NSUserDefaults groupName]];
     NSURL *imageURL = [directoryURL URLByAppendingPathComponent:@"profile_images"];
     NSURL *conversationUrl = [directoryURL URLByAppendingPathComponent:@"conversations"];
-    
-    [[NSFileManager defaultManager] createDirectoryAtURL:imageURL withIntermediateDirectories:YES attributes:nil error:nil];
-    [[NSFileManager defaultManager] createDirectoryAtURL:conversationUrl withIntermediateDirectories:YES attributes:nil error:nil];
 
-    XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:[imageURL relativePath]]);
-    XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:[conversationUrl relativePath]]);
-    
-    // when
-    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"40.23"];
-        WaitForAllGroupsToBeEmpty(0.5);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [self saveNewVersion];
+
+        [[NSFileManager defaultManager] createDirectoryAtURL:imageURL withIntermediateDirectories:YES attributes:nil error:nil];
+        [[NSFileManager defaultManager] createDirectoryAtURL:conversationUrl withIntermediateDirectories:YES attributes:nil error:nil];
+
+        XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:[imageURL relativePath]]);
+        XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:[conversationUrl relativePath]]);
+
+        // when
+        self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"40.23"];
+        }];
+
     }];
-
-    // then
-    XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:[imageURL relativePath]]);
-    XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:[conversationUrl relativePath]]);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:[imageURL relativePath]]);
+        XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:[conversationUrl relativePath]]);
+    }];
 }
 
 - (void)testThatItCopiesTheAPSDecryptionKeysFromKeyChainToSelfClient_41_43
 {
-    // given
-    [self saveNewVersion];
-    UserClient *userClient = [self createSelfClient];
+    __block UserClient *userClient = nil;
     NSData *encryptionKey = [NSData randomEncryptionKey];
     NSData *verificationKey = [NSData randomEncryptionKey];
-    
-    [ZMKeychain setData:verificationKey forAccount:@"APSVerificationKey"];
-    [ZMKeychain setData:encryptionKey forAccount:@"APSDecryptionKey"];
 
-    // when
-    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"41.42"];
-        WaitForAllGroupsToBeEmpty(0.5);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [self saveNewVersion];
+        userClient = [self createSelfClient];
+
+        [ZMKeychain setData:verificationKey forAccount:@"APSVerificationKey"];
+        [ZMKeychain setData:encryptionKey forAccount:@"APSDecryptionKey"];
+
+        // when
+        self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"41.42"];
+        }];
     }];
-    
-    NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
-    XCTAssertEqualObjects(newVersion, @"41.42");
-    
-    // then
-    XCTAssertEqualObjects(userClient.apsVerificationKey, verificationKey);
-    XCTAssertEqualObjects(userClient.apsDecryptionKey, encryptionKey);
-    XCTAssertFalse(userClient.needsToUploadSignalingKeys);
-    XCTAssertFalse([userClient hasLocalModificationsForKey:@"needsToUploadSignalingKeys"]);
-    
-    // and when
-    // the keys change and afterwards we are updating again
-    userClient.apsDecryptionKey = [NSData randomEncryptionKey];
-    userClient.apsVerificationKey = [NSData randomEncryptionKey];
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"41.43"];
-        WaitForAllGroupsToBeEmpty(0.5);
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
+        XCTAssertEqualObjects(newVersion, @"41.42");
+
+        // then
+        XCTAssertEqualObjects(userClient.apsVerificationKey, verificationKey);
+        XCTAssertEqualObjects(userClient.apsDecryptionKey, encryptionKey);
+        XCTAssertFalse(userClient.needsToUploadSignalingKeys);
+        XCTAssertFalse([userClient hasLocalModificationsForKey:@"needsToUploadSignalingKeys"]);
+
+        // and when
+        // the keys change and afterwards we are updating again
+        userClient.apsDecryptionKey = [NSData randomEncryptionKey];
+        userClient.apsVerificationKey = [NSData randomEncryptionKey];
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"41.43"];
+        }];
     }];
-    
-    NSString *newVersion2 = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
-    XCTAssertEqualObjects(newVersion2, @"41.43");
-    
-    // then
-    // we didn't overwrite the keys witht the old ones stored in the keychain
-    XCTAssertNotEqualObjects(userClient.apsVerificationKey, verificationKey);
-    XCTAssertNotEqualObjects(userClient.apsDecryptionKey, encryptionKey);
-    
-    [ZMKeychain deleteAllKeychainItemsWithAccountName:@"APSVerificationKey"];
-    [ZMKeychain deleteAllKeychainItemsWithAccountName:@"APSDecryptionKey"];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        NSString *newVersion2 = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
+        XCTAssertEqualObjects(newVersion2, @"41.43");
+
+        // then
+        // we didn't overwrite the keys witht the old ones stored in the keychain
+        XCTAssertNotEqualObjects(userClient.apsVerificationKey, verificationKey);
+        XCTAssertNotEqualObjects(userClient.apsDecryptionKey, encryptionKey);
+
+        [ZMKeychain deleteAllKeychainItemsWithAccountName:@"APSVerificationKey"];
+        [ZMKeychain deleteAllKeychainItemsWithAccountName:@"APSDecryptionKey"];
+    }];
 }
 
 - (void)testThatItSetsNeedsToUploadSignalingKeysIfKeysNotPresentInKeyChain_41_43
 {
-    // given
-    [self saveNewVersion];
-    UserClient *userClient = [self createSelfClient];
-    XCTAssertFalse(userClient.needsToUploadSignalingKeys);
-    XCTAssertFalse([userClient hasLocalModificationsForKey:@"needsToUploadSignalingKeys"]);
-    
-    // when
-    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"41.42"];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }];
-    
-    NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
-    XCTAssertEqualObjects(newVersion, @"41.42");
-    
-    // then
-    XCTAssertTrue(userClient.needsToUploadSignalingKeys);
-    XCTAssertTrue([userClient hasLocalModificationsForKey:@"needsToUploadSignalingKeys"]);
-    
-    // and when
-    // we created and stored signaling keys and are updatign again
-    userClient.apsVerificationKey = [NSData randomEncryptionKey];
-    userClient.needsToUploadSignalingKeys = NO;
-    [userClient resetLocallyModifiedKeys:[NSSet setWithObject:@"needsToUploadSignalingKeys"]];
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"41.43"];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }];
-    
-    NSString *newVersion2 = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
-    XCTAssertEqualObjects(newVersion2, @"41.43");
+    __block UserClient *userClient = nil;
 
-    // then
-    // we are not reuploading the keys
-    XCTAssertFalse(userClient.needsToUploadSignalingKeys);
-    XCTAssertFalse([userClient hasLocalModificationsForKey:@"needsToUploadSignalingKeys"]);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [self saveNewVersion];
+        userClient = [self createSelfClient];
+        XCTAssertFalse(userClient.needsToUploadSignalingKeys);
+        XCTAssertFalse([userClient hasLocalModificationsForKey:@"needsToUploadSignalingKeys"]);
+
+        // when
+        self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"41.42"];
+        }];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
+        XCTAssertEqualObjects(newVersion, @"41.42");
+
+        // then
+        XCTAssertTrue(userClient.needsToUploadSignalingKeys);
+        XCTAssertTrue([userClient hasLocalModificationsForKey:@"needsToUploadSignalingKeys"]);
+
+        // and when
+        // we created and stored signaling keys and are updatign again
+        userClient.apsVerificationKey = [NSData randomEncryptionKey];
+        userClient.needsToUploadSignalingKeys = NO;
+        [userClient resetLocallyModifiedKeys:[NSSet setWithObject:@"needsToUploadSignalingKeys"]];
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"41.43"];
+        }];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        NSString *newVersion2 = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
+        XCTAssertEqualObjects(newVersion2, @"41.43");
+
+        // then
+        // we are not reuploading the keys
+        XCTAssertFalse(userClient.needsToUploadSignalingKeys);
+        XCTAssertFalse([userClient hasLocalModificationsForKey:@"needsToUploadSignalingKeys"]);
+    }];
 }
 
 - (void)testThatItSetsNotUploadedAssetClientMessagesToFailedAndAlsoExpiresFailedImageMessages_42_11
 {
-    // given
-    [self saveNewVersion];
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    conversation.conversationType = ZMConversationTypeOneOnOne;
-    conversation.remoteIdentifier = NSUUID.createUUID;
-    
-    ZMAssetClientMessage *uploadedImageMessage = [conversation appendOTRMessageWithImageData:self.mediumJPEGData nonce:NSUUID.createUUID];
-    [uploadedImageMessage markAsSent];
-    uploadedImageMessage.uploadState = AssetUploadStateDone;
-    uploadedImageMessage.assetId = NSUUID.createUUID;
-    XCTAssertTrue(uploadedImageMessage.delivered);
-    XCTAssertTrue(uploadedImageMessage.hasDownloadedImage);
-    XCTAssertEqual(uploadedImageMessage.uploadState, AssetUploadStateDone);
-    
-    ZMAssetClientMessage *notUploadedImageMessage = [conversation appendOTRMessageWithImageData:self.mediumJPEGData nonce:NSUUID.createUUID];
-    notUploadedImageMessage.uploadState = AssetUploadStateUploadingFullAsset;
-    XCTAssertFalse(notUploadedImageMessage.delivered);
-    XCTAssertTrue(notUploadedImageMessage.hasDownloadedImage);
-    XCTAssertEqual(notUploadedImageMessage.uploadState, AssetUploadStateUploadingFullAsset);
-    
-    ZMAssetClientMessage *uploadedFileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:self.testVideoFileURL thumbnail:self.verySmallJPEGData]];
-    [uploadedFileMessage markAsSent];
-    uploadedFileMessage.uploadState = AssetUploadStateDone;
-    uploadedFileMessage.assetId = NSUUID.createUUID;
-    XCTAssertTrue(uploadedFileMessage.delivered);
-    XCTAssertTrue(uploadedFileMessage.hasDownloadedImage);
-    XCTAssertEqual(uploadedFileMessage.uploadState, AssetUploadStateDone);
-    
-    ZMAssetClientMessage *notUploadedFileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:self.testVideoFileURL thumbnail:self.verySmallJPEGData]];
-    [notUploadedFileMessage markAsSent];
-    notUploadedFileMessage.uploadState = AssetUploadStateDone;
-    XCTAssertTrue(notUploadedFileMessage.delivered);
-    XCTAssertTrue(notUploadedFileMessage.hasDownloadedImage);
-    XCTAssertEqual(notUploadedFileMessage.uploadState, AssetUploadStateDone);
-    
-    XCTAssertTrue([self.syncMOC saveOrRollback]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // when
-    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"42.11"];
-        WaitForAllGroupsToBeEmpty(0.5);
+    __block ZMAssetClientMessage *uploadedImageMessage = nil;
+    __block ZMAssetClientMessage *notUploadedImageMessage = nil;
+    __block ZMAssetClientMessage *uploadedFileMessage = nil;
+    __block ZMAssetClientMessage *notUploadedFileMessage = nil;
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [self saveNewVersion];
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMConversationTypeOneOnOne;
+        conversation.remoteIdentifier = NSUUID.createUUID;
+
+        uploadedImageMessage = [conversation appendOTRMessageWithImageData:self.mediumJPEGData nonce:NSUUID.createUUID];
+        [uploadedImageMessage markAsSent];
+        uploadedImageMessage.uploadState = AssetUploadStateDone;
+        uploadedImageMessage.assetId = NSUUID.createUUID;
+        XCTAssertTrue(uploadedImageMessage.delivered);
+        XCTAssertTrue(uploadedImageMessage.hasDownloadedImage);
+        XCTAssertEqual(uploadedImageMessage.uploadState, AssetUploadStateDone);
+
+        notUploadedImageMessage = [conversation appendOTRMessageWithImageData:self.mediumJPEGData nonce:NSUUID.createUUID];
+        notUploadedImageMessage.uploadState = AssetUploadStateUploadingFullAsset;
+        XCTAssertFalse(notUploadedImageMessage.delivered);
+        XCTAssertTrue(notUploadedImageMessage.hasDownloadedImage);
+        XCTAssertEqual(notUploadedImageMessage.uploadState, AssetUploadStateUploadingFullAsset);
+
+        uploadedFileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:self.testVideoFileURL thumbnail:self.verySmallJPEGData]];
+        [uploadedFileMessage markAsSent];
+        uploadedFileMessage.uploadState = AssetUploadStateDone;
+        uploadedFileMessage.assetId = NSUUID.createUUID;
+        XCTAssertTrue(uploadedFileMessage.delivered);
+        XCTAssertTrue(uploadedFileMessage.hasDownloadedImage);
+        XCTAssertEqual(uploadedFileMessage.uploadState, AssetUploadStateDone);
+
+        notUploadedFileMessage = (id)[conversation appendMessageWithFileMetadata:[[ZMVideoMetadata alloc] initWithFileURL:self.testVideoFileURL thumbnail:self.verySmallJPEGData]];
+        [notUploadedFileMessage markAsSent];
+        notUploadedFileMessage.uploadState = AssetUploadStateDone;
+        XCTAssertTrue(notUploadedFileMessage.delivered);
+        XCTAssertTrue(notUploadedFileMessage.hasDownloadedImage);
+        XCTAssertEqual(notUploadedFileMessage.uploadState, AssetUploadStateDone);
+
+        XCTAssertTrue([self.syncMOC saveOrRollback]);
     }];
-    
-    NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
-    XCTAssertEqualObjects(newVersion, @"42.11");
-    
-    // then
-    XCTAssertTrue(uploadedImageMessage.delivered);
-    XCTAssertTrue(uploadedImageMessage.hasDownloadedImage);
-    XCTAssertEqual(uploadedImageMessage.uploadState, AssetUploadStateDone);
-    
-    XCTAssertFalse(notUploadedImageMessage.delivered);
-    XCTAssertTrue(notUploadedImageMessage.hasDownloadedImage);
-    XCTAssertEqual(notUploadedImageMessage.uploadState, AssetUploadStateUploadingFailed);
-    
-    XCTAssertTrue(uploadedFileMessage.delivered);
-    XCTAssertTrue(uploadedFileMessage.hasDownloadedImage);
-    XCTAssertEqual(uploadedFileMessage.uploadState, AssetUploadStateDone);
-    
-    XCTAssertTrue(notUploadedFileMessage.delivered);
-    XCTAssertTrue(notUploadedFileMessage.hasDownloadedImage);
-    XCTAssertEqual(notUploadedFileMessage.uploadState, AssetUploadStateUploadingFailed);
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // when
+        self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"42.11"];
+        }];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
+        XCTAssertEqualObjects(newVersion, @"42.11");
+
+        // then
+        XCTAssertTrue(uploadedImageMessage.delivered);
+        XCTAssertTrue(uploadedImageMessage.hasDownloadedImage);
+        XCTAssertEqual(uploadedImageMessage.uploadState, AssetUploadStateDone);
+
+        XCTAssertFalse(notUploadedImageMessage.delivered);
+        XCTAssertTrue(notUploadedImageMessage.hasDownloadedImage);
+        XCTAssertEqual(notUploadedImageMessage.uploadState, AssetUploadStateUploadingFailed);
+
+        XCTAssertTrue(uploadedFileMessage.delivered);
+        XCTAssertTrue(uploadedFileMessage.hasDownloadedImage);
+        XCTAssertEqual(uploadedFileMessage.uploadState, AssetUploadStateDone);
+
+        XCTAssertTrue(notUploadedFileMessage.delivered);
+        XCTAssertTrue(notUploadedFileMessage.hasDownloadedImage);
+        XCTAssertEqual(notUploadedFileMessage.uploadState, AssetUploadStateUploadingFailed);
+    }];
 }
 
 - (void)testThatItAddANewConversationSystemMessageForAllOneOnOneAndGroupConversation_HasHistory_44_4;
 {
-    // given
-    [self.syncMOC setPersistentStoreMetadata:@YES forKey:@"HasHistory"];
-    [self.syncMOC setPersistentStoreMetadata:@"1.0.0" forKey:@"lastSavedVersion"];
+    __block ZMConversation *oneOnOneConversation = nil;
+    __block ZMConversation *groupConversation = nil;
+    __block ZMConversation *selfConversation = nil;
+    __block ZMConversation *connectionConversation = nil;
 
-    ZMConversation *oneOnOneConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    oneOnOneConversation.conversationType = ZMConversationTypeOneOnOne;
-    
-    ZMConversation *groupConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    groupConversation.conversationType = ZMConversationTypeGroup;
-    
-    ZMConversation *selfConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    selfConversation.conversationType = ZMConversationTypeSelf;
-    
-    ZMConversation *connectionConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    connectionConversation.conversationType = ZMConversationTypeConnection;
-    XCTAssertTrue([self.syncMOC saveOrRollback]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    XCTAssertEqual(oneOnOneConversation.messages.count, 0u);
-    XCTAssertEqual(groupConversation.messages.count, 0u);
-    XCTAssertEqual(selfConversation.messages.count, 0u);
-    XCTAssertEqual(connectionConversation.messages.count, 0u);
-    
-    // when
-    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"44.4"];
-        WaitForAllGroupsToBeEmpty(0.5);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [self.syncMOC setPersistentStoreMetadata:@YES forKey:@"HasHistory"];
+        [self.syncMOC setPersistentStoreMetadata:@"1.0.0" forKey:@"lastSavedVersion"];
+
+        oneOnOneConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        oneOnOneConversation.conversationType = ZMConversationTypeOneOnOne;
+
+        groupConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        groupConversation.conversationType = ZMConversationTypeGroup;
+
+        selfConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        selfConversation.conversationType = ZMConversationTypeSelf;
+
+        connectionConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        connectionConversation.conversationType = ZMConversationTypeConnection;
+        XCTAssertTrue([self.syncMOC saveOrRollback]);
     }];
-    
-    NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
-    XCTAssertEqualObjects(newVersion, @"44.4");
-    
-    // then
-    XCTAssertEqual(oneOnOneConversation.messages.count, 0u);
-    
-    XCTAssertEqual(groupConversation.messages.count, 1u);
-    ZMSystemMessage *message = groupConversation.messages.lastObject;
-    XCTAssertEqual(message.systemMessageType, ZMSystemMessageTypeNewConversation);
-    
-    XCTAssertEqual(selfConversation.messages.count, 0u);
 
-    XCTAssertEqual(connectionConversation.messages.count, 0u);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        XCTAssertEqual(oneOnOneConversation.messages.count, 0u);
+        XCTAssertEqual(groupConversation.messages.count, 0u);
+        XCTAssertEqual(selfConversation.messages.count, 0u);
+        XCTAssertEqual(connectionConversation.messages.count, 0u);
+
+        // when
+        self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"44.4"];
+        }];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        NSString *newVersion = [self.syncMOC persistentStoreMetadataForKey:@"lastSavedVersion"];
+        XCTAssertEqualObjects(newVersion, @"44.4");
+
+        // then
+        XCTAssertEqual(oneOnOneConversation.messages.count, 0u);
+
+        XCTAssertEqual(groupConversation.messages.count, 1u);
+        ZMSystemMessage *message = groupConversation.messages.lastObject;
+        XCTAssertEqual(message.systemMessageType, ZMSystemMessageTypeNewConversation);
+
+        XCTAssertEqual(selfConversation.messages.count, 0u);
+
+        XCTAssertEqual(connectionConversation.messages.count, 0u);
+    }];
 }
 
 - (void)testThatItRemovesPendingConfirmationsForDeletedMessages_54_0_1
 {
-    // given
-    [self saveNewVersion];
-    [self.syncMOC setPersistentStoreMetadata:@YES forKey:@"HasHistory"];
-    
-    ZMConversation *oneOnOneConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    oneOnOneConversation.conversationType = ZMConversationTypeOneOnOne;
-    oneOnOneConversation.remoteIdentifier = [NSUUID UUID];
-    
-    ZMUser *otherUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    otherUser.remoteIdentifier = [NSUUID UUID];
-    ZMClientMessage* incomingMessage = (ZMClientMessage *)[oneOnOneConversation appendMessageWithText:@"Test"];
-    incomingMessage.sender = otherUser;
-    
-    ZMClientMessage* confirmation = [incomingMessage confirmReception];
-    [self.syncMOC saveOrRollback];
+    __block ZMClientMessage* confirmation = nil;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [self saveNewVersion];
+        [self.syncMOC setPersistentStoreMetadata:@YES forKey:@"HasHistory"];
 
-    XCTAssertNotNil(confirmation);
-    XCTAssert(!confirmation.isDeleted);
-    
-    [incomingMessage setVisibleInConversation:nil];
-    [incomingMessage setHiddenInConversation:oneOnOneConversation];
-    
-    // when
-    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"54.0.1"];
-        WaitForAllGroupsToBeEmpty(0.5);
+        ZMConversation *oneOnOneConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        oneOnOneConversation.conversationType = ZMConversationTypeOneOnOne;
+        oneOnOneConversation.remoteIdentifier = [NSUUID UUID];
+
+        ZMUser *otherUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        otherUser.remoteIdentifier = [NSUUID UUID];
+        ZMClientMessage* incomingMessage = (ZMClientMessage *)[oneOnOneConversation appendMessageWithText:@"Test"];
+        incomingMessage.sender = otherUser;
+
+        confirmation = [incomingMessage confirmReception];
+        [self.syncMOC saveOrRollback];
+
+        XCTAssertNotNil(confirmation);
+        XCTAssert(!confirmation.isDeleted);
+
+        [incomingMessage setVisibleInConversation:nil];
+        [incomingMessage setHiddenInConversation:oneOnOneConversation];
+
+        // when
+        self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"54.0.1"];
+        }];
     }];
-    
-    [self.syncMOC saveOrRollback];
-    
-    // then
-    XCTAssertNil(confirmation.managedObjectContext);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self.syncMOC saveOrRollback];
+    }];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        XCTAssertNil(confirmation.managedObjectContext);
+    }];
 }
 
 - (void)testThatItPurgesPinCachesInHostBundle_60_0_0
 {
-    [self saveNewVersion];
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    
     // given
+    NSFileManager *fileManager = [NSFileManager defaultManager];
     NSURL *cachesDirectory = [fileManager URLForDirectory:NSCachesDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:nil];
     NSArray *PINCaches = @[@"com.pinterest.PINDiskCache.images", @"com.pinterest.PINDiskCache.largeUserImages", @"com.pinterest.PINDiskCache.smallUserImages"];
-    
-    // Create expected PINCache folders
-    for (NSString *cache in PINCaches) {
-        NSURL *cacheURL = [cachesDirectory URLByAppendingPathComponent:cache isDirectory:YES];
-        XCTAssertTrue([fileManager createDirectoryAtURL:cacheURL withIntermediateDirectories:YES attributes:nil error:nil]);
-    }
-    
     // Create folder which shouldn't be deleted
     NSURL *directoryNotBeDeleted = [cachesDirectory URLByAppendingPathComponent:@"dontDeleteMe" isDirectory:YES];
-    XCTAssertTrue([fileManager createDirectoryAtURL:directoryNotBeDeleted withIntermediateDirectories:YES attributes:nil error:nil]);
-    
-    // when
-    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"61.0.0"];
-        WaitForAllGroupsToBeEmpty(0.5);
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self saveNewVersion];
+        // Create expected PINCache folders
+        for (NSString *cache in PINCaches) {
+            NSURL *cacheURL = [cachesDirectory URLByAppendingPathComponent:cache isDirectory:YES];
+            XCTAssertTrue([fileManager createDirectoryAtURL:cacheURL withIntermediateDirectories:YES attributes:nil error:nil]);
+        }
+
+        XCTAssertTrue([fileManager createDirectoryAtURL:directoryNotBeDeleted withIntermediateDirectories:YES attributes:nil error:nil]);
+
+        // when
+        self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"61.0.0"];
+        }];
     }];
-    
-    [self.syncMOC saveOrRollback];
-    
-    // then
-    for (NSString *cache in PINCaches) {
-        NSURL *cacheURL = [cachesDirectory URLByAppendingPathComponent:cache isDirectory:YES];
-        XCTAssertFalse([fileManager fileExistsAtPath:cacheURL.path]);
-    }
-    
-    XCTAssertTrue([fileManager fileExistsAtPath:directoryNotBeDeleted.path]);
-    
-    // clean up
-    XCTAssertTrue([fileManager removeItemAtURL:directoryNotBeDeleted error:nil]);
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self.syncMOC saveOrRollback];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        for (NSString *cache in PINCaches) {
+            NSURL *cacheURL = [cachesDirectory URLByAppendingPathComponent:cache isDirectory:YES];
+            XCTAssertFalse([fileManager fileExistsAtPath:cacheURL.path]);
+        }
+
+        XCTAssertTrue([fileManager fileExistsAtPath:directoryNotBeDeleted.path]);
+
+        // clean up
+        XCTAssertTrue([fileManager removeItemAtURL:directoryNotBeDeleted error:nil]);
+    }];
 }
 
 - (NSURL *)testVideoFileURL
@@ -548,40 +613,51 @@
 
 - (void)testThatItMarksConnectedUsersToBeUpdatedFromTheBackend_62_3_1
 {
-    // given
-    [self saveNewVersion];
-    ZMUser *connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
-    connectedUser.connection.status = ZMConnectionStatusAccepted;
-    connectedUser.needsToBeUpdatedFromBackend = NO;
+    __block ZMUser *connectedUser = nil;
+    __block ZMUser *selfUser = nil;
+    __block ZMUser *unconnectedUser = nil;
 
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-    selfUser.needsToBeUpdatedFromBackend = NO;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [self saveNewVersion];
+        connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
+        connectedUser.connection.status = ZMConnectionStatusAccepted;
+        connectedUser.needsToBeUpdatedFromBackend = NO;
 
-    ZMUser *unconnectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    unconnectedUser.needsToBeUpdatedFromBackend = NO;
+        selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        selfUser.needsToBeUpdatedFromBackend = NO;
 
-    [self.syncMOC saveOrRollback];
+        unconnectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        unconnectedUser.needsToBeUpdatedFromBackend = NO;
 
-    XCTAssertTrue(connectedUser.isConnected);
-    XCTAssertFalse(unconnectedUser.isConnected);
-    XCTAssertFalse(connectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
+        [self.syncMOC saveOrRollback];
 
-    // when
-    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"62.3.1"];
-        WaitForAllGroupsToBeEmpty(0.5);
+        XCTAssertTrue(connectedUser.isConnected);
+        XCTAssertFalse(unconnectedUser.isConnected);
+        XCTAssertFalse(connectedUser.needsToBeUpdatedFromBackend);
+        XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+        XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
     }];
 
-    [self.syncMOC saveOrRollback];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // when
+        self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"62.3.1"];
+        }];
+    }];
 
-    // then
-    XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertTrue(unconnectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self.syncMOC saveOrRollback];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
+        XCTAssertTrue(unconnectedUser.needsToBeUpdatedFromBackend);
+        XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend);
+    }];
 }
 
 - (void)testThatItMarksConnectedUsersToBeUpdatedFromTheBackend_76_0_0
@@ -589,80 +665,101 @@
     // As some users might already have updated their profile pictures using the /assets/v3 endpoint
     // before the iOS client was able to download it (and the update event was alreday processed) we need
     // to redownload all users as soon as we support downloading profile pictures using the /v3/ endpoint.
+    __block ZMUser *connectedUser = nil;
+    __block ZMUser *selfUser = nil;
+    __block ZMUser *unconnectedUser = nil;
 
-    // given
-    [self saveNewVersion];
-    ZMUser *connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
-    connectedUser.connection.status = ZMConnectionStatusAccepted;
-    connectedUser.needsToBeUpdatedFromBackend = NO;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [self saveNewVersion];
+        connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
+        connectedUser.connection.status = ZMConnectionStatusAccepted;
+        connectedUser.needsToBeUpdatedFromBackend = NO;
 
-    // We might already have uploaded a picture for the selfUser form a different client.
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-    selfUser.needsToBeUpdatedFromBackend = NO;
+        // We might already have uploaded a picture for the selfUser form a different client.
+        selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        selfUser.needsToBeUpdatedFromBackend = NO;
 
-    ZMUser *unconnectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    unconnectedUser.needsToBeUpdatedFromBackend = NO;
+        unconnectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        unconnectedUser.needsToBeUpdatedFromBackend = NO;
 
-    [self.syncMOC saveOrRollback];
+        [self.syncMOC saveOrRollback];
 
-    XCTAssertTrue(connectedUser.isConnected);
-    XCTAssertFalse(unconnectedUser.isConnected);
-    XCTAssertFalse(connectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
-
-    // when
-    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"76.0.0"];
-        WaitForAllGroupsToBeEmpty(0.5);
+        XCTAssertTrue(connectedUser.isConnected);
+        XCTAssertFalse(unconnectedUser.isConnected);
+        XCTAssertFalse(connectedUser.needsToBeUpdatedFromBackend);
+        XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+        XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
     }];
 
-    [self.syncMOC saveOrRollback];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // when
+        self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"76.0.0"];
+        }];
+    }];
 
-    // then
-    XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertTrue(unconnectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self.syncMOC saveOrRollback];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
+        XCTAssertTrue(unconnectedUser.needsToBeUpdatedFromBackend);
+        XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend);
+    }];
 }
 
 - (void)testThatItMarksConnectedUsersToBeUpdatedFromTheBackend_157_0_0
 {
-    // given
-    [self.syncMOC setPersistentStoreMetadata:@"156.0.0" forKey:@"lastSavedVersion"];
-    ZMUser *connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
-    connectedUser.connection.status = ZMConnectionStatusAccepted;
-    connectedUser.needsToBeUpdatedFromBackend = NO;
-    
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-    selfUser.needsToBeUpdatedFromBackend = NO;
-    
-    ZMUser *unconnectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-    unconnectedUser.needsToBeUpdatedFromBackend = NO;
-    
-    [self.syncMOC saveOrRollback];
-    
-    XCTAssertTrue(connectedUser.isConnected);
-    XCTAssertFalse(unconnectedUser.isConnected);
-    XCTAssertFalse(connectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
-    
-    // when
-    self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-    [self performIgnoringZMLogError:^{
-        [self.sut applyPatchesForCurrentVersion:@"157.0.0"];
-        WaitForAllGroupsToBeEmpty(0.5);
+    __block ZMUser *connectedUser = nil;
+    __block ZMUser *selfUser = nil;
+    __block ZMUser *unconnectedUser = nil;
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [self.syncMOC setPersistentStoreMetadata:@"156.0.0" forKey:@"lastSavedVersion"];
+        connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
+        connectedUser.connection.status = ZMConnectionStatusAccepted;
+        connectedUser.needsToBeUpdatedFromBackend = NO;
+
+        selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        selfUser.needsToBeUpdatedFromBackend = NO;
+
+        unconnectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        unconnectedUser.needsToBeUpdatedFromBackend = NO;
+
+        [self.syncMOC saveOrRollback];
+
+        XCTAssertTrue(connectedUser.isConnected);
+        XCTAssertFalse(unconnectedUser.isConnected);
+        XCTAssertFalse(connectedUser.needsToBeUpdatedFromBackend);
+        XCTAssertFalse(unconnectedUser.needsToBeUpdatedFromBackend);
+        XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
     }];
-    
-    [self.syncMOC saveOrRollback];
-    
-    // then
-    XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertTrue(unconnectedUser.needsToBeUpdatedFromBackend);
-    XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // when
+        self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
+        [self performIgnoringZMLogError:^{
+            [self.sut applyPatchesForCurrentVersion:@"157.0.0"];
+        }];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self.syncMOC saveOrRollback];
+    }];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
+        XCTAssertTrue(unconnectedUser.needsToBeUpdatedFromBackend);
+        XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
+    }];
 }
 
 @end

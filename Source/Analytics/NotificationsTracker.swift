@@ -30,6 +30,7 @@ import WireDataModel
         case finishedProcessing
         case processingExpired
         case abortedProcessing
+        case tokenMismatch
 
         var identifier: String {
             return "notifications_" + rawValue
@@ -64,6 +65,10 @@ import WireDataModel
     
     @objc public func registerProcessingAborted() {
         increment(attribute: .abortedProcessing)
+    }
+
+    @objc public func registerTokenMismatch() {
+        increment(attribute: .tokenMismatch)
     }
 
     private func increment(attribute: Attributes, by amount: Double = 1) {

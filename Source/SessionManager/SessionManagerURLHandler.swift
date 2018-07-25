@@ -69,17 +69,39 @@ extension URLAction {
 
             switch pathComponents[1] {
             case "success":
-                guard URLAction.validateURLSchemeRequest(with: components) else { return nil }
-                guard let cookieString = components.query(for: URLQueryItem.Key.cookie) else { return nil }
-                guard let userID = components.query(for: URLQueryItem.Key.userIdentifier).flatMap(UUID.init) else { return nil }
-                guard let cookieData = HTTPCookie.extractCookieData(from: cookieString, url: url) else { return nil }
+                guard URLAction.validateURLSchemeRequest(with: components) else {
+                    self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.tokenNotFound)
+                    return
+                }
+                
+                guard let cookieString = components.query(for: URLQueryItem.Key.cookie) else {
+                    self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.missingRequiredParameter)
+                    return
+                }
+                guard let userID = components.query(for: URLQueryItem.Key.userIdentifier).flatMap(UUID.init) else {
+                    self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.missingRequiredParameter)
+                    return
+                }
+                
+                guard let cookieData = HTTPCookie.extractCookieData(from: cookieString, url: url) else {
+                    self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.invalidCookie)
+                    return
+                }
 
                 let userInfo = UserInfo(identifier: userID, cookieData: cookieData)
                 self = .companyLoginSuccess(userInfo: userInfo)
 
             case "failure":
-                guard URLAction.validateURLSchemeRequest(with: components) else { return nil }
-                guard let label = components.query(for: URLQueryItem.Key.errorLabel) else { return nil }
+                guard URLAction.validateURLSchemeRequest(with: components) else {
+                    self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.tokenNotFound)
+                    return
+                }
+                
+                guard let label = components.query(for: URLQueryItem.Key.errorLabel) else {
+                    self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.missingRequiredParameter)
+                    return
+                }
+                
                 self = .companyLoginFailure(errorLabel: label)
             default:
                 return nil
