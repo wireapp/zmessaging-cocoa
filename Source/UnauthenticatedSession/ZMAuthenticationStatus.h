@@ -24,6 +24,7 @@
 #import "ZMUserSession+Authentication.h"
 #import "ZMClientRegistrationStatus+Internal.h"
 
+@class UserInfo;
 @class ZMCompleteRegistrationUser;
 @class ZMCredentials;
 @class ZMEmailCredentials;
@@ -86,8 +87,8 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 - (void)prepareForRequestingPhoneVerificationCodeForLogin:(NSString *)phone;
 - (void)prepareForRegistrationPhoneVerificationWithCredentials:(ZMPhoneCredentials *)phoneCredentials;
 
-
 - (void)didCompleteRegistrationSuccessfullyWithResponse:(ZMTransportResponse *)response;
+
 - (void)didFailRegistrationWithDuplicatedEmail;
 - (void)didFailRegistrationForOtherReasons:(NSError *)error;
 
@@ -101,6 +102,7 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 - (void)didFailPhoneVerificationForRegistration:(NSError *)error;
 
 - (void)loginSucceededWithResponse:(ZMTransportResponse *)response;
+- (void)loginSucceededWithUserInfo:(UserInfo *)userInfo;
 - (void)didFailLoginWithPhone:(BOOL)invalidCredentials;
 - (void)didFailLoginWithEmailBecausePendingValidation;
 - (void)didFailLoginWithEmail:(BOOL)invalidCredentials;

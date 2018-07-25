@@ -43,7 +43,9 @@ extension TeamRegistrationStrategy : ZMSingleRequestTranscoder {
 
     func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         if response.result == .success {
-            userInfoParser?.parseUserInfo(from: response)
+            response.extractUserInfo().apply {
+                userInfoParser?.upgradeToAuthenticatedSession(with: $0)
+            }
             registrationStatus.success()
         } else {
             let error = NSError.blacklistedEmail(with: response) ??

@@ -18,12 +18,6 @@
 
 import Foundation
 
-extension UserInfo: Equatable {
-    public static func == (lhs: UserInfo, rhs: UserInfo) -> Bool {
-        return (lhs.identifier == rhs.identifier) && (lhs.cookieData == rhs.cookieData)
-    }
-}
-
 public enum URLAction: Equatable {
     case connectBot(serviceUser: ServiceUserData)
     case companyLoginSuccess(userInfo: UserInfo)
@@ -132,9 +126,7 @@ extension URLAction {
     func execute(in unauthenticatedSession: UnauthenticatedSession) {
         switch self {
         case .companyLoginSuccess(let userInfo):
-            unauthenticatedSession.authenticationStatus.notifyAuthenticationDidSucceed()
-            unauthenticatedSession.upgradeToAuthenticatedSession(with: userInfo)
-
+            unauthenticatedSession.authenticationStatus.loginSucceeded(with: userInfo)
         case .companyLoginFailure:
             break // no-op (error should be handled in UI)
 
