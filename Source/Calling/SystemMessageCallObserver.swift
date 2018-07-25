@@ -28,7 +28,7 @@ final class CallSystemMessageGenerator: NSObject {
     var startDateByConversation = [ZMConversation: Date]()
     var connectDateByConversation = [ZMConversation: Date]()
 
-    public func appendSystemMessageIfNeeded(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) -> ZMSystemMessage?{
+    public func appendSystemMessageIfNeeded(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?) -> ZMSystemMessage?{
         var systemMessage : ZMSystemMessage? = nil
 
         switch callState {
@@ -39,14 +39,14 @@ final class CallSystemMessageGenerator: NSObject {
             log.info("Setting call connect date for \(conversation.displayName)")
             connectDateByConversation[conversation] = Date()
         case .terminating(reason: let reason):
-            systemMessage = appendCallEndedSystemMessage(reason: reason, conversation: conversation, caller: caller, timestamp: timestamp)
+        systemMessage = appendCallEndedSystemMessage(reason: reason, conversation: conversation, caller: caller, timestamp: timestamp, previousCallState:previousCallState)
         case .none, .unknown, .answered, .establishedDataChannel, .incoming:
             break
         }
         return systemMessage
     }
 
-    private func appendCallEndedSystemMessage(reason: CallClosedReason, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) -> ZMSystemMessage? {
+    private func appendCallEndedSystemMessage(reason: CallClosedReason, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?) -> ZMSystemMessage? {
         
         var systemMessage : ZMSystemMessage? = nil
         if let connectDate = connectDateByConversation[conversation] {
@@ -60,7 +60,14 @@ final class CallSystemMessageGenerator: NSObject {
                 systemMessage =  conversation.appendPerformedCallMessage(with: 0, caller: caller)
             } else if reason == .canceled || reason == .timeout || reason == .normal {
                 log.info("Appending missed call message: \(caller.displayName), \"\(conversation.displayName)\"")
-                systemMessage = conversation.appendMissedCallMessage(fromUser: caller, at: timestamp ?? Date())
+                
+                var isRelevant = true
+                if case .incoming(video: _, shouldRing: false, degraded: _)? = previousCallState {
+                    //Call was ignored by recipient
+                    isRelevant = false
+                }
+                
+                systemMessage = conversation.appendMissedCallMessage(fromUser: caller, at: timestamp ?? Date(), relevantForStatus: isRelevant)
             }
         }
         

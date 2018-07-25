@@ -18,6 +18,23 @@
 
 import Foundation
 
+extension URLQueryItem {
+    enum Key {
+        static let successRedirect = "success_redirect"
+        static let errorRedirect = "error_redirect"
+        static let cookie = "cookie"
+        static let userIdentifier = "userid"
+        static let errorLabel = "label"
+        static let validationToken = "validation_token"
+    }
+    
+    enum Template {
+        static let cookie = "$cookie"
+        static let userIdentifier = "$userid"
+        static let errorLabel = "$label"
+    }
+}
+
 public protocol CompanyLoginRequesterDelegate: class {
 
     /**
@@ -36,6 +53,8 @@ public protocol CompanyLoginRequesterDelegate: class {
  */
 
 public class CompanyLoginRequester {
+    
+    
 
     /// The URL scheme that where the callback will be provided.
     public let callbackScheme: String
@@ -44,11 +63,13 @@ public class CompanyLoginRequester {
     public weak var delegate: CompanyLoginRequesterDelegate?
 
     let backendHost: String
+    private let defaults: UserDefaults
 
     /// Creates a session requester that uses the specified parameters.
-    public init(backendHost: String, callbackScheme: String) {
+    public init(backendHost: String, callbackScheme: String, defaults: UserDefaults = .shared()) {
         self.backendHost = backendHost
         self.callbackScheme = callbackScheme
+        self.defaults = defaults
     }
 
     // MARK: - Identity Request
@@ -68,43 +89,48 @@ public class CompanyLoginRequester {
         urlComponents.scheme = "https"
         urlComponents.host = backendHost
         urlComponents.path = "/sso/initiate-login/\(token.uuidString)"
+        
+        let validationToken = CompanyLoginVerificationToken()
 
         urlComponents.queryItems = [
-            URLQueryItem(name: "success_redirect", value: makeSuccessCallbackString()),
-            URLQueryItem(name: "error_redirect", value: makeFailureCallbackString())
+            URLQueryItem(name: URLQueryItem.Key.successRedirect, value: makeSuccessCallbackString(using: validationToken)),
+            URLQueryItem(name: URLQueryItem.Key.errorRedirect, value: makeFailureCallbackString(using: validationToken))
         ]
 
         guard let url = urlComponents.url else {
             fatalError("Invalid company login URL. This is a developer error.")
         }
 
+        validationToken.store(in: defaults)
         delegate?.companyLoginRequester(self, didRequestIdentityValidationAtURL: url)
     }
 
     // MARK: - Utilities
 
-    private func makeSuccessCallbackString() -> String {
+    private func makeSuccessCallbackString(using token: CompanyLoginVerificationToken) -> String {
         var components = URLComponents()
         components.scheme = callbackScheme
         components.host = "login"
         components.path = "/success"
 
         components.queryItems = [
-            URLQueryItem(name: "cookie", value: "$cookie"),
-            URLQueryItem(name: "user_id", value: "$userid")
+            URLQueryItem(name: URLQueryItem.Key.cookie, value: URLQueryItem.Template.cookie),
+            URLQueryItem(name: URLQueryItem.Key.userIdentifier, value: URLQueryItem.Template.userIdentifier),
+            URLQueryItem(name: URLQueryItem.Key.validationToken, value: token.uuid.transportString())
         ]
 
         return components.url!.absoluteString
     }
 
-    private func makeFailureCallbackString() -> String {
+    private func makeFailureCallbackString(using token: CompanyLoginVerificationToken) -> String {
         var components = URLComponents()
         components.scheme = callbackScheme
         components.host = "login"
         components.path = "/failure"
 
         components.queryItems = [
-            URLQueryItem(name: "label", value: "$label")
+            URLQueryItem(name: URLQueryItem.Key.errorLabel, value: URLQueryItem.Template.errorLabel),
+            URLQueryItem(name: URLQueryItem.Key.validationToken, value: token.uuid.transportString())
         ]
 
         return components.url!.absoluteString

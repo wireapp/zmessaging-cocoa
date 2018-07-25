@@ -25,9 +25,12 @@ import Foundation
 public enum SessionManagerURLHandlerError {
 
     /// The URL is missing a required parameter.
-    static let missingRequiredParameter: String = "-2063"
+    static let missingRequiredParameter = "-2063"
 
     /// Invalid access credentials.
-    static let invalidCookie: String = "-67700"
+    static let invalidCookie = "-67700"
+    
+    /// The validation token was not found.
+    static let tokenNotFound = "-25346"
 
 }

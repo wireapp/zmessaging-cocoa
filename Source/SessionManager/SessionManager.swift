@@ -844,6 +844,9 @@ extension SessionManager: ZMConversationListObserver {
     
     @objc fileprivate func applicationWillEnterForeground(_ note: Notification) {
         updateAllUnreadCounts()
+        
+        // Delete expired url scheme verification tokens
+        CompanyLoginVerificationToken.flushIfNeeded()
     }
     
     public func conversationListDidChange(_ changeInfo: ConversationListChangeInfo) {
@@ -884,7 +887,7 @@ extension SessionManager: ZMConversationListObserver {
 
 extension SessionManager : WireCallCenterCallStateObserver {
     
-    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) {
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?) {
         guard let moc = conversation.managedObjectContext else { return }
     
         switch callState {

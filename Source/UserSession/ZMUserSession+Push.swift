@@ -43,10 +43,10 @@ extension Dictionary {
 
 extension ZMUserSession {
 
-    static let resetPushTokenNotificationName = Notification.Name(rawValue: "ZMUserSessionResetPushTokensNotification")
+    @objc public static let registerCurrentPushTokenNotificationName = Notification.Name(rawValue: "ZMUserSessionResetPushTokensNotification")
 
-    @objc public func registerForPushTokenResetNotification() {
-        NotificationCenter.default.addObserver(self, selector: #selector(ZMUserSession.resetPushToken), name: ZMUserSession.resetPushTokenNotificationName, object: nil)
+    @objc public func registerForRegisteringPushTokenNotification() {
+        NotificationCenter.default.addObserver(self, selector: #selector(ZMUserSession.registerCurrentPushToken), name: ZMUserSession.registerCurrentPushTokenNotificationName, object: nil)
     }
 
     func setPushKitToken(_ data: Data) {
@@ -73,7 +73,7 @@ extension ZMUserSession {
         }
     }
 
-    @objc func resetPushToken() {
+    @objc public func registerCurrentPushToken() {
         managedObjectContext.performGroupedBlock {
             self.sessionManager.updatePushToken(for: self)
         }
@@ -85,7 +85,11 @@ extension ZMUserSession {
         let syncMOC = managedObjectContext.zm_sync!
         syncMOC.performGroupedBlock {
             guard let selfClient = ZMUser.selfUser(in: syncMOC).selfClient() else { return }
-            guard let pushToken = selfClient.pushToken else { return }
+            guard let pushToken = selfClient.pushToken else {
+                // If we don't have any push token, then try to register it again
+                self.sessionManager.updatePushToken(for: self)
+                return
+            }
             selfClient.pushToken = pushToken.markToDownload()
             syncMOC.saveOrRollback()
         }

@@ -69,17 +69,20 @@ extension URLAction {
 
             switch pathComponents[1] {
             case "success":
-                guard let cookieString = components.query(for: "cookie") else {
+                guard URLAction.validateURLSchemeRequest(with: components) else {
+                    self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.tokenNotFound)
+                    return
+                }
+                
+                guard let cookieString = components.query(for: URLQueryItem.Key.cookie) else {
                     self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.missingRequiredParameter)
                     return
                 }
-
-                guard let userIDString = components.query(for: "user_id"),
-                    let userID = UUID(uuidString: userIDString) else {
-                        self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.missingRequiredParameter)
-                        return
+                guard let userID = components.query(for: URLQueryItem.Key.userIdentifier).flatMap(UUID.init) else {
+                    self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.missingRequiredParameter)
+                    return
                 }
-
+                
                 guard let cookieData = HTTPCookie.extractCookieData(from: cookieString, url: url) else {
                     self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.invalidCookie)
                     return
@@ -89,10 +92,16 @@ extension URLAction {
                 self = .companyLoginSuccess(userInfo: userInfo)
 
             case "failure":
-                guard let label = components.query(for: "label") else {
-                    return nil
+                guard URLAction.validateURLSchemeRequest(with: components) else {
+                    self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.tokenNotFound)
+                    return
                 }
-
+                
+                guard let label = components.query(for: URLQueryItem.Key.errorLabel) else {
+                    self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.missingRequiredParameter)
+                    return
+                }
+                
                 self = .companyLoginFailure(errorLabel: label)
             default:
                 return nil
@@ -102,6 +111,13 @@ extension URLAction {
             return nil
         }
     }
+    
+    private static func validateURLSchemeRequest(with components: URLComponents) -> Bool {
+        guard let storedToken = CompanyLoginVerificationToken.current() else { return false }
+        guard let token = components.query(for: URLQueryItem.Key.validationToken).flatMap(UUID.init) else { return false }
+        return storedToken.matches(identifier: token)
+    }
+
 
     func execute(in session: ZMUserSession) {
         switch self {
@@ -125,6 +141,9 @@ extension URLAction {
         default:
             fatalError("This action cannot be executed with an unauthenticated session.")
         }
+        
+        // Delete the url scheme verification token
+        CompanyLoginVerificationToken.flush()
     }
 }
 

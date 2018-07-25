@@ -72,7 +72,7 @@ public protocol WireCallCenterCallStateObserver : class {
      - parameter caller: user which initiated the call
      - parameter timestamp: when the call state change occured
      */
-    func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?)
+    func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?)
 }
 
 public struct WireCallCenterCallStateNotification : SelfPostingNotification {
@@ -83,6 +83,7 @@ public struct WireCallCenterCallStateNotification : SelfPostingNotification {
     let conversationId : UUID
     let callerId : UUID
     let messageTime : Date?
+    let previousCallState: CallState?
 }
 
 /// MARK - Missed call observer
@@ -178,7 +179,7 @@ extension WireCallCenterV3 {
                let caller = ZMUser(remoteID: note.callerId, createIfNeeded: false, in: context),
                let conversation = ZMConversation(remoteID: note.conversationId, createIfNeeded: false, in: context) {
                 
-                observer?.callCenterDidChange(callState: note.callState, conversation: conversation, caller: caller, timestamp: note.messageTime)
+                observer?.callCenterDidChange(callState: note.callState, conversation: conversation, caller: caller, timestamp: note.messageTime, previousCallState: note.previousCallState)
             }
         }
     }
@@ -191,7 +192,7 @@ extension WireCallCenterV3 {
                let caller = ZMUser(remoteID: note.callerId, createIfNeeded: false, in: context),
                let conversation = ZMConversation(remoteID: note.conversationId, createIfNeeded: false, in: context) {
                 
-                observer?.callCenterDidChange(callState: note.callState, conversation: conversation, caller: caller, timestamp: note.messageTime)
+                observer?.callCenterDidChange(callState: note.callState, conversation: conversation, caller: caller, timestamp: note.messageTime, previousCallState: note.previousCallState)
             }
         }
     }
@@ -210,7 +211,7 @@ extension WireCallCenterV3 {
                let caller = ZMUser(remoteID: note.callerId, createIfNeeded: false, in: context),
                    note.conversationId == conversation.remoteIdentifier {
                 
-                observer?.callCenterDidChange(callState: note.callState, conversation: conversation, caller: caller, timestamp: note.messageTime)
+                observer?.callCenterDidChange(callState: note.callState, conversation: conversation, caller: caller, timestamp: note.messageTime, previousCallState: note.previousCallState)
             }
         }
     }
