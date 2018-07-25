@@ -242,7 +242,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.commonContactsCache = [[NSCache alloc] init];
         self.commonContactsCache.name = @"ZMUserSession commonContactsCache";
         
-        [self registerForPushTokenResetNotification];
+        [self registerForRegisteringPushTokenNotification];
         [self registerForBackgroundNotifications];
         [self registerForRequestToOpenConversationNotification];
         

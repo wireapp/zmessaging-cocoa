@@ -165,7 +165,7 @@ extension PushTokenStrategy : ZMUpstreamTranscoder {
                 notificationsTracker?.registerTokenMismatch()
 
                 // Make sure UI tries to get re-register a new one
-                NotificationInContext(name: ZMUserSession.resetPushTokenNotificationName,
+                NotificationInContext(name: ZMUserSession.registerCurrentPushTokenNotificationName,
                                       context: managedObjectContext.notificationContext,
                                       object: nil,
                                       userInfo: nil).post()
