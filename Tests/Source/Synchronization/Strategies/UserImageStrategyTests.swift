@@ -55,6 +55,18 @@ class UserImageStrategyTests : MessagingTest {
         self.user1ID = nil;
         super.tearDown()
     }
+    
+    static func requestCompleteAsset(for user: ZMUser) {
+        NotificationInContext(name: .userDidRequestCompleteAsset,
+                              context: user.managedObjectContext!.notificationContext,
+                              object: user.objectID).post()
+    }
+    
+    static func requestPreviewAsset(for user: ZMUser) {
+        NotificationInContext(name: .userDidRequestPreviewAsset,
+                              context: user.managedObjectContext!.notificationContext,
+                              object: user.objectID).post()
+    }
 
 }
 
@@ -373,7 +385,7 @@ extension UserImageStrategyTests {
     func testThatItHandlesMediumImageNotBeingPresentOnTheRemote() {
         func prepareForMediumAssetRequest() {
             forwardChanges(for: user1)
-            UserImageStrategy.requestAsset(for: user1)
+            UserImageStrategyTests.requestCompleteAsset(for: user1)
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         }
         
@@ -421,7 +433,7 @@ extension UserImageStrategyTests {
     func testThatItHandlesSmallImageNotBeingPresentOnTheRemote() {
         func prepareForSmallAssetRequest() {
             forwardChanges(for: user1)
-            UserImageStrategy.requestSmallAsset(for: user1)
+            UserImageStrategyTests.requestPreviewAsset(for: user1)
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         }
         
