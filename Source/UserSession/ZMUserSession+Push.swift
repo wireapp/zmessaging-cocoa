@@ -85,7 +85,11 @@ extension ZMUserSession {
         let syncMOC = managedObjectContext.zm_sync!
         syncMOC.performGroupedBlock {
             guard let selfClient = ZMUser.selfUser(in: syncMOC).selfClient() else { return }
-            guard let pushToken = selfClient.pushToken else { return }
+            guard let pushToken = selfClient.pushToken else {
+                // If we don't have any push token, then try to register it again
+                self.sessionManager.updatePushToken(for: self)
+                return
+            }
             selfClient.pushToken = pushToken.markToDownload()
             syncMOC.saveOrRollback()
         }
