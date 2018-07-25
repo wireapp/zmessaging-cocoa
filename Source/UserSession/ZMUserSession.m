@@ -579,6 +579,9 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)didRegisterUserClient:(UserClient *)userClient
 {
     self.transportSession.pushChannel.clientID = userClient.remoteIdentifier;
+    // If during registration user allowed notifications,
+    // The push token can only be registered after client registration
+    [self registerCurrentPushToken];
 }
 
 @end
