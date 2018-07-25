@@ -322,6 +322,13 @@ extension IntegrationTest {
         
         return account
     }
+
+    func createSelfClient(_ context: NSManagedObjectContext) -> UserClient {
+        let selfClient = UserClient.insertNewObject(in: context)
+        selfClient.remoteIdentifier = nil
+        selfClient.user = ZMUser.selfUser(in: context)
+        return selfClient
+    }
 }
 
 class SessionManagerTests_Teams: IntegrationTest {
@@ -772,8 +779,10 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         
         let selfUser = ZMUser.selfUser(in: session.managedObjectContext)
         selfUser.remoteIdentifier = currentUserIdentifier
-        
         session.managedObjectContext.saveOrRollback()
+
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        _ = createSelfClient(session.managedObjectContext)
         
         session.syncManagedObjectContext.performGroupedBlock {
             let _ = ZMConversation(remoteID: self.currentUserIdentifier, createIfNeeded: true, in: session.syncManagedObjectContext)
@@ -890,77 +899,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         // CLEANUP
         self.sessionManager!.tearDownAllBackgroundSessions()
     }
-    
-    func testThatItStoresThePushToken() {
-        // GIVEN
-        let session = setupSession()
-        let token = Data(bytes: [0xba, 0xdf, 0x00, 0xd0])
-
-        // WHEN
-        pushRegistry.updatePushToken(token)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // THEN
-        XCTAssertEqual(session.managedObjectContext.pushKitToken?.deviceToken, token)
-        
-        // CLEANUP
-        self.sessionManager!.tearDownAllBackgroundSessions()
-    }
-    
-    func testThatItMarksTheTokenToDeleteWhenReceivingDidInvalidateToken() {
-        // GIVEN
-        let account = self.createAccount()
-
-        // WHEN
-
-        var session: ZMUserSession! = nil
-        self.sessionManager?.withSession(for: account, perform: { createdSession in
-            session = createdSession
-        })
-
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        session.managedObjectContext.pushKitToken = ZMPushToken(deviceToken: Data(), identifier: "foo.bar", transportType: "APNS_VOIP", isRegistered: true)
-
-        // THEN
-        XCTAssertNotNil(session.managedObjectContext.pushKitToken)
-        XCTAssertFalse(session.managedObjectContext.pushKitToken!.isMarkedForDeletion)
-
-        // AND WHEN
-        pushRegistry.invalidatePushToken()
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // THEN
-        XCTAssertTrue(session.managedObjectContext.pushKitToken!.isMarkedForDeletion)
-
-        // CLEANUP
-        self.sessionManager!.tearDownAllBackgroundSessions()
-    }
-    
-    func testThatItSetsThePushTokenWhenReceivingUpdateCredentials() {
-        // GIVEN
-        let account = self.createAccount()
-        let token = "123".data(using: .utf8)!
-
-        var session: ZMUserSession! = nil
-        self.sessionManager?.withSession(for: account, perform: { createdSession in
-            session = createdSession
-        })
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // WHEN
-        pushRegistry.updatePushToken(token)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // THEN
-        XCTAssertNotNil(session.managedObjectContext.pushKitToken)
-        XCTAssertEqual(session.managedObjectContext.pushKitToken!.deviceToken, token)
-        XCTAssertFalse(session.managedObjectContext.pushKitToken!.isMarkedForDeletion)
-
-        // CLEANUP
-        self.sessionManager!.tearDownAllBackgroundSessions()
-    }
-    
+            
     // the purpose of this test is to ensure push payloads can be processed in
     // the background as soon as the SessionManager is created
     func testThatABackgroundTaskCanBeCreatedAfterCreatingSessionManager() {

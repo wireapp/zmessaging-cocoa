@@ -96,9 +96,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 /// Enqueue some changes on the managed object context (in the block) before saving, then invokes the completion handler
 - (void)enqueueChanges:(dispatch_block_t)block completionHandler:(dispatch_block_t)completionHandler ZM_NON_NULL(1);
 
-/// Creates new signaling keys  and reregisters the keys and the push tokens with the backend
-- (void)resetPushTokens;
-
 /// Initiates the deletion process for the current signed in user
 - (void)initiateUserDeletion;
 
