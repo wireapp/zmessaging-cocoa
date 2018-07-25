@@ -70,16 +70,19 @@ extension URLAction {
             switch pathComponents[1] {
             case "success":
                 guard let cookieString = components.query(for: "cookie") else {
-                    return nil
+                    self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.missingRequiredParameter)
+                    return
                 }
 
                 guard let userIDString = components.query(for: "user_id"),
                     let userID = UUID(uuidString: userIDString) else {
-                    return nil
+                        self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.missingRequiredParameter)
+                        return
                 }
 
                 guard let cookieData = HTTPCookie.extractCookieData(from: cookieString, url: url) else {
-                    return nil
+                    self = .companyLoginFailure(errorLabel: SessionManagerURLHandlerError.invalidCookie)
+                    return
                 }
 
                 let userInfo = UserInfo(identifier: userID, cookieData: cookieData)

@@ -884,7 +884,7 @@ extension SessionManager: ZMConversationListObserver {
 
 extension SessionManager : WireCallCenterCallStateObserver {
     
-    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) {
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?) {
         guard let moc = conversation.managedObjectContext else { return }
     
         switch callState {
