@@ -245,8 +245,10 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         let response = try createResponse(cookie: cookie, userId: userId, userIdKey: "id")
         mockDelegate.existingAccounts = [Account(userName: "", userIdentifier: userId)]
 
+        
+        guard let userInfo = response.extractUserInfo() else { return XCTFail("no userinfo") }
         // when
-        let exists = sut.accountExistsLocally(from: response)
+        let exists = sut.accountExistsLocally(from: userInfo)
 
         // then
         XCTAssertTrue(exists)
@@ -334,7 +336,7 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         let response = try createResponse(cookie: cookie, userId: userId, userIdKey: userIdKey, line: line)
 
         // when
-        sut.parseUserInfo(from: response)
+        response.extractUserInfo().apply(sut.upgradeToAuthenticatedSession)
 
         // then
         XCTAssertLessThanOrEqual(mockDelegate.createdAccounts.count, 1, line: line)

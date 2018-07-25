@@ -715,7 +715,7 @@
     NSString *email = @"gfdgfgdfg@fds.sgf";
     NSString *password = @"#$4tewt343$";
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
-    self.userInfoParser.existingAccounts = [self.userInfoParser.existingAccounts arrayByAddingObject:response];
+    self.userInfoParser.existingAccounts = [self.userInfoParser.existingAccounts arrayByAddingObject:response.extractUserInfo];
 
     // when
     [self performPretendingUiMocIsSyncMoc:^{
@@ -858,8 +858,8 @@
     }];
 
     // then
-    XCTAssertEqual(self.userInfoParser.parseCallCount, 1);
-    XCTAssertEqual(self.userInfoParser.parsedResponses.firstObject, response);
+    XCTAssertEqual(self.userInfoParser.upgradeToAuthenticatedSessionCallCount, 1);
+    XCTAssertEqual(self.userInfoParser.upgradeToAuthenticatedSessionUserInfos.firstObject, response.extractUserInfo);
 }
 
 @end

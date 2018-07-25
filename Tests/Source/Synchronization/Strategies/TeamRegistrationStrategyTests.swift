@@ -88,11 +88,11 @@ class TeamRegistrationStrategyTests: MessagingTest {
         let response = ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
 
         // when
-        XCTAssertEqual(userInfoParser.parseCallCount, 0)
+        XCTAssertEqual(userInfoParser.upgradeToAuthenticatedSessionCallCount, 0)
         sut.didReceive(response, forSingleRequest: sut.registrationSync)
 
         // then
-        XCTAssertEqual(userInfoParser.parseCallCount, 1)
+        XCTAssertEqual(userInfoParser.upgradeToAuthenticatedSessionCallCount, 1)
     }
 }
 
