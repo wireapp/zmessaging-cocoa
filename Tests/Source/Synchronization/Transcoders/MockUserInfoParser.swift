@@ -40,7 +40,5 @@
         userIdentifierCalled += 1
         return userId
     }
-    
-    
 
 }

@@ -28,8 +28,6 @@ public protocol UnauthenticatedSessionDelegate: class {
 }
 
 @objc public protocol UserInfoParser: class {
-    @objc(userIdentifierFromResponse:)
-    func userIdentifier(from response: ZMTransportResponse) -> UUID?
     @objc(accountExistsLocallyFromUserInfo:)
     func accountExistsLocally(from userInfo: UserInfo) -> Bool
     @objc(upgradeToAuthenticatedSessionWithUserInfo:)
@@ -98,14 +96,6 @@ extension UnauthenticatedSession: TearDownCapable {
 // MARK: - UserInfoParser
 
 extension UnauthenticatedSession: UserInfoParser {
-
-    public func userIdentifier(from response: ZMTransportResponse) -> UUID? {
-        guard let info = response.extractUserInfo() else {
-            log.warn("Failed to parse UserInfo from response: \(response)")
-            return nil;
-        }
-        return info.identifier
-    }
 
     public func accountExistsLocally(from info: UserInfo) -> Bool {
         let account = Account(userName: "", userIdentifier: info.identifier)
