@@ -53,6 +53,7 @@ class CallStateObserverTests : MessagingTest {
             conversation.remoteIdentifier = UUID()
             conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral:sender))
             conversation.internalAddParticipants(Set<ZMUser>(arrayLiteral:receiver))
+            conversation.userDefinedName = "Main"
             
             self.conversation = conversation
             
@@ -368,6 +369,77 @@ class CallStateObserverTests : MessagingTest {
         // Then
         XCTAssert(conversationUI.isArchived)
         XCTAssert(conversationUI.isSilenced)
+    }
+    
+    func testThatSilencedUnarchivedConversationsGetUpdatedForIncomingCalls() {
+        // given
+        var otherConvo: ZMConversation?
+        let startDate = Date(timeIntervalSinceReferenceDate: 12345678)
+        
+        syncMOC.performGroupedBlock {
+            self.conversation.isSilenced = true
+            self.conversation.isArchived = false
+            self.conversation.lastServerTimeStamp = Date()
+            self.conversation.lastReadServerTimeStamp = self.conversation.lastServerTimeStamp
+            self.conversation.remoteIdentifier = .create()
+            self.conversation.lastModifiedDate = startDate
+            
+            XCTAssertTrue(self.conversation.isSilenced)
+            XCTAssertFalse(self.conversation.isArchived)
+            
+            otherConvo = ZMConversation.insertNewObject(in: self.syncMOC)
+            otherConvo?.conversationType = .oneOnOne
+            otherConvo?.remoteIdentifier = UUID()
+            otherConvo?.internalAddParticipants(Set<ZMUser>(arrayLiteral:self.sender))
+            otherConvo?.internalAddParticipants(Set<ZMUser>(arrayLiteral:self.receiver))
+            otherConvo?.userDefinedName = "Other"
+            otherConvo?.lastServerTimeStamp = Date()
+            otherConvo?.lastModifiedDate = startDate.addingTimeInterval(500)
+            
+            self.syncMOC.saveOrRollback()
+        }
+        
+        XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // Current situation:
+        // > "Other"
+        // > "Main"             (Muted)
+        
+        let list = ZMConversation.conversationsExcludingArchived(in: syncMOC)
+        
+        if let first = list.firstObject as? ZMConversation,
+            let last = list.lastObject as? ZMConversation {
+            XCTAssertEqual(first, otherConvo!)
+            XCTAssertEqual(last, self.conversation)
+        } else {
+            XCTFail()
+        }
+        
+        // when
+        self.sut.callCenterDidChange(
+            callState: .incoming(video: false, shouldRing: true, degraded: false),
+            conversation: self.conversationUI,
+            caller: self.senderUI,
+            timestamp: Date(),
+            previousCallState: nil
+        )
+        
+        XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        list.resort()
+    
+        // Then
+        
+        // Current situation:
+        // > "Main"     (JOIN)  (Muted)
+        // > "Other"
+        
+        if let first = list.firstObject as? ZMConversation,
+            let last = list.lastObject as? ZMConversation {
+            XCTAssertEqual(first, self.conversation)
+            XCTAssertEqual(last, otherConvo!)
+        } else {
+            XCTFail()
+        }
     }
 
 }
