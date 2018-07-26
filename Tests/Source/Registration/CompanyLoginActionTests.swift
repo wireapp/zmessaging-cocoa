@@ -79,7 +79,7 @@ class CompanyLoginActionTests: XCTestCase {
 
     func testThatItDecodesKnownUserLabel() {
         // GIVEN
-        let url = URL(string: "wire-sso://login/failure?label=\(CompanyLoginError.unknownIdP.rawValue)&validation_token=\(currentToken.uuid)")!
+        let url = URL(string: "wire-sso://login/failure?label=bad-username&validation_token=\(currentToken.uuid)")!
 
         // WHEN
         guard let action = URLAction(url: url, validatingIn: userDefaults) else {
@@ -93,7 +93,7 @@ class CompanyLoginActionTests: XCTestCase {
             return
         }
 
-        XCTAssertEqual(error, .unknownIdP)
+        XCTAssertEqual(error, .badUsername)
     }
 
     func testThatItFallbacksToZeroErrorCodeWhenDecodingUnknownUserLabel() {
