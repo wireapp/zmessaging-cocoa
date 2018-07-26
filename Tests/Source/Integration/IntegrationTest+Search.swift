@@ -48,7 +48,6 @@ extension IntegrationTest {
         XCTAssertEqual(searchUser?.name, name)
         
         searchUser?.connect(message: "Hola")
-//        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     @objc
