@@ -18,6 +18,17 @@
 
 import Foundation
 
+extension URL {
+    enum Host {
+        static let connect = "connect"
+        static let login = "login"
+    }
+    enum Path {
+        static let success = "success"
+        static let failure = "failure"
+    }
+}
+
 extension URLQueryItem {
     enum Key {
         static let successRedirect = "success_redirect"
@@ -110,8 +121,8 @@ public class CompanyLoginRequester {
     private func makeSuccessCallbackString(using token: CompanyLoginVerificationToken) -> String {
         var components = URLComponents()
         components.scheme = callbackScheme
-        components.host = "login"
-        components.path = "/success"
+        components.host = URL.Host.login
+        components.path = "/" + URL.Path.success
 
         components.queryItems = [
             URLQueryItem(name: URLQueryItem.Key.cookie, value: URLQueryItem.Template.cookie),
@@ -125,8 +136,8 @@ public class CompanyLoginRequester {
     private func makeFailureCallbackString(using token: CompanyLoginVerificationToken) -> String {
         var components = URLComponents()
         components.scheme = callbackScheme
-        components.host = "login"
-        components.path = "/failure"
+        components.host = URL.Host.login
+        components.path = "/" + URL.Path.failure
 
         components.queryItems = [
             URLQueryItem(name: URLQueryItem.Key.errorLabel, value: URLQueryItem.Template.errorLabel),
