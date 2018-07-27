@@ -59,6 +59,22 @@ public protocol CompanyLoginRequesterDelegate: class {
 
 }
 
+@objc public protocol RequestEnqueueType: class {
+    @objc(enqueueOneTimeRequest:) func enqueueOneTime(_ searchRequest: ZMTransportRequest)
+}
+
+@objc public protocol RequestEnqueueProvider: class {
+    var requester: RequestEnqueueType { get }
+}
+
+extension ZMTransportSession: RequestEnqueueType {}
+
+extension ZMUserSession: RequestEnqueueProvider {
+    public var requester: RequestEnqueueType {
+        return transportSession
+    }
+}
+
 /**
  * An object that validates the identity of the user and creates a session using company login.
  */
@@ -75,12 +91,46 @@ public class CompanyLoginRequester {
 
     let backendHost: String
     private let defaults: UserDefaults
+    private let requester: RequestEnqueueType
 
     /// Creates a session requester that uses the specified parameters.
-    public init(backendHost: String, callbackScheme: String, defaults: UserDefaults = .shared()) {
+    public init(
+        backendHost: String,
+        callbackScheme: String,
+        defaults: UserDefaults = .shared(),
+        enqueueProvider: RequestEnqueueProvider
+        ) {
         self.backendHost = backendHost
         self.callbackScheme = callbackScheme
         self.defaults = defaults
+        self.requester = enqueueProvider.requester
+    }
+    
+    
+    // MARK: - Token Validation
+    
+    /**
+     * Validated a company login token.
+     *
+     * This method will verify a compy login token with the backend.
+     * The requester provided by the `enqueueProvider` passed to `init` will
+     * be used to perform the request.
+     *
+     * - parameter token: The user login token.
+     * - parameter completion: The completion closure called with the validation result.
+     */
+    
+    public func validate(token: UUID, completion: @escaping (VoidResult) -> Void) {
+        guard let url = urlComponents(for: token).url else {
+            fatalError("Invalid company login URL. This is a developer error.")
+        }
+        
+        let request = ZMTransportRequest(path: url.path, method: .methodHEAD, payload: nil)
+        request.add(ZMCompletionHandler(on: DispatchGroupQueue(queue: .main)) { response in
+            completion(VoidResult(error: response.transportSessionError))
+        })
+        
+        requester.enqueueOneTime(request)
     }
 
     // MARK: - Identity Request
@@ -96,19 +146,15 @@ public class CompanyLoginRequester {
      */
 
     public func requestIdentity(for token: UUID) {
-        var urlComponents = URLComponents()
-        urlComponents.scheme = "https"
-        urlComponents.host = backendHost
-        urlComponents.path = "/sso/initiate-login/\(token.uuidString)"
-        
+        var components = urlComponents(for: token)
         let validationToken = CompanyLoginVerificationToken()
 
-        urlComponents.queryItems = [
+        components.queryItems = [
             URLQueryItem(name: URLQueryItem.Key.successRedirect, value: makeSuccessCallbackString(using: validationToken)),
             URLQueryItem(name: URLQueryItem.Key.errorRedirect, value: makeFailureCallbackString(using: validationToken))
         ]
 
-        guard let url = urlComponents.url else {
+        guard let url = components.url else {
             fatalError("Invalid company login URL. This is a developer error.")
         }
 
@@ -117,6 +163,14 @@ public class CompanyLoginRequester {
     }
 
     // MARK: - Utilities
+    
+    private func urlComponents(for token: UUID) -> URLComponents {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = backendHost
+        components.path = "/sso/initiate-login/\(token.uuidString)"
+        return components
+    }
 
     private func makeSuccessCallbackString(using token: CompanyLoginVerificationToken) -> String {
         var components = URLComponents()
