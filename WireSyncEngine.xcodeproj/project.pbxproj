@@ -278,6 +278,7 @@
 		5E0EB1F421008C1900B5DC2B /* CompanyLoginRequester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0EB1F321008C1900B5DC2B /* CompanyLoginRequester.swift */; };
 		5E0EB1F72100A14A00B5DC2B /* CompanyLoginRequesterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0EB1F52100A13200B5DC2B /* CompanyLoginRequesterTests.swift */; };
 		5E0EB1F92100A46F00B5DC2B /* MockCompanyLoginRequesterDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0EB1F82100A46F00B5DC2B /* MockCompanyLoginRequesterDelegate.swift */; };
+		5E1FD7A5210B2694003D2C3D /* NotificationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD7A4210B2694003D2C3D /* NotificationAction.swift */; };
 		5E8EE1F720FDC6B900DB1F9B /* CompanyLoginRequestDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8EE1F620FDC6B900DB1F9B /* CompanyLoginRequestDetector.swift */; };
 		5E8EE1FA20FDC7D700DB1F9B /* Pasteboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8EE1F920FDC7D700DB1F9B /* Pasteboard.swift */; };
 		5E8EE1FC20FDCCE200DB1F9B /* CompanyLoginRequestDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8EE1FB20FDCCE200DB1F9B /* CompanyLoginRequestDetectorTests.swift */; };
@@ -848,6 +849,7 @@
 		5E0EB1F321008C1900B5DC2B /* CompanyLoginRequester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginRequester.swift; sourceTree = "<group>"; };
 		5E0EB1F52100A13200B5DC2B /* CompanyLoginRequesterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginRequesterTests.swift; sourceTree = "<group>"; };
 		5E0EB1F82100A46F00B5DC2B /* MockCompanyLoginRequesterDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCompanyLoginRequesterDelegate.swift; sourceTree = "<group>"; };
+		5E1FD7A4210B2694003D2C3D /* NotificationAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationAction.swift; sourceTree = "<group>"; };
 		5E8EE1F620FDC6B900DB1F9B /* CompanyLoginRequestDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginRequestDetector.swift; sourceTree = "<group>"; };
 		5E8EE1F920FDC7D700DB1F9B /* Pasteboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pasteboard.swift; sourceTree = "<group>"; };
 		5E8EE1FB20FDCCE200DB1F9B /* CompanyLoginRequestDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginRequestDetectorTests.swift; sourceTree = "<group>"; };
@@ -2136,9 +2138,8 @@
 				F98EDCDD1D82B924001E65CB /* Helpers */,
 				F98EDCC61D82B913001E65CB /* Notification Types */,
 				54E2C1DF1E682DC400536569 /* LocalNotificationDispatcher.swift */,
-				F96C8E791D7DCCE8004B6D87 /* LocalNotificationDispatcher+Messages.swift */,
 				1659114E1DEF1F6E007FA847 /* LocalNotificationDispatcher+Calling.swift */,
-				1626344820D7DB81000D4063 /* PushNotificationCategory.swift */,
+				F96C8E791D7DCCE8004B6D87 /* LocalNotificationDispatcher+Messages.swift */,
 			);
 			name = "Push Notifications";
 			path = "Push notifications";
@@ -2147,6 +2148,8 @@
 		F98EDCC61D82B913001E65CB /* Notification Types */ = {
 			isa = PBXGroup;
 			children = (
+				5E1FD7A4210B2694003D2C3D /* NotificationAction.swift */,
+				1626344820D7DB81000D4063 /* PushNotificationCategory.swift */,
 				EEEA75F81F8A6141006D1070 /* ZMLocalNotification.swift */,
 				EEEA75F71F8A6141006D1070 /* ZMLocalNotification+Calling.swift */,
 				EEEA75F61F8A6140006D1070 /* ZMLocalNotification+Events.swift */,
@@ -2750,6 +2753,7 @@
 				544F8FF31DDCD34600D1AB04 /* UserProfileUpdateNotifications.swift in Sources */,
 				F19F1D1F1EFBC2F000275E27 /* ZMAuthenticationStatus.m in Sources */,
 				F1A94BD21F010287003083D9 /* UnauthenticatedSession+Login.swift in Sources */,
+				5E1FD7A5210B2694003D2C3D /* NotificationAction.swift in Sources */,
 				54A170651B300696001B41A5 /* ProxiedRequestStrategy.swift in Sources */,
 				160C31441E8049320012E4BC /* ApplicationStatusDirectory.swift in Sources */,
 				16FF474C1F0D54B20044C491 /* SessionManager+Logs.swift in Sources */,
@@ -3083,6 +3087,7 @@
 			buildSettings = {
 				GCC_PREFIX_HEADER = "$(SRCROOT)/Source/WireSyncEngine-iOS.pch";
 				INFOPLIST_FILE = "$(SRCROOT)/Resources/WireSyncEngine-ios-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.$(PRODUCT_NAME:rfc1034identifier)";
 				SWIFT_VERSION = 4.0;
@@ -3095,6 +3100,7 @@
 			buildSettings = {
 				GCC_PREFIX_HEADER = "$(SRCROOT)/Source/WireSyncEngine-iOS.pch";
 				INFOPLIST_FILE = "$(SRCROOT)/Resources/WireSyncEngine-ios-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.$(PRODUCT_NAME:rfc1034identifier)";
 				SWIFT_VERSION = 4.0;

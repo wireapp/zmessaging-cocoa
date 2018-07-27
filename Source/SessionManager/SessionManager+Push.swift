@@ -18,6 +18,7 @@
 
 import Foundation
 import PushKit
+import UserNotifications
 
 private let log = ZMSLog(tag: "Push")
 
@@ -32,11 +33,17 @@ protocol PushRegistry {
 
 extension PKPushRegistry: PushRegistry {}
 
-@objc extension SessionManager {
+@objc extension SessionManager: UNUserNotificationCenterDelegate {
+
+    var notificationCenter: UNUserNotificationCenter {
+        return UNUserNotificationCenter.current()
+    }
     
     @objc public func configureUserNotifications() {
         // Configure push notification categories
-        self.application.registerUserNotificationSettings(UIUserNotificationSettings(types: [.alert, .badge, .sound], categories: PushNotificationCategory.allCategories))
+        notificationCenter.setNotificationCategories(PushNotificationCategory.allCategories)
+        notificationCenter.requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { _, _ in })
+        notificationCenter.delegate = self
     }
     
     public func updatePushToken(for session: ZMUserSession) {
@@ -59,7 +66,7 @@ extension PKPushRegistry: PushRegistry {}
             }
         }
     }
-    
+
     // Must be called when the user action with @c identifier is completed on the local notification 
     // @c localNotification (see UIApplicationDelegate).
     @objc(handleActionWithIdentifier:forLocalNotification:withResponseInfo:completionHandler:application:)

@@ -161,16 +161,16 @@ extension ZMUserSession {
 
         if let concreteIdentifier = identifier {
             switch concreteIdentifier {
-            case PushNotificationCategory.CallAction.ignore.rawValue:
+            case CallNotificationAction.ignore.rawValue:
                 self.ignoreCall(with: localNotification, completionHandler: completionHandler)
                 return
-            case PushNotificationCategory.ConversationAction.mute.rawValue:
+            case ConversationNotificationAction.mute.rawValue:
                 self.muteConversation(with: localNotification, completionHandler: completionHandler)
                 return
-            case PushNotificationCategory.ConversationAction.like.rawValue:
+            case ConversationNotificationAction.like.rawValue:
                 self.likeMessage(with: localNotification, completionHandler: completionHandler)
                 return
-            case PushNotificationCategory.ConversationAction.reply.rawValue:
+            case ConversationNotificationAction.reply.rawValue:
                 self.reply(with: localNotification, message: textInput, completionHandler: completionHandler)
                 return
             default:

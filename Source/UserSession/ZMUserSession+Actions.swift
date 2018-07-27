@@ -42,7 +42,7 @@ private let zmLog = ZMSLog(tag: "Push")
     public func handleConnectionRequestCategoryNotification(_ note : ZMStoredLocalNotification) {
         guard let sender = ZMUser.fetch(withRemoteIdentifier: note.senderUUID, in: managedObjectContext) else { return }
         
-        if note.actionIdentifier == PushNotificationCategory.ConversationAction.connect.rawValue {
+        if note.actionIdentifier == ConversationNotificationAction.connect.rawValue {
             sender.accept()
             managedObjectContext.saveOrRollback()
         }
@@ -51,7 +51,7 @@ private let zmLog = ZMSLog(tag: "Push")
     }
     
     public func handleCallCategoryNotification(_ note : ZMStoredLocalNotification) {
-        guard let actionIdentifier = note.actionIdentifier, actionIdentifier == PushNotificationCategory.CallAction.accept.rawValue,
+        guard let actionIdentifier = note.actionIdentifier, actionIdentifier == CallNotificationAction.accept.rawValue,
             let callState = note.conversation?.voiceChannel?.state
         else {
             open(note.conversation, at: nil)
