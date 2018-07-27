@@ -60,7 +60,8 @@ public protocol CompanyLoginRequesterDelegate: class {
 }
 
 @objc public protocol URLSessionProtocol: class {
-    func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Swift.Void) -> URLSessionDataTask
+    @objc(dataTaskWithURL:completionHandler:)
+    func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask
 }
 
 extension URLSession: URLSessionProtocol {}
@@ -68,6 +69,19 @@ extension URLSession: URLSessionProtocol {}
 /**
  * An object that validates the identity of the user and creates a session using company login.
  */
+
+public enum ValidationError {
+    case invalidCode
+    case unknown
+    
+    init?(response: HTTPURLResponse?, error: Error?) {
+        switch (response?.statusCode, error) {
+        case (404?, _): self = .invalidCode
+        case ((400...599)?, _), (_, .some): self = .unknown
+        default: return nil
+        }
+    }
+}
 
 public class CompanyLoginRequester {
     
@@ -107,12 +121,12 @@ public class CompanyLoginRequester {
      * - parameter completion: The completion closure called with the validation result.
      */
     
-    public func validate(token: UUID, completion: @escaping (VoidResult) -> Void) {
+    public func validate(token: UUID, completion: @escaping (ValidationError?) -> Void) {
         guard let url = urlComponents(for: token).url else { fatalError("Invalid company login url.") }
     
         let request = session.dataTask(with: url) { _, response, error in
             DispatchQueue.main.async {
-                completion(VoidResult(error: error))
+                completion(ValidationError(response: response as? HTTPURLResponse, error: error))
             }
         }
         
