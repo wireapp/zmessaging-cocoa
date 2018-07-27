@@ -59,7 +59,7 @@ class CallingRequestStrategyTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         let request = sut.nextRequest()
-        XCTAssertEqual(request?.path, "/calls/config")
+        XCTAssertEqual(request?.path, "/calls/config/v2")
         
         // when
         let payload = [ "config" : true ]
