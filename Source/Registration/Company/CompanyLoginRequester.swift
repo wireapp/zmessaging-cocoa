@@ -77,7 +77,7 @@ public enum ValidationError {
     init?(response: HTTPURLResponse?, error: Error?) {
         switch (response?.statusCode, error) {
         case (404?, _): self = .invalidCode
-        case ((400...599)?, _), (_, .some): self = .unknown
+        case ((400...599)?, _), (_, .some), (.none, _): self = .unknown
         default: return nil
         }
     }
@@ -146,13 +146,8 @@ public class CompanyLoginRequester {
      */
 
     public func requestIdentity(for token: UUID) {
-        var components = urlComponents(for: token)
         let validationToken = CompanyLoginVerificationToken()
-
-        components.queryItems = [
-            URLQueryItem(name: URLQueryItem.Key.successRedirect, value: makeSuccessCallbackString(using: validationToken)),
-            URLQueryItem(name: URLQueryItem.Key.errorRedirect, value: makeFailureCallbackString(using: validationToken))
-        ]
+        let components = urlComponents(for: token, validationToken: validationToken)
 
         guard let url = components.url else {
             fatalError("Invalid company login URL. This is a developer error.")
@@ -164,15 +159,21 @@ public class CompanyLoginRequester {
 
     // MARK: - Utilities
     
-    private func urlComponents(for token: UUID) -> URLComponents {
+    private func urlComponents(for token: UUID, validationToken: CompanyLoginVerificationToken? = nil) -> URLComponents {
         var components = URLComponents()
         components.scheme = "https"
         components.host = backendHost
         components.path = "/sso/initiate-login/\(token.uuidString)"
+        
+        components.queryItems = [
+            URLQueryItem(name: URLQueryItem.Key.successRedirect, value: makeSuccessCallbackString(using: validationToken)),
+            URLQueryItem(name: URLQueryItem.Key.errorRedirect, value: makeFailureCallbackString(using: validationToken))
+        ]
+        
         return components
     }
 
-    private func makeSuccessCallbackString(using token: CompanyLoginVerificationToken) -> String {
+    private func makeSuccessCallbackString(using token: CompanyLoginVerificationToken?) -> String {
         var components = URLComponents()
         components.scheme = callbackScheme
         components.host = URL.Host.login
@@ -180,23 +181,27 @@ public class CompanyLoginRequester {
 
         components.queryItems = [
             URLQueryItem(name: URLQueryItem.Key.cookie, value: URLQueryItem.Template.cookie),
-            URLQueryItem(name: URLQueryItem.Key.userIdentifier, value: URLQueryItem.Template.userIdentifier),
-            URLQueryItem(name: URLQueryItem.Key.validationToken, value: token.uuid.transportString())
+            URLQueryItem(name: URLQueryItem.Key.userIdentifier, value: URLQueryItem.Template.userIdentifier)
         ]
+        
+        if let token = token {
+            components.queryItems?.append(.init(name: URLQueryItem.Key.validationToken, value: token.uuid.transportString()))
+        }
 
         return components.url!.absoluteString
     }
 
-    private func makeFailureCallbackString(using token: CompanyLoginVerificationToken) -> String {
+    private func makeFailureCallbackString(using token: CompanyLoginVerificationToken?) -> String {
         var components = URLComponents()
         components.scheme = callbackScheme
         components.host = URL.Host.login
         components.path = "/" + URL.Path.failure
 
-        components.queryItems = [
-            URLQueryItem(name: URLQueryItem.Key.errorLabel, value: URLQueryItem.Template.errorLabel),
-            URLQueryItem(name: URLQueryItem.Key.validationToken, value: token.uuid.transportString())
-        ]
+        components.queryItems = [URLQueryItem(name: URLQueryItem.Key.errorLabel, value: URLQueryItem.Template.errorLabel)]
+        
+        if let token = token {
+            components.queryItems?.append(.init(name: URLQueryItem.Key.validationToken, value: token.uuid.transportString()))
+        }
 
         return components.url!.absoluteString
     }
