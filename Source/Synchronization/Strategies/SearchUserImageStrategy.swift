@@ -19,260 +19,201 @@
 
 fileprivate let userPath = "/users?ids="
 
-
-fileprivate enum ResponseKey: String {
-    case pictureTag = "tag"
-    case pictures = "picture"
-    case id
-    case pictureInfo = "info"
-    case assets
-    case assetSize = "size"
-    case assetKey = "key"
-    case assetType = "type"
-}
-
-
-fileprivate enum ImageTag: String {
-    case smallProfile
-    case medium
-}
-
-fileprivate enum AssetSize: String {
-    case preview
-    case complete
-}
-
-fileprivate enum AssetType: String {
-    case image
-}
-
-
-/// Either we have assetKeys (Strings) or old style legacy UUIDs.
-enum SearchUserAssetKeys {
-    case asset(preview: String?, complete: String?)
-    case legacy(small: UUID?, medium: UUID?)
-
-    init?(payload: [String: Any]) {
-        // V3
-        if let assetsPayload = payload[ResponseKey.assets.rawValue] as? [[String : Any]], assetsPayload.count > 0 {
-            var smallKey: String?, completeKey: String?
-
-
-            for asset in assetsPayload {
-                guard let size = (asset[ResponseKey.assetSize.rawValue] as? String).flatMap(AssetSize.init),
-                    let key = asset[ResponseKey.assetKey.rawValue] as? String,
-                    let type = (asset[ResponseKey.assetType.rawValue] as? String).flatMap(AssetType.init),
-                    type == .image else { continue }
-
-                switch size {
-                case .preview: smallKey = key
-                case .complete: completeKey = key
-                }
-            }
-
-            if nil != smallKey || nil != completeKey {
-                self = .asset(preview: smallKey, complete: completeKey)
-                return
-            }
-        }
-        // Legacy
-        else if let pictures = payload[ResponseKey.pictures.rawValue] as? [[String : Any]] {
-            var smallId: UUID?, mediumId: UUID?
-
-            for pictureData in pictures {
-                guard let info = (pictureData[ResponseKey.pictureInfo.rawValue] as? [String : Any]),
-                    let tag = (info[ResponseKey.pictureTag.rawValue] as? String).flatMap(ImageTag.init),
-                    let uuid = (pictureData[ResponseKey.id.rawValue] as? String).flatMap(UUID.init) else { continue }
-
-                switch tag {
-                case .smallProfile: smallId = uuid
-                case .medium: mediumId = uuid
-                }
-            }
-
-            if smallId != nil || mediumId != nil {
-                self = .legacy(small: smallId, medium: mediumId)
-                return
-            }
-        }
-
-        return nil
-    }
-
-}
-
-
 public class SearchUserImageStrategy : AbstractRequestStrategy {
-
-    typealias MediumAssetCache = NSCache<NSUUID, SearchUserAssetObjC>
 
     fileprivate unowned var uiContext: NSManagedObjectContext
     fileprivate unowned var syncContext: NSManagedObjectContext
-    let imagesByUserIDCache: NSCache<NSUUID, NSData>
-    let mediumAssetCache: MediumAssetCache
-    let userIDsTable: SearchDirectoryUserIDTable
-    fileprivate var userIDsBeingRequested = Set<UUID>()
-    fileprivate var assetIDsBeingRequested = Set<SearchUserAndAsset>()
+    
+    fileprivate var requestedMissingFullProfiles: Set<UUID> = Set()
+    fileprivate var requestedMissingFullProfilesInProgress: Set<UUID> = Set()
+    
+    fileprivate var requestedPreviewAssets: [UUID : SearchUserAssetKeys?] = [:]
+    fileprivate var requestedCompleteAssets: [UUID : SearchUserAssetKeys?] = [:]
+    fileprivate var requestedPreviewAssetsInProgress: Set<UUID> = Set()
+    fileprivate var requestedCompleteAssetsInProgress: Set<UUID> = Set()
+    
+    
+    fileprivate var observers: [Any] = []
     
     @available (*, unavailable)
     public override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         fatalError()
     }
     
-    public convenience init(applicationStatus: ApplicationStatus, managedObjectContext: NSManagedObjectContext){
-        self.init(applicationStatus: applicationStatus,
-                  managedObjectContext: managedObjectContext,
-                  imagesByUserIDCache: nil,
-                  mediumAssetCache: nil,
-                  userIDsTable: nil)
-    }
-    
-    internal init(applicationStatus: ApplicationStatus,
-                  managedObjectContext: NSManagedObjectContext,
-                  imagesByUserIDCache : NSCache<NSUUID, NSData>?,
-                  mediumAssetCache: NSCache<NSUUID, SearchUserAssetObjC>?,
-                  userIDsTable: SearchDirectoryUserIDTable?) {
+    public init(applicationStatus: ApplicationStatus, managedObjectContext: NSManagedObjectContext) {
+        
         self.syncContext = managedObjectContext
         self.uiContext = managedObjectContext.zm_userInterface
-        self.imagesByUserIDCache = imagesByUserIDCache ?? ZMSearchUser.searchUserToSmallProfileImageCache() as! NSCache<NSUUID, NSData>
-        self.mediumAssetCache = mediumAssetCache ?? ZMSearchUser.searchUserToMediumAssetIDCache() as! MediumAssetCache
-        self.userIDsTable = userIDsTable ?? SearchDirectory.userIDsMissingProfileImage
+        
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
+        
+        observers.append(NotificationInContext.addObserver(
+            name: .searchUserDidRequestPreviewAsset,
+            context: managedObjectContext.notificationContext,
+            using: { [weak self] in
+                self?.requestAsset(with: $0)
+            })
+        )
+        
+        observers.append(NotificationInContext.addObserver(
+            name: .searchUserDidRequestCompleteAsset,
+            context: managedObjectContext.notificationContext,
+            using: { [weak self] in
+                self?.requestAsset(with: $0)
+            })
+        )
+    }
+    
+    public func requestAsset(with note: NotificationInContext) {
+        guard let searchUser = note.object as? ZMSearchUser, let userId = searchUser.remoteIdentifier  else { return }
+        
+        if !searchUser.hasDownloadedFullUserProfile {
+            requestedMissingFullProfiles.insert(userId)
+        }
+                
+        switch note.name {
+        case .searchUserDidRequestPreviewAsset:
+            requestedPreviewAssets[userId] = searchUser.assetKeys
+        case .searchUserDidRequestCompleteAsset:
+            requestedCompleteAssets[userId] = searchUser.assetKeys
+        default:
+            break
+        }
+        
+        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
     
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
-        let request = fetchUsersRequest() ?? fetchAssetRequest()
+        let request = fetchUserProfilesRequest() ?? fetchAssetRequest()
         request?.setDebugInformationTranscoder(self)
         return request
     }
     
     func fetchAssetRequest() -> ZMTransportRequest? {
-        let assetsToDownload = userIDsTable.allUsersWithAssets().subtracting(assetIDsBeingRequested)
-        guard let userAssetID = assetsToDownload.first else { return nil }
-        assetIDsBeingRequested.insert(userAssetID)
-
-        switch userAssetID.asset {
-        case .legacyId(let id):
-            let request = UserImageStrategy.requestForFetchingAsset(with: id, forUserWith: userAssetID.userId)
-            request?.add(ZMCompletionHandler(on: syncContext) { [weak self] response in
-                self?.processAsset(response: response, for: userAssetID)
-            })
+        let previewAssetRequestA = requestedPreviewAssets.lazy.filter({ !self.requestedPreviewAssetsInProgress.contains($0.key) && $0.value != nil }).first
+        let completeAssetRequestA = requestedCompleteAssets.lazy.filter({ !self.requestedCompleteAssetsInProgress.contains($0.key) && $0.value != nil}).first
+        
+        if let previewAssetRequest = previewAssetRequestA, let assetKeys = previewAssetRequest.value, let request = request(for: assetKeys, size: .preview, user: previewAssetRequest.key) {
+            requestedPreviewAssetsInProgress.insert(previewAssetRequest.key)
+            
+            request.add(ZMCompletionHandler(on: syncContext, block: { [weak self] (response) in
+                self?.processAsset(response: response, for: previewAssetRequest.key, size: .preview)
+            }))
+            
             return request
-        case .assetKey(let key):
-            let request = UserImageStrategy.requestForFetchingV3Asset(with: key)
-            request.add(ZMCompletionHandler(on: syncContext) { [weak self] response in
-                self?.processAsset(response: response, for: userAssetID)
-            })
-            return request
-        case .none: return nil
         }
+        
+        if let completeAssetRequest = completeAssetRequestA, let assetKeys = completeAssetRequest.value, let request = request(for: assetKeys, size: .complete, user: completeAssetRequest.key) {
+            requestedCompleteAssetsInProgress.insert(completeAssetRequest.key)
+            
+            request.add(ZMCompletionHandler(on: syncContext, block: { [weak self] (response) in
+                self?.processAsset(response: response, for: completeAssetRequest.key, size: .complete)
+            }))
+            
+            return request
+        }
+        
+        return nil
     }
     
-    func processAsset(response: ZMTransportResponse, for userAssetID: SearchUserAndAsset) {
-        assetIDsBeingRequested.remove(userAssetID)
-        if response.result == .success {
-            if let imageData = response.imageData ?? response.rawData {
-                imagesByUserIDCache.setObject(imageData as NSData, forKey: userAssetID.userId as NSUUID)
-                uiContext.performGroupedBlock {
-                    userAssetID.user.notifyNewSmallImageData(imageData, searchUserObserverCenter: self.uiContext.searchUserObserverCenter)
-                }
-                userIDsTable.removeAllEntries(with: [userAssetID.userId])
+    func request(for asset: SearchUserAssetKeys, size: ProfileImageSize, user: UUID) -> ZMTransportRequest? {
+        switch asset {
+        case .asset(preview: let previewKey, complete: let completeKey):
+            if let key = size == .preview ? previewKey : completeKey {
+                return UserImageStrategy.requestForFetchingV3Asset(with: key)
+            }
+        case .legacy(small: let previewUUID, medium: let completeUUID):
+            if let uuid = size == .preview ? previewUUID : completeUUID {
+                return UserImageStrategy.requestForFetchingAsset(with: uuid, forUserWith: user)
             }
         }
-        else if response.result == .permanentError {
-            userIDsTable.removeAllEntries(with: [userAssetID.userId])
+        return nil
+    }
+    
+    func processAsset(response: ZMTransportResponse, for user: UUID, size: ProfileImageSize) {
+        
+        let tryAgain = response.result != .permanentError && response.result != .success
+        
+        switch size {
+        case .preview:
+            if !tryAgain {
+                requestedPreviewAssets.removeValue(forKey: user)
+            }
+            requestedPreviewAssetsInProgress.remove(user)
+        case .complete:
+            if !tryAgain {
+                requestedCompleteAssets.removeValue(forKey: user)
+            }
+            requestedCompleteAssetsInProgress.remove(user)
+        }
+        
+        uiContext.performGroupedBlock {
+            guard let searchUser = self.uiContext.zm_searchUserCache?.object(forKey: user as NSUUID) else { return }
+            
+            if response.result == .success {
+                if let imageData = response.imageData ?? response.rawData {
+                    searchUser.updateImageData(for: size, imageData: imageData)
+                }
+            } else if response.result == .permanentError {
+                searchUser.reportImageDataHasBeenDeleted()
+            }
         }
     }
     
-    func fetchUsersRequest() -> ZMTransportRequest? {
-        let userIDsToDownload = userIDsTable.allUserIds().subtracting(userIDsBeingRequested)
-        guard userIDsToDownload.count > 0 else { return nil }
+    func fetchUserProfilesRequest() -> ZMTransportRequest? {
+        let missingFullProfiles = requestedMissingFullProfiles.subtracting(requestedMissingFullProfilesInProgress)
         
-        userIDsBeingRequested.formUnion(userIDsToDownload)
+        guard missingFullProfiles.count > 0 else { return nil }
         
-        let completionHandler = ZMCompletionHandler(on: managedObjectContext) { [weak self] response in
-            self?.processUserProfile(response:response, for:userIDsToDownload)
-        }
+        requestedMissingFullProfilesInProgress.formUnion(missingFullProfiles)
+        
+        return SearchUserImageStrategy.requestForFetchingFullProfile(for: missingFullProfiles, completionHandler: ZMCompletionHandler(on: managedObjectContext, block: { (response) in
+            
+            self.requestedMissingFullProfilesInProgress.subtract(missingFullProfiles)
+            
+            // On temporary errors we keep requestedMissingFullProfiles so that we'll retry the request
+            if response.result == .success || response.result == .permanentError {
+                self.requestedMissingFullProfiles.subtract(missingFullProfiles)
+            }
 
-        return SearchUserImageStrategy.requestForFetchingAssets(for:userIDsToDownload, completionHandler:completionHandler)
+            guard response.result == .success else { return }
+            
+            self.uiContext.performGroupedBlock {
+                guard let userProfilePayloads = response.payload as? [[String : Any]] else { return }
+                
+                for userProfilePayload in userProfilePayloads {
+                    guard let userId = (userProfilePayload["id"] as? String).flatMap(UUID.init),
+                          let searchUser = self.uiContext.zm_searchUserCache?.object(forKey: userId as NSUUID) else { continue }
+                    
+                    searchUser.update(from: userProfilePayload)
+                    
+                    if let assetKeys = searchUser.assetKeys {
+                        self.updateAssetKeys(assetKeys, for: userId)
+                    }
+                }
+            }
+        }))
     }
     
-    public static func requestForFetchingAssets(for usersWithIDs: Set<UUID>, completionHandler:ZMCompletionHandler) -> ZMTransportRequest {
+    func updateAssetKeys(_ assetKeys: SearchUserAssetKeys, for userId: UUID) {
+        syncContext.performGroupedBlock {
+            if self.requestedPreviewAssets.keys.contains(userId) {
+                self.requestedPreviewAssets[userId] = assetKeys
+            }
+            
+            if self.requestedCompleteAssets.keys.contains(userId) {
+                self.requestedCompleteAssets[userId] = assetKeys
+            }
+            
+            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        }
+    }
+    
+    public static func requestForFetchingFullProfile(for usersWithIDs: Set<UUID>, completionHandler:ZMCompletionHandler) -> ZMTransportRequest {
         let usersList = usersWithIDs.map{$0.transportString()}.joined(separator: ",")
         let request = ZMTransportRequest(getFromPath: userPath + usersList)
         request.add(completionHandler)
         return request;
     }
 
-    func processUserProfile(response: ZMTransportResponse, for userIDs: Set<UUID>){
-        userIDsBeingRequested.subtract(userIDs)
-
-        if response.result == .success {
-            guard let userList = response.payload as? [[String : Any]] else { return }
-
-            for userData in userList {
-                guard let userId = (userData[ResponseKey.id.rawValue] as? String).flatMap(UUID.init) else { continue }
-                if let assetKeys = SearchUserAssetKeys(payload: userData) {
-                    switch assetKeys {
-                    case .asset(preview: let preview, complete: let complete):
-                        if let preview = preview {
-                            userIDsTable.replaceUserId(userId, withAsset: .assetKey(preview))
-                        } else {
-                            userIDsTable.removeAllEntries(with: [userId])
-                        }
-                        if let complete = complete {
-                            mediumAssetCache.setObject(SearchUserAssetObjC(assetKey: complete), forKey: userId as NSUUID)
-                        }
-                    case .legacy(small: let small, medium: let medium):
-                        if let small = small {
-                            userIDsTable.replaceUserId(userId, withAsset: .legacyId(small))
-                        } else {
-                            userIDsTable.removeAllEntries(with: [userId])
-                        }
-                        if let medium = medium {
-                            mediumAssetCache.setObject(SearchUserAssetObjC(legacyId: medium), forKey: userId as NSUUID)
-                        }
-                    }
-                } else {
-                    userIDsTable.removeAllEntries(with: [userId])
-                }
-            }
-        }
-        else if (response.result == .permanentError) {
-            userIDsTable.removeAllEntries(with: userIDs)
-        }
-    }
-
-    public static func processSingleUserProfile(response: ZMTransportResponse,
-                                  for userID: UUID,
-                                  mediumAssetIDCache: NSCache<NSUUID, SearchUserAssetObjC>) {
-        guard response.result == .success else { return }
-        guard let userList = response.payload as? [[String : Any]] else { return }
-
-        for userData in userList {
-            processSingleUser(payload: userData, for: userID, cache: mediumAssetIDCache)
-        }
-    }
-
-    private static func processSingleUser(payload: [String: Any], for userId: UUID, cache: MediumAssetCache) {
-        guard let receivedId = (payload[ResponseKey.id.rawValue] as? String).flatMap(UUID.init), receivedId == userId else { return }
-        guard let asset = mediumAsset(from: payload).objcCompatibilityValue() else { return }
-        cache.setObject(asset, forKey: userId as NSUUID)
-    }
-
-    private static func mediumAsset(from payload: [String: Any]) -> SearchUserAsset {
-        guard let asset = SearchUserAssetKeys(payload: payload) else { return nil }
-        switch asset {
-        case .asset(preview: _, complete: let complete):
-            if let complete = complete {
-                return .assetKey(complete)
-            }
-        case .legacy(small: _, medium: let medium):
-            if let medium = medium {
-                return .legacyId(medium)
-            }
-        }
-
-        return nil
-    }
 }

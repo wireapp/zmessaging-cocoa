@@ -313,7 +313,7 @@ extension PushTokenStrategyTests {
 
     func testThatItDownloadsTokensAndResetsIfNotValid() {
         // Should be fired when we have to reupload the token
-        expectation(forNotification: ZMUserSession.resetPushTokenNotificationName, object: nil, handler: nil)
+        expectation(forNotification: ZMUserSession.registerCurrentPushTokenNotificationName, object: nil, handler: nil)
 
         self.syncMOC.performGroupedAndWait { _ in
             // given

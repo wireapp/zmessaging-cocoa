@@ -21,143 +21,21 @@ import Foundation
 @testable import WireSyncEngine
 
 class SearchDirectoryTests : MessagingTest {
-    
-    func testThatWhenReceivingSearchUsersWeMarkTheProfileImageAsMissing() {
+
+    func testThatItEmptiesTheSearchUserCacheOnTeardown() {
         // given
-        let resultArrived = expectation(description: "received result")
-        let request = SearchRequest(query: "User", searchOptions: [.directory])
-        
-        mockTransportSession.performRemoteChanges { (remoteChanges) in
-            remoteChanges.insertUser(withName: "User A")
-        }
-        
-        let sut = SearchDirectory(userSession: mockUserSession)
-        
-        // when
-        let task = sut.perform(request)
-        task.onResult { (result, _) in
-            if !result.directory.isEmpty {
-                resultArrived.fulfill()
-            }
-        }
-        task.start()
-        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
-        
-        // then
-        XCTAssertEqual(SearchDirectory.userIDsMissingProfileImage.allUserIds().count, 1)
-        
-        // cleanup
-        sut.tearDown()
-    }
-    
-    func testThatWhenReceivingSearchUsersWeDontMarkTheProfileImageAsMissingIfItExistsInCache() {
-        // given
-        let resultArrived = expectation(description: "received result")
-        var userIdentifier1 : String = ""
-        var userIdentifier2 : String = ""
-        
-        mockTransportSession.performRemoteChanges { (remoteChanges) in
-            userIdentifier1 = remoteChanges.insertUser(withName: "User A").identifier
-            userIdentifier2 = remoteChanges.insertUser(withName: "User B").identifier
-        }
-        
-        let uuid1 = UUID(uuidString: userIdentifier1)!
-        let uuid2 = UUID(uuidString: userIdentifier2)!
-        let request = SearchRequest(query: "User", searchOptions: [.directory])
-        
-        ZMSearchUser.searchUserToMediumImageCache().setObject(Data(count: 1) as NSData, forKey: uuid1 as NSUUID)
-        ZMSearchUser.searchUserToSmallProfileImageCache().setObject(Data(count: 1) as NSData, forKey: uuid1 as NSUUID)
-        
-        let sut = SearchDirectory(userSession: mockUserSession)
-        
-        // when
-        let task = sut.perform(request)
-        task.onResult { (result, _) in
-            if !result.directory.isEmpty {
-                resultArrived.fulfill()
-            }
-        }
-        task.start()
-        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
-        
-        // then
-        XCTAssertEqual(SearchDirectory.userIDsMissingProfileImage.allUserIds(), Set([uuid2]))
-        
-        // cleanup
-        sut.tearDown()
-    }
-    
-    func testThatWhenReceivingSearchUsersWeDontMarkTheProfileImageAsMissingIfThereIsACorrespondingZMUser() {
-        // given
-        let resultArrived = expectation(description: "received result")
-        var userIdentifier1 : String = ""
-        var userIdentifier2 : String = ""
-        
-        mockTransportSession.performRemoteChanges { (remoteChanges) in
-            userIdentifier1 = remoteChanges.insertUser(withName: "User A").identifier
-            userIdentifier2 = remoteChanges.insertUser(withName: "User B").identifier
-        }
-        
-        let uuid1 = UUID(uuidString: userIdentifier1)!
-        let uuid2 = UUID(uuidString: userIdentifier2)!
-        let request = SearchRequest(query: "User", searchOptions: [.directory])
-        
-        let user1 = ZMUser.insertNewObject(in: uiMOC)
-        user1.remoteIdentifier = uuid1
-        uiMOC.saveOrRollback()
-        
-        let sut = SearchDirectory(userSession: mockUserSession)
-        
-        // when
-        let task = sut.perform(request)
-        task.onResult { (result, _) in
-            if !result.directory.isEmpty {
-                resultArrived.fulfill()
-            }
-        }
-        task.start()
-        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
-        
-        // then
-        XCTAssertEqual(SearchDirectory.userIDsMissingProfileImage.allUserIds(), Set([uuid2]))
-        
-        // cleanup
-        sut.tearDown()
-    }
-    
-    func testThatItEmptiesTheMediumImageCacheOnTeardown() {
-        // given
+        uiMOC.zm_searchUserCache = NSCache()
         let uuid = UUID.create()
-        let imageCache = ZMSearchUser.searchUserToMediumImageCache()
         let sut = SearchDirectory(userSession: mockUserSession)
-        
-        imageCache.setObject(Data(count: 1) as NSData, forKey: uuid as NSUUID)
-        
+        _ = ZMSearchUser(contextProvider: mockUserSession, name: "John Doe", handle: "john", accentColor: .brightOrange, remoteIdentifier: uuid)
+        XCTAssertNotNil(uiMOC.zm_searchUserCache?.object(forKey: uuid as NSUUID))
+    
         // when
         sut.tearDown()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // then
-        XCTAssertNil(imageCache.object(forKey: uuid as NSUUID))
-    }
-    
-    func testThatItRemovesItselfFromTheTableOnTearDown() {
-        // given
-        let sut = SearchDirectory(userSession: mockUserSession)
-        let request = SearchRequest(query: "User", searchOptions: [.directory])
-        
-        mockTransportSession.performRemoteChanges { (remoteChanges) in
-            remoteChanges.insertUser(withName: "User A")
-        }
-        
-        sut.perform(request).start()
-        spinMainQueue(withTimeout: 0.5)
-        
-        // when
-        sut.tearDown()
-        
-        // then
-        XCTAssertEqual(SearchDirectory.userIDsMissingProfileImage.allUserIds().count, 0)
+        XCTAssertNil(uiMOC.zm_searchUserCache?.object(forKey: uuid as NSUUID))
     }
     
 }

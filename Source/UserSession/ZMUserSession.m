@@ -187,6 +187,8 @@ ZM_EMPTY_ASSERTING_INIT()
         CTCallCenter *callCenter = [[CTCallCenter alloc] init];
         self.managedObjectContext.zm_coreTelephonyCallCenter = callCenter;
         
+        self.managedObjectContext.zm_searchUserCache = [[NSCache alloc] init];
+        
         [self.syncManagedObjectContext performBlockAndWait:^{
             self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncManagedObjectContext
                                                                                                    cookieStorage:session.cookieStorage
@@ -242,7 +244,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.commonContactsCache = [[NSCache alloc] init];
         self.commonContactsCache.name = @"ZMUserSession commonContactsCache";
         
-        [self registerForPushTokenResetNotification];
+        [self registerForRegisteringPushTokenNotification];
         [self registerForBackgroundNotifications];
         [self registerForRequestToOpenConversationNotification];
         
@@ -579,6 +581,9 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)didRegisterUserClient:(UserClient *)userClient
 {
     self.transportSession.pushChannel.clientID = userClient.remoteIdentifier;
+    // If during registration user allowed notifications,
+    // The push token can only be registered after client registration
+    [self registerCurrentPushToken];
 }
 
 @end

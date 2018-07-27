@@ -18,20 +18,20 @@
 
 
 @objcMembers public class MockUserInfoParser: NSObject, UserInfoParser {
-
+    
     public var accountExistsLocallyCalled = 0
-    public var existingAccounts = [ZMTransportResponse]()
-    public func accountExistsLocally(from response: ZMTransportResponse) -> Bool {
+    public var existingAccounts = [UserInfo]()
+
+    public func accountExistsLocally(from userInfo: UserInfo) -> Bool {
         accountExistsLocallyCalled += 1
-        return existingAccounts.contains(response)
+        return existingAccounts.contains(userInfo)
     }
 
-    var parseCallCount = 0
-    var parsedResponses = [ZMTransportResponse]()
-
-    public func parseUserInfo(from response: ZMTransportResponse) {
-        parseCallCount += 1
-        parsedResponses.append(response)
+    public var upgradeToAuthenticatedSessionCallCount = 0
+    public var upgradeToAuthenticatedSessionUserInfos = [UserInfo]()
+    
+    public func upgradeToAuthenticatedSession(with userInfo: UserInfo) {
+        upgradeToAuthenticatedSessionCallCount += 1
     }
 
     public var userId: UUID?

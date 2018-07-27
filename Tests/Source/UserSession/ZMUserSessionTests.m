@@ -214,7 +214,8 @@
     id pushChannel = [OCMockObject niceMockForProtocol:@protocol(ZMPushChannel)];
     id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
     id cookieStorage = [OCMockObject niceMockForClass:ZMPersistentCookieStorage.class];
-    
+    id sessionManager = [[MockSessionManager alloc] init];
+
     // expect
     [[pushChannel expect] setClientID:userClient.remoteIdentifier];
     [[[transportSession stub] andReturn:pushChannel] pushChannel];
@@ -230,11 +231,17 @@
                                                                      application:self.application
                                                                       appVersion:@"00000"
                                                                    storeProvider:self.storeProvider];
+    userSession.sessionManager = sessionManager;
+    XCTAssertFalse([(MockSessionManager *)sessionManager updatePushTokenCalled]);
     [userSession didRegisterUserClient:userClient];
     
     // then
     [pushChannel verify];
     [transportSession verify];
+
+    XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
+    XCTAssertTrue([(MockSessionManager *)sessionManager updatePushTokenCalled]);
+
     [userSession tearDown];
 }
 

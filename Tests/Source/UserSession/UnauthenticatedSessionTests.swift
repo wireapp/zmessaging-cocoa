@@ -245,27 +245,15 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         let response = try createResponse(cookie: cookie, userId: userId, userIdKey: "id")
         mockDelegate.existingAccounts = [Account(userName: "", userIdentifier: userId)]
 
+        
+        guard let userInfo = response.extractUserInfo() else { return XCTFail("no userinfo") }
         // when
-        let exists = sut.accountExistsLocally(from: response)
+        let exists = sut.accountExistsLocally(from: userInfo)
 
         // then
         XCTAssertTrue(exists)
         XCTAssertEqual(mockDelegate.existingAccountsCalled, 1)
     }
-
-    func testThatItExtractsUserIdentifierFromResponse() throws {
-        // given
-        let userId = UUID.create()
-        let cookie = "zuid=wjCWn1Y1pBgYrFCwuU7WK2eHpAVY8Ocu-rUAWIpSzOcvDVmYVc9Xd6Ovyy-PktFkamLushbfKgBlIWJh6ZtbAA==.1721442805.u.7eaaa023.08326f5e-3c0f-4247-a235-2b4d93f921a4; Expires=Sun, 21-Jul-2024 09:06:45 GMT; Domain=wire.com; HttpOnly; Secure"
-        let response = try createResponse(cookie: cookie, userId: userId, userIdKey: "id")
-
-        // when
-        let authenticatedUserID = sut.userIdentifier(from: response)
-
-        // then
-        XCTAssertEqual(authenticatedUserID, userId)
-    }
-
     
     func testThatItParsesCookieDataAndDoesCallTheDelegateIfTheCookieIsValidAndThereIsAUserIdKeyUser() throws {
         // given
@@ -334,7 +322,7 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         let response = try createResponse(cookie: cookie, userId: userId, userIdKey: userIdKey, line: line)
 
         // when
-        sut.parseUserInfo(from: response)
+        response.extractUserInfo().apply(sut.upgradeToAuthenticatedSession)
 
         // then
         XCTAssertLessThanOrEqual(mockDelegate.createdAccounts.count, 1, line: line)

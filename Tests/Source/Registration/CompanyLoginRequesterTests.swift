@@ -23,14 +23,18 @@ class CompanyLoginRequesterTests: XCTestCase {
 
     func testThatItGeneratesLoginURLForToken() {
         // GIVEN
-        let requester: CompanyLoginRequester = CompanyLoginRequester(backendHost: "localhost", callbackScheme: "wire")
+        let defaults = UserDefaults(suiteName: name)!
+        let requester: CompanyLoginRequester = CompanyLoginRequester(
+            backendHost: "localhost",
+            callbackScheme: "wire",
+            defaults: defaults
+        )
+
         let userID = UUID(uuidString: "A0ACF9C2-2000-467F-B640-14BF4FCCC87A")!
 
         // WHEN
         var url: URL?
         let callbackExpectation = expectation(description: "Requester calls delegate to handle URL")
-
-        let expectedURL = URL(string: "https://localhost/sso/initiate-login/\(userID)?success_redirect=wire://login/success?cookie=$cookie&user_id=$userid&error_redirect=wire://login/failure?label=$label")!
 
         let delegate = MockCompanyLoginRequesterDelegate {
             url = $0
@@ -40,6 +44,10 @@ class CompanyLoginRequesterTests: XCTestCase {
         requester.delegate = delegate
         requester.requestIdentity(for: userID)
         waitForExpectations(timeout: 1, handler: nil)
+
+        guard let validationToken = CompanyLoginVerificationToken.current(in: defaults) else { return XCTFail("no token") }
+        let validationIdentifier = validationToken.uuid.transportString()
+        let expectedURL = URL(string: "https://localhost/sso/initiate-login/\(userID)?success_redirect=wire://login/success?cookie=$cookie&userid=$userid&validation_token=\(validationIdentifier)&error_redirect=wire://login/failure?label=$label&validation_token=\(validationIdentifier)")!
 
         // THEN
         guard let validationURL = url else {
@@ -52,8 +60,8 @@ class CompanyLoginRequesterTests: XCTestCase {
             return
         }
 
-        XCTAssertEqual(components.query(for: "success_redirect"), "wire://login/success?cookie=$cookie&user_id=$userid")
-        XCTAssertEqual(components.query(for: "error_redirect"), "wire://login/failure?label=$label")
+        XCTAssertEqual(components.query(for: "success_redirect"), "wire://login/success?cookie=$cookie&userid=$userid&validation_token=\(validationIdentifier)")
+        XCTAssertEqual(components.query(for: "error_redirect"), "wire://login/failure?label=$label&validation_token=\(validationIdentifier)")
         XCTAssertEqual(validationURL.absoluteString.removingPercentEncoding, expectedURL.absoluteString)
     }
 

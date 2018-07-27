@@ -27,7 +27,6 @@
 #import <WireSyncEngine/ZMNetworkState.h>
 #import <WireSyncEngine/ZMCredentials.h>
 #import <WireSyncEngine/ZMUserSession+OTR.h>
-#import <WireSyncEngine/ZMBareUser+UserSession.h>
 #import <WireSyncEngine/ZMTypingUsers.h>
 
 // PRIVATE

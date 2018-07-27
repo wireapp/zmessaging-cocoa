@@ -62,6 +62,7 @@ class SearchTests : IntegrationTest {
         
         // when
         searchAndConnectToUser(withName: userName, searchQuery: "Johnny")
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         guard let newUser = self.user(for: user!) else { XCTFail(); return }
@@ -122,7 +123,7 @@ class SearchTests : IntegrationTest {
         guard let searchUser = searchForDirectoryUser(withName: userName, searchQuery: "Johnny") else { XCTFail(); return }
         
         // then
-        var token = UserChangeInfo.add(observer: self, forBareUser: searchUser, userSession: userSession!)
+        var token = UserChangeInfo.add(observer: self, for: searchUser, userSession: userSession!)
         XCTAssertNotNil(token)
         XCTAssertNil(searchUser.user)
         XCTAssertEqual(userNotifications.count, 0)
@@ -158,7 +159,7 @@ class SearchTests : IntegrationTest {
         guard let searchUser = searchForDirectoryUser(withName: userName, searchQuery: "Johnny") else { XCTFail(); return }
         
         // then
-        var token = UserChangeInfo.add(observer: self, forBareUser: searchUser, userSession: userSession!)
+        var token = UserChangeInfo.add(observer: self, for: searchUser, userSession: userSession!)
         XCTAssertNotNil(token)
         XCTAssertNotNil(searchUser.user)
         XCTAssertEqual(userNotifications.count, 0)
@@ -193,7 +194,7 @@ class SearchTests : IntegrationTest {
         guard let user = searchForConnectedUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
         
         // when
-        user.requestSmallProfileImage(in: userSession)
+        user.requestPreviewProfileImage()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -211,14 +212,15 @@ class SearchTests : IntegrationTest {
         }
         
         XCTAssertTrue(login())
-        
-        // when
         guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
         guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
+        
+        // when
+        searchUser.requestPreviewProfileImage()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(searchUser.imageSmallProfileData, profileImageData)   
+        XCTAssertEqual(searchUser.previewImageData, profileImageData)
     }
     
     func testThatItReturnsNoImageIfTheUnconnectedSearchUserHasNoImage() {
@@ -238,7 +240,7 @@ class SearchTests : IntegrationTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertNil(searchUser.imageSmallProfileData)
+        XCTAssertNil(searchUser.previewImageData)
     }
     
     func testThatItNotifiesWhenANewImageIsAvailableForAnUnconnectedSearchUser() {
@@ -263,7 +265,8 @@ class SearchTests : IntegrationTest {
         
         guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
         guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
-        var token = UserChangeInfo.add(observer: self, forBareUser: searchUser, userSession: userSession!)
+        searchUser.requestPreviewProfileImage()
+        var token = UserChangeInfo.add(observer: self, for: searchUser, userSession: userSession!)
         XCTAssertNotNil(token)
         
         // when
@@ -298,136 +301,58 @@ class SearchTests : IntegrationTest {
         guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        let mediumAssetIDCache = ZMSearchUser.searchUserToMediumAssetIDCache()
-        let mediumImageCache = ZMSearchUser.searchUserToMediumImageCache()
-        
-        guard let remoteIdentifer = UUID(uuidString: user4.identifier) else { XCTFail(); return }
-        guard let mediumImageIdenitifer = UUID(uuidString: user4.mediumImageIdentifier!) else { XCTFail(); return }
-        
-        
-        guard let searchUserAsset = mediumAssetIDCache.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
-        XCTAssertEqual(searchUserAsset.legacyID, mediumImageIdenitifer)
-        XCTAssertNil(mediumImageCache.object(forKey: remoteIdentifer as AnyObject))
-        
         // when requesting medium image
-        userSession?.performChanges {
-            searchUser.requestMediumProfileImage(in: self.userSession)
-        }
+        searchUser.requestCompleteProfileImage()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(searchUser.imageMediumData, profileImageData)
+        XCTAssertEqual(searchUser.completeImageData, profileImageData)
     }
-    
-    func testThatItRefetchesTheSearchUserIfTheMediumImageDataGotDeletedFromTheCache() {
+
+    func testThatItRefetchesTheSearchUserIfItGotEvictedFromTheCache() {
         // given
         var profileImageData : Data? = nil
         var userName : String? = nil
-        
+
         // We need not to have v3 profile pictures
         user4.previewProfileAssetIdentifier = nil
         user4.completeProfileAssetIdentifier = nil
-        
+
         mockTransportSession.performRemoteChanges { (changes) in
             profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.smallProfileImageIdentifier!)?.data
             userName = self.user4.name
         }
-        
+
         XCTAssertTrue(login())
-        
-        let mediumAssetIDCache = ZMSearchUser.searchUserToMediumAssetIDCache()
-        let mediumImageCache = ZMSearchUser.searchUserToMediumImageCache()
-        
-        guard let remoteIdentifer = UUID(uuidString: user4.identifier) else { XCTFail(); return }
-        guard let mediumImageIdenitifer = UUID(uuidString: user4.mediumImageIdentifier!) else { XCTFail(); return }
-        
+
         // first search
         do {
             guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
             guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
             XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-            
-            guard let searchUserAsset = mediumAssetIDCache.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
-            XCTAssertEqual(searchUserAsset.legacyID, mediumImageIdenitifer)
-            XCTAssertNil(mediumImageCache.object(forKey: remoteIdentifer as AnyObject))
-            
-            // when requesting medium image
-            userSession?.performChanges {
-                searchUser.requestMediumProfileImage(in: self.userSession)
-            }
+
+            searchUser.requestCompleteProfileImage()
             XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-            
+
             // then
-            XCTAssertEqual(searchUser.imageMediumData, profileImageData)
+            XCTAssertEqual(searchUser.completeImageData, profileImageData)
         }
-        
+
         // clear the cache
-        mediumImageCache.removeObject(forKey: remoteIdentifer as AnyObject)
-        mediumAssetIDCache.removeObject(forKey: remoteIdentifer as AnyObject)
+        userSession?.managedObjectContext.zm_searchUserCache?.removeAllObjects()
         
         // second search
         do {
             guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
             guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
             XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-            
-            guard let searchUserAsset = mediumAssetIDCache.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
-            XCTAssertEqual(searchUserAsset.legacyID, mediumImageIdenitifer)
-            XCTAssertNil(mediumImageCache.object(forKey: remoteIdentifer as AnyObject))
-            
-            // when requesting medium image
-            userSession?.performChanges {
-                searchUser.requestMediumProfileImage(in: self.userSession)
-            }
+
+            searchUser.requestCompleteProfileImage()
             XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-            
+
             // then
-            XCTAssertEqual(searchUser.imageMediumData, profileImageData)
+            XCTAssertEqual(searchUser.completeImageData, profileImageData)
         }
-    }
-    
-    func testThatItRefetchesTheSearchUserIfTheMediumAssetIDIsNotSet() {
-        // given
-        var profileImageData : Data? = nil
-        var userName : String? = nil
-        
-        // We need not to have v3 profile pictures
-        user4.previewProfileAssetIdentifier = nil
-        user4.completeProfileAssetIdentifier = nil
-        
-        mockTransportSession.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.smallProfileImageIdentifier!)?.data
-            userName = self.user4.name
-        }
-        
-        XCTAssertTrue(login())
-        
-        let mediumAssetIDCache = ZMSearchUser.searchUserToMediumAssetIDCache()
-        let mediumImageCache = ZMSearchUser.searchUserToMediumImageCache()
-        
-        guard let remoteIdentifer = UUID(uuidString: user4.identifier) else { XCTFail(); return }
-        guard let mediumImageIdenitifer = UUID(uuidString: user4.mediumImageIdentifier!) else { XCTFail(); return }
-        
-        // (1) search
-        guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
-        guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        guard let searchUserAsset = mediumAssetIDCache.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
-        XCTAssertEqual(searchUserAsset.legacyID, mediumImageIdenitifer)
-        XCTAssertNil(mediumImageCache.object(forKey: remoteIdentifer as AnyObject))
-        
-        // (2) remove mediumAssetID from cache
-        mediumAssetIDCache.removeObject(forKey: remoteIdentifer as AnyObject)
-        
-        // (3) when requesting medium image
-        userSession?.performChanges {
-            searchUser.requestMediumProfileImage(in: self.userSession)
-        }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertEqual(searchUser.imageMediumData, profileImageData)
     }
     
     func testThatItNotifiesWhenANewMediumImageIsAvailableForAnUnconnectedSearchUser() {
@@ -454,10 +379,11 @@ class SearchTests : IntegrationTest {
         
         guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
         guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
-        var token = UserChangeInfo.add(observer: self, forBareUser: searchUser, userSession: userSession!)
+        searchUser.requestPreviewProfileImage()
+        var token = UserChangeInfo.add(observer: self, for: searchUser, userSession: userSession!)
         XCTAssertNotNil(token)
         
-        // when small proile image response arrives
+        // when small profile image response arrives
         semaphore.signal()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -465,9 +391,7 @@ class SearchTests : IntegrationTest {
         XCTAssertEqual(userNotifications.count, 1)
 
         // when requesting medium
-        userSession?.performChanges {
-            searchUser.requestMediumProfileImage(in: self.userSession)
-        }
+        searchUser.requestCompleteProfileImage()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -497,7 +421,7 @@ class SearchTests : IntegrationTest {
         
         // when
         mockTransportSession.resetReceivedRequests()
-        user.requestSmallProfileImage(in: userSession)
+        user.requestPreviewProfileImage()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -527,11 +451,11 @@ class SearchTests : IntegrationTest {
         guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        searchUser.requestSmallProfileImage(in: userSession)
+        searchUser.requestPreviewProfileImage()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(searchUser.imageSmallProfileData, profileImageData)
+        XCTAssertEqual(searchUser.previewImageData, profileImageData)
         
         let requests = mockTransportSession.receivedRequests()
         XCTAssertEqual(requests.count, 4)
@@ -567,26 +491,17 @@ class SearchTests : IntegrationTest {
         
         guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
         guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
+        searchUser.requestPreviewProfileImage()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        let mediumAssetIDCache = ZMSearchUser.searchUserToMediumAssetIDCache()
-        let mediumImageCache = ZMSearchUser.searchUserToMediumImageCache()
-        
-        guard let remoteIdentifer = UUID(uuidString: user4.identifier) else { XCTFail(); return }
-        guard let searchUserAsset = mediumAssetIDCache.object(forKey: remoteIdentifer as AnyObject) as? SearchUserAssetObjC else { XCTFail(); return }
-        XCTAssertEqual(searchUserAsset.assetKey, user4.completeProfileAssetIdentifier)
-        XCTAssertNil(mediumImageCache.object(forKey: remoteIdentifer as AnyObject))
-        
+                
         mockTransportSession.resetReceivedRequests()
         
         // when requesting medium image
-        userSession?.performChanges {
-            searchUser.requestMediumProfileImage(in: self.userSession)
-        }
+        searchUser.requestCompleteProfileImage()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(searchUser.imageMediumData, completeProfileImageData)
+        XCTAssertEqual(searchUser.completeImageData, completeProfileImageData)
         
         let requests = mockTransportSession.receivedRequests()
         XCTAssertEqual(requests.count, 1)
@@ -613,28 +528,15 @@ class SearchTests : IntegrationTest {
         guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        let mediumAssetIDCache = ZMSearchUser.searchUserToMediumAssetIDCache()
-        let mediumImageCache = ZMSearchUser.searchUserToMediumImageCache()
-        
-        guard let remoteIdentifer = UUID(uuidString: user4.identifier) else { XCTFail(); return }
-        
-        mediumAssetIDCache.removeAllObjects()
-        
-        XCTAssertNil(mediumAssetIDCache.object(forKey: remoteIdentifer as AnyObject))
-        XCTAssertNil(mediumImageCache.object(forKey: remoteIdentifer as AnyObject))
-        XCTAssertNil(searchUser.completeAssetKey)
-        
         // We reset the requests after having performed the search and fetching the users (in comparison to the other tests).
         mockTransportSession.resetReceivedRequests()
         
         // when requesting medium image
-        userSession?.performChanges {
-            searchUser.requestMediumProfileImage(in: self.userSession)
-        }
+        searchUser.requestCompleteProfileImage()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(searchUser.imageMediumData, completeProfileImageData)
+        XCTAssertEqual(searchUser.completeImageData, completeProfileImageData)
         
         let requests = mockTransportSession.receivedRequests()
         XCTAssertEqual(requests.count, 2)

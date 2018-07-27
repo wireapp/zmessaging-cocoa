@@ -44,7 +44,7 @@ class AvailabilityTests: IntegrationTest {
         // given
         XCTAssertTrue(login())
         mockTransportSession.resetReceivedRequests()
-        let selfUser = ZMUser.selfUser(inUserSession: self.userSession)!
+        let selfUser = ZMUser.selfUser(inUserSession: self.userSession!)
         
         // when
         userSession?.performChanges {
@@ -69,7 +69,7 @@ class AvailabilityTests: IntegrationTest {
         
         XCTAssertTrue(login())
         mockTransportSession.resetReceivedRequests()
-        let selfUser = ZMUser.selfUser(inUserSession: self.userSession)!
+        let selfUser = ZMUser.selfUser(inUserSession: self.userSession!)
         
         // when
         userSession?.performChanges {

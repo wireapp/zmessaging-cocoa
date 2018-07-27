@@ -23,19 +23,23 @@ import XCTest
 
 final class DummyServiceUser: NSObject, ServiceUser {
     
-    var name: String! = "Service user"
+    var previewImageData: Data? = nil
     
-    var displayName: String! = "Service"
+    var completeImageData: Data? = nil
     
-    var initials: String! = "S"
+    var name: String? = "Service user"
     
-    var handle: String! = "service"
+    var displayName: String = "Service"
+    
+    var initials: String? = "S"
+    
+    var handle: String? = "service"
     
     var isSelfUser: Bool = false
     
-    var smallProfileImageCacheKey: String! = ""
+    var smallProfileImageCacheKey: String? = ""
     
-    var mediumProfileImageCacheKey: String! = ""
+    var mediumProfileImageCacheKey: String? = ""
     
     var isConnected: Bool = false
     
@@ -55,19 +59,31 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var isServiceUser: Bool = true
     
+    func requestPreviewProfileImage() {
+        
+    }
+    
+    func requestCompleteProfileImage() {
+        
+    }
+    
+    func imageData(for size: ProfileImageSize, queue: DispatchQueue, completion: @escaping (Data?) -> Void) {
+        
+    }
+    
     func refreshData() {
         
     }
     
-    func connect(withMessageText text: String!, completionHandler handler: (() -> Void)!) {
+    func connect(message: String) {
         
     }
     
-    func isGuest(in conversation: ZMConversation!) -> Bool {
+    func isGuest(in conversation: ZMConversation) -> Bool {
         return false
     }
     
-    var connectionRequestMessage: String! = ""
+    var connectionRequestMessage: String? = ""
     
     var totalCommonConnections: UInt = 0
     

@@ -55,6 +55,18 @@ class UserImageStrategyTests : MessagingTest {
         self.user1ID = nil;
         super.tearDown()
     }
+    
+    static func requestCompleteAsset(for user: ZMUser) {
+        NotificationInContext(name: .userDidRequestCompleteAsset,
+                              context: user.managedObjectContext!.notificationContext,
+                              object: user.objectID).post()
+    }
+    
+    static func requestPreviewAsset(for user: ZMUser) {
+        NotificationInContext(name: .userDidRequestPreviewAsset,
+                              context: user.managedObjectContext!.notificationContext,
+                              object: user.objectID).post()
+    }
 
 }
 
@@ -250,13 +262,14 @@ extension UserImageStrategyTests {
             self.user1.localSmallProfileRemoteIdentifier = nil;
             self.user1.imageSmallProfileData = nil;
         }
+        syncMOC.saveOrRollback()
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     
-        // when
-        expectation(forNotification: NSNotification.Name("ZMRequestUserProfileAssetNotification"), object: nil, handler: nil)
-        UserImageStrategy.requestAsset(for: self.user1)
-        XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 1.5))
+        // when        
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: self.user1.objectID) as? ZMUser)?.requestCompleteProfileImage()
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         syncMOC.performGroupedBlockAndWait {
             self.forwardChanges(for:self.user1)
@@ -372,7 +385,7 @@ extension UserImageStrategyTests {
     func testThatItHandlesMediumImageNotBeingPresentOnTheRemote() {
         func prepareForMediumAssetRequest() {
             forwardChanges(for: user1)
-            UserImageStrategy.requestAsset(for: user1)
+            UserImageStrategyTests.requestCompleteAsset(for: user1)
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         }
         
@@ -420,7 +433,7 @@ extension UserImageStrategyTests {
     func testThatItHandlesSmallImageNotBeingPresentOnTheRemote() {
         func prepareForSmallAssetRequest() {
             forwardChanges(for: user1)
-            UserImageStrategy.requestSmallAsset(for: user1)
+            UserImageStrategyTests.requestPreviewAsset(for: user1)
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         }
         

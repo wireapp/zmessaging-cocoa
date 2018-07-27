@@ -111,7 +111,7 @@ class UserHandleTests : IntegrationTest {
             return
         }
         
-        let selfUser = ZMUser.selfUser(inUserSession: self.userSession)!
+        let selfUser = ZMUser.selfUser(inUserSession: self.userSession!)
         XCTAssertEqual(selfUser.handle, handle)
         
         self.mockTransportSession.performRemoteChanges { _ in

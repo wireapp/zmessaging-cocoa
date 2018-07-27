@@ -21,8 +21,6 @@ import Foundation
 
 @objcMembers public class SearchDirectory : NSObject {
     
-    static let userIDsMissingProfileImage = SearchDirectoryUserIDTable()
-    
     let searchContext : NSManagedObjectContext
     let userSession : ZMUserSession
     var isTornDown = false
@@ -44,7 +42,6 @@ import Foundation
         
         task.onResult { [weak self] (result, _) in
             self?.observeSearchUsers(result)
-            self?.requestSearchUserProfileImages(result)
         }
         
         return task
@@ -56,15 +53,6 @@ import Foundation
         result.services.compactMap { $0 as? ZMSearchUser }.forEach(searchUserObserverCenter.addSearchUser)
     }
     
-    func requestSearchUserProfileImages(_ result : SearchResult) {
-        let usersMissingProfileImage = Set(result.directory.filter({ !$0.isLocalOrHasCachedProfileImageData }))
-        let botsMissingProfileImage = Set(result.services.compactMap { $0 as? ZMSearchUser }.filter({ !$0.isLocalOrHasCachedProfileImageData }))
-
-        let allUsers = usersMissingProfileImage.union(botsMissingProfileImage)
-        SearchDirectory.userIDsMissingProfileImage.setUsers(allUsers, forDirectory: self)
-        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
-    }
-    
 }
 
 extension SearchDirectory: TearDownCapable {
@@ -72,11 +60,8 @@ extension SearchDirectory: TearDownCapable {
     ///
     /// NOTE: this must be called before releasing the instance
     public func tearDown() {
-        userSession.syncManagedObjectContext.performGroupedBlock {
-            SearchDirectory.userIDsMissingProfileImage.removeDirectory(self)
-            SearchDirectory.userIDsMissingProfileImage.clear()
-            ZMSearchUser.searchUserToMediumImageCache().removeAllObjects()
-        }
+        // Evict all cached search users
+        userSession.managedObjectContext.zm_searchUserCache?.removeAllObjects()
 
         // Reset search user observer center to remove unnecessarily observed search users
         userSession.managedObjectContext.searchUserObserverCenter.reset()
