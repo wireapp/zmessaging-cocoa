@@ -154,6 +154,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
     // when
     [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
+    WaitForAllGroupsToBeEmpty(0.5);
 
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
@@ -421,7 +422,8 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
     // when
     [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
-    
+    WaitForAllGroupsToBeEmpty(0.5);
+
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     
