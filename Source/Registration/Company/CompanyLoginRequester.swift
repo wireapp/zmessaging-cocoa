@@ -59,21 +59,11 @@ public protocol CompanyLoginRequesterDelegate: class {
 
 }
 
-@objc public protocol RequestEnqueueType: class {
-    @objc(enqueueOneTimeRequest:) func enqueueOneTime(_ searchRequest: ZMTransportRequest)
+@objc public protocol URLSessionProtocol: class {
+    func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Swift.Void) -> URLSessionDataTask
 }
 
-@objc public protocol RequestEnqueueProvider: class {
-    var requester: RequestEnqueueType { get }
-}
-
-extension ZMTransportSession: RequestEnqueueType {}
-
-extension ZMUserSession: RequestEnqueueProvider {
-    public var requester: RequestEnqueueType {
-        return transportSession
-    }
-}
+extension URLSession: URLSessionProtocol {}
 
 /**
  * An object that validates the identity of the user and creates a session using company login.
@@ -81,8 +71,6 @@ extension ZMUserSession: RequestEnqueueProvider {
 
 public class CompanyLoginRequester {
     
-    
-
     /// The URL scheme that where the callback will be provided.
     public let callbackScheme: String
 
@@ -91,21 +79,20 @@ public class CompanyLoginRequester {
 
     let backendHost: String
     private let defaults: UserDefaults
-    private let requester: RequestEnqueueType
+    private let session: URLSessionProtocol
 
     /// Creates a session requester that uses the specified parameters.
     public init(
         backendHost: String,
         callbackScheme: String,
         defaults: UserDefaults = .shared(),
-        enqueueProvider: RequestEnqueueProvider
+        session: URLSessionProtocol = URLSession.shared
         ) {
         self.backendHost = backendHost
         self.callbackScheme = callbackScheme
         self.defaults = defaults
-        self.requester = enqueueProvider.requester
+        self.session = session
     }
-    
     
     // MARK: - Token Validation
     
@@ -121,16 +108,15 @@ public class CompanyLoginRequester {
      */
     
     public func validate(token: UUID, completion: @escaping (VoidResult) -> Void) {
-        guard let url = urlComponents(for: token).url else {
-            fatalError("Invalid company login URL. This is a developer error.")
+        guard let url = urlComponents(for: token).url else { fatalError("Invalid company login url.") }
+    
+        let request = session.dataTask(with: url) { _, response, error in
+            DispatchQueue.main.async {
+                completion(VoidResult(error: error))
+            }
         }
         
-        let request = ZMTransportRequest(path: url.path, method: .methodHEAD, payload: nil)
-        request.add(ZMCompletionHandler(on: DispatchGroupQueue(queue: .main)) { response in
-            completion(VoidResult(error: response.transportSessionError))
-        })
-        
-        requester.enqueueOneTime(request)
+        request.resume()
     }
 
     // MARK: - Identity Request
