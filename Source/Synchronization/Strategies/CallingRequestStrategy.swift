@@ -64,8 +64,8 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
 
 extension CallingRequestStrategy : ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
-        zmLog.debug("Scheduling request to '/calls/config'")
-        return ZMTransportRequest(path: "/calls/config", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
+        zmLog.debug("Scheduling request to '/calls/config/v2'")
+        return ZMTransportRequest(path: "/calls/config/v2", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
     }
     
     public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
