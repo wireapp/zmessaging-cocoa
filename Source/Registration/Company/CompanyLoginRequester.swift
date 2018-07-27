@@ -46,6 +46,30 @@ extension URLQueryItem {
     }
 }
 
+@objc public protocol URLSessionProtocol: class {
+    @objc(dataTaskWithURL:completionHandler:)
+    func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask
+}
+
+extension URLSession: URLSessionProtocol {}
+
+public typealias StatusCode = Int
+
+public enum ValidationError: Equatable {
+    case invalidCode
+    case invalidStatus(StatusCode)
+    case unknown
+    
+    init?(response: HTTPURLResponse?, error: Error?) {
+        switch (response?.statusCode, error) {
+        case (404?, _): self = .invalidCode
+        case ((400...599)?, _): self = .invalidStatus(response!.statusCode)
+        case (_, .some), (.none, _): self = .unknown
+        default: return nil
+        }
+    }
+}
+
 public protocol CompanyLoginRequesterDelegate: class {
 
     /**
@@ -59,29 +83,9 @@ public protocol CompanyLoginRequesterDelegate: class {
 
 }
 
-@objc public protocol URLSessionProtocol: class {
-    @objc(dataTaskWithURL:completionHandler:)
-    func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask
-}
-
-extension URLSession: URLSessionProtocol {}
-
 /**
  * An object that validates the identity of the user and creates a session using company login.
  */
-
-public enum ValidationError {
-    case invalidCode
-    case unknown
-    
-    init?(response: HTTPURLResponse?, error: Error?) {
-        switch (response?.statusCode, error) {
-        case (404?, _): self = .invalidCode
-        case ((400...599)?, _), (_, .some), (.none, _): self = .unknown
-        default: return nil
-        }
-    }
-}
 
 public class CompanyLoginRequester {
     

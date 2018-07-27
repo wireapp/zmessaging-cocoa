@@ -133,7 +133,7 @@ class CompanyLoginRequesterTests: XCTestCase {
         
         // When
         sut.validate(token: .create()) { error in
-            XCTAssertEqual(error, .unknown)
+            XCTAssertEqual(error, .invalidStatus(500))
             callbackExpectation.fulfill()
         }
         
