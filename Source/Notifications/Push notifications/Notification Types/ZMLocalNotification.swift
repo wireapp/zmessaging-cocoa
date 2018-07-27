@@ -56,8 +56,8 @@ open class ZMLocalNotification: NSObject {
     public let type: LocalNotificationType
     public var title: String?
     public var body: String
-    public var category: String?
-    public var soundName: String?
+    public var category: String
+    public var soundName: String
     public var userInfo: [AnyHashable: Any]?
         
     public var selfUserID: UUID? { return uuid(for: SelfUserIDStringKey) }
@@ -71,40 +71,29 @@ open class ZMLocalNotification: NSObject {
         self.title = builder.titleText()
         self.body = builder.bodyText().escapingPercentageSymbols()
         self.category = builder.notificationType.category
-        self.soundName = builder.notificationType.soundName
+        self.soundName = builder.notificationType.soundName.fileName
         self.userInfo = builder.userInfo()
     }
-    
-    /// Returns a configured concrete UILocalNotification object.
-    ///
-    public lazy var uiLocalNotification: UILocalNotification = {
-        let note = UILocalNotification()
-        
-        let candidateTitle = self.title
-        let candidateBody = self.body
-        
-        if #available(iOS 10, *) {
-            note.alertTitle = candidateTitle
-            note.alertBody = candidateBody
+
+    /// Returns a configured concrete `UNNotificationContent` object.
+    public lazy var userNotificationContent: UNNotificationContent = {
+        let content = UNMutableNotificationContent()
+        content.body = self.body
+        content.categoryIdentifier = self.category
+        content.sound = UNNotificationSound(named: soundName)
+
+        if let title = self.title {
+            content.title = title
         }
-        else {
-            // on iOS 9, the alert title is only visible in the notification center, so we
-            // display all info in the body
-            if let title = candidateTitle {
-                note.alertBody = "\(title)\n\(candidateBody)"
-            } else {
-                note.alertBody = candidateBody
-            }
+
+        if let userInfo = self.userInfo {
+            content.userInfo = userInfo
         }
-        
-        note.category = self.category
-        note.soundName = self.soundName
-        note.userInfo = self.userInfo
-        return note
+
+        return content
     }()
-    
+
     /// Returns true if it is a calling notification, else false.
-    ///
     public var isCallingNotification: Bool {
         switch type {
         case .calling: return true
@@ -113,7 +102,6 @@ open class ZMLocalNotification: NSObject {
     }
     
     /// Returns true if it is a ephemeral notification, else false.
-    ///
     public var isEphemeral: Bool {
         switch type {
         case .message(let contentType):

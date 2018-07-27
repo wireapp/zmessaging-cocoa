@@ -20,6 +20,7 @@
 #import <WireSyncEngine/ZMUserSession.h>
 
 @import UIKit;
+@import UserNotifications;
 
 @protocol ZMApplication;
 
@@ -27,6 +28,9 @@
 
 /// Process the payload of the remote notification. This may cause a @c UILocalNotification to be displayed.
 - (void)application:(id<ZMApplication>)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
+
+///
+- (void)application:(id<ZMApplication>)application didReceiveNotificationResponse:(UNNotificationResponse *)response;
 
 /// Process the local notifications.
 - (void)application:(id<ZMApplication>)application didReceiveLocalNotification:(UILocalNotification *)notification;

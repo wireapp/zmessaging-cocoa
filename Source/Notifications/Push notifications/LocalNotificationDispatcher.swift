@@ -17,6 +17,7 @@
 //
 
 import Foundation
+import UserNotifications
 
 @objc public protocol ForegroundNotificationsDelegate: NSObjectProtocol {
 
@@ -34,6 +35,10 @@ import Foundation
     let messageNotifications: ZMLocalNotificationSet
     let callingNotifications: ZMLocalNotificationSet
     let failedMessageNotifications: ZMLocalNotificationSet
+
+    var notificationCenter: UNUserNotificationCenter {
+        return UNUserNotificationCenter.current()
+    }
 
     unowned let application: ZMApplication
     weak var operationStatus: OperationStatus?

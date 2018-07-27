@@ -73,9 +73,11 @@ extension LocalNotificationDispatcher {
     }
     
     fileprivate func cancelNotificationForMessageID(_ messageID: UUID) {
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: [messageID.uuidString])
+        notificationCenter.removeDeliveredNotifications(withIdentifiers: [messageID.uuidString])
+
         for note in messageNotifications.notifications {
             if note.messageNonce == messageID {
-                application.cancelLocalNotification(note.uiLocalNotification)
                 messageNotifications.remove(note)
             }
         }

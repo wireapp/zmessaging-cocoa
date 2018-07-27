@@ -18,36 +18,27 @@
 
 import Foundation
 
+public enum ZMSoundName: String {
 
-let ZMLocalNotificationRingingDefaultSoundName = "ringing_from_them_long.caf"
-let ZMLocalNotificationPingDefaultSoundName = "ping_from_them.caf"
-let ZMLocalNotificationNewMessageDefaultSoundName = "new_message_apns.caf"
+    case call = "ZMCallSoundName"
+    case ping = "ZMPingSoundName"
+    case newMessage = "ZMMessageSoundName"
 
-@objc public class ZMCustomSound: NSObject {
-    public static func notificationRingingSoundName() -> String {
-        return ZMCustomSoundName("ZMCallSoundName") ??  ZMLocalNotificationRingingDefaultSoundName
+    public var fileName: String {
+        return customFileName ?? defaultFileName
     }
 
-    public static func notificationPingSoundName() -> String {
-        return ZMCustomSoundName("ZMPingSoundName") ?? ZMLocalNotificationPingDefaultSoundName
-    }
-    
-    public static func notificationNewMessageSoundName() -> String {
-        return ZMCustomSoundName("ZMMessageSoundName") ?? ZMLocalNotificationNewMessageDefaultSoundName
-    }
-}
-
-func ZMCustomSoundName(_ key: String) -> String? {
-    guard let soundName = UserDefaults.standard.object(forKey: key) as? String else { return nil }
-    return ZMSound(rawValue: soundName)?.filename()
-}
-
-public func findIndex<S: Sequence>(_ sequence: S, predicate: (S.Iterator.Element) -> Bool) -> Int? {
-    for (index, element) in sequence.enumerated() {
-        if predicate(element) {
-            return index
+    private var defaultFileName: String {
+        switch self {
+        case .call: return "ringing_from_them_long.caf"
+        case .ping: return "ping_from_them.caf"
+        case .newMessage: return "new_message_apns.caf"
         }
     }
-    return nil
-}
 
+    private var customFileName: String? {
+        guard let soundName = UserDefaults.standard.object(forKey: rawValue) as? String else { return nil }
+        return ZMSound(rawValue: soundName)?.filename()
+    }
+
+}
