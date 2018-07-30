@@ -47,8 +47,8 @@ extension URLQueryItem {
 }
 
 @objc public protocol URLSessionProtocol: class {
-    @objc(dataTaskWithURL:completionHandler:)
-    func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask
+    @objc(dataTaskWithRequest:completionHandler:)
+    func dataTask(with request: URLRequest, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Swift.Void) -> URLSessionDataTask
 }
 
 extension URLSession: URLSessionProtocol {}
@@ -127,14 +127,16 @@ public class CompanyLoginRequester {
     
     public func validate(token: UUID, completion: @escaping (ValidationError?) -> Void) {
         guard let url = urlComponents(for: token).url else { fatalError("Invalid company login url.") }
-    
-        let request = session.dataTask(with: url) { _, response, error in
+        var request = URLRequest(url: url)
+        request.httpMethod = "HEAD"
+        
+        let task = session.dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
                 completion(ValidationError(response: response as? HTTPURLResponse, error: error))
             }
         }
         
-        request.resume()
+        task.resume()
     }
 
     // MARK: - Identity Request

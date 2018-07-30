@@ -65,8 +65,8 @@ class CompanyLoginRequesterTests: XCTestCase {
     
     func testThatItReturnsNilWhenVerifyingTokenNoError() {
         // Given
-        let session = MockSession { url in
-            let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)
+        let session = MockSession { request in
+            let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)
             return (nil, response, nil)
         }
 
@@ -91,8 +91,8 @@ class CompanyLoginRequesterTests: XCTestCase {
     
     func testThatItReturnsInvalidCodeErrorFor404Response() {
         // Given
-        let session = MockSession { url in
-            let response = HTTPURLResponse(url: url, statusCode: 404, httpVersion: nil, headerFields: nil)
+        let session = MockSession { request in
+            let response = HTTPURLResponse(url: request.url!, statusCode: 404, httpVersion: nil, headerFields: nil)
             return (nil, response, nil)
         }
         
@@ -117,8 +117,8 @@ class CompanyLoginRequesterTests: XCTestCase {
     
     func testThatItReturnsUnknownErrorForServerError() {
         // Given
-        let session = MockSession { url in
-            let response = HTTPURLResponse(url: url, statusCode: 500, httpVersion: nil, headerFields: nil)
+        let session = MockSession { request in
+            let response = HTTPURLResponse(url: request.url!, statusCode: 500, httpVersion: nil, headerFields: nil)
             return (nil, response, nil)
         }
         
@@ -202,7 +202,7 @@ fileprivate class MockSession: NSObject, URLSessionProtocol {
         }
     }
 
-    typealias RequestHandler = (URL) -> (Data?, URLResponse?, Error?)
+    typealias RequestHandler = (URLRequest) -> (Data?, URLResponse?, Error?)
     let handler: RequestHandler
     
     init(handler: @escaping RequestHandler) {
@@ -210,9 +210,10 @@ fileprivate class MockSession: NSObject, URLSessionProtocol {
         super.init()
     }
     
-    func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
-        let (data, response, error) = handler(url)
+    func dataTask(with request: URLRequest, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
+        let (data, response, error) = handler(request)
         completionHandler(data, response, error)
         return MockURLSessionDataTask()
     }
+
 }
