@@ -1865,6 +1865,17 @@
 			path = Company;
 			sourceTree = "<group>";
 		};
+		5EC3A469210F110E00B76C78 /* Content */ = {
+			isa = PBXGroup;
+			children = (
+				EEEA75F81F8A6141006D1070 /* ZMLocalNotification.swift */,
+				EEEA75F71F8A6141006D1070 /* ZMLocalNotification+Calling.swift */,
+				EEEA75F61F8A6140006D1070 /* ZMLocalNotification+Events.swift */,
+				EEEA75F51F8A613F006D1070 /* ZMLocalNotification+Messages.swift */,
+			);
+			path = Content;
+			sourceTree = "<group>";
+		};
 		85D850FC5E45F9F688A64419 /* Synchronization */ = {
 			isa = PBXGroup;
 			children = (
@@ -2140,12 +2151,9 @@
 		F98EDCC61D82B913001E65CB /* Notification Types */ = {
 			isa = PBXGroup;
 			children = (
+				5EC3A469210F110E00B76C78 /* Content */,
 				5E1FD7A4210B2694003D2C3D /* NotificationAction.swift */,
 				1626344820D7DB81000D4063 /* PushNotificationCategory.swift */,
-				EEEA75F81F8A6141006D1070 /* ZMLocalNotification.swift */,
-				EEEA75F71F8A6141006D1070 /* ZMLocalNotification+Calling.swift */,
-				EEEA75F61F8A6140006D1070 /* ZMLocalNotification+Events.swift */,
-				EEEA75F51F8A613F006D1070 /* ZMLocalNotification+Messages.swift */,
 				F98EDCCD1D82B913001E65CB /* LocalNotificationContentType.swift */,
 				16962EE320286D690069D88D /* LocalNotificationType+Configuration.swift */,
 				16962EE120286A4C0069D88D /* LocalNotificationType+Localization.swift */,

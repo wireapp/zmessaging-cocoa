@@ -69,7 +69,7 @@ extension NotificationAction {
         if let textInputMode = self.textInputMode {
             return UNTextInputNotificationAction(
                 identifier: identifier,
-                title: titleFormat.localizedPushAction,
+                title: titleFormat.pushActionString,
                 options: options,
                 textInputButtonTitle: textInputMode.buttonTitleFormat.localizedPushAction,
                 textInputPlaceholder: textInputMode.placeholderFormat.localizedPushAction
@@ -77,7 +77,7 @@ extension NotificationAction {
         } else {
             return UNNotificationAction(
                 identifier: identifier,
-                title: titleFormat.localizedPushAction,
+                title: titleFormat.pushActionString,
                 options: options)
         }
     }
@@ -98,14 +98,6 @@ extension NotificationAction {
         }
 
         return rawOptions
-    }
-
-}
-
-fileprivate extension String {
-
-    var localizedPushAction: String {
-        return Bundle(for: ZMUserSession.self).localizedString(forKey: "push.notification.action.\(self)", value: "", table: "Push")
     }
 
 }
