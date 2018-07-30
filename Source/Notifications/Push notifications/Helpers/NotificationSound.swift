@@ -18,15 +18,17 @@
 
 import Foundation
 
-public enum ZMSoundName: String {
+/// Represents the sound for types of notifications.
+public enum NotificationSound {
 
-    case call = "ZMCallSoundName"
-    case ping = "ZMPingSoundName"
-    case newMessage = "ZMMessageSoundName"
+    case call, ping, newMessage
 
-    public var fileName: String {
+    /// The name of the song.
+    public var name: String {
         return customFileName ?? defaultFileName
     }
+
+    // MARK: - Utilities
 
     private var defaultFileName: String {
         switch self {
@@ -36,8 +38,16 @@ public enum ZMSoundName: String {
         }
     }
 
+    private var preferenceKey: String {
+        switch self {
+        case .call: return "ZMCallSoundName"
+        case .ping: return "ZMPingSoundName"
+        case .newMessage: return "ZMMessageSoundName"
+        }
+    }
+
     private var customFileName: String? {
-        guard let soundName = UserDefaults.standard.object(forKey: rawValue) as? String else { return nil }
+        guard let soundName = UserDefaults.standard.object(forKey: preferenceKey) as? String else { return nil }
         return ZMSound(rawValue: soundName)?.filename()
     }
 

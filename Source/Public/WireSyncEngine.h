@@ -42,7 +42,6 @@
 #import <WireSyncEngine/ZMOperationLoop+Private.h>
 #import <WireSyncEngine/ZMHotFixDirectory.h>
 #import <WireSyncEngine/ZMUserSessionRegistrationNotification.h>
-#import <WireSyncEngine/UILocalNotification+UserInfo.h>
 #import <WireSyncEngine/ZMStoredLocalNotification.h>
 #import <WireSyncEngine/ZMTyping.h>
 #import <WireSyncEngine/ZMSyncStateDelegate.h>

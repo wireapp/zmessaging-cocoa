@@ -69,22 +69,22 @@ extension PKPushRegistry: PushRegistry {}
 
     // Must be called when the user action with @c identifier is completed on the local notification 
     // @c localNotification (see UIApplicationDelegate).
-    @objc(handleActionWithIdentifier:forLocalNotification:withResponseInfo:completionHandler:application:)
+    @objc(handleActionWithIdentifier:forNotificationResponse:completionHandler:application:)
     public func handleAction(with identifier: String?,
-                             for localNotification: UILocalNotification,
-                             with responseInfo: [AnyHashable: Any],
+                             for response: UNNotificationResponse,
                              completionHandler: @escaping () -> (),
                              application: ZMApplication) {
-        if let selfUserId = localNotification.zm_selfUserUUID,
-            let account = self.accountManager.account(with: selfUserId) {
-            
-            self.withSession(for: account) { userSession in
-                userSession.handleAction(application: application,
-                                         with: identifier,
-                                         for: localNotification,
-                                         with: responseInfo,
-                                         completionHandler: completionHandler)
-            }
+        guard let selfUserID = notificationResponse.userInfo.selfUserID,
+            let account = self.accountManager.account(with: selfUserID) else {
+            return
+        }
+
+        self.withSession(for: account) { userSession in
+            userSession.handleAction(application: application,
+                                     with: identifier,
+                                     for: localNotification,
+                                     with: responseInfo,
+                                     completionHandler: completionHandler)
         }
     }
         

@@ -18,8 +18,6 @@
 
 import Foundation
 
-
-
 public enum LocalNotificationEventType {
     case connectionRequestAccepted, connectionRequestPending, newConnection, conversationCreated
 }

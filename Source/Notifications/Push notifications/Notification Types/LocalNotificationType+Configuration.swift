@@ -54,7 +54,7 @@ extension LocalNotificationType {
         return category.rawValue
     }
     
-    var soundName: ZMSoundName {
+    var sound: NotificationSound {
         switch self {
         case .calling(let callState):
             switch callState {

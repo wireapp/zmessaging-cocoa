@@ -84,9 +84,9 @@ private let zmLog = ZMSLog(tag: "Push")
     
     // MARK: - Background Actions
     
-    public func ignoreCall(with notification: UILocalNotification, completionHandler: @escaping () -> Void) {
+    public func ignoreCall(with notification: UNNotification, completionHandler: @escaping () -> Void) {
         let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "IgnoreCall Action Handler")
-        let conversation = notification.conversation(in: managedObjectContext)
+        let conversation = notification.userInfo.conversation(in: managedObjectContext)
         
         managedObjectContext.perform { 
             conversation?.voiceChannel?.leave(userSession: self)

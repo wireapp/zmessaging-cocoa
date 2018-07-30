@@ -42,7 +42,7 @@ protocol NotificationBuilder {
     func shouldCreateNotification() -> Bool
     func titleText() -> String?
     func bodyText() -> String
-    func userInfo() -> [AnyHashable: Any]?
+    func userInfo() -> NotificationUserInfo?
 }
 
 
@@ -57,21 +57,16 @@ open class ZMLocalNotification: NSObject {
     public var title: String?
     public var body: String
     public var category: String
-    public var soundName: String
-    public var userInfo: [AnyHashable: Any]?
-        
-    public var selfUserID: UUID? { return uuid(for: SelfUserIDStringKey) }
-    public var senderID: UUID? { return uuid(for: SenderIDStringKey) }
-    public var messageNonce: UUID? { return uuid(for: MessageNonceIDStringKey) }
-    public var conversationID: UUID? { return uuid(for: ConversationIDStringKey) }
-    
+    public var sound: NotificationSound
+    public var userInfo: NotificationUserInfo?
+
     init?(conversation: ZMConversation?, builder: NotificationBuilder) {
         guard builder.shouldCreateNotification() else { return nil }
         self.type = builder.notificationType
         self.title = builder.titleText()
-        self.body = builder.bodyText().escapingPercentageSymbols()
+        self.body = builder.bodyText().escapingPercentageSymbols
         self.category = builder.notificationType.category
-        self.soundName = builder.notificationType.soundName.fileName
+        self.sound = builder.notificationType.sound
         self.userInfo = builder.userInfo()
     }
 
@@ -80,18 +75,33 @@ open class ZMLocalNotification: NSObject {
         let content = UNMutableNotificationContent()
         content.body = self.body
         content.categoryIdentifier = self.category
-        content.sound = UNNotificationSound(named: soundName)
+        content.sound = UNNotificationSound(named: sound.name)
 
         if let title = self.title {
             content.title = title
         }
 
         if let userInfo = self.userInfo {
-            content.userInfo = userInfo
+            content.userInfo = userInfo.storage
+        }
+
+        if let conversationID = self.conversationID {
+            content.threadIdentifier = conversationID.transportString()
         }
 
         return content
     }()
+
+}
+
+// MARK: - Properties
+
+extension ZMLocalNotification {
+
+    public var selfUserID: UUID? { return userInfo?.selfUserID }
+    public var senderID: UUID? { return userInfo?.senderID }
+    public var messageNonce: UUID? { return userInfo?.messageNonce }
+    public var conversationID: UUID? { return userInfo?.conversationID }
 
     /// Returns true if it is a calling notification, else false.
     public var isCallingNotification: Bool {
@@ -103,33 +113,24 @@ open class ZMLocalNotification: NSObject {
     
     /// Returns true if it is a ephemeral notification, else false.
     public var isEphemeral: Bool {
-        switch type {
-        case .message(let contentType):
-            if case .ephemeral = contentType {
-                return true
-            } else {
-                return false
-            }
-        default:
+        guard case .message(let contentType) = type else {
             return false
         }
+
+        return contentType == .ephemeral
     }
-    
-    /// Returns the UUID for the given key from the user info if it exists, else
-    /// nil.
-    ///
-    private func uuid(for key: String) -> UUID? {
-        guard let uuidString = userInfo?[key] as? String else { return nil }
-        return UUID(uuidString: uuidString)
-    }
-    
+
+}
+
+// MARK: - Lookup
+
+extension ZMLocalNotification {
+
     public func conversation(in moc: NSManagedObjectContext) -> ZMConversation? {
-        guard let uuid = conversationID else { return nil }
-        return ZMConversation(remoteID: uuid, createIfNeeded: false, in: moc)
+        return userInfo?.conversation(in: moc)
     }
     
     public func sender(in moc: NSManagedObjectContext) -> ZMUser? {
-        guard let uuid = senderID else { return nil }
-        return ZMUser(remoteID: uuid, createIfNeeded: false, in: moc)
+        return userInfo?.sender(in: moc)
     }
 }

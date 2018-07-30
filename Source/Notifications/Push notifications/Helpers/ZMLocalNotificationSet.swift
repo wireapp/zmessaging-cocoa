@@ -33,7 +33,7 @@ import WireTransport
         }
     }
     
-    var oldNotifications = [UILocalNotification]()
+    var oldNotifications = [UNNotificationContent]()
     
     weak var application: ZMApplication?
     let archivingKey : String
@@ -115,7 +115,7 @@ import WireTransport
         guard oldNotifications.count > 0 else { return }
 
         oldNotifications = oldNotifications.filter {
-            if ($0.zm_conversationRemoteID == conversation.remoteIdentifier) {
+            if ($0.user == conversation.remoteIdentifier) {
                 application?.cancelLocalNotification($0)
                 return false
             }
