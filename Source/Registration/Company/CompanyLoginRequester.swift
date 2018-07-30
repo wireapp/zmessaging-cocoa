@@ -48,7 +48,7 @@ extension URLQueryItem {
 
 @objc public protocol URLSessionProtocol: class {
     @objc(dataTaskWithRequest:completionHandler:)
-    func dataTask(with request: URLRequest, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Swift.Void) -> URLSessionDataTask
+    func dataTask(with request: URLRequest, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask
 }
 
 extension URLSession: URLSessionProtocol {}
