@@ -128,7 +128,7 @@
 
     // when
     [self.userSession performChanges:^{
-        [message requestImageDownload];
+        [message.fileMessageData requestImagePreviewDownload];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -651,7 +651,7 @@
     XCTAssertNotNil(conversation);
     
     [self.userSession performChanges:^{
-        [message requestImageDownload];
+        [message.fileMessageData requestImagePreviewDownload];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -785,7 +785,7 @@
     XCTAssertNotNil(conversation);
 
     [self.userSession performChanges:^{
-        [message requestImageDownload];
+        [message.fileMessageData requestImagePreviewDownload];
     }];
 
     WaitForAllGroupsToBeEmpty(0.5);
@@ -853,7 +853,7 @@
     XCTAssertNotNil(conversation);
 
     [self.userSession performChanges:^{
-        [message requestImageDownload];
+        [message.fileMessageData requestImagePreviewDownload];
     }];
 
     WaitForAllGroupsToBeEmpty(0.5);
