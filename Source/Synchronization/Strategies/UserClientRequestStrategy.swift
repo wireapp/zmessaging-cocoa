@@ -99,8 +99,8 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
             return fetchAllClientsSync.nextRequest()
         }
         
-        if clientUpdateStatus.currentPhase == .deletingClients && clientUpdateStatus.credentials != nil {
-            if let request =  deleteSync.nextRequest() {
+        if clientUpdateStatus.canCreateRequest {
+            if let request = deleteSync.nextRequest() {
                 return request
             }
         }
@@ -149,8 +149,11 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
                     fatal("Couldn't create request for new pre keys: \(e)")
                 }
             case _ where keys.contains(ZMUserClientMarkedToDeleteKey):
-                if clientUpdateStatus.currentPhase == ClientUpdatePhase.deletingClients && clientUpdateStatus.credentials != nil {
-                    request = requestsFactory.deleteClientRequest(managedObject, credentials: clientUpdateStatus.credentials!)
+                if clientUpdateStatus.canCreateRequest {
+                    request = requestsFactory.deleteClientRequest(
+                        managedObject,
+                        credentials: clientUpdateStatus.credentials
+                    )
                 }
                 else {
                     fatal("No email credentials in memory")

@@ -203,7 +203,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 - (BOOL)isWaitingForSelfUserEmail
 {
     ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-    return (selfUser.emailAddress == nil);
+    return (selfUser.emailAddress == nil) && !selfUser.usesCompanyLogin;
 }
 
 - (BOOL)isAddingEmailNecessary
