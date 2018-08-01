@@ -138,7 +138,9 @@ extension ZMUser {
             userInfo[ZMPhoneCredentialKey] = phoneNumber
         }
 
-        userInfo[ZMUserUsesCompanyLoginCredentialKey] = self.usesCompanyLogin
+        if self.usesCompanyLogin {
+            userInfo[ZMUserUsesCompanyLoginCredentialKey] = true
+        }
         
         return userInfo
     }
