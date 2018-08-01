@@ -126,9 +126,9 @@ extension ZMUser {
     
     /// This will be used to set user info on the NSError
     @objc
-    public var credentialsUserInfo : Dictionary<String, String> {
+    public var credentialsUserInfo : Dictionary<String, Any> {
         
-        var userInfo : [String : String] = [:]
+        var userInfo : [String : Any] = [:]
         
         if let emailAddress = emailAddress, !emailAddress.isEmpty {
             userInfo[ZMEmailCredentialKey] = emailAddress
@@ -137,6 +137,8 @@ extension ZMUser {
         if let phoneNumber = phoneNumber, !phoneNumber.isEmpty {
             userInfo[ZMPhoneCredentialKey] = phoneNumber
         }
+
+        userInfo[ZMUserUsesCompanyLoginCredentialKey] = self.usesCompanyLogin
         
         return userInfo
     }
