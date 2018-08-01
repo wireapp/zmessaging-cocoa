@@ -774,7 +774,7 @@
     MessageChangeObserver *messageObserver = [[MessageChangeObserver alloc] initWithMessage:observedMessage];
     XCTAssertTrue([observedMessage isKindOfClass:ZMAssetClientMessage.class]);
     
-    [observedMessage requestImageDownload];
+    [observedMessage.imageMessageData requestImageDownload];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -836,7 +836,7 @@
     XCTAssertTrue([observedMessage isKindOfClass:ZMAssetClientMessage.class]);
     
     [self.userSession performChanges:^{
-        [observedMessage requestImageDownload];
+        [observedMessage.imageMessageData requestImageDownload];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -891,13 +891,13 @@
     
     
     // THEN
-    XCTAssertNil([[imageMessageData imageMessageData] mediumData]);
+    XCTAssertNil([[imageMessageData imageMessageData] imageData]);
     
     [self.userSession performChanges:^{
-        [imageMessageData requestImageDownload];
+        [imageMessageData.imageMessageData requestImageDownload];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertNotNil([[imageMessageData imageMessageData] mediumData]);
+    XCTAssertNotNil([[imageMessageData imageMessageData] imageData]);
 }
 
 - (void)testThatAssetMediumIsRedownloadedIfNoDecryptedMessageDataIsStored
@@ -928,12 +928,12 @@
     [self.userSession.managedObjectContext.zm_fileAssetCache deleteAssetData:imageMessageData format:ZMImageFormatMedium encrypted:NO];
     
     // THEN
-    XCTAssertNil([[imageMessageData imageMessageData] mediumData]);
+    XCTAssertNil([[imageMessageData imageMessageData] imageData]);
     [self.userSession performChanges:^{
-        [imageMessageData requestImageDownload];
+        [imageMessageData.imageMessageData requestImageDownload];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertNotNil([[imageMessageData imageMessageData] mediumData]);
+    XCTAssertNotNil([[imageMessageData imageMessageData] imageData]);
 }
 
 @end

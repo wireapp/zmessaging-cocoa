@@ -154,6 +154,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
     // when
     [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
+    WaitForAllGroupsToBeEmpty(0.5);
 
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
@@ -394,9 +395,9 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    NSArray *registeredTokens = [self.mockTransportSession.pushTokens allValues];
+    NSDictionary *registeredTokens = self.mockTransportSession.pushTokens;
     XCTAssertEqual(registeredTokens.count, 1u);
-    NSDictionary *registeredToken = registeredTokens.firstObject;
+    NSDictionary *registeredToken = registeredTokens[deviceTokenAsHex];
     XCTAssertEqualObjects(registeredToken[@"token"], deviceTokenAsHex);
     XCTAssertNotNil(registeredToken[@"app"]);
     XCTAssertTrue([registeredToken[@"app"] hasPrefix:@"com.wire."]);
@@ -421,7 +422,8 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
     // when
     [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
-    
+    WaitForAllGroupsToBeEmpty(0.5);
+
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     

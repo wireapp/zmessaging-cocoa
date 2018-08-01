@@ -121,13 +121,13 @@
 "push.notification.message-timer.off.nousername.noconversationname" = "Jemand hat temporäre Nachrichten in einer Unterhaltung ausgeschaltet";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "ruft mit Video an";
-"push.notification.call.started.video.oneonone.nousername" = "Jemand ruft mit Video an";
+"push.notification.call.started.video.oneonone" = "beginnt einen Videoanruf";
+"push.notification.call.started.video.oneonone.nousername" = "Jemand beginnt einen Videoanruf";
 
-"push.notification.call.started.video.group" = "%1$@ ruft mit Video an";
-"push.notification.call.started.video.group.nousername" = "Jemand ruft mit Video an";
-"push.notification.call.started.video.group.noconversationname" = "%1$@ ruft mit Video in einer Unterhaltung an";
-"push.notification.call.started.video.group.nousername.noconversationname" = "Jemand ruft mit Video in einer Unterhaltung an";
+"push.notification.call.started.video.group" = "%1$@ beginnt einen Videoanruf";
+"push.notification.call.started.video.group.nousername" = "Jemand beginnt einen Videoanruf";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ beginnt einen Videoanruf in einer Unterhaltung";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Jemand beginnt einen Videoanruf in einer Unterhaltung";
 
 // VOICE CALLS
 "push.notification.call.started.oneonone" = "ruft an";

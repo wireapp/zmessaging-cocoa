@@ -40,37 +40,7 @@ class RequestToOpenViewsRecorder: NSObject, ZMRequestsToOpenViewsDelegate {
 }
 
 class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
-        
-    func testThatItDeletesThePushTokenWhenResettingPushTokens() {
-        // given
-        let deviceToken = "token123".data(using: .utf8)!
-        let pushToken = ZMPushToken(deviceToken: deviceToken, identifier: "com.wire.ent", transportType: "APNS_VOIP", isRegistered: true)
-        uiMOC.pushKitToken = pushToken
-        
-        // when
-        performIgnoringZMLogError {
-            self.sut.resetPushTokens()
-        }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertNil(uiMOC.pushKitToken)
-    }
-    
-    func testThatItDoesNotForcePushKitTokenUploadIfNotChangedTheData() {
-        // given
-        let deviceToken = "token123".data(using: .utf8)!
-        let pushToken = ZMPushToken(deviceToken: deviceToken, identifier: "com.wire.ent", transportType: "APNS_VOIP", isRegistered: true)
-        uiMOC.pushKitToken = pushToken
-        
-        // when
-        sut.setPushKitToken(deviceToken)
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertTrue(uiMOC.pushKitToken!.isRegistered)
-    }
-    
+
     func testThatItCallsShowConversationList_ForPushNotificationCategoryConversationWithoutConversation() {
         // given
         let recorder = RequestToOpenViewsRecorder()

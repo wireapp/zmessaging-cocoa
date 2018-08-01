@@ -121,13 +121,13 @@
 "push.notification.message-timer.off.nousername.noconversationname" = "Кто-то отключил таймер сообщения в разговоре";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "звонит с видео";
-"push.notification.call.started.video.oneonone.nousername" = "Видеозвонок";
+"push.notification.call.started.video.oneonone" = "вызывает с видео";
+"push.notification.call.started.video.oneonone.nousername" = "Кто-то вызывает с видео";
 
-"push.notification.call.started.video.group" = "%1$@ звонит с видео";
-"push.notification.call.started.video.group.nousername" = "Видеозвонок";
-"push.notification.call.started.video.group.noconversationname" = "%1$@ звонит с видео в разговоре";
-"push.notification.call.started.video.group.nousername.noconversationname" = "Видеозвонок";
+"push.notification.call.started.video.group" = "%1$@ вызывает с видео";
+"push.notification.call.started.video.group.nousername" = "Кто-то вызывает с видео";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ вызывает с видео в разговоре";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Кто-то вызывает с видео в разговоре";
 
 // VOICE CALLS
 "push.notification.call.started.oneonone" = "звонит";

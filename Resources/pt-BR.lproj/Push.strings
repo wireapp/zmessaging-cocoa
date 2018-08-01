@@ -121,13 +121,13 @@
 "push.notification.message-timer.off.nousername.noconversationname" = "Alguém desligou o tempo da mensagem em uma conversa";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "está te chamando em vídeo";
-"push.notification.call.started.video.oneonone.nousername" = "Alguém está chamando em vídeo";
+"push.notification.call.started.video.oneonone" = "is calling with video";
+"push.notification.call.started.video.oneonone.nousername" = "Someone is calling with video";
 
-"push.notification.call.started.video.group" = "%1$@ está chamando em vídeo";
-"push.notification.call.started.video.group.nousername" = "Alguém está chamando em vídeo";
-"push.notification.call.started.video.group.noconversationname" = "%1$@ está chamando em vídeo em uma conversa";
-"push.notification.call.started.video.group.nousername.noconversationname" = "Alguém está chamando em vídeo em uma conversa";
+"push.notification.call.started.video.group" = "%1$@ is calling with video";
+"push.notification.call.started.video.group.nousername" = "Someone is calling with video";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ is calling with video in a conversation";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Someone is calling with video in a conversation";
 
 // VOICE CALLS
 "push.notification.call.started.oneonone" = "está chamando";

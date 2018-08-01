@@ -20,11 +20,17 @@
 #import "ConversationTestsBase.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
+@interface ConversationTestsBase()
+
+@property (nonatomic, strong) NSMutableArray *testFiles;
+
+@end
 
 @implementation ConversationTestsBase
 
 - (void)setUp{
     [super setUp];
+    self.testFiles = [NSMutableArray array];
     [self setupGroupConversationWithOnlyConnectedParticipants];
     self.receivedConversationWindowChangeNotifications = [NSMutableArray array];
 }
@@ -40,7 +46,10 @@
     XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout: 0.5]);
     self.groupConversationWithOnlyConnected = nil;
     self.receivedConversationWindowChangeNotifications = nil;
-    
+
+    for (NSURL *testFile in self.testFiles) {
+        [NSFileManager.defaultManager removeItemAtURL:testFile error:nil];
+    }
     [super tearDown];
 }
 
@@ -55,6 +64,8 @@
     NSURL *fileURL = [directory URLByAppendingPathComponent:fileName].filePathURL;
     NSData *testData = [NSData secureRandomDataOfLength:256];
     XCTAssertTrue([testData writeToFile:fileURL.path atomically:YES]);
+
+    [self.testFiles addObject:fileURL];
 
     return fileURL;
 }

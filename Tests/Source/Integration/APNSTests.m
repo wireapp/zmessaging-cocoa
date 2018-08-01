@@ -81,83 +81,6 @@
     
 }
 
-- (BOOL)registerForPushNotificationsWithToken:(NSData *)token
-{
-    [self.pushRegistry updatePushToken:token];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    return [self lastRequestsContainedTokenRequests];
-}
-
-- (BOOL)lastRequestsContainedTokenRequests
-{
-    BOOL didContainVOIPRequest = NO;
-    for (ZMTransportRequest *aRequest in self.mockTransportSession.receivedRequests) {
-        if (![aRequest.path isEqualToString: @"/push/tokens"]) {
-            continue;
-        }
-        NSString *transportType = aRequest.payload.asDictionary[@"transport"];
-        if ([transportType isEqualToString:@"APNS_VOIP"]) {
-            didContainVOIPRequest = YES;
-        }
-    }
-    return (didContainVOIPRequest);
-}
-
-- (void)testThatItUpdatesNewTokensIfNeeded
-{
-    XCTAssertTrue([self login]);
-    
-    // given
-    NSData *token = [NSData dataWithBytes:@"abc" length:3];
-    NSData *newToken = [NSData dataWithBytes:@"def" length:6];
-    
-    XCTAssertTrue([self registerForPushNotificationsWithToken:token]);
-    [self.mockTransportSession resetReceivedRequests];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // when
-    [self.pushRegistry setMockPushToken:newToken];
-    [self recreateSessionManager];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue([self lastRequestsContainedTokenRequests], @"Did receive: %@", self.mockTransportSession.receivedRequests);
-}
-
-- (void)testThatItReregistersPushTokensOnDemand
-{
-    XCTAssertTrue([self login]);
-    
-    // given
-    NSData *token = [NSData dataWithBytes:@"abc" length:3];
-    NSData *newToken = [NSData dataWithBytes:@"def" length:6];
-    
-    // when
-    XCTAssertTrue([self registerForPushNotificationsWithToken:token]);
-    
-    // then
-    ZMTransportRequest *request = self.mockTransportSession.receivedRequests.lastObject;
-    XCTAssertEqualObjects(request.path, @"/push/tokens");
-    [self.mockTransportSession resetReceivedRequests];
-    
-    // when
-    [self.pushRegistry setMockPushToken:newToken];
-    [self.userSession resetPushTokens];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    BOOL didContainSignalingKeyRequest = NO;
-    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 2u);
-    for (ZMTransportRequest *aRequest in self.mockTransportSession.receivedRequests) {
-        if ([aRequest.path containsString:@"/clients/"] && [aRequest.payload asDictionary][@"sigkeys"] != nil) {
-            didContainSignalingKeyRequest = YES;
-        }
-    }
-    XCTAssertTrue(didContainSignalingKeyRequest);
-    XCTAssertTrue([self lastRequestsContainedTokenRequests]);
-}
-
 - (void)testThatItFetchesTheNotificationStreamWhenReceivingNotificationOfTypeNotice
 {
     XCTAssertTrue([self login]);
@@ -327,7 +250,6 @@
         WaitForAllGroupsToBeEmpty(0.2);
     }
 }
-
 
 #pragma mark - Helper
 

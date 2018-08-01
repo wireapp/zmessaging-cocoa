@@ -55,12 +55,12 @@ public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder
         self.smallProfileDownstreamSync.whiteListObject(ZMUser.selfUser(in: managedObjectContext))
         
         observers.append(NotificationInContext.addObserver(
-            name: RequestUserProfileAssetNotificationName,
+            name: .userDidRequestCompleteAsset,
             context: managedObjectContext.notificationContext,
             using: { [weak self] in self?.requestAssetForNotification(note: $0) })
         )
         observers.append(NotificationInContext.addObserver(
-            name: RequestUserProfileSmallAssetNotificationName,
+            name: .userDidRequestPreviewAsset,
             context: managedObjectContext.notificationContext,
             using: { [weak self] in self?.requestAssetForNotification(note: $0) })
         )
@@ -82,9 +82,9 @@ public class UserImageStrategy : AbstractRequestStrategy, ZMDownstreamTranscoder
             else { return }
             
             switch note.name {
-            case RequestUserProfileAssetNotificationName:
+            case .userDidRequestCompleteAsset:
                 self.mediumDownstreamSync.whiteListObject(object)
-            case RequestUserProfileSmallAssetNotificationName:
+            case .userDidRequestPreviewAsset:
                 self.smallProfileDownstreamSync.whiteListObject(object)
             default:
                 break
@@ -206,20 +206,4 @@ extension UserImageStrategy {
         return ZMTransportRequest(getFromPath: "/assets/v3/\(key)")
     }
 }
-
-extension UserImageStrategy {
-    
-    public static func requestAsset(for user: ZMUser) {
-        NotificationInContext(name: RequestUserProfileAssetNotificationName,
-                              context: user.managedObjectContext!.notificationContext,
-                              object: user.objectID).post()
-    }
-    
-    public static func requestSmallAsset(for user: ZMUser) {
-        NotificationInContext(name: RequestUserProfileSmallAssetNotificationName,
-                              context: user.managedObjectContext!.notificationContext,
-                              object: user.objectID).post()
-    }
-}
-
 

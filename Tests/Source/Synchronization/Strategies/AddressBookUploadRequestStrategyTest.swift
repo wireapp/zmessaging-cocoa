@@ -449,10 +449,10 @@ extension AddressBookUploadRequestStrategyTest {
         let user2 = self.createUser(connected: true)
         user1.addressBookEntry = AddressBookEntry.insertNewObject(in: self.syncMOC)
         user2.addressBookEntry = AddressBookEntry.insertNewObject(in: self.syncMOC)
-        user1.addressBookEntry.cachedName = "JJ"
-        user2.addressBookEntry.cachedName = "Kirk"
-        user1.addressBookEntry.localIdentifier = "u1"
-        user2.addressBookEntry.localIdentifier = "u2"
+        user1.addressBookEntry?.cachedName = "JJ"
+        user2.addressBookEntry?.cachedName = "Kirk"
+        user1.addressBookEntry?.localIdentifier = "u1"
+        user2.addressBookEntry?.localIdentifier = "u2"
         self.syncMOC.saveOrRollback()
         
         let contacts = [
@@ -485,8 +485,8 @@ extension AddressBookUploadRequestStrategyTest {
         let user2 = self.createUser(connected: true)
         user1.addressBookEntry = AddressBookEntry.insertNewObject(in: self.syncMOC)
         user2.addressBookEntry = AddressBookEntry.insertNewObject(in: self.syncMOC)
-        user1.addressBookEntry.cachedName = "JJ"
-        user2.addressBookEntry.cachedName = "Kirk"
+        user1.addressBookEntry?.cachedName = "JJ"
+        user2.addressBookEntry?.cachedName = "Kirk"
         self.syncMOC.saveOrRollback()
         
         let contacts = [

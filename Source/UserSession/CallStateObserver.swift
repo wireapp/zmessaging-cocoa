@@ -60,7 +60,7 @@ public final class CallStateObserver : NSObject {
 
 extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
-    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) {
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?) {
         
         let callerId = caller.remoteIdentifier
         let conversationId = conversation.remoteIdentifier
@@ -91,7 +91,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             self.updateConversationListIndicator(convObjectID: conversation.objectID, callState: callState)
             
-            if let systemMessage = self.systemMessageGenerator.appendSystemMessageIfNeeded(callState: callState, conversation: conversation, caller: caller, timestamp: timestamp) {
+            if let systemMessage = self.systemMessageGenerator.appendSystemMessageIfNeeded(callState: callState, conversation: conversation, caller: caller, timestamp: timestamp, previousCallState: previousCallState) {
                 switch (systemMessage.systemMessageType, callState, conversation.conversationType) {
                 case (.missedCall, .terminating(reason: .canceled), _ ):
                     // the caller canceled the call
@@ -160,10 +160,9 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
     }
     
     private func updateConversation(_ conversation: ZMConversation, with callState: CallState, timestamp: Date?) {
-        guard !conversation.isSilenced else { return }
         switch callState {
         case .incoming(_, shouldRing: true, degraded: _):
-            if conversation.isArchived {
+            if conversation.isArchived && !conversation.isSilenced {
                 conversation.isArchived = false
             }
             

@@ -121,13 +121,13 @@
 "push.notification.message-timer.off.nousername.noconversationname" = "某人關閉了對話訊息時限";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "視訊來電";
-"push.notification.call.started.video.oneonone.nousername" = "您接到一個視訊來電";
+"push.notification.call.started.video.oneonone" = "想跟你視訊通話";
+"push.notification.call.started.video.oneonone.nousername" = "某人想跟你視訊通話";
 
-"push.notification.call.started.video.group" = "%1$@視訊來電";
-"push.notification.call.started.video.group.nousername" = "您接到一個視訊來電";
-"push.notification.call.started.video.group.noconversationname" = "%1$@在對話中視訊來電";
-"push.notification.call.started.video.group.nousername.noconversationname" = "對話中有視訊來電";
+"push.notification.call.started.video.group" = "%1$@想跟你視訊通話";
+"push.notification.call.started.video.group.nousername" = "某人想跟你視訊通話";
+"push.notification.call.started.video.group.noconversationname" = "%1$@想跟你在對話中視訊通話";
+"push.notification.call.started.video.group.nousername.noconversationname" = "某人想跟你在對話中視訊通話";
 
 // VOICE CALLS
 "push.notification.call.started.oneonone" = "來電";

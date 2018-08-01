@@ -18,16 +18,10 @@
 
 import Foundation
 
-extension UserInfo: Equatable {
-    public static func == (lhs: UserInfo, rhs: UserInfo) -> Bool {
-        return (lhs.identifier == rhs.identifier) && (lhs.cookieData == rhs.cookieData)
-    }
-}
-
 public enum URLAction: Equatable {
     case connectBot(serviceUser: ServiceUserData)
     case companyLoginSuccess(userInfo: UserInfo)
-    case companyLoginFailure(errorLabel: String)
+    case companyLoginFailure(error: CompanyLoginError)
 
     var requiresAuthentication: Bool {
         switch self {
@@ -44,14 +38,14 @@ extension URLComponents {
 }
 
 extension URLAction {
-    init?(url: URL) {
+    init?(url: URL, validatingIn defaults: UserDefaults = .shared()) {
         guard let components = URLComponents(string: url.absoluteString),
             let host = components.host else {
             return nil
         }
         
         switch host {
-        case "connect":
+        case URL.Host.connect:
             guard let service = components.query(for: "service"),
                 let provider = components.query(for: "provider"),
                 let serviceUUID = UUID(uuidString: service),
@@ -60,7 +54,7 @@ extension URLAction {
             }
             self = .connectBot(serviceUser: ServiceUserData(provider: providerUUID, service: serviceUUID))
 
-        case "login":
+        case URL.Host.login:
             let pathComponents = url.pathComponents
 
             guard url.pathComponents.count >= 2 else {
@@ -68,29 +62,42 @@ extension URLAction {
             }
 
             switch pathComponents[1] {
-            case "success":
-                guard let cookieString = components.query(for: "cookie") else {
-                    return nil
+            case URL.Path.success:
+                guard URLAction.validateURLSchemeRequest(with: components, in: defaults) else {
+                    self = .companyLoginFailure(error: .tokenNotFound)
+                    return
                 }
-
-                guard let userIDString = components.query(for: "user_id"),
-                    let userID = UUID(uuidString: userIDString) else {
-                    return nil
+                
+                guard let cookieString = components.query(for: URLQueryItem.Key.cookie) else {
+                    self = .companyLoginFailure(error: .missingRequiredParameter)
+                    return
                 }
-
+                guard let userID = components.query(for: URLQueryItem.Key.userIdentifier).flatMap(UUID.init) else {
+                    self = .companyLoginFailure(error: .missingRequiredParameter)
+                    return
+                }
+                
                 guard let cookieData = HTTPCookie.extractCookieData(from: cookieString, url: url) else {
-                    return nil
+                    self = .companyLoginFailure(error: .invalidCookie)
+                    return
                 }
 
                 let userInfo = UserInfo(identifier: userID, cookieData: cookieData)
                 self = .companyLoginSuccess(userInfo: userInfo)
 
-            case "failure":
-                guard let label = components.query(for: "label") else {
-                    return nil
+            case URL.Path.failure:
+                guard URLAction.validateURLSchemeRequest(with: components, in: defaults) else {
+                    self = .companyLoginFailure(error: .tokenNotFound)
+                    return
+                }
+                
+                guard let label = components.query(for: URLQueryItem.Key.errorLabel) else {
+                    self = .companyLoginFailure(error: .missingRequiredParameter)
+                    return
                 }
 
-                self = .companyLoginFailure(errorLabel: label)
+                let error = CompanyLoginError(label: label)
+                self = .companyLoginFailure(error: error)
             default:
                 return nil
             }
@@ -99,6 +106,13 @@ extension URLAction {
             return nil
         }
     }
+    
+    private static func validateURLSchemeRequest(with components: URLComponents, in defaults: UserDefaults) -> Bool {
+        guard let storedToken = CompanyLoginVerificationToken.current(in: defaults) else { return false }
+        guard let token = components.query(for: URLQueryItem.Key.validationToken).flatMap(UUID.init) else { return false }
+        return storedToken.matches(identifier: token)
+    }
+
 
     func execute(in session: ZMUserSession) {
         switch self {
@@ -113,15 +127,16 @@ extension URLAction {
     func execute(in unauthenticatedSession: UnauthenticatedSession) {
         switch self {
         case .companyLoginSuccess(let userInfo):
-            unauthenticatedSession.authenticationStatus.notifyAuthenticationDidSucceed()
-            unauthenticatedSession.upgradeToAuthenticatedSession(with: userInfo)
-
+            unauthenticatedSession.authenticationStatus.loginSucceeded(with: userInfo)
         case .companyLoginFailure:
             break // no-op (error should be handled in UI)
 
         default:
             fatalError("This action cannot be executed with an unauthenticated session.")
         }
+        
+        // Delete the url scheme verification token
+        CompanyLoginVerificationToken.flush()
     }
 }
 
