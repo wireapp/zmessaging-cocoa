@@ -137,7 +137,7 @@ public final class UserClientRequestFactory {
             let request = ZMTransportRequest(path: "/clients/\(remoteIdentifier)", method: ZMTransportRequestMethod.methodPUT, payload: payload as ZMTransportData)
             request.add(storeMaxRangeID(client, maxRangeID: preKeysRangeMax))
 
-            return ZMUpstreamRequest(keys: [ZMUserClientNumberOfKeysRemainingKey], transportRequest: request, userInfo: nil)
+            return ZMUpstreamRequest(keys: Set(arrayLiteral: ZMUserClientNumberOfKeysRemainingKey), transportRequest: request, userInfo: nil)
         }
         throw UserClientRequestError.clientNotRegistered
     }
@@ -152,23 +152,19 @@ public final class UserClientRequestFactory {
             let request = ZMTransportRequest(path: "/clients/\(remoteIdentifier)", method: ZMTransportRequestMethod.methodPUT, payload: payload as ZMTransportData)
             request.add(storeAPSSignalingKeys(client, signalingKeys: signalingKeys))
             
-            return ZMUpstreamRequest(keys: [ZMUserClientNeedsToUpdateSignalingKeysKey], transportRequest: request, userInfo: nil)
+            return ZMUpstreamRequest(keys: Set(arrayLiteral: ZMUserClientNeedsToUpdateSignalingKeysKey), transportRequest: request, userInfo: nil)
         }
         throw UserClientRequestError.clientNotRegistered
     }
     
     /// Password needs to be set
-    public func deleteClientRequest(_ client: UserClient, credentials: ZMEmailCredentials?) -> ZMUpstreamRequest {
-        let payload = credentials.map {
-            ["email" : $0.email, "password" : $0.password]
-        } ?? [:]
-
-        let request =  ZMTransportRequest(
-            path: "/clients/\(client.remoteIdentifier!)",
-            method: .methodDELETE,
-            payload: payload as ZMTransportData
-        )
-        return ZMUpstreamRequest(keys: [ZMUserClientMarkedToDeleteKey], transportRequest: request)
+    public func deleteClientRequest(_ client: UserClient, credentials: ZMEmailCredentials) -> ZMUpstreamRequest {
+        let payload = [
+            "email" : credentials.email!,
+            "password" : credentials.password!
+        ]
+        let request =  ZMTransportRequest(path: "/clients/\(client.remoteIdentifier!)", method: ZMTransportRequestMethod.methodDELETE, payload: payload as ZMTransportData)
+        return ZMUpstreamRequest(keys: Set(arrayLiteral: ZMUserClientMarkedToDeleteKey), transportRequest: request)
     }
     
     public func fetchClientsRequest() -> ZMTransportRequest! {
