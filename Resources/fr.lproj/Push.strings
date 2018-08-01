@@ -121,13 +121,13 @@
 "push.notification.message-timer.off.nousername.noconversationname" = "Quelqu'un a désactivé les messages éphémères dans une conversation";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "appelle en vidéo";
-"push.notification.call.started.video.oneonone.nousername" = "Quelqu'un appelle en vidéo";
+"push.notification.call.started.video.oneonone" = "a commencé un appel vidéo";
+"push.notification.call.started.video.oneonone.nousername" = "Quelqu'un a commencé un appel vidéo";
 
-"push.notification.call.started.video.group" = "%1$@ appelle en vidéo";
-"push.notification.call.started.video.group.nousername" = "Quelqu'un appelle en vidéo";
-"push.notification.call.started.video.group.noconversationname" = "%1$@ appelle en vidéo dans une conversation";
-"push.notification.call.started.video.group.nousername.noconversationname" = "Quelqu'un appelle en vidéo dans une conversation";
+"push.notification.call.started.video.group" = "%1$@ a commencé un appel vidéo";
+"push.notification.call.started.video.group.nousername" = "Quelqu'un a commencé un appel vidéo";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ a commencé un appel vidéo dans une conversation";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Quelqu'un a commencé un appel vidéo dans une conversation";
 
 // VOICE CALLS
 "push.notification.call.started.oneonone" = "appelle";

@@ -121,13 +121,13 @@
 "push.notification.message-timer.off.nousername.noconversationname" = "Someone turned off the message timer in a conversation";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "يتصل بمكالمة فيديو";
-"push.notification.call.started.video.oneonone.nousername" = "اتصال فيديو من شخص ما";
+"push.notification.call.started.video.oneonone" = "is calling with video";
+"push.notification.call.started.video.oneonone.nousername" = "Someone is calling with video";
 
-"push.notification.call.started.video.group" = "مكالمة فيديو من %1$@";
-"push.notification.call.started.video.group.nousername" = "اتصال فيديو من شخص ما";
-"push.notification.call.started.video.group.noconversationname" = "%1$@ يتصل بالفيديو في مُحادثة";
-"push.notification.call.started.video.group.nousername.noconversationname" = "شخص يتصل فيديو في مُحادثة";
+"push.notification.call.started.video.group" = "%1$@ is calling with video";
+"push.notification.call.started.video.group.nousername" = "Someone is calling with video";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ is calling with video in a conversation";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Someone is calling with video in a conversation";
 
 // VOICE CALLS
 "push.notification.call.started.oneonone" = "يتصل بك";
