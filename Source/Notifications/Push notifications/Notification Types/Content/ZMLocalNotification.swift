@@ -71,7 +71,7 @@ open class ZMLocalNotification: NSObject {
     }
 
     /// Returns a configured concrete `UNNotificationContent` object.
-    public lazy var userNotificationContent: UNNotificationContent = {
+    public lazy var content: UNNotificationContent = {
         let content = UNMutableNotificationContent()
         content.body = self.body
         content.categoryIdentifier = self.category
@@ -91,6 +91,12 @@ open class ZMLocalNotification: NSObject {
 
         return content
     }()
+    
+    /// Returns a configured concrete `UNNotificationRequest` for the given trigger.
+    public func request(with trigger: UNNotificationTrigger? = nil) -> UNNotificationRequest {
+        let id = messageNonce?.uuidString ?? UUID().uuidString
+        return UNNotificationRequest(identifier: id, content: content, trigger: trigger)
+    }
 
 }
 
