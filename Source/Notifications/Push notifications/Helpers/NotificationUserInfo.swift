@@ -199,7 +199,7 @@ extension UNNotification {
 
     /// The user info describing the notification context.
     public var userInfo: NotificationUserInfo {
-        return NotificationUserInfo(storage: content.userInfo)
+        return NotificationUserInfo(storage: request.content.userInfo)
     }
 
 }
@@ -208,7 +208,7 @@ extension UNNotificationResponse {
 
     /// The user info describing the notification context.
     public var userInfo: NotificationUserInfo {
-        return NotificationUserInfo(storage: self.notification.userInfo)
+        return notification.userInfo
     }
 
 }
