@@ -124,10 +124,10 @@
 "push.notification.call.started.video.oneonone" = "дзвонить з відео";
 "push.notification.call.started.video.oneonone.nousername" = "Хтось дзвонить з відео";
 
-"push.notification.call.started.video.group" = "Відеодзвінок від %1$@";
+"push.notification.call.started.video.group" = "%1$@ дзвонить з відео";
 "push.notification.call.started.video.group.nousername" = "Хтось дзвонить з відео";
-"push.notification.call.started.video.group.noconversationname" = "%1$@ дзвонить з відео у розмові";
-"push.notification.call.started.video.group.nousername.noconversationname" = "Хтось дзвонить з відео у розмові";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ дзвонить з відео в розмові";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Хтось дзвонить з відео в розмові";
 
 // VOICE CALLS
 "push.notification.call.started.oneonone" = "дзвонить";

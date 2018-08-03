@@ -121,13 +121,13 @@
 "push.notification.message-timer.off.nousername.noconversationname" = "Someone turned off the message timer in a conversation";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "görüntülü arıyor";
-"push.notification.call.started.video.oneonone.nousername" = "Birisi görüntülü arama yapıyor";
+"push.notification.call.started.video.oneonone" = "is calling with video";
+"push.notification.call.started.video.oneonone.nousername" = "Someone is calling with video";
 
-"push.notification.call.started.video.group" = "%1$@ görüntülü arıyor";
-"push.notification.call.started.video.group.nousername" = "Birisi görüntülü arama yapıyor";
-"push.notification.call.started.video.group.noconversationname" = "%1$@ bir konuşmada görüntülü arama yapıyor";
-"push.notification.call.started.video.group.nousername.noconversationname" = "Birisi bir konuşmada görüntülü arama yapıyor";
+"push.notification.call.started.video.group" = "%1$@ is calling with video";
+"push.notification.call.started.video.group.nousername" = "Someone is calling with video";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ is calling with video in a conversation";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Someone is calling with video in a conversation";
 
 // VOICE CALLS
 "push.notification.call.started.oneonone" = "arıyor";

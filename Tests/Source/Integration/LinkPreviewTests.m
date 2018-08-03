@@ -351,7 +351,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.userSession performChanges:^{
-        [message requestImageDownload];
+        [message.imageMessageData requestImageDownload];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
