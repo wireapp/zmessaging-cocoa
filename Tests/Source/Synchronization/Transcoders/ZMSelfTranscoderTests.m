@@ -489,21 +489,6 @@
 
 @implementation ZMSelfStrategyTests (ClientRegistrationStatus)
 
-// TODO Sabine:
-//- (void)testThatItReturnsTheTimedDownstreamSyncWhenTHeClientRegistrationStatusIsWaitingForEmailVerififcation
-//{
-//    // given
-//    [(ZMClientRegistrationStatus *)[[self.mockClientRegistrationStatus expect] andReturnValue:OCMOCK_VALUE(ZMClientRegistrationPhaseWaitingForEmailVerfication)] currentPhase];
-//    
-//    // when
-//    NSArray *generators = [self.sut requestGenerators];
-//    
-//    // then
-//    XCTAssertEqual(generators.count, 1u);
-//    XCTAssertEqual([generators.firstObject class], [ZMTimedSingleRequestSync class]);
-//    [self.mockClientRegistrationStatus verify];
-//}
-
 - (void)testThatItForwardSelfUserUpdatesToTheClientRegsitrationStatus_RemoteIdentifier
 {
     // given
