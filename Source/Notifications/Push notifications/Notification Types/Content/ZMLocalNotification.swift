@@ -53,6 +53,12 @@ protocol NotificationBuilder {
 ///
 open class ZMLocalNotification: NSObject {
     
+    /// The unique identifier for this notification. Use it to later update
+    /// or remove pending or scheduled notification requests.
+    public lazy var id: UUID = {
+        return messageNonce ?? UUID()
+    }()
+    
     public let type: LocalNotificationType
     public var title: String?
     public var body: String
@@ -92,11 +98,11 @@ open class ZMLocalNotification: NSObject {
         return content
     }()
     
-    /// Returns a configured concrete `UNNotificationRequest` for the given trigger.
-    public func request(with trigger: UNNotificationTrigger? = nil) -> UNNotificationRequest {
-        let id = messageNonce?.uuidString ?? UUID().uuidString
-        return UNNotificationRequest(identifier: id, content: content, trigger: trigger)
-    }
+    /// Returns a configured concrete `UNNotificationRequest`.
+    public lazy var request: UNNotificationRequest = {
+        let idString = id.uuidString
+        return UNNotificationRequest(identifier: idString, content: content, trigger: nil)
+    }()
 
 }
 

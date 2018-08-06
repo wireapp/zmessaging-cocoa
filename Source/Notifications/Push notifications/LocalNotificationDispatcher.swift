@@ -86,7 +86,7 @@ import UserNotifications
         if operationStatus?.operationState == .foreground {
             self.foregroundNotificationDelegate?.didReceieveLocal(notification: note, application: application)
         } else {
-            notificationCenter.add(note.request(), withCompletionHandler: nil)
+            notificationCenter.add(note.request, withCompletionHandler: nil)
         }
     }
 
