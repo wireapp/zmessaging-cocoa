@@ -199,33 +199,6 @@ ZM_EMPTY_ASSERTING_INIT()
 
 
 
-@interface MessageWindowChangeObserver ()
-@property (nonatomic, weak) ZMConversationMessageWindow *window;
-@property (nonatomic) id token;
-
-@end
-
-
-@implementation MessageWindowChangeObserver
-
-- (instancetype)initWithMessageWindow:(ZMConversationMessageWindow *)window
-{
-    self = [super init];
-    if(self) {
-        self.window = window;
-        self.token = [MessageWindowChangeInfo addObserver:self forWindow:window];
-    }
-    return self;
-}
-
-- (void)conversationWindowDidChange:(MessageWindowChangeInfo *)note
-{
-    [self.notifications addObject:note];
-}
-
-@end
-
-
 
 
 static NSString * const Placeholder = @"Placeholder";
