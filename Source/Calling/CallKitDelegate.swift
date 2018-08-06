@@ -87,7 +87,7 @@ public class CallKitDelegate : NSObject {
         configuration.maximumCallGroups = 1
         configuration.maximumCallsPerCallGroup = 1
         configuration.supportedHandleTypes = [.generic]
-        configuration.ringtoneSound = ZMCustomSound.notificationRingingSoundName()
+        configuration.ringtoneSound = NotificationSound.call.name
         
         if let image = UIImage(named: "logo") {
             configuration.iconTemplateImageData = UIImagePNGRepresentation(image)
