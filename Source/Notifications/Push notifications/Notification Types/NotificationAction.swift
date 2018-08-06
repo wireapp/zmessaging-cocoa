@@ -71,8 +71,8 @@ extension NotificationAction {
                 identifier: identifier,
                 title: titleFormat.pushActionString,
                 options: options,
-                textInputButtonTitle: textInputMode.buttonTitleFormat.localizedPushAction,
-                textInputPlaceholder: textInputMode.placeholderFormat.localizedPushAction
+                textInputButtonTitle: textInputMode.buttonTitleFormat.pushActionString,
+                textInputPlaceholder: textInputMode.placeholderFormat.pushActionString
             )
         } else {
             return UNNotificationAction(
