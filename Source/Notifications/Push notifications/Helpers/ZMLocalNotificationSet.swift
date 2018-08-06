@@ -27,13 +27,23 @@ import WireTransport
 
 @objc public final class ZMLocalNotificationSet : NSObject  {
     
-    public fileprivate(set) var notifications : Set<ZMLocalNotification> = Set() {
-        didSet {
-            updateArchive()
-        }
+    private var notificationCenter: UNUserNotificationCenter {
+        return UNUserNotificationCenter.current()
     }
     
-    var oldNotifications = [UNNotificationContent]()
+    private var allNotifications: [ZMLocalNotification] {
+        return notifications + oldNotifications
+    }
+    
+    private var allIDs: [UUID] {
+        return allNotifications.map { $0.id }
+    }
+    
+    public fileprivate(set) var notifications : Set<ZMLocalNotification> = Set() {
+        didSet { updateArchive() }
+    }
+
+    private var oldNotifications = [ZMLocalNotification]()
     
     weak var application: ZMApplication?
     let archivingKey : String
@@ -44,29 +54,23 @@ import WireTransport
         self.archivingKey = archivingKey
         self.keyValueStore = keyValueStore
         super.init()
-        
+
         unarchiveOldNotifications()
     }
     
     /// unarchives all previously created notifications that haven't been cancelled yet
     func unarchiveOldNotifications(){
         guard let archive = keyValueStore.storedValue(key: archivingKey) as? Data,
-            let unarchivedNotes =  NSKeyedUnarchiver.unarchiveObject(with: archive) as? [UILocalNotification]
+            let unarchivedNotes =  NSKeyedUnarchiver.unarchiveObject(with: archive) as? [ZMLocalNotification]
             else { return }
         self.oldNotifications = unarchivedNotes
     }
     
     /// Archives all scheduled notifications - this could be optimized
     func updateArchive(){
-        var uiNotifications : [UILocalNotification] = notifications.reduce([]) { (uiNotes, localNote) in
-            var newUINotes = uiNotes
-            newUINotes.append(localNote.uiLocalNotification)
-            return newUINotes
-        }
-        uiNotifications = uiNotifications + oldNotifications
-        let data = NSKeyedArchiver.archivedData(withRootObject: uiNotifications)
+        let data = NSKeyedArchiver.archivedData(withRootObject: allNotifications)
         keyValueStore.store(value: data as NSData, key: archivingKey)
-        keyValueStore.enqueueDelayedSave() // we need to save otherwiese changes might not be stored
+        keyValueStore.enqueueDelayedSave() // we need to save otherwise changes might not be stored
     }
     
     @discardableResult public func remove(_ notification: ZMLocalNotification) -> ZMLocalNotification? {
@@ -84,10 +88,9 @@ import WireTransport
     
     /// Cancels all notifications
     public func cancelAllNotifications() {
-        notifications.forEach { application?.cancelLocalNotification($0.uiLocalNotification) }
+        let ids = allIDs.map { $0.uuidString }
+        notificationCenter.removeAllNotifications(with: ids)
         notifications = Set()
-        
-        oldNotifications.forEach{application?.cancelLocalNotification($0)}
         oldNotifications = []
     }
     
@@ -100,13 +103,8 @@ import WireTransport
     /// Cancel all notifications created in this run
     internal func cancelCurrentNotifications(_ conversation: ZMConversation) {
         guard notifications.count > 0 else { return }
-        var toRemove = Set<ZMLocalNotification>()
-        notifications.forEach {
-            if ($0.conversationID == conversation.remoteIdentifier) {
-                toRemove.insert($0)
-                application?.cancelLocalNotification($0.uiLocalNotification)
-            }
-        }
+        let toRemove = notifications.filter { $0.conversationID == conversation.remoteIdentifier }
+        notificationCenter.removeAllNotifications(with: toRemove.map { $0.id.uuidString })
         notifications.subtract(toRemove)
     }
     
@@ -115,24 +113,17 @@ import WireTransport
         guard oldNotifications.count > 0 else { return }
 
         oldNotifications = oldNotifications.filter {
-            if ($0.user == conversation.remoteIdentifier) {
-                application?.cancelLocalNotification($0)
-                return false
-            }
-            return true
+            guard $0.conversationID == conversation.remoteIdentifier else { return true }
+            notificationCenter.removeAllNotifications(with: [$0.id.uuidString])
+            return false
         }
     }
     
     /// Cancal all notifications with the given message nonce
     internal func cancelCurrentNotifications(messageNonce: UUID) {
         guard notifications.count > 0 else { return }
-        var toRemove = Set<ZMLocalNotification>()
-        notifications.forEach {
-            if ($0.messageNonce == messageNonce) {
-                toRemove.insert($0)
-                application?.cancelLocalNotification($0.uiLocalNotification)
-            }
-        }
+        let toRemove = notifications.filter { $0.messageNonce == messageNonce }
+        notificationCenter.removeAllNotifications(with: toRemove.map { $0.id.uuidString })
         notifications.subtract(toRemove)
     }
 }
@@ -142,12 +133,19 @@ import WireTransport
 public extension ZMLocalNotificationSet {
 
     public func cancelNotificationForIncomingCall(_ conversation: ZMConversation) {
-        var toRemove = Set<ZMLocalNotification>()
-        notifications.forEach{ note in
-            guard note.conversationID == conversation.remoteIdentifier, note.isCallingNotification else { return }
-            toRemove.insert(note)
-            application?.cancelLocalNotification(note.uiLocalNotification)
+        let toRemove = notifications.filter {
+            $0.conversationID == conversation.remoteIdentifier && $0.isCallingNotification
         }
+        notificationCenter.removeAllNotifications(with: toRemove.map { $0.id.uuidString })
         notifications.subtract(toRemove)
+    }
+}
+
+// TODO: put this somewhere else?
+extension UNUserNotificationCenter {
+    
+    func removeAllNotifications(with requestIdentifiers: [String]) {
+        removePendingNotificationRequests(withIdentifiers: requestIdentifiers)
+        removeDeliveredNotifications(withIdentifiers: requestIdentifiers)
     }
 }
