@@ -24,7 +24,6 @@
 #import "ZMOperationLoop+Background.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
-#import "ZMStoredLocalNotification.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
