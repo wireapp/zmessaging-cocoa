@@ -134,61 +134,33 @@ extension ZMUserSession {
             self.sessionManager?.localNotificationResponder?.processLocal(notification, forSession: self)
         }
     }
-
-    public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
-        
-        if let category = notification.category, category == PushNotificationCategory.incomingCall.rawValue {
-            self.handleTrackingOnCallNotification(notification)
-        }
-        
-        self.pendingLocalNotification = ZMStoredLocalNotification(notification: notification,
-                                                                  managedObjectContext: self.managedObjectContext,
-                                                                  actionIdentifier: nil,
-                                                                  textInput: nil)
-
-        if self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen {
-            self.processPendingNotificationActions()
-        }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
+    {
+            // currently no op
     }
     
-    public func handleAction(application: ZMApplication,
-                             with identifier: String?,
-                             for localNotification: UILocalNotification,
-                             with responseInfo: [AnyHashable: Any],
-                             completionHandler: @escaping () -> ()) {
-        
-        let textInput: String = responseInfo[UIUserNotificationActionResponseTypedTextKey] as? String ?? ""
-
-        if let concreteIdentifier = identifier {
-            switch concreteIdentifier {
-            case CallNotificationAction.ignore.rawValue:
-                self.ignoreCall(with: localNotification, completionHandler: completionHandler)
-                return
-            case ConversationNotificationAction.mute.rawValue:
-                self.muteConversation(with: localNotification, completionHandler: completionHandler)
-                return
-            case ConversationNotificationAction.like.rawValue:
-                self.likeMessage(with: localNotification, completionHandler: completionHandler)
-                return
-            case ConversationNotificationAction.reply.rawValue:
-                self.reply(with: localNotification, message: textInput, completionHandler: completionHandler)
-                return
-            default:
-                break
+    public func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                       didReceive response: UNNotificationResponse,
+                                       withCompletionHandler completionHandler: @escaping () -> Void)
+    {
+        switch response.actionIdentifier {
+        case CallNotificationAction.ignore.rawValue:
+            ignoreCall(with: response.notification, completionHandler: completionHandler)
+        case ConversationNotificationAction.mute.rawValue:
+            muteConversation(with: response.notification, completionHandler: completionHandler)
+        case ConversationNotificationAction.like.rawValue:
+            likeMessage(with: response.notification, completionHandler: completionHandler)
+        case ConversationNotificationAction.reply.rawValue:
+            // TODO: review this
+            if let textInput = (response as? UNTextInputNotificationResponse)?.userText {
+                reply(with: response.notification, message: textInput, completionHandler: completionHandler)
             }
+        default:
+            // handle stored notification here
+            completionHandler()
         }
-        
-        if application.applicationState == .inactive {
-            self.pendingLocalNotification = ZMStoredLocalNotification(notification: localNotification,
-                                                                      managedObjectContext: self.managedObjectContext,
-                                                                      actionIdentifier: identifier,
-                                                                      textInput: textInput)
-        }
-         
-        if self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen {
-            self.processPendingNotificationActions()
-        }
-        
-        completionHandler();
     }
 }

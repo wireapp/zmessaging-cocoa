@@ -40,6 +40,7 @@ extension PKPushRegistry: PushRegistry {}
     }
     
     @objc public func configureUserNotifications() {
+        guard application.shouldRegisterUserNotificationSettings else { return }
         // Configure push notification categories
         notificationCenter.setNotificationCategories(PushNotificationCategory.allCategories)
         notificationCenter.requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { _, _ in })
@@ -54,40 +55,36 @@ extension PKPushRegistry: PushRegistry {}
             }
         }
     }
+    
+    public func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                       willPresent notification: UNNotification,
+                                       withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
+    {
+        // route to user session
+        guard let selfID = notification.userInfo.selfUserID,
+            let account = accountManager.account(with: selfID)
+            else { return }
         
-    // Must be called when the AppDelegate receives the new local push notification.
-    @objc(didReceiveLocalNotification:application:)
-    public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
-        if let selfUserId = notification.zm_selfUserUUID,
-            let account = self.accountManager.account(with: selfUserId) {
-            
-            self.withSession(for: account) { userSession in
-                userSession.didReceiveLocal(notification: notification, application: application)
-            }
-        }
-    }
-
-    // Must be called when the user action with @c identifier is completed on the local notification 
-    // @c localNotification (see UIApplicationDelegate).
-    @objc(handleActionWithIdentifier:forNotificationResponse:completionHandler:application:)
-    public func handleAction(with identifier: String?,
-                             for response: UNNotificationResponse,
-                             completionHandler: @escaping () -> (),
-                             application: ZMApplication) {
-        guard let selfUserID = notificationResponse.userInfo.selfUserID,
-            let account = self.accountManager.account(with: selfUserID) else {
-            return
-        }
-
         self.withSession(for: account) { userSession in
-            userSession.handleAction(application: application,
-                                     with: identifier,
-                                     for: localNotification,
-                                     with: responseInfo,
-                                     completionHandler: completionHandler)
+            userSession.userNotificationCenter(center, willPresent: notification, withCompletionHandler: completionHandler)
         }
     }
+    
+    public func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                       didReceive response: UNNotificationResponse,
+                                       withCompletionHandler completionHandler: @escaping () -> Void)
+    {
         
+        // route to user session
+        guard let selfID = response.notification.userInfo.selfUserID,
+            let account = accountManager.account(with: selfID)
+            else { return }
+        
+        self.withSession(for: account) { userSession in
+            userSession.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
+        }
+    }
+    
     fileprivate func activateAccount(for session: ZMUserSession, completion: @escaping () -> ()) {
         if session == activeUserSession {
             completion()
