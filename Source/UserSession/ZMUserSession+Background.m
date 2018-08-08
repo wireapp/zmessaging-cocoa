@@ -33,10 +33,6 @@ static NSString *ZMLogTag = @"Push";
 
 - (void)application:(id<ZMApplication>)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
 {
-    UILocalNotification *notification = launchOptions[UIApplicationLaunchOptionsLocalNotificationKey];
-    if (notification != nil) {
-        [self application:application didReceiveLocalNotification:notification];
-    }
     NSDictionary *payload = launchOptions[UIApplicationLaunchOptionsRemoteNotificationKey];
     if (payload != nil) {
         [self application:application didReceiveRemoteNotification:payload fetchCompletionHandler:^(UIBackgroundFetchResult result) {
@@ -50,20 +46,6 @@ static NSString *ZMLogTag = @"Push";
     NOT_USED(application);
     NOT_USED(userInfo);
     NOT_USED(completionHandler);
-}
-
-- (void)application:(id<ZMApplication>)application didReceiveLocalNotification:(UILocalNotification *)notification;
-{
-    [self didReceiveLocalWithNotification:notification application:application];
-}
-
-- (void)application:(id<ZMApplication>)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification responseInfo:(NSDictionary *)responseInfo completionHandler:(void(^)(void))completionHandler;
-{
-    [self handleActionWithApplication:application
-                                 with:identifier
-                                  for:notification
-                                 with:responseInfo
-                    completionHandler:completionHandler];
 }
 
 - (void)application:(id<ZMApplication>)application
