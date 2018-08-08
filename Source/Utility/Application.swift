@@ -22,23 +22,17 @@ import UIKit
 /// An abstraction of the application (UIApplication, NSApplication)
 @objc public protocol ZMApplication : NSObjectProtocol {
     
-    /// the current application state
+    /// The current application state
     var applicationState : UIApplicationState { get }
-
-    /// Schedules a local notification
-    func scheduleLocalNotification(_ notification: UILocalNotification)
-    
-    /// Cancels a local notification
-    func cancelLocalNotification(_ notification: UILocalNotification)
-    
-    /// Register for remote notification
-    func registerForRemoteNotifications()
-    
-    /// whether alert notifications are enabled
-    var alertNotificationsEnabled : Bool { get }
     
     /// Badge count
     var applicationIconBadgeNumber : Int { get set }
+    
+    /// To determine if notification settings should be registered
+    var shouldRegisterUserNotificationSettings : Bool { get }
+    
+    /// Register for remote notification
+    func registerForRemoteNotifications()
     
     /// Register for change in application state: didBecomeActive
     @objc func registerObserverForDidBecomeActive(_ object: NSObject, selector: Selector)
@@ -58,9 +52,6 @@ import UIKit
     /// Unregister for change in application state
     @objc func unregisterObserverForStateChange(_ object: NSObject)
     
-    /// Register user notification settings
-    @objc func registerUserNotificationSettings(_ settings: UIUserNotificationSettings)
-    
     /// Sets minimum interval for background fetch
     @objc func setMinimumBackgroundFetchInterval(_ minimumBackgroundFetchInterval: TimeInterval)
 }
@@ -68,8 +59,8 @@ import UIKit
 
 extension UIApplication : ZMApplication {
     
-    public var alertNotificationsEnabled : Bool {
-        return self.currentUserNotificationSettings?.types.contains(.alert) ?? false
+    public var shouldRegisterUserNotificationSettings : Bool {
+        return true
     }
     
     @objc public func registerObserverForDidBecomeActive(_ object: NSObject, selector: Selector) {
