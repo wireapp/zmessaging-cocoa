@@ -288,7 +288,10 @@ extension SearchTask {
         tasksRemaining += 1
 
         context.performGroupedBlock {
-            let request = type(of: self).servicesSearchRequest(query: self.request.query)
+            let selfUser = ZMUser.selfUser(in: self.context)
+            guard let teamIdentifier = selfUser.team?.remoteIdentifier else { return }
+
+            let request = type(of: self).servicesSearchRequest(teamIdentifier: teamIdentifier, query: self.request.query)
             
             request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in
                 
@@ -318,11 +321,14 @@ extension SearchTask {
         }
     }
     
-    static func servicesSearchRequest(query: String) -> ZMTransportRequest {
+    static func servicesSearchRequest(teamIdentifier: UUID, query: String) -> ZMTransportRequest {
         let url = NSURLComponents()
-        url.path = "/services"
-        
-        url.queryItems = [URLQueryItem(name: "tags", value: "integration"), URLQueryItem(name: "start", value: query.trimmingCharacters(in: .whitespacesAndNewlines))]
+        url.path = "/teams/\(teamIdentifier.transportString())/services/whitelisted"
+
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedQuery.isEmpty {
+            url.queryItems = [URLQueryItem(name: "prefix", value: trimmedQuery)]
+        }
         let urlStr = url.string?.replacingOccurrences(of: "+", with: "%2B") ?? ""
         return ZMTransportRequest(getFromPath: urlStr)
     }
