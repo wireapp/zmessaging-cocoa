@@ -24,6 +24,7 @@ import UserNotifications
  */
 
 private enum NotificationUserInfoKey: String {
+    case requestID = "requestIDString"
     case conversationID = "conversationIDString"
     case messageNonce = "messageNonceString"
     case senderID = "senderIDString"
@@ -55,6 +56,11 @@ public struct NotificationUserInfo {
 
     // MARK: - Properties
 
+    public var requestID: UUID? {
+        get { return self[.requestID] as? UUID }
+        set { self[.requestID] = newValue }
+    }
+    
     public var conversationID: UUID? {
         get { return self[.conversationID] as? UUID }
         set { self[.conversationID] = newValue }
