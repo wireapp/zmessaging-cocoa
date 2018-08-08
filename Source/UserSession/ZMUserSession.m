@@ -184,8 +184,9 @@ ZM_EMPTY_ASSERTING_INIT()
         FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:cacheLocation];
         self.managedObjectContext.zm_fileAssetCache = fileAssetCache;
         
-        CTCallCenter *callCenter = [[CTCallCenter alloc] init];
-        self.managedObjectContext.zm_coreTelephonyCallCenter = callCenter;
+        // TODO: USE NEW API OR REMOVE
+//        CTCallCenter *callCenter = [[CTCallCenter alloc] init];
+//        self.managedObjectContext.zm_coreTelephonyCallCenter = callCenter;
         
         self.managedObjectContext.zm_searchUserCache = [[NSCache alloc] init];
         
