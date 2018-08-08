@@ -66,7 +66,7 @@ public struct NotificationUserInfo {
         set { self[.conversationID] = newValue }
     }
 
-    public var conversatioName: String? {
+    public var conversationName: String? {
         get { return self[.conversationName] as? String }
         set { self[.conversationName] = newValue }
     }

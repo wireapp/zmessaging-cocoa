@@ -95,7 +95,7 @@ extension ZMLocalNotification {
             userInfo.messageNonce = message.nonce
             userInfo.conversationID = conversationID
             userInfo.eventTime = eventTime
-            userInfo.conversatioName = conversation.meaningfulDisplayName
+            userInfo.conversationName = conversation.meaningfulDisplayName
             userInfo.teamName = selfUser.team?.name
 
             return userInfo
@@ -190,7 +190,7 @@ extension ZMLocalNotification {
             var userInfo = NotificationUserInfo()
             userInfo.selfUserID = selfUserID
             userInfo.conversationID = conversationID
-            userInfo.conversatioName = conversation.meaningfulDisplayName
+            userInfo.conversationName = conversation.meaningfulDisplayName
             userInfo.teamName = selfUser.team?.name
             
             return userInfo

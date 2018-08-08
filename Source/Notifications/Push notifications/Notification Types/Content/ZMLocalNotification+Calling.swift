@@ -84,7 +84,7 @@ extension ZMLocalNotification {
             userInfo.selfUserID = selfUserID
             userInfo.senderID = senderID
             userInfo.conversationID = conversationID
-            userInfo.conversatioName = conversation.meaningfulDisplayName
+            userInfo.conversationName = conversation.meaningfulDisplayName
             userInfo.teamName = selfUser.team?.name
 
             return userInfo
