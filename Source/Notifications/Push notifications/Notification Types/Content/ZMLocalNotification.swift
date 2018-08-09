@@ -55,9 +55,7 @@ open class ZMLocalNotification: NSObject {
     
     /// The unique identifier for this notification. Use it to later update
     /// or remove pending or scheduled notification requests.
-    public lazy var id: UUID = {
-        return messageNonce ?? UUID()
-    }()
+    public let id: UUID
     
     public let type: LocalNotificationType
     public var title: String?
@@ -74,6 +72,8 @@ open class ZMLocalNotification: NSObject {
         self.category = builder.notificationType.category
         self.sound = builder.notificationType.sound
         self.userInfo = builder.userInfo()
+        self.id = userInfo?.messageNonce ?? UUID()
+        super.init()        
     }
 
     /// Returns a configured concrete `UNNotificationContent` object.
@@ -100,8 +100,8 @@ open class ZMLocalNotification: NSObject {
     
     /// Returns a configured concrete `UNNotificationRequest`.
     public lazy var request: UNNotificationRequest = {
-        let idString = id.uuidString
-        return UNNotificationRequest(identifier: idString, content: content, trigger: nil)
+        userInfo?.requestID = id
+        return UNNotificationRequest(identifier: id.uuidString, content: content, trigger: nil)
     }()
 
 }
