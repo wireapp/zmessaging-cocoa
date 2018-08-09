@@ -39,8 +39,11 @@ private enum NotificationUserInfoKey: String {
  * of user notifications.
  */
 
-public struct NotificationUserInfo {
+public class NotificationUserInfo: NSObject, NSCoding {
     
+    /// The key under which the storage property is encoded.
+    private static let storageKey = "storageKey"
+   
     /// The raw values of the user info. These must contain property list
     /// data types only, otherwise scheduled UNNotificationRequest objects
     /// using this user info within its content will fail.
@@ -49,11 +52,24 @@ public struct NotificationUserInfo {
     /// Creates the user info from its raw value.
     public init(storage: [AnyHashable: Any]) {
         self.storage = storage
+        super.init()
     }
 
     /// Creates an empty notification user info payload.
-    public init() {
-        self.storage = [:]
+    public override convenience init() {
+        self.init(storage: [:])
+    }
+    
+    public required convenience init?(coder aDecoder: NSCoder) {
+        guard let data = aDecoder.decodeObject(forKey: type(of: self).storageKey) as? [AnyHashable : Any] else {
+            return nil
+        }
+        
+        self.init(storage: data)
+    }
+    
+    public func encode(with aCoder: NSCoder) {
+        aCoder.encode(storage, forKey: type(of: self).storageKey)
     }
 
     // MARK: - Properties
@@ -175,13 +191,13 @@ extension NotificationUserInfo {
 
 extension NotificationUserInfo {
 
-    public mutating func setupUserInfo(for conversation: ZMConversation, sender: ZMUser) {
+    public func setupUserInfo(for conversation: ZMConversation, sender: ZMUser) {
         addSelfUserInfo(using: conversation)
         self.conversationID = conversation.remoteIdentifier
         self.senderID = sender.remoteIdentifier
     }
 
-    public mutating func setupUserInfo(for conversation: ZMConversation, event: ZMUpdateEvent) {
+    public func setupUserInfo(for conversation: ZMConversation, event: ZMUpdateEvent) {
         addSelfUserInfo(using: conversation)
         self.conversationID = conversation.remoteIdentifier
         self.senderID = event.senderUUID()
@@ -189,7 +205,7 @@ extension NotificationUserInfo {
         self.eventTime = event.timeStamp()
     }
 
-    public mutating func setupUserInfo(for message: ZMMessage) {
+    public func setupUserInfo(for message: ZMMessage) {
         addSelfUserInfo(using: message)
         self.conversationID = message.conversation?.remoteIdentifier
         self.senderID = message.sender?.remoteIdentifier
@@ -198,7 +214,7 @@ extension NotificationUserInfo {
     }
 
     /// Adds the description of the self user using the given managed object.
-    private mutating func addSelfUserInfo(using object: NSManagedObject) {
+    private func addSelfUserInfo(using object: NSManagedObject) {
         guard let context = object.managedObjectContext else {
             fatalError("Object doesn't have a managed context.")
         }
