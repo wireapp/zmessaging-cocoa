@@ -31,20 +31,17 @@ import WireTransport
         return UNUserNotificationCenter.current()
     }
     
-    private var allNotifications: [ZMLocalNotification] {
-        return notifications + oldNotifications
+    private var allNotifications: [NotificationUserInfo] {
+        return notifications.compactMap { $0.userInfo } + oldNotifications
     }
     
-    private var allIDs: [UUID] {
-        return allNotifications.map { $0.id }
-    }
-    
-    public fileprivate(set) var notifications : Set<ZMLocalNotification> = Set() {
+    public fileprivate(set) var notifications = Set<ZMLocalNotification>() {
         didSet { updateArchive() }
     }
 
-    private var oldNotifications = [ZMLocalNotification]()
-    
+    private var oldNotifications = [NotificationUserInfo]()
+
+    // TODO: REMOVE APPLICATION
     weak var application: ZMApplication?
     let archivingKey : String
     let keyValueStore : ZMSynchonizableKeyValueStore
@@ -58,10 +55,10 @@ import WireTransport
         unarchiveOldNotifications()
     }
     
-    /// unarchives all previously created notifications that haven't been cancelled yet
+    /// Unarchives all previously created notifications that haven't been cancelled yet
     func unarchiveOldNotifications(){
         guard let archive = keyValueStore.storedValue(key: archivingKey) as? Data,
-            let unarchivedNotes =  NSKeyedUnarchiver.unarchiveObject(with: archive) as? [ZMLocalNotification]
+        let unarchivedNotes =  NSKeyedUnarchiver.unarchiveObject(with: archive) as? [NotificationUserInfo]
             else { return }
         self.oldNotifications = unarchivedNotes
     }
@@ -88,7 +85,7 @@ import WireTransport
     
     /// Cancels all notifications
     public func cancelAllNotifications() {
-        let ids = allIDs.map { $0.uuidString }
+        let ids = allNotifications.compactMap { $0.requestID?.uuidString }
         notificationCenter.removeAllNotifications(with: ids)
         notifications = Set()
         oldNotifications = []
@@ -111,10 +108,14 @@ import WireTransport
     /// Cancels all notifications created in previous runs
     internal func cancelOldNotifications(_ conversation: ZMConversation) {
         guard oldNotifications.count > 0 else { return }
-
-        oldNotifications = oldNotifications.filter {
-            guard $0.conversationID == conversation.remoteIdentifier else { return true }
-            notificationCenter.removeAllNotifications(with: [$0.id.uuidString])
+        
+        oldNotifications = oldNotifications.filter { userInfo in
+            guard
+                userInfo.conversationID == conversation.remoteIdentifier,
+                let requestID = userInfo.requestID?.uuidString
+                else { return true }
+            
+            notificationCenter.removeAllNotifications(with: [requestID])
             return false
         }
     }
