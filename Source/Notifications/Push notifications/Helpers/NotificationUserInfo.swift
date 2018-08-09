@@ -40,9 +40,11 @@ private enum NotificationUserInfoKey: String {
  */
 
 public struct NotificationUserInfo {
-
-    /// The raw values of the user info.
-    public var storage: [AnyHashable: Any]
+    
+    /// The raw values of the user info. These must contain property list
+    /// data types only, otherwise scheduled UNNotificationRequest objects
+    /// using this user info within its content will fail.
+    public private(set) var storage: [AnyHashable: Any]
 
     /// Creates the user info from its raw value.
     public init(storage: [AnyHashable: Any]) {
@@ -56,14 +58,19 @@ public struct NotificationUserInfo {
 
     // MARK: - Properties
 
+    private func uuid(for key: NotificationUserInfoKey) -> UUID? {
+        guard let uuidString = self[key] as? String else { return nil }
+        return UUID(uuidString: uuidString)
+    }
+    
     public var requestID: UUID? {
-        get { return self[.requestID] as? UUID }
-        set { self[.requestID] = newValue }
+        get { return uuid(for: .requestID) }
+        set { self[.requestID] = newValue?.uuidString }
     }
     
     public var conversationID: UUID? {
-        get { return self[.conversationID] as? UUID }
-        set { self[.conversationID] = newValue }
+        get { return uuid(for: .conversationID)}
+        set { self[.conversationID] = newValue?.uuidString }
     }
 
     public var conversationName: String? {
@@ -77,23 +84,26 @@ public struct NotificationUserInfo {
     }
 
     public var messageNonce: UUID? {
-        get { return self[.messageNonce] as? UUID }
-        set { self[.messageNonce] = newValue }
+        get { return uuid(for: .messageNonce) }
+        set { self[.messageNonce] = newValue?.uuidString }
     }
 
     public var senderID: UUID? {
-        get { return self[.senderID] as? UUID }
-        set { self[.senderID] = newValue }
+        get { return uuid(for: .senderID) }
+        set { self[.senderID] = newValue?.uuidString }
     }
 
     public var eventTime: Date? {
-        get { return self[.eventTime] as? Date }
-        set { self[.eventTime] = newValue }
+        get {
+            guard let interval = self[.eventTime] as? TimeInterval else { return nil }
+            return Date(timeIntervalSince1970: interval)
+        }
+        set { self[.eventTime] = newValue?.timeIntervalSince1970 }
     }
 
     public var selfUserID: UUID? {
-        get { return self[.selfUserID] as? UUID }
-        set { self[.selfUserID] = newValue }
+        get { return uuid(for: .selfUserID) }
+        set { self[.selfUserID] = newValue?.uuidString }
     }
 
     // MARK: - Utilities
