@@ -189,7 +189,7 @@ extension SearchTask {
             query = String(query[query.index(after: query.startIndex)...])
         }
         
-        let url = NSURLComponents()
+        var url = URLComponents()
         url.path = "/search/contacts"
         url.queryItems = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "size", value: String(fetchLimit))]
         let urlStr = url.string?.replacingOccurrences(of: "+", with: "%2B") ?? ""
@@ -272,7 +272,7 @@ extension SearchTask {
             handle = String(handle[handle.index(after: handle.startIndex)...])
         }
         
-        let url = NSURLComponents()
+        var url = URLComponents()
         url.path = "/users"
         url.queryItems = [URLQueryItem(name: "handles", value: handle)]
         let urlStr = url.string?.replacingOccurrences(of: "+", with: "%2B") ?? ""
@@ -322,7 +322,7 @@ extension SearchTask {
     }
     
     static func servicesSearchRequest(teamIdentifier: UUID, query: String) -> ZMTransportRequest {
-        let url = NSURLComponents()
+        var url = URLComponents()
         url.path = "/teams/\(teamIdentifier.transportString())/services/whitelisted"
 
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
