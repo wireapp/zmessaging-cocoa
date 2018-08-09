@@ -27,21 +27,22 @@ import Foundation
     let actionIdentifier: String?
     let textInput: String?
     
-    init(notification: ZMLocalNotification,
+    init(userInfo: NotificationUserInfo,
          moc: NSManagedObjectContext,
-         actionIdentifier: String,
-         textInput: String)
+         category: String,
+         actionIdentifier: String? = nil,
+         textInput: String? = nil)
     {
-        conversation = notification.conversation(in: moc)
+        conversation = userInfo.conversation(in: moc)
         
         if let conversation = conversation {
-            message = notification.userInfo?.message(in: conversation, managedObjectContext: moc)
+            message = userInfo.message(in: conversation, managedObjectContext: moc)
         } else {
             message = nil
         }
         
-        senderID = notification.senderID
-        category = notification.category
+        senderID = userInfo.senderID
+        self.category = category
         self.actionIdentifier = actionIdentifier
         self.textInput = textInput
         super.init()
