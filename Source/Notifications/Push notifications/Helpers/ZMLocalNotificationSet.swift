@@ -27,12 +27,11 @@ import WireTransport
 
 @objc public final class ZMLocalNotificationSet : NSObject  {
     
+    let archivingKey : String
+    let keyValueStore : ZMSynchonizableKeyValueStore
+    
     private var notificationCenter: UNUserNotificationCenter {
         return UNUserNotificationCenter.current()
-    }
-    
-    private var allNotifications: [NotificationUserInfo] {
-        return notifications.compactMap { $0.userInfo } + oldNotifications
     }
     
     public fileprivate(set) var notifications = Set<ZMLocalNotification>() {
@@ -41,13 +40,11 @@ import WireTransport
 
     private var oldNotifications = [NotificationUserInfo]()
 
-    // TODO: REMOVE APPLICATION
-    weak var application: ZMApplication?
-    let archivingKey : String
-    let keyValueStore : ZMSynchonizableKeyValueStore
+    private var allNotifications: [NotificationUserInfo] {
+        return notifications.compactMap { $0.userInfo } + oldNotifications
+    }
     
-    public init(application: ZMApplication, archivingKey: String, keyValueStore: ZMSynchonizableKeyValueStore) {
-        self.application = application
+    public init(archivingKey: String, keyValueStore: ZMSynchonizableKeyValueStore) {
         self.archivingKey = archivingKey
         self.keyValueStore = keyValueStore
         super.init()
