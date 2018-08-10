@@ -40,7 +40,7 @@ extension PKPushRegistry: PushRegistry {}
     }
     
     @objc public func configureUserNotifications() {
-        guard application.shouldRegisterUserNotificationSettings else { return }
+        guard application.shouldRegisterUserNotificationSettings ?? true else { return }
         // Configure push notification categories
         notificationCenter.setNotificationCategories(PushNotificationCategory.allCategories)
         notificationCenter.requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { _, _ in })

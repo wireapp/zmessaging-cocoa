@@ -29,7 +29,7 @@ import UIKit
     var applicationIconBadgeNumber : Int { get set }
     
     /// To determine if notification settings should be registered
-    var shouldRegisterUserNotificationSettings : Bool { get }
+    @objc optional var shouldRegisterUserNotificationSettings : Bool { get }
     
     /// Register for remote notification
     func registerForRemoteNotifications()
@@ -58,10 +58,6 @@ import UIKit
 
 
 extension UIApplication : ZMApplication {
-    
-    public var shouldRegisterUserNotificationSettings : Bool {
-        return true
-    }
     
     @objc public func registerObserverForDidBecomeActive(_ object: NSObject, selector: Selector) {
         NotificationCenter.default.addObserver(object, selector: selector, name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
