@@ -36,7 +36,7 @@ import UserNotifications
     let callingNotifications: ZMLocalNotificationSet
     let failedMessageNotifications: ZMLocalNotificationSet
 
-    var notificationCenter: UNUserNotificationCenter {
+    var notificationCenter: UserNotificationCenter {
         return UNUserNotificationCenter.current()
     }
 
@@ -119,7 +119,7 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
             if let receivedMessage = ZMGenericMessage(from: event), receivedMessage.hasReaction(), receivedMessage.reaction.emoji.isEmpty {
                 UUID(uuidString: receivedMessage.reaction.messageId).apply(eventNotifications.cancelCurrentNotifications(messageNonce:))
             }
-
+            
             let note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
             note.apply(eventNotifications.addObject)
             note.apply(scheduleLocalNotification)

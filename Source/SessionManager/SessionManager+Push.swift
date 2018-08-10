@@ -33,12 +33,15 @@ protocol PushRegistry {
 
 extension PKPushRegistry: PushRegistry {}
 
-@objc extension SessionManager: UNUserNotificationCenterDelegate {
 
-    var notificationCenter: UNUserNotificationCenter {
+extension SessionManager {
+    var notificationCenter: UserNotificationCenter {
         return UNUserNotificationCenter.current()
     }
-    
+}
+
+@objc extension SessionManager: UNUserNotificationCenterDelegate {
+
     @objc public func configureUserNotifications() {
         guard application.shouldRegisterUserNotificationSettings ?? true else { return }
         // Configure push notification categories
