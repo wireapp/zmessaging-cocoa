@@ -110,7 +110,7 @@ fileprivate class EventNotificationBuilder: NotificationBuilder {
         let selfUser = ZMUser.selfUser(in: moc)
         guard let selfUserRemoteID = selfUser.remoteIdentifier else { return nil }
         
-        var userInfo = NotificationUserInfo()
+        let userInfo = NotificationUserInfo()
         userInfo.selfUserID = selfUserRemoteID
         userInfo.senderID = event.senderUUID()
         userInfo.conversationID = conversation?.remoteIdentifier
@@ -176,7 +176,7 @@ private class ReactionEventNotificationBuilder: EventNotificationBuilder {
     
     override func userInfo() -> NotificationUserInfo? {
         // we want to store the nonce of the message being reacted to, not the event nonce
-        var info = super.userInfo()
+        let info = super.userInfo()
         info?.messageNonce = nonce
         return info
     }

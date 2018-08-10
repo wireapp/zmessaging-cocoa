@@ -80,7 +80,7 @@ extension ZMLocalNotification {
                   let conversationID = conversation.remoteIdentifier
                   else { return nil }
             
-            var userInfo = NotificationUserInfo()
+            let userInfo = NotificationUserInfo()
             userInfo.selfUserID = selfUserID
             userInfo.senderID = senderID
             userInfo.conversationID = conversationID
