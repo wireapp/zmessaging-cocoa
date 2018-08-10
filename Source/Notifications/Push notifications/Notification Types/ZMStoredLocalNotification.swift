@@ -25,13 +25,11 @@ import Foundation
     let senderID: UUID?
     let category: String
     let actionIdentifier: String?
-    let textInput: String?
     
     init(userInfo: NotificationUserInfo,
          moc: NSManagedObjectContext,
          category: String,
-         actionIdentifier: String? = nil,
-         textInput: String? = nil)
+         actionIdentifier: String? = nil)
     {
         conversation = userInfo.conversation(in: moc)
         
@@ -44,7 +42,6 @@ import Foundation
         senderID = userInfo.senderID
         self.category = category
         self.actionIdentifier = actionIdentifier
-        self.textInput = textInput
         super.init()
     }
 }
