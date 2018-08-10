@@ -151,6 +151,7 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
                                        willPresent notification: UNNotification,
                                        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
     {
+        log.debug("Notification center wants to present in-app notification: \(notification)")
         let category = notification.request.content.categoryIdentifier
         if category == PushNotificationCategory.incomingCall.rawValue {
             self.handleTrackingOnCallNotification(notification)
@@ -163,6 +164,7 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
                                        didReceive response: UNNotificationResponse,
                                        withCompletionHandler completionHandler: @escaping () -> Void)
     {
+        log.debug("Did receive notification response: \(response)")
         let textInput = (response as? UNTextInputNotificationResponse)?.userText
         let note = response.notification
         
