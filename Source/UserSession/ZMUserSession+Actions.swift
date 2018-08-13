@@ -87,9 +87,9 @@ private let zmLog = ZMSLog(tag: "Push")
     
     // MARK: - Background Actions
     
-    public func ignoreCall(with notification: UNNotification, completionHandler: @escaping () -> Void) {
+    public func ignoreCall(with userInfo: NotificationUserInfo, completionHandler: @escaping () -> Void) {
         let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "IgnoreCall Action Handler")
-        let conversation = notification.userInfo.conversation(in: managedObjectContext)
+        let conversation = userInfo.conversation(in: managedObjectContext)
         
         managedObjectContext.perform { 
             conversation?.voiceChannel?.leave(userSession: self)
@@ -98,9 +98,9 @@ private let zmLog = ZMSLog(tag: "Push")
         }
     }
     
-    public  func muteConversation(with notification: UNNotification, completionHandler: @escaping () -> Void) {
+    public  func muteConversation(with userInfo: NotificationUserInfo, completionHandler: @escaping () -> Void) {
         let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Mute Conversation Action Handler")
-        let conversation = notification.userInfo.conversation(in: managedObjectContext)
+        let conversation = userInfo.conversation(in: managedObjectContext)
 
         managedObjectContext.perform {
             conversation?.isSilenced = true
@@ -110,10 +110,10 @@ private let zmLog = ZMSLog(tag: "Push")
         }
     }
     
-    public  func reply(with notification: UNNotification, message: String, completionHandler: @escaping () -> Void) {
+    public  func reply(with userInfo: NotificationUserInfo, message: String, completionHandler: @escaping () -> Void) {
         guard
             !message.isEmpty,
-            let conversation = notification.userInfo.conversation(in: managedObjectContext)
+            let conversation = userInfo.conversation(in: managedObjectContext)
             else { return completionHandler() }
 
         let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "DirectReply Action Handler")
@@ -124,7 +124,7 @@ private let zmLog = ZMSLog(tag: "Push")
             self.messageReplyObserver = nil
             self.syncManagedObjectContext.performGroupedBlock {
             
-                let conversationOnSyncContext = notification.userInfo.conversation(in: self.syncManagedObjectContext)
+                let conversationOnSyncContext = userInfo.conversation(in: self.syncManagedObjectContext)
                 if result == .failed {
                     zmLog.warn("failed to reply via push notification action")
                     self.localNotificationDispatcher.didFailToSendMessage(in: conversationOnSyncContext!)
@@ -166,10 +166,10 @@ private let zmLog = ZMSLog(tag: "Push")
         }
     }
     
-    public func likeMessage(with notification: UNNotification, completionHandler: @escaping () -> Void) {
+    public func likeMessage(with userInfo: NotificationUserInfo, completionHandler: @escaping () -> Void) {
         guard
-            let conversation = notification.userInfo.conversation(in: managedObjectContext),
-            let message = notification.userInfo.message(in: conversation, managedObjectContext: managedObjectContext)
+            let conversation = userInfo.conversation(in: managedObjectContext),
+            let message = userInfo.message(in: conversation, managedObjectContext: managedObjectContext)
             else { return completionHandler() }
 
         let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Like Message Activity")

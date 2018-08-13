@@ -165,22 +165,38 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
                                        withCompletionHandler completionHandler: @escaping () -> Void)
     {
         log.debug("Did receive notification response: \(response)")
-        let textInput = (response as? UNTextInputNotificationResponse)?.userText
+        let userText = (response as? UNTextInputNotificationResponse)?.userText
         let note = response.notification
         
-        switch response.actionIdentifier {
+        handleResponse(actionIdentifier: response.actionIdentifier,
+                       categoryIdentifier: note.request.content.categoryIdentifier,
+                       userInfo: note.userInfo,
+                       userText: userText,
+                       completionHandler: completionHandler)
+    }
+    
+    // The logic for handling notification actions is factored out of the
+    // delegate method because we cannot create a `UNNotificationResponse`
+    // object in unit tests.
+    func handleResponse(actionIdentifier: String,
+                        categoryIdentifier: String,
+                        userInfo: NotificationUserInfo,
+                        userText: String?,
+                        completionHandler: @escaping () -> Void)
+    {
+        switch actionIdentifier {
         case CallNotificationAction.ignore.rawValue:
-            ignoreCall(with: note, completionHandler: completionHandler)
+            ignoreCall(with: userInfo, completionHandler: completionHandler)
             return
         case ConversationNotificationAction.mute.rawValue:
-            muteConversation(with: note, completionHandler: completionHandler)
+            muteConversation(with: userInfo, completionHandler: completionHandler)
             return
         case ConversationNotificationAction.like.rawValue:
-            likeMessage(with: note, completionHandler: completionHandler)
+            likeMessage(with: userInfo, completionHandler: completionHandler)
             return
         case ConversationNotificationAction.reply.rawValue:
-            if let textInput = textInput {
-                reply(with: note, message: textInput, completionHandler: completionHandler)
+            if let textInput = userText {
+                reply(with: userInfo, message: textInput, completionHandler: completionHandler)
             }
             return
         default:
@@ -188,10 +204,10 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
         }
         
         // if we reach this, then the action requires opening the app
-        self.pendingLocalNotification = ZMStoredLocalNotification(userInfo: note.userInfo,
+        self.pendingLocalNotification = ZMStoredLocalNotification(userInfo: userInfo,
                                                                   moc: self.managedObjectContext,
-                                                                  category: note.request.content.categoryIdentifier,
-                                                                  actionIdentifier: response.actionIdentifier)
+                                                                  category: categoryIdentifier,
+                                                                  actionIdentifier: actionIdentifier)
         self.processPendingNotificationActionsIfPossible()
         
         // TODO: should this only be called after processing has succeeded?
