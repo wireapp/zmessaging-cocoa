@@ -23,7 +23,7 @@ import Foundation
  * mocking for unit tests.
  */
 
-protocol UserNotificationCenter: class {
+public protocol UserNotificationCenter: class {
     
     /// The object that processes incoming notifications and actions.
     var delegate: UNUserNotificationCenterDelegate? { get set }
@@ -49,7 +49,7 @@ protocol UserNotificationCenter: class {
 
 extension UNUserNotificationCenter: UserNotificationCenter {
     
-    func removeAllNotifications(withIdentifiers identifiers: [String]) {
+    public func removeAllNotifications(withIdentifiers identifiers: [String]) {
         removePendingNotificationRequests(withIdentifiers: identifiers)
         removeDeliveredNotifications(withIdentifiers: identifiers)
     }
