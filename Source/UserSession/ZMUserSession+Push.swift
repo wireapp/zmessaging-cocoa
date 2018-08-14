@@ -181,7 +181,7 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
     func handleResponse(actionIdentifier: String,
                         categoryIdentifier: String,
                         userInfo: NotificationUserInfo,
-                        userText: String?,
+                        userText: String? = nil,
                         completionHandler: @escaping () -> Void)
     {
         switch actionIdentifier {
