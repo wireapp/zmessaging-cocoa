@@ -23,6 +23,12 @@ class UserNotificationCenterMock: UserNotificationCenter {
     
     weak var delegate: UNUserNotificationCenterDelegate?
     
+    /// Identifiers of scheduled notification requests.
+    var scheduledRequests = [UNNotificationRequest]()
+
+    /// Identifiers of removed notifications.
+    var removedNotifications = Set<String>()
+    
     func setNotificationCategories(_ categories: Set<UNNotificationCategory>) {
         
     }
@@ -36,18 +42,20 @@ class UserNotificationCenterMock: UserNotificationCenter {
     func add(_ request: UNNotificationRequest,
              withCompletionHandler: ((Error?) -> Void)?)
     {
+        scheduledRequests.append(request)
         
     }
     
     func removePendingNotificationRequests(withIdentifiers identifiers: [String]) {
-        
+        removedNotifications.formUnion(identifiers)
     }
     
     func removeDeliveredNotifications(withIdentifiers identifiers: [String]) {
-        
+        removedNotifications.formUnion(identifiers)
     }
     
     func removeAllNotifications(withIdentifiers identifiers: [String]) {
-        
+        removePendingNotificationRequests(withIdentifiers: identifiers)
+        removeDeliveredNotifications(withIdentifiers: identifiers)
     }
 }
