@@ -28,6 +28,7 @@ class CallStateObserverTests : MessagingTest {
     var conversation : ZMConversation!
     var conversationUI : ZMConversation!
     var localNotificationDispatcher : LocalNotificationDispatcher!
+    var notificationCenter : UserNotificationCenterMock!
     var mockCallCenter : WireCallCenterV3Mock?
     
     override func setUp() {
@@ -66,13 +67,15 @@ class CallStateObserverTests : MessagingTest {
                 foregroundNotificationDelegate: MockForegroundNotificationDelegate(),
                 application: self.application,
                 operationStatus: self.mockUserSession.operationStatus)
+            
+            self.notificationCenter = UserNotificationCenterMock()
+            self.localNotificationDispatcher.notificationCenter = self.notificationCenter
         }
 
         senderUI = uiMOC.object(with: sender.objectID) as! ZMUser
         conversationUI = uiMOC.object(with: conversation.objectID) as! ZMConversation
         sut = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
         uiMOC.zm_callCenter = mockCallCenter
-
     }
     
     override func tearDown() {
@@ -83,6 +86,7 @@ class CallStateObserverTests : MessagingTest {
         receiver = nil
         conversation = nil
         localNotificationDispatcher = nil
+        notificationCenter = nil
         mockCallCenter = nil
         
         super.tearDown()
@@ -177,7 +181,7 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(application.scheduledLocalNotifications.count, 1)
+        XCTAssertEqual(notificationCenter.scheduledRequests.count, 1)
     }
     
     func testThatCallStatesAreForwardedToTheNotificationDispatcher() {
@@ -186,7 +190,7 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
+        XCTAssertEqual(notificationCenter.scheduledRequests.count, 1)
     }
     
     func testThatWeSendNotificationWhenCallStarts() {
@@ -270,7 +274,7 @@ class CallStateObserverTests : MessagingTest {
         
         // then
         XCTAssertEqual(conversationUI.messages.count, 1)
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
+        XCTAssertEqual(notificationCenter.scheduledRequests.count, 1)
     }
 
     func testThatMissedCallNotificationIsNotForwardedForGroupCallAnsweredElsewhere() {
@@ -286,7 +290,7 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0)
+        XCTAssertEqual(notificationCenter.scheduledRequests.count, 0)
     }
     
     func testThatClearedConversationsGetsUnarchivedForIncomingCalls() {
