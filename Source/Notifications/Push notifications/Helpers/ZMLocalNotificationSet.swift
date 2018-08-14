@@ -30,15 +30,13 @@ import WireTransport
     let archivingKey : String
     let keyValueStore : ZMSynchonizableKeyValueStore
     
-    private var notificationCenter: UserNotificationCenter {
-        return UNUserNotificationCenter.current()
-    }
+    var notificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()
     
     public fileprivate(set) var notifications = Set<ZMLocalNotification>() {
         didSet { updateArchive() }
     }
 
-    private var oldNotifications = [NotificationUserInfo]()
+    public private(set) var oldNotifications = [NotificationUserInfo]()
 
     private var allNotifications: [NotificationUserInfo] {
         return notifications.compactMap { $0.userInfo } + oldNotifications
