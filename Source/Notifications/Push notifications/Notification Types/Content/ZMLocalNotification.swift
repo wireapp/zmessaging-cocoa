@@ -73,7 +73,9 @@ open class ZMLocalNotification: NSObject {
         self.sound = builder.notificationType.sound
         self.userInfo = builder.userInfo()
         self.id = userInfo?.messageNonce ?? UUID()
-        super.init()        
+        super.init()
+        
+        self.userInfo?.requestID = id
     }
 
     /// Returns a configured concrete `UNNotificationContent` object.
@@ -100,7 +102,6 @@ open class ZMLocalNotification: NSObject {
     
     /// Returns a configured concrete `UNNotificationRequest`.
     public lazy var request: UNNotificationRequest = {
-        userInfo?.requestID = id
         return UNNotificationRequest(identifier: id.uuidString, content: content, trigger: nil)
     }()
 
