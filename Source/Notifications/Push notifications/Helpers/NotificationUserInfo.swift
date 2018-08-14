@@ -121,9 +121,12 @@ public class NotificationUserInfo: NSObject, NSCoding {
         get { return uuid(for: .selfUserID) }
         set { self[.selfUserID] = newValue?.uuidString }
     }
+}
 
-    // MARK: - Utilities
+// MARK: - Utilities
 
+extension NotificationUserInfo {
+    
     fileprivate subscript(_ key: NotificationUserInfoKey) -> Any? {
         get {
             return storage[key.rawValue]
@@ -132,7 +135,22 @@ public class NotificationUserInfo: NSObject, NSCoding {
             storage[key.rawValue] = newValue
         }
     }
-
+    
+    override public func isEqual(_ object: Any?) -> Bool {
+        guard let other = object as? NotificationUserInfo else { return false }
+        return self == other
+    }
+    
+    static func ==(lhs: NotificationUserInfo, rhs: NotificationUserInfo) -> Bool {
+        return  lhs.requestID == rhs.requestID &&
+                lhs.conversationID == rhs.conversationID &&
+                lhs.conversationName == rhs.conversationName &&
+                lhs.teamName == rhs.teamName &&
+                lhs.messageNonce == rhs.messageNonce &&
+                lhs.senderID == rhs.senderID &&
+                lhs.eventTime == rhs.eventTime &&
+                lhs.selfUserID == rhs.selfUserID
+    }
 }
 
 // MARK: - Lookup
