@@ -29,7 +29,6 @@ import WireTransport
     
     let archivingKey : String
     let keyValueStore : ZMSynchonizableKeyValueStore
-    
     var notificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()
     
     public fileprivate(set) var notifications = Set<ZMLocalNotification>() {
