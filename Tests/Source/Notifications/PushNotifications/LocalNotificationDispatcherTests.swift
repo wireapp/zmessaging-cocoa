@@ -25,6 +25,7 @@ class LocalNotificationDispatcherTests: MessagingTest {
     var sut: LocalNotificationDispatcher!
     var conversation1: ZMConversation!
     var conversation2: ZMConversation!
+    
     var notificationCenter: UserNotificationCenterMock!
     var notificationDelegate: MockForegroundNotificationDelegate!
     
