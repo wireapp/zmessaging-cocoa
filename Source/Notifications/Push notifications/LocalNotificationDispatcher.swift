@@ -36,9 +36,7 @@ import UserNotifications
     let callingNotifications: ZMLocalNotificationSet
     let failedMessageNotifications: ZMLocalNotificationSet
 
-    var notificationCenter: UserNotificationCenter {
-        return UNUserNotificationCenter.current()
-    }
+    var notificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()
 
     unowned let application: ZMApplication
     weak var operationStatus: OperationStatus?
