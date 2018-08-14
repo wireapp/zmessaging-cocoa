@@ -144,10 +144,10 @@ private let zmLog = ZMSLog(tag: "Push")
         }
     }
     
-    public func handleTrackingOnCallNotification(_ notification: UNNotification) {
+    public func handleTrackingOnCallNotification(with userInfo: NotificationUserInfo) {
         
         guard
-            let conversation = notification.userInfo.conversation(in: managedObjectContext),
+            let conversation = userInfo.conversation(in: managedObjectContext),
             let callState = conversation.voiceChannel?.state,
             case .incoming(video: _, shouldRing: _, degraded: _) = callState,
             let callCenter = self.callCenter,
@@ -159,7 +159,7 @@ private let zmLog = ZMSLog(tag: "Push")
         self.syncManagedObjectContext.performGroupedBlock { [weak self] in
             guard
                 let `self` = self,
-                let conversationInSyncContext = notification.userInfo.conversation(in: self.syncManagedObjectContext)
+                let conversationInSyncContext = userInfo.conversation(in: self.syncManagedObjectContext)
                 else { return }
             
             self.syncManagedObjectContext.analytics?.tagActionOnPushNotification(conversation: conversationInSyncContext, action: type)

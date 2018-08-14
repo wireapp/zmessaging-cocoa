@@ -267,7 +267,7 @@ extension ZMUserSessionTests_PushNotifications {
     }
     
     func handle(action: String, category: String, userInfo: NotificationUserInfo, userText: String? = nil) {
-        sut.handleResponse(actionIdentifier: action, categoryIdentifier: category, userInfo: userInfo, userText: userText) {}
+        sut.handleNotificationResponse(actionIdentifier: action, categoryIdentifier: category, userInfo: userInfo, userText: userText) {}
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         sut.didFinishSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

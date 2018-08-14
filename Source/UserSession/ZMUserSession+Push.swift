@@ -137,29 +137,31 @@ extension ZMUserSession {
     }
 }
 
+// MARK: - UNUserNotificationCenterDelegate
+
+/*
+ * Note: Although ZMUserSession conforms to UNUserNotificationCenterDelegate,
+ * it should not actually be assigned as the delegate of UNUserNotificationCenter.
+ * Instead, the delegate should be the SessionManager, whose repsonsibility it is
+ * to forward the method calls to the appropriate user session.
+ */
 extension ZMUserSession: UNUserNotificationCenterDelegate {
     
-    private func processPendingNotificationActionsIfPossible() {
-        // Don't process note while syncing (data may not be ready yet). We will
-        // try again once syncing has completed.
-        if self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen {
-            self.processPendingNotificationActions()
-        }
-    }
-    
+    // Called by the SessionManager when a notification is received while the app
+    // is in the foreground.
     public func userNotificationCenter(_ center: UNUserNotificationCenter,
                                        willPresent notification: UNNotification,
                                        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
     {
         log.debug("Notification center wants to present in-app notification: \(notification)")
-        let category = notification.request.content.categoryIdentifier
-        if category == PushNotificationCategory.incomingCall.rawValue {
-            self.handleTrackingOnCallNotification(notification)
-        }
+        let categoryIdentifier = notification.request.content.categoryIdentifier
         
-        // Call completionHandler(.alert) to present in app notification
+        handleInAppNotification(with: notification.userInfo,
+                                categoryIdentifier: categoryIdentifier,
+                                completionHandler: completionHandler)
     }
     
+    // Called by the SessionManager when the user engages a notification action.
     public func userNotificationCenter(_ center: UNUserNotificationCenter,
                                        didReceive response: UNNotificationResponse,
                                        withCompletionHandler completionHandler: @escaping () -> Void)
@@ -168,21 +170,43 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
         let userText = (response as? UNTextInputNotificationResponse)?.userText
         let note = response.notification
         
-        handleResponse(actionIdentifier: response.actionIdentifier,
-                       categoryIdentifier: note.request.content.categoryIdentifier,
-                       userInfo: note.userInfo,
-                       userText: userText,
-                       completionHandler: completionHandler)
+        handleNotificationResponse(actionIdentifier: response.actionIdentifier,
+                                   categoryIdentifier: note.request.content.categoryIdentifier,
+                                   userInfo: note.userInfo,
+                                   userText: userText,
+                                   completionHandler: completionHandler)
     }
     
-    // The logic for handling notification actions is factored out of the
-    // delegate method because we cannot create a `UNNotificationResponse`
-    // object in unit tests.
-    func handleResponse(actionIdentifier: String,
-                        categoryIdentifier: String,
-                        userInfo: NotificationUserInfo,
-                        userText: String? = nil,
-                        completionHandler: @escaping () -> Void)
+    // MARK: Abstractions
+    
+    /* The logic for handling notifications/actions is factored out of the
+     * delegate methods because we cannot create `UNNotification` and
+     * `UNNotificationResponse` objects in unit tests.
+     */
+    
+    func handleInAppNotification(with userInfo: NotificationUserInfo,
+                                 categoryIdentifier: String,
+                                 completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
+    {
+        if categoryIdentifier == PushNotificationCategory.incomingCall.rawValue {
+            self.handleTrackingOnCallNotification(with: userInfo)
+        }
+        
+        self.pendingLocalNotification = ZMStoredLocalNotification(userInfo: userInfo,
+                                                                  moc: self.managedObjectContext,
+                                                                  category: categoryIdentifier,
+                                                                  actionIdentifier: "")
+        self.processPendingNotificationActionsIfPossible()
+        
+        // pass in .alert to show in app notification
+        completionHandler([])
+    }
+    
+    func handleNotificationResponse(actionIdentifier: String,
+                                    categoryIdentifier: String,
+                                    userInfo: NotificationUserInfo,
+                                    userText: String? = nil,
+                                    completionHandler: @escaping () -> Void)
     {
         switch actionIdentifier {
         case CallNotificationAction.ignore.rawValue:
@@ -213,5 +237,13 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
         // TODO: should this only be called after processing has succeeded?
         // or is it risky that this could take too long.
         completionHandler()
+    }
+    
+    private func processPendingNotificationActionsIfPossible() {
+        // Don't process note while syncing (data may not be ready yet). We will
+        // try again once syncing has completed.
+        if self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen {
+            self.processPendingNotificationActions()
+        }
     }
 }
