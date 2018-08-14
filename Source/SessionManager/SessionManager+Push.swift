@@ -59,31 +59,31 @@ extension SessionManager {
         }
     }
     
+    func handleNotification(with userInfo: NotificationUserInfo, block: @escaping (ZMUserSession) -> Void) {
+        guard
+            let selfID = userInfo.selfUserID,
+            let account = accountManager.account(with: selfID)
+            else { return }
+        
+        self.withSession(for: account, perform: block)
+    }
+    
     public func userNotificationCenter(_ center: UNUserNotificationCenter,
                                        willPresent notification: UNNotification,
                                        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
     {
         // route to user session
-        guard let selfID = notification.userInfo.selfUserID,
-            let account = accountManager.account(with: selfID)
-            else { return }
-        
-        self.withSession(for: account) { userSession in
+        handleNotification(with: notification.userInfo) { userSession in
             userSession.userNotificationCenter(center, willPresent: notification, withCompletionHandler: completionHandler)
         }
     }
-    
+   
     public func userNotificationCenter(_ center: UNUserNotificationCenter,
                                        didReceive response: UNNotificationResponse,
                                        withCompletionHandler completionHandler: @escaping () -> Void)
     {
-        
         // route to user session
-        guard let selfID = response.notification.userInfo.selfUserID,
-            let account = accountManager.account(with: selfID)
-            else { return }
-        
-        self.withSession(for: account) { userSession in
+        handleNotification(with: response.notification.userInfo) { userSession in
             userSession.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
         }
     }
