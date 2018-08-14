@@ -92,7 +92,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         let note2 = textNotification(oneOnOneConversation, sender: sender, isEphemeral: true)
         
         // then
-        XCTAssertNil(note2?.content.title)
+        XCTAssertEqual(note2?.content.title, "")
         XCTAssertEqual(note2?.content.body, "Someone sent you a message")
     }
     
