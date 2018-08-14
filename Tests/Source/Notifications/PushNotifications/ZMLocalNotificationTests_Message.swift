@@ -73,14 +73,14 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         let note2 = textNotification(oneOnOneConversation, sender: sender)
         
         // then
-        XCTAssertNil(note2?.content.title)
+        XCTAssertEqual(note2?.content.title, "")
         XCTAssertEqual(note2?.content.body, "New message")
     }
     
     func testThatItShowsShowsEphemeralStringEvenWhenHidePreviewSettingIsTrue() {
         // given
         let note1 = textNotification(oneOnOneConversation, sender: sender, isEphemeral: true)
-        XCTAssertNil(note1?.content.title)
+        XCTAssertEqual(note1?.content.title, "")
         XCTAssertEqual(note1?.content.body, "Someone sent you a message")
         
         // when
