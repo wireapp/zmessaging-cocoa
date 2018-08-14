@@ -119,6 +119,7 @@ extension IntegrationTest {
         
         pushRegistry = PushRegistryMock(queue: nil)
         application = ApplicationMock()
+        notificationCenter = UserNotificationCenterMock()
         mockTransportSession = MockTransportSession(dispatchGroup: self.dispatchGroup)
         mockTransportSession.cookieStorage = ZMPersistentCookieStorage(forServerName: "ztest.example.com", userIdentifier: currentUserIdentifier)
         WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self
@@ -155,6 +156,7 @@ extension IntegrationTest {
         groupConversation = nil
         groupConversationWithServiceUser = nil
         application = nil
+        notificationCenter = nil
         resetInMemoryDatabases()
         deleteSharedContainerContent()
         sharedContainerDirectory = nil
@@ -564,6 +566,10 @@ extension IntegrationTest : SessionManagerDelegate {
     
     public func sessionManagerActivated(userSession: ZMUserSession) {
         self.userSession = userSession
+        
+        if let notificationCenter = self.notificationCenter {
+            self.userSession?.localNotificationDispatcher.notificationCenter = notificationCenter
+        }
         
         userSession.syncManagedObjectContext.performGroupedBlock {
             userSession.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)

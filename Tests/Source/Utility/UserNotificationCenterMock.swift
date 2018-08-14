@@ -19,15 +19,15 @@
 import Foundation
 import WireSyncEngine
 
-class UserNotificationCenterMock: UserNotificationCenter {
+@objc class UserNotificationCenterMock: NSObject, UserNotificationCenter {
     
     weak var delegate: UNUserNotificationCenterDelegate?
     
     /// Identifiers of scheduled notification requests.
-    var scheduledRequests = [UNNotificationRequest]()
+    @objc var scheduledRequests = [UNNotificationRequest]()
 
     /// Identifiers of removed notifications.
-    var removedNotifications = Set<String>()
+    @objc var removedNotifications = Set<String>()
     
     func setNotificationCategories(_ categories: Set<UNNotificationCategory>) {
         
