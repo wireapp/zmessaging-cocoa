@@ -97,11 +97,11 @@ extension SessionManager: PKPushRegistryDelegate {
 
 // MARK: - UNUserNotificationCenterDelegate
 
-extension SessionManager {
-    var notificationCenter: UserNotificationCenter {
-        return UNUserNotificationCenter.current()
-    }
-}
+//extension SessionManager {
+//    var notificationCenter: UserNotificationCenter {
+//        return UNUserNotificationCenter.current()
+//    }
+//}
 
 @objc extension SessionManager: UNUserNotificationCenterDelegate {
     
@@ -132,7 +132,6 @@ extension SessionManager {
     
     @objc public func configureUserNotifications() {
         guard application.shouldRegisterUserNotificationSettings ?? true else { return }
-        // Configure push notification categories
         notificationCenter.setNotificationCategories(PushNotificationCategory.allCategories)
         notificationCenter.requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { _, _ in })
         notificationCenter.delegate = self

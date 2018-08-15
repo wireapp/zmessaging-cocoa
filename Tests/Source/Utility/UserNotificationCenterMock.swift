@@ -29,21 +29,24 @@ import WireSyncEngine
     /// Identifiers of removed notifications.
     @objc var removedNotifications = Set<String>()
     
+    /// The registered notification categories for the app.
+    @objc var registeredNotificationCategories = Set<UNNotificationCategory>()
+    
+    /// The requested authorization options for the app.
+    @objc var requestedAuthorizationOptions: UNAuthorizationOptions = []
+    
     func setNotificationCategories(_ categories: Set<UNNotificationCategory>) {
-        
+        registeredNotificationCategories.formUnion(categories)
     }
     
     func requestAuthorization(options: UNAuthorizationOptions,
                               completionHandler: @escaping (Bool, Error?) -> Void)
     {
-        
+        requestedAuthorizationOptions.insert(options)
     }
     
-    func add(_ request: UNNotificationRequest,
-             withCompletionHandler: ((Error?) -> Void)?)
-    {
+    func add(_ request: UNNotificationRequest, withCompletionHandler: ((Error?) -> Void)?) {
         scheduledRequests.append(request)
-        
     }
     
     func removePendingNotificationRequests(withIdentifiers identifiers: [String]) {
