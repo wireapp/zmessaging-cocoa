@@ -233,9 +233,6 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
                                                                   category: categoryIdentifier,
                                                                   actionIdentifier: actionIdentifier)
         self.processPendingNotificationActionsIfPossible()
-        
-        // TODO: should this only be called after processing has succeeded?
-        // or is it risky that this could take too long.
         completionHandler()
     }
     
