@@ -37,7 +37,7 @@ extension SearchResult {
         let addressBook = AddressBookSearch(addressBook: debug_searchResultAddressBookOverride)
         
         // I don't need to find the address book contacts of users that I already found
-        let identifiersOfAlreadyFoundUsers = contacts.flatMap { $0.addressBookEntry?.localIdentifier } + self.directory.flatMap { $0.user?.addressBookEntry?.localIdentifier }
+        let identifiersOfAlreadyFoundUsers = contacts.compactMap { $0.addressBookEntry?.localIdentifier } + self.directory.compactMap { $0.user?.addressBookEntry?.localIdentifier }
         let allMatchingAddressBookContacts = addressBook.contactsMatchingQuery(query, identifiersToExclude: identifiersOfAlreadyFoundUsers)
         
         // There might also be contacts for which the local address book name match and which are also Wire users, but on Wire their name doesn't match,
@@ -46,16 +46,16 @@ extension SearchResult {
         
         let (additionalUsersFromAddressBook, addressBookContactsWithoutUser) = contactsThatAreAlsoUsers(contacts: allMatchingAddressBookContacts,
                                                                                                         managedObjectContext: userSession.managedObjectContext)
-        let searchUsersFromAddressBook = addressBookContactsWithoutUser.flatMap { ZMSearchUser(contact: $0, user: nil, userSession: userSession) }
+        let searchUsersFromAddressBook = addressBookContactsWithoutUser.compactMap {  ZMSearchUser(contextProvider: userSession, contact: $0) }
         
         // of those users, which one are connected and which one are not?
         let additionalConnectedUsers = additionalUsersFromAddressBook
             .filter { $0.connection != nil }
-            .flatMap { ZMSearchUser(contact: nil, user: $0, userSession: userSession) }
+            .compactMap { ZMSearchUser(contextProvider: userSession, user: $0) }
         let additionalNonConnectedUsers = additionalUsersFromAddressBook
             .filter { $0.connection == nil }
-            .flatMap { ZMSearchUser(contact: nil, user: $0, userSession: userSession) }
-        let connectedUsers = contacts.flatMap { ZMSearchUser(contact: nil, user: $0, userSession: userSession )}
+            .compactMap { ZMSearchUser(contextProvider: userSession, user: $0) }
+        let connectedUsers = contacts.compactMap { ZMSearchUser(contextProvider: userSession, user: $0) }
         
         return SearchResult(contacts: contacts,
                             teamMembers: teamMembers,
@@ -84,7 +84,8 @@ extension SearchResult {
         let users = managedObjectContext.executeFetchRequestOrAssert(fetchRequest) as! [ZMUser]
         
         for user in users {
-            identifiersToContact.removeValue(forKey: user.addressBookEntry.localIdentifier!)
+            guard let localIdentifier = user.addressBookEntry?.localIdentifier else { continue }
+            identifiersToContact.removeValue(forKey: localIdentifier)
         }
         
         return (users: users, nonMatchedContacts: Array(identifiersToContact.values))

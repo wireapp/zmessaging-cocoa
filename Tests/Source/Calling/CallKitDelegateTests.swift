@@ -26,7 +26,7 @@ import OCMock
 
 @available(iOS 10.0, *)
 class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
-    
+
     static let accountManagerURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("MockSessionManager.accounts")
     
     var localNotificationResponder: LocalNotificationResponder? = nil
@@ -44,6 +44,15 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
     
     func updateAppIconBadge(accountID: UUID, unreadCount: Int) {
         
+    }
+    
+    func configureUserNotifications() {
+        
+    }
+
+    @objc public var updatePushTokenCalled = false
+    func updatePushToken(for session: ZMUserSession) {
+        updatePushTokenCalled = true
     }
     
     deinit {
@@ -400,7 +409,7 @@ class CallKitDelegateTest: MessagingTest {
         self.uiMOC.saveOrRollback()
         
         mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
-        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date())
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date(), previousCallState: nil)
         
         let call = CallKitDelegateTestsMocking.mockCall(with: sut.callUUID(for: conversation)!, outgoing: false)
         self.callKitController.mockCallObserver.mockCalls = [call]
@@ -522,7 +531,7 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
-        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date())
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date(), previousCallState: nil)
         let callUUID = sut.callUUID(for: conversation)!
         
         // when
@@ -542,7 +551,7 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
-        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date())
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date(), previousCallState: nil)
         let callUUID = sut.callUUID(for: conversation)
         
         // when
@@ -562,7 +571,7 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
-        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date())
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date(), previousCallState: nil)
         let callUUID = sut.callUUID(for: conversation)
         
         // when
@@ -685,7 +694,7 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: nil)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: nil, previousCallState: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 1)
@@ -701,7 +710,7 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: nil)
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: nil, previousCallState: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
@@ -717,7 +726,7 @@ class CallKitDelegateTest: MessagingTest {
         sut.requestStartCall(in: conversation, video: false)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversation: conversation, caller: otherUser, timestamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversation: conversation, caller: otherUser, timestamp: nil, previousCallState: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
@@ -733,10 +742,10 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
-        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date())
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date(), previousCallState: nil)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .lostMedia), conversation: conversation, caller: otherUser, timestamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .lostMedia), conversation: conversation, caller: otherUser, timestamp: nil, previousCallState: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.lastEndedReason, .failed)
@@ -748,10 +757,10 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
-        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date())
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date(), previousCallState: nil)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .timeout), conversation: conversation, caller: otherUser, timestamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .timeout), conversation: conversation, caller: otherUser, timestamp: nil, previousCallState: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.lastEndedReason, .unanswered)
@@ -763,10 +772,10 @@ class CallKitDelegateTest: MessagingTest {
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         mockWireCallCenterV3.mockCallState = .incoming(video: true, shouldRing: true, degraded: false)
-        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date())
+        self.sut.callCenterDidChange(callState: .incoming(video: true, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: Date(), previousCallState: nil)
         
         // when
-        sut.callCenterDidChange(callState: .terminating(reason: .anweredElsewhere), conversation: conversation, caller: otherUser, timestamp: nil)
+        sut.callCenterDidChange(callState: .terminating(reason: .anweredElsewhere), conversation: conversation, caller: otherUser, timestamp: nil, previousCallState: nil)
         
         // then
         XCTAssertEqual(self.callKitProvider.lastEndedReason, .answeredElsewhere)

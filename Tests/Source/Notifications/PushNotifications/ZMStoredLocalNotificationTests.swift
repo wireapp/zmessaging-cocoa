@@ -53,6 +53,7 @@ class ZMStoredLocalNotificationTests: MessagingTest {
         let textInput = "Foobar"
         let message = conversation.appendMessage(withText: textInput) as! ZMClientMessage
         message.sender = sender
+        message.serverTimestamp = Date.distantFuture
         uiMOC.saveOrRollback()
         
         let note = ZMLocalNotification(message: message)
@@ -64,7 +65,7 @@ class ZMStoredLocalNotificationTests: MessagingTest {
         // then
         XCTAssertEqual(storedNote.conversation, conversation)
         XCTAssertEqual(storedNote.senderUUID, sender.remoteIdentifier)
-        XCTAssertEqual(storedNote.category, ZMConversationCategoryIncludingLike)
+        XCTAssertEqual(storedNote.category, WireSyncEngine.PushNotificationCategory.conversationIncludingLike.rawValue)
         XCTAssertEqual(storedNote.textInput, textInput)
     }
 }

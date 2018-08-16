@@ -43,24 +43,20 @@ private let addressBookLastUploadedIndex = "ZMAddressBookTranscoderLastIndexUplo
     /// Is the payload being generated? This is an async operation
     fileprivate var isGeneratingPayload : Bool = false
     
-    /// Address book analytics events tracker
-    fileprivate let tracker : AddressBookTracker
-    
     /// Address book
     fileprivate let addressBookGenerator : ()->(AddressBookAccessor?)
     
     public override convenience init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
-        self.init(managedObjectContext: moc, applicationStatus: applicationStatus, addressBookGenerator: { return AddressBook.factory() }, tracker: nil)
+        self.init(managedObjectContext: moc, applicationStatus: applicationStatus, addressBookGenerator: { return AddressBook.factory() })
     }
     
     /// Use for testing only
-    internal init(managedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus, addressBookGenerator: @escaping ()->(AddressBookAccessor?) = { return AddressBook.factory() }, tracker: AddressBookTracker? = nil) {
+    internal init(managedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus, addressBookGenerator: @escaping ()->(AddressBookAccessor?) = { return AddressBook.factory() }) {
         // notify of denied access
         if addressBookGenerator() == nil {
             NotificationInContext(name: failedToAccessAddressBookNotificationName, context: moc.notificationContext).post()
         }
         self.addressBookGenerator = addressBookGenerator
-        self.tracker = tracker ?? AddressBookAnalytics(analytics: moc.analytics, managedObjectContext: moc)
         super.init(withManagedObjectContext: moc, applicationStatus: applicationStatus)
         self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
     }
@@ -97,7 +93,6 @@ extension AddressBookUploadRequestStrategy : ZMSingleRequestTranscoder {
         
         let allLocalContactIDs = Set(encodedChunk.otherContactsHashes.keys)
         let payload : [String: Any] = ["cards" : contactCards]
-        self.tracker.tagAddressBookUploadStarted(encodedChunk.numberOfTotalContacts)
         let request = ZMTransportRequest(path: onboardingEndpoint, method: .methodPOST, payload: payload as ZMTransportData?, shouldCompress: true)
         request.add(ZMCompletionHandler(on: self.managedObjectContext, block: {
             [weak self] response in
@@ -122,9 +117,6 @@ extension AddressBookUploadRequestStrategy : ZMSingleRequestTranscoder {
             
             self.addressBookNeedsToBeUploaded = false
             self.encodedAddressBookChunkToUpload = nil
-            
-            // tracking
-            self.tracker.tagAddressBookUploadSuccess()
         }
     }
     
@@ -132,7 +124,7 @@ extension AddressBookUploadRequestStrategy : ZMSingleRequestTranscoder {
     private func updateLocalUsers(cards: [[String:AnyObject]], expectedContactIDs: Set<String>) {
         
         // do a single fetch for all users
-        let userIds = cards.flatMap { ($0["id"] as? String).flatMap { UUID(uuidString: $0 ) } }
+        let userIds = cards.compactMap { ($0["id"] as? String).flatMap { UUID(uuidString: $0 ) } }
         let users = ZMUser.fetchObjects(withRemoteIdentifiers: NSOrderedSet(array: userIds), in: self.managedObjectContext)!.array as! [ZMUser]
         
         let idToUsers = users.dictionary {
@@ -163,8 +155,8 @@ extension AddressBookUploadRequestStrategy : ZMSingleRequestTranscoder {
                 if user.addressBookEntry == nil {
                     user.addressBookEntry = AddressBookEntry.insertNewObject(in: self.managedObjectContext)
                 }
-                user.addressBookEntry.localIdentifier = contactId
-                user.addressBookEntry.cachedName = addressBook.contact(identifier: contactId)?.displayName
+                user.addressBookEntry?.localIdentifier = contactId
+                user.addressBookEntry?.cachedName = addressBook.contact(identifier: contactId)?.displayName
             }
         }
         

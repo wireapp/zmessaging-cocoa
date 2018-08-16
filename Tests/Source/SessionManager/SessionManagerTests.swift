@@ -46,16 +46,20 @@ class SessionManagerTests: IntegrationTest {
             reachability: reachability
         )
         
-        return SessionManager(
+        let sessionManager = SessionManager(
             appVersion: "0.0.0",
             authenticatedSessionFactory: authenticatedSessionFactory,
             unauthenticatedSessionFactory: unauthenticatedSessionFactory,
             reachability: reachability,
             delegate: delegate,
             application: application,
-            launchOptions: [:],
+            pushRegistry: pushRegistry,
             dispatchGroup: dispatchGroup
         )
+        
+        sessionManager.start(launchOptions: [:])
+        
+        return sessionManager
     }
     
     override func tearDown() {
@@ -109,7 +113,7 @@ class SessionManagerTests: IntegrationTest {
         XCTAssertNotNil(delegate.userSession)
         XCTAssertNil(sut?.unauthenticatedSession)
         withExtendedLifetime(token) {
-            XCTAssertEqual([delegate.userSession].flatMap { $0 }, observer.createdUserSession)
+            XCTAssertEqual([delegate.userSession].compactMap { $0 }, observer.createdUserSession)
         }
     }
     
@@ -132,7 +136,6 @@ class SessionManagerTests: IntegrationTest {
                               analytics: nil,
                               delegate: nil,
                               application: application,
-                              launchOptions: [:],
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
                                 let environment = ZMBackendEnvironment(type: .staging)
@@ -148,6 +151,7 @@ class SessionManagerTests: IntegrationTest {
                                 )
                                 
                                 sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+                                sessionManager.start(launchOptions: [:])
                                 
                                 // WHEN
                                 createToken = sessionManager.addSessionManagerCreatedSessionObserver(observer)
@@ -194,7 +198,6 @@ class SessionManagerTests: IntegrationTest {
                               analytics: nil,
                               delegate: nil,
                               application: application,
-                              launchOptions: [:],
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
                                 let environment = ZMBackendEnvironment(type: .staging)
@@ -210,6 +213,7 @@ class SessionManagerTests: IntegrationTest {
                                 )
                                 
                                 sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+                                sessionManager.start(launchOptions: [:])
                                 
                                 // WHEN
                                 destroyToken = sessionManager.addSessionManagerDestroyedSessionObserver(observer)
@@ -256,7 +260,6 @@ class SessionManagerTests: IntegrationTest {
                               analytics: nil,
                               delegate: nil,
                               application: application,
-                              launchOptions: [:],
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
                                 let environment = ZMBackendEnvironment(type: .staging)
@@ -272,6 +275,7 @@ class SessionManagerTests: IntegrationTest {
                                 )
                                 
                                 sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+                                sessionManager.start(launchOptions: [:])
                                 
                                 // WHEN
                                 destroyToken = sessionManager.addSessionManagerDestroyedSessionObserver(observer)
@@ -317,6 +321,13 @@ extension IntegrationTest {
         manager.addOrUpdate(account)
         
         return account
+    }
+
+    func createSelfClient(_ context: NSManagedObjectContext) -> UserClient {
+        let selfClient = UserClient.insertNewObject(in: context)
+        selfClient.remoteIdentifier = nil
+        selfClient.user = ZMUser.selfUser(in: context)
+        return selfClient
     }
 }
 
@@ -490,6 +501,7 @@ class SessionManagerTests_Teams: IntegrationTest {
 }
 
 class SessionManagerTests_MultiUserSession: IntegrationTest {
+    
     func testThatItLoadsAndKeepsBackgroundUserSession() {
         // GIVEN
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
@@ -568,7 +580,6 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                               analytics: nil,
                               delegate: nil,
                               application: application,
-                              launchOptions: [:],
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
                                 let environment = ZMBackendEnvironment(type: .staging)
@@ -584,6 +595,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                                 )
                                 
                                 sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+                                sessionManager.start(launchOptions: [:])
                                 
                                 sessionManager.loadSession(for: account) { userSession in
                                     realSessionManager = sessionManager
@@ -623,7 +635,6 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                        analytics: nil,
                        delegate: nil,
                        application: application,
-                       launchOptions: [:],
                        blacklistDownloadInterval : 60) { sessionManager in
                         
                         let environment = ZMBackendEnvironment(type: .staging)
@@ -639,6 +650,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                         )
                         
                         sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+                        sessionManager.start(launchOptions: [:])
 
             sessionManager.withSession(for: account) { userSession in
                 realSessionManager = sessionManager
@@ -674,7 +686,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
             
             XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             
-            let selfUser = ZMUser.selfUser(inUserSession: session)!
+            let selfUser = ZMUser.selfUser(inUserSession: session)
             selfUser.remoteIdentifier = currentUserIdentifier
         
             self.sessionManager!.tearDownAllBackgroundSessions()
@@ -700,7 +712,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         
         // WHEN
         let pushCompleted = self.expectation(description: "Push completed")
-        self.sessionManager?.pushDispatcher.didReceiveRemoteNotification(payload, fetchCompletionHandler: { _ in
+        pushRegistry.mockIncomingPushPayload(payload, completion: {
             DispatchQueue.main.async {
                 // THEN
                 XCTAssertNotNil(self.sessionManager!.backgroundUserSessions[account.userIdentifier])
@@ -731,11 +743,11 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         var userSession1: ZMUserSession!
         let pushCompleted2 = self.expectation(description: "Push completed 2")
         var userSession2: ZMUserSession!
-        self.sessionManager?.pushDispatcher.didReceiveRemoteNotification(payload, fetchCompletionHandler: { _ in
+        pushRegistry.mockIncomingPushPayload(payload, completion: {
             pushCompleted1.fulfill()
             userSession1 = self.sessionManager!.backgroundUserSessions[account.userIdentifier]
         })
-        self.sessionManager?.pushDispatcher.didReceiveRemoteNotification(payload, fetchCompletionHandler: { _ in
+        pushRegistry.mockIncomingPushPayload(payload, completion: {
             pushCompleted2.fulfill()
             userSession2 = self.sessionManager!.backgroundUserSessions[account.userIdentifier]
         })
@@ -767,8 +779,10 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         
         let selfUser = ZMUser.selfUser(in: session.managedObjectContext)
         selfUser.remoteIdentifier = currentUserIdentifier
-        
         session.managedObjectContext.saveOrRollback()
+
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        _ = createSelfClient(session.managedObjectContext)
         
         session.syncManagedObjectContext.performGroupedBlock {
             let _ = ZMConversation(remoteID: self.currentUserIdentifier, createIfNeeded: true, in: session.syncManagedObjectContext)
@@ -826,9 +840,13 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         
         // WHEN
         let completionExpectation = self.expectation(description: "Completed action")
-        self.sessionManager?.handleAction(with: nil, for: localNotification, with: [:], completionHandler: {_ in
-            completionExpectation.fulfill()
-        }, application: self.application!)
+        self.sessionManager?.handleAction(
+            with: nil,
+            for: localNotification,
+            with: [:],
+            completionHandler: completionExpectation.fulfill,
+            application: self.application!
+        )
 
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
@@ -872,7 +890,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // WHEN
-        sessionManager?.callCenterDidChange(callState: .answered(degraded: false), conversation: conversation!, caller: caller!, timestamp: nil)
+        sessionManager?.callCenterDidChange(callState: .answered(degraded: false), conversation: conversation!, caller: caller!, timestamp: nil, previousCallState: nil)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -881,106 +899,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         // CLEANUP
         self.sessionManager!.tearDownAllBackgroundSessions()
     }
-    
-}
-
-class SessionManagerTests_Push: IntegrationTest {
-    func testThatItStoresThePushToken() {
-        // GIVEN
-        let token = Data(bytes: [0xba, 0xdf, 0x00, 0xd0])
-        let fakePushClient = TestPushDispatcherClient()
-        // WHEN
-        self.sessionManager!.pushDispatcher.add(client: fakePushClient)
-        self.sessionManager!.didRegisteredForRemoteNotifications(with: token)
-        
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // THEN
-        XCTAssertEqual(fakePushClient.pushTokens.count, 1)
-        XCTAssertEqual(fakePushClient.pushTokens[0].type, .regular)
-        XCTAssertEqual(fakePushClient.pushTokens[0].data, token)
-    }
-    
-    func testThatItForwardsThePush() {
-        // GIVEN
-        let fakePushClient = TestPushDispatcherClient()
-        let payload: [AnyHashable: Any] = ["data": [
-            "user": UUID().transportString(),
-            "type": "notice"
-            ]]
-        
-        // WHEN
-        self.sessionManager!.pushDispatcher.add(client: fakePushClient)
-        self.sessionManager!.didReceiveRemote(notification: payload, fetchCompletionHandler: {_ in })
-
-        XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // THEN
-        XCTAssertEqual(fakePushClient.canHandlePayloads.count, 1)
-        XCTAssertEqual(fakePushClient.receivedPayloads.count, 1)
-        XCTAssert(NSDictionary(dictionary: fakePushClient.receivedPayloads[0]).isEqual(to: fakePushClient.canHandlePayloads[0]))
-        XCTAssert(NSDictionary(dictionary: fakePushClient.receivedPayloads[0]).isEqual(to: payload))
-    }
-    
-    func testThatItMarksTheTokenToDeleteWhenReceivingDidInvalidateToken() {
-        // GIVEN
-        let account = self.createAccount()
-        
-        // WHEN
-        
-        var session: ZMUserSession! = nil
-        self.sessionManager?.withSession(for: account, perform: { createdSession in
-            session = createdSession
-        })
-        
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        session.managedObjectContext.pushKitToken = ZMPushToken(deviceToken: Data(), identifier: "foo.bar", transportType: "APNS", fallback: "APNS", isRegistered: true)
-        
-        // THEN
-        XCTAssertNotNil(session.managedObjectContext.pushKitToken)
-        XCTAssertFalse(session.managedObjectContext.pushKitToken!.isMarkedForDeletion)
-        
-        // AND WHEN
-        self.sessionManager?.pushDispatcher.pushRegistrant.pushRegistry(PKPushRegistry.init(queue: nil), didInvalidatePushTokenForType:.voIP)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // THEN
-        XCTAssertTrue(session.managedObjectContext.pushKitToken!.isMarkedForDeletion)
-        
-        // CLEANUP
-        self.sessionManager!.tearDownAllBackgroundSessions()
-    }
-    
-    class MockPushCredentials: PKPushCredentials {
-        override var token: Data {
-            return Data()
-        }
-    }
-    
-    func testThatItSetsThePushTokenWhenReceivingUpdateCredentials() {
-        // GIVEN
-        let account = self.createAccount()
-        
-        var session: ZMUserSession! = nil
-        self.sessionManager?.withSession(for: account, perform: { createdSession in
-            session = createdSession
-        })
-        
-        let credentials = MockPushCredentials()
-        // WHEN
-        self.sessionManager?.pushDispatcher.pushRegistrant.pushRegistry(PKPushRegistry.init(queue: nil), didUpdate: credentials, forType: .voIP)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // THEN
-        XCTAssertNotNil(session.managedObjectContext.pushKitToken)
-        XCTAssertEqual(session.managedObjectContext.pushKitToken!.deviceToken, credentials.token)
-        XCTAssertFalse(session.managedObjectContext.pushKitToken!.isMarkedForDeletion)
-        
-        // CLEANUP
-        self.sessionManager!.tearDownAllBackgroundSessions()
-    }
-    
+            
     // the purpose of this test is to ensure push payloads can be processed in
     // the background as soon as the SessionManager is created
     func testThatABackgroundTaskCanBeCreatedAfterCreatingSessionManager() {
@@ -1020,7 +939,7 @@ extension SessionManagerTests {
             
             let conversation1 = createdSession.insertConversationWithUnreadMessage()
             conversations.append(conversation1)
-            XCTAssertNil(conversation1.lastReadMessage)
+            XCTAssertNotNil(conversation1.firstUnreadMessage)
             createdSession.managedObjectContext.saveOrRollback()
             conversation1CreatedExpectation.fulfill()
         })
@@ -1031,7 +950,7 @@ extension SessionManagerTests {
             createdSession.managedObjectContext.createSelfUserAndSelfConversation()
             
             let conversation2 = createdSession.insertConversationWithUnreadMessage()
-            XCTAssertNil(conversation2.lastReadMessage)
+            XCTAssertNotNil(conversation2.firstUnreadMessage)
             conversations.append(conversation2)
             createdSession.managedObjectContext.saveOrRollback()
             conversation2CreatedExpectation.fulfill()
@@ -1039,7 +958,7 @@ extension SessionManagerTests {
         
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         XCTAssertEqual(conversations.count, 2)
-        XCTAssertEqual(conversations.filter { $0.lastReadMessage == nil }.count, 2)
+        XCTAssertEqual(conversations.filter { $0.firstUnreadMessage != nil }.count, 2)
         // when
         
         let doneExpectation = self.expectation(description: "Conversations are marked as read")
@@ -1051,7 +970,7 @@ extension SessionManagerTests {
         // then
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
-        XCTAssertEqual(conversations.filter { $0.lastReadMessage == nil }.count, 0)
+        XCTAssertEqual(conversations.filter { $0.firstUnreadMessage != nil }.count, 0)
         
         // cleanup
         self.sessionManager!.tearDownAllBackgroundSessions()

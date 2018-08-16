@@ -21,12 +21,12 @@ import Foundation
 import WireSyncEngine
 
 extension ZMUserSession {
-    @discardableResult func insertNonUnreadDotGeneratingMessageMessage(in conversation: ZMConversation) -> ZMSystemMessage {
+    @discardableResult func insertUnreadDotGeneratingMessageMessage(in conversation: ZMConversation) -> ZMSystemMessage {
         let newTime = conversation.lastServerTimeStamp?.addingTimeInterval(5) ?? Date()
         
         let message = ZMSystemMessage(nonce: UUID(), managedObjectContext: self.managedObjectContext)
         message.serverTimestamp = newTime
-        message.systemMessageType = .newClient
+        message.systemMessageType = .missedCall
         conversation.lastServerTimeStamp = message.serverTimestamp
         conversation.mutableMessages.add(message)
         return message
@@ -36,9 +36,9 @@ extension ZMUserSession {
         let conversation = ZMConversation.insertGroupConversation(intoUserSession: self, withParticipants: [], name: nil, in: nil)
         conversation.remoteIdentifier = UUID()
         
-        self.insertNonUnreadDotGeneratingMessageMessage(in: conversation)
+        self.insertUnreadDotGeneratingMessageMessage(in: conversation)
         // then
-        XCTAssertNil(conversation.lastReadMessage)
+        XCTAssertNotNil(conversation.firstUnreadMessage)
         return conversation
     }
 }
@@ -62,6 +62,6 @@ class ZMUserSessionSwiftTests: ZMUserSessionTestsBase {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        XCTAssertEqual(conversations.filter { $0.lastReadMessage == nil }.count, 0)
+        XCTAssertEqual(conversations.filter { $0.firstUnreadMessage != nil }.count, 0)
     }
 }

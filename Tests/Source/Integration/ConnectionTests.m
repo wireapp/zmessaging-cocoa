@@ -139,7 +139,7 @@
     
     // when
     [self.userSession performChanges:^{
-        [userToConnectTo connectWithMessageText:@"Add me!" completionHandler:nil];
+        [userToConnectTo connectWithMessage:@"Add me!"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -894,13 +894,13 @@
 
     //when sending again
     [self.userSession performChanges:^{
-        [user connectWithMessageText:@"connect!" completionHandler:nil];
+        [user connectWithMessage:@"connect!"];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertTrue([conversations containsObject:conversation]);
-    XCTAssertEqual(observer.notifications.count, 3u);
+    XCTAssertEqual(observer.notifications.count, 2u);
 }
 
 

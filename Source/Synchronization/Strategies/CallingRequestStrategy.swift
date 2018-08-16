@@ -20,7 +20,7 @@ import Foundation
 import WireRequestStrategy
 import WireDataModel
 
-@objc
+@objcMembers
 public final class CallingRequestStrategy : NSObject, RequestStrategy {
     
     fileprivate let zmLog = ZMSLog(tag: "calling")
@@ -48,11 +48,11 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     }
     
     public func nextRequest() -> ZMTransportRequest? {
-        if let request = self.callConfigRequestSync.nextRequest() {
-            return request
-        }
+        let request = self.callConfigRequestSync.nextRequest() ?? genericMessageStrategy.nextRequest()
         
-        return genericMessageStrategy.nextRequest()
+        request?.forceToVoipSession()
+       
+        return request
     }
     
     public func dropPendingCallMessages(for conversation: ZMConversation) {
@@ -64,8 +64,8 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
 
 extension CallingRequestStrategy : ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
-        zmLog.debug("Scheduling request to '/calls/config'")
-        return ZMTransportRequest(path: "/calls/config", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
+        zmLog.debug("Scheduling request to '/calls/config/v2'")
+        return ZMTransportRequest(path: "/calls/config/v2", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
     }
     
     public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
@@ -169,7 +169,7 @@ extension CallingRequestStrategy : WireCallCenterTransport {
             
             self.zmLog.debug("sending calling message")
             
-            let genericMessage = ZMGenericMessage(callingContent: dataString, nonce: NSUUID().transportString())
+            let genericMessage = ZMGenericMessage(callingContent: dataString, nonce: UUID())
             
             self.genericMessageStrategy.schedule(message: genericMessage, inConversation: conversation) { (response) in
                 

@@ -32,7 +32,6 @@
 @class ZMSyncStrategy;
 @class ZMOperationLoop;
 @class ZMPushRegistrant;
-@class ZMApplicationRemoteNotification;
 @class ZMStoredLocalNotification;
 @class ZMAPNSEnvironment;
 @class UserProfileUpdateStatus;

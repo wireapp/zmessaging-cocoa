@@ -60,7 +60,7 @@ class PushNotificationStatusTests: MessagingTest {
         
         
         // when
-        sut.fetch(eventId: eventId) { (_) in }
+        sut.fetch(eventId: eventId) { }
         
         // then
         XCTAssertEqual(sut.status, .inProgress)
@@ -71,8 +71,8 @@ class PushNotificationStatusTests: MessagingTest {
         let eventId1 = UUID.timeBasedUUID() as UUID
         let eventId2 = UUID.timeBasedUUID() as UUID
         
-        sut.fetch(eventId: eventId1) { (_) in }
-        sut.fetch(eventId: eventId2) { (_) in }
+        sut.fetch(eventId: eventId1) { }
+        sut.fetch(eventId: eventId2) { }
         
         // when
         syncMOC.zm_lastNotificationID = eventId1
@@ -85,7 +85,7 @@ class PushNotificationStatusTests: MessagingTest {
     func testThatStatusIsDoneAfterEventIdIsFetched() {
         // given
         let eventId = UUID.timeBasedUUID() as UUID
-        sut.fetch(eventId: eventId) { (_) in }
+        sut.fetch(eventId: eventId) { }
         
         // when
         syncMOC.zm_lastNotificationID = eventId
@@ -98,7 +98,7 @@ class PushNotificationStatusTests: MessagingTest {
     func testThatStatusIsDoneAfterEventIdIsFetchedEvenIfMoreEventsWillBeFetched() {
         // given
         let eventId = UUID.timeBasedUUID() as UUID
-        sut.fetch(eventId: eventId) { (_) in }
+        sut.fetch(eventId: eventId) { }
         
         // when
         syncMOC.zm_lastNotificationID = eventId
@@ -111,7 +111,7 @@ class PushNotificationStatusTests: MessagingTest {
     func testThatStatusIsDoneAfterEventIdIsFetchedEvenIfNoEventsWereDownloaded() {
         // given
         let eventId = UUID.timeBasedUUID() as UUID
-        sut.fetch(eventId: eventId) { (_) in }
+        sut.fetch(eventId: eventId) { }
         
         // when
         sut.didFetch(eventIds: [], finished: true)
@@ -123,7 +123,7 @@ class PushNotificationStatusTests: MessagingTest {
     func testThatStatusIsDoneIfEventsCantBeFetched() {
         // given
         let eventId = UUID.timeBasedUUID() as UUID
-        sut.fetch(eventId: eventId) { (_) in }
+        sut.fetch(eventId: eventId) { }
         
         // when
         sut.didFailToFetchEvents()
@@ -137,7 +137,7 @@ class PushNotificationStatusTests: MessagingTest {
         let eventId = UUID.timeBasedUUID() as UUID
         
         // expect
-        sut.fetch(eventId: eventId) { (result) in
+        sut.fetch(eventId: eventId) {
             XCTFail("Didn't expect completion handler to be called")
         }
         
@@ -155,7 +155,7 @@ class PushNotificationStatusTests: MessagingTest {
         let expectation = self.expectation(description: "completion handler was called")
         
         // expect
-        sut.fetch(eventId: eventId) { (result) in
+        sut.fetch(eventId: eventId) {
             expectation.fulfill()
         }
         
@@ -174,7 +174,7 @@ class PushNotificationStatusTests: MessagingTest {
         let expectation = self.expectation(description: "completion handler was called")
         
         // expect
-        sut.fetch(eventId: eventId) { (result) in
+        sut.fetch(eventId: eventId) {
             expectation.fulfill()
         }
         
@@ -193,7 +193,7 @@ class PushNotificationStatusTests: MessagingTest {
         syncMOC.zm_lastNotificationID = eventId
 
         // when
-        sut.fetch(eventId: eventId) { (result) in
+        sut.fetch(eventId: eventId) {
             expectation.fulfill()
         }
         

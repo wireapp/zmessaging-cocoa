@@ -22,7 +22,23 @@ import Foundation
 
 class SearchTaskTests : MessagingTest {
     
-    
+    var teamIdentifier: UUID!
+
+    override func setUp() {
+        super.setUp()
+        self.teamIdentifier = UUID()
+        performPretendingUiMocIsSyncMoc { [unowned self] in
+            let selfUser = ZMUser.selfUser(in: self.uiMOC)
+            guard let team = Team.fetchOrCreate(with: self.teamIdentifier, create: true, in: self.uiMOC, created: nil) else { XCTFail(); return }
+            _ = Member.getOrCreateMember(for: selfUser, in: team, context: self.uiMOC)
+        }
+    }
+
+    override func tearDown() {
+        self.teamIdentifier = nil
+        super.tearDown()
+    }
+
     func createConnectedUser(withName name: String) -> ZMUser {
         let user = ZMUser.insertNewObject(in: uiMOC)
         user.name = name
@@ -685,7 +701,7 @@ class SearchTaskTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(mockTransportSession.receivedRequests().first?.path, "/services?tags=integration&start=Steve%20O'Hara%20%26%20S%C3%B6hne")
+        XCTAssertEqual(mockTransportSession.receivedRequests().first?.path, "/teams/\(teamIdentifier.transportString())/services/whitelisted?prefix=Steve%20O'Hara%20%26%20S%C3%B6hne")
     }
     
     func testThatItCallsCompletionHandlerForServicesSearch() {
@@ -713,13 +729,23 @@ class SearchTaskTests : MessagingTest {
     
     func testThatItTrimsThePrefixQuery() throws {
         // when
-        let task = SearchTask.servicesSearchRequest(query: "Search query ")
+        let task = SearchTask.servicesSearchRequest(teamIdentifier: self.teamIdentifier, query: "Search query ")
         // then
         let components = URLComponents(url: task.URL, resolvingAgainstBaseURL: false)
         
-        XCTAssertEqual(components?.queryItems?.count, 2)
-        let prefixComponent = components!.queryItems!.filter { $0.name == "start" }.first!
-        XCTAssertEqual(prefixComponent.value, "Search query")
+        XCTAssertEqual(components?.queryItems?.count, 1)
+        let queryItem = components?.queryItems?.first
+        XCTAssertEqual(queryItem?.name, "prefix")
+        XCTAssertEqual(queryItem?.value, "Search query")
+    }
+
+    func testThatItDoesNotAddPrefixQueryIfItIsEmpty() {
+        // when
+        let task = SearchTask.servicesSearchRequest(teamIdentifier: self.teamIdentifier, query: "")
+        // then
+        let components = URLComponents(url: task.URL, resolvingAgainstBaseURL: false)
+
+        XCTAssertNil(components?.queryItems)
     }
     
     // MARK: Combined results

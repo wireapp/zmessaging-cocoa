@@ -17,44 +17,37 @@
 //
 
 import Foundation
+import PushKit
 
-private let log = ZMSLog(tag: "SessionManager")
+private let log = ZMSLog(tag: "Push")
 
-extension SessionManager {
-    public func registerSessionForRemoteNotificationsIfNeeded(_ session: ZMUserSession) {
+protocol PushRegistry {
+    
+    var delegate: PKPushRegistryDelegate? { get set }
+    var desiredPushTypes: Set<PKPushType>? { get set }
+    
+    func pushToken(for type: PKPushType) -> Data?
+    
+}
+
+extension PKPushRegistry: PushRegistry {}
+
+@objc extension SessionManager {
+    
+    @objc public func configureUserNotifications() {
+        // Configure push notification categories
+        self.application.registerUserNotificationSettings(UIUserNotificationSettings(types: [.alert, .badge, .sound], categories: PushNotificationCategory.allCategories))
+    }
+    
+    public func updatePushToken(for session: ZMUserSession) {
         session.managedObjectContext.performGroupedBlock {
             // Refresh the tokens if needed
-            self.pushDispatcher.lastKnownPushTokens.forEach { type, actualToken in
-                switch type {
-                case .voip:
-                    if actualToken != session.managedObjectContext.pushKitToken?.deviceToken {
-                        session.managedObjectContext.pushKitToken = nil
-                        session.setPushKitToken(actualToken)
-                    }
-                case .regular:
-                    if actualToken != session.managedObjectContext.pushToken?.deviceToken {
-                        session.managedObjectContext.pushToken = nil
-                        session.setPushToken(actualToken)
-                    }
-                }
+            if let token = self.pushRegistry.pushToken(for: .voIP) {
+                session.setPushKitToken(token)
             }
-            
-            session.registerForRemoteNotifications()
         }
     }
-    
-    // Must be called when the AppDelegate receives the new push token.
-    public func didRegisteredForRemoteNotifications(with token: Data) {
-        self.pushDispatcher.didRegisteredForRemoteNotifications(with: token)
-    }
-    
-    // Must be called when the AppDelegate receives the new push notification.
-    @objc(didReceiveRemoteNotification:fetchCompletionHandler:)
-    public func didReceiveRemote(notification: [AnyHashable: Any],
-                                fetchCompletionHandler: @escaping (UIBackgroundFetchResult)->()) {
-        self.pushDispatcher.didReceiveRemoteNotification(notification, fetchCompletionHandler: fetchCompletionHandler)
-    }
-    
+        
     // Must be called when the AppDelegate receives the new local push notification.
     @objc(didReceiveLocalNotification:application:)
     public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
@@ -97,7 +90,7 @@ extension SessionManager {
         var foundSession: Bool = false
         self.backgroundUserSessions.forEach { accountId, backgroundSession in
             if session == backgroundSession, let account = self.accountManager.account(with: accountId) {
-                self.select(account) { _ in
+                self.select(account) {
                     completion()
                 }
                 foundSession = true
@@ -131,20 +124,63 @@ extension SessionManager: ZMRequestsToOpenViewsDelegate {
     }
 }
 
-extension SessionManager: PushDispatcherClient {
-    // Called by PushDispatcher when the pust notification is received. Wakes up or creates the user session for the
-    // account mentioned in the notification.
-    public func receivedPushNotification(with payload: [AnyHashable: Any],
-                                         from source: ZMPushNotficationType,
-                                         completion: ZMPushNotificationCompletionHandler?) {
+extension SessionManager: PKPushRegistryDelegate {
+    
+    public func pushRegistry(_ registry: PKPushRegistry, didUpdate pushCredentials: PKPushCredentials, for type: PKPushType) {
+        guard type == .voIP else { return }
         
-        guard let accountId = payload.accountId(), let account = self.accountManager.account(with: accountId) else {
-            completion?(.noData)
-            return
-        }
-            
-        withSession(for: account, perform: { userSession in
-            userSession.receivedPushNotification(with: payload, from: source, completion: completion)
+        log.debug("PushKit token was updated: \(pushCredentials.token)")
+        
+        // give new push token to all running sessions
+        backgroundUserSessions.values.forEach({ userSession in
+            userSession.setPushKitToken(pushCredentials.token)
         })
     }
+    
+    public func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenFor type: PKPushType) {
+        guard type == .voIP else { return }
+        
+        log.debug("PushKit token was invalidated")
+        
+        // delete push token from all running sessions
+        backgroundUserSessions.values.forEach({ userSession in
+            userSession.deletePushKitToken()
+        })
+    }
+    
+    public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
+        self.pushRegistry(registry, didReceiveIncomingPushWith: payload, for: type, completion: {})
+    }
+    
+    public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
+        // We only care about voIP pushes, other types are not related to push notifications (watch complications and files)
+        guard type == .voIP else { return completion() }
+        
+        log.debug("Received push payload: \(payload.dictionaryPayload)")
+        notificationsTracker?.registerReceivedPush()
+        
+        guard let accountId = payload.dictionaryPayload.accountId(),
+              let account = self.accountManager.account(with: accountId),
+              let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Process PushKit payload", expirationHandler: { [weak self] in
+                log.debug("Processing push payload expired")
+                self?.notificationsTracker?.registerProcessingExpired()
+              }) else {
+                log.debug("Aborted processing of payload: \(payload.dictionaryPayload)")
+                notificationsTracker?.registerProcessingAborted()
+                return completion()
+        }
+        
+        withSession(for: account, perform: { userSession in
+            log.debug("Forwarding push payload to user session with account \(account.userIdentifier)")
+            
+            userSession.receivedPushNotification(with: payload.dictionaryPayload, completion: { [weak self] in
+                log.debug("Processing push payload completed")
+                self?.notificationsTracker?.registerNotificationProcessingCompleted()
+                activity.end()
+                completion()
+            })
+        })
+    }
+    
 }
+

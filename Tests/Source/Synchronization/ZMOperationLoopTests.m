@@ -884,15 +884,13 @@
     XCTAssertNotNil(events);
     
     // expect
-    [[self.pushNotificationStatus expect] fetchEventId:identifier completionHandler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult))) {
-        handler(ZMPushPayloadResultSuccess);
+    [[self.pushNotificationStatus expect] fetchEventId:identifier completionHandler:[OCMArg checkWithBlock:^BOOL(dispatch_block_t handler) {
+        handler();
         return YES;
     }]];
     
     // when
-    [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^(ZMPushPayloadResult result) {
-        NOT_USED(result);
-    } source:ZMPushNotficationTypeVoIP];
+    [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^{}];
     WaitForAllGroupsToBeEmpty(1.0);
     
     // then
@@ -908,13 +906,13 @@
     NSDictionary *pushPayload = [self encryptedPushPayload];
     
     // expect
-    [[self.pushNotificationStatus expect] fetchEventId:OCMOCK_ANY completionHandler:[OCMArg checkWithBlock:^BOOL((void(^handler)(ZMPushPayloadResult))) {
-        handler(ZMPushPayloadResultSuccess);
+    [[self.pushNotificationStatus expect] fetchEventId:OCMOCK_ANY completionHandler:[OCMArg checkWithBlock:^BOOL(dispatch_block_t handler) {
+        handler();
         return YES;
     }]];
 
     // when
-    [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^(ZMPushPayloadResult result) { NOT_USED(result); } source:ZMPushNotficationTypeVoIP];
+    [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^{}];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -942,7 +940,7 @@
     [[self.pushNotificationStatus expect] fetchEventId:notificationID completionHandler:OCMOCK_ANY];
 
     // when
-    [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^(ZMPushPayloadResult result) { NOT_USED(result); } source:ZMPushNotficationTypeVoIP];
+    [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^{}];
     WaitForAllGroupsToBeEmpty(1.0);
 
     // then

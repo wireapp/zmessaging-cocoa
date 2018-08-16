@@ -352,7 +352,7 @@
     // when
     {
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
-            ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"some message" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
+            ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"some message" nonce:NSUUID.createUUID expiresAfter:nil];
             [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
@@ -422,7 +422,7 @@
         NOT_USED(session);
         
         for (NSUInteger i=0; i<20; ++i) {
-            ZMGenericMessage *message = [ZMGenericMessage messageWithText:[NSString stringWithFormat:@"Message %ld", (unsigned long)i] nonce:NSUUID.createUUID.transportString expiresAfter:nil];
+            ZMGenericMessage *message = [ZMGenericMessage messageWithText:[NSString stringWithFormat:@"Message %ld", (unsigned long)i] nonce:NSUUID.createUUID expiresAfter:nil];
             [self.groupConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
             [NSThread sleepForTimeInterval:0.002]; // SE has milisecond precision
         }
@@ -431,6 +431,7 @@
     
     
     ZMConversation *groupConversation = [self conversationForMockConversation:self.groupConversation];
+    [groupConversation markAsRead];
     XCTAssertNotNil(groupConversation);
     
     ZMConversationMessageWindow *conversationWindow = [groupConversation conversationWindowWithSize:5];
@@ -447,7 +448,7 @@
     NSString *extraMessageText = @"This is an extra message at the end of the window";
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:extraMessageText nonce:NSUUID.createUUID.transportString expiresAfter:nil];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:extraMessageText nonce:NSUUID.createUUID expiresAfter:nil];
         [self.groupConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -504,7 +505,7 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session ZM_UNUSED) {
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:expectedText nonce:NSUUID.createUUID.transportString expiresAfter:nil];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:expectedText nonce:NSUUID.createUUID expiresAfter:nil];
         [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -604,7 +605,7 @@
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Bla bla bla" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Bla bla bla" nonce:NSUUID.createUUID expiresAfter:nil];
         MockUser *fromUser = self.groupConversation.activeUsers.lastObject;
         [self.groupConversation encryptAndInsertDataFromClient:fromUser.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
@@ -626,7 +627,7 @@
     }
     XCTAssertEqual(updatesCount, 1);
     XCTAssertEqual(moves.count, 1u);
-    XCTAssertEqual([(ZMMovedIndex *)moves.firstObject from], 1u);
+    XCTAssertEqual([(ZMMovedIndex *)moves.firstObject from], 3u);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject to], 0u);
 }
 
@@ -685,7 +686,7 @@
     [observer clearNotifications];
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:messageText1 nonce:nonce1.transportString expiresAfter:nil];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:messageText1 nonce:nonce1 expiresAfter:nil];
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:toClient data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -705,7 +706,7 @@
     
     // send second message
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:messageText2 nonce:nonce2.transportString expiresAfter:nil];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:messageText2 nonce:nonce2 expiresAfter:nil];
         [self.selfToUser2Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:toClient data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -726,7 +727,7 @@
     // send first message again
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:messageText3 nonce:nonce3.transportString expiresAfter:nil];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:messageText3 nonce:nonce3 expiresAfter:nil];
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:toClient data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -757,10 +758,12 @@
     // make sure oneToOneConversation is not on top
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        [self.selfToUser2Conversation insertKnockFromUser:self.user2 nonce:[NSUUID createUUID]];
+        ZMGenericMessage *knock = [ZMGenericMessage knockWithNonce:NSUUID.createUUID expiresAfter:nil];
+        [self.self.selfToUser2Conversation encryptAndInsertDataFromClient:self.user2.clients.anyObject toClient:self.selfUser.clients.anyObject data:knock.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
+    [conversationListChangeObserver clearNotifications];
     XCTAssertNotEqual(oneToOneConversation, conversationList[0]); // make sure conversation is not on top
     
     NSUInteger oneToOneIndex = [conversationList indexOfObject:oneToOneConversation];
@@ -768,12 +771,14 @@
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        [self.selfToUser1Conversation insertKnockFromUser:self.user1 nonce:[NSUUID createUUID]];
+        ZMGenericMessage *knock = [ZMGenericMessage knockWithNonce:NSUUID.createUUID expiresAfter:nil];
+        [self.self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:knock.data];
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    XCTAssertEqual(oneToOneConversation, conversationList[0]); // make sure conversation is not on top
     ConversationListChangeInfo *note = conversationListChangeObserver.notifications.firstObject;
     XCTAssertTrue(note);
     
@@ -794,12 +799,14 @@
 
     ZMConversation *oneToOneConversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     MockUser *mockUser = [self createSentConnectionFromUserWithName:@"Hans" uuid:NSUUID.createUUID];
+    
+    WaitForAllGroupsToBeEmpty(0.5);
 
     ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     ZMConversation *sentConversation = conversationList.firstObject;
 
     [self.mockTransportSession performRemoteChanges:^(__unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"some message" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"some message" nonce:NSUUID.createUUID expiresAfter:nil];
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     
@@ -1121,7 +1128,7 @@
     
     // when
     [self checkThatItUnarchives:shouldUnarchive silenced:NO mockConversation:self.groupConversation withBlock:^(ZM_UNUSED id session) {
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Some text" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Some text" nonce:NSUUID.createUUID expiresAfter:nil];
         MockUser *fromUser = self.groupConversation.activeUsers.lastObject;
         [self.groupConversation encryptAndInsertDataFromClient:fromUser.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
@@ -1134,7 +1141,7 @@
     
     // when
     [self checkThatItUnarchives:shouldUnarchive silenced:YES mockConversation:self.groupConversation withBlock:^(ZM_UNUSED id session) {
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Some text" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Some text" nonce:NSUUID.createUUID expiresAfter:nil];
         MockUser *fromUser = self.groupConversation.activeUsers.lastObject;
         [self.groupConversation encryptAndInsertDataFromClient:fromUser.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
@@ -1144,10 +1151,17 @@
 {
     // expect
     BOOL shouldUnarchive = YES;
+
+    ZMGenericMessage *message = [ZMGenericMessage genericMessageWithImageSize:CGSizeMake(10, 10)
+                                                                     mimeType:@"image/jpeg"
+                                                                         size:123
+                                                                        nonce:NSUUID.createUUID
+                                                                 expiresAfter:nil];
     
     // when
-    [self checkThatItUnarchives:shouldUnarchive silenced:NO mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversation insertImageEventsFromUser:session.selfUser];
+    [self checkThatItUnarchives:shouldUnarchive silenced:NO mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
+        MockUser *fromUser = self.groupConversation.activeUsers.lastObject;
+        [self.groupConversation encryptAndInsertDataFromClient:fromUser.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
 }
 
@@ -1156,9 +1170,16 @@
     // expect
     BOOL shouldUnarchive = NO;
     
+    ZMGenericMessage *message = [ZMGenericMessage genericMessageWithImageSize:CGSizeMake(10, 10)
+                                                                     mimeType:@"image/jpeg"
+                                                                         size:123
+                                                                        nonce:NSUUID.createUUID
+                                                                 expiresAfter:nil];
+    
     // when
-    [self checkThatItUnarchives:shouldUnarchive silenced:YES mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversation insertImageEventsFromUser:session.selfUser];
+    [self checkThatItUnarchives:shouldUnarchive silenced:YES mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
+        MockUser *fromUser = self.groupConversation.activeUsers.lastObject;
+        [self.groupConversation encryptAndInsertDataFromClient:fromUser.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
 }
 
@@ -1168,8 +1189,10 @@
     BOOL shouldUnarchive = YES;
     
     // when
-    [self checkThatItUnarchives:shouldUnarchive silenced:NO mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversation insertKnockFromUser:session.selfUser nonce:NSUUID.createUUID];
+    [self checkThatItUnarchives:shouldUnarchive silenced:NO mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
+        ZMGenericMessage *knock = [ZMGenericMessage knockWithNonce:NSUUID.createUUID expiresAfter:nil];
+        MockUser *fromUser = self.groupConversation.activeUsers.lastObject;
+        [self.groupConversation encryptAndInsertDataFromClient:fromUser.clients.anyObject toClient:self.selfUser.clients.anyObject data:knock.data];
     }];
 }
 
@@ -1179,19 +1202,10 @@
     BOOL shouldUnarchive = NO;
     
     // when
-    [self checkThatItUnarchives:shouldUnarchive silenced:YES mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversation insertKnockFromUser:session.selfUser nonce:NSUUID.createUUID];
-    }];
-}
-
-- (void)testThatAddingUsersToAnArchivedConversation_Unarchives_ThisConversation
-{
-    // expect
-    BOOL shouldUnarchive = YES;
-    
-    // when
-    [self checkThatItUnarchives:shouldUnarchive silenced:NO mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversation addUsersByUser:session.selfUser addedUsers:@[self.user5]];
+    [self checkThatItUnarchives:shouldUnarchive silenced:YES mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
+        ZMGenericMessage *knock = [ZMGenericMessage knockWithNonce:NSUUID.createUUID expiresAfter:nil];
+        MockUser *fromUser = self.groupConversation.activeUsers.lastObject;
+        [self.groupConversation encryptAndInsertDataFromClient:fromUser.clients.anyObject toClient:self.selfUser.clients.anyObject data:knock.data];
     }];
 }
 
@@ -1299,7 +1313,7 @@
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Will insert this to have a message to read" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Will insert this to have a message to read" nonce:NSUUID.createUUID expiresAfter:nil];
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
     }];
     
@@ -1318,7 +1332,7 @@
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"This should increase the unread count" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"This should increase the unread count" nonce:NSUUID.createUUID expiresAfter:nil];
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1342,7 +1356,6 @@
     [self.userSession performChanges:^{
         textMsg = (id)[conv appendMessageWithText:@"bla bla"];
         imageMsg = (id)[conv appendMessageWithImageData:self.verySmallJPEGData];
-        [conv setVisibleWindowFromMessage:nil toMessage:imageMsg];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1416,13 +1429,16 @@
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
         // If the client is not registered yet we need to account for the added System Message
         for (NSUInteger i = 0; i < messagesCount - conversation.messages.count; i++) {
-            ZMGenericMessage *message = [ZMGenericMessage messageWithText:[NSString stringWithFormat:@"foo %lu", (unsigned long)i] nonce:NSUUID.createUUID.transportString expiresAfter:nil];
+            ZMGenericMessage *message = [ZMGenericMessage messageWithText:[NSString stringWithFormat:@"foo %lu", (unsigned long)i] nonce:NSUUID.createUUID expiresAfter:nil];
             [mockConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
         }
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
     conversation = [self conversationForMockConversation:mockConversation];
+    [conversation markAsRead];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
     XCTAssertEqual(conversation.messages.count, messagesCount);
     
     ZMConversationMessageWindow *window = [conversation conversationWindowWithSize:messagesCount];
@@ -1540,8 +1556,8 @@
     
     [self.userSession performChanges:^{
         [self spinMainQueueWithTimeout:1]; // if the message is sent within the same second of clearing the window, it will not be added when resyncing
-        [conversation appendMessageWithText:@"lalala"];
-        [conversation setVisibleWindowFromMessage:conversation.messages.lastObject toMessage:conversation.messages.lastObject];
+        id<ZMConversationMessage> message = [conversation appendMessageWithText:@"lalala"];
+        [conversation markMessagesAsReadUntil:message];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -1745,7 +1761,7 @@
     
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
         [self spinMainQueueWithTimeout:1]; // if the action happens within the same second the user clears the history, the event is not added
-        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"foo" nonce:NSUUID.createUUID.transportString expiresAfter:nil];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"foo" nonce:NSUUID.createUUID expiresAfter:nil];
         [self.groupConversation encryptAndInsertDataFromClient:self.user2.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1934,7 +1950,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSString *reactionEmoji = @"❤️";
-    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce.transportString nonce:[NSUUID UUID].transportString];
+    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce nonce:[NSUUID UUID]];
     MockUserClient *fromClient = [self.user1.clients anyObject];
     MockUserClient *toClient = [self.selfUser.clients anyObject];
     
@@ -2043,7 +2059,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     MessageChangeObserver *observer = [[MessageChangeObserver alloc] initWithMessage:message];
-    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:message.nonce.transportString nonce:[NSUUID UUID].transportString];
+    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:message.nonce nonce:[NSUUID UUID]];
     MockUserClient *fromClient = [self.user1.clients anyObject];
     MockUserClient *toClient = [self.selfUser.clients anyObject];
     
@@ -2079,7 +2095,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSString *reactionEmoji = @"Jean Robert, j'ai mal aux pieds";
-    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce.transportString nonce:[NSUUID UUID].transportString];
+    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce nonce:[NSUUID UUID]];
     MockUserClient *fromClient = [self.user1.clients anyObject];
     MockUserClient *toClient = [self.selfUser.clients anyObject];
     
@@ -2114,7 +2130,7 @@
     
     NSString *reactionEmoji = @"❤️";
 
-    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce.transportString nonce:[NSUUID UUID].transportString];
+    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce nonce:[NSUUID UUID]];
     MockUserClient *fromClient = [self.user1.clients anyObject];
     MockUserClient *toClient = [self.selfUser.clients anyObject];
     
@@ -2154,7 +2170,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     NSString *reactionEmoji = @"❤️";
-    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce.transportString nonce:[NSUUID UUID].transportString];
+    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce nonce:[NSUUID UUID]];
     MockUserClient *fromClient = [self.user1.clients anyObject];
     MockUserClient *toClient = [self.selfUser.clients anyObject];
     
@@ -2235,7 +2251,7 @@
     XCTAssertNil([ZMMessage fetchMessageWithNonce:nonce forConversation:conversation inManagedObjectContext:self.userSession.managedObjectContext]);
     
     NSString *reactionEmoji = @"❤️";
-    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce.transportString nonce:[NSUUID UUID].transportString];
+    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce nonce:[NSUUID UUID]];
     MockUserClient *fromClient = [self.user1.clients anyObject];
     MockUserClient *toClient = [self.selfUser.clients anyObject];
     
@@ -2263,14 +2279,14 @@
     MockUserClient *toClient = [self.selfUser.clients anyObject];
 
     NSUUID *nonce = [NSUUID createUUID];
-    ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"JCVD is the best actor known" nonce:nonce.transportString expiresAfter:nil];
+    ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"JCVD is the best actor known" nonce:nonce expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^( __unused  MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [mockConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    message = [ZMGenericMessage messageWithEditMessage:nonce.transportString newText:@"JCVD is the best actor known in the galaxy!" nonce:[NSUUID createUUID].transportString];
+    message = [ZMGenericMessage messageWithEditMessage:nonce newText:@"JCVD is the best actor known in the galaxy!" nonce:[NSUUID createUUID]];
     
     [self.mockTransportSession performRemoteChanges:^( __unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [mockConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
@@ -2314,7 +2330,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
         
     NSString *reactionEmoji = @"❤️";
-    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce.transportString nonce:[NSUUID UUID].transportString];
+    ZMGenericMessage *reactionMessage = [ZMGenericMessage messageWithEmojiString:reactionEmoji messageID:nonce nonce:[NSUUID UUID]];
     MockUserClient *fromClient = [self.user1.clients anyObject];
     MockUserClient *toClient = [self.selfUser.clients anyObject];
     

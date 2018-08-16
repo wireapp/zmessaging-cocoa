@@ -33,6 +33,7 @@
 @class MockConversation;
 @class MockConnection;
 @class SearchDirectory;
+@class PushRegistryMock;
 
 @interface IntegrationTest : ZMTBaseTest
 
@@ -44,6 +45,7 @@
 @property (nonatomic, nullable) ZMAPNSEnvironment *apnsEnvironment;
 @property (nonatomic, nullable) ApplicationMock *application;
 @property (nonatomic, nullable) ZMUserSession *userSession;
+@property (nonatomic, null_unspecified) PushRegistryMock *pushRegistry;
 @property (nonatomic, null_unspecified) NSURL *sharedContainerDirectory;
 @property (nonatomic, readonly) BOOL useInMemoryStore;
 @property (nonatomic, readonly) BOOL useRealKeychain;

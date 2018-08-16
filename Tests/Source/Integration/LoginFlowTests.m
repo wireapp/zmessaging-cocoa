@@ -154,6 +154,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
     // when
     [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
+    WaitForAllGroupsToBeEmpty(0.5);
 
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
@@ -332,7 +333,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // should not make more requests
-    XCTAssertLessThanOrEqual(numberOfRequests, 2);
     XCTAssertFalse(self.userSession.isLoggedIn);
     XCTAssertEqual(recorder.notifications.count, 2lu);
     XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount);
@@ -379,19 +379,24 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
 @implementation LoginFlowTests (PushToken)
 
-- (void)testThatItRegisteresThePushTokenWithTheBackend;
+- (void)testThatItRegistersThePushTokenWithTheBackend;
 {
+    // given
     NSData *deviceToken = [@"asdfasdf" dataUsingEncoding:NSUTF8StringEncoding];
     NSString *deviceTokenAsHex = @"6173646661736466";
     XCTAssertTrue([self login]);
     
-    [self.userSession setPushToken:deviceToken];
+    // then
+    XCTAssertTrue([self.pushRegistry.desiredPushTypes containsObject:PKPushTypeVoIP]);
+    
+    // when
+    [self.pushRegistry updatePushToken:deviceToken];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    NSArray *registeredTokens = self.mockTransportSession.pushTokens;
+    NSDictionary *registeredTokens = self.mockTransportSession.pushTokens;
     XCTAssertEqual(registeredTokens.count, 1u);
-    NSDictionary *registeredToken = registeredTokens.firstObject;
+    NSDictionary *registeredToken = registeredTokens[deviceTokenAsHex];
     XCTAssertEqualObjects(registeredToken[@"token"], deviceTokenAsHex);
     XCTAssertNotNil(registeredToken[@"app"]);
     XCTAssertTrue([registeredToken[@"app"] hasPrefix:@"com.wire."]);
@@ -416,7 +421,8 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
     // when
     [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
-    
+    WaitForAllGroupsToBeEmpty(0.5);
+
     // then
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     

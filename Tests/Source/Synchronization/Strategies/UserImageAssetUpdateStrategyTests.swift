@@ -214,6 +214,7 @@ extension UserImageAssetUpdateStrategyTests {
 
 // MARK: - Profile image download
 extension UserImageAssetUpdateStrategyTests {
+
     func testThatItCreatesDownstreamRequestSyncs() {
         XCTAssertNotNil(sut.downstreamRequestSyncs[.preview])
         XCTAssertNotNil(sut.downstreamRequestSyncs[.complete])
@@ -236,9 +237,12 @@ extension UserImageAssetUpdateStrategyTests {
         user.previewProfileAssetIdentifier = "fooo"
         let sync = self.sut.downstreamRequestSyncs[.preview]!
         XCTAssertFalse(sync.hasOutstandingItems)
+        syncMOC.saveOrRollback()
         
         // WHEN
-        user.requestPreviewAsset()
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: user.objectID) as? ZMUser)?.requestPreviewProfileImage()
+        }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -251,9 +255,12 @@ extension UserImageAssetUpdateStrategyTests {
         user.completeProfileAssetIdentifier = "fooo"
         let sync = self.sut.downstreamRequestSyncs[.complete]!
         XCTAssertFalse(sync.hasOutstandingItems)
+        syncMOC.saveOrRollback()
         
         // WHEN
-        user.requestCompleteAsset()
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: user.objectID) as? ZMUser)?.requestCompleteProfileImage()
+        }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -265,9 +272,12 @@ extension UserImageAssetUpdateStrategyTests {
         let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
         let assetId = "foo-bar"
         user.previewProfileAssetIdentifier = assetId
+        syncMOC.saveOrRollback()
         
         // WHEN
-        user.requestPreviewAsset()
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: user.objectID) as? ZMUser)?.requestPreviewProfileImage()
+        }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -282,9 +292,12 @@ extension UserImageAssetUpdateStrategyTests {
         let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: self.syncMOC)!
         let assetId = "foo-bar"
         user.completeProfileAssetIdentifier = assetId
+        syncMOC.saveOrRollback()
         
         // WHEN
-        user.requestCompleteAsset()
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: user.objectID) as? ZMUser)?.requestCompleteProfileImage()
+        }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -322,6 +335,60 @@ extension UserImageAssetUpdateStrategyTests {
         
         // THEN
         XCTAssertEqual(user.imageMediumData, imageData)
+    }
+    
+    func testThatItDeletesPreviewProfileAssetIdentifierWhenReceivingAPermanentErrorForPreviewImage() {
+        // Given
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: syncMOC)!
+        let assetId = UUID.create().transportString()
+        user.previewProfileAssetIdentifier = assetId
+        syncMOC.saveOrRollback()
+        
+        // When
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: user.objectID) as? ZMUser)?.requestPreviewProfileImage()
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        guard let request = sut.nextRequestIfAllowed() else { return XCTFail("nil request generated") }
+        XCTAssertEqual(request.path, "/assets/v3/\(assetId)")
+        XCTAssertEqual(request.method, .methodGET)
+        
+        // Given
+        let response = ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil)
+        request.complete(with: response)
+        
+        // THEN
+        user.requestPreviewProfileImage()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertNil(user.previewProfileAssetIdentifier)
+        XCTAssertNil(sut.nextRequestIfAllowed())
+    }
+    
+    func testThatItDeletesCompleteProfileAssetIdentifierWhenReceivingAPermanentErrorForCompleteImage() {
+        // Given
+        let user = ZMUser(remoteID: .create(), createIfNeeded: true, in: syncMOC)!
+        let assetId = UUID.create().transportString()
+        user.completeProfileAssetIdentifier = assetId
+        syncMOC.saveOrRollback()
+        
+        // When
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: user.objectID) as? ZMUser)?.requestCompleteProfileImage()
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        guard let request = sut.nextRequestIfAllowed() else { return XCTFail("nil request generated") }
+        XCTAssertEqual(request.path, "/assets/v3/\(assetId)")
+        XCTAssertEqual(request.method, .methodGET)
+        
+        // Given
+        let response = ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil)
+        request.complete(with: response)
+        
+        // THEN
+        user.requestCompleteProfileImage()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertNil(user.completeProfileAssetIdentifier)
+        XCTAssertNil(sut.nextRequestIfAllowed())
     }
 
 }

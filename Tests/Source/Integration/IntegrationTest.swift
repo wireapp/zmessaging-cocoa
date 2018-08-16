@@ -117,6 +117,7 @@ extension IntegrationTest {
         ZMPersistentCookieStorage.setDoNotPersistToKeychain(!useRealKeychain)
         StorageStack.shared.createStorageAsInMemory = useInMemoryStore
         
+        pushRegistry = PushRegistryMock(queue: nil)
         application = ApplicationMock()
         mockTransportSession = MockTransportSession(dispatchGroup: self.dispatchGroup)
         mockTransportSession.cookieStorage = ZMPersistentCookieStorage(forServerName: "ztest.example.com", userIdentifier: currentUserIdentifier)
@@ -226,9 +227,11 @@ extension IntegrationTest {
             reachability: reachability,
             delegate: self,
             application: application,
-            launchOptions: [:],
+            pushRegistry: pushRegistry,
             dispatchGroup: self.dispatchGroup
         )
+        
+        sessionManager?.start(launchOptions: [:])
         
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -538,7 +541,7 @@ extension IntegrationTest {
 extension IntegrationTest {
     @objc(remotelyAppendSelfConversationWithZMClearedForMockConversation:atTime:)
     func remotelyAppendSelfConversationWithZMCleared(for mockConversation: MockConversation, at time: Date) {
-        let genericMessage = ZMGenericMessage(clearedTimestamp: time, ofConversationWithID: mockConversation.identifier, nonce: NSUUID.create().transportString())
+        let genericMessage = ZMGenericMessage(clearedTimestamp: time, ofConversationWith: UUID(uuidString: mockConversation.identifier)!, nonce: UUID.create())
         mockTransportSession.performRemoteChanges { session in
             self.selfConversation.insertClientMessage(from: self.selfUser, data: genericMessage.data())
         }
@@ -546,7 +549,7 @@ extension IntegrationTest {
     
     @objc(remotelyAppendSelfConversationWithZMLastReadForMockConversation:atTime:)
     func remotelyAppendSelfConversationWithZMLastRead(for mockConversation: MockConversation, at time: Date) {
-        let genericMessage = ZMGenericMessage(lastRead: time, ofConversationWithID: mockConversation.identifier, nonce: NSUUID.create().transportString())
+        let genericMessage = ZMGenericMessage(lastRead: time, ofConversationWith: UUID(uuidString: mockConversation.identifier)!, nonce: UUID.create())
         mockTransportSession.performRemoteChanges { session in
             self.selfConversation.insertClientMessage(from: self.selfUser, data: genericMessage.data())
         }

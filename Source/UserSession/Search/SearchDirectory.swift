@@ -19,9 +19,7 @@
 import Foundation
 
 
-public class SearchDirectory : NSObject {
-    
-    static let userIDsMissingProfileImage = SearchDirectoryUserIDTable()
+@objcMembers public class SearchDirectory : NSObject {
     
     let searchContext : NSManagedObjectContext
     let userSession : ZMUserSession
@@ -44,7 +42,6 @@ public class SearchDirectory : NSObject {
         
         task.onResult { [weak self] (result, _) in
             self?.observeSearchUsers(result)
-            self?.requestSearchUserProfileImages(result)
         }
         
         return task
@@ -53,16 +50,7 @@ public class SearchDirectory : NSObject {
     func observeSearchUsers(_ result : SearchResult) {
         let searchUserObserverCenter = userSession.managedObjectContext.searchUserObserverCenter
         result.directory.forEach(searchUserObserverCenter.addSearchUser)
-        result.services.flatMap { $0 as? ZMSearchUser }.forEach(searchUserObserverCenter.addSearchUser)
-    }
-    
-    func requestSearchUserProfileImages(_ result : SearchResult) {
-        let usersMissingProfileImage = Set(result.directory.filter({ !$0.isLocalOrHasCachedProfileImageData }))
-        let botsMissingProfileImage = Set(result.services.flatMap { $0 as? ZMSearchUser }.filter({ !$0.isLocalOrHasCachedProfileImageData }))
-
-        let allUsers = usersMissingProfileImage.union(botsMissingProfileImage)
-        SearchDirectory.userIDsMissingProfileImage.setUsers(allUsers, forDirectory: self)
-        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        result.services.compactMap { $0 as? ZMSearchUser }.forEach(searchUserObserverCenter.addSearchUser)
     }
     
 }
@@ -72,11 +60,8 @@ extension SearchDirectory: TearDownCapable {
     ///
     /// NOTE: this must be called before releasing the instance
     public func tearDown() {
-        userSession.syncManagedObjectContext.performGroupedBlock {
-            SearchDirectory.userIDsMissingProfileImage.removeDirectory(self)
-            SearchDirectory.userIDsMissingProfileImage.clear()
-            ZMSearchUser.searchUserToMediumImageCache().removeAllObjects()
-        }
+        // Evict all cached search users
+        userSession.managedObjectContext.zm_searchUserCache?.removeAllObjects()
 
         // Reset search user observer center to remove unnecessarily observed search users
         userSession.managedObjectContext.searchUserObserverCenter.reset()

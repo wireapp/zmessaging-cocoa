@@ -282,7 +282,7 @@
     
     MockUserClient *fromClient = self.user1.clients.anyObject;
     MockUserClient *toClient = self.selfUser.clients.anyObject;
-    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Foo" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
+    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Foo" nonce:[NSUUID createUUID] expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(id ZM_UNUSED session) {
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:textMessage.data];
@@ -295,7 +295,7 @@
     NSUUID *messageNone = receivedMessage.nonce;
     
     // when
-    ZMGenericMessage *editMessage = [ZMGenericMessage messageWithEditMessage:messageNone.transportString  newText:@"Bar" nonce:[NSUUID createUUID].transportString];
+    ZMGenericMessage *editMessage = [ZMGenericMessage messageWithEditMessage:messageNone  newText:@"Bar" nonce:[NSUUID createUUID]];
     [self.mockTransportSession performRemoteChanges:^(id ZM_UNUSED session) {
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:editMessage.data];
     }];
@@ -315,7 +315,7 @@
     
     MockUserClient *fromClient = self.user1.clients.anyObject;
     MockUserClient *toClient = self.selfUser.clients.anyObject;
-    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Foo" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
+    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Foo" nonce:[NSUUID createUUID] expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(id ZM_UNUSED session) {
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:textMessage.data];
@@ -334,7 +334,7 @@
     NSDate *lastModifiedDate = conversation.lastModifiedDate;
     
     // when
-    ZMGenericMessage *editMessage = [ZMGenericMessage messageWithEditMessage:messageNone.transportString newText:@"Bar" nonce:[NSUUID createUUID].transportString];
+    ZMGenericMessage *editMessage = [ZMGenericMessage messageWithEditMessage:messageNone newText:@"Bar" nonce:[NSUUID createUUID]];
     __block MockEvent *editEvent;
     [self.mockTransportSession performRemoteChanges:^(id ZM_UNUSED session) {
         editEvent = [self.selfToUser1Conversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:editMessage.data];

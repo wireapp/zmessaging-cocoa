@@ -122,13 +122,13 @@ extension ZMAddressBookContact {
         self.organization = contact.organizationName
         
         // email
-        self.emailAddresses = contact.emailAddresses.flatMap { emailNormalizer($0.value as String) }
+        self.emailAddresses = contact.emailAddresses.compactMap { emailNormalizer($0.value as String) }
         
         // phone
         self.rawPhoneNumbers = contact.phoneNumbers.map { $0.value.stringValue }
         
         // normalize phone
-        self.phoneNumbers = self.rawPhoneNumbers.flatMap { phoneNumberNormalizer($0) }
+        self.phoneNumbers = self.rawPhoneNumbers.compactMap { phoneNumberNormalizer($0) }
         
         // ignore contacts with no email nor phones
         guard self.emailAddresses.count > 0 || self.phoneNumbers.count > 0 else {

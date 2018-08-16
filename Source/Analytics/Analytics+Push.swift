@@ -26,24 +26,24 @@ extension AnalyticsType {
         attributes["action"] = action.attributeValue
         attributes["conversation_type"] = conversation.conversationType.analyticsType
         attributes["with_service"] = conversation.includesServiceUser ? "true" : "false"
-        tagEvent("contributed", attributes: attributes as [String : NSObject])
+        tagEvent("contributed", attributes: attributes as! [String : NSObject])
     }
     
 }
 
 public extension ZMConversation {
     
-    var ephemeralTrackingAttributes: [String: String] {
-        let ephemeral = destructionTimeout != .none
-        var attributes = ["is_ephemeral": ephemeral ? "true" : "false"]
+    @objc public var ephemeralTrackingAttributes: [String: Any] {
+        let ephemeral = messageDestructionTimeout != nil
+        var attributes: [String: Any] = ["is_ephemeral": ephemeral]
         guard ephemeral else { return attributes }
-        attributes["ephemeral_time"] = "\(Int(destructionTimeout.rawValue))"
+        attributes["ephemeral_time"] = "\(Int(messageDestructionTimeoutValue))"
         return attributes
     }
     
     /// Whether the conversation includes at least 1 service user.
-    public var includesServiceUser: Bool {
-        guard let participants = lastServerSyncedActiveParticipants.array as? [ZMBareUser] else { return false }
+    @objc public var includesServiceUser: Bool {
+        guard let participants = lastServerSyncedActiveParticipants.array as? [UserType] else { return false }
         return participants.any { $0.isServiceUser }
     }
 }

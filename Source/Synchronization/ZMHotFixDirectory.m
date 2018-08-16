@@ -131,6 +131,14 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory refetchUsers:context];
                      }],
+                    
+                    
+                    /// We need to refetch all conversations in order to receive the correct status of the message timer.
+                    [ZMHotFixPatch
+                     patchWithVersion:@"175.0.0"
+                     patchCode:^(NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory refetchGroupConversations:context];
+                     }],
                     ];
     });
     return patches;

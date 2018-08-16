@@ -178,7 +178,7 @@ extension EventDecoderTest {
         
         syncMOC.performGroupedBlock {
             // given
-            let event1 = self.eventStreamEvent(conversation: ZMConversation.selfConversation(in: self.syncMOC), genericMessage: ZMGenericMessage(callingContent: "123", nonce: UUID.create().transportString()))
+            let event1 = self.eventStreamEvent(conversation: ZMConversation.selfConversation(in: self.syncMOC), genericMessage: ZMGenericMessage(callingContent: "123", nonce: UUID.create()))
             let event2 = self.eventStreamEvent()
             
             self.insert([event1, event2])
@@ -201,7 +201,7 @@ extension EventDecoderTest {
         
         syncMOC.performGroupedBlock {
             // given
-            let callingBessage = ZMGenericMessage(callingContent: "123", nonce: UUID.create().transportString())
+            let callingBessage = ZMGenericMessage(callingContent: "123", nonce: UUID.create())
             
             let event1 = self.eventStreamEvent(conversation: ZMConversation.selfConversation(in: self.syncMOC), genericMessage: callingBessage, from: ZMUser.selfUser(in: self.syncMOC))
             let event2 = self.eventStreamEvent()

@@ -131,7 +131,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
 
 @interface UserChangeObserver ()
-@property (nonatomic, weak) id<ZMBareUser> user;
+@property (nonatomic, weak) id<UserType> user;
 @property (nonatomic) id token;
 @end
 
@@ -142,12 +142,12 @@ ZM_EMPTY_ASSERTING_INIT()
     return [self initWithUser:user managedObjectContext:user.managedObjectContext];
 }
 
-- (instancetype)initWithUser:(id<ZMBareUser>)user managedObjectContext:(NSManagedObjectContext *)managedObjectContext
+- (instancetype)initWithUser:(id<UserType>)user managedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {
     self = [super init];
     if(self) {
         self.user = user;
-        self.token = [UserChangeInfo addObserver:self forBareUser:user managedObjectContext:managedObjectContext];
+        self.token = [UserChangeInfo addObserver:self forUser:user managedObjectContext:managedObjectContext];
     }
     return self;
 }

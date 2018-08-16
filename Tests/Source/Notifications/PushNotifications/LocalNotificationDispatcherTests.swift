@@ -99,6 +99,27 @@ extension LocalNotificationDispatcherTests {
         XCTAssertTrue(notification.alertBody!.contains(text))
     }
     
+    func testThatItCreatesNotificationFromSystemMessagesIfNotActive() {
+        // GIVEN
+        conversation1.messageDestructionTimeout = .synced(.fiveMinutes)
+        let message = conversation1.appendMessageTimerUpdateMessage(
+            fromUser: user1,
+            timer: conversation1.messageDestructionTimeoutValue,
+            timestamp: .init()
+        )
+        message.sender = user1
+        
+        // WHEN
+        sut.process(message)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(application.scheduledLocalNotifications.count, 1)
+        XCTAssertEqual(notificationDelegate.receivedLocalNotifications.count, 0)
+        guard let notification = application.scheduledLocalNotifications.first else { return XCTFail() }
+        XCTAssertTrue(notification.alertBody!.contains("User 1 set the message timer to"))
+    }
+
     func testThatItForwardsNotificationFromMessagesIfActive() {
         // GIVEN
         let text = UUID.create().transportString()
@@ -199,19 +220,22 @@ extension LocalNotificationDispatcherTests {
     
     func testThatItCancelsReadNotificationsIfTheLastReadChanges() {
         // GIVEN
-        let message = self.conversation1.appendMessage(withText: "foo") as! ZMClientMessage
-        message.sender = self.user1
+        let message = conversation1.appendMessage(withText: "foo") as! ZMClientMessage
+        message.sender = user1
         let note1 = ZMLocalNotification(expiredMessage: message)!
         let note2 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
-        self.sut.eventNotifications.addObject(note1)
-        self.sut.eventNotifications.addObject(note2)
+        sut.eventNotifications.addObject(note1)
+        sut.eventNotifications.addObject(note2)
+        conversation1.lastServerTimeStamp = Date.distantFuture
+        syncMOC.saveOrRollback()
         
         // WHEN
-        self.conversation1.updateLastReadServerTimeStampIfNeeded(withTimeStamp: Date(timeIntervalSinceNow: 1000), andSync: false)
+        let conversationOnUI = uiMOC.object(with: conversation1.objectID) as? ZMConversation
+        conversationOnUI?.markAsRead()
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
-        XCTAssertEqual(Set(self.application.cancelledLocalNotifications), Set([note2.uiLocalNotification, note1.uiLocalNotification]))
+        XCTAssertEqual(Set(application.cancelledLocalNotifications), Set([note2.uiLocalNotification, note1.uiLocalNotification]))
     }
     
     func testThatItSchedulesADefaultNotificationIfContentShouldNotBeVisible() {
@@ -332,8 +356,8 @@ extension LocalNotificationDispatcherTests {
         sender.remoteIdentifier = UUID.create()
         
         let message = conversation.appendMessage(withText: "text") as! ZMClientMessage
-        let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce!.transportString(), nonce: UUID.create().transportString())
-        let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce!.transportString(), nonce: UUID.create().transportString())
+        let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce!, nonce: UUID.create())
+        let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce!, nonce: UUID.create())
         
         let event1 = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction1, senderID: sender.remoteIdentifier!)
         let event2 = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction2, senderID: sender.remoteIdentifier!)
@@ -356,7 +380,7 @@ extension LocalNotificationDispatcherTests {
 extension LocalNotificationDispatcherTests {
         
     func payloadForEncryptedOTRMessage(text: String, nonce: UUID) -> [String: Any] {
-        let message = ZMGenericMessage.message(text: text, nonce: nonce.transportString())
+        let message = ZMGenericMessage.message(text: text, nonce: nonce)
         return self.payloadForOTRAsset(with: message)
     }
     

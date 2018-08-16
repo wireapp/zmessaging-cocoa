@@ -39,7 +39,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 @interface ZMAuthenticationStatus ()
 
 @property (nonatomic, weak) id<UserInfoParser> userInfoParser;
-@property (nonatomic, strong) ZMTransportResponse *authenticationResponse;
+@property (nonatomic, strong) UserInfo *authenticatedUserInfo;
 
 @end
 
@@ -67,8 +67,8 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (NSUUID *)authenticatedUserIdentifier
 {
-    if (self.authenticationResponse != nil) {
-        return [self.userInfoParser userIdentifierFromResponse:self.authenticationResponse];
+    if (self.authenticatedUserInfo != nil) {
+        return self.authenticatedUserInfo.identifier;
     }
     return nil;
 }
@@ -220,11 +220,17 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)continueAfterBackupImportStep
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
-    [self continueAuthenticationWithResponse:self.authenticationResponse];
+    
+    [self continueAuthenticationWithUserInfo:self.authenticatedUserInfo];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 
 - (void)continueAuthenticationWithResponse:(ZMTransportResponse *)response
+{
+    [self continueAuthenticationWithUserInfo:response.extractUserInfo];
+}
+
+- (void)continueAuthenticationWithUserInfo:(UserInfo *)userInfo
 {
     self.isWaitingForBackupImport = NO;
     if (self.isWaitingForLogin) {
@@ -232,7 +238,8 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     }
     [self notifyAuthenticationDidSucceed];
     // There might be some authentication errors after parsing the response (e.g. too many accounts)
-    [self.userInfoParser parseUserInfoFromResponse:response];
+    
+    [self.userInfoParser upgradeToAuthenticatedSessionWithUserInfo:userInfo];
 }
 
 - (void)prepareForRequestingPhoneVerificationCodeForRegistration:(NSString *)phone
@@ -333,13 +340,18 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (void)loginSucceededWithResponse:(ZMTransportResponse *)response
 {
+    [self loginSucceededWithUserInfo:response.extractUserInfo];
+}
+
+- (void)loginSucceededWithUserInfo:(UserInfo *)userInfo
+{
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
     if (self.completedRegistration) {
-        [self continueAuthenticationWithResponse:response];
+        [self continueAuthenticationWithUserInfo:userInfo];
     } else {
-        self.authenticationResponse = response;
+        self.authenticatedUserInfo = userInfo;
         self.isWaitingForBackupImport = YES;
-        BOOL existingAccount = [self.userInfoParser accountExistsLocallyFromResponse:response];
+        BOOL existingAccount = [self.userInfoParser accountExistsLocallyFromUserInfo:userInfo];
         [self notifyAuthenticationReadyToImportBackupWithExistingAccount:existingAccount];
     }
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);

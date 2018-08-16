@@ -43,9 +43,6 @@
 /// Lets the user session process local and remote notifications contained in the launch options;
 - (void)application:(id<ZMApplication>)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
 
-/// Calls registerUserNotificationSettings on application
-- (void)setupPushNotificationsForApplication:(id<ZMApplication>)application;
-
 - (void)applicationDidEnterBackground:(NSNotification *)note;
 - (void)applicationWillEnterForeground:(NSNotification *)note;
 
@@ -54,12 +51,6 @@
 
 // PRIVATE
 @interface ZMUserSession (PushToken)
-
-- (void)setPushToken:(NSData *)deviceToken;
-- (void)setPushKitToken:(NSData *)deviceToken;
-
-/// deletes the pushKit token from the backend
-- (void)deletePushKitToken;
 
 - (BOOL)isAuthenticated;
 

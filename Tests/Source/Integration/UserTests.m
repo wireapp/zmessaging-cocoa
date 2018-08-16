@@ -95,7 +95,7 @@
     XCTAssertNotNil(imageData);
     
     [(NSCache *)someUser.managedObjectContext.userInfo[@"userImagesCache"] removeAllObjects];
-    [someUser requestSmallProfileImageInUserSession:self.userSession];
+    [someUser requestPreviewProfileImage];
     
     WaitForAllGroupsToBeEmpty(0.5);
     NSData *newImageData = [someUser imageSmallProfileData];
@@ -113,7 +113,7 @@
     XCTAssertNotNil(imageData);
     
     [(NSCache *)someUser.managedObjectContext.userInfo[@"userImagesCache"] removeAllObjects];
-    [someUser requestMediumProfileImageInUserSession:self.userSession];
+    [someUser requestCompleteProfileImage];
     
     WaitForAllGroupsToBeEmpty(0.5);
     NSData *newImageData = [someUser imageMediumData];

@@ -37,7 +37,7 @@ public protocol ServerConnection {
 
 extension SessionManager {
     
-    public var serverConnection : ServerConnection? {
+    @objc public var serverConnection : ServerConnection? {
         return self
     }
     

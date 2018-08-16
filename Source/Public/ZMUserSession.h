@@ -96,9 +96,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 /// Enqueue some changes on the managed object context (in the block) before saving, then invokes the completion handler
 - (void)enqueueChanges:(dispatch_block_t)block completionHandler:(dispatch_block_t)completionHandler ZM_NON_NULL(1);
 
-/// Creates new signaling keys  and reregisters the keys and the push tokens with the backend
-- (void)resetPushTokens;
-
 /// Initiates the deletion process for the current signed in user
 - (void)initiateUserDeletion;
 
@@ -107,9 +104,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 
 /// The sync has been completed as least once
 @property (nonatomic, readonly) BOOL hasCompletedInitialSync;
-
-/// Request the push token from iOS and send it to the backend.
-- (void)registerForRemoteNotifications;
 
 @end
 
@@ -162,7 +156,8 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 
 typedef NS_ENUM (NSInteger, ProxiedRequestType) {
     ProxiedRequestTypeGiphy,
-    ProxiedRequestTypeSoundcloud
+    ProxiedRequestTypeSoundcloud,
+    ProxiedRequestTypeYouTube
 };
 
 @interface ZMUserSession (Proxy)

@@ -85,14 +85,15 @@ class TeamRegistrationStrategyTests: MessagingTest {
     func testThatItCallsParseUserInfoOnSuccess() {
         // given
         registrationStatus.phase = .createTeam(team: team)
-        let response = ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
-
+        let cookie = "zuid=wjCWn1Y1pBgYrFCwuU7WK2eHpAVY8Ocu-rUAWIpSzOcvDVmYVc9Xd6Ovyy-PktFkamLushbfKgBlIWJh6ZtbAA==.1721442805.u.7eaaa023.08326f5e-3c0f-4247-a235-2b4d93f921a4; Expires=Sun, 21-Jul-2024 09:06:45 GMT; Domain=wire.com; HttpOnly; Secure"
+        let response = ZMTransportResponse(payload: ["user": UUID.create().transportString()] as ZMTransportData, httpStatus: 200, transportSessionError: nil, headers: ["Set-Cookie": cookie])
+        
         // when
-        XCTAssertEqual(userInfoParser.parseCallCount, 0)
+        XCTAssertEqual(userInfoParser.upgradeToAuthenticatedSessionCallCount, 0)
         sut.didReceive(response, forSingleRequest: sut.registrationSync)
 
         // then
-        XCTAssertEqual(userInfoParser.parseCallCount, 1)
+        XCTAssertEqual(userInfoParser.upgradeToAuthenticatedSessionCallCount, 1)
     }
 }
 

@@ -66,12 +66,12 @@ internal enum AssetTransportError: Error {
         deleteRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
         
         observers.append(NotificationInContext.addObserver(
-            name: ZMUser.completeAssetFetchNotification,
+            name: .userDidRequestCompleteAsset,
             context: managedObjectContext.notificationContext,
             using: { [weak self] in self?.requestAssetForNotification(note: $0) })
         )
         observers.append(NotificationInContext.addObserver(
-            name: ZMUser.previewAssetFetchNotification,
+            name: .userDidRequestPreviewAsset,
             context: managedObjectContext.notificationContext,
             using: { [weak self] in self?.requestAssetForNotification(note: $0) })
         )
@@ -117,9 +117,9 @@ internal enum AssetTransportError: Error {
                 else { return }
             
             switch note.name {
-            case ZMUser.previewAssetFetchNotification:
+            case .userDidRequestPreviewAsset:
                 self.downstreamRequestSyncs[.preview]?.whiteListObject(object)
-            case ZMUser.completeAssetFetchNotification:
+            case .userDidRequestCompleteAsset:
                 self.downstreamRequestSyncs[.complete]?.whiteListObject(object)
             default:
                 break
@@ -143,7 +143,7 @@ internal enum AssetTransportError: Error {
             return deleteRequestSync?.nextRequest()
         }
         
-        let sync = ProfileImageSize.allSizes.filter(updateStatus.hasImageToUpload).flatMap { upstreamRequestSyncs[$0] }.first
+        let sync = ProfileImageSize.allSizes.filter(updateStatus.hasImageToUpload).compactMap { upstreamRequestSyncs[$0] }.first
         sync?.readyForNextRequestIfNotBusy()
         return sync?.nextRequest()
     }
@@ -167,8 +167,17 @@ extension UserImageAssetUpdateStrategy: ZMDownstreamTranscoder {
         return ZMTransportRequest.imageGet(fromPath: path)
     }
     
-    public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {}
-    
+    public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
+        guard let whitelistSync = downstreamSync as? ZMDownstreamObjectSyncWithWhitelist else { return }
+        guard let user = object as? ZMUser else { return }
+
+        switch size(for: whitelistSync) {
+        case .preview?: user.previewProfileAssetIdentifier = nil
+        case .complete?: user.completeProfileAssetIdentifier = nil
+        default: break
+        }
+    }
+
     public func update(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
         guard let whitelistSync = downstreamSync as? ZMDownstreamObjectSyncWithWhitelist else { return }
         guard let user = object as? ZMUser else { return }
@@ -206,7 +215,7 @@ extension UserImageAssetUpdateStrategy: ZMSingleRequestTranscoder {
             imageUploadStatus?.uploadingFailed(imageSize: size, error: error)
             return
         }
-        guard let payload = response.payload?.asDictionary(), let assetId = payload["key"] as? String else { fatal("No asset ID present in payload: \(String(describing: response.payload))") }
+        guard let payload = response.payload?.asDictionary(), let assetId = payload["key"] as? String else { fatal("No asset ID present in payload") }
         imageUploadStatus?.uploadingDone(imageSize: size, assetId: assetId)
     }
 }

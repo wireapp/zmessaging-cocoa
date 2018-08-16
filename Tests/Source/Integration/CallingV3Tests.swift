@@ -30,7 +30,7 @@ class CallStateTestObserver : WireCallCenterCallStateObserver {
         token = WireCallCenterV3.addCallStateObserver(observer: self, for: conversation, context: context)
     }
     
-    func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?) {
+    func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?) {
         changes.append(callState)
     }
     
@@ -44,24 +44,25 @@ class CallStateTestObserver : WireCallCenterCallStateObserver {
     
 }
 
-class VoiceChannelParticipantTestObserver : VoiceChannelParticipantObserver {
+class CallParticipantTestObserver : WireCallCenterCallParticipantObserver {
     
-    var changes : [VoiceChannelParticipantNotification] = []
+    var changes : [[(UUID, CallParticipantState)]] = []
     var token : Any?
     
     func observe(conversation: ZMConversation, context: NSManagedObjectContext) {
-        token = WireCallCenterV3.addVoiceChannelParticipantObserver(observer: self, for: conversation, context: context)
+        token = WireCallCenterV3.addCallParticipantObserver(observer: self, for: conversation, context: context)
     }
     
-    func voiceChannelParticipantsDidChange(_ changeInfo: VoiceChannelParticipantNotification) {
-        changes.append(changeInfo)
+    func callParticipantsDidChange(conversation: ZMConversation, participants: [(UUID, CallParticipantState)]) {
+        changes.append(participants)
     }
+    
 }
 
 class CallingV3Tests : IntegrationTest {
     
     var stateObserver : CallStateTestObserver!
-    var participantObserver : VoiceChannelParticipantTestObserver!
+    var participantObserver : CallParticipantTestObserver!
     
     override func setUp() {
         super.setUp()
@@ -70,7 +71,7 @@ class CallingV3Tests : IntegrationTest {
         createExtraUsersAndConversations()
         
         stateObserver = CallStateTestObserver()
-        participantObserver = VoiceChannelParticipantTestObserver()
+        participantObserver = CallParticipantTestObserver()
     }
     
     override func tearDown() {
@@ -80,38 +81,20 @@ class CallingV3Tests : IntegrationTest {
     }
     
     func selfJoinCall(isStart: Bool) {
-        userSession?.enqueueChanges {
-            _ = self.conversationUnderTest.voiceChannel?.join(video: false)
-        }
+        _ = self.conversationUnderTest.voiceChannel?.join(video: false)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
-    func selfDropCall(){
+    func selfLeaveCall(){
         let convIdRef = self.conversationIdRef
         let userIdRef = self.selfUser.identifier.cString(using: .utf8)
-        userSession?.enqueueChanges {
-            self.conversationUnderTest.voiceChannel?.leave()
-            WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
-                                             conversationId: convIdRef,
-                                             messageTime: 0,
-                                             userId: userIdRef,
-                                             contextRef: self.wireCallCenterRef)
-        }
+        self.conversationUnderTest.voiceChannel?.leave()
+        WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
+                                         conversationId: convIdRef,
+                                         messageTime: 0,
+                                         userId: userIdRef,
+                                         contextRef: self.wireCallCenterRef)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-    }
-    
-    func selfIgnoreCall(){
-        let convIdRef = self.conversationIdRef
-        let userIdRef = self.selfUser.identifier.cString(using: .utf8)
-        userSession?.performChanges{
-            self.conversationUnderTest.voiceChannel?.ignore()
-            WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING,
-                                             conversationId: convIdRef,
-                                             messageTime: 0,
-                                             userId: userIdRef,
-                                             contextRef: self.wireCallCenterRef)
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout:0.5))
     }
     
     func otherStartCall(user: ZMUser, isVideoCall: Bool = false, shouldRing: Bool = true) {
@@ -144,7 +127,7 @@ class CallingV3Tests : IntegrationTest {
     }
     
     func participantsChanged(members: [(user: ZMUser, establishedFlow: Bool)]) {
-        let mappedMembers = members.map{CallMember(userId: $0.user.remoteIdentifier!, audioEstablished: $0.establishedFlow)}
+        let mappedMembers = members.map{AVSCallMember(userId: $0.user.remoteIdentifier!, audioEstablished: $0.establishedFlow)}
         (userSession!.managedObjectContext.zm_callCenter as! WireCallCenterV3IntegrationMock).mockAVSWrapper.mockMembers = mappedMembers
 
         WireSyncEngine.groupMemberHandler(conversationIdRef: conversationIdRef, contextRef: wireCallCenterRef)
@@ -191,7 +174,7 @@ class CallingV3Tests : IntegrationTest {
         stateObserver.checkLastNotificationHasCallState(.outgoing(degraded: false))
         
         // when
-        selfDropCall()
+        selfLeaveCall()
         closeCall(user: self.localSelfUser, reason: .canceled)
         
         // then
@@ -218,7 +201,7 @@ class CallingV3Tests : IntegrationTest {
         stateObserver.changes = []
 
         // when
-        selfDropCall()
+        selfLeaveCall()
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
@@ -246,7 +229,7 @@ class CallingV3Tests : IntegrationTest {
         stateObserver.changes = []
         
         // when
-        selfDropCall()
+        selfLeaveCall()
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 1)
@@ -297,7 +280,7 @@ class CallingV3Tests : IntegrationTest {
         // (4) self user leaves
         //
         // when
-        selfDropCall()
+        selfLeaveCall()
         closeCall(user: self.localSelfUser, reason: .canceled)
         
         // then
@@ -342,17 +325,11 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(participantObserver.changes.count, 2)
-        if let partInfo =  participantObserver.changes.last {
-            XCTAssertEqual(partInfo.insertedIndexes, [])
-            XCTAssertEqual(partInfo.updatedIndexes, [0])
-            XCTAssertEqual(partInfo.deletedIndexes, [])
-            XCTAssertEqual(partInfo.movedIndexPairs, [])
-        }
         
         // (4) self user leaves
         //
         // when
-        selfDropCall()
+        selfLeaveCall()
         closeCall(user: self.localSelfUser, reason: .canceled)
         
         // then
@@ -463,7 +440,7 @@ class CallingV3Tests : IntegrationTest {
         
         // (2) we ignore
         // when
-        selfIgnoreCall()
+        selfLeaveCall()
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 2)
@@ -488,7 +465,7 @@ class CallingV3Tests : IntegrationTest {
         // (1) other user joins and we ignore
         // when
         otherStartCall(user: user)
-        selfIgnoreCall()
+        selfLeaveCall()
         
         // then
         XCTAssertEqual(stateObserver.changes.count, 2)
@@ -523,7 +500,7 @@ class CallingV3Tests : IntegrationTest {
         
         // (2) Self ignores call
         // and when
-        selfIgnoreCall()
+        selfLeaveCall()
         
         // then
         XCTAssertEqual(convObserver!.notifications.count, 1)
@@ -532,16 +509,12 @@ class CallingV3Tests : IntegrationTest {
         }
         XCTAssertEqual(conversationUnderTest.conversationListIndicator, .inactiveCall)
         
-        // (2) Other user ends call
+        // (3) Other user ends call
         // and when
         closeCall(user: user, reason: .canceled)
         
-        // then
-        XCTAssertEqual(convObserver!.notifications.count, 2)
-        if let change = convObserver!.notifications.lastObject as? ConversationChangeInfo {
-            XCTAssertTrue(change.conversationListIndicatorChanged)
-        }
-        XCTAssertEqual(conversationUnderTest.conversationListIndicator, .missedCall)
+        // then (We don't show a missed call indicator for calls which the self user previously ignored)
+        XCTAssertEqual(conversationUnderTest.conversationListIndicator, .none)
     }
 
     func testThatItFiresAConversationChangeNotificationWhenAGroupCallIsJoined() {
@@ -566,7 +539,7 @@ class CallingV3Tests : IntegrationTest {
         selfJoinCall(isStart: false)
         establishedFlow(user: localSelfUser)
         
-        // second user joins        
+        // second user joins
         participantsChanged(members: [(user: localUser1, establishedFlow: false),
                                       (user: localUser2, establishedFlow: false)])
 
@@ -579,7 +552,7 @@ class CallingV3Tests : IntegrationTest {
         
         // (3) selfUser user ends call
         // and when
-        selfDropCall()
+        selfLeaveCall()
         
         // then
         XCTAssertEqual(convObserver!.notifications.count, 2)
@@ -610,7 +583,7 @@ class CallingV3Tests : IntegrationTest {
         otherStartCall(user: user)
         
         // Self ignores call
-        selfIgnoreCall()
+        selfLeaveCall()
         
         // Other user ends call
         closeCall(user: user, reason: .canceled)
@@ -634,7 +607,7 @@ class CallingV3Tests : IntegrationTest {
         otherStartCall(user: user)
         
         // Self ignores call
-        selfIgnoreCall()
+        selfLeaveCall()
         
         // Other user ends call
         closeCall(user: user, reason: .canceled)
@@ -646,6 +619,41 @@ class CallingV3Tests : IntegrationTest {
         
         // then
         XCTAssertEqual(conversationUnderTest.voiceChannel?.state, .incoming(video: false, shouldRing: true, degraded: false))
+    }
+    
+    func testThatCallIsTerminatedIfConversationSecurityDegrades() {
+        
+        // given
+        XCTAssertTrue(login())
+        
+        let remoteUser = user(for: user2)!
+        
+        // Make conversation secure
+        establishSession(with: user2)
+        let selfClient = ZMUser.selfUser(inUserSession: userSession!).selfClient()!
+        userSession?.performChanges {
+            remoteUser.clients.forEach({ selfClient.trustClient($0) })
+        }
+        XCTAssertEqual(conversationUnderTest.securityLevel, .secure)
+        
+        // Other user calls
+        otherStartCall(user: remoteUser)
+        
+        // Self joins the call
+        selfJoinCall(isStart: true)
+        
+        // Call is established
+        establishedFlow(user: remoteUser)
+        XCTAssertEqual(conversationUnderTest.voiceChannel?.state, .established)
+        
+        // when
+        mockTransportSession.performRemoteChanges { session in
+            session.registerClient(for: self.selfUser, label: "Foo client", type: "permanent")
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(conversationUnderTest.voiceChannel?.state, .terminating(reason: .securityDegraded))
     }
     
 }
@@ -672,7 +680,7 @@ extension CallingV3Tests {
         let messageCount = conversationUnderTest.messages.count;
         
         // expect
-        expectation(forNotification: WireSyncEngine.WireCallCenterMissedCallNotification.notificationName.rawValue, object: nil)
+        expectation(forNotification: WireSyncEngine.WireCallCenterMissedCallNotification.notificationName, object: nil)
 
         // when
         simulateMissedCall(user: user)
@@ -704,7 +712,7 @@ extension CallingV3Tests {
         let messageCount = conversationUnderTest.messages.count;
 
         // expect
-        expectation(forNotification: WireSyncEngine.WireCallCenterMissedCallNotification.notificationName.rawValue, object: nil)
+        expectation(forNotification: WireSyncEngine.WireCallCenterMissedCallNotification.notificationName, object: nil)
         
         // when
         simulateMissedCall(user: user)

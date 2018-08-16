@@ -16,6 +16,8 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+import WireUtilities
+import WireDataModel
 
 fileprivate extension Team {
 
@@ -28,7 +30,7 @@ fileprivate extension Team {
         let existingMembers = members
         
         // Update or insert new members
-        let newMembers = membersPayload.flatMap {Member.createOrUpdate(with: $0, in: self, context: managedObjectContext!)}
+        let newMembers = membersPayload.compactMap { Member.createOrUpdate(with: $0, in: self, context: managedObjectContext!) }
         
         // Delete removed members
         let membersToDelete = existingMembers.subtracting(newMembers)
@@ -74,7 +76,7 @@ public final class MemberDownloadRequestStrategy: AbstractRequestStrategy, ZMCon
 extension MemberDownloadRequestStrategy: ZMDownstreamTranscoder {
 
     public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
-        guard downstreamSync as? ZMDownstreamObjectSync == self.downstreamSync, let team = object as? Team else { fatal("Wrong sync or object for: \(object)") }
+        guard downstreamSync as? ZMDownstreamObjectSync == self.downstreamSync, let team = object as? Team else { fatal("Wrong sync or object for: \(object.privateDescription)") }
         return team.remoteIdentifier.map(TeamDownloadRequestFactory.getMembersRequest)
     }
 

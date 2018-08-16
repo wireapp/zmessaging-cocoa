@@ -23,9 +23,7 @@
 #import "ZMUserSession+Internal.h"
 #import "ZMOperationLoop+Background.h"
 #import "ZMOperationLoop+Private.h"
-#import "ZMPushToken.h"
 #import "ZMSyncStrategy.h"
-#import "ZMUserSession+UserNotificationCategories.h"
 #import "ZMStoredLocalNotification.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
@@ -33,27 +31,6 @@
 static NSString *ZMLogTag = @"Push";
 
 @implementation ZMUserSession (ZMBackground)
-
-- (void)setupPushNotificationsForApplication:(id<ZMApplication>)application
-{
-    [application registerForRemoteNotifications];
-    
-#if TARGET_OS_SIMULATOR
-    ZMLogInfo(@"Skipping request for remote notification permission on simulator.");    
-#else
-    NSSet *categories = [NSSet setWithArray:@[
-                                              self.replyCategory,
-                                              self.replyCategoryIncludingLike,
-                                              self.missedCallCategory,
-                                              self.incomingCallCategory,
-                                              self.connectCategory
-                                              ]];
-    [application registerUserNotificationSettings:[UIUserNotificationSettings  settingsForTypes:(UIUserNotificationTypeSound |
-                                                                                                 UIUserNotificationTypeAlert |
-                                                                                                 UIUserNotificationTypeBadge)
-                                                                                     categories:categories]];
-#endif
-}
 
 - (void)application:(id<ZMApplication>)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
 {
@@ -157,17 +134,7 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     }
     
     [self.managedObjectContext performGroupedBlock: ^{
-        ZMStoredLocalNotification *note = self.pendingLocalNotification;
-        
-        if ([note.category isEqualToString:ZMConnectCategory]) {
-            [self handleConnectionRequestCategoryNotification:note];
-        }
-        else if ([note.category isEqualToString:ZMIncomingCallCategory] || [note.category isEqualToString:ZMMissedCallCategory]){
-            [self handleCallCategoryNotification:note];
-        }
-        else {
-            [self handleDefaultCategoryNotification:note];
-        }
+        [self handleNotification:self.pendingLocalNotification];
         self.pendingLocalNotification = nil;
     }];
     

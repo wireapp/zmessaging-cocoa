@@ -109,6 +109,17 @@
 "push.notification.member.leave.self.nousername.noconversationname" = "Jus pašalino iš susirašinėjimo";
 "push.notification.member.leave.self.nousername" = "Jūs buvote pašalinti";
 
+// EPHEMERAL MESSAGE TIMER UPDATE
+"push.notification.message-timer.update" = "%@ nustatė žinutės laikmatį į %@";
+"push.notification.message-timer.update.nousername" = "Kažkas nustatė žinutės laikmatį į %@";
+"push.notification.message-timer.update.noconversationname" = "%@ nustatė žinutės laikmatį į %@ susirašinėjime";
+"push.notification.message-timer.update.nousername.noconversationname" = "Kažkas nustatė žinutės laikmatį į %@ susirašinėjime";
+
+"push.notification.message-timer.off" = "%@ išjungė žinutės laikmatį";
+"push.notification.message-timer.off.nousername" = "Kažkas išjungė žinutės laikmatį";
+"push.notification.message-timer.off.noconversationname" = "%@ išjungė žinutės laikmatį susirašinėjime";
+"push.notification.message-timer.off.nousername.noconversationname" = "Kažkas išjungė žinutės laikmatį susirašinėjime";
+
 // VIDEO CALLS
 "push.notification.call.started.video.oneonone" = "skambina su vaizdu";
 "push.notification.call.started.video.oneonone.nousername" = "Kažkas skambina su vaizdu";

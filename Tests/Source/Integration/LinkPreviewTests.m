@@ -219,7 +219,7 @@
     NSUUID *messageNonce = [NSUUID createUUID];
     NSString *urlText = ZMTestURLArticleWithoutPictureString;
     
-    ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString expiresAfter:nil];
+    ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
         [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
     }];
@@ -234,7 +234,7 @@
     
     //when
     ZMLinkPreview *remoteLinkPreview = [self.mockLinkPreviewDetector linkPreviewFromURLString:urlText includeAsset:NO includingTweet:NO];
-    linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString expiresAfter:nil];
+    linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
         [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
@@ -261,7 +261,7 @@
     NSUUID *messageNonce = [NSUUID createUUID];
     NSString *urlText = ZMTestURLArticleWithoutPictureString;
     
-    ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString expiresAfter:nil];
+    ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
         [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
     }];
@@ -286,7 +286,7 @@
     
     //when
     ZMLinkPreview *remoteLinkPreview = [builder build];
-    linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString expiresAfter:nil];
+    linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
         [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
@@ -328,7 +328,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     
-    ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce.transportString expiresAfter:nil];
+    ZMGenericMessage *linkPreviewMessage = [ZMGenericMessage messageWithText:urlText nonce:messageNonce expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
         [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
     }];
@@ -343,7 +343,7 @@
     
     //when
     ZMLinkPreview *remoteLinkPreview = [self.mockLinkPreviewDetector linkPreviewFromURLString:urlText asset:imageAssetData tweet:nil];
-    linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce.transportString expiresAfter:nil];
+    linkPreviewMessage = [ZMGenericMessage messageWithText:urlText linkPreview:remoteLinkPreview nonce:messageNonce expiresAfter:nil];
     
     [self.mockTransportSession performRemoteChanges:^(__unused id<MockTransportSessionObjectCreation> session) {
         [mockConversation encryptAndInsertDataFromClient:senderClient toClient:selfClient data:linkPreviewMessage.data];
@@ -351,7 +351,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     [self.userSession performChanges:^{
-        [message requestImageDownload];
+        [message.imageMessageData requestImageDownload];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -371,7 +371,7 @@
     
     NSString *text = ZMTestURLArticleWithoutPictureString;
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    conversation.messageDestructionTimeout = 10;
+    conversation.localMessageDestructionTimeout = 10;
     
     ZMLinkPreview *expectedLinkPreview = [self.mockLinkPreviewDetector linkPreviewFromURLString:text includeAsset:NO includingTweet:NO];
     

@@ -38,8 +38,8 @@
     NSUUID *nonce1 = [NSUUID createUUID];
     NSUUID *nonce2 = [NSUUID createUUID];
     
-    ZMGenericMessage *genericMessage1 = [ZMGenericMessage messageWithText:expectedText1 nonce:nonce1.transportString expiresAfter:nil];
-    ZMGenericMessage *genericMessage2 = [ZMGenericMessage messageWithText:expectedText2 nonce:nonce2.transportString expiresAfter:nil];
+    ZMGenericMessage *genericMessage1 = [ZMGenericMessage messageWithText:expectedText1 nonce:nonce1 expiresAfter:nil];
+    ZMGenericMessage *genericMessage2 = [ZMGenericMessage messageWithText:expectedText2 nonce:nonce2 expiresAfter:nil];
     
     [self testThatItAppendsMessageToConversation:self.groupConversation withBlock:^NSArray *(MockTransportSession<MockTransportSessionObjectCreation> * __unused session){
         
@@ -92,7 +92,7 @@
     
     // then
     MockEvent *lastEvent = self.selfToUser1Conversation.events.lastObject;
-    XCTAssertEqual(lastEvent.eventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertEqual(lastEvent.eventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMGenericMessage *genericMessage = (ZMGenericMessage *)[[[[ZMGenericMessageBuilder alloc] init] mergeFromData:lastEvent.decryptedOTRData] build];
@@ -118,9 +118,9 @@
     
     
     NSDictionary *lastEventPayload = lastEvent.payload.asDictionary;
-    ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
+    ZMUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
-    XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertEqual(lastEventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.userSession.syncManagedObjectContext];
@@ -157,9 +157,9 @@
     
     MockPushEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
     NSDictionary *lastEventPayload = lastEvent.payload.asDictionary;
-    ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
+    ZMUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
-    XCTAssertNotEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertNotEqual(lastEventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStatePending);
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.userSession.syncManagedObjectContext];
@@ -250,7 +250,7 @@
     
     // then
     MockEvent *lastEvent = self.selfToUser1Conversation.events.lastObject;
-    XCTAssertEqual(lastEvent.eventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertEqual(lastEvent.eventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMGenericMessage *genericMessage = (ZMGenericMessage *)[[[[ZMGenericMessageBuilder alloc] init] mergeFromData:lastEvent.decryptedOTRData] build];
@@ -276,9 +276,9 @@
     MockPushEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
     //check that recipient can read this message
     NSDictionary *lastEventPayload = lastEvent.payload.asDictionary;
-    ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
+    ZMUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
-    XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertEqual(lastEventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMUser *selfUser = [ZMUser selfUserInContext:self.userSession.syncManagedObjectContext];
@@ -314,9 +314,9 @@
     // then
     MockPushEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
     NSDictionary *lastEventPayload = lastEvent.payload.asDictionary;
-    ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
+    ZMUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
-    XCTAssertNotEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertNotEqual(lastEventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStatePending);
     
     XCTAssertFalse([message hasLocalModificationsForKey:@"uploadState"]);
@@ -543,7 +543,7 @@
     // when receiving a new message
     NSString *otherUserMessageText = @"Are you still there?";
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> __unused *session) {
-        ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithText:otherUserMessageText nonce:NSUUID.createUUID.transportString expiresAfter:nil];
+        ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithText:otherUserMessageText nonce:NSUUID.createUUID expiresAfter:nil];
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:genericMessage.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -568,7 +568,7 @@
     XCTAssertTrue([self login]);
     
     NSString *expectedText = @"The sky above the port was the color of ";
-    ZMGenericMessage *message = [ZMGenericMessage messageWithText:expectedText nonce:[NSUUID createUUID].transportString expiresAfter:nil];
+    ZMGenericMessage *message = [ZMGenericMessage messageWithText:expectedText nonce:[NSUUID createUUID] expiresAfter:nil];
     
 
     MockConversation *mockConversation = self.groupConversation;
@@ -681,7 +681,7 @@
     NSData *sha = [*encryptedData zmSHA256Digest];
     
     ZMImageAssetEncryptionKeys *keys = [[ZMImageAssetEncryptionKeys alloc] initWithOtrKey:otrKey sha256:sha];
-    ZMGenericMessage *message = [ZMGenericMessage genericMessageWithMediumImageProperties:properties processedImageProperties:properties encryptionKeys:keys nonce:[NSUUID createUUID].transportString format:format expiresAfter:nil];
+    ZMGenericMessage *message = [ZMGenericMessage genericMessageWithMediumImageProperties:properties processedImageProperties:properties encryptionKeys:keys nonce:[NSUUID createUUID] format:format expiresAfter:nil];
 
     return message;
 }
@@ -699,7 +699,7 @@
     
     // when
     
-    ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Foo bar" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
+    ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Foo bar" nonce:[NSUUID createUUID] expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
         [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject
                                                       toClient:self.selfUser.clients.anyObject
@@ -734,7 +734,7 @@
     
     // then
     MockEvent *lastEvent = self.selfToUser1Conversation.events.lastObject;
-    XCTAssertEqual(lastEvent.eventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertEqual(lastEvent.eventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     ZMGenericMessage *genericMessage = (ZMGenericMessage *)[[[[ZMGenericMessageBuilder alloc] init] mergeFromData:lastEvent.decryptedOTRData] build];
@@ -774,7 +774,7 @@
     MessageChangeObserver *messageObserver = [[MessageChangeObserver alloc] initWithMessage:observedMessage];
     XCTAssertTrue([observedMessage isKindOfClass:ZMAssetClientMessage.class]);
     
-    [observedMessage requestImageDownload];
+    [observedMessage.imageMessageData requestImageDownload];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -836,7 +836,7 @@
     XCTAssertTrue([observedMessage isKindOfClass:ZMAssetClientMessage.class]);
     
     [self.userSession performChanges:^{
-        [observedMessage requestImageDownload];
+        [observedMessage.imageMessageData requestImageDownload];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -891,13 +891,13 @@
     
     
     // THEN
-    XCTAssertNil([[imageMessageData imageMessageData] mediumData]);
+    XCTAssertNil([[imageMessageData imageMessageData] imageData]);
     
     [self.userSession performChanges:^{
-        [imageMessageData requestImageDownload];
+        [imageMessageData.imageMessageData requestImageDownload];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertNotNil([[imageMessageData imageMessageData] mediumData]);
+    XCTAssertNotNil([[imageMessageData imageMessageData] imageData]);
 }
 
 - (void)testThatAssetMediumIsRedownloadedIfNoDecryptedMessageDataIsStored
@@ -928,12 +928,12 @@
     [self.userSession.managedObjectContext.zm_fileAssetCache deleteAssetData:imageMessageData format:ZMImageFormatMedium encrypted:NO];
     
     // THEN
-    XCTAssertNil([[imageMessageData imageMessageData] mediumData]);
+    XCTAssertNil([[imageMessageData imageMessageData] imageData]);
     [self.userSession performChanges:^{
-        [imageMessageData requestImageDownload];
+        [imageMessageData.imageMessageData requestImageDownload];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertNotNil([[imageMessageData imageMessageData] mediumData]);
+    XCTAssertNotNil([[imageMessageData imageMessageData] imageData]);
 }
 
 @end
@@ -1150,9 +1150,9 @@
     
     MockPushEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
     NSDictionary *lastEventPayload = lastEvent.payload.asDictionary;
-    ZMTUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
+    ZMUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
-    XCTAssertEqual(lastEventType, ZMTUpdateEventConversationOTRMessageAdd);
+    XCTAssertEqual(lastEventType, ZMUpdateEventTypeConversationOtrMessageAdd);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
     
     XCTAssertEqual(message.conversation.securityLevel, ZMConversationSecurityLevelSecure);
@@ -1499,7 +1499,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // WHEN
-    ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Test" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
+    ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Test" nonce:[NSUUID createUUID] expiresAfter:nil];
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused transportSession) {
         MockUserClient *newClient = [transportSession registerClientForUser:self.user1 label:@"test-it" type:@"permanent"];
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:newClient toClient:self.selfUser.clients.anyObject data:message.data];
@@ -1520,7 +1520,7 @@
                                                        expectedSecurityLevel:(ZMConversationSecurityLevel)expectedSecurityLevel
 {
     NSString *expectedText = @"The sky above the port was the color of ";
-    ZMGenericMessage *message = [ZMGenericMessage messageWithText:expectedText nonce:[NSUUID createUUID].transportString expiresAfter:nil];
+    ZMGenericMessage *message = [ZMGenericMessage messageWithText:expectedText nonce:[NSUUID createUUID] expiresAfter:nil];
     
     XCTAssertTrue([self login]);
     
@@ -2191,7 +2191,7 @@
     
     // when sending the fist message
     
-    ZMGenericMessage *firstMessage = [ZMGenericMessage messageWithText:firstMessageText nonce:[NSUUID createUUID].transportString expiresAfter:nil];
+    ZMGenericMessage *firstMessage = [ZMGenericMessage messageWithText:firstMessageText nonce:[NSUUID createUUID] expiresAfter:nil];
 
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
         

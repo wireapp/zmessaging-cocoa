@@ -66,7 +66,7 @@
     [self.application setBackground];
     
     // when
-    [self.userSession receivedPushNotificationWith:[self noticePayloadForLastEvent] from:ZMPushNotficationTypeVoIP completion:nil];
+    [self.userSession receivedPushNotificationWith:[self noticePayloadForLastEvent] completion:^{}];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -79,162 +79,6 @@
     }];
     XCTAssertNotEqual(index, (NSUInteger) NSNotFound);
     
-}
-
-
-- (BOOL)registerForPushNotificationsWithToken:(NSData *)token
-{
-    [self.sessionManager didRegisteredForRemoteNotificationsWith:token];
-    [self.mockTransportSession resetReceivedRequests];
-    [self.userSession performChanges:^{
-        [self.userSession setPushToken:token];
-        [self.userSession setPushKitToken:token];
-        [self.userSession.managedObjectContext forceSaveOrRollback];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    return [self lastRequestsContainedTokenRequests];
-}
-
-- (BOOL)lastRequestsContainedTokenRequests
-{
-    BOOL didContainVOIPRequest = NO;
-    BOOL didContainRemoteRequest = NO;
-    for (ZMTransportRequest *aRequest in self.mockTransportSession.receivedRequests) {
-        if (![aRequest.path isEqualToString: @"/push/tokens"]) {
-            continue;
-        }
-        NSString *transportType = aRequest.payload.asDictionary[@"transport"];
-        if ([transportType isEqualToString:@"APNS_VOIP"]) {
-            didContainVOIPRequest = YES;
-        }
-        if ([transportType isEqualToString:@"APNS"]) {
-            didContainRemoteRequest = YES;
-        }
-    }
-    return (didContainRemoteRequest && didContainVOIPRequest);
-}
-
-- (void)testThatItUpdatesNewTokensIfNeeded
-{
-    XCTAssertTrue([self login]);
-    
-    // given
-    NSData *token = [NSData dataWithBytes:@"abc" length:3];
-    NSData *newToken = [NSData dataWithBytes:@"def" length:6];
-    
-    XCTAssertTrue([self registerForPushNotificationsWithToken:token]);
-    [self.mockTransportSession resetReceivedRequests];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // expect
-    ZM_WEAK(self);
-    self.application.registerForRemoteNotificationsCallback = ^{
-        ZM_STRONG(self);
-        [self.userSession performChanges:^{
-            [self.userSession updatePushKitTokenTo:newToken forType:PushTokenTypeVoip];
-            [self.userSession updatePushKitTokenTo:newToken forType:PushTokenTypeRegular];
-        }];
-    };
-    
-    // expect
-    id mockPushRegistrant = [OCMockObject niceMockForClass:ZMPushRegistrant.class];
-    [(ZMPushRegistrant *)[[mockPushRegistrant expect] andReturn:newToken] pushToken];
-
-    [[[mockPushRegistrant stub] andReturn:mockPushRegistrant] alloc];
-    (void)[[[mockPushRegistrant stub] andReturn:mockPushRegistrant] initWithDidUpdateCredentials:OCMOCK_ANY
-                                                                               didReceivePayload:OCMOCK_ANY
-                                                                              didInvalidateToken:OCMOCK_ANY];
-
-    // when
-    [self recreateSessionManager];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue([self lastRequestsContainedTokenRequests], @"Did receive: %@", self.mockTransportSession.receivedRequests);
-    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2);
-    [mockPushRegistrant stopMocking];
-}
-
-- (void)testThatItReregistersPushTokensOnDemand
-{
-    XCTAssertTrue([self login]);
-    
-    // given
-    NSData *token = [NSData dataWithBytes:@"abc" length:3];
-    NSData *newToken = [NSData dataWithBytes:@"def" length:6];
-    
-    // when
-    XCTAssertTrue([self registerForPushNotificationsWithToken:token]);
-    
-    // then
-    ZMTransportRequest *request = self.mockTransportSession.receivedRequests.lastObject;
-    XCTAssertEqualObjects(request.path, @"/push/tokens");
-    [self.mockTransportSession resetReceivedRequests];
-    
-    // expect
-    ZM_WEAK(self);
-    self.application.registerForRemoteNotificationsCallback = ^{
-        ZM_STRONG(self);
-        [self.userSession performChanges:^{
-            [self.userSession updatePushKitTokenTo:newToken forType:PushTokenTypeVoip];
-            [self.userSession updatePushKitTokenTo:newToken forType:PushTokenTypeRegular];
-        }];
-    };
-    
-    // when
-    [self.userSession resetPushTokens];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    BOOL didContainSignalingKeyRequest = NO;
-    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 3u);
-    for (ZMTransportRequest *aRequest in self.mockTransportSession.receivedRequests) {
-        if ([aRequest.path containsString:@"/clients/"] && [aRequest.payload asDictionary][@"sigkeys"] != nil) {
-            didContainSignalingKeyRequest = YES;
-        }
-    }
-    XCTAssertTrue(didContainSignalingKeyRequest);
-    XCTAssertTrue([self lastRequestsContainedTokenRequests]);
-    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2);
-}
-
-- (void)testThatItDoesNotReregistersPushTokensOnDemandIfItsNotChanged
-{
-    XCTAssertTrue([self login]);
-    
-    // given
-    NSData *token = [NSData dataWithBytes:@"abc" length:3];
-    
-    XCTAssertTrue([self registerForPushNotificationsWithToken:token]);
-    [self.mockTransportSession resetReceivedRequests];
-    
-    // expect
-    ZM_WEAK(self);
-    self.application.registerForRemoteNotificationsCallback = ^{
-        ZM_STRONG(self);
-        [self.userSession performChanges:^{
-            [self.userSession updatePushKitTokenTo:token forType:PushTokenTypeVoip];
-        }];
-    };
-    
-    // when
-    [self.userSession performChanges:^{
-        [self.userSession resetPushTokens];
-    }];
-    WaitForAllGroupsToBeEmpty(1.0);
-    
-    // then
-    BOOL didContainSignalingKeyRequest = NO;
-    XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
-    for (ZMTransportRequest *aRequest in self.mockTransportSession.receivedRequests) {
-        if ([aRequest.path containsString:@"/clients/"] && [aRequest.payload asDictionary][@"sigkeys"] != nil) {
-            didContainSignalingKeyRequest = YES;
-        }
-    }
-    XCTAssertTrue(didContainSignalingKeyRequest);
-    XCTAssertFalse([self lastRequestsContainedTokenRequests]);
-    XCTAssertEqual(self.application.registerForRemoteNotificationCount, 2);
 }
 
 - (void)testThatItFetchesTheNotificationStreamWhenReceivingNotificationOfTypeNotice
@@ -282,7 +126,7 @@
     
     [self.mockTransportSession resetReceivedRequests];
     NSDictionary *apnsPayload = noticePayload;
-    [self.userSession receivedPushNotificationWith:apnsPayload from:ZMPushNotficationTypeVoIP completion:nil];
+    [self.userSession receivedPushNotificationWith:apnsPayload completion:^{}];
     
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
     WaitForAllGroupsToBeEmpty(0.5);
@@ -342,7 +186,7 @@
     
     [self.mockTransportSession resetReceivedRequests];
     NSDictionary *apnsPayload = noticePayload;
-    [self.userSession receivedPushNotificationWith:apnsPayload from:ZMPushNotficationTypeVoIP completion:nil];
+    [self.userSession receivedPushNotificationWith:apnsPayload completion:^{}];
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -358,7 +202,7 @@
         // given
         XCTAssertTrue([self login]);
 
-        ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Hello" nonce:[NSUUID createUUID].transportString expiresAfter:nil];
+        ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Hello" nonce:[NSUUID createUUID] expiresAfter:nil];
         
         [self closePushChannelAndWaitUntilClosed]; // do not use websocket
         
@@ -401,12 +245,11 @@
         };
         
         // when
-        [self.userSession receivedPushNotificationWith:[self noticePayloadForLastEvent] from:ZMPushNotficationTypeVoIP completion:nil];
+        [self.userSession receivedPushNotificationWith:[self noticePayloadForLastEvent] completion:^{}];
         XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
         WaitForAllGroupsToBeEmpty(0.2);
     }
 }
-
 
 #pragma mark - Helper
 

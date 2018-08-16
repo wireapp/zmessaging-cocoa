@@ -26,6 +26,7 @@ NSString * const ZMClientsKey = @"clients";
 NSString * const ZMPhoneCredentialKey = @"phone";
 NSString * const ZMEmailCredentialKey = @"email";
 NSString * const ZMPasswordCredentialKey = @"password";
+NSString * const ZMUserUsesCompanyLoginCredentialKey = @"uses-company-login";
 
 @implementation NSError (ZMUserSession)
 

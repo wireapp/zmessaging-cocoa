@@ -32,7 +32,6 @@
 #import "ZMCredentials.h"
 #import <libkern/OSAtomic.h>
 #import "ZMAuthenticationStatus.h"
-#import "ZMPushToken.h"
 #import "ZMBlacklistVerificator.h"
 #import "NSURL+LaunchOptions.h"
 #import "WireSyncEngineLogs.h"
@@ -188,6 +187,8 @@ ZM_EMPTY_ASSERTING_INIT()
         CTCallCenter *callCenter = [[CTCallCenter alloc] init];
         self.managedObjectContext.zm_coreTelephonyCallCenter = callCenter;
         
+        self.managedObjectContext.zm_searchUserCache = [[NSCache alloc] init];
+        
         [self.syncManagedObjectContext performBlockAndWait:^{
             self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncManagedObjectContext
                                                                                                    cookieStorage:session.cookieStorage
@@ -243,7 +244,7 @@ ZM_EMPTY_ASSERTING_INIT()
         self.commonContactsCache = [[NSCache alloc] init];
         self.commonContactsCache.name = @"ZMUserSession commonContactsCache";
         
-        [self registerForResetPushTokensNotification];
+        [self registerForRegisteringPushTokenNotification];
         [self registerForBackgroundNotifications];
         [self registerForRequestToOpenConversationNotification];
         
@@ -350,11 +351,6 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.application registerObserverForWillEnterForeground:self selector:@selector(applicationWillEnterForeground:)];
 }
 
-- (void)registerForResetPushTokensNotification
-{
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetPushTokens) name:ZMUserSessionResetPushTokensNotificationName object:nil];
-}
-
 - (NSManagedObjectContext *)managedObjectContext
 {
     return self.storeProvider.contextDirectory.uiContext;
@@ -423,39 +419,6 @@ ZM_EMPTY_ASSERTING_INIT()
     }];
 }
 
-- (void)registerForRemoteNotifications
-{
-    [self.managedObjectContext performGroupedBlock:^{
-        // Request the current token, the rest is taken care of
-        [self setupPushNotificationsForApplication:self.application];
-    }];
-}
-
-- (void)resetPushTokens
-{
-    // instead of relying on the tokens we have cached locally we should always ask the OS about the latest tokens
-    [self.managedObjectContext performGroupedBlock:^{
-        
-        // (2) Refresh "normal" remote notification token
-        // we need to set the current push token to nil,
-        // otherwise if the push token didn't change it would not resend the request to the backend
-        self.managedObjectContext.pushToken = nil;
-        
-        // according to Apple's documentation, calling [registerForRemoteNotifications] should not cause additional overhead
-        // and should return the *existing* device token to the app delegate via [didRegisterForRemoteNotifications:] immediately
-        // this call is forwarded to the ZMUserSession+Background where the new token is set
-        [self.application registerForRemoteNotifications];
-        
-        // (3) reset the preKeys for encrypting and decrypting
-        [UserClient resetSignalingKeysInContext:self.managedObjectContext];
-
-        if (![self.managedObjectContext forceSaveOrRollback]) {
-            ZMLogError(@"Failed to save push token after refresh");
-        }
-        
-    }];
-}
-
 - (void)initiateUserDeletion
 {
     [self.syncManagedObjectContext performGroupedBlock:^{
@@ -486,7 +449,6 @@ ZM_EMPTY_ASSERTING_INIT()
         self.syncManagedObjectContext.accessToken = nil;
     }];
 
-    
     [self.managedObjectContext performGroupedBlock:^{
         ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
         [PostLoginAuthenticationNotification notifyAuthenticationInvalidatedWithError:[NSError userSessionErrorWithErrorCode:ZMUserSessionAccessTokenExpired userInfo:selfUser.credentialsUserInfo] context:self.managedObjectContext];
@@ -519,52 +481,6 @@ ZM_EMPTY_ASSERTING_INIT()
 
 
 @implementation ZMUserSession (PushToken)
-
-
-- (void)setPushToken:(NSData *)deviceToken;
-{
-    NSString *transportType = [self.apnsEnvironment transportTypeForTokenType:ZMAPNSTypeNormal];
-    NSString *appIdentifier = self.apnsEnvironment.appIdentifier;
-    ZMPushToken *token = nil;
-    if (transportType != nil && deviceToken != nil && appIdentifier != nil) {
-        token = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:appIdentifier transportType:transportType fallback:nil isRegistered:NO];
-    }
-    
-    if ((self.managedObjectContext.pushToken != token) && ! [self.managedObjectContext.pushToken isEqual:token]) {
-        self.managedObjectContext.pushToken = token;
-        if (![self.managedObjectContext forceSaveOrRollback]) {
-            ZMLogError(@"Failed to save push token");
-        }
-    }
-}
-
-- (void)setPushKitToken:(NSData *)deviceToken;
-{
-    ZMAPNSType apnsType = ZMAPNSTypeVoIP;
-    NSString *transportType = [self.apnsEnvironment transportTypeForTokenType:apnsType];
-    NSString *appIdentifier = self.apnsEnvironment.appIdentifier;
-    ZMPushToken *token = nil;
-    if (transportType != nil && deviceToken != nil && appIdentifier != nil) {
-        NSString *fallback = [self.apnsEnvironment fallbackForTransportType:apnsType];
-        token = [[ZMPushToken alloc] initWithDeviceToken:deviceToken identifier:appIdentifier transportType:transportType fallback:fallback isRegistered:NO];
-    }
-    if ((self.managedObjectContext.pushKitToken != token) && ! [self.managedObjectContext.pushKitToken isEqual:token]) {
-        self.managedObjectContext.pushKitToken = token;
-        if (![self.managedObjectContext forceSaveOrRollback]) {
-            ZMLogError(@"Failed to save pushKit token");
-        }
-    }
-}
-
-- (void)deletePushKitToken
-{
-    if(self.managedObjectContext.pushKitToken) {
-        self.managedObjectContext.pushKitToken = [self.managedObjectContext.pushKitToken forDeletionMarkedCopy];
-        if (![self.managedObjectContext forceSaveOrRollback]) {
-            ZMLogError(@"Failed to save pushKit token marked for deletion");
-        }
-    }
-}
 
 - (BOOL)isAuthenticated
 {
@@ -665,6 +581,9 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)didRegisterUserClient:(UserClient *)userClient
 {
     self.transportSession.pushChannel.clientID = userClient.remoteIdentifier;
+    // If during registration user allowed notifications,
+    // The push token can only be registered after client registration
+    [self registerCurrentPushToken];
 }
 
 @end

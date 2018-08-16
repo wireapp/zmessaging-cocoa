@@ -20,11 +20,10 @@
 @import  UIKit;
 
 #import "ZMOperationLoop.h"
-#import "ZMPushRegistrant.h"
 
 @interface ZMOperationLoop (Background)
 
 /// Process the payload of the remote notification. This may cause a @c UILocalNotification to be displayed.
-- (void)fetchEventsFromPushChannelPayload:(NSDictionary * _Nonnull)payload completionHandler:(ZMPushResultHandler _Nonnull)completionHandler source:(ZMPushNotficationType)source;
+- (void)fetchEventsFromPushChannelPayload:(NSDictionary * _Nonnull)payload completionHandler:(dispatch_block_t _Nonnull)completionHandler;
 
 @end

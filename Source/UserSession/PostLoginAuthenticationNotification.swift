@@ -71,7 +71,7 @@ enum PostLoginAuthenticationEvent {
     case accountDeleted
 }
 
-@objc public class PostLoginAuthenticationNotification : NSObject {
+@objcMembers public class PostLoginAuthenticationNotification : NSObject {
     
     static private let name = Notification.Name(rawValue: "PostLoginAuthenticationNotification")
     static private let eventKey = "event"
@@ -130,7 +130,7 @@ enum PostLoginAuthenticationEvent {
     }
 }
 
-public extension PostLoginAuthenticationNotification {
+@objc public extension PostLoginAuthenticationNotification {
     
     static func notifyAuthenticationInvalidated(error: NSError, context: NSManagedObjectContext) {
         self.notify(event: .authenticationInvalidated(error: error), context: context)

@@ -20,29 +20,77 @@ import Foundation
 
 class ZMHotFixTests_Integration: MessagingTest {
 
-    func testThatOnlyTeamConversationsAreUpdated() {
-        // given
-        let g1 = ZMConversation.insertNewObject(in: self.syncMOC)
-        g1.conversationType = .group
-        XCTAssertFalse(g1.needsToBeUpdatedFromBackend)
+    func testThatOnlyTeamAndGroupConversationsAreUpdated() {
+        var g1: ZMConversation!
+        var g2: ZMConversation!
+        var g3: ZMConversation!
 
-        let g2 = ZMConversation.insertNewObject(in: self.syncMOC)
-        g2.conversationType = .group
-        g2.team = Team.insertNewObject(in: self.syncMOC)
-        XCTAssertFalse(g2.needsToBeUpdatedFromBackend)
+        syncMOC.performGroupedAndWait { _ in
+            // given
+            g1 = ZMConversation.insertNewObject(in: self.syncMOC)
+            g1.conversationType = .group
+            XCTAssertFalse(g1.needsToBeUpdatedFromBackend)
 
-        self.syncMOC.setPersistentStoreMetadata("146.0", key: "lastSavedVersion")
-        let sut = ZMHotFix(syncMOC: self.syncMOC)
+            g2 = ZMConversation.insertNewObject(in: self.syncMOC)
+            g2.conversationType = .group
+            g2.team = Team.insertNewObject(in: self.syncMOC)
+            XCTAssertFalse(g2.needsToBeUpdatedFromBackend)
 
-        // when
-        self.performIgnoringZMLogError {
-            sut?.applyPatches(forCurrentVersion: "147.0")
-            XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+            g3 = ZMConversation.insertNewObject(in: self.syncMOC)
+            g3.conversationType = .connection
+            XCTAssertFalse(g3.needsToBeUpdatedFromBackend)
+
+            self.syncMOC.setPersistentStoreMetadata("146.0", key: "lastSavedVersion")
+            let sut = ZMHotFix(syncMOC: self.syncMOC)
+
+            // when
+            self.performIgnoringZMLogError {
+                sut?.applyPatches(forCurrentVersion: "147.0")
+            }
         }
 
-        // then
-        XCTAssertFalse(g1.needsToBeUpdatedFromBackend)
-        XCTAssertTrue(g2.needsToBeUpdatedFromBackend)
+        syncMOC.performGroupedAndWait { _ in
+            // then
+            XCTAssertTrue(g1.needsToBeUpdatedFromBackend)
+            XCTAssertTrue(g2.needsToBeUpdatedFromBackend)
+            XCTAssertFalse(g3.needsToBeUpdatedFromBackend)
+        }
     }
 
+    func testThatOnlyGroupConversationsAreUpdated() {
+        var g1: ZMConversation!
+        var g2: ZMConversation!
+        var g3: ZMConversation!
+
+        syncMOC.performGroupedAndWait { _ in
+            // given
+            g1 = ZMConversation.insertNewObject(in: self.syncMOC)
+            g1.conversationType = .group
+            XCTAssertFalse(g1.needsToBeUpdatedFromBackend)
+
+            g2 = ZMConversation.insertNewObject(in: self.syncMOC)
+            g2.conversationType = .connection
+            g2.team = Team.insertNewObject(in: self.syncMOC)
+            XCTAssertFalse(g2.needsToBeUpdatedFromBackend)
+
+            g3 = ZMConversation.insertNewObject(in: self.syncMOC)
+            g3.conversationType = .connection
+            XCTAssertFalse(g3.needsToBeUpdatedFromBackend)
+
+            self.syncMOC.setPersistentStoreMetadata("147.0", key: "lastSavedVersion")
+            let sut = ZMHotFix(syncMOC: self.syncMOC)
+
+            // when
+            self.performIgnoringZMLogError {
+                sut?.applyPatches(forCurrentVersion: "155.0")
+            }
+        }
+
+        syncMOC.performGroupedAndWait { _ in
+            // then
+            XCTAssertTrue(g1.needsToBeUpdatedFromBackend)
+            XCTAssertFalse(g2.needsToBeUpdatedFromBackend)
+            XCTAssertFalse(g3.needsToBeUpdatedFromBackend)
+        }
+    }
 }

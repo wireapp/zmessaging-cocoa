@@ -59,7 +59,7 @@ class UserProfileImageV3Tests: IntegrationTest {
         XCTAssertTrue(login())
         
         // THEN
-        checkProfileImagesMatch(local: ZMUser.selfUser(inUserSession: userSession)!, remote: selfUser)
+        checkProfileImagesMatch(local: ZMUser.selfUser(inUserSession: userSession!), remote: selfUser)
     }
     
     func testThatSelfUserImagesAreUploadedWhenThereAreNone() {
@@ -85,7 +85,7 @@ class UserProfileImageV3Tests: IntegrationTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
-        checkProfileImagesMatch(local: ZMUser.selfUser(inUserSession: userSession)!, remote: selfUser)
+        checkProfileImagesMatch(local: ZMUser.selfUser(inUserSession: userSession!), remote: selfUser)
     }
     
     func testThatSelfUserImagesAreChanged() {
@@ -99,15 +99,15 @@ class UserProfileImageV3Tests: IntegrationTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
-        checkProfileImagesMatch(local: ZMUser.selfUser(inUserSession: userSession)!, remote: selfUser)
+        checkProfileImagesMatch(local: ZMUser.selfUser(inUserSession: userSession!), remote: selfUser)
     }
     
     func testThatOldSelfUserImagesAreDeletedAfterChange() {
         // GIVEN
         XCTAssertTrue(login())
-        let currentUser = ZMUser.selfUser(inUserSession: userSession)
-        let completeId = currentUser?.completeProfileAssetIdentifier
-        let previewId = currentUser?.previewProfileAssetIdentifier
+        let currentUser = ZMUser.selfUser(inUserSession: userSession!)
+        let completeId = currentUser.completeProfileAssetIdentifier
+        let previewId = currentUser.previewProfileAssetIdentifier
         XCTAssertNotNil(completeId)
         XCTAssertNotNil(previewId)
         
@@ -139,7 +139,7 @@ class UserProfileImageV3Tests: IntegrationTest {
         XCTAssertTrue(login())
         
         // THEN
-        checkProfileImagesMatch(local: ZMUser.selfUser(inUserSession: userSession)!, remote: selfUser)
+        checkProfileImagesMatch(local: ZMUser.selfUser(inUserSession: userSession!), remote: selfUser)
     }
 
     func testThatSelfUserImagesAreDownloadedIfChangedRemotely() {
@@ -154,7 +154,7 @@ class UserProfileImageV3Tests: IntegrationTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
-        let localUser = ZMUser.selfUser(inUserSession: userSession)!
+        let localUser = ZMUser.selfUser(inUserSession: userSession!)
         let completeAsset = assets?["complete"]
         let previewAsset = assets?["preview"]
         checkProfileImagesMatch(local: localUser, previewAsset: previewAsset, completeAsset: completeAsset)

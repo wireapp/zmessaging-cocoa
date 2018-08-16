@@ -28,18 +28,16 @@ public protocol UnauthenticatedSessionDelegate: class {
 }
 
 @objc public protocol UserInfoParser: class {
-    @objc(userIdentifierFromResponse:)
-    func userIdentifier(from response: ZMTransportResponse) -> UUID?
-    @objc(accountExistsLocallyFromResponse:)
-    func accountExistsLocally(from response: ZMTransportResponse) -> Bool
-    @objc(parseUserInfoFromResponse:)
-    func parseUserInfo(from response: ZMTransportResponse)
+    @objc(accountExistsLocallyFromUserInfo:)
+    func accountExistsLocally(from userInfo: UserInfo) -> Bool
+    @objc(upgradeToAuthenticatedSessionWithUserInfo:)
+    func upgradeToAuthenticatedSession(with userInfo: UserInfo)
 }
 
 private let log = ZMSLog(tag: "UnauthenticatedSession")
 
 
-@objc
+@objcMembers
 public class UnauthenticatedSession: NSObject {
     
     public let groupQueue: DispatchGroupQueue
@@ -98,31 +96,18 @@ extension UnauthenticatedSession: TearDownCapable {
 // MARK: - UserInfoParser
 
 extension UnauthenticatedSession: UserInfoParser {
-    public func userIdentifier(from response: ZMTransportResponse) -> UUID? {
-        guard let info = response.extractUserInfo() else {
-            log.warn("Failed to parse UserInfo from response: \(response)")
-            return nil;
-        }
-        return info.identifier
-    }
 
-    public func accountExistsLocally(from response: ZMTransportResponse) -> Bool {
-        guard let info = response.extractUserInfo() else {
-            log.warn("Failed to parse UserInfo from response: \(response)")
-            return false
-        }
+    public func accountExistsLocally(from info: UserInfo) -> Bool {
         let account = Account(userName: "", userIdentifier: info.identifier)
         guard let delegate = delegate else { return false }
         return delegate.session(session: self, isExistingAccount: account)
     }
 
-    public func parseUserInfo(from response: ZMTransportResponse) {
-        guard let info = response.extractUserInfo() else { return log.warn("Failed to parse UserInfo from response: \(response)") }
-        log.debug("Parsed UserInfo from response: \(info)")
-        let account = Account(userName: "", userIdentifier: info.identifier)
+    public func upgradeToAuthenticatedSession(with userInfo: UserInfo) {
+        let account = Account(userName: "", userIdentifier: userInfo.identifier)
         let cookieStorage = account.cookieStorage()
-        cookieStorage.authenticationCookieData = info.cookieData
-        self.authenticationStatus.authenticationCookieData = info.cookieData
+        cookieStorage.authenticationCookieData = userInfo.cookieData
+        self.authenticationStatus.authenticationCookieData = userInfo.cookieData
         self.delegate?.session(session: self, createdAccount: account)
     }
 

@@ -45,14 +45,9 @@ extension IntegrationTest {
         
         let searchUser = searchResult?.directory.first
         XCTAssertNotNil(searchUser)
-        XCTAssertEqual(searchUser?.displayName, name)
+        XCTAssertEqual(searchUser?.name, name)
         
-        let connectionCreated = expectation(description: "Connection created")
-        
-        searchUser?.connect(withMessageText: "Hola", completionHandler: {
-            connectionCreated.fulfill()
-        })
-        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        searchUser?.connect(message: "Hola")
     }
     
     @objc
@@ -104,14 +99,11 @@ extension IntegrationTest {
     }
     
     @objc
-    public func connect(withUser user: ZMBareUser) {
-        let connectionCreated = expectation(description: "Connection created")
-        
-        user.connect(withMessageText: "Hola", completionHandler: {
-            connectionCreated.fulfill()
-        })
-        
-        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    public func connect(withUser user: UserType) {
+        userSession?.performChanges {
+            user.connect(message: "Hola")
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
 }

@@ -109,14 +109,25 @@
 "push.notification.member.leave.self.nousername.noconversationname" = "تم حذفك من مُحادثة";
 "push.notification.member.leave.self.nousername" = "تمت إزالتك";
 
-// VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "يتصل بمكالمة فيديو";
-"push.notification.call.started.video.oneonone.nousername" = "اتصال فيديو من شخص ما";
+// EPHEMERAL MESSAGE TIMER UPDATE
+"push.notification.message-timer.update" = "%@ set the message timer to %@";
+"push.notification.message-timer.update.nousername" = "Someone set the message timer to %@";
+"push.notification.message-timer.update.noconversationname" = "%@ set the message timer to %@ in a conversation";
+"push.notification.message-timer.update.nousername.noconversationname" = "Someone set the message timer to %@ in a conversation";
 
-"push.notification.call.started.video.group" = "مكالمة فيديو من %1$@";
-"push.notification.call.started.video.group.nousername" = "اتصال فيديو من شخص ما";
-"push.notification.call.started.video.group.noconversationname" = "%1$@ يتصل بالفيديو في مُحادثة";
-"push.notification.call.started.video.group.nousername.noconversationname" = "شخص يتصل فيديو في مُحادثة";
+"push.notification.message-timer.off" = "%@ turned off the message timer";
+"push.notification.message-timer.off.nousername" = "Someone turned off the message timer";
+"push.notification.message-timer.off.noconversationname" = "%@ turned off the message timer in a conversation";
+"push.notification.message-timer.off.nousername.noconversationname" = "Someone turned off the message timer in a conversation";
+
+// VIDEO CALLS
+"push.notification.call.started.video.oneonone" = "is calling with video";
+"push.notification.call.started.video.oneonone.nousername" = "Someone is calling with video";
+
+"push.notification.call.started.video.group" = "%1$@ is calling with video";
+"push.notification.call.started.video.group.nousername" = "Someone is calling with video";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ is calling with video in a conversation";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Someone is calling with video in a conversation";
 
 // VOICE CALLS
 "push.notification.call.started.oneonone" = "يتصل بك";

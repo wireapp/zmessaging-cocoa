@@ -19,7 +19,7 @@
 import Foundation
 import WireDataModel
 
-@objc public class NotificationsTracker: NSObject {
+@objcMembers public class NotificationsTracker: NSObject {
 
     let eventName = "notifications.processing"
 
@@ -29,6 +29,8 @@ import WireDataModel
         case finishedFetchingStream
         case finishedProcessing
         case processingExpired
+        case abortedProcessing
+        case tokenMismatch
 
         var identifier: String {
             return "notifications_" + rawValue
@@ -59,6 +61,14 @@ import WireDataModel
 
     @objc public func registerProcessingExpired() {
         increment(attribute: .processingExpired)
+    }
+    
+    @objc public func registerProcessingAborted() {
+        increment(attribute: .abortedProcessing)
+    }
+
+    @objc public func registerTokenMismatch() {
+        increment(attribute: .tokenMismatch)
     }
 
     private func increment(attribute: Attributes, by amount: Double = 1) {

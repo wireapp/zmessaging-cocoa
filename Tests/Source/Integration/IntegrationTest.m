@@ -58,6 +58,7 @@
     self.currentUserIdentifier = nil;
     
     WaitForAllGroupsToBeEmpty(0.5);
+    [NSFileManager.defaultManager removeItemAtURL:[MockUserClient mockEncryptionSessionDirectory] error:nil];
     
     [super tearDown];
 }

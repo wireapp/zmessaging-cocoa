@@ -63,31 +63,6 @@ class ConversationStatusStrategyTests: MessagingTest {
         }
     }
     
-    func testThatItResetsUnread_LastRead() {
-        self.syncMOC.performGroupedBlockAndWait{
-            // given
-            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
-            conversation.lastReadServerTimeStamp = Date()
-            conversation.remoteIdentifier = UUID.create()
-            conversation.setLocallyModifiedKeys(Set(arrayLiteral: "lastReadServerTimeStamp"))
-            conversation.appendMessage(withText: "hey")
-
-            conversation.didUpdateWhileFetchingUnreadMessages()
-            conversation.lastUnreadMissedCallDate = conversation.lastReadServerTimeStamp?.addingTimeInterval(-10)
-            conversation.lastUnreadKnockDate = conversation.lastReadServerTimeStamp?.addingTimeInterval(-15)
-            
-            XCTAssertTrue(conversation.hasUnreadMissedCall)
-            XCTAssertTrue(conversation.hasUnreadKnock)
-
-            // when
-            self.sut.objectsDidChange(Set(arrayLiteral: conversation))
-            
-            // then
-            XCTAssertFalse(conversation.hasUnreadMissedCall)
-            XCTAssertFalse(conversation.hasUnreadKnock)
-        }
-    }
-    
     func testThatItProcessesConversationsWithLocalModifications_Cleared() {
         
         self.syncMOC.performGroupedBlockAndWait{
@@ -131,7 +106,7 @@ class ConversationStatusStrategyTests: MessagingTest {
             self.sut.objectsDidChange(Set(arrayLiteral: conversation))
             
             // then
-            XCTAssertTrue((conversation.messages.array.first as! NSManagedObject).isDeleted)
+            XCTAssertTrue(message.isZombieObject)
         }
     }
     

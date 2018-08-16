@@ -41,52 +41,64 @@ extension Dictionary {
     }
 }
 
-extension ZMUserSession: PushDispatcherOptionalClient {
-    
-    public func updatedPushToken(to newToken: PushToken) {
-        
-        guard let managedObjectContext = self.managedObjectContext else {
-            return
-        }
-        
-        switch newToken.type {
-        case .regular:
-            if let data = newToken.data {
-                let oldToken = self.managedObjectContext.pushToken?.deviceToken
-                if oldToken == nil || oldToken != data {
-                    managedObjectContext.pushToken = nil
-                    self.setPushToken(data)
-                    managedObjectContext.forceSaveOrRollback()
-                }
-            }
-        case .voip:
-            if let data = newToken.data {
-                // Check if token is changed before triggering the request
-                if managedObjectContext.pushKitToken == nil || managedObjectContext.pushKitToken?.deviceToken != data {
-                    managedObjectContext.pushKitToken = nil
-                    self.setPushKitToken(data)
-                    managedObjectContext.forceSaveOrRollback()
-                }
-            }
-            else {
-                self.deletePushKitToken()
-                managedObjectContext.forceSaveOrRollback()
+extension ZMUserSession {
+
+    @objc public static let registerCurrentPushTokenNotificationName = Notification.Name(rawValue: "ZMUserSessionResetPushTokensNotification")
+
+    @objc public func registerForRegisteringPushTokenNotification() {
+        NotificationCenter.default.addObserver(self, selector: #selector(ZMUserSession.registerCurrentPushToken), name: ZMUserSession.registerCurrentPushTokenNotificationName, object: nil)
+    }
+
+    func setPushKitToken(_ data: Data) {
+        guard let transportType = self.apnsEnvironment.transportType(forTokenType: .voIP) else { return }
+        guard let appIdentifier = self.apnsEnvironment.appIdentifier else { return }
+
+        let syncMOC = managedObjectContext.zm_sync!
+        syncMOC.performGroupedBlock {
+            guard let selfClient = ZMUser.selfUser(in: syncMOC).selfClient() else { return }
+            if selfClient.pushToken?.deviceToken != data {
+                selfClient.pushToken = PushToken(deviceToken: data, appIdentifier: appIdentifier, transportType: transportType, isRegistered: false)
+                syncMOC.saveOrRollback()
             }
         }
     }
 
-    public func mustHandle(payload: [AnyHashable: Any]) -> Bool {
-        requireInternal(Thread.isMainThread, "Should be on main thread")
-        guard let moc = self.managedObjectContext, let accountId = payload.accountId() else {
-            return false
+    func deletePushKitToken() {
+        let syncMOC = managedObjectContext.zm_sync!
+        syncMOC.performGroupedBlock {
+            guard let selfClient = ZMUser.selfUser(in: syncMOC).selfClient() else { return }
+            guard let pushToken = selfClient.pushToken else { return }
+            selfClient.pushToken = pushToken.markToDelete()
+            syncMOC.saveOrRollback()
         }
-        
-        return accountId == ZMUser.selfUser(in: moc).remoteIdentifier
     }
+
+    @objc public func registerCurrentPushToken() {
+        managedObjectContext.performGroupedBlock {
+            self.sessionManager.updatePushToken(for: self)
+        }
+    }
+
+    /// Will compare the push token registered on backend with the local one
+    /// and re-register it if they don't match
+    public func validatePushToken() {
+        let syncMOC = managedObjectContext.zm_sync!
+        syncMOC.performGroupedBlock {
+            guard let selfClient = ZMUser.selfUser(in: syncMOC).selfClient() else { return }
+            guard let pushToken = selfClient.pushToken else {
+                // If we don't have any push token, then try to register it again
+                self.sessionManager.updatePushToken(for: self)
+                return
+            }
+            selfClient.pushToken = pushToken.markToDownload()
+            syncMOC.saveOrRollback()
+        }
+    }
+}
+
+extension ZMUserSession {
     
-    public func receivedPushNotification(with payload: [AnyHashable: Any],
-                                         from source: ZMPushNotficationType,
-                                         completion: ZMPushNotificationCompletionHandler?) {
+    @objc public func receivedPushNotification(with payload: [AnyHashable: Any], completion: @escaping () -> Void) {
         guard let syncMoc = self.syncManagedObjectContext else {
             return
         }
@@ -98,24 +110,24 @@ extension ZMUserSession: PushDispatcherOptionalClient {
             
             if notAuthenticated {
                 log.debug("Not displaying notification because app is not authenticated")
-                completion?(.success)
+                completion()
                 return
             }
             
             // once notification processing is finished, it's safe to update the badge
-            let completionHandler: ZMPushNotificationCompletionHandler = { result in
-                completion?(result)
+            let completionHandler = {
+                completion()
                 let unreadCount = Int(ZMConversation.unreadConversationCount(in: syncMoc))
                 self.sessionManager?.updateAppIconBadge(accountID: accountID, unreadCount: unreadCount)
             }
             
-            self.operationLoop.fetchEvents(fromPushChannelPayload: payload, completionHandler: completionHandler, source: source)
+            self.operationLoop.fetchEvents(fromPushChannelPayload: payload, completionHandler: completionHandler)
         }
     }
     
 }
 
-extension ZMUserSession: ForegroundNotificationsDelegate {
+@objc extension ZMUserSession: ForegroundNotificationsDelegate {
     
     public func didReceieveLocal(notification: ZMLocalNotification, application: ZMApplication) {
         managedObjectContext.performGroupedBlock {
@@ -125,7 +137,7 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
 
     public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
         
-        if let category = notification.category, category == ZMIncomingCallCategory {
+        if let category = notification.category, category == PushNotificationCategory.incomingCall.rawValue {
             self.handleTrackingOnCallNotification(notification)
         }
         
@@ -149,16 +161,16 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
 
         if let concreteIdentifier = identifier {
             switch concreteIdentifier {
-            case ZMCallIgnoreAction:
+            case PushNotificationCategory.CallAction.ignore.rawValue:
                 self.ignoreCall(with: localNotification, completionHandler: completionHandler)
                 return
-            case ZMConversationMuteAction:
+            case PushNotificationCategory.ConversationAction.mute.rawValue:
                 self.muteConversation(with: localNotification, completionHandler: completionHandler)
                 return
-            case ZMMessageLikeAction:
+            case PushNotificationCategory.ConversationAction.like.rawValue:
                 self.likeMessage(with: localNotification, completionHandler: completionHandler)
                 return
-            case ZMConversationDirectReplyAction:
+            case PushNotificationCategory.ConversationAction.reply.rawValue:
                 self.reply(with: localNotification, message: textInput, completionHandler: completionHandler)
                 return
             default:
@@ -180,12 +192,3 @@ extension ZMUserSession: ForegroundNotificationsDelegate {
         completionHandler();
     }
 }
-
-// Testing
-extension ZMUserSession {
-    @objc(updatePushKitTokenTo:forType:)
-    public func updatedPushToken(to data: Data, for type: PushTokenType) {
-        self.updatedPushToken(to: PushToken(type: type, data: data))
-    }
-}
-

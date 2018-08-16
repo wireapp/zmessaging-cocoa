@@ -27,13 +27,11 @@
 #import <WireSyncEngine/ZMNetworkState.h>
 #import <WireSyncEngine/ZMCredentials.h>
 #import <WireSyncEngine/ZMUserSession+OTR.h>
-#import <WireSyncEngine/ZMBareUser+UserSession.h>
 #import <WireSyncEngine/ZMTypingUsers.h>
 
 // PRIVATE
 #import <WireSyncEngine/ZMBlacklistVerificator.h>
 #import <WireSyncEngine/ZMUserSession+Private.h>
-#import <WireSyncEngine/ZMPushRegistrant.h>
 #import <WireSyncEngine/ZMUserSession+Background.h>
 #import <WireSyncEngine/ZMAuthenticationStatus.h>
 #import <WireSyncEngine/ZMClientRegistrationStatus.h>
@@ -46,9 +44,7 @@
 #import <WireSyncEngine/ZMHotFixDirectory.h>
 #import <WireSyncEngine/ZMUserSessionRegistrationNotification.h>
 #import <WireSyncEngine/UILocalNotification+UserInfo.h>
-#import <WireSyncEngine/ZMUserSession+UserNotificationCategories.h>
 #import <WireSyncEngine/ZMStoredLocalNotification.h>
-#import <WireSyncEngine/ZMPushToken.h>
 #import <WireSyncEngine/ZMTyping.h>
 #import <WireSyncEngine/ZMSyncStateDelegate.h>
 #import <WireSyncEngine/ZMUserSession+OperationLoop.h>

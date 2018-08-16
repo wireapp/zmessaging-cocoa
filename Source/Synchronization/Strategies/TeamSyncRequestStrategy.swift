@@ -117,7 +117,7 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
         // receive during the slow sync. Afterwards we delete all teams that were no longer present on the backend.
         let request = Team.sortedFetchRequest()
         guard let existingTeams = managedObjectContext.executeFetchRequestOrAssert(request) as? [Team] else { return Set() }
-        return Set(existingTeams.flatMap { $0.remoteIdentifier })
+        return Set(existingTeams.compactMap { $0.remoteIdentifier })
     }
     
 }
@@ -132,7 +132,7 @@ extension TeamSyncRequestStrategy: ZMSimpleListRequestPaginatorSync {
         let payload = response.payload?.asDictionary() as? [String: Any]
         let teamsPayload = payload?["teams"] as? [[String: Any]]
         
-        let teams = teamsPayload?.flatMap { (payload) -> Team? in
+        let teams = teamsPayload?.compactMap { (payload) -> Team? in
             guard let isBound = payload["binding"] as? Bool, isBound == true,
                   let id = (payload["id"] as? String).flatMap(UUID.init)
             else { return nil }
@@ -183,7 +183,7 @@ extension TeamSyncRequestStrategy: ZMRemoteIdentifierObjectTranscoder {
             if let team = Team.fetchOrCreate(with: identifier, create: true, in: managedObjectContext, created: nil) {
                 if response.result == .success, let membersDict = membersPayload {
                     let existingMembers = team.members
-                    let newMembers = membersDict.flatMap { payload in
+                    let newMembers = membersDict.compactMap { payload in
                         Member.createOrUpdate(with: payload, in: team, context: managedObjectContext)
                     }
                     

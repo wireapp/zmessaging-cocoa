@@ -22,13 +22,45 @@ extension ZMConversationTranscoder {
 
     @objc (processAccessModeUpdateEvent:inConversation:)
     public func processAccessModeUpdate(event: ZMUpdateEvent, in conversation: ZMConversation) {
+        precondition(event.type == .conversationAccessModeUpdate, "invalid update event type")
         guard let payload = event.payload["data"] as? [String : AnyHashable] else { return }
         guard let access = payload["access"] as? [String] else { return }
         guard let accessRole = payload["access_role"] as? String else { return }
 
         conversation.accessMode = ConversationAccessMode(values: access)
         conversation.accessRole = ConversationAccessRole(rawValue: accessRole)
+    }
+    
+    @objc (processDestructionTimerUpdateEvent:inConversation:)
+    public func processDestructionTimerUpdate(event: ZMUpdateEvent, in conversation: ZMConversation?) {
+        precondition(event.type == .conversationMessageTimerUpdate, "invalid update event type")
+        guard let payload = event.payload["data"] as? [String : AnyHashable],
+            let senderUUID = event.senderUUID(),
+            let user = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext) else { return }
+        
+        var timeout: MessageDestructionTimeout?
+        let timeoutIntegerValue = (payload["message_timer"] as? Int64) ?? 0
+        
+        // Backend is sending the miliseconds, we need to convert to seconds.
+        timeout = .synced(MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue / 1000)))
+        
+        let fromSelf = user.isSelfUser
+        let fromOffToOff = !(conversation?.hasSyncedDestructionTimeout ?? false) && timeout == .synced(.none)
+        
+        let noChange = fromOffToOff || conversation?.messageDestructionTimeout == timeout
+        
+        // We seem to get duplicate update events for timeout changes, returning
+        // early will avoid duplicate system messages.
+        if fromSelf && noChange { return }
 
+        conversation?.messageDestructionTimeout = timeout
+        
+        if let timestamp = event.timeStamp(), let conversation = conversation {
+            // system message should reflect the synced timer value, not local
+            let timer = conversation.hasSyncedDestructionTimeout ? conversation.messageDestructionTimeoutValue : 0
+            let message = conversation.appendMessageTimerUpdateMessage(fromUser: user, timer: timer, timestamp: timestamp)
+            localNotificationDispatcher.process(message)
+        }
     }
 
 }

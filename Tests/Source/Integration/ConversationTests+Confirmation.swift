@@ -27,7 +27,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             
             let fromClient = user1?.clients.anyObject() as! MockUserClient
             let toClient = selfUser?.clients.anyObject() as! MockUserClient
-            let textMessage = ZMGenericMessage.message(text: "Hello", nonce: UUID.create().transportString())
+            let textMessage = ZMGenericMessage.message(text: "Hello", nonce: UUID.create())
             let conversation = self.conversation(for: selfToUser1Conversation!)
             
             let requestPath = "/conversations/\(conversation!.remoteIdentifier!.transportString())/otr/messages?report_missing=\(user1!.identifier)"
@@ -81,7 +81,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             
             let fromClient = user1?.clients.anyObject() as! MockUserClient
             let toClient = selfUser?.clients.anyObject() as! MockUserClient
-            let confirmationMessage = ZMGenericMessage(confirmation: message.nonce!.transportString(), type: .DELIVERED, nonce:UUID.create().transportString())
+            let confirmationMessage = ZMGenericMessage(confirmation: message.nonce!, type: .DELIVERED, nonce:UUID.create())
             
             // when
             mockTransportSession?.performRemoteChanges { session in
@@ -114,7 +114,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
 
         let fromClient = user1!.clients.anyObject() as! MockUserClient
         let toClient = selfUser!.clients.anyObject() as! MockUserClient
-        let confirmationMessage = ZMGenericMessage(confirmation: message.nonce!.transportString(), type: .DELIVERED, nonce:UUID.create().transportString())
+        let confirmationMessage = ZMGenericMessage(confirmation: message.nonce!, type: .DELIVERED, nonce:UUID.create())
 
         let convObserver = ConversationChangeObserver(conversation: conversation)
 

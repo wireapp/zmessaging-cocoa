@@ -24,7 +24,6 @@
 #import "ZMUserSession+Internal.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
-#import "ZMPushToken.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *ZMLogTag ZM_UNUSED = @"Authentication";

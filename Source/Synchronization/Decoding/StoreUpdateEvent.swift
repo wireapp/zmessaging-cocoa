@@ -70,7 +70,7 @@ public final class StoredUpdateEvent: NSManagedObject {
     
     /// Maps passed in objects of type `StoredUpdateEvent` to `ZMUpdateEvent`
     public static func eventsFromStoredEvents(_ storedEvents: [StoredUpdateEvent]) -> [ZMUpdateEvent] {
-        let events : [ZMUpdateEvent] = storedEvents.flatMap{
+        let events : [ZMUpdateEvent] = storedEvents.compactMap {
             var eventUUID : UUID?
             if let uuid = $0.uuidString {
                 eventUUID = UUID(uuidString: uuid)

@@ -60,7 +60,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         // then
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "is calling")
-        XCTAssertEqual(note.category, ZMIncomingCallCategory)
+        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.incomingCall.rawValue)
         XCTAssertEqual(note.soundName, ZMCustomSound.notificationRingingSoundName())
     }
     
@@ -83,8 +83,8 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         
         // then
         XCTAssertEqual(note.title, "Callie")
-        XCTAssertEqual(note.body, "is video calling")
-        XCTAssertEqual(note.category, ZMIncomingCallCategory)
+        XCTAssertEqual(note.body, "is calling with video")
+        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.incomingCall.rawValue)
         XCTAssertEqual(note.soundName, ZMCustomSound.notificationRingingSoundName())
     }
     
@@ -108,7 +108,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         // then
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "called")
-        XCTAssertEqual(note.category, ZMConversationCategory)
+        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.conversation.rawValue)
         XCTAssertEqual(note.soundName, ZMCustomSound.notificationNewMessageSoundName())
     }
     
@@ -138,7 +138,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         // then
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "called")
-        XCTAssertEqual(note.category, ZMMissedCallCategory)
+        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.missedCall.rawValue)
         XCTAssertEqual(note.soundName, ZMCustomSound.notificationNewMessageSoundName())
     }
     
@@ -155,7 +155,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         // then
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "called")
-        XCTAssertEqual(note.category, ZMMissedCallCategory)
+        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.missedCall.rawValue)
         XCTAssertEqual(note.soundName, ZMCustomSound.notificationNewMessageSoundName())
     }
     
