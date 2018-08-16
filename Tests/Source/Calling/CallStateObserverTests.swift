@@ -189,10 +189,10 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
     }
     
-    func testThatWeSendNotificationWhenCallStarts() {
+    func testThatWeSendNotificationWhenCallIsEstablished() {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
-        mockCallCenter?.mockNonIdleCalls = [conversationUI.remoteIdentifier! : .incoming(video: false, shouldRing: true, degraded: false)]
+        mockCallCenter?.mockActiveCalls = [conversationUI.remoteIdentifier! : .established]
         mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
         
         // expect
@@ -201,39 +201,32 @@ class CallStateObserverTests : MessagingTest {
         }
         
         // when
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversation: conversationUI, caller: senderUI, timestamp: nil, previousCallState: nil)
+        sut.callCenterDidChange(callState: .established, conversation: conversationUI, caller: senderUI, timestamp: nil, previousCallState: nil)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
-    func testThatWeKeepTheWebsocketOpenOnOutgoingCalls() {
+    func testThatWeSendNotificationWhenCallHasEstablishedDataChannel() {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
-        mockCallCenter?.mockNonIdleCalls = [conversationUI.remoteIdentifier! : .incoming(video: false, shouldRing: true, degraded: false)]
+        mockCallCenter?.mockActiveCalls = [conversationUI.remoteIdentifier! : .establishedDataChannel]
         mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
         
         // expect
-        expectation(forNotification: CallStateObserver.CallInProgressNotification, object: nil) { (note) -> Bool in
-            if let open = note.userInfo?[CallStateObserver.CallInProgressKey] as? Bool, open == true {
-                return true
-            } else {
-                return false
-            }
+        expectation(forNotification: CallStateObserver.CallInProgressNotification, object: nil) { (_) -> Bool in
+            return true
         }
         
-        // given when
-        sut.callCenterDidChange(callState: .outgoing(degraded: false), conversation: conversationUI, caller: senderUI, timestamp: Date(), previousCallState: nil)
+        // when
+        sut.callCenterDidChange(callState: .establishedDataChannel, conversation: conversationUI, caller: senderUI, timestamp: nil, previousCallState: nil)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
-        
-        // tear down
-        mockCallCenter = nil
     }
-    
+        
     func testThatWeSendNotificationWhenCallTerminates() {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
-        mockCallCenter?.mockNonIdleCalls = [conversationUI.remoteIdentifier! : .incoming(video: false, shouldRing: true, degraded: false)]
+        mockCallCenter?.mockActiveCalls = [conversationUI.remoteIdentifier! : .established]
         mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
-        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: false, degraded: false), conversation: conversationUI, caller: senderUI, timestamp: Date(), previousCallState: nil)
+        sut.callCenterDidChange(callState: .established, conversation: conversationUI, caller: senderUI, timestamp: Date(), previousCallState: nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // expect
@@ -246,7 +239,7 @@ class CallStateObserverTests : MessagingTest {
         }
         
         // when
-        mockCallCenter?.mockNonIdleCalls = [:]
+        mockCallCenter?.mockActiveCalls = [:]
         sut.callCenterDidChange(callState: .none, conversation: conversationUI, caller: senderUI, timestamp: Date(), previousCallState: nil)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         

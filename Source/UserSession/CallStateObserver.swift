@@ -77,8 +77,8 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             let uiManagedObjectContext = self.syncManagedObjectContext.zm_userInterface
             uiManagedObjectContext?.performGroupedBlock {
-                if let noneIdleCallCount = uiManagedObjectContext?.zm_callCenter?.nonIdleCalls.count {
-                    self.callInProgress = noneIdleCallCount > 0
+                if let activeCallCount = uiManagedObjectContext?.zm_callCenter?.activeCalls.count {
+                    self.callInProgress = activeCallCount > 0
                 }
             }
             

@@ -611,6 +611,30 @@ class WireCallCenterV3Tests: MessagingTest {
         XCTAssertFalse(sut.isContantBitRate(conversationId: oneOnOneConversationID))
     }
     
+    func testThatActiveCallsOnlyIncludeExpectedCallStates() {
+        // given
+        let activeCallStates: [CallState] = [CallState.established,
+                                             CallState.establishedDataChannel]
+        
+        let nonActiveCallStates: [CallState] = [CallState.incoming(video: false, shouldRing: false, degraded: false),
+                                           CallState.outgoing(degraded: false),
+                                           CallState.answered(degraded: false),
+                                           CallState.terminating(reason: CallClosedReason.normal),
+                                           CallState.none,
+                                           CallState.unknown]
+        
+        // then
+        for callState in nonActiveCallStates {
+            sut.createSnapshot(callState: callState, members: [], callStarter: nil, video: false, for: groupConversation.remoteIdentifier!)
+            XCTAssertEqual(sut.activeCalls.count, 0)
+        }
+        
+        for callState in activeCallStates {
+            sut.createSnapshot(callState: callState, members: [], callStarter: nil, video: false, for: groupConversation.remoteIdentifier!)
+            XCTAssertEqual(sut.activeCalls.count, 1)
+        }
+    }
+    
 }
 
 // MARK: - Ignoring Calls
