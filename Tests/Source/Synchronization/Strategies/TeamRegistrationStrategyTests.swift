@@ -24,6 +24,7 @@ class RegistrationStrategyTests: MessagingTest {
     var sut : WireSyncEngine.RegistrationStrategy!
     var userInfoParser: MockUserInfoParser!
     var team: UnregisteredTeam!
+    var user: UnregisteredUser!
 
     override func setUp() {
         super.setUp()
@@ -31,6 +32,14 @@ class RegistrationStrategyTests: MessagingTest {
         userInfoParser = MockUserInfoParser()
         sut = WireSyncEngine.RegistrationStrategy(groupQueue: self.syncMOC, status: registrationStatus, userInfoParser: userInfoParser)
         team = UnregisteredTeam(teamName: "Dream Team", email: "some@email.com", emailCode: "23", fullName: "M. Jordan", password: "qwerty", accentColor: .brightOrange)
+
+        user = UnregisteredUser()
+        user.name = "M. Jordan"
+        user.accentColorValue = .brightOrange
+        user.verificationCode = "23"
+        user.credentials = .phone(number: "+4912345678900")
+        user.acceptedTermsOfService = true
+        user.profileImageData = Data()
     }
 
     override func tearDown() {
@@ -67,9 +76,38 @@ class RegistrationStrategyTests: MessagingTest {
         XCTAssertEqual(request, transportRequest)
     }
 
+    func testThatItMakesARequestWhenStateIsCreateUser() {
+        //given
+        let path = "/register"
+        let payload = user.payload
+
+        let transportRequest = ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
+        registrationStatus.phase = .createUser(user: user)
+
+        //when
+        let request = sut.nextRequest()
+
+        //then
+        XCTAssertNotNil(request);
+        XCTAssertEqual(request, transportRequest)
+    }
+
     func testThatItNotifiesStatusAfterSuccessfulResponseToTeamCreate() {
         // given
         registrationStatus.phase = .createTeam(team: team)
+        let response = ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
+
+        // when
+        XCTAssertEqual(registrationStatus.successCalled, 0)
+        sut.didReceive(response, forSingleRequest: sut.registrationSync)
+
+        // then
+        XCTAssertEqual(registrationStatus.successCalled, 1)
+    }
+
+    func testThatItNotifiesStatusAfterSuccessfulResponseToUserCreate() {
+        // given
+        registrationStatus.phase = .createUser(user: user)
         let response = ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
 
         // when

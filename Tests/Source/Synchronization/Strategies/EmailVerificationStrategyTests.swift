@@ -65,10 +65,43 @@ class RegistrationCredentialVerificationStrategyTests : MessagingTest {
         XCTAssertEqual(request, transportRequest)
     }
 
+    func testThatItReturnsARequestWhenStateIsSendPhoneActivationCode(){
+        //given
+        let phone = "+4912345678900"
+        let path = "/activate/send"
+        let payload = ["phone": phone,
+                       "locale": NSLocale.formattedLocaleIdentifier()!]
+
+        let transportRequest = ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
+        registrationStatus.phase = .sendActivationCode(credential: .phone(phone))
+
+        //when
+
+        let request = sut.nextRequest()
+
+        //then
+        XCTAssertNotNil(request);
+        XCTAssertEqual(request, transportRequest)
+    }
+
     func testThatItNotifiesStatusAfterSuccessfulResponseToSendingActivationCode() {
         // given
         let email = "john@smith.com"
         registrationStatus.phase = .sendActivationCode(credential: .email(email))
+        let response = ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
+
+        // when
+        XCTAssertEqual(registrationStatus.successCalled, 0)
+        sut.didReceive(response, forSingleRequest: sut.codeSendingSync)
+
+        // then
+        XCTAssertEqual(registrationStatus.successCalled, 1)
+    }
+
+    func testThatItNotifiesStatusAfterSuccessfulResponseToSendingPhoneActivationCode() {
+        // given
+        let phone = "+4912345678900"
+        registrationStatus.phase = .sendActivationCode(credential: .phone(phone))
         let response = ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
 
         // when
@@ -92,6 +125,27 @@ class RegistrationCredentialVerificationStrategyTests : MessagingTest {
 
         let transportRequest = ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
         registrationStatus.phase = .checkActivationCode(credential: .email(email), code: code)
+
+        //when
+
+        let request = sut.nextRequest()
+
+        //then
+        XCTAssertNotNil(request);
+        XCTAssertEqual(request, transportRequest)
+    }
+
+    func testThatItReturnsARequestWhenStateIsCheckPhoneActivationCode(){
+        //given
+        let phone = "+4912345678900"
+        let code = "123456"
+        let path = "/activate"
+        let payload = ["phone": phone,
+                       "code": code,
+                       "dryrun": true] as [String : Any]
+
+        let transportRequest = ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
+        registrationStatus.phase = .checkActivationCode(credential: .phone(phone), code: code)
 
         //when
 
@@ -144,15 +198,37 @@ extension RegistrationCredentialVerificationStrategyTests: RegistrationStatusStr
         checkSendingCodeResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
     }
 
+    func testThatItNotifiesStatusAfterErrorToPhoneVerify_PhoneExists() {
+        checkSendingPhoneCodeResponseError(with: .phoneNumberIsAlreadyRegistered, errorLabel: "key-exists", httpStatus: 409)
+    }
+
+    func testThatItNotifiesStatusAfterErrorToPhoneVerify_InvalidPhone() {
+        checkSendingPhoneCodeResponseError(with: .invalidPhoneNumber, errorLabel: "invalid-phone", httpStatus: 400)
+    }
+
+    func testThatItNotifiesStatusAfterErrorToPhoneVerify_OtherError() {
+        checkSendingPhoneCodeResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
+    }
+
     // MARK:- error tests for activation
 
-    func testThatItNotifiesStatusAfterErrorToEmailactivate_InvalidCode() {
+    func testThatItNotifiesStatusAfterErrorToEmailActivate_InvalidCode() {
         checkActivationResponseError(with: .invalidActivationCode, errorLabel: "invalid-code", httpStatus: 404)
     }
 
     func testThatItNotifiesStatusAfterErrorToEmailActivation_OtherError() {
         checkActivationResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
     }
+
+    func testThatItNotifiesStatusAfterErrorToPhoneActivate_InvalidCode() {
+        checkPhoneActivationResponseError(with: .invalidActivationCode, errorLabel: "invalid-code", httpStatus: 404)
+    }
+
+    func testThatItNotifiesStatusAfterErrorToPhoneActivation_OtherError() {
+        checkPhoneActivationResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
+    }
+
+    // MARK: - Helpers
 
     func checkSendingCodeResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
         // given
@@ -163,11 +239,30 @@ extension RegistrationCredentialVerificationStrategyTests: RegistrationStatusStr
         checkResponseError(with: phase, code: code, errorLabel: errorLabel, httpStatus: httpStatus)
     }
 
+    func checkSendingPhoneCodeResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
+        // given
+        let phone = "+4912345678900"
+        let phase: RegistrationPhase = .sendActivationCode(credential: .phone(phone))
+
+        // when & then
+        checkResponseError(with: phase, code: code, errorLabel: errorLabel, httpStatus: httpStatus)
+    }
+
     func checkActivationResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
         // given
         let email = "john@smith.com"
         let activationCode = "123456"
         let phase: RegistrationPhase = .checkActivationCode(credential: .email(email), code: activationCode)
+
+        // when & then
+        checkResponseError(with: phase, code: code, errorLabel: errorLabel, httpStatus: httpStatus)
+    }
+
+    func checkPhoneActivationResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
+        // given
+        let phone = "+4912345678900"
+        let activationCode = "123456"
+        let phase: RegistrationPhase = .checkActivationCode(credential: .phone(phone), code: activationCode)
 
         // when & then
         checkResponseError(with: phase, code: code, errorLabel: errorLabel, httpStatus: httpStatus)

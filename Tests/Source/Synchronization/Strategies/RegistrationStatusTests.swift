@@ -252,5 +252,46 @@ class RegistrationStatusTests : MessagingTest{
         XCTAssertEqual(delegate.teamRegistrationFailedError as NSError?, error)
     }
 
+    // MARK: - User Creation
+
+    func testThatItAdvancesToCreateUserStateAfterTriggeringCreationStarts() {
+        // when
+        sut.create(user: user)
+
+        // then
+        XCTAssertEqual(sut.phase, .createUser(user: user))
+    }
+
+    func testThatItInformsTheDelegateAboutCreateUserSuccess() {
+        // given
+        sut.create(user: user)
+        XCTAssertEqual(delegate.userRegisteredCalled, 0)
+        XCTAssertEqual(delegate.userRegistrationFailedCalled, 0)
+
+        // when
+        sut.success()
+
+        //then
+        XCTAssertTrue(sut.completedRegistration)
+        XCTAssertEqual(delegate.userRegisteredCalled, 1)
+        XCTAssertEqual(delegate.userRegistrationFailedCalled, 0)
+    }
+
+    func testThatItInformsTheDelegateAboutCreateUserError() {
+        // given
+        let error = NSError(domain: "some", code: 2, userInfo: [:])
+        sut.create(user: user)
+        XCTAssertEqual(delegate.userRegisteredCalled, 0)
+        XCTAssertEqual(delegate.userRegistrationFailedCalled, 0)
+
+        // when
+        sut.handleError(error)
+
+        //then
+        XCTAssertEqual(delegate.userRegisteredCalled, 0)
+        XCTAssertEqual(delegate.userRegistrationFailedCalled, 1)
+        XCTAssertEqual(delegate.userRegistrationError as NSError?, error)
+    }
+
 }
 

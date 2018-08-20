@@ -161,9 +161,6 @@ class RegistrationTests : IntegrationTest {
     func testThatIsActivationCodeIsVerifiedToSpecifiedPhoneNumber() {
         // Given
         let phone = "+4912345678900"
-        self.mockTransportSession.performRemoteChanges { (session) in
-            session.whiteListPhone(phone)
-        }
 
         let code = self.mockTransportSession.phoneVerificationCodeForRegistration
         XCTAssertEqual(delegate.activationCodeValidatedCalled, 0)
