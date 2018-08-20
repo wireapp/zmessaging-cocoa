@@ -27,6 +27,10 @@ extension UnregisteredUser {
      */
 
     var payload: ZMTransportData {
+        guard self.isComplete else {
+            fatalError("Attempt to register an incomplete user.")
+        }
+
         var payload: [String: Any] = [:]
 
         switch credentials {

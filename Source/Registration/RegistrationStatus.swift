@@ -69,7 +69,7 @@ protocol RegistrationStatusProtocol: class {
 public class RegistrationStatus: RegistrationStatusProtocol {
 
     /// The current phase of registration.
-    public var phase : Phase = .none
+    public var phase: RegistrationPhase = .none
 
     /// Whether registration completed.
     public internal(set) var completedRegistration: Bool = false
