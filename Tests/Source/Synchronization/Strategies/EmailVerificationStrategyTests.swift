@@ -19,15 +19,15 @@
 import Foundation
 @testable import WireSyncEngine
 
-class EmailVerificationStrategyTests : MessagingTest {
+class RegistrationCredentialVerificationStrategyTests : MessagingTest {
 
     var registrationStatus : TestRegistrationStatus!
-    var sut : WireSyncEngine.EmailVerificationStrategy!
+    var sut : WireSyncEngine.RegistationCredentialVerificationStrategy!
 
     override func setUp() {
         super.setUp()
         registrationStatus = TestRegistrationStatus()
-        sut = WireSyncEngine.EmailVerificationStrategy(groupQueue: self.syncMOC, status: registrationStatus)
+        sut = WireSyncEngine.RegistationCredentialVerificationStrategy(groupQueue: self.syncMOC, status: registrationStatus)
     }
 
     override func tearDown() {
@@ -54,7 +54,7 @@ class EmailVerificationStrategyTests : MessagingTest {
                        "locale": NSLocale.formattedLocaleIdentifier()!]
 
         let transportRequest = ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
-        registrationStatus.phase = .sendActivationCode(email: email)
+        registrationStatus.phase = .sendActivationCode(credential: .email(email))
 
         //when
 
@@ -68,7 +68,7 @@ class EmailVerificationStrategyTests : MessagingTest {
     func testThatItNotifiesStatusAfterSuccessfulResponseToSendingActivationCode() {
         // given
         let email = "john@smith.com"
-        registrationStatus.phase = .sendActivationCode(email: email)
+        registrationStatus.phase = .sendActivationCode(credential: .email(email))
         let response = ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
 
         // when
@@ -91,7 +91,7 @@ class EmailVerificationStrategyTests : MessagingTest {
                        "dryrun": true] as [String : Any]
 
         let transportRequest = ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
-        registrationStatus.phase = .checkActivationCode(email: email, code: code)
+        registrationStatus.phase = .checkActivationCode(credential: .email(email), code: code)
 
         //when
 
@@ -106,7 +106,7 @@ class EmailVerificationStrategyTests : MessagingTest {
         // given
         let email = "john@smith.com"
         let code = "123456"
-        registrationStatus.phase = .checkActivationCode(email: email, code: code)
+        registrationStatus.phase = .checkActivationCode(credential: .email(email), code: code)
         let response = ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
 
         // when
@@ -120,7 +120,7 @@ class EmailVerificationStrategyTests : MessagingTest {
 
 }
 
-extension EmailVerificationStrategyTests: RegistrationStatusStrategyTestHelper {
+extension RegistrationCredentialVerificationStrategyTests: RegistrationStatusStrategyTestHelper {
 
     func handleResponse(response: ZMTransportResponse) {
         sut.didReceive(response, forSingleRequest: sut.codeSendingSync)
@@ -157,7 +157,7 @@ extension EmailVerificationStrategyTests: RegistrationStatusStrategyTestHelper {
     func checkSendingCodeResponseError(with code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
         // given
         let email = "john@smith.com"
-        let phase: RegistrationStatus.Phase = .sendActivationCode(email: email)
+        let phase: RegistrationPhase = .sendActivationCode(credential: .email(email))
 
         // when & then
         checkResponseError(with: phase, code: code, errorLabel: errorLabel, httpStatus: httpStatus)
@@ -167,7 +167,7 @@ extension EmailVerificationStrategyTests: RegistrationStatusStrategyTestHelper {
         // given
         let email = "john@smith.com"
         let activationCode = "123456"
-        let phase: RegistrationStatus.Phase = .checkActivationCode(email: email, code: activationCode)
+        let phase: RegistrationPhase = .checkActivationCode(credential: .email(email), code: activationCode)
 
         // when & then
         checkResponseError(with: phase, code: code, errorLabel: errorLabel, httpStatus: httpStatus)

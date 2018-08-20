@@ -32,7 +32,7 @@ class TestRegistrationStatus: WireSyncEngine.RegistrationStatusProtocol {
         successCalled += 1
     }
 
-    var phase: WireSyncEngine.RegistrationStatus.Phase = .none
+    var phase: RegistrationPhase = .none
 }
 
 protocol RegistrationStatusStrategyTestHelper {
@@ -41,7 +41,7 @@ protocol RegistrationStatusStrategyTestHelper {
 }
 
 extension RegistrationStatusStrategyTestHelper {
-    func checkResponseError(with phase: RegistrationStatus.Phase, code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
+    func checkResponseError(with phase: RegistrationPhase, code: ZMUserSessionErrorCode, errorLabel: String, httpStatus: NSInteger, file: StaticString = #file, line: UInt = #line) {
         registrationStatus.phase = phase
 
         let expectedError = NSError(code: code, userInfo: [:])

@@ -19,18 +19,18 @@
 import Foundation
 @testable import WireSyncEngine
 
-class TeamRegistrationStrategyTests: MessagingTest {
+class RegistrationStrategyTests: MessagingTest {
     var registrationStatus : TestRegistrationStatus!
-    var sut : WireSyncEngine.TeamRegistrationStrategy!
+    var sut : WireSyncEngine.RegistrationStrategy!
     var userInfoParser: MockUserInfoParser!
-    var team: TeamToRegister!
+    var team: UnregisteredTeam!
 
     override func setUp() {
         super.setUp()
         registrationStatus = TestRegistrationStatus()
         userInfoParser = MockUserInfoParser()
-        sut = WireSyncEngine.TeamRegistrationStrategy(groupQueue: self.syncMOC, status: registrationStatus, userInfoParser: userInfoParser)
-        team = WireSyncEngine.TeamToRegister(teamName: "Dream Team", email: "some@email.com", emailCode: "23", fullName: "M. Jordan", password: "qwerty", accentColor: .brightOrange)
+        sut = WireSyncEngine.RegistrationStrategy(groupQueue: self.syncMOC, status: registrationStatus, userInfoParser: userInfoParser)
+        team = UnregisteredTeam(teamName: "Dream Team", email: "some@email.com", emailCode: "23", fullName: "M. Jordan", password: "qwerty", accentColor: .brightOrange)
     }
 
     override func tearDown() {
@@ -99,7 +99,7 @@ class TeamRegistrationStrategyTests: MessagingTest {
 
 // MARK:- error tests for team creation
 
-extension TeamRegistrationStrategyTests: RegistrationStatusStrategyTestHelper {
+extension RegistrationStrategyTests: RegistrationStatusStrategyTestHelper {
 
     func handleResponse(response: ZMTransportResponse) {
         sut.didReceive(response, forSingleRequest: sut.registrationSync)

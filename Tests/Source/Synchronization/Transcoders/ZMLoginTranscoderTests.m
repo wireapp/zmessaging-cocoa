@@ -537,30 +537,6 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 
 @implementation ZMLoginTranscoderTests (EmailVerification)
 
-- (void)testThatItResetsDidRegisterDuplicatedEmailAfterASuccessfulLoginRequest
-{
-    // given
-
-    XCTestExpectation *ex = [self expectationWithDescription:@"auth"];
-    id token = [ZMUserSessionRegistrationNotification addObserverInContext:self.authenticationStatus withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
-        NOT_USED(event);
-        XCTAssertNotNil(error);
-        XCTAssertEqual((ZMUserSessionErrorCode)error.code, ZMUserSessionEmailIsAlreadyRegistered);
-        [ex fulfill];
-    }];
-    
-    ZMCompleteRegistrationUser *user = [ZMCompleteRegistrationUser registrationUserWithEmail:@"foo@foo.com" password:@"12345678"];
-    
-    [self.authenticationStatus prepareForRegistrationOfUser:user];
-    [self.authenticationStatus didFailRegistrationWithDuplicatedEmail];
-    
-    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-    
-    // then
-    token = nil;
-    XCTAssertNotEqual(self.authenticationStatus.currentPhase, ZMAuthenticationPhaseWaitingForEmailVerification);
-}
-
 - (void)testThatItSendsAVerificationResendRequest_AuthenticationStatus;
 {
     // given

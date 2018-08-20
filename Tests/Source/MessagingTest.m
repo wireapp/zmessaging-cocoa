@@ -40,8 +40,6 @@
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfStrategy.h"
 #import "ZMConnectionTranscoder.h"
-#import "ZMRegistrationTranscoder.h"
-#import "ZMPhoneNumberVerificationTranscoder.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMLastUpdateEventIDTranscoder.h"
 #import "ZMCallFlowRequestStrategy.h"

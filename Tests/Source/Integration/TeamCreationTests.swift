@@ -26,13 +26,13 @@ class TeamCreationTests : IntegrationTest {
     var registrationStatus: WireSyncEngine.RegistrationStatus? {
         return sessionManager?.unauthenticatedSession?.registrationStatus
     }
-    var teamToRegister: TeamToRegister!
+    var teamToRegister: UnregisteredTeam!
 
     override func setUp() {
         super.setUp()
         delegate = TestRegistrationStatusDelegate()
         sessionManager?.unauthenticatedSession?.registrationStatus.delegate = delegate
-        teamToRegister = TeamToRegister(teamName: "A-Team", email: "ba@a-team.de", emailCode: "911", fullName: "Bosco B. A. Baracus", password: "BadAttitude", accentColor: .vividRed)
+        teamToRegister = UnregisteredTeam(teamName: "A-Team", email: "ba@a-team.de", emailCode: "911", fullName: "Bosco B. A. Baracus", password: "BadAttitude", accentColor: .vividRed)
     }
 
     override func tearDown() {
@@ -46,23 +46,23 @@ class TeamCreationTests : IntegrationTest {
     func testThatIsActivationCodeIsSentToSpecifiedEmail(){
         // Given
         let email = "john@smith.com"
-        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 0)
-        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 0)
+        XCTAssertEqual(delegate.activationCodeSentCalled, 0)
+        XCTAssertEqual(delegate.activationCodeSendingFailedCalled, 0)
 
         // When
-        registrationStatus?.sendActivationCode(to: email)
+        registrationStatus?.sendActivationCode(to: .email(email))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // Then
-        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 1)
-        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 0)
+        XCTAssertEqual(delegate.activationCodeSentCalled, 1)
+        XCTAssertEqual(delegate.activationCodeSendingFailedCalled, 0)
     }
 
     func testThatIsActivationCodeSendingFailWhenEmailAlreadyRegistered(){
         // Given
         let email = "john@smith.com"
-        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 0)
-        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 0)
+        XCTAssertEqual(delegate.activationCodeSentCalled, 0)
+        XCTAssertEqual(delegate.activationCodeSendingFailedCalled, 0)
 
         // When
         self.mockTransportSession.performRemoteChanges { (session) in
@@ -70,15 +70,15 @@ class TeamCreationTests : IntegrationTest {
             user.email = email
         }
 
-        registrationStatus?.sendActivationCode(to: email)
+        registrationStatus?.sendActivationCode(to: .email(email))
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // Then
-        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 0)
-        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 1)
+        XCTAssertEqual(delegate.activationCodeSentCalled, 0)
+        XCTAssertEqual(delegate.activationCodeSendingFailedCalled, 1)
 
-        let error: NSError? = (delegate.emailActivationCodeSendingFailedError) as NSError?
+        let error: NSError? = (delegate.activationCodeSendingFailedError) as NSError?
 
         XCTAssertNotNil(error)
         XCTAssertEqual(error?.code, Int(ZMUserSessionErrorCode.emailIsAlreadyRegistered.rawValue))
@@ -92,16 +92,16 @@ class TeamCreationTests : IntegrationTest {
             session.whiteListEmail(email)
         }
         let code = self.mockTransportSession.emailActivationCode
-        XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 0)
-        XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 0)
+        XCTAssertEqual(delegate.activationCodeValidatedCalled, 0)
+        XCTAssertEqual(delegate.activationCodeValidationFailedCalled, 0)
 
         // When
-        registrationStatus?.checkActivationCode(email: email, code: code)
+        registrationStatus?.checkActivationCode(credential: .email(email), code: code)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // Then
-        XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 1)
-        XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 0)
+        XCTAssertEqual(delegate.activationCodeValidatedCalled, 1)
+        XCTAssertEqual(delegate.activationCodeValidationFailedCalled, 0)
     }
 
     // MARK: - create team tests
