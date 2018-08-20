@@ -121,7 +121,6 @@ public extension ZMAuthenticationStatus {
     }
 }
 
-
 extension ZMUser {
     
     /// This will be used to set user info on the NSError

@@ -44,34 +44,38 @@ import Foundation
 }
 
 extension UnauthenticatedSession {
-    
-    @objc(registerUser:)
-    public func register(user: ZMCompleteRegistrationUser) {
-        let password = user.password
-        let phoneNumber = user.phoneNumber
-        let phoneVerificationCode = user.phoneVerificationCode
-        let invitationCode = user.invitationCode
-        
-        do {
-            if phoneNumber == nil {
-                var password = password as NSString?
-                try ZMUser.validatePassword(&password)
-            }
-            else if (invitationCode != nil && phoneNumber != nil) {
-                var phoneVerificationCode = phoneVerificationCode as NSString?
-                try ZMUser.validatePhoneVerificationCode(&phoneVerificationCode)
-            }
-            else if (phoneNumber != nil) {
-                var phoneNumber = phoneNumber as NSString?
-                try ZMUser.validatePhoneNumber(&phoneNumber)
-            }
-        } catch {
-            ZMUserSessionRegistrationNotification.notifyRegistrationDidFail(NSError(code: .needsCredentials, userInfo: nil), context: authenticationStatus)
+
+    private func notifyNeedsCredentials() {
+        ZMUserSessionRegistrationNotification.notifyRegistrationDidFail(NSError(code: .needsCredentials, userInfo: nil), context: authenticationStatus)
+    }
+
+    public func register(user: UnregisteredUser) {
+        guard let credentials = user.credentials else {
+            notifyNeedsCredentials()
             return
         }
 
+        switch credentials {
+        case .phone(let number):
+            guard UnregisteredUser.normalizedPhoneNumber(number).isValid else {
+                notifyNeedsCredentials()
+                return
+            }
+
+        case .email(let address, let password):
+            guard UnregisteredUser.normalizedEmailAddress(address).isValid else {
+                notifyNeedsCredentials()
+                return
+            }
+
+            guard UnregisteredUser.normalizedPassword(password).isValid else {
+                notifyNeedsCredentials()
+                return
+            }
+        }
+
         authenticationErrorIfNotReachable {
-            self.authenticationStatus.prepareForRegistration(of: user)
+//            self.authenticationStatus.prepareForRegistration(of: user)
             RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
     }
@@ -79,7 +83,7 @@ extension UnauthenticatedSession {
     @objc
     public func requestPhoneVerificationCodeForRegistration(_ phoneNumber: String) {
         authenticationErrorIfNotReachable {
-            self.authenticationStatus.prepareForRequestingPhoneVerificationCode(forRegistration: phoneNumber)
+//            self.authenticationStatus.prepareForRequestingPhoneVerificationCode(forRegistration: phoneNumber)
             RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
     }
@@ -87,7 +91,7 @@ extension UnauthenticatedSession {
     @objc
     public func verifyPhoneNumberForRegistration(_ phoneNumber: String, verificationCode: String) {
         let credentials = ZMPhoneCredentials(phoneNumber: phoneNumber, verificationCode: verificationCode)
-        authenticationStatus.prepareForRegistrationPhoneVerification(with: credentials)
+//        authenticationStatus.prepareForRegistrationPhoneVerification(with: credentials)
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
     
@@ -95,17 +99,7 @@ extension UnauthenticatedSession {
     public func resendRegistrationVerificationEmail() {
         ZMUserSessionRegistrationNotification.resendValidationForRegistrationEmail(inContext: authenticationStatus)
     }
-    
-    @objc
-    public func cancelWaitForEmailVerification() {
-        authenticationStatus.cancelWaitingForEmailVerification()
-    }
-    
-    @objc
-    public func cancelWaitForPhoneVerification() {
-        // no-op
-    }
-    
+        
     @objc(setProfileImage:)
     public func setProfileImage(imageData: Data) {
         authenticationStatus.profileImageData = imageData
