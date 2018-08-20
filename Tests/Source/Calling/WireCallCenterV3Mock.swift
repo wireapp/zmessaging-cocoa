@@ -102,6 +102,7 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     
     public let mockAVSWrapper : MockAVSWrapper
     public var mockNonIdleCalls : [UUID : CallState] = [:]
+    public var mockActiveCalls : [UUID : CallState] = [:]
     
     var mockMembers : [AVSCallMember] {
         set {
@@ -140,6 +141,10 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
         
     public override var nonIdleCalls : [UUID : CallState ] {
         return mockNonIdleCalls
+    }
+    
+    public override var activeCalls: [UUID : CallState] {
+        return mockActiveCalls
     }
     
     public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport) {

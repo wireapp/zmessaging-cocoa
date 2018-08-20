@@ -110,24 +110,24 @@
 "push.notification.member.leave.self.nousername" = "あなたは削除されました";
 
 // EPHEMERAL MESSAGE TIMER UPDATE
-"push.notification.message-timer.update" = "%@ set the message timer to %@";
-"push.notification.message-timer.update.nousername" = "Someone set the message timer to %@";
-"push.notification.message-timer.update.noconversationname" = "%@ set the message timer to %@ in a conversation";
-"push.notification.message-timer.update.nousername.noconversationname" = "Someone set the message timer to %@ in a conversation";
+"push.notification.message-timer.update" = "%@ はタイマーメッセージを %@ に設定しました。";
+"push.notification.message-timer.update.nousername" = "だれかがタイマーメッセージを %@ に設定しました";
+"push.notification.message-timer.update.noconversationname" = "%@ が 会話内のタイマーメッセージを %@ に設定しました";
+"push.notification.message-timer.update.nousername.noconversationname" = "だれかが 会話内のタイマーメッセージを %@ に設定しました";
 
-"push.notification.message-timer.off" = "%@ turned off the message timer";
-"push.notification.message-timer.off.nousername" = "Someone turned off the message timer";
-"push.notification.message-timer.off.noconversationname" = "%@ turned off the message timer in a conversation";
-"push.notification.message-timer.off.nousername.noconversationname" = "Someone turned off the message timer in a conversation";
+"push.notification.message-timer.off" = "%@ が タイマーメッセージをオフにしました";
+"push.notification.message-timer.off.nousername" = "だれかがタイマーメッセージをオフにしました";
+"push.notification.message-timer.off.noconversationname" = "%@ が 会話内のタイマーメッセージを オフにしました";
+"push.notification.message-timer.off.nousername.noconversationname" = "だれか が 会話内のタイマーメッセージを オフにしました";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "is calling with video";
-"push.notification.call.started.video.oneonone.nousername" = "Someone is calling with video";
+"push.notification.call.started.video.oneonone" = "ビデオ通話で呼び出す";
+"push.notification.call.started.video.oneonone.nousername" = "だれかがビデオ通話で呼出中";
 
-"push.notification.call.started.video.group" = "%1$@ is calling with video";
-"push.notification.call.started.video.group.nousername" = "Someone is calling with video";
-"push.notification.call.started.video.group.noconversationname" = "%1$@ is calling with video in a conversation";
-"push.notification.call.started.video.group.nousername.noconversationname" = "Someone is calling with video in a conversation";
+"push.notification.call.started.video.group" = "%1$@ をビデオ通話で呼出中...";
+"push.notification.call.started.video.group.nousername" = "だれかがビデオ通話で呼出中";
+"push.notification.call.started.video.group.noconversationname" = "%1$@がビデオ会話で呼び出しています";
+"push.notification.call.started.video.group.nousername.noconversationname" = "だれかがビデオ会話で呼び出しています";
 
 // VOICE CALLS
 "push.notification.call.started.oneonone" = "呼び出し中";
