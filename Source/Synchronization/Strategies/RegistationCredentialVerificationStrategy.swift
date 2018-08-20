@@ -61,13 +61,20 @@ extension RegistationCredentialVerificationStrategy : ZMSingleRequestTranscoder 
             let error : NSError
 
             switch (registrationStatus.phase) {
-            case .sendActivationCode:
-                error = NSError.blacklistedEmail(with: response) ??
+            case .sendActivationCode(let credentials):
+                let decodedError: NSError?
+                switch credentials {
+                case .email:
+                    decodedError = NSError.blacklistedEmail(with: response) ??
                     NSError.emailAddressInUse(with: response) ??
-                    NSError.phoneNumberIsAlreadyRegisteredError(with: response) ??
-                    NSError.invalidEmail(with: response) ??
-                    NSError.invalidPhoneNumber(withReponse: response) ??
-                    NSError(code: .unknownError, userInfo: [:])
+                    NSError.invalidEmail(with: response)
+
+                case .phone:
+                    decodedError = NSError.phoneNumberIsAlreadyRegisteredError(with: response) ??
+                    NSError.invalidPhoneNumber(withReponse: response)
+                }
+
+                error = decodedError ?? NSError(code: .unknownError, userInfo: [:])
             case .checkActivationCode:
                 error = NSError.invalidActivationCode(with: response) ??
                     NSError(code: .unknownError, userInfo: [:])

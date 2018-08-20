@@ -77,6 +77,7 @@ class RegistrationStatusTests : MessagingTest{
     var email: String!
     var code: String!
     var team: UnregisteredTeam!
+    var user: UnregisteredUser!
 
     override func setUp() {
         super.setUp()
@@ -87,6 +88,14 @@ class RegistrationStatusTests : MessagingTest{
         email = "some@foo.bar"
         code = "123456"
         team = UnregisteredTeam(teamName: "Dream Team", email: email, emailCode: "23", fullName: "M. Jordan", password: "qwerty", accentColor: .brightOrange)
+
+        user = UnregisteredUser()
+        user.credentials = UnregisteredUser.Credentials.email(address: email, password: "qwerty")
+        user.name = "M. Jordan"
+        user.accentColorValue = .brightOrange
+        user.verificationCode = code
+        user.acceptedTermsOfService = true
+        user.profileImageData = Data()
     }
 
     override func tearDown() {
