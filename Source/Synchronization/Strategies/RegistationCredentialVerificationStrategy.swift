@@ -64,7 +64,9 @@ extension RegistationCredentialVerificationStrategy : ZMSingleRequestTranscoder 
             case .sendActivationCode:
                 error = NSError.blacklistedEmail(with: response) ??
                     NSError.emailAddressInUse(with: response) ??
+                    NSError.phoneNumberIsAlreadyRegisteredError(with: response) ??
                     NSError.invalidEmail(with: response) ??
+                    NSError.invalidPhoneNumber(withReponse: response) ??
                     NSError(code: .unknownError, userInfo: [:])
             case .checkActivationCode:
                 error = NSError.invalidActivationCode(with: response) ??
