@@ -137,6 +137,44 @@ class RegistrationTests : IntegrationTest {
         XCTAssertEqual(error?.code, Int(ZMUserSessionErrorCode.phoneNumberIsAlreadyRegistered.rawValue))
     }
 
+    func testThatWeCanSendAnActivationCodeTwice_Phone() {
+        // Given
+        let phone1 = "+4912345678900"
+        let phone2 = "+4900000000000"
+        XCTAssertEqual(delegate.activationCodeSentCalled, 0)
+        XCTAssertEqual(delegate.activationCodeSendingFailedCalled, 0)
+
+        // When
+        registrationStatus?.sendActivationCode(to: .phone(phone1))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        registrationStatus?.sendActivationCode(to: .phone(phone2))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // Then
+        XCTAssertEqual(delegate.activationCodeSentCalled, 2)
+        XCTAssertEqual(delegate.activationCodeSendingFailedCalled, 0)
+    }
+
+    func testThatWeCanSendAnActivationCodeTwice_Email() {
+        // Given
+        let email1 = "john@smith.com"
+        let email2 = "jane@smith.com"
+        XCTAssertEqual(delegate.activationCodeSentCalled, 0)
+        XCTAssertEqual(delegate.activationCodeSendingFailedCalled, 0)
+
+        // When
+        registrationStatus?.sendActivationCode(to: .email(email1))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        registrationStatus?.sendActivationCode(to: .email(email2))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // Then
+        XCTAssertEqual(delegate.activationCodeSentCalled, 2)
+        XCTAssertEqual(delegate.activationCodeSendingFailedCalled, 0)
+    }
+
     // MARK: - check activation code tests
 
     func testThatIsActivationCodeIsVerifiedToSpecifiedEmail() {
@@ -161,12 +199,14 @@ class RegistrationTests : IntegrationTest {
     func testThatIsActivationCodeIsVerifiedToSpecifiedPhoneNumber() {
         // Given
         let phone = "+4912345678900"
-
-        let code = self.mockTransportSession.phoneVerificationCodeForRegistration
         XCTAssertEqual(delegate.activationCodeValidatedCalled, 0)
         XCTAssertEqual(delegate.activationCodeValidationFailedCalled, 0)
 
         // When
+        registrationStatus?.sendActivationCode(to: .phone(phone))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        let code = self.mockTransportSession.phoneVerificationCodeForRegistration
         registrationStatus?.checkActivationCode(credential: .phone(phone), code: code)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
