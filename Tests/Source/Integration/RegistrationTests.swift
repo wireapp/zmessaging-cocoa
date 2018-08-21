@@ -50,6 +50,7 @@ class RegistrationTests : IntegrationTest {
     override func tearDown() {
         delegate = nil
         teamToRegister = nil
+        user = nil
         super.tearDown()
     }
 

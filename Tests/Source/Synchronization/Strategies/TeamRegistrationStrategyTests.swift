@@ -47,6 +47,7 @@ class RegistrationStrategyTests: MessagingTest {
         registrationStatus = nil
         userInfoParser = nil
         team = nil
+        user = nil
         super.tearDown()
     }
 

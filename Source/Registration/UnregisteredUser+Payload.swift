@@ -33,22 +33,19 @@ extension UnregisteredUser {
 
         var payload: [String: Any] = [:]
 
-        switch credentials {
-        case .phone(let number)?:
+        switch credentials! {
+        case .phone(let number):
             payload["phone"] = number
-            payload["phone_code"] = verificationCode
+            payload["phone_code"] = verificationCode!
 
-        case .email(let address, let password)?:
+        case .email(let address, let password):
             payload["email"] = address
             payload["password"] = password
-            payload["email_code"] = verificationCode
-
-        default:
-            break
+            payload["email_code"] = verificationCode!
         }
 
-        payload["accent_id"] = accentColorValue?.rawValue
-        payload["name"] = name
+        payload["accent_id"] = accentColorValue!.rawValue
+        payload["name"] = name!
         payload["locale"] = NSLocale.formattedLocaleIdentifier()
         payload["label"] = CookieLabel.current.value
 

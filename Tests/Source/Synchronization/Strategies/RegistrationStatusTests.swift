@@ -104,6 +104,7 @@ class RegistrationStatusTests : MessagingTest{
         email = nil
         code = nil
         team = nil
+        user = nil
         super.tearDown()
     }
 
