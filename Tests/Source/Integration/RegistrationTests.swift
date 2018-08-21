@@ -45,6 +45,7 @@ class RegistrationTests : IntegrationTest {
         user.accentColorValue = .vividRed
         user.acceptedTermsOfService = true
         user.profileImageData = Data()
+        user.marketingConsent = true
     }
 
     override func tearDown() {

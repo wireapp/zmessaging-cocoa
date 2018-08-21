@@ -40,6 +40,7 @@ class RegistrationStrategyTests: MessagingTest {
         user.credentials = .phone(number: "+4912345678900")
         user.acceptedTermsOfService = true
         user.profileImageData = Data()
+        user.marketingConsent = true
     }
 
     override func tearDown() {

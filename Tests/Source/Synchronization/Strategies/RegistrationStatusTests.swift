@@ -96,6 +96,7 @@ class RegistrationStatusTests : MessagingTest{
         user.verificationCode = code
         user.acceptedTermsOfService = true
         user.profileImageData = Data()
+        user.marketingConsent = true
     }
 
     override func tearDown() {
