@@ -570,7 +570,7 @@ public struct CallEvent {
         callSnapshots.removeValue(forKey: conversationId)
     }
     
-    fileprivate func createSnapshot(callState : CallState, members: [AVSCallMember], callStarter: UUID?, video: Bool, for conversationId: UUID) {
+    internal func createSnapshot(callState : CallState, members: [AVSCallMember], callStarter: UUID?, video: Bool, for conversationId: UUID) {
         guard let moc = uiMOC,
               let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: moc)
         else { return }
@@ -848,6 +848,17 @@ public struct CallEvent {
         }
         
         return callStates
+    }
+    
+    public var activeCalls: [UUID: CallState] {
+        return nonIdleCalls.filter({ key, callState in
+            switch callState {
+            case .established, .establishedDataChannel:
+                return true
+            default:
+                return false
+            }
+        })
     }
     
     /// Returns conversations with active calls
