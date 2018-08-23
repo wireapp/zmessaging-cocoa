@@ -28,7 +28,11 @@ import OCMock
 class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
 
     static let accountManagerURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("MockSessionManager.accounts")
-    
+
+    deinit {
+        try? FileManager.default.removeItem(at: MockSessionManager.accountManagerURL)
+    }
+
     var localNotificationResponder: LocalNotificationResponder? = nil
     var callKitDelegate: WireSyncEngine.CallKitDelegate? = nil
     var callNotificationStyle: CallNotificationStyle = .pushNotifications
@@ -41,24 +45,23 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
             completion(userSession)
         }
     }
-    
-    func updateAppIconBadge(accountID: UUID, unreadCount: Int) {
-        
-    }
-    
-    func configureUserNotifications() {
-        
-    }
 
     @objc public var updatePushTokenCalled = false
     func updatePushToken(for session: ZMUserSession) {
         updatePushTokenCalled = true
     }
-    
-    deinit {
-        try? FileManager.default.removeItem(at: MockSessionManager.accountManagerURL)
+
+    func updateAppIconBadge(accountID: UUID, unreadCount: Int) {
+        // no-op
     }
     
+    func configureUserNotifications() {
+        // no-op
+    }
+
+    func update(credentials: ZMCredentials) -> Bool {
+        return false
+    }
     
 }
 

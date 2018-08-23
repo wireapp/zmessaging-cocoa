@@ -72,6 +72,9 @@ public protocol SessionManagerType : class {
     /// Configure user notification settings. This will ask the user for permission to display notifications.
     func configureUserNotifications()
 
+    /// Needs to be called before we try to register another device because API requires password
+    func update(credentials: ZMCredentials) -> Bool
+    
 }
 
 @objc
