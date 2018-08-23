@@ -462,27 +462,28 @@ extension ZMConversation {
         return localizedCallerName(with: ZMUser.selfUser(in: managedObjectContext))
     }
     
-    func localizedCallerName(with user: ZMUser) -> String? {
+    func localizedCallerName(with user: ZMUser) -> String {
         
         let conversationName = self.userDefinedName
         let callerName : String? = user.name
+        var result : String? = nil
         
         switch conversationType {
         case .group:
             if let conversationName = conversationName, let callerName = callerName {
-                return String.localizedStringWithFormat("callkit.call.started.group".pushFormatString, callerName, conversationName)
+                result = String.localizedStringWithFormat("callkit.call.started.group".pushFormatString, callerName, conversationName)
             } else if let conversationName = conversationName {
-                return String.localizedStringWithFormat("callkit.call.started.group.nousername".pushFormatString, conversationName)
+                result = String.localizedStringWithFormat("callkit.call.started.group.nousername".pushFormatString, conversationName)
             } else if let callerName = callerName {
-                return String.localizedStringWithFormat("callkit.call.started.group.noconversationname".pushFormatString, callerName)
-            } else {
-                return String.localizedStringWithFormat("callkit.call.started.group.nousername.noconversationname".pushFormatString)
+                result = String.localizedStringWithFormat("callkit.call.started.group.noconversationname".pushFormatString, callerName)
             }
         case .oneOnOne:
-            return connectedUser?.displayName
+            result = connectedUser?.displayName
         default:
-            return nil
+            break
         }
+        
+        return result ?? String.localizedStringWithFormat("callkit.call.started.group.nousername.noconversationname".pushFormatString)
     }
     
 }
