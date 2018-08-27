@@ -38,6 +38,7 @@
 @class ApplicationStatusDirectory;
 @class AVSMediaManager;
 @class CallingRequestStrategy;
+@class EventDecoder;
 
 @protocol ZMTransportData;
 @protocol ZMSyncStateDelegate;
@@ -49,25 +50,30 @@
 
 @interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory, TearDownCapable>
 
-- (instancetype)initWithStoreProvider:(id<LocalStoreProviderProtocol>)storeProvider
-                        cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
-                         mediaManager:(AVSMediaManager *)mediaManager
-                          flowManager:(id<FlowManagerType>)flowManager
-         localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
-           applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
-                          application:(id<ZMApplication>)application;
+- (instancetype _Nonnull )initWithStoreProvider:(id<LocalStoreProviderProtocol> _Nonnull)storeProvider
+                                  cookieStorage:(ZMPersistentCookieStorage * _Nullable)cookieStorage
+                                   mediaManager:(AVSMediaManager * _Nullable)mediaManager
+                                    flowManager:(id<FlowManagerType> _Nonnull)flowManager
+                   localNotificationsDispatcher:(LocalNotificationDispatcher * _Nonnull)localNotificationsDispatcher
+                     applicationStatusDirectory:(ApplicationStatusDirectory * _Nonnull)applicationStatusDirectory
+                                    application:(id<ZMApplication> _Nonnull)application;
 
 - (void)didInterruptUpdateEventsStream;
 - (void)didEstablishUpdateEventsStream;
 - (void)didFinishSync;
 
-- (ZMTransportRequest *)nextRequest;
+- (ZMTransportRequest *_Nullable)nextRequest;
 
 - (void)tearDown;
 
-@property (nonatomic, readonly) NSManagedObjectContext *syncMOC;
-@property (nonatomic, weak, readonly) ApplicationStatusDirectory *applicationStatusDirectory;
-@property (nonatomic, readonly) CallingRequestStrategy *callingRequestStrategy;
+@property (nonatomic, readonly, nonnull) NSManagedObjectContext *syncMOC;
+@property (nonatomic, weak, readonly, nullable) ApplicationStatusDirectory *applicationStatusDirectory;
+@property (nonatomic, readonly, nonnull) CallingRequestStrategy *callingRequestStrategy;
+@property (nonatomic, readonly, nonnull) EventDecoder *eventDecoder;
+@property (nonatomic, readonly, nonnull) ZMUpdateEventsBuffer *eventsBuffer;
+@property (nonatomic, readonly, nonnull) NSArray<id<ZMEventConsumer>> *eventConsumers;
+@property (nonatomic, weak, readonly, nullable) LocalNotificationDispatcher *localNotificationDispatcher;
+@property (nonatomic, readonly) BOOL isReadyToProcessEvents;
 
 @end
 

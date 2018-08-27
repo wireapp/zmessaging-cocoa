@@ -57,7 +57,6 @@
 #import <WireSyncEngine/ZMHotFix.h>
 #import <WireSyncEngine/ZMStoredLocalNotification.h>
 #import <WireSyncEngine/ZMSyncStrategy.h>
-#import <WireSyncEngine/ZMSyncStrategy+EventProcessing.h>
 #import <WireSyncEngine/ZMObjectStrategyDirectory.h>
 #import <WireSyncEngine/ZMUpdateEventsBuffer.h>
 #import <WireSyncEngine/ZMConversationTranscoder.h>

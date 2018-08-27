@@ -30,7 +30,6 @@
 @class ApplicationStatusDirectory;
 
 extern NSString * const ZMPushChannelIsOpenKey;
-extern NSString * const ZMPushChannelResponseStatusKey;
 
 @interface ZMOperationLoop : NSObject <TearDownCapable>
 

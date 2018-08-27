@@ -25,7 +25,6 @@
 #import "MessagingTest.h"
 #import "ZMSyncStateDelegate.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
-#import "ZMSyncStrategy+EventProcessing.h"
 #import "ZMSimpleListRequestPaginator.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "WireSyncEngine_iOS_Tests-Swift.h"

@@ -29,7 +29,6 @@
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
-#import "ZMSyncStrategy+EventProcessing.h"
 #import "ZMOperationLoop+Background.h"
 
 @interface ZMOperationLoopTests : MessagingTest
@@ -707,7 +706,6 @@
 {
     // given
     id fakeResponse = [OCMockObject niceMockForClass:[NSHTTPURLResponse class]];
-    [[[fakeResponse stub] andReturnValue:@(100l)] statusCode];
     [[self.syncStrategy stub] didInterruptUpdateEventsStream];
     
     // when
@@ -717,14 +715,12 @@
     XCTAssertEqual(self.pushChannelNotifications.count, 1u);
     NSNotification *note = self.pushChannelNotifications.firstObject;
     XCTAssertFalse([note.userInfo[ZMPushChannelIsOpenKey] boolValue]);
-    XCTAssertEqualObjects(note.userInfo[ZMPushChannelResponseStatusKey], @(100));
 }
 
 - (void)testThatItSendsANotificationWhenOpeningThePushChannel
 {
     // given
     id fakeResponse = [OCMockObject niceMockForClass:[NSHTTPURLResponse class]];
-    [[[fakeResponse stub] andReturnValue:@(100l)] statusCode];
     [[self.syncStrategy stub] didEstablishUpdateEventsStream];
 
     // when
@@ -734,7 +730,6 @@
     XCTAssertEqual(self.pushChannelNotifications.count, 1u);
     NSNotification *note = self.pushChannelNotifications.firstObject;
     XCTAssertTrue([note.userInfo[ZMPushChannelIsOpenKey] boolValue]);
-    XCTAssertEqualObjects(note.userInfo[ZMPushChannelResponseStatusKey], @(100));
 }
 
 - (void)testThatItInformsTransportSessionWhenEnteringForeground

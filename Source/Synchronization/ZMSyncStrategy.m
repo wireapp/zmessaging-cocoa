@@ -27,7 +27,6 @@
 
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
-#import "ZMSyncStrategy+EventProcessing.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMUserTranscoder.h"
@@ -271,6 +270,11 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.hotFix applyPatches];
 }
 
+- (BOOL)isReadyToProcessEvents
+{
+    return !self.applicationStatusDirectory.syncStatus.isSyncing;
+}
+
 - (void)tearDown
 {
     self.tornDown = YES;
@@ -369,29 +373,6 @@ ZM_EMPTY_ASSERTING_INIT()
     }
     
     return [self.requestStrategies firstNonNilReturnedFromSelector:@selector(nextRequest)];
-}
-
-- (ZMFetchRequestBatch *)fetchRequestBatchForEvents:(NSArray<ZMUpdateEvent *> *)events
-{
-    NSMutableSet <NSUUID *>*nonces = [NSMutableSet set];
-    NSMutableSet <NSUUID *>*remoteIdentifiers = [NSMutableSet set];
-    
-    for (id<ZMEventConsumer> obj in self.requestStrategies) {
-        @autoreleasepool {
-            if ([obj respondsToSelector:@selector(messageNoncesToPrefetchToProcessEvents:)]) {
-                [nonces unionSet:[obj messageNoncesToPrefetchToProcessEvents:events]];
-            }
-            if ([obj respondsToSelector:@selector(conversationRemoteIdentifiersToPrefetchToProcessEvents:)]) {
-                [remoteIdentifiers unionSet:[obj conversationRemoteIdentifiersToPrefetchToProcessEvents:events]];
-            }
-        }
-    }
-    
-    ZMFetchRequestBatch *fetchRequestBatch = [[ZMFetchRequestBatch alloc] init];
-    [fetchRequestBatch addNoncesToPrefetchMessages:nonces];
-    [fetchRequestBatch addConversationRemoteIdentifiersToPrefetchConversations:remoteIdentifiers];
-    
-    return fetchRequestBatch;
 }
 
 @end

@@ -28,7 +28,6 @@
 #import "MessagingTest.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMSyncStrategy+Internal.h"
-#import "ZMSyncStrategy+EventProcessing.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
 #import "ZMUpdateEventsBuffer.h"
 #import "ZMOperationLoop.h"
@@ -591,8 +590,10 @@
     }
     
     // when
-    [self.sut fetchRequestBatchForEvents:events];
+    ZMFetchRequestBatch *fetchRequest = [self.sut prefetchRequestForUpdateEvents:events];
+    NOT_USED(fetchRequest);
     WaitForAllGroupsToBeEmpty(0.5);
+
 }
 
 - (void)testThatCallingNextRequestFetchesObjectsAndDistributesThemToTheChangeTracker

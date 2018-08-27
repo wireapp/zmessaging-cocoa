@@ -246,7 +246,7 @@ public extension ZMConversation {
             
             userSession.syncManagedObjectContext.performGroupedBlock {
                 // Process user added event
-                userSession.operationLoop.syncStrategy.processUpdateEvents([event], ignoreBuffer: true)
+                userSession.operationLoop.syncStrategy.process(updateEvents: [event], ignoreBuffer: true)
             }
         }))
         
