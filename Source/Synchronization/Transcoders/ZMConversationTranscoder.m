@@ -469,8 +469,28 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         case ZMUpdateEventTypeConversationMessageTimerUpdate:
             [self processDestructionTimerUpdateEvent:event inConversation:conversation];
             break;
+        case ZMUpdateEventTypeConversationOtrMessageAdd:
+        case ZMUpdateEventTypeConversationOtrAssetAdd:
+            [self processMessageAddEvent:event forConversation:conversation];
+            break;
         default:
             break;
+    }
+}
+
+- (void)processMessageAddEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation
+{
+    ZMUser *user = [ZMUser userWithRemoteID:event.senderUUID createIfNeeded:YES inContext:self.managedObjectContext];
+    
+    if (![conversation.activeParticipants containsObject:user]) {
+        ZMSystemMessage *participantAddedMessage = [[ZMSystemMessage alloc] initWithNonce:NSUUID.UUID managedObjectContext:self.managedObjectContext];
+        participantAddedMessage.systemMessageType = ZMSystemMessageTypeParticipantsAdded;
+        participantAddedMessage.sender = user;
+        participantAddedMessage.users = [NSSet setWithObject:user];
+        participantAddedMessage.serverTimestamp = [event.timeStamp dateByAddingTimeInterval:-0.01];
+        
+        [conversation sortedAppendMessage:participantAddedMessage];
+        [conversation internalAddParticipants:[NSSet setWithObject:user]];
     }
 }
 
