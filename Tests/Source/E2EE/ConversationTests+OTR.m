@@ -1067,6 +1067,44 @@
     return message;
 }
 
+- (void)testThatItChangesTheSecurityLevelIfMessageArrivesFromPreviouslyUnknownUntrustedParticipant
+{
+    XCTAssertTrue([self login]);
+    
+    // given
+    
+    // register other users clients
+    [self establishSessionWithMockUser:self.user1];
+    [self establishSessionWithMockUser:self.user2];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // make conversation secure
+    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversationWithOnlyConnected];
+    [self makeConversationSecured:conversation];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
+    
+    // when
+    
+    // silently add user to conversation
+    [self performRemoteChangesExludedFromNotificationStream:^(id<MockTransportSessionObjectCreation> session) {
+        NOT_USED(session);
+        [self.groupConversationWithOnlyConnected addUsersByUser:self.user1 addedUsers:@[self.user5]];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // send a message from silently added user
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session) {
+        NOT_USED(session);
+        [self.groupConversationWithOnlyConnected insertKnockFromUser:self.user5 nonce:NSUUID.createUUID];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
+}
+
 - (void)testThatItChangesTheSecurityLevelIfUnconnectedUntrustedParticipantIsAdded
 {
     XCTAssertTrue([self login]);

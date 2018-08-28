@@ -535,7 +535,26 @@ extension IntegrationTest {
         
         return user!
     }
+    
+    @objc(performRemoteChangesExludedFromNotificationStream:)
+    func performRemoteChangesExludedFromNotificationStream(_ changes: @escaping (_ session: MockTransportSessionObjectCreation) -> Void) {
+        mockTransportSession.performRemoteChanges { session in
+            session.simulatePushChannelClosed()
+            changes(session)
+        }
         
+        mockTransportSession.responseGeneratorBlock = { (request) in
+            guard request.path.contains("/notifications") else { return nil }
+
+            self.mockTransportSession.responseGeneratorBlock = nil
+            return ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
+        }
+        
+        mockTransportSession.performRemoteChanges { session in
+            session.clearNotifications()
+            session.simulatePushChannelOpened()
+        }
+    }
 }
 
 extension IntegrationTest {
