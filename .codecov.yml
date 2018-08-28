@@ -1,0 +1,14 @@
+coverage:
+  status:
+    project:
+      calling:
+        flags: calling
+
+flags:
+  calling:
+    paths:
+      - Source/Calling/
+      - Source/Synchronization/Strategies/CallingRequestStrategy.swift
+      - Source/UserSession/ZMUserSession+Calling.swift
+      - Source/Notifications/Push notifications/Notification Types/ZMLocalNotification+Calling.swift
+      - Source/Notifications/Push notifications/LocalNotificationDispatcher+Calling.swift
