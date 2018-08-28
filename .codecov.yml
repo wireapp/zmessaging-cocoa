@@ -1,0 +1,10 @@
+coverage:
+  status:
+    project:
+      calling:
+        flags: calling
+
+flags:
+  calling:
+    paths:
+      - "Sources/**/*[C|c]alling*"
