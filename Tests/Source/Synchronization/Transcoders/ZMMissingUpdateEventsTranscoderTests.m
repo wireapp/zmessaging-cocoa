@@ -752,7 +752,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 
     // then
     XCTAssertNotNil(request);
-    XCTAssertTrue(request.shouldUseVoipSession);
+    XCTAssertTrue(request.shouldUseOnlyBackgroundSession);
 }
 
 - (void)testThatItDoesNotifyThePushNotificationStatusWhenEventsAreFetched
