@@ -265,6 +265,10 @@ extension CallKitDelegate {
             return log("Cannot report incoming call: conversation is missing handle")
         }
         
+        guard !conversation.needsToBeUpdatedFromBackend else {
+            return log("Cannot report incoming call: conversation needs to be updated from backend")
+        }
+        
         let update = CXCallUpdate()
         update.supportsHolding = false
         update.supportsDTMF = false
