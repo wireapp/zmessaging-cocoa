@@ -717,7 +717,7 @@
     XCTAssertEqual(conversationList[0], conversation2);
     
     XCTAssertGreaterThanOrEqual(observer.notifications.count, 2u);
-    ConversationListChangeInfo *note2 = observer.notifications.lastObject;
+    ConversationListChangeInfo *note2 = [observer.notifications objectAtIndex:1];
     XCTAssertNotNil(note2);
     XCTAssertEqualObjects(note2.updatedIndexes, expectedIndexes3);
     
