@@ -355,7 +355,6 @@ extension TopConversationsDirectoryTests {
         (0..<messageCount.old).forEach {
             let message = conversation.appendMessage(withText: "Message #\($0)") as! ZMMessage
             message.serverTimestamp = Date(timeIntervalSince1970: TimeInterval($0 * 100))
-            conversation.resortMessages(withUpdatedMessage: message)
         }
 
         XCTAssertTrue(uiMOC.saveOrRollback(), file: file, line: line)

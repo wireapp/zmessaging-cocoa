@@ -123,9 +123,9 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertEqual(conversation.messages.count, 2lu); //text message, then link preview message
+    XCTAssertEqual(conversation.recentMessages.count, 2lu); //text message, then link preview message
     
-    __block ZMClientMessage *message = conversation.messages.lastObject;
+    __block ZMClientMessage *message = (ZMClientMessage *)conversation.recentMessages.lastObject;
     [self checkForValidLinkPreviewInMessage:message expectedLinkPreview:expectedLinkPreview failureRecorder:NewFailureRecorder()];
 }
 
@@ -148,9 +148,9 @@
     
     
     //then
-    XCTAssertEqual(conversation.messages.count, 2lu); //text message, then link preview message
+    XCTAssertEqual(conversation.recentMessages.count, 2lu); //text message, then link preview message
     
-    __block ZMClientMessage *message = conversation.messages.lastObject;
+    __block ZMClientMessage *message = (ZMClientMessage *)conversation.recentMessages.lastObject;
     
     [self checkForValidLinkPreviewInMessage:message expectedLinkPreview:expectedLinkPreview failureRecorder:NewFailureRecorder()];
 }
@@ -173,9 +173,9 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //then
-    XCTAssertEqual(conversation.messages.count, 2lu); //text message, then link preview message
+    XCTAssertEqual(conversation.recentMessages.count, 2lu); //text message, then link preview message
     
-    __block ZMClientMessage *message = conversation.messages.lastObject;
+    __block ZMClientMessage *message = (ZMClientMessage *)conversation.recentMessages.lastObject;
     [self checkForValidLinkPreviewInMessage:message expectedLinkPreview:expectedLinkPreview failureRecorder:NewFailureRecorder()];
 }
 
@@ -196,9 +196,9 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //then
-    XCTAssertEqual(conversation.messages.count, 2lu); //text message, then link preview message
+    XCTAssertEqual(conversation.recentMessages.count, 2lu); //text message, then link preview message
     
-    __block ZMClientMessage *message = conversation.messages.lastObject;
+    __block ZMClientMessage *message = (ZMClientMessage *)conversation.recentMessages.lastObject;
     [self checkForValidLinkPreviewInMessage:message expectedLinkPreview:expectedLinkPreview failureRecorder:NewFailureRecorder()];
 }
 
@@ -226,8 +226,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //sanity check
-    XCTAssertEqual(conversation.messages.count, 3lu);
-    ZMClientMessage *message = [conversation.messages lastObject];
+    XCTAssertEqual(conversation.recentMessages.count, 3lu);
+    ZMClientMessage *message = (ZMClientMessage *)[conversation.recentMessages lastObject];
     XCTAssertEqualObjects(message.nonce, messageNonce);
     XCTAssertEqualObjects(message.textMessageData.messageText, urlText);
     XCTAssertNil(message.textMessageData.linkPreview);
@@ -268,8 +268,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //sanity check
-    XCTAssertEqual(conversation.messages.count, 3lu);
-    ZMClientMessage *message = [conversation.messages lastObject];
+    XCTAssertEqual(conversation.recentMessages.count, 3lu);
+    ZMClientMessage *message = (ZMClientMessage *)[conversation.recentMessages lastObject];
     XCTAssertEqualObjects(message.nonce, messageNonce);
     XCTAssertEqualObjects(message.textMessageData.messageText, urlText);
     XCTAssertNil(message.textMessageData.linkPreview);
@@ -335,8 +335,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     //sanity check
-    XCTAssertEqual(conversation.messages.count, 3lu);
-    ZMClientMessage *message = [conversation.messages lastObject];
+    XCTAssertEqual(conversation.recentMessages.count, 3lu);
+    ZMClientMessage *message = (ZMClientMessage *)[conversation.recentMessages lastObject];
     XCTAssertEqualObjects(message.nonce, messageNonce);
     XCTAssertEqualObjects(message.textMessageData.messageText, urlText);
     XCTAssertNil(message.textMessageData.linkPreview);
@@ -380,9 +380,9 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertEqual(conversation.messages.count, 2lu); //text message, then link preview message
+    XCTAssertEqual(conversation.recentMessages.count, 2lu); //text message, then link preview message
     
-    __block ZMClientMessage *message = conversation.messages.lastObject;
+    __block ZMClientMessage *message = (ZMClientMessage *)conversation.recentMessages.lastObject;
     XCTAssertTrue(message.isEphemeral);
     [self checkForValidLinkPreviewInMessage:message expectedLinkPreview:expectedLinkPreview failureRecorder:NewFailureRecorder()];
 

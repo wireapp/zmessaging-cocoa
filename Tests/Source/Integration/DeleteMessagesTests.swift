@@ -68,9 +68,9 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         // then
         guard let conversation = self.conversation(for: selfToUser1Conversation) else {return XCTFail()}
-        let messages = conversation.messages
+        let messages = conversation.recentMessages
         XCTAssertEqual(messages.count, 2) // system message & inserted message
-        guard let message = messages.lastObject as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
+        guard let message = messages.last as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
         let genericMessage = ZMGenericMessage(deleteMessage: message.nonce!, nonce: UUID.create())
         
         // when
@@ -82,9 +82,9 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         // then
         XCTAssertTrue(message.hasBeenDeleted)
-        XCTAssertEqual(conversation.messages.count, 2) // 2x system message
-        XCTAssertNotEqual(conversation.messages.firstObject as? ZMClientMessage, message)
-        guard let systemMessage = conversation.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+        XCTAssertEqual(conversation.recentMessages.count, 2) // 2x system message
+        XCTAssertNotEqual(conversation.recentMessages.first as? ZMClientMessage, message)
+        guard let systemMessage = conversation.recentMessages.last as? ZMSystemMessage else { return XCTFail() }
         XCTAssertEqual(systemMessage.systemMessageType, ZMSystemMessageType.messageDeletedForEveryone)
     }
     
@@ -106,9 +106,9 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         // then
         guard let conversation = self.conversation(for: selfToUser1Conversation) else {return XCTFail()}
-        let messages = conversation.messages
+        let messages = conversation.recentMessages
         XCTAssertEqual(messages.count, 2) // system message & inserted message
-        guard let message = messages.lastObject as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
+        guard let message = messages.last as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
         
         let genericMessage = ZMGenericMessage(deleteMessage: message.nonce!, nonce: UUID.create())
         
@@ -121,8 +121,8 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         // then
         XCTAssertFalse(message.hasBeenDeleted)
-        XCTAssertEqual(conversation.messages.count, 2) // system message & inserted message
-        XCTAssertEqual(conversation.messages.lastObject as? ZMClientMessage, message)
+        XCTAssertEqual(conversation.recentMessages.count, 2) // system message & inserted message
+        XCTAssertEqual(conversation.recentMessages.last as? ZMClientMessage, message)
     }
 
     func testThatItRetriesToSendADeletedMessageIfItCouldNotBeSentBefore() {
@@ -182,13 +182,11 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         guard let conversation = self.conversation(for: selfToUser1Conversation) else {return XCTFail()}
-        let window = conversation.conversationWindow(withSize: 10)
-        let observer = MessageWindowChangeObserver(messageWindow: window)!
         
         // then
-        let messages = conversation.messages
+        let messages = conversation.recentMessages
         XCTAssertEqual(messages.count, 2) // system message & inserted message
-        guard let message = messages.lastObject as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
+        guard let message = messages.last as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
         let genericMessage = ZMGenericMessage(deleteMessage: message.nonce!, nonce: UUID.create())
         
         // when
@@ -200,12 +198,7 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         // then
         XCTAssertTrue(message.hasBeenDeleted)
-        XCTAssertEqual(conversation.messages.count, 2) // 2x system message
-        
-        XCTAssertEqual(observer.notifications.count, 1)
-        guard let note = observer.notifications.firstObject as? MessageWindowChangeInfo else { return XCTFail() }
-        XCTAssertEqual(note.deletedIndexes.count, 1) // Deleted the original message
-        XCTAssertEqual(note.insertedIndexes.count, 1) // Inserted the system message
+        XCTAssertEqual(conversation.recentMessages.count, 2) // 2x system message
     }
 
 }

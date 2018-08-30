@@ -124,7 +124,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         handleNotification(notification, conversationAction: .like)
         
         // then
-        let lastMessage = conversation.messages.lastObject as? ZMMessage
+        let lastMessage = conversation.recentMessages.last
         XCTAssertEqual(lastMessage?.reactions.count, 1)
     }
     
@@ -217,7 +217,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         handleNotification(notification, conversationAction: .reply, responseInfo: responseInfo)
         
         // then
-        XCTAssertEqual(conversation.messages.count, 1);
+        XCTAssertEqual(conversation.recentMessages.count, 1);
         XCTAssertNil(recorder.lastRequestToShowConversation)
     }
     

@@ -46,7 +46,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    NSUInteger messageCount = conversation.messages.count;
+    NSUInteger messageCount = conversation.recentMessages.count;
     [self.mockTransportSession resetReceivedRequests];
     
     // when
@@ -57,8 +57,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(conversation.messages.count, messageCount);
-    XCTAssertEqualObjects(conversation.messages.lastObject, editMessage);
+    XCTAssertEqual(conversation.recentMessages.count, messageCount);
+    XCTAssertEqualObjects(conversation.recentMessages.lastObject, editMessage);
     XCTAssertEqualObjects(editMessage.textMessageData.messageText, @"Bar");
     XCTAssertNotEqualObjects(editMessage.nonce, message.nonce);
 
@@ -89,7 +89,7 @@
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
         
 
-    NSUInteger messageIndex = [conversation.messages indexOfObject:message];
+    NSUInteger messageIndex = [conversation.recentMessages indexOfObject:message];
     XCTAssertEqual(messageIndex, 2u);
     
     // when
@@ -100,7 +100,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    NSUInteger editedMessageIndex = [conversation.messages indexOfObject:editMessage];
+    NSUInteger editedMessageIndex = [conversation.recentMessages indexOfObject:editMessage];
     XCTAssertEqual(editedMessageIndex, messageIndex);
     
     XCTAssertEqual(observer.notifications.count, 1u);
@@ -115,8 +115,6 @@
     XCTAssertFalse(convInfo.conversationListIndicatorChanged);
     XCTAssertFalse(convInfo.clearedChanged);
     XCTAssertFalse(convInfo.securityLevelChanged);
-    
-    XCTAssertEqual(windowObserver.notifications.count, 2u);
 }
 
 - (void)testThatItCanEditAnEditedMessage
@@ -137,7 +135,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    NSUInteger messageCount = conversation.messages.count;
+    NSUInteger messageCount = conversation.recentMessages.count;
     [self.mockTransportSession resetReceivedRequests];
     
     // when
@@ -148,8 +146,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(conversation.messages.count, messageCount);
-    XCTAssertEqualObjects(conversation.messages.lastObject, editMessage2);
+    XCTAssertEqual(conversation.recentMessages.count, messageCount);
+    XCTAssertEqualObjects(conversation.recentMessages.lastObject, editMessage2);
     XCTAssertEqualObjects(editMessage2.textMessageData.messageText, @"FooBar");
     
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
@@ -171,7 +169,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    NSUInteger messageCount = conversation.messages.count;
+    NSUInteger messageCount = conversation.recentMessages.count;
     NSUUID *originalNonce = message.nonce;
     
     [self.mockTransportSession resetReceivedRequests];
@@ -193,10 +191,10 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(conversation.messages.count, messageCount);
+    XCTAssertEqual(conversation.recentMessages.count, messageCount);
     XCTAssertTrue(message.isZombieObject);
 
-    XCTAssertEqualObjects(conversation.messages.lastObject, editMessage);
+    XCTAssertEqualObjects(conversation.recentMessages.lastObject, editMessage);
     XCTAssertEqualObjects(editMessage.textMessageData.messageText, @"Bar");
     XCTAssertEqualObjects(editMessage.nonce, originalNonce);
 }
@@ -213,7 +211,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    NSUInteger messageCount = conversation.messages.count;
+    NSUInteger messageCount = conversation.recentMessages.count;
     NSUUID *originalNonce = message.nonce;
     
     [self.mockTransportSession resetReceivedRequests];
@@ -241,10 +239,10 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(conversation.messages.count, messageCount);
+    XCTAssertEqual(conversation.recentMessages.count, messageCount);
     XCTAssertTrue(message.isZombieObject);
     
-    ZMMessage *editMessage2 = conversation.messages.lastObject;
+    ZMMessage *editMessage2 = conversation.recentMessages.lastObject;
     XCTAssertNotEqual(editMessage1, editMessage2);
     
     // The failed edit message is hidden
@@ -264,7 +262,7 @@
     // given
     XCTAssert([self login]);
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    NSUInteger messageCount = conversation.messages.count;
+    NSUInteger messageCount = conversation.recentMessages.count;
     
     MockUserClient *fromClient = self.user1.clients.anyObject;
     MockUserClient *toClient = self.selfUser.clients.anyObject;
@@ -275,8 +273,8 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertEqual(conversation.messages.count, messageCount+1);
-    ZMClientMessage *receivedMessage = conversation.messages.lastObject;
+    XCTAssertEqual(conversation.recentMessages.count, messageCount+1);
+    ZMClientMessage *receivedMessage = (ZMClientMessage *)conversation.recentMessages.lastObject;
     XCTAssertEqualObjects(receivedMessage.textMessageData.messageText, @"Foo");
     NSUUID *messageNone = receivedMessage.nonce;
     
@@ -288,8 +286,8 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertEqual(conversation.messages.count, messageCount+1);
-    ZMClientMessage *editedMessage = conversation.messages.lastObject;
+    XCTAssertEqual(conversation.recentMessages.count, messageCount+1);
+    ZMClientMessage *editedMessage = (ZMClientMessage *)conversation.recentMessages.lastObject;
     XCTAssertEqualObjects(editedMessage.textMessageData.messageText, @"Bar");
 }
 
@@ -308,12 +306,14 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    ZMClientMessage *receivedMessage = conversation.messages.lastObject;
+    ZMClientMessage *receivedMessage = (ZMClientMessage *)conversation.recentMessages.lastObject;
     NSUUID *messageNone = receivedMessage.nonce;
     
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     
-    NSUInteger messageIndex = [conversation.messages indexOfObject:receivedMessage];
+    [receivedMessage.managedObjectContext processPendingChanges];
+    
+    NSUInteger messageIndex = [conversation.recentMessages indexOfObject:receivedMessage];
     XCTAssertEqual(messageIndex, 0u);
     NSDate *lastModifiedDate = conversation.lastModifiedDate;
     
@@ -329,8 +329,8 @@
     XCTAssertEqualObjects(conversation.lastModifiedDate, lastModifiedDate);
     XCTAssertNotEqualObjects(conversation.lastModifiedDate, editEvent.time);
 
-    ZMClientMessage *editedMessage = conversation.messages.lastObject;
-    NSUInteger editedMessageIndex = [conversation.messages indexOfObject:editedMessage];
+    ZMClientMessage *editedMessage = (ZMClientMessage *)conversation.recentMessages.lastObject;
+    NSUInteger editedMessageIndex = [conversation.recentMessages indexOfObject:editedMessage];
     XCTAssertEqual(editedMessageIndex, messageIndex);
     
     XCTAssertEqual(observer.notifications.count, 1u);
