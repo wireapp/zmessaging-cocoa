@@ -35,7 +35,6 @@
 #import "ZMBlacklistVerificator.h"
 #import "NSURL+LaunchOptions.h"
 #import "WireSyncEngineLogs.h"
-#import "ZMCallFlowRequestStrategy.h"
 #import "ZMOperationLoop+Private.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMClientRegistrationStatus.h"
@@ -224,7 +223,6 @@ ZM_EMPTY_ASSERTING_INIT()
             self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
                                                                                       cookieStorage:session.cookieStorage
                                                                         localNotificationDispatcher:self.localNotificationDispatcher
-                                                                                       mediaManager:mediaManager
                                                                                         flowManager:flowManager
                                                                                       storeProvider:storeProvider
                                                                          applicationStatusDirectory:self.applicationStatusDirectory

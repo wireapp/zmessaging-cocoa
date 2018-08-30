@@ -19,6 +19,7 @@
 import Foundation
 import WireTesting
 import WireTransport.Testing
+import avs
 
 @testable import WireSyncEngine
 

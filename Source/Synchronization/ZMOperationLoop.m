@@ -63,7 +63,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                            cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
              localNotificationDispatcher:(LocalNotificationDispatcher *)dispatcher
-                            mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
               applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
@@ -72,7 +71,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
     ZMSyncStrategy *syncStrategy = [[ZMSyncStrategy alloc] initWithStoreProvider:storeProvider
                                                                    cookieStorage:cookieStorage
-                                                                    mediaManager:mediaManager
                                                                      flowManager:flowManager
                                                     localNotificationsDispatcher:dispatcher
                                                       applicationStatusDirectory:applicationStatusDirectory

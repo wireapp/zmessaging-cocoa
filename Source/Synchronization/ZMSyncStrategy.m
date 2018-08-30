@@ -35,7 +35,6 @@
 #import "ZMAuthenticationStatus.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMLastUpdateEventIDTranscoder.h"
-#import "ZMCallFlowRequestStrategy.h"
 #import "WireSyncEngineLogs.h"
 #import "ZMClientRegistrationStatus.h"
 #import "ZMHotFix.h"
@@ -56,7 +55,6 @@
 @property (nonatomic) ClientMessageTranscoder *clientMessageTranscoder;
 @property (nonatomic) ZMMissingUpdateEventsTranscoder *missingUpdateEventsTranscoder;
 @property (nonatomic) ZMLastUpdateEventIDTranscoder *lastUpdateEventIDTranscoder;
-@property (nonatomic) ZMCallFlowRequestStrategy *callFlowRequestStrategy;
 @property (nonatomic) LinkPreviewAssetUploadRequestStrategy *linkPreviewAssetUploadRequestStrategy;
 @property (nonatomic) ImageDownloadRequestStrategy *imageDownloadRequestStrategy;
 
@@ -111,7 +109,6 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (instancetype)initWithStoreProvider:(id<LocalStoreProviderProtocol>)storeProvider
                         cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
-                         mediaManager:(AVSMediaManager *)mediaManager
                           flowManager:(id<FlowManagerType>)flowManager
          localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
            applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
@@ -130,7 +127,7 @@ ZM_EMPTY_ASSERTING_INIT()
         [self.eventMOC addGroup:self.syncMOC.dispatchGroup];
         self.applicationStatusDirectory = applicationStatusDirectory;
         
-        [self createTranscodersWithLocalNotificationsDispatcher:localNotificationsDispatcher mediaManager:mediaManager flowManager:flowManager applicationStatusDirectory:applicationStatusDirectory];
+        [self createTranscodersWithLocalNotificationsDispatcher:localNotificationsDispatcher flowManager:flowManager applicationStatusDirectory:applicationStatusDirectory];
         
         self.eventsBuffer = [[ZMUpdateEventsBuffer alloc] initWithUpdateEventConsumer:self];
         self.userClientRequestStrategy = [[UserClientRequestStrategy alloc] initWithClientRegistrationStatus:applicationStatusDirectory.clientRegistrationStatus
@@ -174,7 +171,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[LinkPreviewUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory],
                                    self.selfStrategy,
                                    self.callingRequestStrategy,
-                                   self.callFlowRequestStrategy,
                                    [[GenericMessageNotificationRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:applicationStatusDirectory.clientRegistrationStatus],
                                    [[UserImageAssetUpdateStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatusDirectory:applicationStatusDirectory],
                                    [[TeamDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory syncStatus:applicationStatusDirectory.syncStatus],
@@ -198,7 +194,6 @@ ZM_EMPTY_ASSERTING_INIT()
 }
 
 - (void)createTranscodersWithLocalNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
-                                             mediaManager:(AVSMediaManager *)mediaManager
                                               flowManager:(id<FlowManagerType>)flowManager
                                applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
 {
@@ -210,7 +205,6 @@ ZM_EMPTY_ASSERTING_INIT()
     self.clientMessageTranscoder = [[ClientMessageTranscoder alloc] initIn:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher applicationStatus:applicationStatusDirectory];
     self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self previouslyReceivedEventIDsCollection:self.eventDecoder application:self.application applicationStatus:applicationStatusDirectory];
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory syncStatus:applicationStatusDirectory.syncStatus objectDirectory:self];
-    self.callFlowRequestStrategy = [[ZMCallFlowRequestStrategy alloc] initWithMediaManager:mediaManager flowManager:flowManager managedObjectContext:self.syncMOC applicationStatus:self.applicationStatusDirectory application:self.application];
     self.callingRequestStrategy = [[CallingRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:applicationStatusDirectory.clientRegistrationStatus flowManager:flowManager];
     self.conversationStatusSync = [[ConversationStatusStrategy alloc] initWithManagedObjectContext:self.syncMOC];
     self.linkPreviewAssetDownloadRequestStrategy = [[LinkPreviewAssetDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory];
@@ -284,7 +278,6 @@ ZM_EMPTY_ASSERTING_INIT()
     self.missingUpdateEventsTranscoder = nil;
     self.changeTrackerBootStrap = nil;
     self.callingRequestStrategy = nil;
-    self.callFlowRequestStrategy = nil;
     self.connectionTranscoder = nil;
     self.conversationTranscoder = nil;
     self.eventsBuffer = nil;

@@ -44,7 +44,6 @@
 #import "ZMPhoneNumberVerificationTranscoder.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMLastUpdateEventIDTranscoder.h"
-#import "ZMCallFlowRequestStrategy.h"
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMUserSession+Internal.h"
@@ -419,8 +418,6 @@ static ZMReachability *sharedReachabilityMock = nil;
     [self verifyMockLater:selfStrategy];
     id missingUpdateEventsTranscoder = [OCMockObject mockForClass:ZMMissingUpdateEventsTranscoder.class];
     [self verifyMockLater:missingUpdateEventsTranscoder];
-    id callFlowRequestStrategy = [OCMockObject mockForClass:ZMCallFlowRequestStrategy.class];
-    [self verifyMockLater:callFlowRequestStrategy];
     
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
     [[[objectDirectory stub] andReturn:selfStrategy] selfStrategy];
