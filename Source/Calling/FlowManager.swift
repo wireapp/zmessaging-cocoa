@@ -20,43 +20,24 @@ import Foundation
 import avs
 
 @objc
-public protocol FlowManagerDelegate : class {
-    
-    func flowManagerDidUpdateVolume(_ volume: Double, for participantId: String, in conversationId : UUID)
-    
-}
-
-@objc
 public protocol FlowManagerType {
-    
-    var delegate : FlowManagerDelegate? { get set }
-    
+
     func setVideoCaptureDevice(_ device : CaptureDevice, for conversationId: UUID)
-    func reportNetworkChanged()
 }
 
 @objc
 public class FlowManager : NSObject, FlowManagerType {
     public static let AVSFlowManagerCreatedNotification = Notification.Name("AVSFlowManagerCreatedNotification")
     
-    public weak var delegate: FlowManagerDelegate? {
-        didSet {
-            guard avsFlowManager == nil else { return }
-            avsFlowManager = AVSFlowManager(delegate: self, mediaManager: mediaManager)
-            NotificationCenter.default.post(name: type(of: self).AVSFlowManagerCreatedNotification, object: self)
-        }
-    }
     fileprivate var mediaManager : AVSMediaManager?
     fileprivate var avsFlowManager : AVSFlowManager?
 
     init(mediaManager: AVSMediaManager) {
         super.init()
-        
+
         self.mediaManager = mediaManager
-    }
-        
-    public func reportNetworkChanged() {
-        avsFlowManager?.networkChanged()
+        self.avsFlowManager = AVSFlowManager(delegate: self, mediaManager: mediaManager)
+        NotificationCenter.default.post(name: type(of: self).AVSFlowManagerCreatedNotification, object: self)
     }
     
     public func setVideoCaptureDevice(_ device : CaptureDevice, for conversationId: UUID) {
@@ -101,8 +82,7 @@ extension FlowManager : AVSFlowManagerDelegate {
     }
     
     public func didUpdateVolume(_ volume: Double, conversationId convid: String!, participantId: String!) {
-        guard let conversationId = UUID(uuidString: convid)  else { return }
-        delegate?.flowManagerDidUpdateVolume(volume, for: participantId, in: conversationId)
+
     }
     
 }
