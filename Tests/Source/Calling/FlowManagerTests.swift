@@ -21,22 +21,18 @@ import Foundation
 import avs
 @testable import WireSyncEngine
 
-final fileprivate class FlowManagerMockDelegate: FlowManagerDelegate {
-    func flowManagerDidUpdateVolume(_ volume: Double, for participantId: String, in conversationId: UUID) {
-        // NO-OP
-    }
-}
 
 class FlowManagerTests : MessagingTest {
     func testThatItSendsNotificationWhenFlowManagerIsCreated() {
         // GIVEN
-        let sut = FlowManager(mediaManager: AVSMediaManager.default())
         let expectation = self.expectation(description: "Notification is sent")
-        let notificationObserver = NotificationCenter.default.addObserver(forName: FlowManager.AVSFlowManagerCreatedNotification, object: sut, queue: nil) { _ in
+        let notificationObserver = NotificationCenter.default.addObserver(forName: FlowManager.AVSFlowManagerCreatedNotification, object: nil, queue: nil) { _ in
             expectation.fulfill()
         }
+
         // WHEN
-        sut.delegate = FlowManagerMockDelegate()
+        _ = FlowManager(mediaManager: AVSMediaManager.default())
+
         // THEN
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         NotificationCenter.default.removeObserver(notificationObserver)
