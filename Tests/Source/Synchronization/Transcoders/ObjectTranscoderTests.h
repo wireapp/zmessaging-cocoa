@@ -19,7 +19,6 @@
 
 #import "MessagingTest.h"
 #import "ZMSyncStrategy.h"
-#import "ZMSyncStrategy+EventProcessing.h"
 
 
 @class MockApplicationStatus;

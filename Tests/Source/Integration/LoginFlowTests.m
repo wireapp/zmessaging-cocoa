@@ -285,9 +285,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
     [self.unauthenticatedSession continueAfterBackupImportStep];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    // should not make more requests
-    XCTAssertLessThanOrEqual(numberOfRequests, 2);
+
     XCTAssertFalse(self.userSession.isLoggedIn);
     
     XCTAssertEqual(recorder.notifications.count, 2lu);
@@ -332,7 +330,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     [self.unauthenticatedSession continueAfterBackupImportStep];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    // should not make more requests
     XCTAssertFalse(self.userSession.isLoggedIn);
     XCTAssertEqual(recorder.notifications.count, 2lu);
     XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount);

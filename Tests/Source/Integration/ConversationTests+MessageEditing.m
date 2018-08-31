@@ -90,7 +90,7 @@
         
 
     NSUInteger messageIndex = [conversation.recentMessages indexOfObject:message];
-    XCTAssertEqual(messageIndex, 2u);
+    XCTAssertEqual(messageIndex, 1u);
     
     // when
     __block ZMMessage *editMessage;
@@ -314,7 +314,7 @@
     [receivedMessage.managedObjectContext processPendingChanges];
     
     NSUInteger messageIndex = [conversation.recentMessages indexOfObject:receivedMessage];
-    XCTAssertEqual(messageIndex, 0u);
+    XCTAssertEqual(messageIndex, 1u);
     NSDate *lastModifiedDate = conversation.lastModifiedDate;
     
     // when

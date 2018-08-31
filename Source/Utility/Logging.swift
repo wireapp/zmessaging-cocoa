@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2016 Wire Swiss GmbH
+// Copyright (C) 2018 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,14 +14,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
-//
+// 
 
+import Foundation
 
-#import "ZMSyncStrategy.h"
-
-@interface ZMSyncStrategy (EventProcessing) <ZMUpdateEventConsumer>
-
-/// Process events that are received through the notification stream or the websocket
-- (void)processUpdateEvents:(NSArray <ZMUpdateEvent *>*)events ignoreBuffer:(BOOL)ignoreBuffer;
-
-@end
+struct Logging {
+    static let eventProcessing = ZMSLog(tag: "event-processing")
+    static let network = ZMSLog(tag: "Network")
+}

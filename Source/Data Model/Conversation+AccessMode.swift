@@ -106,7 +106,7 @@ extension ZMConversation {
                 if let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
                     // Process `conversation.code-update` event
                     userSession.syncManagedObjectContext.performGroupedBlock {
-                        userSession.operationLoop.syncStrategy.processUpdateEvents([event], ignoreBuffer: true)
+                        userSession.operationLoop.syncStrategy.process(updateEvents: [event], ignoreBuffer: true)
                     }
                 }
             }
@@ -151,7 +151,7 @@ extension ZMConversation {
                 self.allowGuests = allowGuests
                 // Process `conversation.access-update` event
                 userSession.syncManagedObjectContext.performGroupedBlock {
-                    userSession.operationLoop.syncStrategy.processUpdateEvents([event], ignoreBuffer: true)
+                    userSession.operationLoop.syncStrategy.process(updateEvents: [event], ignoreBuffer: true)
                 }
                 completion(.success)
             } else {

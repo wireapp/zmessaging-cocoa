@@ -70,8 +70,6 @@ extension EventDecoder {
     /// It then calls the passed in block (multiple times if necessary), returning the decrypted events
     /// If the app crashes while processing the events, they can be recovered from the database
     @objc public func processEvents(_ events: [ZMUpdateEvent], block: ConsumeBlock) {
-     
-        
         var lastIndex: Int64?
         
         eventMOC.performGroupedBlockAndWait {
@@ -84,6 +82,10 @@ extension EventDecoder {
             
             guard let index = lastIndex else { return }
             self.storeEvents(filteredEvents, startingAtIndex: index)
+        }
+        
+        if !events.isEmpty {
+            Logging.eventProcessing.info("Decrypted/Stored \( events.count) event(s)")
         }
         
         process(block, firstCall: true)
@@ -139,6 +141,10 @@ extension EventDecoder {
     
     /// Calls the `ComsumeBlock` and deletes the respective stored events subsequently.
     private func processBatch(_ events: [ZMUpdateEvent], storedEvents: [NSManagedObject], block: ConsumeBlock) {
+        if !events.isEmpty {
+            Logging.eventProcessing.info("Forwarding \(events.count) event(s) to consumers")
+        }
+        
         block(filterInvalidEvents(from: events))
         
         eventMOC.performGroupedBlockAndWait {

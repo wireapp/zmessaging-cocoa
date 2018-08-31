@@ -88,17 +88,19 @@ public protocol AVSWrapperType {
 /// Wraps AVS calls for dependency injection and better testing
 public class AVSWrapper : AVSWrapperType {
 
-    private static var isInitialized = false
     private let handle : UnsafeMutableRawPointer
+    
+    private static var initialize: () -> Void = {
+        let resultValue = wcall_init()
+        if resultValue != 0 {
+            fatal("Failed to initialise AVS (error code: \(resultValue))")
+        }
+        return {}
+    }()
     
     required public init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?) {
         
-        if !AVSWrapper.isInitialized {
-            let resultValue = wcall_init()
-            if resultValue != 0 {
-                fatal("Failed to initialise AVS (error code: \(resultValue))")
-            }
-        }
+        AVSWrapper.initialize()
         
         handle = wcall_create(userId.transportString(),
                               clientId,

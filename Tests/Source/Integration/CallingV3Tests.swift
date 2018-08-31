@@ -18,6 +18,7 @@
 
 
 import Foundation
+import avs
 import WireDataModel
 @testable import WireSyncEngine
 
