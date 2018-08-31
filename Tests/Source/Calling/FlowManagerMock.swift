@@ -27,10 +27,8 @@ public class FlowManagerMock : NSObject, FlowManagerType {
     public var callConfigHttpStatus : Int = 0
     public var callConfig : Data? = nil
     public var didReportCallConfig : Bool = false
-    public var didReportNetworkChanged : Bool = false
     public var didSetVideoCaptureDevice : Bool = false
-    public weak var delegate: FlowManagerDelegate? = nil
-    
+
     override init() {
         super.init()
     }
@@ -45,11 +43,7 @@ public class FlowManagerMock : NSObject, FlowManagerType {
         callConfigHttpStatus = httpStatus
         didReportCallConfig = true
     }
-    
-    public func reportNetworkChanged() {
-        didReportNetworkChanged = true
-    }
-    
+
     public func setVideoCaptureDevice(_ device: CaptureDevice, for conversationId: UUID) {
         didSetVideoCaptureDevice = true
     }
