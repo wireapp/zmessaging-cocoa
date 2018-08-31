@@ -198,7 +198,6 @@
     self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:[[FakeCookieStorage alloc] init] requestCancellation:self application:self.application syncStateDelegate:self analytics:nil];
     self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider
                                                cookieStorage:nil
-                                                mediaManager:nil
                                                  flowManager:self.mockflowManager
                                 localNotificationsDispatcher:self.mockDispatcher
                                   applicationStatusDirectory:self.applicationStatusDirectory

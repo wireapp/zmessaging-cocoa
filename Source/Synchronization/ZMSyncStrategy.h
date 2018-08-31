@@ -52,7 +52,6 @@
 
 - (instancetype _Nonnull )initWithStoreProvider:(id<LocalStoreProviderProtocol> _Nonnull)storeProvider
                                   cookieStorage:(ZMPersistentCookieStorage * _Nullable)cookieStorage
-                                   mediaManager:(AVSMediaManager * _Nullable)mediaManager
                                     flowManager:(id<FlowManagerType> _Nonnull)flowManager
                    localNotificationsDispatcher:(LocalNotificationDispatcher * _Nonnull)localNotificationsDispatcher
                      applicationStatusDirectory:(ApplicationStatusDirectory * _Nonnull)applicationStatusDirectory

@@ -1067,6 +1067,68 @@
     return message;
 }
 
+- (void)testThatItChangesTheSecurityLevelIfMessageArrivesFromPreviouslyUnknownUntrustedParticipant
+{
+    XCTAssertTrue([self login]);
+    
+    // given
+    
+    // register other users clients
+    [self establishSessionWithMockUser:self.user1];
+    [self establishSessionWithMockUser:self.user2];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // make conversation secure
+    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversationWithOnlyConnected];
+    [self makeConversationSecured:conversation];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
+    
+    // when
+    
+    // silently add user to conversation
+    [self performRemoteChangesExludedFromNotificationStream:^(id<MockTransportSessionObjectCreation> session) {
+        NOT_USED(session);
+        [self.groupConversationWithOnlyConnected addUsersByUser:self.user1 addedUsers:@[self.user5]];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // send a message from silently added user
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session) {
+        NOT_USED(session);
+        MockUserClient *mockSelfClient = self.selfUser.clients.anyObject;
+        MockUserClient *mockUser5Client = self.user5.clients.anyObject;
+        ZMGenericMessage *message = [ZMGenericMessage messageWithText:@"Test 123" nonce:[NSUUID createUUID] expiresAfter:nil];
+        NSData *messageData = [MockUserClient encryptedWithData:message.data from:mockUser5Client to:mockSelfClient];
+        [self.groupConversationWithOnlyConnected insertOTRMessageFromClient:mockUser5Client toClient:mockSelfClient data:messageData];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    BOOL containsParticipantAddedMessage = NO;
+    BOOL containsNewClientMessage = YES;
+    for (ZMMessage *message in conversation.messages) {
+        if ([message isKindOfClass:ZMSystemMessage.class] && [(ZMSystemMessage *)message systemMessageType] == ZMSystemMessageTypeParticipantsAdded) {
+            switch ([(ZMSystemMessage *)message systemMessageType]) {
+                case ZMSystemMessageTypeParticipantsAdded:
+                    containsParticipantAddedMessage = YES;
+                    break;
+                case ZMSystemMessageTypeNewClient:
+                    containsNewClientMessage = YES;
+                    break;
+                default:
+                    break;
+            }
+            
+        }
+    }
+    
+    XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
+    XCTAssertTrue(containsParticipantAddedMessage);
+    XCTAssertTrue(containsNewClientMessage);
+}
+
 - (void)testThatItChangesTheSecurityLevelIfUnconnectedUntrustedParticipantIsAdded
 {
     XCTAssertTrue([self login]);

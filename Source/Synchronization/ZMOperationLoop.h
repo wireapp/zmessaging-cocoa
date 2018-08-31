@@ -40,7 +40,6 @@ extern NSString * const ZMPushChannelIsOpenKey;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                            cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
              localNotificationDispatcher:(LocalNotificationDispatcher *)dispatcher
-                            mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
               applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
