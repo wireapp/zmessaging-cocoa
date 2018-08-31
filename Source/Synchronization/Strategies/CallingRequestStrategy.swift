@@ -50,7 +50,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     public func nextRequest() -> ZMTransportRequest? {
         let request = self.callConfigRequestSync.nextRequest() ?? genericMessageStrategy.nextRequest()
         
-        request?.forceToBackgroundSession()
+        request?.forceToVoipSession()
        
         return request
     }
