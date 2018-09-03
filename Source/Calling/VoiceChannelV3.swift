@@ -225,7 +225,7 @@ public extension CallState {
         
     var callParticipantState : CallParticipantState {
         switch self {
-        case .unknown, .terminating, .incoming, .none, .establishedDataChannel:
+        case .unknown, .terminating, .incoming, .none, .establishedDataChannel, .mediaStopped:
             return .unconnected
         case .established:
             return .connected(videoState: .stopped)

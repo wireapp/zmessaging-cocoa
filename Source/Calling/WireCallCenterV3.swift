@@ -138,6 +138,8 @@ public enum CallState : Equatable {
     case establishedDataChannel
     /// Call is established (media is flowing)
     case established
+    /// Call is over and audio/video is guranteed to be stopped
+    case mediaStopped
     /// Call in process of being terminated
     case terminating(reason: CallClosedReason)
     /// Unknown call state
@@ -156,6 +158,8 @@ public enum CallState : Equatable {
         case (.established, .established):
             fallthrough
         case (.terminating, .terminating):
+            fallthrough
+        case (.mediaStopped, .mediaStopped):
             fallthrough
         case (.unknown, .unknown):
             return true
@@ -200,6 +204,8 @@ public enum CallState : Equatable {
             zmLog.debug("outgoing call, , degraded: \(degraded)")
         case .terminating(reason: let reason):
             zmLog.debug("terminating call reason: \(reason)")
+        case .mediaStopped:
+            zmLog.debug("media stopped")
         case .none:
             zmLog.debug("no call")
         case .unknown:
@@ -509,6 +515,16 @@ internal func constantBitRateChangeHandler(userId: UnsafePointer<Int8>?, enabled
         }
     } else {
         zmLog.error("Couldn't send CBR notification")
+    }
+}
+
+internal func mediaStoppedChangeHandler(conversationIdRef: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?) {
+    guard let contextRef = contextRef, let conversationId = UUID(cString: conversationIdRef) else { return }
+    
+    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+    
+    callCenter.uiMOC?.performGroupedBlock {
+        callCenter.handleCallState(callState: .mediaStopped, conversationId: conversationId, userId: nil)
     }
 }
 
