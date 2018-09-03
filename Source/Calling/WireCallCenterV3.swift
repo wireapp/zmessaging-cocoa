@@ -661,7 +661,7 @@ public struct CallEvent {
             if self.callState(conversationId: conversationId) == .established {
                 return // Ignore if data channel was established after audio
             }
-        case .terminating(reason: let reason) where reason == .stillOngoing:
+        case .terminating(reason: .stillOngoing):
             callState = .incoming(video: false, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
         default:
             break
