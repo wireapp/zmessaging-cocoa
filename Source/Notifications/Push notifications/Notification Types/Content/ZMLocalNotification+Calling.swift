@@ -53,7 +53,7 @@ extension ZMLocalNotification {
         
         func shouldCreateNotification() -> Bool {
             switch callState {
-            case .terminating(reason: .anweredElsewhere), .terminating(reason: .normal):
+            case .terminating(reason: .anweredElsewhere), .terminating(reason: .normal), .terminating(reason: .rejectedElsewhere):
                 return false
             case .incoming(video: _, shouldRing: let shouldRing, degraded: _):
                 return shouldRing

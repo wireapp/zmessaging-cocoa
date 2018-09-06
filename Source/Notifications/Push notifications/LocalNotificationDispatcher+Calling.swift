@@ -26,7 +26,7 @@ public extension LocalNotificationDispatcher {
         switch callState {
         case .terminating(reason: let reason):
             switch reason {
-            case .anweredElsewhere: break
+            case .anweredElsewhere, .rejectedElsewhere: break
             default: return
             }
         default: break

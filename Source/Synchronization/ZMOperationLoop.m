@@ -25,7 +25,6 @@
 
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
-#import "ZMSyncStrategy+EventProcessing.h"
 
 #import "ZMUserTranscoder.h"
 #import "ZMUserSession.h"
@@ -35,7 +34,6 @@
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 NSString * const ZMPushChannelIsOpenKey = @"pushChannelIsOpen";
-NSString * const ZMPushChannelResponseStatusKey = @"responseStatus";
 
 static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
@@ -56,10 +54,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 @end
 
 
-@interface ZMOperationLoop (ZMPushChannel) <ZMPushChannelConsumer>
-@end
-
-
 @interface ZMOperationLoop (NewRequests) <ZMRequestAvailableObserver>
 @end
 
@@ -69,7 +63,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                            cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
              localNotificationDispatcher:(LocalNotificationDispatcher *)dispatcher
-                            mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
               applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
@@ -78,7 +71,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
     ZMSyncStrategy *syncStrategy = [[ZMSyncStrategy alloc] initWithStoreProvider:storeProvider
                                                                    cookieStorage:cookieStorage
-                                                                    mediaManager:mediaManager
                                                                      flowManager:flowManager
                                                     localNotificationsDispatcher:dispatcher
                                                       applicationStatusDirectory:applicationStatusDirectory
@@ -307,53 +299,3 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 }
 
 @end
-
-
-@implementation ZMOperationLoop (ZMPushChannel)
-
-- (void)pushChannel:(ZMPushChannelConnection *)channel didReceiveTransportData:(id<ZMTransportData>)data;
-{
-    NOT_USED(channel);
-    
-    ZMLogWithLevelAndTag(ZMLogLevelInfo, ZMTAG_NETWORK, @"---> Push channel: %@", data);
-    
-    NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:data];
-    
-    for(ZMUpdateEvent *event in events) {
-        [event appendDebugInformation:@"From push channel (web socket)"];
-    }
-    
-    if(events.count > 0u) {
-        [self.syncStrategy processUpdateEvents:events ignoreBuffer:NO];
-    }
-}
-
-- (void)pushChannelDidClose:(ZMPushChannelConnection *)channel withResponse:(NSHTTPURLResponse *)response error:(nullable NSError *)error;
-{
-    NOT_USED(response);
-    NOT_USED(error);
-    [[[NotificationInContext alloc] initWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
-                                         context:self.syncMOC.notificationContext
-                                          object:self userInfo:@{
-                                                                 ZMPushChannelIsOpenKey : @(NO),
-                                                                 ZMPushChannelResponseStatusKey : @(response.statusCode)
-                                                                 }] post];
-    [self.syncStrategy didInterruptUpdateEventsStream];
-    [ZMRequestAvailableNotification notifyNewRequestsAvailable:channel];
-}
-
-- (void)pushChannelDidOpen:(ZMPushChannelConnection *)channel withResponse:(NSHTTPURLResponse *)response;
-{
-    [[[NotificationInContext alloc] initWithName:ZMOperationLoop.pushChannelStateChangeNotificationName
-                                         context:self.syncMOC.notificationContext
-                                          object:self userInfo: @{
-                                                                  ZMPushChannelIsOpenKey : @(YES),
-                                                                  ZMPushChannelResponseStatusKey : @(response.statusCode)
-                                                  }
-      ] post];
-    [self.syncStrategy didEstablishUpdateEventsStream];
-    [ZMRequestAvailableNotification notifyNewRequestsAvailable:channel];
-}
-
-@end
-

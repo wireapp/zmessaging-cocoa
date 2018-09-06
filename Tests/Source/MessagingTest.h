@@ -71,6 +71,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSURL *accountDirectory;
 @property (nonatomic, readonly) NSMutableArray<ZMUpdateEvent *> *processedUpdateEvents;
 
+@property (nonatomic) CallNotificationStyle mockCallNotificationStyle;
+
 /// reset ui and sync contexts
 - (void)resetUIandSyncContextsAndResetPersistentStore:(BOOL)resetPersistentStore;
 - (void)resetUIandSyncContextsAndResetPersistentStore:(BOOL)resetPersistentStore notificationContentHidden:(BOOL)notificationContentHidden;

@@ -719,6 +719,22 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
     }
     
+    func testThatItIgnoresNewIncomingCall_v3_Unfectched_conversation() {
+        // given
+        let conversation = self.conversation()
+        conversation.needsToBeUpdatedFromBackend = true
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        
+        // when
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversation, caller: otherUser, timestamp: nil, previousCallState: nil)
+        
+        // then
+        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 0)
+    }
+    
     func testThatItReportCallEndedAt_v3_Terminating_normal() {
         // given
         let conversation = self.conversation()

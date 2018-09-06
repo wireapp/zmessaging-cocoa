@@ -131,7 +131,6 @@
         // We need the object IDs to be permanent. We shouldn't see temporary ones, but since we can recover, do so.
         BOOL const identifierIsTemporary = (user.objectID.isTemporaryID ||
                                             conversation.objectID.isTemporaryID);
-        VerifyString(! identifierIsTemporary, "Ran into temporary object ID. Obtaining permanent ID.");
         if (identifierIsTemporary)
         {
             NSError *error;

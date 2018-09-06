@@ -99,29 +99,29 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         // when
         mockTransportSession.performRemoteChanges { session in
-            self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: textMessage.data())
+            self.groupConversation.encryptAndInsertData(from: firstClient, to: selfClient, data: textMessage.data())
         }
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        guard let conversation = self.conversation(for: selfToUser1Conversation) else {return XCTFail()}
+        guard let conversation = self.conversation(for: self.groupConversation) else {return XCTFail()}
         let messages = conversation.messages
-        XCTAssertEqual(messages.count, 2) // system message & inserted message
+        XCTAssertEqual(messages.count, 3) // 2x system message & inserted message
         guard let message = messages.lastObject as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
         
         let genericMessage = ZMGenericMessage(deleteMessage: message.nonce!, nonce: UUID.create())
         
         // when
         mockTransportSession.performRemoteChanges { session in
-            self.selfToUser1Conversation.encryptAndInsertData(from: secondClient, to: selfClient, data: genericMessage.data())
+            self.groupConversation.encryptAndInsertData(from: secondClient, to: selfClient, data: genericMessage.data())
         }
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertFalse(message.hasBeenDeleted)
-        XCTAssertEqual(conversation.messages.count, 2) // system message & inserted message
+        XCTAssertEqual(conversation.messages.count, 3) // 2x system message & inserted message
         XCTAssertEqual(conversation.messages.lastObject as? ZMClientMessage, message)
     }
 

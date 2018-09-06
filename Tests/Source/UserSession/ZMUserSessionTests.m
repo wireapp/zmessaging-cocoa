@@ -20,6 +20,7 @@
 @import PushKit;
 @import WireMockTransport;
 @import WireSyncEngine;
+@import avs;
 
 #include "ZMUserSessionTestsBase.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
@@ -775,10 +776,6 @@
 }
 
 @end
-
-@interface ZMCallFlowRequestStrategy (FlowManagerDelegate) <AVSFlowManagerDelegate>
-@end
-
 
 @implementation ZMUserSessionTests (Transport)
 
