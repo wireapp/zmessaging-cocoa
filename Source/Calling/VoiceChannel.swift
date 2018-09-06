@@ -92,8 +92,10 @@ public protocol CallObservers : NSObjectProtocol {
     
     /// Add observer of constant bit rate audio. Returns a token which needs to be retained as long as the observer should be active.
     func addConstantBitRateObserver(_ observer: ConstantBitRateAudioObserver) -> Any
-    
+
+    /// Add observer of network quality. Returns a token which needs to be retained as long as the observer should be active.
+    func addNetworkConditionObserver(_ observer: NetworkConditionObserver) -> Any
+
     /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.
     static func addCallStateObserver(_ observer: WireCallCenterCallStateObserver, userSession: ZMUserSession) -> Any
-    
 }

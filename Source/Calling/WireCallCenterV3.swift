@@ -518,6 +518,24 @@ internal func constantBitRateChangeHandler(userId: UnsafePointer<Int8>?, enabled
     }
 }
 
+/// Handles network quality information
+internal func networkQualityHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?, quality: Int32, rtt: Int32, upstreamLoss: Int32, downstreamLoss: Int32, contextRef: UnsafeMutableRawPointer?) {
+    guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId), let networkCondition = NetworkCondition(rawValue: quality) else { return }
+
+    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+
+    if let context = callCenter.uiMOC {
+        context.performGroupedBlock {
+            let previousCondition = callCenter.networkCondition(inConversation: convID)
+            callCenter.callNetworkConditionChanged(conversationId: convID, userId: userID, networkCondition: networkCondition)
+            let newCondition = callCenter.networkCondition(inConversation: convID)
+            if previousCondition != newCondition {
+                WireCallCenterNetworkConditionNotification(conversationId: convID, networkCondition: newCondition).post(in: context.notificationContext)
+            }
+        }
+    }
+}
+
 /// MARK - Call center transport
 public typealias CallConfigRequestCompletion = (String?, Int) -> Void
 
@@ -918,6 +936,14 @@ public struct CallEvent {
     func callParticipantAudioEstablished(conversationId: UUID, userId: UUID) {
         callSnapshots[conversationId]?.callParticipants.callParticpantAudioEstablished(userId: userId)
     }
+
+    fileprivate func callNetworkConditionChanged(conversationId: UUID, userId: UUID, networkCondition: NetworkCondition) {
+        callSnapshots[conversationId]?.callParticipants.callParticpantNetworkConditionChanged(userId: userId, networkCondition: networkCondition)
+    }
+
+    public func networkCondition(inConversation conversationId: UUID) -> NetworkCondition {
+        return callSnapshots[conversationId]?.callParticipants.networkCondition ?? .normal
+    }
     
     /// Returns the state for a call participant.
     public func state(forUser userId: UUID, in conversationId: UUID) -> CallParticipantState {
@@ -950,5 +976,4 @@ extension WireCallCenterV3 : ZMConversationObserver {
             }
         }
     }
-    
 }

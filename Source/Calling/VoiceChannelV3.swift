@@ -193,6 +193,10 @@ extension VoiceChannelV3 : CallActionsInternal {
 }
 
 extension VoiceChannelV3 : CallObservers {
+
+    public func addNetworkConditionObserver(_ observer: NetworkConditionObserver) -> Any {
+        return WireCallCenterV3.addNetworkConditionObserver(observer: observer, for: conversation!, context: conversation!.managedObjectContext!)
+    }
     
     /// Add observer of voice channel state. Returns a token which needs to be retained as long as the observer should be active.
     public func addCallStateObserver(_ observer: WireCallCenterCallStateObserver) -> Any {

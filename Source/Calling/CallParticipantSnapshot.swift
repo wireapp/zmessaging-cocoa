@@ -21,6 +21,13 @@ import Foundation
 class CallParticipantsSnapshot {
     
     public private(set) var members : OrderedSetState<AVSCallMember>
+
+    // We take the worst condition of all the legs
+    public var networkCondition: NetworkCondition {
+        return members.map { $0.networkCondition }
+            .sorted() { $0.rawValue < $1.rawValue }
+            .last ?? .normal
+    }
     
     fileprivate unowned var callCenter : WireCallCenterV3
     fileprivate let conversationId : UUID
@@ -65,6 +72,12 @@ class CallParticipantsSnapshot {
         guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
         
         update(updatedMember: AVSCallMember(userId: userId, audioEstablished: true, videoState: callMember.videoState))
+    }
+
+    func callParticpantNetworkConditionChanged(userId: UUID, networkCondition: NetworkCondition) {
+        guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
+
+        update(updatedMember: AVSCallMember(userId: userId, audioEstablished: true, videoState: callMember.videoState, networkCondition: networkCondition))
     }
     
     func update(updatedMember: AVSCallMember) {

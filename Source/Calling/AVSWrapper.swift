@@ -128,7 +128,7 @@ public class AVSWrapper : AVSWrapperType {
         
         wcall_set_data_chan_estab_handler(handle, dataChannelEstablishedHandler)
         wcall_set_group_changed_handler(handle, groupMemberHandler, observer)
-        wcall_set_network_quality_handler(handle, nil, 5, nil)
+        wcall_set_network_quality_handler(handle, networkQualityHandler, 5, observer)
     }
     
     public func startCall(conversationId: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool) -> Bool {
