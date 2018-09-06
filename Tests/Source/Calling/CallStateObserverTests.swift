@@ -194,7 +194,7 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
+        XCTAssertEqual(notificationCenter.scheduledRequests.count, 1)
     }
     
     func testIncomingCallsInUnfetchedConversationAreForwaredToTheNotificationDispatcher_whenCallStyleIsPushNotification() {
@@ -207,7 +207,7 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
+        XCTAssertEqual(notificationCenter.scheduledRequests.count, 1)
     }
     
     func testThatIncomingCallsAreForwardedToTheNotificationDispatcher_whenCallStyleIsPushNotification() {
