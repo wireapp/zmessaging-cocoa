@@ -25,18 +25,21 @@ public struct AVSCallMember : Hashable {
     let remoteId: UUID
     let audioEstablished: Bool
     let videoState: VideoState
+    let networkCondition: NetworkCondition
     
     init?(wcallMember: wcall_member) {
         guard let remoteId = UUID(cString:wcallMember.userid) else { return nil }
         self.remoteId = remoteId
         audioEstablished = (wcallMember.audio_estab != 0)
         videoState = VideoState(rawValue: wcallMember.video_recv) ?? .stopped
+        networkCondition = .normal
     }
     
-    init(userId : UUID, audioEstablished: Bool = false, videoState: VideoState = .stopped) {
+    init(userId : UUID, audioEstablished: Bool = false, videoState: VideoState = .stopped, networkCondition: NetworkCondition = .normal) {
         self.remoteId = userId
         self.audioEstablished = audioEstablished
         self.videoState = videoState
+        self.networkCondition = networkCondition
     }
     
     public var hashValue: Int {
@@ -46,6 +49,12 @@ public struct AVSCallMember : Hashable {
     public static func ==(lhs: AVSCallMember, rhs: AVSCallMember) -> Bool {
         return lhs.remoteId == rhs.remoteId
     }
+}
+
+public enum NetworkCondition: Int32 {
+    case normal = 1
+    case medium = 2
+    case poor = 3
 }
 
 public enum VideoState: Int32 {
