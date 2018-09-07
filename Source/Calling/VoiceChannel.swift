@@ -56,6 +56,7 @@ public protocol CallProperties : NSObjectProtocol {
     var isVideoCall: Bool { get }
     var initiator: ZMUser? { get }
     var videoState: VideoState { get set }
+    var networkCondition: NetworkCondition { get }
     
     func state(forParticipant: ZMUser) -> CallParticipantState
     func setVideoCaptureDevice(_ device: CaptureDevice) throws
