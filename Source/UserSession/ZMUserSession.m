@@ -183,9 +183,6 @@ ZM_EMPTY_ASSERTING_INIT()
         FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:cacheLocation];
         self.managedObjectContext.zm_fileAssetCache = fileAssetCache;
         
-        CTCallCenter *callCenter = [[CTCallCenter alloc] init];
-        self.managedObjectContext.zm_coreTelephonyCallCenter = callCenter;
-        
         self.managedObjectContext.zm_searchUserCache = [[NSCache alloc] init];
         
         [self.syncManagedObjectContext performBlockAndWait:^{
@@ -428,8 +425,10 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)openAppstore
 {
     NSURL *appStoreURL = [NSURL URLWithString:AppstoreURL];
-    [[UIApplication sharedApplication] openURL:appStoreURL];
-    [NSTimer scheduledTimerWithTimeInterval:30 target:self selector:@selector(didNotUpdateApp:) userInfo:nil repeats:NO];
+    if ([[UIApplication sharedApplication] canOpenURL:appStoreURL]) {
+        [[UIApplication sharedApplication] openURL:appStoreURL options:@{} completionHandler:NULL];
+        [NSTimer scheduledTimerWithTimeInterval:30 target:self selector:@selector(didNotUpdateApp:) userInfo:nil repeats:NO];
+    }
 }
 
 - (void)didNotUpdateApp:(NSTimer *)timer;

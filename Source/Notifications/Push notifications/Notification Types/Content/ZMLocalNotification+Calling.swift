@@ -72,19 +72,21 @@ extension ZMLocalNotification {
             return notificationType.messageBodyText(sender: caller, conversation: conversation)
         }
                 
-        func userInfo() -> [AnyHashable: Any]? {
-            
-            guard let selfUserID = ZMUser.selfUser(in: managedObjectContext).remoteIdentifier,
+        func userInfo() -> NotificationUserInfo? {
+            let selfUser = ZMUser.selfUser(in: managedObjectContext)
+
+            guard let selfUserID = selfUser.remoteIdentifier,
                   let senderID = caller.remoteIdentifier,
                   let conversationID = conversation.remoteIdentifier
                   else { return nil }
             
-            var userInfo = [AnyHashable: Any]()
-            userInfo[SelfUserIDStringKey] = selfUserID.transportString()
-            userInfo[SenderIDStringKey] = senderID.transportString()
-            userInfo[ConversationIDStringKey] = conversationID.transportString()
-            userInfo[ConversationNameStringKey] = conversation.meaningfulDisplayName
-            userInfo[TeamNameStringKey] = ZMUser.selfUser(in: managedObjectContext).name
+            let userInfo = NotificationUserInfo()
+            userInfo.selfUserID = selfUserID
+            userInfo.senderID = senderID
+            userInfo.conversationID = conversationID
+            userInfo.conversationName = conversation.meaningfulDisplayName
+            userInfo.teamName = selfUser.team?.name
+
             return userInfo
         }
     }

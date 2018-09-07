@@ -152,6 +152,7 @@ static ZMReachability *sharedReachabilityMock = nil;
     self.mockOperationStatus.isInBackground = NO;
     self.mockOperationLoop = [OCMockObject niceMockForClass:ZMOperationLoop.class];
     self.mockSyncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
+    self.mockCallNotificationStyle = CallNotificationStylePushNotifications;
     
     [[[self.mockOperationLoop stub] andReturn:self.mockSyncStrategy] syncStrategy];
     
@@ -439,7 +440,7 @@ static ZMReachability *sharedReachabilityMock = nil;
         [[[mockUserSession stub] andReturn:self.sharedContainerURL] sharedContainerURL];
         [[[mockUserSession stub] andReturn:self.mockOperationStatus] operationStatus];
         [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockOperationLoop] operationLoop];
-        [[[mockUserSession stub] andReturnValue:@(CallNotificationStylePushNotifications)] callNotificationStyle];
+        [[[mockUserSession stub] andReturnValue:@(self.mockCallNotificationStyle)] callNotificationStyle];
 
         [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockTransportSession] transportSession];
         _mockUserSession = mockUserSession;

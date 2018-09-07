@@ -106,35 +106,19 @@ fileprivate class EventNotificationBuilder: NotificationBuilder {
         return notificationType.messageBodyText(sender: sender, conversation: conversation)
     }
         
-    func userInfo() -> [AnyHashable : Any]? {
+    func userInfo() -> NotificationUserInfo? {
+        let selfUser = ZMUser.selfUser(in: moc)
+        guard let selfUserRemoteID = selfUser.remoteIdentifier else { return nil }
         
-        guard let selfUserID = ZMUser.selfUser(in: moc).remoteIdentifier else { return nil }
-        
-        var userInfo = [AnyHashable: Any]()
-        userInfo[SelfUserIDStringKey] = selfUserID.transportString()
-        
-        if let senderID = event.senderUUID() {
-            userInfo[SenderIDStringKey] = senderID.transportString()
-        }
-        
-        if let conversationID = conversation?.remoteIdentifier {
-            userInfo[ConversationIDStringKey] = conversationID.transportString()
-        }
-        
-        if let messageNonce = event.messageNonce() {
-            userInfo[MessageNonceIDStringKey] = messageNonce.transportString()
-        }
-        
-        if let eventTime = event.timeStamp() {
-            userInfo[EventTimeKey] = eventTime
-        }
-        
-        if let conversation = conversation {
-            userInfo[ConversationNameStringKey] = conversation.meaningfulDisplayName
-        }
-        
-        userInfo[TeamNameStringKey] = ZMUser.selfUser(in: moc).team?.name
-        
+        let userInfo = NotificationUserInfo()
+        userInfo.selfUserID = selfUserRemoteID
+        userInfo.senderID = event.senderUUID()
+        userInfo.conversationID = conversation?.remoteIdentifier
+        userInfo.messageNonce = event.messageNonce()
+        userInfo.eventTime = event.timeStamp()
+        userInfo.conversationName = conversation?.meaningfulDisplayName
+        userInfo.teamName = selfUser.team?.name
+
         return userInfo
     }
 }
@@ -145,7 +129,7 @@ fileprivate class EventNotificationBuilder: NotificationBuilder {
 private class ReactionEventNotificationBuilder: EventNotificationBuilder {
     
     private let emoji: String
-    private let nonce: String
+    private let nonce: UUID
     private let message: ZMGenericMessage
     
     override var notificationType: LocalNotificationType {
@@ -157,14 +141,17 @@ private class ReactionEventNotificationBuilder: EventNotificationBuilder {
     }
     
     override init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
-        
         guard let message = ZMGenericMessage(from: event), message.hasReaction() else {
+            return nil
+        }
+
+        guard let nonce = UUID(uuidString: message.reaction.messageId) else {
             return nil
         }
         
         self.message = message
         self.emoji = message.reaction.emoji
-        self.nonce = message.reaction.messageId
+        self.nonce = nonce
         
         super.init(event: event, conversation: conversation, managedObjectContext: managedObjectContext)
     }
@@ -187,10 +174,10 @@ private class ReactionEventNotificationBuilder: EventNotificationBuilder {
         return true
     }
     
-    override func userInfo() -> [AnyHashable : Any]? {
+    override func userInfo() -> NotificationUserInfo? {
         // we want to store the nonce of the message being reacted to, not the event nonce
-        var info = super.userInfo()
-        info?[MessageNonceIDStringKey] = nonce
+        let info = super.userInfo()
+        info?.messageNonce = nonce
         return info
     }
 }

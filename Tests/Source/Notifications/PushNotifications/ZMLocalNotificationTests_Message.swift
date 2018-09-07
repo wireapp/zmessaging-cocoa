@@ -61,8 +61,8 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     func testThatItShowsDefaultAlertBodyWhenHidePreviewSettingIsTrue() {
         // given
         let note1 = textNotification(oneOnOneConversation, sender: sender)
-        XCTAssertEqual(note1?.uiLocalNotification.alertTitle, "Super User")
-        XCTAssertEqual(note1?.uiLocalNotification.alertBody, "Hello Hello!")
+        XCTAssertEqual(note1?.content.title, "Super User")
+        XCTAssertEqual(note1?.content.body, "Hello Hello!")
         
         // when
         let moc = oneOnOneConversation.managedObjectContext!
@@ -73,15 +73,15 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         let note2 = textNotification(oneOnOneConversation, sender: sender)
         
         // then
-        XCTAssertNil(note2?.uiLocalNotification.alertTitle)
-        XCTAssertEqual(note2?.uiLocalNotification.alertBody, "New message")
+        XCTAssertEqual(note2?.content.title, "")
+        XCTAssertEqual(note2?.content.body, "New message")
     }
     
     func testThatItShowsShowsEphemeralStringEvenWhenHidePreviewSettingIsTrue() {
         // given
         let note1 = textNotification(oneOnOneConversation, sender: sender, isEphemeral: true)
-        XCTAssertNil(note1?.uiLocalNotification.alertTitle)
-        XCTAssertEqual(note1?.uiLocalNotification.alertBody, "Someone sent you a message")
+        XCTAssertEqual(note1?.content.title, "")
+        XCTAssertEqual(note1?.content.body, "Someone sent you a message")
         
         // when
         let moc = oneOnOneConversation.managedObjectContext!
@@ -92,8 +92,8 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         let note2 = textNotification(oneOnOneConversation, sender: sender, isEphemeral: true)
         
         // then
-        XCTAssertNil(note2?.uiLocalNotification.alertTitle)
-        XCTAssertEqual(note2?.uiLocalNotification.alertBody, "Someone sent you a message")
+        XCTAssertEqual(note2?.content.title, "")
+        XCTAssertEqual(note2?.content.body, "Someone sent you a message")
     }
     
     func testItCreatesMessageNotificationsCorrectly(){

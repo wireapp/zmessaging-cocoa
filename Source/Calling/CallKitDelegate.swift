@@ -87,7 +87,7 @@ public class CallKitDelegate : NSObject {
         configuration.maximumCallGroups = 1
         configuration.maximumCallsPerCallGroup = 1
         configuration.supportedHandleTypes = [.generic]
-        configuration.ringtoneSound = ZMCustomSound.notificationRingingSoundName()
+        configuration.ringtoneSound = NotificationSound.call.name
         
         if let image = UIImage(named: "logo") {
             configuration.iconTemplateImageData = UIImagePNGRepresentation(image)
@@ -263,6 +263,10 @@ extension CallKitDelegate {
     func reportIncomingCall(from user: ZMUser, in conversation: ZMConversation, video: Bool) {
         guard let handle = conversation.callKitHandle else {
             return log("Cannot report incoming call: conversation is missing handle")
+        }
+        
+        guard !conversation.needsToBeUpdatedFromBackend else {
+            return log("Cannot report incoming call: conversation needs to be updated from backend")
         }
         
         let update = CXCallUpdate()
