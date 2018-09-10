@@ -22,56 +22,36 @@ private let zmLog = ZMSLog(tag: "Push")
 
 @objc extension ZMUserSession {
     
-    public func handleNotification(_ note: ZMStoredLocalNotification) {
-        guard let category = PushNotificationCategory(rawValue: note.category) else {
-            return handleDefaultCategoryNotification(note)
-        }
-        
-        switch category {
-        case .connect:
-            handleConnectionRequestCategoryNotification(note)
-        case .incomingCall, .missedCall:
-            handleCallCategoryNotification(note)
-        default:
-            handleDefaultCategoryNotification(note)
-        }
-    }
-    
     // MARK: - Foreground Actions
     
-    public func handleConnectionRequestCategoryNotification(_ note : ZMStoredLocalNotification) {
-        guard
-            let senderID = note.senderID,
-            let sender = ZMUser.fetch(withRemoteIdentifier: senderID, in: managedObjectContext)
-            else { return }
+    public func acceptConnectionRequest(with userInfo: NotificationUserInfo, completionHandler: @escaping () -> Void) {
         
-        if note.actionIdentifier == ConversationNotificationAction.connect.rawValue {
-            sender.accept()
-            managedObjectContext.saveOrRollback()
-        }
+        guard let senderID = userInfo.senderID,
+              let sender = ZMUser.fetch(withRemoteIdentifier: senderID, in: managedObjectContext)
+        else { return }
         
+        sender.accept()
+        managedObjectContext.saveOrRollback()
         open(sender.connection?.conversation, at: nil)
+        completionHandler()
     }
     
-    public func handleCallCategoryNotification(_ note : ZMStoredLocalNotification) {
-        guard let actionIdentifier = note.actionIdentifier, actionIdentifier == CallNotificationAction.accept.rawValue,
-            let callState = note.conversation?.voiceChannel?.state
-        else {
-            open(note.conversation, at: nil)
-            return
+    public func acceptCall(with userInfo: NotificationUserInfo, completionHandler: @escaping () -> Void) {
+        
+        let conversation = userInfo.conversation(in: managedObjectContext)
+        
+        defer {
+            open(conversation, at: nil)
+            completionHandler()
         }
+        
+        guard let callState = conversation?.voiceChannel?.state else { return }
         
         if case let .incoming(video: video, shouldRing: _, degraded: _) = callState, callCenter?.activeCallConversations(in: self).count == 0 {
-            _ = note.conversation?.voiceChannel?.join(video: video, userSession: self)
+            _ = conversation?.voiceChannel?.join(video: video, userSession: self)
         }
+    }
         
-        open(note.conversation, at: nil)
-    }
-    
-    public func handleDefaultCategoryNotification(_ note: ZMStoredLocalNotification) {
-        open(note.conversation, at: nil)
-    }
-    
     func open(_ conversation: ZMConversation?, at message : ZMMessage?) {
         guard let strongDelegate = requestToOpenViewDelegate else { return }
             

@@ -192,11 +192,7 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
             self.handleTrackingOnCallNotification(with: userInfo)
         }
         
-        self.pendingLocalNotification = ZMStoredLocalNotification(userInfo: userInfo,
-                                                                  moc: self.managedObjectContext,
-                                                                  category: categoryIdentifier,
-                                                                  actionIdentifier: "")
-        self.processPendingNotificationActionsIfPossible()
+        open(userInfo.conversation(in: managedObjectContext), at: nil)
         
         // pass in .alert to show in app notification
         completionHandler([])
@@ -211,36 +207,23 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
         switch actionIdentifier {
         case CallNotificationAction.ignore.rawValue:
             ignoreCall(with: userInfo, completionHandler: completionHandler)
-            return
+        case CallNotificationAction.accept.rawValue:
+            acceptCall(with: userInfo, completionHandler: completionHandler)
         case ConversationNotificationAction.mute.rawValue:
             muteConversation(with: userInfo, completionHandler: completionHandler)
-            return
         case ConversationNotificationAction.like.rawValue:
             likeMessage(with: userInfo, completionHandler: completionHandler)
-            return
         case ConversationNotificationAction.reply.rawValue:
             if let textInput = userText {
                 reply(with: userInfo, message: textInput, completionHandler: completionHandler)
             }
-            return
+        case ConversationNotificationAction.connect.rawValue:
+            acceptConnectionRequest(with: userInfo, completionHandler: completionHandler)
         default:
+            open(userInfo.conversation(in: managedObjectContext), at: nil)
+            completionHandler()
             break
         }
-        
-        // if we reach this, then the action requires opening the app
-        self.pendingLocalNotification = ZMStoredLocalNotification(userInfo: userInfo,
-                                                                  moc: self.managedObjectContext,
-                                                                  category: categoryIdentifier,
-                                                                  actionIdentifier: actionIdentifier)
-        self.processPendingNotificationActionsIfPossible()
-        completionHandler()
     }
     
-    private func processPendingNotificationActionsIfPossible() {
-        // Don't process note while syncing (data may not be ready yet). We will
-        // try again once syncing has completed.
-        if self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen {
-            self.processPendingNotificationActions()
-        }
-    }
 }

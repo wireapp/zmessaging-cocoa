@@ -54,7 +54,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
-@property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) NSMutableArray* observersToken;
 @property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
@@ -571,7 +570,6 @@ ZM_EMPTY_ASSERTING_INIT()
         self.hasCompletedInitialSync = YES;
         [self changeNetworkStateAndNotify];
         [self notifyThirdPartyServices];
-        [self processPendingNotificationActions];
     }];
 }
 

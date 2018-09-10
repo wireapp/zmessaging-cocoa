@@ -108,20 +108,6 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     }];
 }
 
-- (void)processPendingNotificationActions
-{
-    if (self.pendingLocalNotification == nil) {
-        return;
-    }
-    
-    [self.managedObjectContext performGroupedBlock: ^{
-        [self handleNotification:self.pendingLocalNotification];
-        self.pendingLocalNotification = nil;
-    }];
-    
-}
-
-
 @end
 
 
