@@ -25,7 +25,17 @@ class LocalNotificationDispatcherTests: MessagingTest {
     var sut: LocalNotificationDispatcher!
     var conversation1: ZMConversation!
     var conversation2: ZMConversation!
+    
+    var notificationCenter: UserNotificationCenterMock!
     var notificationDelegate: MockForegroundNotificationDelegate!
+    
+    var scheduledRequests: [UNNotificationRequest] {
+        return self.notificationCenter.scheduledRequests
+    }
+    
+    var receivedForegroundNotifications: [ZMLocalNotification] {
+        return self.notificationDelegate.receivedLocalNotifications
+    }
     
     var user1: ZMUser!
     var user2: ZMUser!
@@ -36,11 +46,20 @@ class LocalNotificationDispatcherTests: MessagingTest {
     
     override func setUp() {
         super.setUp()
+        self.notificationCenter = UserNotificationCenterMock()
         self.notificationDelegate = MockForegroundNotificationDelegate()
         self.sut = LocalNotificationDispatcher(in: self.syncMOC,
                                                foregroundNotificationDelegate: self.notificationDelegate,
                                                application: self.application,
                                                operationStatus: self.mockUserSession.operationStatus)
+        
+        self.sut.notificationCenter = self.notificationCenter
+        
+        [self.sut.eventNotifications,
+         self.sut.failedMessageNotifications,
+         self.sut.messageNotifications,
+         self.sut.callingNotifications].forEach { $0.notificationCenter = notificationCenter }
+        
         self.mockUserSession.operationStatus.isInBackground = true
         
         syncMOC.performGroupedBlockAndWait {
@@ -68,6 +87,7 @@ class LocalNotificationDispatcherTests: MessagingTest {
     }
     
     override func tearDown() {
+        self.notificationCenter = nil
         self.notificationDelegate = nil
         self.user1 = nil
         self.user2 = nil
@@ -93,10 +113,18 @@ extension LocalNotificationDispatcherTests {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
-        XCTAssertEqual(self.notificationDelegate.receivedLocalNotifications.count, 0)
-        guard let notification = self.application.scheduledLocalNotifications.first else { return XCTFail() }
-        XCTAssertTrue(notification.alertBody!.contains(text))
+        XCTAssertEqual(self.sut.messageNotifications.notifications.count, 1)
+        XCTAssertEqual(self.scheduledRequests.count, 1)
+        XCTAssertEqual(self.receivedForegroundNotifications.count, 0)
+        
+        guard
+            let note = self.sut.messageNotifications.notifications.first,
+            let request = self.scheduledRequests.first
+            else { return XCTFail() }
+        
+        XCTAssertTrue(note.body.contains(text))
+        XCTAssertEqual(note.body, request.content.body)
+        XCTAssertEqual(note.id.uuidString, request.identifier)
     }
     
     func testThatItCreatesNotificationFromSystemMessagesIfNotActive() {
@@ -107,17 +135,26 @@ extension LocalNotificationDispatcherTests {
             timer: conversation1.messageDestructionTimeoutValue,
             timestamp: .init()
         )
+
         message.sender = user1
-        
+
         // WHEN
         sut.process(message)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // THEN
-        XCTAssertEqual(application.scheduledLocalNotifications.count, 1)
-        XCTAssertEqual(notificationDelegate.receivedLocalNotifications.count, 0)
-        guard let notification = application.scheduledLocalNotifications.first else { return XCTFail() }
-        XCTAssertTrue(notification.alertBody!.contains("User 1 set the message timer to"))
+        XCTAssertEqual(self.sut.messageNotifications.notifications.count, 1)
+        XCTAssertEqual(self.scheduledRequests.count, 1)
+        XCTAssertEqual(self.receivedForegroundNotifications.count, 0)
+        
+        guard
+            let note = self.sut.messageNotifications.notifications.first,
+            let request = self.scheduledRequests.first
+            else { return XCTFail() }
+        
+        XCTAssertTrue(note.body.contains("User 1 set the message timer to"))
+        XCTAssertEqual(note.body, request.content.body)
+        XCTAssertEqual(note.id.uuidString, request.identifier)
     }
 
     func testThatItForwardsNotificationFromMessagesIfActive() {
@@ -126,80 +163,78 @@ extension LocalNotificationDispatcherTests {
         let message = self.conversation1.appendMessage(withText: text) as! ZMClientMessage
         message.sender = self.user1
         self.mockUserSession.operationStatus.isInBackground = false
-        
+
         // WHEN
         self.sut.process(message)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // THEN
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0)
-        XCTAssertEqual(self.notificationDelegate.receivedLocalNotifications.count, 1)
+        XCTAssertEqual(self.scheduledRequests.count, 0)
+        XCTAssertEqual(self.receivedForegroundNotifications.count, 1)
+        
+        guard let note = self.receivedForegroundNotifications.first else { return XCTFail() }
+        XCTAssertTrue(note.body.contains(text))
     }
 
     func testThatItAddsNotificationOfDifferentConversationsToTheList() {
-        
         // GIVEN
         let message1 = self.conversation1.appendMessage(withText: "foo1") as! ZMClientMessage
         message1.sender = self.user1
         let message2 = self.conversation2.appendMessage(withText: "boo2") as! ZMClientMessage
         message2.sender = self.user2
-        
+
         // WHEN
         self.sut.process(message1)
         self.sut.process(message2)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // THEN
-        guard self.application.scheduledLocalNotifications.count == 2 else {
-            return XCTFail("Wrong number of notifications")
-        }
-        XCTAssertEqual(self.application.scheduledLocalNotifications[0].conversation(in: self.syncMOC), self.conversation1)
-        XCTAssertEqual(self.application.scheduledLocalNotifications[1].conversation(in: self.syncMOC), self.conversation2)
+        XCTAssertEqual(self.scheduledRequests.count, 2)
+        let userInfos = self.scheduledRequests.map { NotificationUserInfo(storage: $0.content.userInfo) }
+        XCTAssertEqual(userInfos[0].conversation(in: self.syncMOC), self.conversation1)
+        XCTAssertEqual(userInfos[1].conversation(in: self.syncMOC), self.conversation2)
     }
-    
+
     func testThatItDoesNotCreateANotificationForAnUnsupportedEventType() {
         // GIVEN
         let event = self.event(withPayload: nil, in: self.conversation1, type: EventConversationTyping)!
-        
+
         // WHEN
         self.sut.didReceive(events: [event], conversationMap: [:])
 
         // THEN
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0)
+        XCTAssertEqual(self.scheduledRequests.count, 0)
     }
-    
+
     func testThatWhenFailingAMessageItSchedulesANotification() {
         self.syncMOC.performGroupedBlockAndWait {
             // GIVEN
             let message = self.conversation1.appendMessage(withText: "bar") as! ZMClientMessage
             message.sender = self.user1
-            
+
             // WHEN
             self.sut.didFailToSend(message)
-            
+
             // THEN
-            XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
-            
+            XCTAssertEqual(self.scheduledRequests.count, 1)
         }
     }
-    
+
     func testThatItCancelsAllNotificationsForFailingMessagesWhenCancelingAllNotifications() {
-        
         // GIVEN
         let note1 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
         let note2 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
         self.sut.eventNotifications.addObject(note1)
         self.sut.failedMessageNotifications.addObject(note2)
-        
+
         // WHEN
         self.sut.cancelAllNotifications()
-        
+
         // THEN
-        XCTAssertEqual(self.application.cancelledLocalNotifications, [note1.uiLocalNotification, note2.uiLocalNotification])
+        XCTAssertEqual(self.notificationCenter.removedNotifications, Set([note1.id.uuidString, note2.id.uuidString]))
     }
 
     func testThatItCancelsNotificationsForFailingMessagesWhenCancelingNotificationsForASpecificConversation() {
-        
         // GIVEN
         let note1 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
         let note2 = ZMLocalNotification(expiredMessageIn: self.conversation2)!
@@ -209,15 +244,14 @@ extension LocalNotificationDispatcherTests {
         self.sut.eventNotifications.addObject(note2)
         self.sut.failedMessageNotifications.addObject(note3)
         self.sut.failedMessageNotifications.addObject(note4)
-        
+
         // WHEN
         self.sut.cancelNotification(for: self.conversation1)
-        
+
         // THEN
-        XCTAssertEqual(self.application.cancelledLocalNotifications, [note1.uiLocalNotification, note3.uiLocalNotification])
-        
+        XCTAssertEqual(self.notificationCenter.removedNotifications, Set([note1.id.uuidString, note3.id.uuidString]))
     }
-    
+
     func testThatItCancelsReadNotificationsIfTheLastReadChanges() {
         // GIVEN
         let message = conversation1.appendMessage(withText: "foo") as! ZMClientMessage
@@ -228,76 +262,46 @@ extension LocalNotificationDispatcherTests {
         sut.eventNotifications.addObject(note2)
         conversation1.lastServerTimeStamp = Date.distantFuture
         syncMOC.saveOrRollback()
-        
+
         // WHEN
         let conversationOnUI = uiMOC.object(with: conversation1.objectID) as? ZMConversation
         conversationOnUI?.markAsRead()
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // THEN
-        XCTAssertEqual(Set(application.cancelledLocalNotifications), Set([note2.uiLocalNotification, note1.uiLocalNotification]))
+        XCTAssertEqual(self.notificationCenter.removedNotifications, Set([note1.id.uuidString, note2.id.uuidString]))
     }
-    
+
     func testThatItSchedulesADefaultNotificationIfContentShouldNotBeVisible() {
         // GIVEN
         self.syncMOC.setPersistentStoreMetadata(NSNumber(value: true), key: LocalNotificationDispatcher.ZMShouldHideNotificationContentKey)
         self.syncMOC.saveOrRollback()
         let message = self.conversation1.appendMessage(withText: "foo") as! ZMClientMessage
         message.sender = self.user1
-        
+
         // WHEN
         self.sut.process(message)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // THEN
-        guard self.application.scheduledLocalNotifications.count == 1 else {
-            return XCTFail("Wrong number of notifications")
-        }
-        XCTAssertEqual(self.application.scheduledLocalNotifications[0].alertBody, "New message")
-        XCTAssertEqual(self.application.scheduledLocalNotifications[0].soundName, "new_message_apns.caf")
-    
+        XCTAssertEqual(self.scheduledRequests.count, 1)
+        XCTAssertEqual(self.scheduledRequests[0].content.body, "New message")
+        XCTAssertEqual(self.scheduledRequests[0].content.sound, UNNotificationSound(named: "new_message_apns.caf"))
     }
-        
+
     func testThatItDoesNotCreateNotificationForTwoMessageEventsWithTheSameNonce() {
-        
+
         // GIVEN
         let message = self.conversation1.appendMessage(withText: "foobar") as! ZMClientMessage
         message.sender = self.user1
-        
+
         // WHEN
         self.sut.process(message)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // THEN
-        guard self.sut.messageNotifications.notifications.count == 1,
-            self.application.scheduledLocalNotifications.count == 1 else {
-                return XCTFail()
-        }
-        
-        // WHEN 
-        self.sut.process(message)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // THEN
         XCTAssertEqual(self.sut.messageNotifications.notifications.count, 1)
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
-    }
-        
-    func testThatItDoesNotCreateNotificationForFileUploadEventsWithTheSameNonce() {
-    
-        // GIVEN
-        let url = Bundle(for: LocalNotificationDispatcherTests.self).url(forResource: "video", withExtension: "mp4")
-        let audioMetadata = ZMAudioMetadata(fileURL: url!, duration: 100)
-        let message = self.conversation1.appendMessage(with: audioMetadata) as! ZMAssetClientMessage
-        message.sender = self.user1
-        
-        // WHEN
-        self.sut.process(message)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // THEN
-        XCTAssertEqual(self.sut.messageNotifications.notifications.count, 1)
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
+        XCTAssertEqual(self.scheduledRequests.count, 1)
         
         // WHEN
         self.sut.process(message)
@@ -305,72 +309,93 @@ extension LocalNotificationDispatcherTests {
 
         // THEN
         XCTAssertEqual(self.sut.messageNotifications.notifications.count, 1)
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
+        XCTAssertEqual(self.scheduledRequests.count, 1)
     }
-        
+
+    func testThatItDoesNotCreateNotificationForFileUploadEventsWithTheSameNonce() {
+        // GIVEN
+        let url = Bundle(for: LocalNotificationDispatcherTests.self).url(forResource: "video", withExtension: "mp4")
+        let audioMetadata = ZMAudioMetadata(fileURL: url!, duration: 100)
+        let message = self.conversation1.appendMessage(with: audioMetadata) as! ZMAssetClientMessage
+        message.sender = self.user1
+
+        // WHEN
+        self.sut.process(message)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
+        XCTAssertEqual(self.sut.messageNotifications.notifications.count, 1)
+        XCTAssertEqual(self.scheduledRequests.count, 1)
+
+        // WHEN
+        self.sut.process(message)
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
+        XCTAssertEqual(self.sut.messageNotifications.notifications.count, 1)
+        XCTAssertEqual(self.scheduledRequests.count, 1)
+    }
+
     func testThatItCreatesNotificationForSelfGroupParticipation() {
-    
         // GIVEN
         let message = ZMSystemMessage(nonce: UUID(), managedObjectContext: syncMOC)
         message.visibleInConversation = self.conversation1
         message.sender = self.user1
         message.systemMessageType = .participantsAdded
         message.users = [self.selfUser]
-        
+
         // notification content
         let text = "\(message.sender!.name!) added you"
-        
+
         // WHEN
         self.sut.process(message)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // THEN
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1)
-        XCTAssertEqual(self.notificationDelegate.receivedLocalNotifications.count, 0)
-        guard let notification = self.application.scheduledLocalNotifications.first else { return XCTFail() }
-        XCTAssertTrue(notification.alertBody!.contains(text))
+        XCTAssertEqual(self.scheduledRequests.count, 1)
+        XCTAssertEqual(self.receivedForegroundNotifications.count, 0)
+        XCTAssertTrue(self.scheduledRequests.first!.content.body.contains(text))
     }
-    
+
     func testThatItDoesNotCreateNotificationForOtherGroupParticipation() {
-        
         // GIVEN
         let message = ZMSystemMessage(nonce: UUID(), managedObjectContext: syncMOC)
         message.visibleInConversation = self.conversation1
         message.sender = self.user1
         message.systemMessageType = .participantsAdded
         message.users = [self.user2]
-        
+
         // WHEN
         self.sut.process(message)
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // THEN
-        XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0)
-        XCTAssertEqual(self.notificationDelegate.receivedLocalNotifications.count, 0)
+        XCTAssertEqual(self.scheduledRequests.count, 0)
+        XCTAssertEqual(self.receivedForegroundNotifications.count, 0)
     }
-    
+
     func testThatItCancelsNotificationWhenUserDeletesLike() {
         let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
         conversation.remoteIdentifier = UUID.create()
         let sender = ZMUser.insertNewObject(in: self.syncMOC)
         sender.remoteIdentifier = UUID.create()
-        
+
         let message = conversation.appendMessage(withText: "text") as! ZMClientMessage
         let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce!, nonce: UUID.create())
         let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce!, nonce: UUID.create())
-        
+
         let event1 = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction1, senderID: sender.remoteIdentifier!)
         let event2 = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction2, senderID: sender.remoteIdentifier!)
-    
+
         sut.didReceive(events: [event1], conversationMap: [:])
-        XCTAssertEqual(application.scheduledLocalNotifications.count, 1)
-        let note = application.scheduledLocalNotifications.first!
+        XCTAssertEqual(self.scheduledRequests.count, 1)
+        let id = self.scheduledRequests.first!.identifier
         
         // WHEN
         sut.didReceive(events: [event2], conversationMap: [:])
-        
+
         // THEN
-        XCTAssertTrue(application.cancelledLocalNotifications.contains(note))
+        XCTAssertTrue(self.notificationCenter.removedNotifications.contains(id))
     }
 }
 
@@ -378,7 +403,7 @@ extension LocalNotificationDispatcherTests {
 
 // MARK: - Helpers
 extension LocalNotificationDispatcherTests {
-        
+    
     func payloadForEncryptedOTRMessage(text: String, nonce: UUID) -> [String: Any] {
         let message = ZMGenericMessage.message(text: text, nonce: nonce)
         return self.payloadForOTRAsset(with: message)
@@ -422,11 +447,11 @@ extension LocalNotificationDispatcherTests {
 
 
 class MockForegroundNotificationDelegate: NSObject, ForegroundNotificationsDelegate {
-    
-    var receivedLocalNotifications: [UILocalNotification] = []
+
+    var receivedLocalNotifications: [ZMLocalNotification] = []
 
     func didReceieveLocal(notification: ZMLocalNotification, application: ZMApplication) {
-        self.receivedLocalNotifications.append(notification.uiLocalNotification)
+        self.receivedLocalNotifications.append(notification)
     }
 }
 

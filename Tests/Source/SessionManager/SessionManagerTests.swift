@@ -794,6 +794,35 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         return session
     }
     
+    func testThatItConfiguresNotificationSettingsWhenAccountIsActivated() {
+        // GIVEN
+        _ = self.setupSession()
+        let expectation = self.expectation(description: "Session loaded")
+        sessionManager?.notificationCenter = notificationCenter!
+        
+        guard
+            let sessionManager = self.sessionManager,
+            let account = sessionManager.accountManager.account(with: currentUserIdentifier)
+            else { return XCTFail() }
+        
+        // WHEN
+        sessionManager.select(account, completion: { userSession in
+            XCTAssertNotNil(userSession)
+            expectation.fulfill()
+        })
+        
+        XCTAssertTrue(self.wait(withTimeout: 0.1) { return self.sessionManager!.activeUserSession != nil })
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(self.notificationCenter?.registeredNotificationCategories, WireSyncEngine.PushNotificationCategory.allCategories)
+        XCTAssertEqual(self.notificationCenter?.requestedAuthorizationOptions, [.alert, .badge, .sound])
+        XCTAssertNotNil(self.notificationCenter?.delegate)
+        
+        // CLEANUP
+        self.sessionManager!.tearDownAllBackgroundSessions()
+    }
+    
     func testThatItActivatesTheAccountForPushReaction() {
         // GIVEN
         let session = self.setupSession()
@@ -802,59 +831,64 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         application?.applicationState = .background
         
         let selfConversation = ZMConversation(remoteID: currentUserIdentifier, createIfNeeded: false, in: session.managedObjectContext)
+
+        let userInfo = NotificationUserInfo()
+        userInfo.conversationID = selfConversation?.remoteIdentifier
+        userInfo.selfUserID = currentUserIdentifier
         
-        let localNotification = UILocalNotification()
-        localNotification.setupUserInfo(selfConversation, for: nil)
-        
-        XCTAssertEqual(localNotification.zm_selfUserUUID, currentUserIdentifier)
+        let category = WireSyncEngine.PushNotificationCategory.conversation.rawValue
+
         XCTAssertNil(self.sessionManager!.activeUserSession)
-        
+
         // WHEN
-        self.sessionManager?.didReceiveLocal(notification: localNotification, application: self.application!)
-        
+        self.sessionManager?.handleNotification(with: userInfo) { userSession in
+            userSession.handleInAppNotification(with: userInfo,
+                                                categoryIdentifier: category,
+                                                completionHandler: { _ in })
+        }
+
         XCTAssertTrue(self.wait(withTimeout: 0.1) { return self.sessionManager!.activeUserSession != nil })
-        
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // THEN
         XCTAssertEqual(self.sessionManager!.activeUserSession, session)
-        
+
         // CLEANUP
         self.sessionManager!.tearDownAllBackgroundSessions()
     }
-    
+
     func testThatItActivatesTheAccountForPushAction() {
         // GIVEN
         let session = self.setupSession()
         session.isPerformingSync = false
         session.pushChannelIsOpen = true
         application?.applicationState = .inactive
-        
+
         let selfConversation = ZMConversation(remoteID: currentUserIdentifier, createIfNeeded: false, in: session.managedObjectContext)
         
-        let localNotification = UILocalNotification()
-        localNotification.setupUserInfo(selfConversation, for: nil)
+        let userInfo = NotificationUserInfo()
+        userInfo.conversationID = selfConversation?.remoteIdentifier
+        userInfo.selfUserID = currentUserIdentifier
         
-        XCTAssertEqual(localNotification.zm_selfUserUUID, currentUserIdentifier)
+        let category = WireSyncEngine.PushNotificationCategory.conversation.rawValue
+        
         XCTAssertNil(self.sessionManager!.activeUserSession)
-        
+
         // WHEN
         let completionExpectation = self.expectation(description: "Completed action")
-        self.sessionManager?.handleAction(
-            with: nil,
-            for: localNotification,
-            with: [:],
-            completionHandler: completionExpectation.fulfill,
-            application: self.application!
-        )
-
-        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        self.sessionManager?.handleNotification(with: userInfo) { userSession in
+            userSession.handleNotificationResponse(actionIdentifier: "",
+                                                   categoryIdentifier: category,
+                                                   userInfo: userInfo,
+                                                   completionHandler: completionExpectation.fulfill)
+        }
         
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // THEN
         XCTAssertEqual(self.sessionManager!.activeUserSession, session)
-        
+
         // CLEANUP
         self.sessionManager!.tearDownAllBackgroundSessions()
     }
@@ -864,7 +898,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         let manager = sessionManager!.accountManager
         let account1 = Account(userName: "Test Account 1", userIdentifier: currentUserIdentifier)
         account1.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
-
+        
         manager.addOrUpdate(account1)
         let account2 = Account(userName: "Test Account 2", userIdentifier: UUID())
         account2.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
@@ -899,7 +933,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         // CLEANUP
         self.sessionManager!.tearDownAllBackgroundSessions()
     }
-            
+    
     // the purpose of this test is to ensure push payloads can be processed in
     // the background as soon as the SessionManager is created
     func testThatABackgroundTaskCanBeCreatedAfterCreatingSessionManager() {

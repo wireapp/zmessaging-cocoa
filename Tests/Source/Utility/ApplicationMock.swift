@@ -24,22 +24,11 @@ import WireSyncEngine
     
     public var applicationState: UIApplicationState = .active
     
-    public var alertNotificationsEnabled: Bool = false
-    
-    /// Records calls to `scheduleLocalNotification`
-    public var scheduledLocalNotifications : [UILocalNotification] = []
-    
-    /// Records calls to `cancelledLocalNotifications`
-    public var cancelledLocalNotifications : [UILocalNotification] = []
-    
     /// Records calls to `registerForRemoteNotification`
     public var registerForRemoteNotificationCount : Int = 0
     
     /// The current badge icon number
     public var applicationIconBadgeNumber: Int = 0
-    
-    /// Records calls to `registerUserNotificationSettings`
-    public var registeredUserNotificationSettings : [UIUserNotificationSettings] = []
     
     /// Records calls to `setMinimumBackgroundFetchInterval`
     public var minimumBackgroundFetchInverval : TimeInterval = UIApplicationBackgroundFetchIntervalNever
@@ -51,21 +40,9 @@ import WireSyncEngine
 // MARK: - Application protocol
 extension ApplicationMock : ZMApplication {
     
-    public func scheduleLocalNotification(_ notification: UILocalNotification) {
-        self.scheduledLocalNotifications.append(notification)
-    }
-    
-    public func cancelLocalNotification(_ notification: UILocalNotification) {
-        self.cancelledLocalNotifications.append(notification)
-    }
-    
     public func registerForRemoteNotifications() {
         self.registerForRemoteNotificationCount += 1
         self.registerForRemoteNotificationsCallback()
-    }
-    
-    public func registerUserNotificationSettings(_ settings: UIUserNotificationSettings) {
-        self.registeredUserNotificationSettings.append(settings)
     }
     
     public func setMinimumBackgroundFetchInterval(_ minimumBackgroundFetchInterval: TimeInterval) {

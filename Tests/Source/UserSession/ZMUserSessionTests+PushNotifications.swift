@@ -41,19 +41,17 @@ class RequestToOpenViewsRecorder: NSObject, ZMRequestsToOpenViewsDelegate {
 
 class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
 
+    typealias Category = WireSyncEngine.PushNotificationCategory
+    typealias ConversationAction = WireSyncEngine.ConversationNotificationAction
+    typealias CallAction = WireSyncEngine.CallNotificationAction
+    
     func testThatItCallsShowConversationList_ForPushNotificationCategoryConversationWithoutConversation() {
         // given
         let recorder = RequestToOpenViewsRecorder()
-        let notification = UILocalNotification()
-        notification.category = WireSyncEngine.PushNotificationCategory.conversation.rawValue
         sut.requestToOpenViewDelegate = recorder
-        application.setInactive()
         
         // when
-        sut.handleAction(application: application, with: nil, for: notification, with: [:]) {}
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.didFinishSync()
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        handle(conversationAction: nil, category: .conversation, userInfo: NotificationUserInfo())
         
         // then
         XCTAssertEqual(recorder.lastRequestToShowConversationsList, sut)
@@ -63,179 +61,179 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         // given
         let sender = ZMUser.insertNewObject(in: uiMOC)
         sender.remoteIdentifier = UUID()
+
         let recorder = RequestToOpenViewsRecorder()
-        let notification = notificationWithConnectionRequest(from: sender)
         sut.requestToOpenViewDelegate = recorder
-        application.setInactive()
-        
-        
+
+        let userInfo = userInfoWithConnectionRequest(from: sender)
+
         // when
-        handleNotification(notification, conversationAction: nil)
-        
+        handle(conversationAction: nil, category: .connect, userInfo: userInfo)
+
         // then
         XCTAssertEqual(recorder.lastRequestToShowConversation?.0, sut)
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, notification.zm_conversationRemoteID)
+        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
         XCTAssertFalse(sender.isConnected)
     }
-    
+
     func testThatItCallsShowConversationListAndConnects_ForPushNotificationCategoryConnectWithAcceptAction() {
         // given
         let sender = ZMUser.insertNewObject(in: uiMOC)
         sender.remoteIdentifier = UUID()
+        
         let recorder = RequestToOpenViewsRecorder()
-        let notification = notificationWithConnectionRequest(from: sender)
         sut.requestToOpenViewDelegate = recorder
-        application.setInactive()
-        
-        
+
+        let userInfo = userInfoWithConnectionRequest(from: sender)
+
         // when
-        handleNotification(notification, conversationAction: .connect)
-        
+        handle(conversationAction: .connect, category: .connect, userInfo: userInfo)
+
         // then
         XCTAssertEqual(recorder.lastRequestToShowConversation?.0, sut)
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, notification.zm_conversationRemoteID)
+        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
         XCTAssertTrue(sender.isConnected)
     }
-    
+
     func testThatItMutesAndDoesNotShowConversation_ForPushNotificationCategoryConversationWithMuteAction() {
-        
         // given
         let recorder = RequestToOpenViewsRecorder()
-        let notification = notificationWithConveration(for: .conversation)
-        let conversation = notification.conversation(in: uiMOC)!
+        let userInfo = userInfoWithConversation()
+        let conversation = userInfo.conversation(in: uiMOC)!
         simulateLoggedInUser()
-        
+
         // when
-        handleNotification(notification, conversationAction: .mute)
-        
+        handle(conversationAction: .mute, category: .conversation, userInfo: userInfo)
+
         // then
         XCTAssertNil(recorder.lastRequestToShowConversation)
         XCTAssertTrue(conversation.isSilenced)
     }
-    
+
     func testThatItAddsLike_ForPushNotificationCategoryConversationWithLikeAction() {
         // given
-        let notification = notificationWithConveration(for: .conversation, hasMessage: true)
-        let conversation = notification.conversation(in: uiMOC)!
+        let userInfo = userInfoWithConversation(hasMessage: true)
+        let conversation = userInfo.conversation(in: uiMOC)!
+        
         simulateLoggedInUser()
         sut.operationStatus.isInBackground = true
-        
+
         // when
-        handleNotification(notification, conversationAction: .like)
-        
+        handle(conversationAction: .like, category: .conversation, userInfo: userInfo)
+
         // then
         let lastMessage = conversation.messages.lastObject as? ZMMessage
         XCTAssertEqual(lastMessage?.reactions.count, 1)
     }
-    
+
     func testThatItCallsShowConversation_ForPushNotificationCategoryConversation() {
         // given
         let recorder = RequestToOpenViewsRecorder()
-        let notification = notificationWithConveration(for: .conversation)
         sut.requestToOpenViewDelegate = recorder
-        application.setInactive()
-        
+
+        let userInfo = userInfoWithConversation()
+
         // when
-        handleNotification(notification, conversationAction: nil)
-        
+        handle(conversationAction: nil, category: .conversation, userInfo: userInfo)
+
         // then
         XCTAssertEqual(recorder.lastRequestToShowConversation?.0, sut)
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, notification.zm_conversationRemoteID)
+        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
     }
-    
+
     func testThatItCallsShowConversationAndAcceptsCall_ForPushNotificationCategoryIncomingCallWithAcceptAction() {
         // given
         simulateLoggedInUser()
         createSelfClient()
-        application.setInactive()
+
         let recorder = RequestToOpenViewsRecorder()
-        let callCenter = createCallCenter()
-        let notification = notificationWithConveration(for: .incomingCall)
-        let conversation = notification.conversation(in: uiMOC)!
-        simulateIncomingCall(fromUser: conversation.connectedUser!, conversation: conversation)
         sut.requestToOpenViewDelegate = recorder
-        
+
+        let userInfo = userInfoWithConversation()
+        let conversation = userInfo.conversation(in: uiMOC)!
+
+        let callCenter = createCallCenter()
+        simulateIncomingCall(fromUser: conversation.connectedUser!, conversation: conversation)
+
         // when
-        handleNotification(notification, callAction: .accept)
-        
+        handle(callAction: .accept, category: .incomingCall, userInfo: userInfo)
+
         // then
         XCTAssertTrue(callCenter.didCallAnswerCall);
         XCTAssertEqual(recorder.lastRequestToShowConversation?.0, sut)
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, notification.zm_conversationRemoteID)
+        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID)
     }
-    
+
     func testThatItDoesNotCallsShowConversationAndRejectsCall_ForPushNotificationCategoryIncomingCallWithIgnoreAction() {
         // given
         simulateLoggedInUser()
         createSelfClient()
-        application.setInactive()
+        
         let recorder = RequestToOpenViewsRecorder()
-        let callCenter = createCallCenter()
-        let notification = notificationWithConveration(for: .incomingCall)
-        let conversation = notification.conversation(in: uiMOC)!
-        simulateIncomingCall(fromUser: conversation.connectedUser!, conversation: conversation)
         sut.requestToOpenViewDelegate = recorder
-        
+
+        let userInfo = userInfoWithConversation()
+        let conversation = userInfo.conversation(in: uiMOC)!
+
+        let callCenter = createCallCenter()
+        simulateIncomingCall(fromUser: conversation.connectedUser!, conversation: conversation)
+
         // when
-        handleNotification(notification, callAction: .ignore)
-        
+        handle(callAction: .ignore, category: .incomingCall, userInfo: userInfo)
+
         // then
         XCTAssertTrue(callCenter.didCallRejectCall);
         XCTAssertNil(recorder.lastRequestToShowConversation)
     }
-    
+
     func testThatItCallsShowConversationButDoesNotCallBack_ForPushNotificationCategoryMissedCallWithCallBackAction() {
         // given
         simulateLoggedInUser()
         createSelfClient()
-        application.setInactive()
+        
         let recorder = RequestToOpenViewsRecorder()
-        let callCenter = createCallCenter()
-        let notification = notificationWithConveration(for: .missedCall)
         sut.requestToOpenViewDelegate = recorder
-        
+
+        let userInfo = userInfoWithConversation()
+        let callCenter = createCallCenter()
+
         // when
-        handleNotification(notification, callAction: .callBack)
-        
+        handle(callAction: .callBack, category: .missedCall, userInfo: userInfo)
+
         // then
         XCTAssertFalse(callCenter.didCallStartCall);
         XCTAssertEqual(recorder.lastRequestToShowConversation?.0, sut)
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, notification.zm_conversationRemoteID)
+        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
     }
-    
+
     func testThatItDoesNotCallShowConversationAndAppendsAMessage_ForPushNotificationCategoryConversationWithDirectReplyAction() {
         // given
         simulateLoggedInUser()
         sut.operationStatus.isInBackground = true
+        
         let recorder = RequestToOpenViewsRecorder()
-        let notification = notificationWithConveration(for: .conversation)
-        let conversation = notification.conversation(in: uiMOC)!
-        let responseInfo = [UIUserNotificationActionResponseTypedTextKey : "Hello World"]
         sut.requestToOpenViewDelegate = recorder
-        
+
+        let userInfo = userInfoWithConversation()
+        let conversation = userInfo.conversation(in: uiMOC)!
+
         // when
-        handleNotification(notification, conversationAction: .reply, responseInfo: responseInfo)
-        
+        handle(conversationAction: .reply, category: .conversation, userInfo: userInfo, userText: "Hello World")
+
         // then
         XCTAssertEqual(conversation.messages.count, 1);
         XCTAssertNil(recorder.lastRequestToShowConversation)
     }
-    
+
     func testThatOnLaunchItCallsShowConversationList_ForPushNotificationCategoryConversationWithoutConversation() {
         // given
         simulateLoggedInUser()
         let recorder = RequestToOpenViewsRecorder()
-        let notification = UILocalNotification()
-        notification.category = WireSyncEngine.PushNotificationCategory.conversation.rawValue
-        application.setInactive()
         sut.requestToOpenViewDelegate = recorder
-        
+
         // when
-        sut.application(application, didFinishLaunchingWithOptions: [UIApplicationLaunchOptionsKey.localNotification: notification])
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.didFinishSync()
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+        handle(conversationAction: nil, category: .conversation, userInfo: NotificationUserInfo())
+
         // then
         XCTAssertEqual(recorder.lastRequestToShowConversationsList, sut)
     }
@@ -244,41 +242,38 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         // given
         simulateLoggedInUser()
         let recorder = RequestToOpenViewsRecorder()
-        let notification = notificationWithConveration(for: .conversation)
-        application.setInactive()
         sut.requestToOpenViewDelegate = recorder
         
+        let userInfo = userInfoWithConversation()
+
         // when
-        sut.application(application, didFinishLaunchingWithOptions: [UIApplicationLaunchOptionsKey.localNotification: notification])
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.didFinishSync()
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        handle(conversationAction: nil, category: .conversation, userInfo: userInfo)
         
         // then
         XCTAssertEqual(recorder.lastRequestToShowConversation?.0, sut)
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, notification.zm_conversationRemoteID)
+        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
     }
     
 }
 
 extension ZMUserSessionTests_PushNotifications {
     
-    func handleNotification(_ notification: UILocalNotification, conversationAction: WireSyncEngine.PushNotificationCategory.ConversationAction?, responseInfo: [AnyHashable : Any] = [:]) {
-        sut.handleAction(application: application, with: conversationAction?.rawValue, for: notification, with: responseInfo) {}
+    func handle(conversationAction: ConversationAction?, category: Category, userInfo: NotificationUserInfo, userText: String? = nil) {
+        handle(action: conversationAction?.rawValue ?? "", category: category.rawValue, userInfo: userInfo, userText: userText)
+    }
+    
+    func handle(callAction: CallAction, category: Category, userInfo: NotificationUserInfo) {
+        handle(action: callAction.rawValue, category: category.rawValue, userInfo: userInfo)
+    }
+    
+    func handle(action: String, category: String, userInfo: NotificationUserInfo, userText: String? = nil) {
+        sut.handleNotificationResponse(actionIdentifier: action, categoryIdentifier: category, userInfo: userInfo, userText: userText) {}
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         sut.didFinishSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
-    func handleNotification(_ notification: UILocalNotification, callAction: WireSyncEngine.PushNotificationCategory.CallAction?) {
-        sut.handleAction(application: application, with: callAction?.rawValue, for: notification, with: [:]) {}
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.didFinishSync()
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-    }
-    
-    func notificationWithConveration(for category: WireSyncEngine.PushNotificationCategory, hasMessage: Bool = false) -> UILocalNotification {
-        
+    func userInfoWithConversation(hasMessage: Bool = false) -> NotificationUserInfo {
         let conversationId = UUID()
         var messageNonce: UUID?
         syncMOC.performGroupedBlockAndWait {
@@ -304,18 +299,17 @@ extension ZMUserSessionTests_PushNotifications {
             self.syncMOC.saveOrRollback()
         }
         
-        let notification = UILocalNotification()
-        notification.category = category.rawValue
-        notification.userInfo = ["conversationIDString" : conversationId.transportString()]
+        let userInfo = NotificationUserInfo()
+        userInfo.conversationID = conversationId
         
         if hasMessage {
-            notification.userInfo?["messageNonceString"] = messageNonce?.transportString()
+            userInfo.messageNonce = messageNonce
         }
         
-        return notification
+        return userInfo
     }
     
-    func notificationWithConnectionRequest(from sender: ZMUser) -> UILocalNotification {
+    func userInfoWithConnectionRequest(from sender: ZMUser) -> NotificationUserInfo {
         let conversation = ZMConversation.insertNewObject(in: uiMOC)
         conversation.conversationType = .connection
         conversation.remoteIdentifier = UUID()
@@ -326,13 +320,11 @@ extension ZMUserSessionTests_PushNotifications {
         connection.status = .pending
         
         uiMOC.saveOrRollback()
+
+        let userInfo = NotificationUserInfo()
+        userInfo.conversationID = conversation.remoteIdentifier
+        userInfo.senderID = sender.remoteIdentifier
         
-        let notification = UILocalNotification()
-        notification.category = WireSyncEngine.PushNotificationCategory.connect.rawValue
-        notification.userInfo = ["conversationIDString" : conversation.remoteIdentifier!.transportString(),
-                                 "senderIDString" : sender.remoteIdentifier.transportString()]
-        
-        return notification
+        return userInfo
     }
-    
 }

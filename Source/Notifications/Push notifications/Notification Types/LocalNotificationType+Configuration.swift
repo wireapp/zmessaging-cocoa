@@ -54,26 +54,26 @@ extension LocalNotificationType {
         return category.rawValue
     }
     
-    var soundName: String {
+    var sound: NotificationSound {
         switch self {
         case .calling(let callState):
             switch callState {
             case .incoming:
-                return ZMCustomSound.notificationRingingSoundName()
+                return .call
             default:
-                return ZMCustomSound.notificationNewMessageSoundName()
+                return .newMessage
             }
         case .event:
-            return ZMCustomSound.notificationNewMessageSoundName()
+            return .newMessage
         case .message(let contentType):
             switch contentType {
             case .knock:
-                return ZMCustomSound.notificationPingSoundName()
+                return .ping
             default:
-                return ZMCustomSound.notificationNewMessageSoundName()
+                return .newMessage
             }
         case .failedMessage:
-            return ZMCustomSound.notificationNewMessageSoundName()
+            return .newMessage
         }
     }
     

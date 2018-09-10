@@ -60,12 +60,11 @@ class ZMStoredLocalNotificationTests: MessagingTest {
         XCTAssertNotNil(note)
         
         // when
-        let storedNote = ZMStoredLocalNotification(notification: note!.uiLocalNotification, managedObjectContext: uiMOC, actionIdentifier: nil, textInput: textInput)
+        let storedNote = ZMStoredLocalNotification(userInfo: note!.userInfo!, moc: uiMOC, category: note!.category, actionIdentifier: nil)
         
         // then
         XCTAssertEqual(storedNote.conversation, conversation)
-        XCTAssertEqual(storedNote.senderUUID, sender.remoteIdentifier)
+        XCTAssertEqual(storedNote.senderID, sender.remoteIdentifier)
         XCTAssertEqual(storedNote.category, WireSyncEngine.PushNotificationCategory.conversationIncludingLike.rawValue)
-        XCTAssertEqual(storedNote.textInput, textInput)
     }
 }

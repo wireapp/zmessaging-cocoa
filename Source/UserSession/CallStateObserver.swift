@@ -84,8 +84,12 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             // This will unarchive the conversation when there is an incoming call
             self.updateConversation(conversation, with: callState, timestamp: timestamp)
-
-            if (self.userSession?.callNotificationStyle ?? .callKit) == .pushNotifications {
+            
+            // CallKit depends on a fetched conversation
+            let skipCallKit = conversation.needsToBeUpdatedFromBackend
+            let notificationStyle = self.userSession?.callNotificationStyle ?? .callKit
+            
+            if notificationStyle == .pushNotifications || skipCallKit {
                 self.localNotificationDispatcher.process(callState: callState, in: conversation, caller: caller)
             }
             
