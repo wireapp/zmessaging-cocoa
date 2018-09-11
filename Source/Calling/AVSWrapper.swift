@@ -20,6 +20,8 @@
 import Foundation
 import avs
 
+private let zmLog = ZMSLog(tag: "calling")
+
 public struct AVSCallMember : Hashable {
     
     let remoteId: UUID
@@ -85,11 +87,152 @@ public protocol AVSWrapperType {
     func update(callConfig: String?, httpStatusCode: Int)
 }
 
+typealias ConstantBitRateChangeHandler = @convention(c) (UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
+typealias VideoStateChangeHandler = @convention(c) (UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
+typealias IncomingCallHandler = @convention(c) (UnsafePointer<Int8>?, UInt32, UnsafePointer<Int8>?, Int32, Int32, UnsafeMutableRawPointer?) -> Void
+typealias MissedCallHandler = @convention(c) (UnsafePointer<Int8>?, UInt32, UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
+typealias AnsweredCallHandler = @convention(c) (UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+typealias DataChannelEstablishedHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+typealias CallEstablishedHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+typealias CloseCallHandler = @convention(c) (Int32, UnsafePointer<Int8>?, UInt32, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+typealias CallMetricsHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+typealias CallConfigRefreshHandler = @convention(c) (UnsafeMutableRawPointer?, UnsafeMutableRawPointer?) -> Int32
+typealias CallReadyHandler = @convention(c) (Int32, UnsafeMutableRawPointer?) -> Void
+typealias CallMessageSendHandler = @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<UInt8>?, Int, Int32, UnsafeMutableRawPointer?) -> Int32
+typealias CallGroupChangedHandler = @convention(c) (UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+
+protocol AVSValue {
+    associatedtype AVSType
+    init?(rawValue: AVSType)
+}
+
+extension Bool: AVSValue {
+    init(rawValue: Int32) {
+        self = rawValue == 1 ? true : false
+    }
+}
+
+extension UUID: AVSValue {
+    init?(rawValue: UnsafePointer<Int8>?) {
+        self.init(cString: rawValue)
+    }
+}
+
+extension VideoState: AVSValue {}
+
+extension Date: AVSValue {
+    init(rawValue: UInt32) {
+        self = Date(timeIntervalSince1970: TimeInterval(rawValue))
+    }
+}
+
+extension CallClosedReason: AVSValue {
+    public init?(rawValue: Int32) {
+        self.init(wcall_reason: rawValue)
+    }
+}
+
+extension String: AVSValue {
+    init?(rawValue: UnsafePointer<Int8>) {
+        self.init(cString: rawValue)
+    }
+}
+
 /// Wraps AVS calls for dependency injection and better testing
 public class AVSWrapper : AVSWrapperType {
 
     private let handle : UnsafeMutableRawPointer
-    
+
+    // MARK: - C Callback Handlers
+
+    let constantBitRateChangeHandler: ConstantBitRateChangeHandler = { _, enabledFlag, contextRef in
+        AVSWrapper.withCallCenter(contextRef, enabledFlag) {
+            $0.handleConstantBitRateChange(enabled: $1)
+        }
+    }
+
+    let videoStateChangeHandler: VideoStateChangeHandler = { userId, state, contextRef in
+        AVSWrapper.withCallCenter(contextRef, userId, state) {
+            $0.handleVideoStateChange(userId: $1, newState: $2)
+        }
+    }
+
+    let incomingCallHandler: IncomingCallHandler = { conversationId, messageTime, userId, isVideoCall, shouldRing, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, isVideoCall, shouldRing) {
+            $0.handleIncomingCall(conversationId: $1, messageTime: $2, userId: $3, isVideoCall: $4, shouldRing: $5)
+        }
+    }
+
+    let missedCallHandler: MissedCallHandler = { conversationId, messageTime, userId, isVideoCall, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, isVideoCall) {
+            $0.handleMissedCall(conversationId: $1, messageTime: $2, userId: $3, isVideoCall: $4)
+        }
+    }
+
+    let answeredCallHandler: AnsweredCallHandler = { conversationId, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationId) {
+            $0.handleAnsweredCall(conversationId: $1)
+        }
+    }
+
+    let dataChannelEstablishedHandler: DataChannelEstablishedHandler = { conversationId, userId, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationId, userId) {
+            $0.handleDataChannelEstablishement(conversationId: $1, userId: $2)
+        }
+    }
+
+    let establishedCallHandler: CallEstablishedHandler = { conversationId, userId, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationId, userId) {
+            $0.handleEstablishedCall(conversationId: $1, userId: $2)
+        }
+    }
+
+    let closedCallHandler: CloseCallHandler = { reason, conversationId, messageTime, userId, contextRef in
+        AVSWrapper.withCallCenter(contextRef, reason, conversationId, messageTime, userId) {
+            $0.handleCallEnd(reason: $1, conversationId: $2, messageTime: $3, userId: $4)
+        }
+    }
+
+    let callMetricsHandler: CallMetricsHandler = { conversationId, metrics, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationId, metrics) {
+            $0.handleCallMetrics(conversationId: $1, metrics: $2)
+        }
+    }
+
+    let requestCallConfigHandler: CallConfigRefreshHandler = { handle, contextRef in
+        zmLog.debug("AVS: requestCallConfigHandler \(String(describing: handle)) \(String(describing: contextRef))")
+        return AVSWrapper.withCallCenter(contextRef) {
+            $0.handleCallConfigRefreshRequest()
+        }
+    }
+
+    let readyHandler: CallReadyHandler = { version, contextRef in
+        AVSWrapper.withCallCenter(contextRef) {
+            $0.setCallReady(version: version)
+        }
+    }
+
+    let sendCallMessageHandler: CallMessageSendHandler = { token, conversationId, senderUserId, senderClientId, _, _, data, dataLength, _, contextRef in
+        guard let token = token else {
+            return EINVAL
+        }
+
+        let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
+        let transformedData = Data(buffer: bytes)
+
+        return AVSWrapper.withCallCenter(contextRef, conversationId, senderUserId, senderClientId) {
+            $0.handleCallMessageRequest(token: token, conversationId: $1, senderUserId: $2, senderClientId: $3, data: transformedData)
+        }
+    }
+
+    let groupMemberHandler: CallGroupChangedHandler = { conversationIdRef, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationIdRef) {
+            $0.handleGroupMemberChange(conversationId: $1)
+        }
+    }
+
+    // MARK: - 
+
     private static var initialize: () -> Void = {
         let resultValue = wcall_init()
         if resultValue != 0 {
@@ -116,7 +259,7 @@ public class AVSWrapper : AVSWrapperType {
                               constantBitRateChangeHandler,
                               videoStateChangeHandler,
                               observer)
-        
+
         wcall_set_data_chan_estab_handler(handle, dataChannelEstablishedHandler)
         wcall_set_group_changed_handler(handle, groupMemberHandler, observer)
         wcall_set_media_stopped_handler(handle, mediaStoppedChangeHandler)
@@ -180,4 +323,64 @@ public class AVSWrapper : AVSWrapperType {
         
         return callMembers
     }
+}
+
+extension AVSWrapper {
+
+    @discardableResult
+    static func withCallCenter(_ contextRef: UnsafeMutableRawPointer?, _ block: (WireCallCenterV3) -> Void) -> Int32 {
+        guard let contextRef = contextRef else { return EINVAL }
+        let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+        block(callCenter)
+        return 0
+    }
+
+    @discardableResult
+    static func withCallCenter<A1: AVSValue>(_ contextRef: UnsafeMutableRawPointer?, _ v1: A1.AVSType?, _ block: (WireCallCenterV3, A1) -> Void) -> Int32 {
+        guard let contextRef = contextRef, let value1 = v1.flatMap(A1.init) else { return EINVAL }
+        let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+        block(callCenter, value1)
+        return 0
+    }
+
+    @discardableResult
+    static func withCallCenter<A1: AVSValue, A2: AVSValue>(_ contextRef: UnsafeMutableRawPointer?, _ v1: A1.AVSType?, _ v2: A2.AVSType?, _ block: (WireCallCenterV3, A1, A2) -> Void) -> Int32 {
+        guard let contextRef = contextRef, let value1 = v1.flatMap(A1.init), let value2 = v2.flatMap(A2.init) else { return EINVAL }
+        let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+        block(callCenter, value1, value2)
+        return 0
+    }
+
+    @discardableResult
+    static func withCallCenter<A1: AVSValue, A2: AVSValue, A3: AVSValue>(_ contextRef: UnsafeMutableRawPointer?, _ v1: A1.AVSType?, _ v2: A2.AVSType?, _ v3: A3.AVSType?, _ block: (WireCallCenterV3, A1, A2, A3) -> Void) -> Int32 {
+        guard let contextRef = contextRef, let value1 = v1.flatMap(A1.init), let value2 = v2.flatMap(A2.init), let value3 = v3.flatMap(A3.init) else { return EINVAL }
+        let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+        block(callCenter, value1, value2, value3)
+        return 0
+    }
+
+    @discardableResult
+    static func withCallCenter<A1: AVSValue, A2: AVSValue, A3: AVSValue, A4: AVSValue>(_ contextRef: UnsafeMutableRawPointer?, _ v1: A1.AVSType?, _ v2: A2.AVSType?, _ v3: A3.AVSType?, _ v4: A4.AVSType?, _ block: (WireCallCenterV3, A1, A2, A3, A4) -> Void) -> Int32 {
+        guard let contextRef = contextRef, let value1 = v1.flatMap(A1.init), let value2 = v2.flatMap(A2.init), let value3 = v3.flatMap(A3.init), let value4 = v4.flatMap(A4.init) else { return EINVAL }
+        let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+        block(callCenter, value1, value2, value3, value4)
+        return 0
+    }
+
+    @discardableResult
+    static func withCallCenter<A1: AVSValue, A2: AVSValue, A3: AVSValue, A4: AVSValue, A5: AVSValue>(_ contextRef: UnsafeMutableRawPointer?, _ v1: A1.AVSType?, _ v2: A2.AVSType?, _ v3: A3.AVSType?, _ v4: A4.AVSType?, _ v5: A5.AVSType?, _ block: (WireCallCenterV3, A1, A2, A3, A4, A5) -> Void) -> Int32 {
+        guard let contextRef = contextRef, let value1 = v1.flatMap(A1.init), let value2 = v2.flatMap(A2.init), let value3 = v3.flatMap(A3.init), let value4 = v4.flatMap(A4.init), let value5 = v5.flatMap(A5.init) else { return EINVAL }
+        let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+        block(callCenter, value1, value2, value3, value4, value5)
+        return 0
+    }
+
+    @discardableResult
+    static func withCallCenter<A1: AVSValue, A2: AVSValue, A3: AVSValue, A4: AVSValue, A5: AVSValue, A6: AVSValue>(_ contextRef: UnsafeMutableRawPointer?, _ v1: A1.AVSType?, _ v2: A2.AVSType?, _ v3: A3.AVSType?, _ v4: A4.AVSType?, _ v5: A5.AVSType?, _ v6: A6.AVSType?, _ block: (WireCallCenterV3, A1, A2, A3, A4, A5, A6) -> Void) -> Int32 {
+        guard let contextRef = contextRef, let value1 = v1.flatMap(A1.init), let value2 = v2.flatMap(A2.init), let value3 = v3.flatMap(A3.init), let value4 = v4.flatMap(A4.init), let value5 = v5.flatMap(A5.init), let value6 = v6.flatMap(A6.init) else { return EINVAL }
+        let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+        block(callCenter, value1, value2, value3, value4, value5, value6)
+        return 0
+    }
+
 }

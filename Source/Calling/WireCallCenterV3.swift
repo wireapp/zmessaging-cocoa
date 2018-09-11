@@ -19,223 +19,7 @@
 import Foundation
 import avs
 
-
-private class Box<T : Any> {
-    var value : T
-    
-    init(value: T) {
-        self.value = value
-    }
-}
-
-public enum CallClosedReason : Int32 {
-    /// Ongoing call was closed by remote or self user
-    case normal
-    /// Incoming call was canceled by remote
-    case canceled
-    /// Incoming call was answered on another device
-    case anweredElsewhere
-    /// Outgoing call timed out
-    case timeout
-    /// Ongoing call lost media and was closed
-    case lostMedia
-    /// Call was closed because of internal error in AVS
-    case internalError
-    /// Call was closed due to a input/output error (couldn't access microphone)
-    case inputOutputError
-    /// Call left by the selfUser but continues until everyone else leaves or AVS closes it
-    case stillOngoing
-    /// Call was dropped due to the security level degrading
-    case securityDegraded
-    /// The call was rejected on another device.
-    case rejectedElsewhere
-    /// Call was closed for an unknown reason. This is most likely a bug.
-    case unknown
-    
-    init(wcall_reason: Int32) {
-        switch wcall_reason {
-        case WCALL_REASON_NORMAL:
-            self = .normal
-        case WCALL_REASON_CANCELED:
-            self = .canceled
-        case WCALL_REASON_ANSWERED_ELSEWHERE:
-            self = .anweredElsewhere
-        case WCALL_REASON_TIMEOUT:
-            self = .timeout
-        case WCALL_REASON_LOST_MEDIA:
-            self = .lostMedia
-        case WCALL_REASON_ERROR:
-            self = .internalError
-        case WCALL_REASON_IO_ERROR:
-            self = .inputOutputError
-        case WCALL_REASON_STILL_ONGOING:
-            self = .stillOngoing
-        case WCALL_REASON_REJECTED:
-            self = .rejectedElsewhere
-        default:
-            self = .unknown
-        }
-    }
-    
-    var wcall_reason : Int32 {
-        switch self {
-        case .normal:
-            return WCALL_REASON_NORMAL
-        case .canceled:
-            return WCALL_REASON_CANCELED
-        case .anweredElsewhere:
-            return WCALL_REASON_ANSWERED_ELSEWHERE
-        case .timeout:
-            return WCALL_REASON_TIMEOUT
-        case .lostMedia:
-            return WCALL_REASON_LOST_MEDIA
-        case .internalError:
-            return WCALL_REASON_ERROR
-        case .inputOutputError:
-            return WCALL_REASON_IO_ERROR
-        case .stillOngoing:
-            return WCALL_REASON_STILL_ONGOING
-        case .securityDegraded:
-            return WCALL_REASON_ERROR
-        case .rejectedElsewhere:
-            return WCALL_REASON_REJECTED
-        case .unknown:
-            return WCALL_REASON_ERROR
-        }
-    }
-}
-
-private let zmLog = ZMSLog(tag: "calling")
-
-public enum CallParticipantState : Equatable {
-    
-    // Participant is not in the call
-    case unconnected
-    // Participant is in the process of connecting to the call
-    case connecting
-    /// Participant is connected to call and audio is flowing
-    case connected(videoState: VideoState)
-    
-    public static func ==(lhs: CallParticipantState, rhs: CallParticipantState) -> Bool {
-        switch (lhs, rhs) {
-        case (.connecting, .connecting):
-            fallthrough
-        case (.unconnected, .unconnected):
-            return true
-        case (.connected(videoState: let lvideoState), .connected(videoState: let rvideoState)):
-            return lvideoState == rvideoState
-        default:
-            return false
-        }
-    }
-}
-
-public enum CallState : Equatable {
-    
-    /// There's no call
-    case none
-    /// Outgoing call is pending
-    case outgoing(degraded: Bool)
-    /// Incoming call is pending
-    case incoming(video: Bool, shouldRing: Bool, degraded: Bool)
-    /// Call is answered
-    case answered(degraded: Bool)
-    /// Call is established (data is flowing)
-    case establishedDataChannel
-    /// Call is established (media is flowing)
-    case established
-    /// Call is over and audio/video is guranteed to be stopped
-    case mediaStopped
-    /// Call in process of being terminated
-    case terminating(reason: CallClosedReason)
-    /// Unknown call state
-    case unknown
-    
-    public static func ==(lhs: CallState, rhs: CallState) -> Bool {
-        switch (lhs, rhs) {
-        case (.outgoing(degraded: let lDegraded), .outgoing(degraded: let rDegraded)):
-            return lDegraded == rDegraded
-        case (.answered(degraded: let lDegraded), .answered(degraded: let rDegraded)):
-            return lDegraded == rDegraded
-        case (.none, .none):
-            fallthrough
-        case (.establishedDataChannel, .establishedDataChannel):
-            fallthrough
-        case (.established, .established):
-            fallthrough
-        case (.terminating, .terminating):
-            fallthrough
-        case (.mediaStopped, .mediaStopped):
-            fallthrough
-        case (.unknown, .unknown):
-            return true
-        case (.incoming(video: let lVideo, shouldRing: let lShouldRing, degraded: let lDegraded), .incoming(video: let rVideo, shouldRing: let rShouldRing, degraded: let rDegraded)):
-            return lVideo == rVideo && lShouldRing == rShouldRing && lDegraded == rDegraded
-        default:
-            return false
-        }
-    }
-    
-    init(wcallState: Int32) {
-        switch wcallState {
-        case WCALL_STATE_NONE:
-            self = .none
-        case WCALL_STATE_INCOMING:
-            self = .incoming(video: false, shouldRing: true, degraded: false)
-        case WCALL_STATE_OUTGOING:
-            self = .outgoing(degraded: false)
-        case WCALL_STATE_ANSWERED:
-            self = .answered(degraded: false)
-        case WCALL_STATE_MEDIA_ESTAB:
-            self = .established
-        case WCALL_STATE_TERM_LOCAL: fallthrough
-        case WCALL_STATE_TERM_REMOTE:
-            self = .terminating(reason: .unknown)
-        default:
-            self = .none // FIXME check with AVS when WCALL_STATE_UNKNOWN can happen
-        }
-    }
-    
-    func logState(){
-        switch self {
-        case .answered(degraded: let degraded):
-            zmLog.debug("answered call, degraded: \(degraded)")
-        case .incoming(video: let isVideo, shouldRing: let shouldRing, degraded: let degraded):
-            zmLog.debug("incoming call, isVideo: \(isVideo), shouldRing: \(shouldRing), degraded: \(degraded)")
-        case .establishedDataChannel:
-            zmLog.debug("established data channel")
-        case .established:
-            zmLog.debug("established call")
-        case .outgoing(degraded: let degraded):
-            zmLog.debug("outgoing call, , degraded: \(degraded)")
-        case .terminating(reason: let reason):
-            zmLog.debug("terminating call reason: \(reason)")
-        case .mediaStopped:
-            zmLog.debug("media stopped")
-        case .none:
-            zmLog.debug("no call")
-        case .unknown:
-            zmLog.debug("unknown call state")
-        }
-    }
-    
-    func update(withSecurityLevel securityLevel: ZMConversationSecurityLevel) -> CallState {
-        
-        let degraded = securityLevel == .secureWithIgnored
-        
-        switch self {
-        case .incoming(video: let video, shouldRing: let shouldRing, degraded: _):
-            return .incoming(video: video, shouldRing: shouldRing, degraded: degraded)
-        case .outgoing:
-            return .outgoing(degraded: degraded)
-        case .answered:
-            return .answered(degraded: degraded)
-        default:
-            return self
-        }
-    }
-}
-
+//    case rejectedElsewhere
 private struct CallSnapshot {
     let callParticipants: CallParticipantsSnapshot
     let callState: CallState
@@ -313,147 +97,7 @@ internal extension AVSCallMember {
 }
 
 
-// MARK: - C convention functions
-
-/// Handles incoming calls
-/// In order to be passed to C, this function needs to be global
-
-internal func incomingCallHandler(conversationId: UnsafePointer<Int8>?, messageTime: UInt32, userId: UnsafePointer<Int8>?, isVideoCall: Int32, shouldRing: Int32, contextRef: UnsafeMutableRawPointer?)
-{
-    guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
-    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
-    
-    callCenter.uiMOC?.performGroupedBlock {
-        let callState : CallState = .incoming(video: isVideoCall != 0, shouldRing: shouldRing != 0, degraded: callCenter.isDegraded(conversationId: convID))
-        callCenter.handleCallState(callState: callState, conversationId: convID, userId: userID, messageTime: Date(timeIntervalSince1970: TimeInterval(messageTime)))
-    }
-}
-
-/// Handles missed calls
-/// In order to be passed to C, this function needs to be global
-internal func missedCallHandler(conversationId: UnsafePointer<Int8>?, messageTime: UInt32, userId: UnsafePointer<Int8>?, isVideoCall: Int32, contextRef: UnsafeMutableRawPointer?)
-{
-    guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
-    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
-    
-    callCenter.uiMOC?.performGroupedBlock {
-        callCenter.missed(conversationId: convID,
-                          userId: userID,
-                          timestamp: Date(timeIntervalSince1970: TimeInterval(messageTime)),
-                          isVideoCall: (isVideoCall != 0))
-    }
-}
-
-/// Handles answered calls
-/// In order to be passed to C, this function needs to be global
-internal func answeredCallHandler(conversationId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?){
-    guard let contextRef = contextRef, let convID = UUID(cString: conversationId) else { return }
-    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
-    
-    callCenter.uiMOC?.performGroupedBlock {
-        callCenter.handleCallState(callState: .answered(degraded: callCenter.isDegraded(conversationId: convID)), conversationId: convID, userId: nil)
-    }
-}
-
-/// Handles when data channel gets established
-/// In order to be passed to C, this function needs to be global
-internal func dataChannelEstablishedHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?,contextRef: UnsafeMutableRawPointer?) {
-    guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
-    
-    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
-    
-    callCenter.uiMOC?.performGroupedBlock {
-        callCenter.handleCallState(callState: .establishedDataChannel, conversationId: convID, userId: userID)
-    }
-}
-
-/// Handles established calls
-/// In order to be passed to C, this function needs to be global
-internal func establishedCallHandler(conversationId: UnsafePointer<Int8>?, userId: UnsafePointer<Int8>?,contextRef: UnsafeMutableRawPointer?)
-{
-    guard let contextRef = contextRef, let convID = UUID(cString: conversationId), let userID = UUID(cString: userId) else { return }
-    
-    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
-    
-    callCenter.uiMOC?.performGroupedBlock {
-        callCenter.handleCallState(callState: .established, conversationId: convID, userId: userID)
-    }
-}
-
-/// Handles ended calls
-/// If the user answers on the different device, we receive a `WCALL_REASON_ANSWERED_ELSEWHERE` followed by a `WCALL_REASON_NORMAL` once the call ends
-/// If the user leaves an ongoing group conversation or an incoming group call times out, we receive a `WCALL_REASON_STILL_ONGOING` followed by a `WCALL_REASON_NORMAL` once the call ends
-/// If messageTime is set to 0, the event wasn't caused by a message therefore we don't have a serverTimestamp.
-internal func closedCallHandler(reason:Int32, conversationId: UnsafePointer<Int8>?, messageTime: UInt32, userId: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?)
-{
-    guard let contextRef = contextRef, let convID = UUID(cString: conversationId) else { return }
-    let userID = UUID(cString: userId)
-    
-    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
-    callCenter.uiMOC?.performGroupedBlock {
-        let time = (messageTime == 0) ? nil : Date(timeIntervalSince1970: TimeInterval(messageTime))
-        callCenter.handleCallState(callState: .terminating(reason: CallClosedReason(wcall_reason: reason)), conversationId: convID, userId: userID, messageTime: time)
-    }
-}
-
-/// Handles call metrics
-internal func callMetricsHandler(conversationId: UnsafePointer<Int8>?, metrics: UnsafePointer<Int8>?, contextRef:UnsafeMutableRawPointer?) {
-    do {
-        guard let jsonData = String(cString: metrics)?.data(using: .utf8), let contextRef = contextRef else { return }
-        guard let attributes = try JSONSerialization.jsonObject(with: jsonData, options: .mutableContainers) as? [String: NSObject] else { return }
-        let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
-        callCenter.analytics?.tagEvent("calling.avs_metrics_ended_call", attributes: attributes)
-    } catch {
-        zmLog.error("Unable to parse call metrics JSON: \(error)")
-    }
-}
-
-/// Handle requests for refreshing the calling configuration
-internal func requestCallConfigHandler(handle : UnsafeMutableRawPointer?, contextRef: UnsafeMutableRawPointer?) -> Int32 {
-    zmLog.debug("AVS: requestCallConfigHandler \(String(describing: handle)) \(String(describing: contextRef))")
-    guard let contextRef = contextRef else { return EPROTO }
-    
-    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
-    
-    callCenter.uiMOC?.performGroupedBlock {
-        callCenter.requestCallConfig()
-    }
-    
-    return 0
-}
-
-/// Handles sending call messages
-/// In order to be passed to C, this function needs to be global
-internal func sendCallMessageHandler(token: UnsafeMutableRawPointer?,
-                                     conversationId: UnsafePointer<Int8>?,
-                                     senderUserId: UnsafePointer<Int8>?,
-                                     senderClientId: UnsafePointer<Int8>?,
-                                     destinationUserId: UnsafePointer<Int8>?,
-                                     destinationClientId: UnsafePointer<Int8>?,
-                                     data: UnsafePointer<UInt8>?,
-                                     dataLength: Int,
-                                     transient : Int32,
-                                     contextRef: UnsafeMutableRawPointer?) -> Int32
-{
-    guard let token = token, let contextRef = contextRef, let conversationId = UUID(cString: conversationId), let userId = UUID(cString: senderUserId), let clientId = String(cString: senderClientId), let data = data else {
-        return EINVAL // invalid argument
-    }
-    
-    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
-    let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
-    let transformedData = Data(buffer: bytes)
-
-    callCenter.uiMOC?.performGroupedBlock {
-        callCenter.send(token: token,
-                        conversationId: conversationId,
-                        userId: userId,
-                        clientId: clientId,
-                        data: transformedData,
-                        dataLength: dataLength)
-    }
-    
-    return 0
-}
+// MARK - Call center transport
 
 /// Called when AVS is ready
 /// In order to be passed to C, this function needs to be global
@@ -562,6 +206,10 @@ public struct CallEvent {
  * Thread safety: WireCallCenter instance methods should only be called from the main thread, class method can be called from any thread.
  */
 @objc public class WireCallCenterV3 : NSObject {
+
+    let handler: @convention(c) (Int32, UnsafeMutableRawPointer) -> Void = { _, _ in
+
+    }
     
     /// The selfUser remoteIdentifier
     fileprivate let selfUserId : UUID
@@ -596,7 +244,7 @@ public struct CallEvent {
         guard let moc = uiMOC,
               let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: moc)
         else { return }
-        
+
         let callParticipants = CallParticipantsSnapshot(conversationId: conversationId, members: members, callCenter: self)
         let token = ConversationChangeInfo.add(observer: self, for: conversation)
         let group = conversation.conversationType == .group
@@ -968,3 +616,154 @@ extension WireCallCenterV3 : ZMConversationObserver {
     }
     
 }
+
+extension WireCallCenterV3 {
+
+    private func handleEvent(_ description: String, _ handlerBlock: @escaping () -> Void) {
+        guard let context = self.uiMOC else {
+            zmLog.error("Cannot handle event '\(description)' because the UI context is not available.")
+            return
+        }
+
+        context.performGroupedBlock {
+            handlerBlock()
+        }
+    }
+
+    private func handleEventInContext(_ description: String, _ handlerBlock: @escaping (NSManagedObjectContext) -> Void) {
+        guard let context = self.uiMOC else {
+            zmLog.error("Cannot handle event '\(description)' because the UI context is not available.")
+            return
+        }
+
+        context.performGroupedBlock {
+            handlerBlock(context)
+        }
+    }
+
+    /// Handles incoming calls.
+    func handleIncomingCall(conversationId: UUID, messageTime: Date, userId: UUID, isVideoCall: Bool, shouldRing: Bool) {
+        handleEvent("incoming-call") {
+            let callState : CallState = .incoming(video: isVideoCall, shouldRing: shouldRing, degraded: self.isDegraded(conversationId: conversationId))
+            self.handleCallState(callState: callState, conversationId: conversationId, userId: userId, messageTime: messageTime)
+        }
+    }
+
+    /// Handles missed calls.
+    func handleMissedCall(conversationId: UUID, messageTime: Date, userId: UUID, isVideoCall: Bool) {
+        handleEvent("missed-call") {
+            self.missed(conversationId: conversationId, userId: userId, timestamp: messageTime, isVideoCall: isVideoCall)
+        }
+    }
+
+    /// Handles answered calls.
+    func handleAnsweredCall(conversationId: UUID) {
+        handleEvent("answered-call") {
+            self.handleCallState(callState: .answered(degraded: self.isDegraded(conversationId: conversationId)),
+                                 conversationId: conversationId, userId: nil)
+        }
+    }
+
+    /// Handles when data channel gets established.
+    func handleDataChannelEstablishement(conversationId: UUID, userId: UUID) {
+        handleEvent("data-channel-established") {
+            self.handleCallState(callState: .establishedDataChannel, conversationId: conversationId, userId: userId)
+        }
+    }
+
+    /// Handles established calls.
+    func handleEstablishedCall(conversationId: UUID, userId: UUID) {
+        handleEvent("established-call") {
+            self.handleCallState(callState: .established, conversationId: conversationId, userId: userId)
+        }
+    }
+
+    /**
+     * Handles ended calls
+     * If the user answers on the different device, we receive a `WCALL_REASON_ANSWERED_ELSEWHERE` followed by a
+     * `WCALL_REASON_NORMAL` once the call ends.
+     *
+     * If the user leaves an ongoing group conversation or an incoming group call times out, we receive a
+     * `WCALL_REASON_STILL_ONGOING` followed by a `WCALL_REASON_NORMAL` once the call ends.
+     *
+     * If messageTime is set to 0, the event wasn't caused by a message therefore we don't have a serverTimestamp.
+     */
+
+    func handleCallEnd(reason: CallClosedReason, conversationId: UUID, messageTime: Date?, userId: UUID) {
+        handleEvent("closed-call") {
+            self.handleCallState(callState: .terminating(reason: reason), conversationId: conversationId, userId: userId, messageTime: messageTime)
+        }
+    }
+
+    /// Handles call metrics.
+    func handleCallMetrics(conversationId: UUID, metrics: String) {
+        do {
+            let metricsData = Data(metrics.utf8)
+            guard let attributes = try JSONSerialization.jsonObject(with: metricsData, options: .mutableContainers) as? [String: NSObject] else { return }
+            analytics?.tagEvent("calling.avs_metrics_ended_call", attributes: attributes)
+        } catch {
+            zmLog.error("Unable to parse call metrics JSON: \(error)")
+        }
+    }
+
+    /// Handle requests for refreshing the calling configuration.
+    func handleCallConfigRefreshRequest() {
+        handleEvent("request-call-config") {
+            self.requestCallConfig()
+        }
+    }
+
+    /// Handles sending call messages
+    internal func handleCallMessageRequest(token: WireCallMessageToken,
+                                           conversationId: UUID,
+                                           senderUserId: UUID,
+                                           senderClientId: String,
+                                           data: Data)
+    {
+        handleEvent("send-call-message") {
+            self.send(token: token,
+                      conversationId: conversationId,
+                      userId: senderUserId,
+                      clientId: senderClientId,
+                      data: data,
+                      dataLength: data.count)
+        }
+    }
+
+    /// Called when AVS is ready.
+    func setCallReady(version: Int32) {
+        zmLog.debug("wcall intialized with protocol version: \(version)")
+        handleEvent("call-ready") {
+            self.isReady = true
+        }
+    }
+
+    /// Handles other users joining / leaving / connecting.
+    func handleGroupMemberChange(conversationId: UUID) {
+        handleEvent("group-member-change") {
+            let members = self.avsWrapper.members(in: conversationId)
+            self.callParticipantsChanged(conversationId: conversationId, participants: members)
+        }
+    }
+
+    /// Handles video state changes.
+    func handleVideoStateChange(userId: UUID, newState: VideoState) {
+        handleEvent("video-state-change") {
+            self.nonIdleCalls.forEach {
+                self.callParticipantVideostateChanged(conversationId: $0.key, userId: userId, videoState: newState)
+            }
+        }
+    }
+
+    /// Handles audio CBR mode enabling.
+    func handleConstantBitRateChange(enabled: Bool) {
+        handleEventInContext("cbr-change") {
+            if let establishedCall = self.callSnapshots.first(where: { $0.value.callState == .established || $0.value.callState == .establishedDataChannel }) {
+                self.callSnapshots[establishedCall.key] = establishedCall.value.updateConstantBitrate(enabled)
+                WireCallCenterCBRNotification(enabled: enabled).post(in: $0.notificationContext)
+            }
+        }
+    }
+
+}
+
