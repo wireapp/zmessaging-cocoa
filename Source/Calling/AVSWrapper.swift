@@ -23,6 +23,7 @@ private let zmLog = ZMSLog(tag: "calling")
 
 /**
  * The type of objects that can provide an interface to calling APIs.
+ * This provides strong typing, dependency injection and better testing.
  */
 
 public protocol AVSWrapperType {
@@ -42,16 +43,16 @@ public protocol AVSWrapperType {
 
 /**
  * An object that provides an interface to the AVS APIs.
- * This provides strong typing, dependency injection and better testing.
  */
 
-/// Wraps AVS calls for .
 public class AVSWrapper: AVSWrapperType {
 
-    private let handle : UnsafeMutableRawPointer
+    /// The wrapped `wcall` instance.
+    private let handle: UnsafeMutableRawPointer
 
     // MARK: - Initialization
 
+    /// Initializes avs.
     private static var initialize: () -> Void = {
         let resultValue = wcall_init()
         if resultValue != 0 {
@@ -59,7 +60,16 @@ public class AVSWrapper: AVSWrapperType {
         }
         return {}
     }()
-    
+
+    /**
+     * Creates the wrapper around `wcall`.
+     * - parameter userId: The identifier of the user that owns the calling center.
+     * - parameter clientId: The identifier of the current client (this device).
+     * - parameter observer: The raw pointer to the object that will receive events from AVS.
+     * This must be a pointer to a `WireCallCenterV3` object. If it isn't, the notifications
+     * won't be handled.
+     */
+
     required public init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?) {
         AVSWrapper.initialize()
         
@@ -84,37 +94,45 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     // MARK: - Convenience Methods
-    
+
+    /// Requests AVS to initiate a call.
     public func startCall(conversationId: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool) -> Bool {
         let didStart = wcall_start(handle, conversationId.transportString(), callType.rawValue, conversationType.rawValue, useCBR ? 1 : 0)
         return didStart == 0
     }
-    
+
+    /// Marks the call as answered in AVS.
     public func answerCall(conversationId: UUID, callType: AVSCallType, useCBR: Bool) -> Bool {
         let didAnswer = wcall_answer(handle, conversationId.transportString(), callType.rawValue, useCBR ? 1 : 0)
         return didAnswer == 0
     }
-    
+
+    /// Marks the call as ended in AVS.
     public func endCall(conversationId: UUID) {
         wcall_end(handle, conversationId.transportString())
     }
-    
+
+    /// Marks the call as rejected in AVS.
     public func rejectCall(conversationId: UUID) {
         wcall_reject(handle, conversationId.transportString())
     }
-    
+
+    /// Closes the `wcall` handler. This object becomes invalid after this method is called.
     public func close() {
         wcall_destroy(handle)
     }
-    
+
+    /// Changes the video state in AVS for the given conversation.
     public func setVideoState(conversationId: UUID, videoState: VideoState) {
         wcall_set_video_send_state(handle, conversationId.transportString(), videoState.rawValue)
     }
-    
+
+    /// Passes the response of the calling config request to AVS.
     public func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {
         wcall_resp(handle, Int32(httpStatus), "", context)
     }
-    
+
+    /// Notifies AVS that we received a remote event.
     public func received(callEvent: CallEvent) {
         callEvent.data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
             let currentTime = UInt32(callEvent.currentTimestamp.timeIntervalSince1970)
@@ -123,11 +141,13 @@ public class AVSWrapper: AVSWrapperType {
             wcall_recv_msg(handle, bytes, callEvent.data.count, currentTime, serverTime, callEvent.conversationId.transportString(), callEvent.userId.transportString(), callEvent.clientId)
         }
     }
-    
+
+    /// Updates the calling config.
     public func update(callConfig: String?, httpStatusCode: Int) {
         wcall_config_update(handle, httpStatusCode == 200 ? 0 : EPROTO, callConfig ?? "")
     }
-        
+
+    /// Returns the list of members in the conversation.
     public func members(in conversationId: UUID) -> [AVSCallMember] {
         guard let membersRef = wcall_get_members(handle, conversationId.transportString()) else { return [] }
         
