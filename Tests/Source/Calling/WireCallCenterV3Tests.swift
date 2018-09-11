@@ -262,6 +262,16 @@ class WireCallCenterV3Tests: MessagingTest {
         }
     }
     
+    func testThatTheMediaStopppedCallHandlerPostsTheRightNotification() {
+        // given
+        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        checkThatItPostsNotification(expectedCallState: .mediaStopped, expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
+            WireSyncEngine.mediaStoppedChangeHandler(conversationIdRef: oneOnOneConversationIDRef, contextRef: context)
+        }
+    }
+    
     func testThatOtherIncomingCallsAreRejectedWhenWeAnswerCall() {
         // given
         WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)

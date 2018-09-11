@@ -79,7 +79,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1u);
+    XCTAssertEqual(self.notificationCenter.scheduledRequests.count, 1u);
 }
 
 - (void)testThatItSendsUILocalNotificationsForExpiredMessageNotPickedUpForRequestWhenGoingToTheBackground
@@ -104,7 +104,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.application.scheduledLocalNotifications.count, 1u);
+    XCTAssertEqual(self.notificationCenter.scheduledRequests.count, 1u);
 }
 
 - (void)testThatItDoesNotCreateNotificationsForMessagesInTheSelfConversation
@@ -128,7 +128,7 @@ static NSTimeInterval zmMessageExpirationTimer = 0.3;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.application.scheduledLocalNotifications.count, 0u);
+    XCTAssertEqual(self.notificationCenter.scheduledRequests.count, 0u);
 }
 
 @end

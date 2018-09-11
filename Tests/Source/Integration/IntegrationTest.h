@@ -34,6 +34,7 @@
 @class MockConnection;
 @class SearchDirectory;
 @class PushRegistryMock;
+@class UserNotificationCenterMock;
 
 @interface IntegrationTest : ZMTBaseTest
 
@@ -50,6 +51,7 @@
 @property (nonatomic, readonly) BOOL useInMemoryStore;
 @property (nonatomic, readonly) BOOL useRealKeychain;
 @property (nonatomic, nullable) SearchDirectory *sharedSearchDirectory;
+@property (nonatomic, nullable) UserNotificationCenterMock *notificationCenter;
 
 @property (nonatomic, null_unspecified) MockUser *selfUser;
 @property (nonatomic, null_unspecified) MockConversation *selfConversation;

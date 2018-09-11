@@ -43,6 +43,7 @@ public final class MockKVStore : NSObject, ZMSynchonizableKeyValueStore {
 class ZMLocalNotificationSetTests : MessagingTest {
 
     var sut : ZMLocalNotificationSet!
+    var notificationCenter: UserNotificationCenterMock!
     var keyValueStore : MockKVStore!
     let archivingKey = "archivingKey"
     
@@ -53,7 +54,10 @@ class ZMLocalNotificationSetTests : MessagingTest {
     override func setUp(){
         super.setUp()
         keyValueStore = MockKVStore()
-        sut = ZMLocalNotificationSet(application: self.application, archivingKey: archivingKey, keyValueStore: keyValueStore)
+        sut = ZMLocalNotificationSet(archivingKey: archivingKey, keyValueStore: keyValueStore)
+        
+        notificationCenter = UserNotificationCenterMock()
+        sut.notificationCenter = notificationCenter
         
         let selfUser = ZMUser.selfUser(in: self.uiMOC)
         selfUser.remoteIdentifier = UUID.create()
@@ -68,6 +72,7 @@ class ZMLocalNotificationSetTests : MessagingTest {
     override func tearDown(){
         keyValueStore = nil
         sut = nil
+        notificationCenter = nil
         sender = nil
         conversation1 = nil
         conversation2 = nil
@@ -112,10 +117,10 @@ class ZMLocalNotificationSetTests : MessagingTest {
 
         // then
         XCTAssertFalse(sut.notifications.contains(note1))
-        XCTAssertTrue(self.application.cancelledLocalNotifications.contains(note1.uiLocalNotification))
+        XCTAssertTrue(notificationCenter.removedNotifications.contains(note1.id.uuidString))
 
         XCTAssertTrue(sut.notifications.contains(note2))
-        XCTAssertFalse(self.application.cancelledLocalNotifications.contains(note2.uiLocalNotification))
+        XCTAssertFalse(notificationCenter.removedNotifications.contains(note2.id.uuidString))
     }
 
     func testThatItPersistsNotifications() {
@@ -125,10 +130,10 @@ class ZMLocalNotificationSetTests : MessagingTest {
         sut.addObject(note)
 
         // when recreate sut to release non-persisted objects
-        sut = ZMLocalNotificationSet(application: self.application, archivingKey: archivingKey, keyValueStore: keyValueStore)
+        sut = ZMLocalNotificationSet(archivingKey: archivingKey, keyValueStore: keyValueStore)
 
         // then
-        XCTAssertTrue(sut.oldNotifications.contains(note.uiLocalNotification))
+        XCTAssertTrue(sut.oldNotifications.contains(note.userInfo!))
     }
 
     func testThatItResetsTheNotificationSetWhenCancellingAllNotifications(){

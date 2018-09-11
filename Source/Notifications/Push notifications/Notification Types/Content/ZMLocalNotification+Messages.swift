@@ -79,24 +79,25 @@ extension ZMLocalNotification {
             return notificationType.messageBodyText(sender: sender, conversation: conversation).trimmingCharacters(in: .whitespaces)
         }
         
-        func userInfo() -> [AnyHashable: Any]? {
-            
-            guard
-                let moc = message.managedObjectContext,
-                let selfUserID = ZMUser.selfUser(in: moc).remoteIdentifier,
+        func userInfo() -> NotificationUserInfo? {
+            guard let moc = message.managedObjectContext else { return nil }
+            let selfUser = ZMUser.selfUser(in: moc)
+
+            guard let selfUserID = ZMUser.selfUser(in: moc).remoteIdentifier,
                 let senderID = sender.remoteIdentifier,
                 let conversationID = conversation.remoteIdentifier,
                 let eventTime = message.serverTimestamp
                 else { return nil }
             
-            var userInfo = [AnyHashable: Any]()
-            userInfo[SelfUserIDStringKey] = selfUserID.transportString()
-            userInfo[SenderIDStringKey] = senderID.transportString()
-            userInfo[MessageNonceIDStringKey] = message.nonce!.transportString()
-            userInfo[ConversationIDStringKey] = conversationID.transportString()
-            userInfo[EventTimeKey] = eventTime
-            userInfo[ConversationNameStringKey] = conversation.meaningfulDisplayName
-            userInfo[TeamNameStringKey] = ZMUser.selfUser(in: managedObjectContext).team?.name
+            let userInfo = NotificationUserInfo()
+            userInfo.selfUserID = selfUserID
+            userInfo.senderID = senderID
+            userInfo.messageNonce = message.nonce
+            userInfo.conversationID = conversationID
+            userInfo.eventTime = eventTime
+            userInfo.conversationName = conversation.meaningfulDisplayName
+            userInfo.teamName = selfUser.team?.name
+
             return userInfo
         }
     }
@@ -180,16 +181,17 @@ extension ZMLocalNotification {
             return notificationType.messageBodyText(sender: ZMUser.selfUser(in: managedObjectContext), conversation: conversation)
         }
         
-        func userInfo() -> [AnyHashable : Any]? {
+        func userInfo() -> NotificationUserInfo? {
+            let selfUser = ZMUser.selfUser(in: managedObjectContext)
             
-            guard let selfUserID = ZMUser.selfUser(in: managedObjectContext).remoteIdentifier,
+            guard let selfUserID = selfUser.remoteIdentifier,
                   let conversationID = conversation.remoteIdentifier else { return nil }
             
-            var userInfo = [AnyHashable: Any]()
-            userInfo[SelfUserIDStringKey] = selfUserID.transportString()
-            userInfo[ConversationIDStringKey] = conversationID.transportString()
-            userInfo[ConversationNameStringKey] = conversation.meaningfulDisplayName
-            userInfo[TeamNameStringKey] = ZMUser.selfUser(in: managedObjectContext).team?.name
+            let userInfo = NotificationUserInfo()
+            userInfo.selfUserID = selfUserID
+            userInfo.conversationID = conversationID
+            userInfo.conversationName = conversation.meaningfulDisplayName
+            userInfo.teamName = selfUser.team?.name
             
             return userInfo
         }

@@ -61,7 +61,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "is calling")
         XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.incomingCall.rawValue)
-        XCTAssertEqual(note.soundName, ZMCustomSound.notificationRingingSoundName())
+        XCTAssertEqual(note.sound, .call)
     }
     
     func testIncomingAudioCall_ShouldRing_False() {
@@ -85,7 +85,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "is calling with video")
         XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.incomingCall.rawValue)
-        XCTAssertEqual(note.soundName, ZMCustomSound.notificationRingingSoundName())
+        XCTAssertEqual(note.sound, .call)
     }
     
     func testIncomingVideoCall_ShouldRing_False() {
@@ -109,7 +109,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "called")
         XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.conversation.rawValue)
-        XCTAssertEqual(note.soundName, ZMCustomSound.notificationNewMessageSoundName())
+        XCTAssertEqual(note.sound, .newMessage)
     }
     
     func testCallClosedReasonsWhichShouldBeIgnored() {
@@ -139,7 +139,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "called")
         XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.missedCall.rawValue)
-        XCTAssertEqual(note.soundName, ZMCustomSound.notificationNewMessageSoundName())
+        XCTAssertEqual(note.sound, .newMessage)
     }
     
     func testMissedCallFromSelfUser() {
@@ -156,7 +156,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "called")
         XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.missedCall.rawValue)
-        XCTAssertEqual(note.soundName, ZMCustomSound.notificationNewMessageSoundName())
+        XCTAssertEqual(note.sound, .newMessage)
     }
     
     func testThatItAddsATitleIfTheUserIsPartOfATeam() {

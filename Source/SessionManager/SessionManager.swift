@@ -175,6 +175,8 @@ public protocol SessionManagerSwitchingDelegate: class {
     var pushRegistry: PushRegistry
     let notificationsTracker: NotificationsTracker?
     
+    var notificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()
+    
     internal var authenticatedSessionFactory: AuthenticatedSessionFactory
     internal let unauthenticatedSessionFactory: UnauthenticatedSessionFactory
     

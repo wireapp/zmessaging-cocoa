@@ -42,7 +42,7 @@ protocol NotificationBuilder {
     func shouldCreateNotification() -> Bool
     func titleText() -> String?
     func bodyText() -> String
-    func userInfo() -> [AnyHashable: Any]?
+    func userInfo() -> NotificationUserInfo?
 }
 
 
@@ -53,58 +53,70 @@ protocol NotificationBuilder {
 ///
 open class ZMLocalNotification: NSObject {
     
+    /// The unique identifier for this notification. Use it to later update
+    /// or remove pending or scheduled notification requests.
+    public let id: UUID
+    
     public let type: LocalNotificationType
     public var title: String?
     public var body: String
-    public var category: String?
-    public var soundName: String?
-    public var userInfo: [AnyHashable: Any]?
-        
-    public var selfUserID: UUID? { return uuid(for: SelfUserIDStringKey) }
-    public var senderID: UUID? { return uuid(for: SenderIDStringKey) }
-    public var messageNonce: UUID? { return uuid(for: MessageNonceIDStringKey) }
-    public var conversationID: UUID? { return uuid(for: ConversationIDStringKey) }
-    
+    public var category: String
+    public var sound: NotificationSound
+    public var userInfo: NotificationUserInfo?
+
     init?(conversation: ZMConversation?, builder: NotificationBuilder) {
         guard builder.shouldCreateNotification() else { return nil }
         self.type = builder.notificationType
         self.title = builder.titleText()
-        self.body = builder.bodyText().escapingPercentageSymbols()
+        self.body = builder.bodyText().escapingPercentageSymbols
         self.category = builder.notificationType.category
-        self.soundName = builder.notificationType.soundName
+        self.sound = builder.notificationType.sound
         self.userInfo = builder.userInfo()
+        self.id = userInfo?.messageNonce ?? UUID()
+        super.init()
+        
+        self.userInfo?.requestID = id
     }
-    
-    /// Returns a configured concrete UILocalNotification object.
-    ///
-    public lazy var uiLocalNotification: UILocalNotification = {
-        let note = UILocalNotification()
-        
-        let candidateTitle = self.title
-        let candidateBody = self.body
-        
-        if #available(iOS 10, *) {
-            note.alertTitle = candidateTitle
-            note.alertBody = candidateBody
+
+    /// Returns a configured concrete `UNNotificationContent` object.
+    public lazy var content: UNNotificationContent = {
+        let content = UNMutableNotificationContent()
+        content.body = self.body
+        content.categoryIdentifier = self.category
+        content.sound = UNNotificationSound(named: sound.name)
+
+        if let title = self.title {
+            content.title = title
         }
-        else {
-            // on iOS 9, the alert title is only visible in the notification center, so we
-            // display all info in the body
-            if let title = candidateTitle {
-                note.alertBody = "\(title)\n\(candidateBody)"
-            } else {
-                note.alertBody = candidateBody
-            }
+
+        if let userInfo = self.userInfo {
+            content.userInfo = userInfo.storage
         }
-        
-        note.category = self.category
-        note.soundName = self.soundName
-        note.userInfo = self.userInfo
-        return note
+
+        if let conversationID = self.conversationID {
+            content.threadIdentifier = conversationID.transportString()
+        }
+
+        return content
     }()
     
+    /// Returns a configured concrete `UNNotificationRequest`.
+    public lazy var request: UNNotificationRequest = {
+        return UNNotificationRequest(identifier: id.uuidString, content: content, trigger: nil)
+    }()
+
+}
+
+// MARK: - Properties
+
+extension ZMLocalNotification {
+
+    public var selfUserID: UUID? { return userInfo?.selfUserID }
+    public var senderID: UUID? { return userInfo?.senderID }
+    public var messageNonce: UUID? { return userInfo?.messageNonce }
+    public var conversationID: UUID? { return userInfo?.conversationID }
+
     /// Returns true if it is a calling notification, else false.
-    ///
     public var isCallingNotification: Bool {
         switch type {
         case .calling: return true
@@ -113,35 +125,25 @@ open class ZMLocalNotification: NSObject {
     }
     
     /// Returns true if it is a ephemeral notification, else false.
-    ///
     public var isEphemeral: Bool {
-        switch type {
-        case .message(let contentType):
-            if case .ephemeral = contentType {
-                return true
-            } else {
-                return false
-            }
-        default:
+        guard case .message(let contentType) = type else {
             return false
         }
+
+        return contentType == .ephemeral
     }
-    
-    /// Returns the UUID for the given key from the user info if it exists, else
-    /// nil.
-    ///
-    private func uuid(for key: String) -> UUID? {
-        guard let uuidString = userInfo?[key] as? String else { return nil }
-        return UUID(uuidString: uuidString)
-    }
-    
+
+}
+
+// MARK: - Lookup
+
+extension ZMLocalNotification {
+
     public func conversation(in moc: NSManagedObjectContext) -> ZMConversation? {
-        guard let uuid = conversationID else { return nil }
-        return ZMConversation(remoteID: uuid, createIfNeeded: false, in: moc)
+        return userInfo?.conversation(in: moc)
     }
     
     public func sender(in moc: NSManagedObjectContext) -> ZMUser? {
-        guard let uuid = senderID else { return nil }
-        return ZMUser(remoteID: uuid, createIfNeeded: false, in: moc)
+        return userInfo?.sender(in: moc)
     }
 }

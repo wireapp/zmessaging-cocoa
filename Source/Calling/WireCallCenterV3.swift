@@ -47,6 +47,8 @@ public enum CallClosedReason : Int32 {
     case stillOngoing
     /// Call was dropped due to the security level degrading
     case securityDegraded
+    /// The call was rejected on another device.
+    case rejectedElsewhere
     /// Call was closed for an unknown reason. This is most likely a bug.
     case unknown
     
@@ -68,6 +70,8 @@ public enum CallClosedReason : Int32 {
             self = .inputOutputError
         case WCALL_REASON_STILL_ONGOING:
             self = .stillOngoing
+        case WCALL_REASON_REJECTED:
+            self = .rejectedElsewhere
         default:
             self = .unknown
         }
@@ -93,6 +97,8 @@ public enum CallClosedReason : Int32 {
             return WCALL_REASON_STILL_ONGOING
         case .securityDegraded:
             return WCALL_REASON_ERROR
+        case .rejectedElsewhere:
+            return WCALL_REASON_REJECTED
         case .unknown:
             return WCALL_REASON_ERROR
         }
@@ -138,6 +144,8 @@ public enum CallState : Equatable {
     case establishedDataChannel
     /// Call is established (media is flowing)
     case established
+    /// Call is over and audio/video is guranteed to be stopped
+    case mediaStopped
     /// Call in process of being terminated
     case terminating(reason: CallClosedReason)
     /// Unknown call state
@@ -156,6 +164,8 @@ public enum CallState : Equatable {
         case (.established, .established):
             fallthrough
         case (.terminating, .terminating):
+            fallthrough
+        case (.mediaStopped, .mediaStopped):
             fallthrough
         case (.unknown, .unknown):
             return true
@@ -200,6 +210,8 @@ public enum CallState : Equatable {
             zmLog.debug("outgoing call, , degraded: \(degraded)")
         case .terminating(reason: let reason):
             zmLog.debug("terminating call reason: \(reason)")
+        case .mediaStopped:
+            zmLog.debug("media stopped")
         case .none:
             zmLog.debug("no call")
         case .unknown:
@@ -512,6 +524,16 @@ internal func constantBitRateChangeHandler(userId: UnsafePointer<Int8>?, enabled
     }
 }
 
+internal func mediaStoppedChangeHandler(conversationIdRef: UnsafePointer<Int8>?, contextRef: UnsafeMutableRawPointer?) {
+    guard let contextRef = contextRef, let conversationId = UUID(cString: conversationIdRef) else { return }
+    
+    let callCenter = Unmanaged<WireCallCenterV3>.fromOpaque(contextRef).takeUnretainedValue()
+    
+    callCenter.uiMOC?.performGroupedBlock {
+        callCenter.handleCallState(callState: .mediaStopped, conversationId: conversationId, userId: nil)
+    }
+}
+
 /// MARK - Call center transport
 public typealias CallConfigRequestCompletion = (String?, Int) -> Void
 
@@ -655,7 +677,7 @@ public struct CallEvent {
             if self.callState(conversationId: conversationId) == .established {
                 return // Ignore if data channel was established after audio
             }
-        case .terminating(reason: let reason) where reason == .stillOngoing:
+        case .terminating(reason: .stillOngoing):
             callState = .incoming(video: false, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
         default:
             break

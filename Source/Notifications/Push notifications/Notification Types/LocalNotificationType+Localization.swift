@@ -257,6 +257,10 @@ extension String {
     internal var pushFormatString : String {
         return Bundle(for: ZMUserSession.self).localizedString(forKey: "push.notification.\(self)", value: "", table: "Push")
     }
+
+    internal var pushActionString: String {
+        return Bundle(for: ZMUserSession.self).localizedString(forKey: "push.notification.action.\(self)", value: "", table: "Push")
+    }
     
     static fileprivate func localizedStringWithFormat(_ format : String, arguments: [CVarArg]) -> String {
         switch arguments.count {
