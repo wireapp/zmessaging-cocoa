@@ -26,19 +26,34 @@ private let zmLog = ZMSLog(tag: "calling")
  */
 
 public enum CallParticipantState: Equatable {
-    // Participant is not in the call
+    /// Participant is not in the call
     case unconnected
-    // Participant is in the process of connecting to the call
+    /// Participant is in the process of connecting to the call
     case connecting
     /// Participant is connected to call and audio is flowing
     case connected(videoState: VideoState)
 }
 
 /**
+ * The state of video in the call.
+ */
+
+public enum VideoState: Int32 {
+    /// Sender is not sending video
+    case stopped = 0
+    /// Sender is sending video
+    case started = 1
+    /// Sender is sending video but currently has a bad connection
+    case badConnection = 2
+    /// Sender has paused the video
+    case paused = 3
+}
+
+/**
  * The current state of a call.
  */
 
-public enum CallState : Equatable {
+public enum CallState: Equatable {
 
     /// There's no call
     case none
@@ -52,10 +67,17 @@ public enum CallState : Equatable {
     case establishedDataChannel
     /// Call is established (media is flowing)
     case established
+    /// Call is over and audio/video is guranteed to be stopped
+    case mediaStopped
     /// Call in process of being terminated
     case terminating(reason: CallClosedReason)
     /// Unknown call state
     case unknown
+
+    /**
+     * Creates the call state from the given AVS flag.
+     * - parameter wcallState: The state of the call as represented in AVS.
+     */
 
     init(wcallState: Int32) {
         switch wcallState {
@@ -73,9 +95,15 @@ public enum CallState : Equatable {
         case WCALL_STATE_TERM_REMOTE:
             self = .terminating(reason: .unknown)
         default:
-            self = .none // FIXME check with AVS when WCALL_STATE_UNKNOWN can happen
+            // WCALL_STATE_UNKNOWN can happen when we check the call state of a
+            // conversation id that isn't in the list of calls
+            self = .none
         }
     }
+
+    /**
+     * Logs the current state to the calling logs.
+     */
 
     func logState() {
         switch self {
@@ -91,6 +119,8 @@ public enum CallState : Equatable {
             zmLog.debug("outgoing call, , degraded: \(degraded)")
         case .terminating(reason: let reason):
             zmLog.debug("terminating call reason: \(reason)")
+        case .mediaStopped:
+            zmLog.debug("media stopped")
         case .none:
             zmLog.debug("no call")
         case .unknown:
@@ -98,8 +128,13 @@ public enum CallState : Equatable {
         }
     }
 
-    func update(withSecurityLevel securityLevel: ZMConversationSecurityLevel) -> CallState {
+    /**
+     * Updates the state of the call when the security level changes.
+     * - parameter securityLevel: The new security level of the conversation for the call.
+     * - returns: The current status, updated with the appropriate degradation information.
+     */
 
+    func update(withSecurityLevel securityLevel: ZMConversationSecurityLevel) -> CallState {
         let degraded = securityLevel == .secureWithIgnored
 
         switch self {

@@ -18,6 +18,17 @@
 
 import Foundation
 
+public enum VoiceChannelV3Error: LocalizedError {
+    case switchToVideoNotAllowed
+
+    public var errorDescription: String? {
+        switch self {
+        case .switchToVideoNotAllowed:
+            return "Switch to video is not allowed"
+        }
+    }
+}
+
 public class VoiceChannelV3 : NSObject, VoiceChannel {
 
     public var callCenter: WireCallCenterV3? {
@@ -106,7 +117,7 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
     }
     
     public func setVideoCaptureDevice(_ device: CaptureDevice) throws {
-        guard let conversationId = conversation?.remoteIdentifier else { throw VoiceChannelV2Error.switchToVideoNotAllowedError() }
+        guard let conversationId = conversation?.remoteIdentifier else { throw VoiceChannelV3Error.switchToVideoNotAllowed }
         
         self.callCenter?.setVideoCaptureDevice(device, for: conversationId)
     }

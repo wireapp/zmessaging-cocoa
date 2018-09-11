@@ -75,7 +75,6 @@
 		165D3A151E1D3EF30052E654 /* WireCallCenterV3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D3A141E1D3EF30052E654 /* WireCallCenterV3.swift */; };
 		165D3A211E1D43870052E654 /* VoiceChannelV3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D3A171E1D43870052E654 /* VoiceChannelV3.swift */; };
 		165D3A221E1D43870052E654 /* VoiceChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D3A181E1D43870052E654 /* VoiceChannel.swift */; };
-		165D3A281E1D43870052E654 /* CallingInitialisationNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D3A1E1E1D43870052E654 /* CallingInitialisationNotification.swift */; };
 		165D3A3D1E1D60520052E654 /* ZMConversation+VoiceChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D3A3C1E1D60520052E654 /* ZMConversation+VoiceChannel.swift */; };
 		1660AA091ECCAC900056D403 /* SearchDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1660AA081ECCAC900056D403 /* SearchDirectory.swift */; };
 		1660AA0B1ECCAF4E0056D403 /* SearchRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1660AA0A1ECCAF4E0056D403 /* SearchRequest.swift */; };
@@ -279,17 +278,22 @@
 		5E0EB1F72100A14A00B5DC2B /* CompanyLoginRequesterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0EB1F52100A13200B5DC2B /* CompanyLoginRequesterTests.swift */; };
 		5E0EB1F92100A46F00B5DC2B /* MockCompanyLoginRequesterDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0EB1F82100A46F00B5DC2B /* MockCompanyLoginRequesterDelegate.swift */; };
 		5E1FD7A5210B2694003D2C3D /* NotificationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD7A4210B2694003D2C3D /* NotificationAction.swift */; };
+		5E8BB8992147CD3F00EEA64B /* AVSBridging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8BB8982147CD3F00EEA64B /* AVSBridging.swift */; };
+		5E8BB89C2147CE1600EEA64B /* AVSCallMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8BB89B2147CE1600EEA64B /* AVSCallMember.swift */; };
+		5E8BB89E2147E9DF00EEA64B /* AVSWrapper+Handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8BB89D2147E9DF00EEA64B /* AVSWrapper+Handlers.swift */; };
+		5E8BB8A02147F5BC00EEA64B /* CallSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8BB89F2147F5BC00EEA64B /* CallSnapshot.swift */; };
+		5E8BB8A22147F89000EEA64B /* CallCenterSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8BB8A12147F89000EEA64B /* CallCenterSupport.swift */; };
 		5E8EE1F720FDC6B900DB1F9B /* CompanyLoginRequestDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8EE1F620FDC6B900DB1F9B /* CompanyLoginRequestDetector.swift */; };
 		5E8EE1FA20FDC7D700DB1F9B /* Pasteboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8EE1F920FDC7D700DB1F9B /* Pasteboard.swift */; };
 		5E8EE1FC20FDCCE200DB1F9B /* CompanyLoginRequestDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8EE1FB20FDCCE200DB1F9B /* CompanyLoginRequestDetectorTests.swift */; };
 		5E8EE1FE20FDCD1300DB1F9B /* MockPasteboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8EE1FD20FDCD1300DB1F9B /* MockPasteboard.swift */; };
 		5E9D326F2109C1740032FB06 /* CompanyLoginErrorCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E9D326E2109C1740032FB06 /* CompanyLoginErrorCode.swift */; };
 		5E9D32712109C54B0032FB06 /* CompanyLoginActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E9D32702109C54B0032FB06 /* CompanyLoginActionTests.swift */; };
-		5EC3A466210B735000B76C78 /* String+NotificationFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC3A465210B735000B76C78 /* String+NotificationFormat.swift */; };
-		5EC3A468210B763000B76C78 /* NotificationUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC3A467210B763000B76C78 /* NotificationUserInfo.swift */; };
 		5EC2C58F2137F5EE00C6CE35 /* CallClosedReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC2C58E2137F5EE00C6CE35 /* CallClosedReason.swift */; };
 		5EC2C5912137F80E00C6CE35 /* CallState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC2C5902137F80E00C6CE35 /* CallState.swift */; };
 		5EC2C593213827BF00C6CE35 /* WireCallCenterV3+Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC2C592213827BF00C6CE35 /* WireCallCenterV3+Events.swift */; };
+		5EC3A466210B735000B76C78 /* String+NotificationFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC3A465210B735000B76C78 /* String+NotificationFormat.swift */; };
+		5EC3A468210B763000B76C78 /* NotificationUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC3A467210B763000B76C78 /* NotificationUserInfo.swift */; };
 		7C1F4BF5203C4F67000537A8 /* Analytics+Push.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1F4BF4203C4F67000537A8 /* Analytics+Push.swift */; };
 		85D8522CF8DE246DDD5BD12C /* MockEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D85AAE7FA09852AB9B0D6A /* MockEntity.m */; };
 		85D85EAFA1CB6E457D14E3B7 /* MockEntity2.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D85C9E7A2AAAE14D4BC2CC /* MockEntity2.m */; };
@@ -614,7 +618,6 @@
 		165D3A171E1D43870052E654 /* VoiceChannelV3.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VoiceChannelV3.swift; sourceTree = "<group>"; };
 		165D3A181E1D43870052E654 /* VoiceChannel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VoiceChannel.swift; sourceTree = "<group>"; };
 		165D3A1A1E1D43870052E654 /* WireCallCenterV3Mock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WireCallCenterV3Mock.swift; sourceTree = "<group>"; };
-		165D3A1E1E1D43870052E654 /* CallingInitialisationNotification.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallingInitialisationNotification.swift; sourceTree = "<group>"; };
 		165D3A3C1E1D60520052E654 /* ZMConversation+VoiceChannel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMConversation+VoiceChannel.swift"; sourceTree = "<group>"; };
 		1660AA081ECCAC900056D403 /* SearchDirectory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchDirectory.swift; sourceTree = "<group>"; };
 		1660AA0A1ECCAF4E0056D403 /* SearchRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchRequest.swift; sourceTree = "<group>"; };
@@ -843,17 +846,22 @@
 		5E0EB1F52100A13200B5DC2B /* CompanyLoginRequesterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginRequesterTests.swift; sourceTree = "<group>"; };
 		5E0EB1F82100A46F00B5DC2B /* MockCompanyLoginRequesterDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCompanyLoginRequesterDelegate.swift; sourceTree = "<group>"; };
 		5E1FD7A4210B2694003D2C3D /* NotificationAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationAction.swift; sourceTree = "<group>"; };
+		5E8BB8982147CD3F00EEA64B /* AVSBridging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVSBridging.swift; sourceTree = "<group>"; };
+		5E8BB89B2147CE1600EEA64B /* AVSCallMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVSCallMember.swift; sourceTree = "<group>"; };
+		5E8BB89D2147E9DF00EEA64B /* AVSWrapper+Handlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AVSWrapper+Handlers.swift"; sourceTree = "<group>"; };
+		5E8BB89F2147F5BC00EEA64B /* CallSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallSnapshot.swift; sourceTree = "<group>"; };
+		5E8BB8A12147F89000EEA64B /* CallCenterSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallCenterSupport.swift; sourceTree = "<group>"; };
 		5E8EE1F620FDC6B900DB1F9B /* CompanyLoginRequestDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginRequestDetector.swift; sourceTree = "<group>"; };
 		5E8EE1F920FDC7D700DB1F9B /* Pasteboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pasteboard.swift; sourceTree = "<group>"; };
 		5E8EE1FB20FDCCE200DB1F9B /* CompanyLoginRequestDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginRequestDetectorTests.swift; sourceTree = "<group>"; };
 		5E8EE1FD20FDCD1300DB1F9B /* MockPasteboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPasteboard.swift; sourceTree = "<group>"; };
 		5E9D326E2109C1740032FB06 /* CompanyLoginErrorCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginErrorCode.swift; sourceTree = "<group>"; };
 		5E9D32702109C54B0032FB06 /* CompanyLoginActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginActionTests.swift; sourceTree = "<group>"; };
-		5EC3A465210B735000B76C78 /* String+NotificationFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+NotificationFormat.swift"; sourceTree = "<group>"; };
-		5EC3A467210B763000B76C78 /* NotificationUserInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationUserInfo.swift; sourceTree = "<group>"; };
 		5EC2C58E2137F5EE00C6CE35 /* CallClosedReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallClosedReason.swift; sourceTree = "<group>"; };
 		5EC2C5902137F80E00C6CE35 /* CallState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallState.swift; sourceTree = "<group>"; };
 		5EC2C592213827BF00C6CE35 /* WireCallCenterV3+Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WireCallCenterV3+Events.swift"; sourceTree = "<group>"; };
+		5EC3A465210B735000B76C78 /* String+NotificationFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+NotificationFormat.swift"; sourceTree = "<group>"; };
+		5EC3A467210B763000B76C78 /* NotificationUserInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationUserInfo.swift; sourceTree = "<group>"; };
 		7C1F4BF4203C4F67000537A8 /* Analytics+Push.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Analytics+Push.swift"; sourceTree = "<group>"; };
 		85D8502FFC4412F91D0CC1A4 /* ZMOperationLoop.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMOperationLoop.m; sourceTree = "<group>"; };
 		85D85104C6D06FA902E3253C /* ZMSyncStrategyTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMSyncStrategyTests.m; sourceTree = "<group>"; };
@@ -1342,20 +1350,24 @@
 			children = (
 				165D3A181E1D43870052E654 /* VoiceChannel.swift */,
 				165D3A171E1D43870052E654 /* VoiceChannelV3.swift */,
-				165D3A1E1E1D43870052E654 /* CallingInitialisationNotification.swift */,
+				165D3A3C1E1D60520052E654 /* ZMConversation+VoiceChannel.swift */,
 				16A764601F3E0B0B00564F21 /* CallKitDelegate.swift */,
 				1658C2361F503CF800889F22 /* FlowManager.swift */,
 				BF735CF91E70003D003BC61F /* SystemMessageCallObserver.swift */,
 				165911521DEF38EC007FA847 /* CallStateObserver.swift */,
+				5E8BB89B2147CE1600EEA64B /* AVSCallMember.swift */,
+				5E8BB89F2147F5BC00EEA64B /* CallSnapshot.swift */,
 				16C4BD9F20A309CD00BCDB17 /* CallParticipantSnapshot.swift */,
-				166A8BF21E015F3B00F5EEEA /* WireCallCenterV3Factory.swift */,
+				5EC2C5902137F80E00C6CE35 /* CallState.swift */,
+				5EC2C58E2137F5EE00C6CE35 /* CallClosedReason.swift */,
+				5E8BB89D2147E9DF00EEA64B /* AVSWrapper+Handlers.swift */,
+				5E8BB8982147CD3F00EEA64B /* AVSBridging.swift */,
+				F90EC5A21E7BF1AC00A6779E /* AVSWrapper.swift */,
+				5E8BB8A12147F89000EEA64B /* CallCenterSupport.swift */,
 				165D3A141E1D3EF30052E654 /* WireCallCenterV3.swift */,
 				5EC2C592213827BF00C6CE35 /* WireCallCenterV3+Events.swift */,
-				5EC2C58E2137F5EE00C6CE35 /* CallClosedReason.swift */,
-				5EC2C5902137F80E00C6CE35 /* CallState.swift */,
 				F9E577201E77EC6D0065EFE4 /* WireCallCenterV3+Notifications.swift */,
-				F90EC5A21E7BF1AC00A6779E /* AVSWrapper.swift */,
-				165D3A3C1E1D60520052E654 /* ZMConversation+VoiceChannel.swift */,
+				166A8BF21E015F3B00F5EEEA /* WireCallCenterV3Factory.swift */,
 			);
 			path = Calling;
 			sourceTree = "<group>";
@@ -2743,10 +2755,12 @@
 				F19F1D281EFBC34E00275E27 /* ZMUserSessionRegistrationNotification.m in Sources */,
 				5EC2C5912137F80E00C6CE35 /* CallState.swift in Sources */,
 				5478A1411DEC4048006F7268 /* UserProfile.swift in Sources */,
+				5E8BB89E2147E9DF00EEA64B /* AVSWrapper+Handlers.swift in Sources */,
 				F16C8BE82044129700677D31 /* ZMConversationTranscoder.swift in Sources */,
 				1626344920D7DB81000D4063 /* PushNotificationCategory.swift in Sources */,
 				F98EDCD71D82B913001E65CB /* LocalNotificationContentType.swift in Sources */,
 				F90EC5A31E7BF1AC00A6779E /* AVSWrapper.swift in Sources */,
+				5E8BB8992147CD3F00EEA64B /* AVSBridging.swift in Sources */,
 				16F5F16C1E4092C00062F0AE /* NSManagedObjectContext+CTCallCenter.swift in Sources */,
 				16962EE420286D690069D88D /* LocalNotificationType+Configuration.swift in Sources */,
 				BF00441B1C737CE9007A6EA4 /* PushNotificationStatus.swift in Sources */,
@@ -2761,6 +2775,7 @@
 				F9B171F61C0EF21100E6EEC6 /* ClientUpdateStatus.swift in Sources */,
 				54D175271ADE9EC9001AA338 /* ZMUserSession+Authentication.m in Sources */,
 				549816351A432BC800A7CE2E /* ZMLoginTranscoder.m in Sources */,
+				5E8BB89C2147CE1600EEA64B /* AVSCallMember.swift in Sources */,
 				874F142D1C16FD9700C15118 /* Device.swift in Sources */,
 				CEF2DE7F1DB778F300451642 /* RequestLoopAnalyticsTracker.swift in Sources */,
 				549AEA3D1D6365C1003C0BEC /* ZMUserSession+AddressBook.swift in Sources */,
@@ -2822,7 +2837,6 @@
 				549816251A432BC800A7CE2E /* ZMSimpleListRequestPaginator.m in Sources */,
 				8798607B1C3D48A400218A3E /* DeleteAccountRequestStrategy.swift in Sources */,
 				5E0EB1F421008C1900B5DC2B /* CompanyLoginRequester.swift in Sources */,
-				165D3A281E1D43870052E654 /* CallingInitialisationNotification.swift in Sources */,
 				16A764611F3E0B0B00564F21 /* CallKitDelegate.swift in Sources */,
 				BF491CD11F03D7CF0055EE44 /* PermissionsDownloadRequestStrategy.swift in Sources */,
 				54973A361DD48CAB007F8702 /* NSManagedObject+EncryptionContext.swift in Sources */,
@@ -2837,7 +2851,9 @@
 				8717DFA71F6EF44E0087EFE4 /* SessionManager+Push.swift in Sources */,
 				D52257232062637500562561 /* DeletableAssetIdentifierProvider.swift in Sources */,
 				D5225720206261AA00562561 /* AssetDeletionStatus.swift in Sources */,
+				5E8BB8A02147F5BC00EEA64B /* CallSnapshot.swift in Sources */,
 				163FB9972057E25600E74F83 /* NSManagedObjectContext+LastNotificationID.swift in Sources */,
+				5E8BB8A22147F89000EEA64B /* CallCenterSupport.swift in Sources */,
 				1660AA0D1ECDB0250056D403 /* SearchTask.swift in Sources */,
 				F9245BED1CBF95A8009D1E85 /* ZMHotFixDirectory+Swift.swift in Sources */,
 				54991D5A1DEDD07E007E282F /* ContactAddressBook.swift in Sources */,
