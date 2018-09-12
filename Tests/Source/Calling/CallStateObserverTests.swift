@@ -225,7 +225,7 @@ class CallStateObserverTests : MessagingTest {
     func testThatWeSendNotificationWhenCallIsEstablished() {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
-        mockCallCenter?.mockActiveCalls = [conversationUI.remoteIdentifier! : .established]
+        mockCallCenter?.setMockCallState(.established, conversationId: conversation.remoteIdentifier!, callerId: mockCallCenter!.selfUserId, isVideo: false)
         mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
         
         // expect
@@ -241,7 +241,7 @@ class CallStateObserverTests : MessagingTest {
     func testThatWeSendNotificationWhenCallHasEstablishedDataChannel() {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
-        mockCallCenter?.mockActiveCalls = [conversationUI.remoteIdentifier! : .establishedDataChannel]
+        mockCallCenter?.setMockCallState(.establishedDataChannel, conversationId: conversation.remoteIdentifier!, callerId: mockCallCenter!.selfUserId, isVideo: false)
         mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
         
         // expect
@@ -257,7 +257,7 @@ class CallStateObserverTests : MessagingTest {
     func testThatWeSendNotificationWhenCallTerminates() {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
-        mockCallCenter?.mockActiveCalls = [conversationUI.remoteIdentifier! : .established]
+        mockCallCenter?.setMockCallState(.established, conversationId: conversation.remoteIdentifier!, callerId: mockCallCenter!.selfUserId, isVideo: false)
         mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
         sut.callCenterDidChange(callState: .established, conversation: conversationUI, caller: senderUI, timestamp: Date(), previousCallState: nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -272,7 +272,7 @@ class CallStateObserverTests : MessagingTest {
         }
         
         // when
-        mockCallCenter?.mockActiveCalls = [:]
+        mockCallCenter?.removeMockActiveCalls()
         sut.callCenterDidChange(callState: .none, conversation: conversationUI, caller: senderUI, timestamp: Date(), previousCallState: nil)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
