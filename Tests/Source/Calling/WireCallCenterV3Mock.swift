@@ -139,14 +139,14 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
         return (avsWrapper as! MockAVSWrapper).didCallRejectCall
     }
         
-    public override var nonIdleCalls : [UUID : CallState ] {
-        return mockNonIdleCalls
-    }
-    
-    public override var activeCalls: [UUID : CallState] {
-        return mockActiveCalls
-    }
-    
+//    public override var nonIdleCalls : [UUID : CallState] {
+//        return mockNonIdleCalls
+//    }
+//
+//    public override var activeCalls: [UUID : CallState] {
+//        return mockActiveCalls
+//    }
+
     public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport) {
         mockAVSWrapper = MockAVSWrapper(userId: userId, clientId: clientId, observer: nil)
         super.init(userId: userId, clientId: clientId, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: transport)
@@ -160,14 +160,14 @@ public class WireCallCenterV3Mock : WireCallCenterV3 {
     public override func isVideoCall(conversationId: UUID) -> Bool {
         return mockIsVideoCall
     }
-    
-    public override func callState(conversationId: UUID) -> CallState {
-        return mockCallState
-    }
-
-    var mockInitiator : ZMUser?
-    
-    override public func initiatorForCall(conversationId: UUID) -> UUID? {
-        return mockInitiator?.remoteIdentifier ?? super.initiatorForCall(conversationId: conversationId)
-    }
+//    
+//    public override func callState(conversationId: UUID) -> CallState {
+//        return mockCallState
+//    }
+//
+//    var mockInitiator : ZMUser?
+//    
+//    override public func initiatorForCall(conversationId: UUID) -> UUID? {
+//        return mockInitiator?.remoteIdentifier ?? super.initiatorForCall(conversationId: conversationId)
+//    }
 }

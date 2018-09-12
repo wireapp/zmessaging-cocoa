@@ -55,7 +55,7 @@ extension CallClosedReason: AVSValue {
 
 extension Bool: AVSValue {
     init(rawValue: Int32) {
-        self = rawValue == 1 ? true : false
+        self = rawValue == 1
     }
 }
 

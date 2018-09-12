@@ -140,8 +140,8 @@ extension WireCallCenterV3 {
         guard
             let moc = uiMOC,
             let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: moc)
-            else {
-                return
+        else {
+            return
         }
 
         let callParticipants = CallParticipantsSnapshot(conversationId: conversationId, members: members, callCenter: self)
