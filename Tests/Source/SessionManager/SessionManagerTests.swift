@@ -297,7 +297,7 @@ class SessionManagerTests: IntegrationTest {
         XCTAssertEqual(realSessionManager.backgroundUserSessions[account2.userIdentifier], realSessionManager.activeUserSession)
         
         withExtendedLifetime(destroyToken) {
-            NotificationCenter.default.post(Notification(name: Notification.Name.UIApplicationDidReceiveMemoryWarning))
+            NotificationCenter.default.post(Notification(name: UIApplication.didReceiveMemoryWarningNotification))
         }
         
         // THEN
@@ -610,7 +610,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // WHEN
-        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidReceiveMemoryWarning, object: nil)
+        NotificationCenter.default.post(name: UIApplication.didReceiveMemoryWarningNotification, object: nil)
         
         // THEN
         XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
@@ -665,7 +665,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // WHEN
-        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidReceiveMemoryWarning, object: nil)
+        NotificationCenter.default.post(name: UIApplication.didReceiveMemoryWarningNotification, object: nil)
         
         // THEN
         XCTAssertNil(realSessionManager.backgroundUserSessions[account.userIdentifier])

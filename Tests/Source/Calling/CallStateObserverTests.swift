@@ -72,8 +72,8 @@ class CallStateObserverTests : MessagingTest {
             self.localNotificationDispatcher.notificationCenter = self.notificationCenter
         }
 
-        senderUI = uiMOC.object(with: sender.objectID) as! ZMUser
-        conversationUI = uiMOC.object(with: conversation.objectID) as! ZMConversation
+        senderUI = uiMOC.object(with: sender.objectID) as? ZMUser
+        conversationUI = uiMOC.object(with: conversation.objectID) as? ZMConversation
         sut = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
         uiMOC.zm_callCenter = mockCallCenter
     }

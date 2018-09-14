@@ -25,7 +25,7 @@ import PushKit
 
 
 private let log = ZMSLog(tag: "SessionManager")
-public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
+public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 
 
 @objc public enum CallNotificationStyle : UInt {
@@ -284,7 +284,7 @@ public protocol SessionManagerSwitchingDelegate: class {
                 }
         })
      
-        self.memoryWarningObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.UIApplicationDidReceiveMemoryWarning,
+        self.memoryWarningObserver = NotificationCenter.default.addObserver(forName: UIApplication.didReceiveMemoryWarningNotification,
                                                                             object: nil,
                                                                             queue: nil,
                                                                             using: {[weak self] _ in
@@ -295,8 +295,8 @@ public protocol SessionManagerSwitchingDelegate: class {
             self.tearDownAllBackgroundSessions()
         })
         
-        NotificationCenter.default.addObserver(self, selector: #selector(applicationWillEnterForeground(_:)), name: .UIApplicationWillEnterForeground, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive(_:)), name: .UIApplicationDidBecomeActive, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(applicationWillEnterForeground(_:)), name: UIApplication.willEnterForegroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive(_:)), name: UIApplication.didBecomeActiveNotification, object: nil)
     }
 
     init(

@@ -74,7 +74,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             let conversation = self.conversation(for: selfToUser1Conversation!)
             var message : ZMClientMessage!
             self.userSession?.performChanges {
-                message = conversation?.appendMessage(withText: "Hello") as! ZMClientMessage
+                message = conversation?.appendMessage(withText: "Hello") as? ZMClientMessage
             }
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
             XCTAssertEqual(message.deliveryState, ZMDeliveryState.sent)
@@ -106,7 +106,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
         let conversation = self.conversation(for: selfToUser1Conversation!)
         var message : ZMClientMessage!
         self.userSession?.performChanges {
-            message = conversation?.appendMessage(withText: "Hello") as! ZMClientMessage
+            message = conversation?.appendMessage(withText: "Hello") as? ZMClientMessage
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         XCTAssertEqual(conversation?.hiddenMessages.count, 0)
