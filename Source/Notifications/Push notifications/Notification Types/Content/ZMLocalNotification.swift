@@ -126,11 +126,8 @@ extension ZMLocalNotification {
     
     /// Returns true if it is a ephemeral notification, else false.
     public var isEphemeral: Bool {
-        guard case .message(let contentType) = type else {
-            return false
-        }
-
-        return contentType == .ephemeral
+        guard case .message(.ephemeral) = type else { return false }
+        return true
     }
 
 }
