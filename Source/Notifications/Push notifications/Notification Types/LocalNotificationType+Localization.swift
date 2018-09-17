@@ -231,7 +231,8 @@ extension LocalNotificationType {
             case .knock:
                 arguments.append(NSNumber(value: 1))
             case .ephemeral(isMention: true):
-                return String.localizedStringWithFormat(baseKey.pushFormatString) + ".\(MentionKey)"
+                let key = baseKey + "." + MentionKey
+                return .localizedStringWithFormat(key.pushFormatString)
             case .ephemeral, .hidden:
                 return String.localizedStringWithFormat(baseKey.pushFormatString)
             case .messageTimerUpdate(let timerString):
