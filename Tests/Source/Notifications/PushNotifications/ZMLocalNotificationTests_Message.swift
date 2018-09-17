@@ -28,7 +28,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     
     func textNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, isEphemeral: Bool = false) -> ZMLocalNotification? {
         if isEphemeral { conversation.messageDestructionTimeout = .local(0.5) }
-        let message = conversation.appendMessage(withText: text ?? "Hello Hello!") as! ZMOTRMessage
+        let message = conversation.append(text: text ?? "Hello Hello!") as! ZMOTRMessage
         message.serverTimestamp = Date.distantFuture
         message.sender = sender
         conversation.lastReadServerTimeStamp = Date()
@@ -143,7 +143,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     func testThatItSavesTheMessageNonce() {
         
         // given
-        let message = oneOnOneConversation.appendMessage(withText: "Hello Hello!") as! ZMOTRMessage
+        let message = oneOnOneConversation.append(text: "Hello Hello!") as! ZMOTRMessage
         message.serverTimestamp = Date.distantFuture
         message.sender = sender
         
@@ -214,7 +214,7 @@ extension ZMLocalNotificationTests_Message {
     
     func imageNote(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, isEphemeral : Bool = false) -> ZMLocalNotification? {
         if isEphemeral { conversation.messageDestructionTimeout = .local(10) }
-        let message = conversation.appendMessage(withImageData: verySmallJPEGData()) as! ZMAssetClientMessage
+        let message = conversation.append(imageFromData: verySmallJPEGData()) as! ZMAssetClientMessage
         message.serverTimestamp = Date.distantFuture
         message.sender = sender
         return ZMLocalNotification(message: message)
@@ -308,7 +308,7 @@ extension ZMLocalNotificationTests_Message {
         }
         
         let metadata = ZMFileMetadata(fileURL: fileType.testURL)
-        let message = conversation.appendMessage(with: metadata) as! ZMAssetClientMessage
+        let message = conversation.append(file: metadata) as! ZMAssetClientMessage
         message.serverTimestamp = Date.distantFuture
         message.sender = sender
         message.delivered = true
@@ -428,7 +428,7 @@ extension ZMLocalNotificationTests_Message {
     }
 
     func bodyForEditNote(_ conversation: ZMConversation, sender: ZMUser, text: String) -> String {
-        let message = conversation.appendMessage(withText: "Foo") as! ZMClientMessage
+        let message = conversation.append(text: "Foo") as! ZMClientMessage
         message.markAsSent()
         let note = editNote(message, sender: sender, text: text)
         XCTAssertNotNil(note)

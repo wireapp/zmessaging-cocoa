@@ -41,7 +41,7 @@ class TextSearchTests: ConversationTestsBase {
 
         // When
         mockTransportSession.performRemoteChanges { session in
-            let genericMessage = ZMGenericMessage.message(text: "Hello there!", nonce: UUID.create())
+            let genericMessage = ZMGenericMessage.message(content: ZMText.text(with: "Hello there!"))
             self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: genericMessage.data())
         }
 
@@ -65,7 +65,7 @@ class TextSearchTests: ConversationTestsBase {
 
         // When
         mockTransportSession.performRemoteChanges { _ in
-            let genericMessage = ZMGenericMessage.message(text: "Hello there!", nonce: nonce)
+            let genericMessage = ZMGenericMessage.message(content: ZMText.text(with: "Hello there!"), nonce: nonce)
             self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: genericMessage.data())
         }
 
@@ -77,7 +77,7 @@ class TextSearchTests: ConversationTestsBase {
 
         // And when
         mockTransportSession.performRemoteChanges { _ in
-            let genericMessage = ZMGenericMessage(editMessage: nonce, newText: "This is an edit!!", nonce: UUID.create())
+            let genericMessage = ZMGenericMessage.message(content: ZMMessageEdit.edit(with: ZMText.text(with: "This is an edit!!"), replacingMessageId: nonce))
             self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: genericMessage.data())
         }
 
@@ -100,11 +100,7 @@ class TextSearchTests: ConversationTestsBase {
 
         // When
         mockTransportSession.performRemoteChanges { session in
-            let genericMessage = ZMGenericMessage.genericMessage(
-                pbMessage: ZMText(message: text, linkPreview: nil)!,
-                messageID: UUID.create(),
-                expiresAfter: NSNumber(value: 300)
-            )
+            let genericMessage = ZMGenericMessage.message(content: ZMText.text(with: text), expiresAfter: 300)
             self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: genericMessage.data())
         }
 
@@ -128,7 +124,7 @@ class TextSearchTests: ConversationTestsBase {
 
         // When
         mockTransportSession.performRemoteChanges { session in
-            let genericMessage = ZMGenericMessage.message(text: "Hello there!", nonce: nonce)
+            let genericMessage = ZMGenericMessage.message(content: ZMText.text(with: "Hello there!"), nonce: nonce)
             self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: genericMessage.data())
         }
 
@@ -143,7 +139,7 @@ class TextSearchTests: ConversationTestsBase {
 
         // And when
         mockTransportSession.performRemoteChanges { _ in
-            let genericMessage = ZMGenericMessage(deleteMessage: nonce, nonce:UUID.create())
+            let genericMessage = ZMGenericMessage.message(content: ZMMessageDelete(messageID: nonce))
             self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: genericMessage.data())
         }
 

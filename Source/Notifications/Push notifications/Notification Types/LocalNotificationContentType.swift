@@ -64,7 +64,7 @@ public enum LocalNotificationContentType : Equatable {
             case .participantsRemoved:
                 return .participantsRemoved
             case .messageTimerUpdate:
-                let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(systemMessageData.messageTimer.doubleValue))
+                let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(systemMessageData.messageTimer?.doubleValue ?? 0))
                 if value == .none {
                     return .messageTimerUpdate(nil)
                 } else {

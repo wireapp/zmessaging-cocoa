@@ -52,7 +52,7 @@
     // when
     __block ZMMessage *editMessage;
     [self.userSession performChanges:^{
-        editMessage = [ZMMessage edit:message newText:@"Bar"];
+        editMessage = [ZMMessage edit:message newText:@"Bar" mentions:@[] fetchLinkPreview:NO];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -96,7 +96,7 @@
     // when
     __block ZMMessage *editMessage;
     [self.userSession performChanges:^{
-        editMessage = [ZMMessage edit:message newText:@"Bar"];
+        editMessage = [ZMMessage edit:message newText:@"Bar" mentions:@[] fetchLinkPreview:NO];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -147,7 +147,7 @@
     
     __block ZMMessage *editMessage1;
     [self.userSession performChanges:^{
-        editMessage1 = [ZMMessage edit:message newText:@"Bar"];
+        editMessage1 = [ZMMessage edit:message newText:@"Bar" mentions:@[] fetchLinkPreview:NO];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -157,7 +157,7 @@
     // when
     __block ZMMessage *editMessage2;
     [self.userSession performChanges:^{
-        editMessage2 = [ZMMessage edit:editMessage1 newText:@"FooBar"];
+        editMessage2 = [ZMMessage edit:editMessage1 newText:@"FooBar" mentions:@[] fetchLinkPreview:NO];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -199,7 +199,7 @@
     // when
     __block ZMMessage *editMessage;
     [self.userSession performChanges:^{
-        editMessage = [ZMMessage edit:message newText:@"Bar"];
+        editMessage = [ZMMessage edit:message newText:@"Bar" mentions:@[] fetchLinkPreview:NO];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -240,7 +240,7 @@
     
     __block ZMMessage *editMessage1;
     [self.userSession performChanges:^{
-        editMessage1 = [ZMMessage edit:message newText:@"Bar"];
+        editMessage1 = [ZMMessage edit:message newText:@"Bar" mentions:@[] fetchLinkPreview:NO];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -282,7 +282,7 @@
     
     MockUserClient *fromClient = self.user1.clients.anyObject;
     MockUserClient *toClient = self.selfUser.clients.anyObject;
-    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Foo" nonce:[NSUUID createUUID] expiresAfter:nil];
+    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Foo" mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
     
     [self.mockTransportSession performRemoteChanges:^(id ZM_UNUSED session) {
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:textMessage.data];
@@ -292,10 +292,10 @@
     XCTAssertEqual(conversation.messages.count, messageCount+1);
     ZMClientMessage *receivedMessage = conversation.messages.lastObject;
     XCTAssertEqualObjects(receivedMessage.textMessageData.messageText, @"Foo");
-    NSUUID *messageNone = receivedMessage.nonce;
+    NSUUID *messageNonce = receivedMessage.nonce;
     
     // when
-    ZMGenericMessage *editMessage = [ZMGenericMessage messageWithEditMessage:messageNone  newText:@"Bar" nonce:[NSUUID createUUID]];
+    ZMGenericMessage *editMessage = [ZMGenericMessage messageWithContent:[ZMMessageEdit editWith:[ZMText textWith:@"Bar" mentions:@[] linkPreviews:@[]] replacingMessageId:messageNonce] nonce:NSUUID.createUUID];
     [self.mockTransportSession performRemoteChanges:^(id ZM_UNUSED session) {
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:editMessage.data];
     }];
@@ -315,7 +315,7 @@
     
     MockUserClient *fromClient = self.user1.clients.anyObject;
     MockUserClient *toClient = self.selfUser.clients.anyObject;
-    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:@"Foo" nonce:[NSUUID createUUID] expiresAfter:nil];
+    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Foo" mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
     
     [self.mockTransportSession performRemoteChanges:^(id ZM_UNUSED session) {
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:textMessage.data];
@@ -323,7 +323,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMClientMessage *receivedMessage = conversation.messages.lastObject;
-    NSUUID *messageNone = receivedMessage.nonce;
+    NSUUID *messageNonce = receivedMessage.nonce;
     
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     
@@ -334,7 +334,7 @@
     NSDate *lastModifiedDate = conversation.lastModifiedDate;
     
     // when
-    ZMGenericMessage *editMessage = [ZMGenericMessage messageWithEditMessage:messageNone newText:@"Bar" nonce:[NSUUID createUUID]];
+    ZMGenericMessage *editMessage = [ZMGenericMessage messageWithContent:[ZMMessageEdit editWith:[ZMText textWith:@"Bar" mentions:@[] linkPreviews:@[]] replacingMessageId:messageNonce] nonce:NSUUID.createUUID];
     __block MockEvent *editEvent;
     [self.mockTransportSession performRemoteChanges:^(id ZM_UNUSED session) {
         editEvent = [self.selfToUser1Conversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:editMessage.data];

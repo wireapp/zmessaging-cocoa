@@ -117,7 +117,7 @@ private let zmLog = ZMSLog(tag: "Push")
         }
         
         enqueueChanges {
-            guard let message = conversation.appendMessage(withText: message) else { return /* failure */ }
+            guard let message = conversation.append(text: message) else { return /* failure */ }
             self.messageReplyObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { [weak self] in
                 self?.updateBackgroundTask(with: message)
             })

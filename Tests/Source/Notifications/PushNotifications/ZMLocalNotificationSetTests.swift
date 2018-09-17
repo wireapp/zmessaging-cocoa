@@ -80,7 +80,7 @@ class ZMLocalNotificationSetTests : MessagingTest {
     }
     
     func createMessage(with text: String, in conversation: ZMConversation) -> ZMOTRMessage {
-        let message = conversation.appendMessage(withText: text) as! ZMOTRMessage
+        let message = conversation.append(text: text) as! ZMOTRMessage
         message.sender = sender
         message.serverTimestamp = Date()
         return message
