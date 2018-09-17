@@ -94,7 +94,7 @@
     ZMAssetImageMetaData *image = [ZMAssetImageMetaData imageMetaDataWithWidth:1024 height:2048];
     ZMAssetPreview *preview = [ZMAssetPreview previewWithSize:256 mimeType:@"image/jpeg" remoteData:remote imageMetaData:image];
     ZMAsset *asset = [ZMAsset assetWithOriginal:nil preview:preview];
-    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce expiresAfter:nil];
+    ZMGenericMessage *updateMessage = [ZMGenericMessage messageWithContent:asset nonce:nonce];
     
     
     // when
@@ -152,12 +152,8 @@
     XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
-    ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
-                                                                      mimeType:@"text/plain"
-                                                                          name:@"foo228"
-                                                                     messageID:nonce
-                                                                  expiresAfter:nil];
-
+    ZMAsset *asset = [ZMAsset assetWithOriginal:[ZMAssetOriginal originalWithSize:256 mimeType:@"text/plain" name:@"foo228"] preview:nil];
+    ZMGenericMessage *original = [ZMGenericMessage messageWithContent:asset nonce:nonce];
 
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
@@ -194,7 +190,7 @@
     NSUUID *assetID = NSUUID.createUUID;
     NSData *otrKey = NSData.randomEncryptionKey;
     NSData *sha256 = NSData.zmRandomSHA256Key;
-    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce expiresAfter:nil];
+    ZMGenericMessage *uploaded = [ZMGenericMessage messageWithContent:[ZMAsset assetWithUploadedOTRKey:otrKey sha256:sha256] nonce:nonce];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
@@ -214,7 +210,7 @@
     XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
-    ZMGenericMessage *cancelled = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedCANCELLED messageID:nonce expiresAfter:nil];
+    ZMGenericMessage *cancelled = [ZMGenericMessage messageWithContent:[ZMAsset assetWithNotUploaded:ZMAssetNotUploadedCANCELLED] nonce:nonce];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:cancelled insertBlock:
@@ -232,7 +228,7 @@
     XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
-    ZMGenericMessage *failed = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedFAILED messageID:nonce expiresAfter:nil];
+    ZMGenericMessage *failed = [ZMGenericMessage messageWithContent:[ZMAsset assetWithNotUploaded:ZMAssetNotUploadedFAILED] nonce:nonce];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:failed insertBlock:
@@ -262,7 +258,7 @@
     NSData *encryptedAsset = [assetData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
     NSData *sha256 = encryptedAsset.zmSHA256Digest;
     
-    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce expiresAfter:nil];
+    ZMGenericMessage *uploaded = [ZMGenericMessage messageWithContent:[ZMAsset assetWithUploadedOTRKey:otrKey sha256:sha256] nonce:nonce];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
@@ -315,7 +311,7 @@
     NSData *encryptedAsset = [assetData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
     NSData *sha256 = encryptedAsset.zmSHA256Digest;
     
-    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce expiresAfter:nil];
+    ZMGenericMessage *uploaded = [ZMGenericMessage messageWithContent:[ZMAsset assetWithUploadedOTRKey:otrKey sha256:sha256] nonce:nonce];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
@@ -387,11 +383,8 @@
     XCTAssertNotNil(selfClient);
     XCTAssertNotNil(senderClient);
     
-    ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
-                                                                      mimeType:mimeType
-                                                                          name:@"foo229"
-                                                                     messageID:nonce
-                                                                  expiresAfter:isEphemeral ? @20 : nil];
+    ZMAsset *asset = [ZMAsset assetWithOriginal:[ZMAssetOriginal originalWithSize:256 mimeType:mimeType name:@"foo229"] preview:nil];
+    ZMGenericMessage *original = [ZMGenericMessage messageWithContent:asset nonce:nonce timeout:isEphemeral ? 20 : 0];
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *__unused session) {
@@ -411,7 +404,6 @@
     ZMAssetClientMessage *message = (ZMAssetClientMessage *)conversation.messages.lastObject;
     XCTAssertEqual(message.size, 256lu);
     XCTAssertEqualObjects(message.mimeType, mimeType);
-    XCTAssertEqualObjects(message.filename, @"foo229");
     XCTAssertEqualObjects(message.nonce, nonce);
     
     // perform update
@@ -501,11 +493,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     NSUUID *nonce = NSUUID.createUUID;
-    ZMGenericMessage *original = [ZMGenericMessage genericMessageWithAssetSize:256
-                                                                      mimeType:@"text/plain"
-                                                                          name:self.name
-                                                                     messageID:nonce
-                                                                  expiresAfter:@30];
+    ZMGenericMessage *original = [ZMGenericMessage messageWithContent:[ZMAsset assetWithOriginalWithImageSize:CGSizeZero mimeType:@"text/plain" size:256] nonce:nonce timeout:30];
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
@@ -529,7 +517,6 @@
 
     XCTAssertEqual(message.size, 256lu);
     XCTAssertEqualObjects(message.mimeType, @"text/plain");
-    XCTAssertEqualObjects(message.filename, self.name);
     XCTAssertEqualObjects(message.nonce, nonce);
     XCTAssertNil(message.assetId);
     XCTAssertEqual(message.transferState, ZMFileTransferStateUploading);
@@ -544,7 +531,7 @@
     NSUUID *assetID = NSUUID.createUUID;
     NSData *otrKey = NSData.randomEncryptionKey;
     NSData *sha256 = NSData.zmRandomSHA256Key;
-    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce expiresAfter:@30];
+    ZMGenericMessage *uploaded = [ZMGenericMessage messageWithContent:[ZMAsset assetWithUploadedOTRKey:otrKey sha256:sha256] nonce:nonce timeout:30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
@@ -566,7 +553,7 @@
     XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
-    ZMGenericMessage *cancelled = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedCANCELLED messageID:nonce  expiresAfter:@30];
+    ZMGenericMessage *cancelled = [ZMGenericMessage messageWithContent:[ZMAsset assetWithNotUploaded:ZMAssetNotUploadedCANCELLED] nonce:nonce timeout:30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:cancelled insertBlock:
@@ -584,7 +571,7 @@
     XCTAssertTrue([self login]);
     
     NSUUID *nonce = NSUUID.createUUID;
-    ZMGenericMessage *failed = [ZMGenericMessage genericMessageWithNotUploaded:ZMAssetNotUploadedFAILED messageID:nonce expiresAfter:@30];
+    ZMGenericMessage *failed = [ZMGenericMessage messageWithContent:[ZMAsset assetWithNotUploaded:ZMAssetNotUploadedFAILED] nonce:nonce timeout:30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:failed insertBlock:
@@ -617,7 +604,7 @@
     ZMAssetImageMetaData *image = [ZMAssetImageMetaData imageMetaDataWithWidth:1024 height:2048];
     ZMAssetPreview *preview = [ZMAssetPreview previewWithSize:256 mimeType:@"image/jpeg" remoteData:remote imageMetaData:image];
     ZMAsset *asset = [ZMAsset assetWithOriginal:nil preview:preview];
-    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce expiresAfter:@30];
+    ZMGenericMessage *updateMessage = [ZMGenericMessage messageWithContent:asset nonce:nonce timeout:30];
     
     
     // when
@@ -684,7 +671,7 @@
     NSData *encryptedAsset = [assetData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
     NSData *sha256 = encryptedAsset.zmSHA256Digest;
     
-    ZMGenericMessage *uploaded = [ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce expiresAfter:@30];
+    ZMGenericMessage *uploaded = [ZMGenericMessage messageWithContent:[ZMAsset assetWithUploadedOTRKey:otrKey sha256:sha256] nonce:nonce timeout:30];
     
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
@@ -749,7 +736,7 @@
     ZMAssetImageMetaData *image = [ZMAssetImageMetaData imageMetaDataWithWidth:1024 height:2048];
     ZMAssetPreview *preview = [ZMAssetPreview previewWithSize:256 mimeType:@"image/jpeg" remoteData:remote imageMetaData:image];
     ZMAsset *asset = [ZMAsset assetWithOriginal:nil preview:preview];
-    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce expiresAfter:nil];
+    ZMGenericMessage *updateMessage = [ZMGenericMessage messageWithContent:asset nonce:nonce];
 
 
     // when
@@ -820,7 +807,7 @@
     ZMAssetImageMetaData *image = [ZMAssetImageMetaData imageMetaDataWithWidth:1024 height:2048];
     ZMAssetPreview *preview = [ZMAssetPreview previewWithSize:256 mimeType:@"image/jpeg" remoteData:remote imageMetaData:image];
     ZMAsset *asset = [ZMAsset assetWithOriginal:nil preview:preview];
-    ZMGenericMessage *updateMessage = [ZMGenericMessage genericMessageWithAsset:asset messageID:nonce expiresAfter:@20];
+    ZMGenericMessage *updateMessage = [ZMGenericMessage messageWithContent:asset nonce:nonce timeout:20];
 
     // when
     __block MessageChangeObserver *observer;
@@ -882,7 +869,7 @@
     NSUUID *assetID = NSUUID.createUUID;
     NSData *otrKey = NSData.randomEncryptionKey;
     NSData *sha256 = NSData.zmRandomSHA256Key;
-    ZMGenericMessage *uploaded = [[ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce expiresAfter:nil] updatedUploadedWithAssetId:assetID.transportString token:nil];
+    ZMGenericMessage *uploaded = [[ZMGenericMessage messageWithContent:[ZMAsset assetWithUploadedOTRKey:otrKey sha256:sha256] nonce:nonce] updatedUploadedWithAssetId:assetID.transportString token:nil];
 
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
@@ -2244,7 +2231,7 @@
     NSData *encryptedAsset = [assetData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
     NSData *sha256 = encryptedAsset.zmSHA256Digest;
 
-    ZMGenericMessage *uploaded = [[ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce expiresAfter:nil] updatedUploadedWithAssetId:assetID.transportString token:nil];
+    ZMGenericMessage *uploaded = [[ZMGenericMessage messageWithContent:[ZMAsset assetWithUploadedOTRKey:otrKey sha256:sha256] nonce:nonce] updatedUploadedWithAssetId:assetID.transportString token:nil];
 
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:
@@ -2300,7 +2287,7 @@
     NSData *encryptedAsset = [assetData zmEncryptPrefixingPlainTextIVWithKey:otrKey];
     NSData *sha256 = encryptedAsset.zmSHA256Digest;
 
-    ZMGenericMessage *uploaded = [[ZMGenericMessage genericMessageWithUploadedOTRKey:otrKey sha256:sha256 messageID:nonce expiresAfter:nil] updatedUploadedWithAssetId:assetID.transportString token:nil];
+    ZMGenericMessage *uploaded = [[ZMGenericMessage messageWithContent:[ZMAsset assetWithUploadedOTRKey:otrKey sha256:sha256] nonce:nonce] updatedUploadedWithAssetId:assetID.transportString token:nil];
 
     // when
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalAndUpdate:uploaded insertBlock:

@@ -291,7 +291,7 @@ extension ZMUserSessionTests_PushNotifications {
             connection.status = .accepted
             
             if hasMessage {
-                let message = conversation.appendMessage(withText: "123") as? ZMClientMessage
+                let message = conversation.append(text: "123") as? ZMClientMessage
                 message?.markAsSent()
                 messageNonce = message?.nonce
             }
