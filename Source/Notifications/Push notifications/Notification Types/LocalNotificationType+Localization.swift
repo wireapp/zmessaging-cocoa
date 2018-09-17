@@ -66,6 +66,7 @@ private let ZMPushStringNewConnection       = "new_user"             // "[sender
 private let OneOnOneKey = "oneonone"
 private let GroupKey = "group"
 private let SelfKey = "self"
+private let MentionKey = "mention"
 private let NoConversationNameKey = "noconversationname"
 private let NoUserNameKey = "nousername"
 
@@ -217,15 +218,21 @@ extension LocalNotificationType {
             arguments.append(senderName)
         }
         
+        var mentionKey: String? = nil
+        
         switch self {
         case .message(let contentType):
             switch contentType {
-            case .text(let content):
+            case let .text(content, isMention: isMention):
                 arguments.append(content)
+                mentionKey = isMention ? MentionKey : nil
             case .reaction(emoji: let emoji):
                 arguments.append(emoji)
             case .knock:
                 arguments.append(NSNumber(value: 1))
+            case .ephemeral(isMention: true):
+                let key = baseKey + "." + MentionKey
+                return .localizedStringWithFormat(key.pushFormatString)
             case .ephemeral, .hidden:
                 return String.localizedStringWithFormat(baseKey.pushFormatString)
             case .messageTimerUpdate(let timerString):
@@ -246,7 +253,7 @@ extension LocalNotificationType {
             arguments.append(conversationName)
         }
         
-        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey].compactMap({ $0 }).joined(separator: ".")
+        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey, mentionKey].compactMap({ $0 }).joined(separator: ".")
         return String.localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
     }
     
