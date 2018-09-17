@@ -47,7 +47,7 @@ extension ConversationTests_Ephemeral {
         conversation.messageDestructionTimeout = .local(100)
         var message : ZMClientMessage!
         self.userSession?.performChanges {
-            message = conversation.append(text: "Hello") as! ZMClientMessage
+            message = conversation.append(text: "Hello") as? ZMClientMessage
             XCTAssertTrue(message.isEphemeral)
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
@@ -75,7 +75,7 @@ extension ConversationTests_Ephemeral {
         conversation.messageDestructionTimeout = .local(100)
         var message : ZMAssetClientMessage!
         self.userSession?.performChanges{
-            message = conversation.append(imageFromData: self.verySmallJPEGData()) as! ZMAssetClientMessage
+            message = conversation.append(imageFromData: self.verySmallJPEGData()) as? ZMAssetClientMessage
             XCTAssertTrue(message.isEphemeral)
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
@@ -99,7 +99,7 @@ extension ConversationTests_Ephemeral {
         conversation.messageDestructionTimeout = .local(0.1)
         var ephemeral : ZMClientMessage!
         self.userSession?.performChanges{
-            ephemeral = conversation.append(text: "Hello") as! ZMClientMessage
+            ephemeral = conversation.append(text: "Hello") as? ZMClientMessage
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         spinMainQueue(withTimeout: 0.5)
@@ -192,7 +192,7 @@ extension ConversationTests_Ephemeral {
         conversation.messageDestructionTimeout = .local(1)
         var ephemeral : ZMClientMessage!
         self.userSession?.performChanges {
-            ephemeral = conversation.append(text: "Hello") as! ZMClientMessage
+            ephemeral = conversation.append(text: "Hello") as? ZMClientMessage
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
 

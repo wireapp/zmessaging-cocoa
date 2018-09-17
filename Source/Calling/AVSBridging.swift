@@ -45,7 +45,9 @@ protocol AVSEnum: RawRepresentable, AVSValue {}
 
 // MARK: - AVS Types
 
-extension VideoState: AVSEnum {}
+extension VideoState: AVSEnum {
+    typealias AVSType = RawValue
+}
 
 extension CallClosedReason: AVSValue {
     public init?(rawValue: Int32) {

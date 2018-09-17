@@ -90,7 +90,7 @@ public class CallKitDelegate : NSObject {
         configuration.ringtoneSound = NotificationSound.call.name
         
         if let image = UIImage(named: "logo") {
-            configuration.iconTemplateImageData = UIImagePNGRepresentation(image)
+            configuration.iconTemplateImageData = image.pngData()
         }
         
         return configuration
