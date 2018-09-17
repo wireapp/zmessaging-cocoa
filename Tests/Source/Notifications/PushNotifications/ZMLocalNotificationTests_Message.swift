@@ -28,7 +28,6 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     
     func textNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, mentionedUser: UserType? = nil, isEphemeral: Bool = false) -> ZMLocalNotification? {
         if isEphemeral { conversation.messageDestructionTimeout = .local(0.5) }
-
         
         let mention = mentionedUser.map(papply(Mention.init, NSRange(location: 0, length: 8)))
         let message = conversation.append(text: text ?? "Hello Hello!", mentions: mention.map { [$0] } ?? []) as! ZMOTRMessage
