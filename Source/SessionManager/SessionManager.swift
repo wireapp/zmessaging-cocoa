@@ -71,6 +71,12 @@ public protocol SessionManagerType : class {
     
     /// Configure user notification settings. This will ask the user for permission to display notifications.
     func configureUserNotifications()
+    
+    /// Switch account and and ask UI to to navigate to a message in a conversation
+    func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?, in session: ZMUserSession)
+    
+    /// Switch account and and ask UI to navigate to the conversatio list
+    func showConversationList(in session: ZMUserSession)
 
 }
 
@@ -162,7 +168,7 @@ public protocol SessionManagerSwitchingDelegate: class {
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
-    public weak var requestToOpenViewDelegate: ZMRequestsToOpenViewsDelegate?
+    public weak var showContentDelegate: ShowContentDelegate?
     public weak var switchingDelegate: SessionManagerSwitchingDelegate?
     public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
     

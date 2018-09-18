@@ -192,7 +192,7 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
             self.handleTrackingOnCallNotification(with: userInfo)
         }
         
-        open(userInfo.conversation(in: managedObjectContext), at: nil)
+        showContent(for: userInfo)
         
         // pass in .alert to show in app notification
         completionHandler([])
@@ -220,7 +220,7 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
         case ConversationNotificationAction.connect.rawValue:
             acceptConnectionRequest(with: userInfo, completionHandler: completionHandler)
         default:
-            open(userInfo.conversation(in: managedObjectContext), at: nil)
+            showContent(for: userInfo)
             completionHandler()
             break
         }

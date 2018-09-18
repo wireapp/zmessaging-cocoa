@@ -27,42 +27,49 @@ private let zmLog = ZMSLog(tag: "Push")
     public func acceptConnectionRequest(with userInfo: NotificationUserInfo, completionHandler: @escaping () -> Void) {
         
         guard let senderID = userInfo.senderID,
-              let sender = ZMUser.fetch(withRemoteIdentifier: senderID, in: managedObjectContext)
+              let sender = ZMUser.fetch(withRemoteIdentifier: senderID, in: managedObjectContext),
+              let conversation = sender.connection?.conversation
         else { return }
         
         sender.accept()
         managedObjectContext.saveOrRollback()
-        open(sender.connection?.conversation, at: nil)
+        showConversation(conversation)
         completionHandler()
     }
     
     public func acceptCall(with userInfo: NotificationUserInfo, completionHandler: @escaping () -> Void) {
         
-        let conversation = userInfo.conversation(in: managedObjectContext)
+        guard let conversation = userInfo.conversation(in: managedObjectContext) else { return }
         
         defer {
-            open(conversation, at: nil)
+            showConversation(conversation)
             completionHandler()
         }
         
-        guard let callState = conversation?.voiceChannel?.state else { return }
+        guard let callState = conversation.voiceChannel?.state else { return }
         
         if case let .incoming(video: video, shouldRing: _, degraded: _) = callState, callCenter?.activeCallConversations(in: self).count == 0 {
-            _ = conversation?.voiceChannel?.join(video: video, userSession: self)
+            _ = conversation.voiceChannel?.join(video: video, userSession: self)
+        }
+    }
+    
+    func showContent(for userInfo: NotificationUserInfo) {
+        if let conversation = userInfo.conversation(in: managedObjectContext) {
+            
+            if let message = userInfo.message(in: conversation, managedObjectContext: managedObjectContext) as? ZMClientMessage,
+                let textMessageData = message.textMessageData, textMessageData.isMentioningSelf {
+                showConversation(conversation, at: conversation.firstUnreadMessageMentioningSelf)
+            } else {
+                showConversation(conversation)
+            }
+            
+        } else {
+            sessionManager?.showConversationList(in: self)
         }
     }
         
-    func open(_ conversation: ZMConversation?, at message : ZMMessage?) {
-        guard let strongDelegate = requestToOpenViewDelegate else { return }
-            
-        if conversation == nil {
-            strongDelegate.showConversationList(for: self)
-        }
-        else if message == nil {
-            strongDelegate.userSession(self, show: conversation)
-        } else {
-            strongDelegate.userSession(self, show: message, in: conversation)
-        }
+    fileprivate func showConversation(_ conversation: ZMConversation, at message : ZMConversationMessage? = nil) {
+        sessionManager?.showConversation(conversation, at: message, in: self)
     }
     
     // MARK: - Background Actions
