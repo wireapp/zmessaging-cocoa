@@ -46,41 +46,41 @@ class AssetDeletionStatusTests: MessagingTest {
     
     func testThatItAddsAnIdentifierToTheList() {
         // Given
-        let expected = UUID.create().transportString()
+        let identifier = UUID.create().transportString()
         
         // When
-        NotificationCenter.default.post(name: .deleteAssetNotification, object: expected)
+        NotificationCenter.default.post(name: .deleteAssetNotification, object: identifier)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // Then
-        XCTAssertEqual(identifierProvider.assetIdentifiersToBeDeleted, [expected])
+        XCTAssertEqual(identifierProvider.assetIdentifiersToBeDeleted, [identifier])
     }
     
     func testThatItReturnsAnIdentifierWhenThereIsOne() {
         // Given
-        let expected = UUID.create().transportString()
-        identifierProvider.assetIdentifiersToBeDeleted = [expected]
+        let identifier = UUID.create().transportString()
+        identifierProvider.assetIdentifiersToBeDeleted = [identifier]
         
         // When
-        let identifier = sut.nextIdentifierToDelete()
+        let nextIdentifierToDelete = sut.nextIdentifierToDelete()
         
         // Then
-        XCTAssertEqual(identifier, expected)
+        XCTAssertEqual(nextIdentifierToDelete, identifier)
         XCTAssertNil(sut.nextIdentifierToDelete())
     }
     
     func testThatItReturnsAnIdentifierOnlyOnce() {
         // Given
-        let firstExpected = UUID.create().transportString()
-        let secondExpected = UUID.create().transportString()
-        identifierProvider.assetIdentifiersToBeDeleted = [firstExpected, secondExpected]
+        let identifier1 = UUID.create().transportString()
+        let identifier2 = UUID.create().transportString()
+        identifierProvider.assetIdentifiersToBeDeleted = [identifier1, identifier2]
         
         // When
         guard let first = sut.nextIdentifierToDelete() else { return XCTFail("no first identifier") }
         guard let second = sut.nextIdentifierToDelete() else { return XCTFail("no second identifier") }
         
         // Then
-        let expected = Set([firstExpected, secondExpected])
+        let expected = Set([identifier1, identifier2])
         let actual = Set([first, second])
         XCTAssertEqual(actual, expected)
         XCTAssertNil(sut.nextIdentifierToDelete())
@@ -88,14 +88,14 @@ class AssetDeletionStatusTests: MessagingTest {
     
     func testThatItFiresANextRequestNotificationIfAnIdentifierIsAdded() {
         // Given
-        let expected = UUID.create().transportString()
+        let identifier = UUID.create().transportString()
         
         // Expect
         let requestExpectation = expectation(description: "notification should be posted")
         let observer = MockRequestAvailableObserver(requestAvailable: requestExpectation.fulfill)
         
         // When
-        NotificationCenter.default.post(name: .deleteAssetNotification, object: expected)
+        NotificationCenter.default.post(name: .deleteAssetNotification, object: identifier)
         
         // Then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.1))
@@ -104,10 +104,9 @@ class AssetDeletionStatusTests: MessagingTest {
     
     func testThatItDoesNotReturnAnIdentifierAgainAfterItSucceeded() {
         // Given
-        let firstExpected = UUID.create().transportString()
-        let secondExpected = UUID.create().transportString()
-        let expected = Set([firstExpected, secondExpected])
-        identifierProvider.assetIdentifiersToBeDeleted = expected
+        let identifier1 = UUID.create().transportString()
+        let identifier2 = UUID.create().transportString()
+        identifierProvider.assetIdentifiersToBeDeleted = Set([identifier1, identifier2])
         guard let first = sut.nextIdentifierToDelete() else { return XCTFail("no first identifier") }
         
         // When
@@ -121,14 +120,13 @@ class AssetDeletionStatusTests: MessagingTest {
     
     func testThatItDoesNotReturnAnIdentifierAgainAfterItFailed() {
         // Given
-        let firstExpected = UUID.create().transportString()
-        let secondExpected = UUID.create().transportString()
-        let expected = Set([firstExpected, secondExpected])
-        identifierProvider.assetIdentifiersToBeDeleted = expected
+        let identifier1 = UUID.create().transportString()
+        let identifier2 = UUID.create().transportString()
+        identifierProvider.assetIdentifiersToBeDeleted = Set([identifier1, identifier2])
         guard let first = sut.nextIdentifierToDelete() else { return XCTFail("no first identifier") }
         
         // When
-        sut.didFailToDelete(identifier: firstExpected)
+        sut.didFailToDelete(identifier: first)
         
         // Then
         guard let second = sut.nextIdentifierToDelete() else { return XCTFail("no second identifier") }
