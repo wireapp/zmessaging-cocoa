@@ -182,8 +182,8 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
         if categoryIdentifier == PushNotificationCategory.incomingCall.rawValue {
             self.handleTrackingOnCallNotification(with: userInfo)
         }
-        
-        open(userInfo.conversation(in: managedObjectContext), at: nil)
+                
+        // show in app notification
         
         // pass in .alert to show in app notification
         completionHandler([])
