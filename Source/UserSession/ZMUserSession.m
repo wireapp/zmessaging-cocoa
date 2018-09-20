@@ -195,12 +195,7 @@ ZM_EMPTY_ASSERTING_INIT()
             self.syncManagedObjectContext.zm_userImageCache = userImageCache;
             self.syncManagedObjectContext.zm_fileAssetCache = fileAssetCache;
             
-            self.localNotificationDispatcher = [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:self.syncManagedObjectContext
-                                                                                  foregroundNotificationDelegate:self
-                                                                                                     application:application
-                                                                                                 operationStatus:self.operationStatus];
-
-            
+            self.localNotificationDispatcher = [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:self.syncManagedObjectContext];
             
             self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
                                                                                           userSession:self];

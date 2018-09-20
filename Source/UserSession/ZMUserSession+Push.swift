@@ -128,15 +128,6 @@ extension ZMUserSession {
     
 }
 
-@objc extension ZMUserSession: ForegroundNotificationsDelegate {
-    
-    public func didReceieveLocal(notification: ZMLocalNotification, application: ZMApplication) {
-        managedObjectContext.performGroupedBlock {
-            self.sessionManager?.localNotificationResponder?.processLocal(notification, forSession: self)
-        }
-    }
-}
-
 // MARK: - UNUserNotificationCenterDelegate
 
 /*
