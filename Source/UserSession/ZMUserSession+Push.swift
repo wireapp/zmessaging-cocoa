@@ -182,11 +182,9 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
         if categoryIdentifier == PushNotificationCategory.incomingCall.rawValue {
             self.handleTrackingOnCallNotification(with: userInfo)
         }
-                
-        // show in app notification
         
-        // pass in .alert to show in app notification
-        completionHandler([])
+        // show in app notification
+        completionHandler([.alert, .sound])
     }
     
     func handleNotificationResponse(actionIdentifier: String,
