@@ -57,7 +57,6 @@ public protocol SessionManagerType : class {
     
     var accountManager : AccountManager { get }
     var backgroundUserSessions: [UUID: ZMUserSession] { get }
-    weak var localNotificationResponder: LocalNotificationResponder? { get }
     
     @available(iOS 10.0, *)
     var callKitDelegate : CallKitDelegate? { get }
@@ -72,11 +71,6 @@ public protocol SessionManagerType : class {
     /// Configure user notification settings. This will ask the user for permission to display notifications.
     func configureUserNotifications()
 
-}
-
-@objc
-public protocol LocalNotificationResponder : class {
-    func processLocal(_ notification: ZMLocalNotification, forSession session: ZMUserSession)
 }
 
 @objc
@@ -155,7 +149,6 @@ public protocol SessionManagerSwitchingDelegate: class {
     public let appVersion: String
     var isAppVersionBlacklisted = false
     public weak var delegate: SessionManagerDelegate? = nil
-    public weak var localNotificationResponder: LocalNotificationResponder?
     public let accountManager: AccountManager
     public fileprivate(set) var activeUserSession: ZMUserSession?
     public var urlHandler: SessionManagerURLHandler!
