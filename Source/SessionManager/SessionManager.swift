@@ -58,6 +58,8 @@ public protocol SessionManagerType : class {
     var accountManager : AccountManager { get }
     var backgroundUserSessions: [UUID: ZMUserSession] { get }
     
+    weak var foregroundNotificationResponder: ForegroundNotificationResponder? { get }
+    
     @available(iOS 10.0, *)
     var callKitDelegate : CallKitDelegate? { get }
     var callNotificationStyle: CallNotificationStyle { get }
@@ -76,6 +78,11 @@ public protocol SessionManagerType : class {
 @objc
 public protocol SessionManagerSwitchingDelegate: class {
     func confirmSwitchingAccount(completion: @escaping (Bool)->Void)
+}
+
+@objc
+public protocol ForegroundNotificationResponder: class {
+    func shouldPresentForegroundNotification(for conversation: UUID) -> Bool
 }
 
 /// The `SessionManager` class handles the creation of `ZMUserSession` and `UnauthenticatedSession`
@@ -155,6 +162,7 @@ public protocol SessionManagerSwitchingDelegate: class {
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
+    public weak var foregroundNotificationResponder: ForegroundNotificationResponder?
     public weak var requestToOpenViewDelegate: ZMRequestsToOpenViewsDelegate?
     public weak var switchingDelegate: SessionManagerSwitchingDelegate?
     public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
