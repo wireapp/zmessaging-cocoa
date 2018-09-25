@@ -183,8 +183,17 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
             self.handleTrackingOnCallNotification(with: userInfo)
         }
         
-        // show in app notification
-        completionHandler([.alert, .sound])
+        // foreground notification responder exists on the UI context, so we
+        // need to switch to that context
+        self.managedObjectContext.perform {
+            guard
+                let conv = userInfo.conversation(in: self.managedObjectContext)?.remoteIdentifier,
+                let responder = self.sessionManager.foregroundNotificationResponder,
+                responder.shouldPresentForegroundNotification(for: conv)
+                else { return completionHandler([]) }
+            
+            completionHandler([.alert, .sound])
+        }
     }
     
     func handleNotificationResponse(actionIdentifier: String,
