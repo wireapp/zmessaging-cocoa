@@ -319,7 +319,7 @@ class CallStateObserverTests : MessagingTest {
         // given
         syncMOC.performGroupedBlock {
             self.conversation.lastServerTimeStamp = Date()
-            self.conversation.appendMessage(withText: "test")
+            self.conversation.append(text: "test")
             self.conversation.clearMessageHistory()
             XCTAssert(self.conversation.isArchived)
             XCTAssertNotNil(self.conversation.clearedTimeStamp)

@@ -38,7 +38,7 @@ extension ConversationTests_Ephemeral {
         
         let conversation = self.conversation(for: selfToUser1Conversation!)!
         self.userSession?.performChanges{
-            _ = conversation.appendMessage(withText: "Hello") as! ZMClientMessage
+            _ = conversation.append(text: "Hello") as! ZMClientMessage
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         mockTransportSession?.resetReceivedRequests()
@@ -47,7 +47,7 @@ extension ConversationTests_Ephemeral {
         conversation.messageDestructionTimeout = .local(100)
         var message : ZMClientMessage!
         self.userSession?.performChanges {
-            message = conversation.appendMessage(withText: "Hello") as? ZMClientMessage
+            message = conversation.append(text: "Hello") as? ZMClientMessage
             XCTAssertTrue(message.isEphemeral)
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
@@ -66,7 +66,7 @@ extension ConversationTests_Ephemeral {
         
         let conversation = self.conversation(for: selfToUser1Conversation!)!
         self.userSession?.performChanges {
-            _ = conversation.appendMessage(withText: "Hello") as! ZMClientMessage
+            _ = conversation.append(text: "Hello") as! ZMClientMessage
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         mockTransportSession?.resetReceivedRequests()
@@ -75,7 +75,7 @@ extension ConversationTests_Ephemeral {
         conversation.messageDestructionTimeout = .local(100)
         var message : ZMAssetClientMessage!
         self.userSession?.performChanges{
-            message = conversation.appendMessage(withImageData: self.verySmallJPEGData()) as? ZMAssetClientMessage
+            message = conversation.append(imageFromData: self.verySmallJPEGData()) as? ZMAssetClientMessage
             XCTAssertTrue(message.isEphemeral)
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
@@ -99,7 +99,7 @@ extension ConversationTests_Ephemeral {
         conversation.messageDestructionTimeout = .local(0.1)
         var ephemeral : ZMClientMessage!
         self.userSession?.performChanges{
-            ephemeral = conversation.appendMessage(withText: "Hello") as? ZMClientMessage
+            ephemeral = conversation.append(text: "Hello") as? ZMClientMessage
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         spinMainQueue(withTimeout: 0.5)
@@ -110,7 +110,7 @@ extension ConversationTests_Ephemeral {
         // other client deletes ephemeral message
         let fromClient = user1?.clients.anyObject() as! MockUserClient
         let toClient = selfUser?.clients.anyObject() as! MockUserClient
-        let deleteMessage = ZMGenericMessage(deleteMessage: ephemeral.nonce!, nonce:UUID.create())
+        let deleteMessage = ZMGenericMessage.message(content: ZMMessageDelete(messageID: ephemeral.nonce!))
         
         mockTransportSession?.performRemoteChanges { session in
             self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: deleteMessage.data())
@@ -127,8 +127,8 @@ extension ConversationTests_Ephemeral {
     func remotelyInsertEphemeralMessage(conversation: MockConversation) {
         let fromClient = user1?.clients.anyObject() as! MockUserClient
         let toClient = selfUser?.clients.anyObject() as! MockUserClient
-        let text = ZMText(message: "foo", linkPreview: nil)!
-        let genericMessage = ZMGenericMessage.genericMessage(pbMessage: text, messageID:UUID.create(), expiresAfter: NSNumber(value:0.1))
+        let text = ZMText.text(with: "foo")
+        let genericMessage = ZMGenericMessage.message(content: text, expiresAfter: 0.1)
         XCTAssertEqual(genericMessage.ephemeral.expireAfterMillis, 100)
         XCTAssertTrue(genericMessage.hasEphemeral())
         
@@ -192,7 +192,7 @@ extension ConversationTests_Ephemeral {
         conversation.messageDestructionTimeout = .local(1)
         var ephemeral : ZMClientMessage!
         self.userSession?.performChanges {
-            ephemeral = conversation.appendMessage(withText: "Hello") as? ZMClientMessage
+            ephemeral = conversation.append(text: "Hello") as? ZMClientMessage
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
 

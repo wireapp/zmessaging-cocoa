@@ -27,7 +27,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             
             let fromClient = user1?.clients.anyObject() as! MockUserClient
             let toClient = selfUser?.clients.anyObject() as! MockUserClient
-            let textMessage = ZMGenericMessage.message(text: "Hello", nonce: UUID.create())
+            let textMessage = ZMGenericMessage.message(content: ZMText.text(with: "Hello"))
             let conversation = self.conversation(for: selfToUser1Conversation!)
             
             let requestPath = "/conversations/\(conversation!.remoteIdentifier!.transportString())/otr/messages?report_missing=\(user1!.identifier)"
@@ -74,14 +74,14 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             let conversation = self.conversation(for: selfToUser1Conversation!)
             var message : ZMClientMessage!
             self.userSession?.performChanges {
-                message = conversation?.appendMessage(withText: "Hello") as? ZMClientMessage
+                message = conversation?.append(text: "Hello") as? ZMClientMessage
             }
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
             XCTAssertEqual(message.deliveryState, ZMDeliveryState.sent)
             
             let fromClient = user1?.clients.anyObject() as! MockUserClient
             let toClient = selfUser?.clients.anyObject() as! MockUserClient
-            let confirmationMessage = ZMGenericMessage(confirmation: message.nonce!, type: .DELIVERED, nonce:UUID.create())
+            let confirmationMessage = ZMGenericMessage.message(content: ZMConfirmation.confirm(messageId: message.nonce!))
             
             // when
             mockTransportSession?.performRemoteChanges { session in
@@ -106,7 +106,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
         let conversation = self.conversation(for: selfToUser1Conversation!)
         var message : ZMClientMessage!
         self.userSession?.performChanges {
-            message = conversation?.appendMessage(withText: "Hello") as? ZMClientMessage
+            message = conversation?.append(text: "Hello") as? ZMClientMessage
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         XCTAssertEqual(conversation?.hiddenMessages.count, 0)
@@ -114,7 +114,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
 
         let fromClient = user1!.clients.anyObject() as! MockUserClient
         let toClient = selfUser!.clients.anyObject() as! MockUserClient
-        let confirmationMessage = ZMGenericMessage(confirmation: message.nonce!, type: .DELIVERED, nonce:UUID.create())
+        let confirmationMessage = ZMGenericMessage.message(content: ZMConfirmation.confirm(messageId: message.nonce!))
 
         let convObserver = ConversationChangeObserver(conversation: conversation)
 
