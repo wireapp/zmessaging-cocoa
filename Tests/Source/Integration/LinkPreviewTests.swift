@@ -18,7 +18,7 @@
 
 import Foundation
 
-class _LinkPreviewTests: ConversationTestsBase {
+class LinkPreviewTests: ConversationTestsBase {
     
     var mockLinkPreviewDetector: MockLinkPreviewDetector!
     
