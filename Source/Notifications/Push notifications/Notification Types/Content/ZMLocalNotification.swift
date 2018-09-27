@@ -93,8 +93,12 @@ open class ZMLocalNotification: NSObject {
             content.userInfo = userInfo.storage
         }
 
+        // only group non ephemeral messages
         if let conversationID = self.conversationID {
-            content.threadIdentifier = conversationID.transportString()
+            switch self.type {
+            case .message(.ephemeral): break
+            default: content.threadIdentifier = conversationID.transportString()
+            }            
         }
 
         return content
