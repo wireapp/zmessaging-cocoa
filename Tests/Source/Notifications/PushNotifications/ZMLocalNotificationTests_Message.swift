@@ -179,82 +179,83 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         // Then
         XCTAssertNil(note)
     }
-    
-    func testThatItDoesCreateANotificationWhenTheConversationIsSilencedAndSelfUserIsMentioned() {
-        // Given
-        groupConversation.isSilenced = true
-        
-        // When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
-        
-        // Then
-        XCTAssertNotNil(note)
-    }
-    
-    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned() {
-        // Given & When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
-        
-        // Then
-        XCTAssertEqual(note?.body, "Mention from Super User: Hello Hello!")
-    }
-    
-    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_UserWithoutName() {
-        // Given
-        sender.name = nil
-        
-        // When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
-        
-        // Then
-        XCTAssertEqual(note?.body, "New mention: Hello Hello!")
-    }
-    
-    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_NoConversationName() {
-        // Given & When
-        let note = textNotification(groupConversationWithoutName, sender: sender, mentionedUser: selfUser)
-        
-        // Then
-        XCTAssertEqual(note?.body, "Super User mentioned you in a conversation: Hello Hello!")
-    }
-    
-    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_UserWithoutNameNoConversationName() {
-        // Given
-        sender.name = nil
-        
-        // When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
-        
-        // Then
-        XCTAssertEqual(note?.body, "New mention: Hello Hello!")
-    }
-    
-    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_OneOnOne() {
-        // Given & When
-        let note = textNotification(oneOnOneConversation, sender: sender, mentionedUser: selfUser)
-        
-        // Then
-        XCTAssertEqual(note?.body, "Mention: Hello Hello!")
-    }
-    
-    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_OneOnOne_NoUserName() {
-        // Given
-        sender.name = nil
 
-        // Given
-        let note = textNotification(oneOnOneConversation, sender: sender, mentionedUser: selfUser)
-        
-        // Then
-        XCTAssertEqual(note?.body, "New mention: Hello Hello!")
-    }
-    
-    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_Ephemeral() {
-        // Given & When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser, isEphemeral: true)
-        
-        // Then
-        XCTAssertEqual(note?.body, "Someone mentioned you")
-    }
+// TODO re-enable when mention notifications are back
+//    func testThatItDoesCreateANotificationWhenTheConversationIsSilencedAndSelfUserIsMentioned() {
+//        // Given
+//        groupConversation.isSilenced = true
+//
+//        // When
+//        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertNotNil(note)
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned() {
+//        // Given & When
+//        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "Mention from Super User: Hello Hello!")
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_UserWithoutName() {
+//        // Given
+//        sender.name = nil
+//
+//        // When
+//        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "New mention: Hello Hello!")
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_NoConversationName() {
+//        // Given & When
+//        let note = textNotification(groupConversationWithoutName, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "Super User mentioned you in a conversation: Hello Hello!")
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_UserWithoutNameNoConversationName() {
+//        // Given
+//        sender.name = nil
+//
+//        // When
+//        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "New mention: Hello Hello!")
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_OneOnOne() {
+//        // Given & When
+//        let note = textNotification(oneOnOneConversation, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "Mention: Hello Hello!")
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_OneOnOne_NoUserName() {
+//        // Given
+//        sender.name = nil
+//
+//        // Given
+//        let note = textNotification(oneOnOneConversation, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "New mention: Hello Hello!")
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_Ephemeral() {
+//        // Given & When
+//        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser, isEphemeral: true)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "Someone mentioned you")
+//    }
 
     func testThatItCreatesPushNotificationForMessageOfUnknownType() {
         XCTAssertEqual(bodyForUnknownNote(oneOnOneConversation, sender: sender), "New message")
