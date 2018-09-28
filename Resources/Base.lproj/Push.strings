@@ -209,7 +209,7 @@
 "push.notification.action.message.open" = "Open";
 "push.notification.action.message.reply" = "Reply";
 "push.notification.action.message.reply.button.title" = "Send";
-"push.notification.action.message.reply.placeholder" = "Write a Message";
+"push.notification.action.message.reply.placeholder" = "Type a Message";
 "push.notification.action.conversation.mute" = "Mute";
 "push.notification.action.message.like" = "♥";
 
