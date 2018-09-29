@@ -42,7 +42,7 @@ class OTRTests : IntegrationTest {
         // when
         var message: ZMConversationMessage?
         userSession?.performChanges {
-            message = conversation.appendMessage(withText: text)
+            message = conversation.append(text: text)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -66,7 +66,7 @@ class OTRTests : IntegrationTest {
         // when
         var message: ZMConversationMessage? = nil
         userSession?.performChanges {
-             message = conversation.appendMessage(withImageData: imageData)
+             message = conversation.append(imageFromData: imageData)
         }
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

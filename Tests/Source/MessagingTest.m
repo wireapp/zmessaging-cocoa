@@ -42,7 +42,6 @@
 #import "ZMConnectionTranscoder.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMLastUpdateEventIDTranscoder.h"
-#import "ZMCallFlowRequestStrategy.h"
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import "ZMUserSession+Internal.h"
@@ -151,6 +150,7 @@ static ZMReachability *sharedReachabilityMock = nil;
     self.mockOperationStatus.isInBackground = NO;
     self.mockOperationLoop = [OCMockObject niceMockForClass:ZMOperationLoop.class];
     self.mockSyncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
+    self.mockCallNotificationStyle = CallNotificationStylePushNotifications;
     
     [[[self.mockOperationLoop stub] andReturn:self.mockSyncStrategy] syncStrategy];
     
@@ -417,8 +417,6 @@ static ZMReachability *sharedReachabilityMock = nil;
     [self verifyMockLater:selfStrategy];
     id missingUpdateEventsTranscoder = [OCMockObject mockForClass:ZMMissingUpdateEventsTranscoder.class];
     [self verifyMockLater:missingUpdateEventsTranscoder];
-    id callFlowRequestStrategy = [OCMockObject mockForClass:ZMCallFlowRequestStrategy.class];
-    [self verifyMockLater:callFlowRequestStrategy];
     
     [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
     [[[objectDirectory stub] andReturn:selfStrategy] selfStrategy];
@@ -440,7 +438,7 @@ static ZMReachability *sharedReachabilityMock = nil;
         [[[mockUserSession stub] andReturn:self.sharedContainerURL] sharedContainerURL];
         [[[mockUserSession stub] andReturn:self.mockOperationStatus] operationStatus];
         [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockOperationLoop] operationLoop];
-        [[[mockUserSession stub] andReturnValue:@(CallNotificationStylePushNotifications)] callNotificationStyle];
+        [[[mockUserSession stub] andReturnValue:@(self.mockCallNotificationStyle)] callNotificationStyle];
 
         [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockTransportSession] transportSession];
         _mockUserSession = mockUserSession;
@@ -619,7 +617,7 @@ static ZMReachability *sharedReachabilityMock = nil;
 {
     NSUUID *nonce = [NSUUID createUUID];
     ZMClientMessage *message = [[ZMClientMessage alloc] initWithNonce:nonce managedObjectContext:self.syncMOC];
-    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithText:text nonce:nonce expiresAfter:nil];
+    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:text mentions:@[] linkPreviews:@[]] nonce:nonce];
     [message addData:textMessage.data];
     return message;
 }

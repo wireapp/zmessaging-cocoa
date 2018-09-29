@@ -24,7 +24,6 @@
 @class OperationStatus;
 @class ManagedObjectContextChangeObserver;
 @class LocalNotificationDispatcher;
-@class ZMStoredLocalNotification;
 @class AccountStatus;
 @class ApplicationStatusDirectory;
 @class UserExpirationObserver;
@@ -61,13 +60,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) ZMAPNSEnvironment *apnsEnvironment;
 
 - (void)tearDown;
-
-// Notification that was received during the time when the sync engine is not ready to process it.
-@property (nonatomic, nullable) ZMStoredLocalNotification *pendingLocalNotification;
-
-/// When starting the app due to a push notification action, we store the notification information and wait until sync completed before processing pending local notifications.
-/// This is important for possibly outdated calling notifications for which we need to fetch the call state before joining the call.
-- (void)processPendingNotificationActions;
 
 @end
 

@@ -19,6 +19,7 @@
 
 import Foundation
 import WireTransport
+import UserNotifications
 
 let PushChannelUserIDKey = "user"
 let PushChannelDataKey = "data"
@@ -134,61 +135,95 @@ extension ZMUserSession {
             self.sessionManager?.localNotificationResponder?.processLocal(notification, forSession: self)
         }
     }
+}
 
-    public func didReceiveLocal(notification: UILocalNotification, application: ZMApplication) {
+// MARK: - UNUserNotificationCenterDelegate
+
+/*
+ * Note: Although ZMUserSession conforms to UNUserNotificationCenterDelegate,
+ * it should not actually be assigned as the delegate of UNUserNotificationCenter.
+ * Instead, the delegate should be the SessionManager, whose repsonsibility it is
+ * to forward the method calls to the appropriate user session.
+ */
+extension ZMUserSession: UNUserNotificationCenterDelegate {
+    
+    // Called by the SessionManager when a notification is received while the app
+    // is in the foreground.
+    public func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                       willPresent notification: UNNotification,
+                                       withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
+    {
+        log.debug("Notification center wants to present in-app notification: \(notification)")
+        let categoryIdentifier = notification.request.content.categoryIdentifier
         
-        if let category = notification.category, category == PushNotificationCategory.incomingCall.rawValue {
-            self.handleTrackingOnCallNotification(notification)
+        handleInAppNotification(with: notification.userInfo,
+                                categoryIdentifier: categoryIdentifier,
+                                completionHandler: completionHandler)
+    }
+    
+    // Called by the SessionManager when the user engages a notification action.
+    public func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                       didReceive response: UNNotificationResponse,
+                                       withCompletionHandler completionHandler: @escaping () -> Void)
+    {
+        log.debug("Did receive notification response: \(response)")
+        let userText = (response as? UNTextInputNotificationResponse)?.userText
+        let note = response.notification
+        
+        handleNotificationResponse(actionIdentifier: response.actionIdentifier,
+                                   categoryIdentifier: note.request.content.categoryIdentifier,
+                                   userInfo: note.userInfo,
+                                   userText: userText,
+                                   completionHandler: completionHandler)
+    }
+    
+    // MARK: Abstractions
+    
+    /* The logic for handling notifications/actions is factored out of the
+     * delegate methods because we cannot create `UNNotification` and
+     * `UNNotificationResponse` objects in unit tests.
+     */
+    
+    func handleInAppNotification(with userInfo: NotificationUserInfo,
+                                 categoryIdentifier: String,
+                                 completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
+    {
+        if categoryIdentifier == PushNotificationCategory.incomingCall.rawValue {
+            self.handleTrackingOnCallNotification(with: userInfo)
         }
         
-        self.pendingLocalNotification = ZMStoredLocalNotification(notification: notification,
-                                                                  managedObjectContext: self.managedObjectContext,
-                                                                  actionIdentifier: nil,
-                                                                  textInput: nil)
-
-        if self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen {
-            self.processPendingNotificationActions()
+        open(userInfo.conversation(in: managedObjectContext), at: nil)
+        
+        // pass in .alert to show in app notification
+        completionHandler([])
+    }
+    
+    func handleNotificationResponse(actionIdentifier: String,
+                                    categoryIdentifier: String,
+                                    userInfo: NotificationUserInfo,
+                                    userText: String? = nil,
+                                    completionHandler: @escaping () -> Void)
+    {
+        switch actionIdentifier {
+        case CallNotificationAction.ignore.rawValue:
+            ignoreCall(with: userInfo, completionHandler: completionHandler)
+        case CallNotificationAction.accept.rawValue:
+            acceptCall(with: userInfo, completionHandler: completionHandler)
+        case ConversationNotificationAction.mute.rawValue:
+            muteConversation(with: userInfo, completionHandler: completionHandler)
+        case ConversationNotificationAction.like.rawValue:
+            likeMessage(with: userInfo, completionHandler: completionHandler)
+        case ConversationNotificationAction.reply.rawValue:
+            if let textInput = userText {
+                reply(with: userInfo, message: textInput, completionHandler: completionHandler)
+            }
+        case ConversationNotificationAction.connect.rawValue:
+            acceptConnectionRequest(with: userInfo, completionHandler: completionHandler)
+        default:
+            open(userInfo.conversation(in: managedObjectContext), at: nil)
+            completionHandler()
+            break
         }
     }
     
-    public func handleAction(application: ZMApplication,
-                             with identifier: String?,
-                             for localNotification: UILocalNotification,
-                             with responseInfo: [AnyHashable: Any],
-                             completionHandler: @escaping () -> ()) {
-        
-        let textInput: String = responseInfo[UIUserNotificationActionResponseTypedTextKey] as? String ?? ""
-
-        if let concreteIdentifier = identifier {
-            switch concreteIdentifier {
-            case PushNotificationCategory.CallAction.ignore.rawValue:
-                self.ignoreCall(with: localNotification, completionHandler: completionHandler)
-                return
-            case PushNotificationCategory.ConversationAction.mute.rawValue:
-                self.muteConversation(with: localNotification, completionHandler: completionHandler)
-                return
-            case PushNotificationCategory.ConversationAction.like.rawValue:
-                self.likeMessage(with: localNotification, completionHandler: completionHandler)
-                return
-            case PushNotificationCategory.ConversationAction.reply.rawValue:
-                self.reply(with: localNotification, message: textInput, completionHandler: completionHandler)
-                return
-            default:
-                break
-            }
-        }
-        
-        if application.applicationState == .inactive {
-            self.pendingLocalNotification = ZMStoredLocalNotification(notification: localNotification,
-                                                                      managedObjectContext: self.managedObjectContext,
-                                                                      actionIdentifier: identifier,
-                                                                      textInput: textInput)
-        }
-         
-        if self.didStartInitialSync && !self.isPerformingSync && self.pushChannelIsOpen {
-            self.processPendingNotificationActions()
-        }
-        
-        completionHandler();
-    }
 }

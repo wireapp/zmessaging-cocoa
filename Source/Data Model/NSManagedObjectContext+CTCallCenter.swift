@@ -21,23 +21,6 @@ import CoreTelephony
 
 public extension NSManagedObjectContext {
     
-    private static let CTCallCenterKey = "CTCallCenterKey"
-    
-    @objc
-    var zm_coreTelephonyCallCenter : CTCallCenter? {
-        
-        get {
-            precondition(zm_isUserInterfaceContext, "callCenter can only be accessed on the ui context")
-            return userInfo[NSManagedObjectContext.CTCallCenterKey] as? CTCallCenter
-        }
-        
-        set {
-            precondition(zm_isUserInterfaceContext, "callCenter can only be accessed on the ui context")
-            userInfo[NSManagedObjectContext.CTCallCenterKey] = newValue
-        }
-        
-    }
-
     private static let WireCallCenterKey = "WireCallCenterKey"
 
     @objc

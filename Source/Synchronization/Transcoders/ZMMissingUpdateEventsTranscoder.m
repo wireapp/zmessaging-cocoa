@@ -22,9 +22,9 @@
 @import WireRequestStrategy;
 
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
-#import "ZMSyncStrategy+EventProcessing.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMSimpleListRequestPaginator.h"
+#import "WireSyncEngineLogs.h"
 
 
 static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
@@ -181,6 +181,8 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
             }
         }
     }
+    
+    ZMLogWithLevelAndTag(ZMLogLevelInfo, ZMTAG_EVENT_PROCESSING, @"Downloaded %li event(s)", parsedEvents.count);
     
     [syncStrategy processUpdateEvents:parsedEvents ignoreBuffer:YES];
     [self.pushNotificationStatus didFetchEventIds:eventIds finished:!self.listPaginator.hasMoreToFetch];

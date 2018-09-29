@@ -69,6 +69,8 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
             return completionHandler()
         }
         
+        Logging.eventProcessing.info("Scheduling to fetch events notified by push")
+        
         eventIdRanking.add(eventId)
         completionHandlers[eventId] = completionHandler
         
@@ -87,6 +89,8 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
         eventIdRanking.minusSet(Set<UUID>(eventIds))
         
         guard finished else { return }
+        
+        Logging.eventProcessing.info("Finished to fetching all available events")
         
         for eventId in completionHandlers.keys.filter({  self.lastEventIdIsNewerThan(eventId: $0) || highestRankingEventId == $0 }) {
             let completionHandler = completionHandlers.removeValue(forKey: eventId)

@@ -23,7 +23,7 @@
 
 @protocol ZMUpdateEventConsumer <NSObject>
 
-- (void)consumeUpdateEvents:(NSArray<ZMUpdateEvent *>*)updateEvents;
+- (void)consumeUpdateEvents:(NSArray<ZMUpdateEvent *>* _Nonnull)updateEvents NS_SWIFT_NAME(consume(updateEvents:));
 
 @end
 
@@ -37,16 +37,16 @@
 
 @interface ZMUpdateEventsBuffer : NSObject <ZMUpdateEventsFlushableCollection>
 
-- (instancetype)initWithUpdateEventConsumer:(id<ZMUpdateEventConsumer>)eventConsumer;
+- (instancetype _Nonnull )initWithUpdateEventConsumer:(id <ZMUpdateEventConsumer> _Nonnull)eventConsumer;
 
 /// discard all events in the buffer
 - (void)discardAllUpdateEvents;
 
 /// discard the event with this identifier
-- (void)discardUpdateEventWithIdentifier:(NSUUID* )eventIdentifier;
+- (void)discardUpdateEventWithIdentifier:(NSUUID *_Nonnull)eventIdentifier;
 
-- (void)addUpdateEvent:(ZMUpdateEvent *)event;
+- (void)addUpdateEvent:(ZMUpdateEvent *_Nonnull)event;
 
-- (NSArray *)updateEvents;
+- (NSArray *_Nonnull)updateEvents;
 
 @end

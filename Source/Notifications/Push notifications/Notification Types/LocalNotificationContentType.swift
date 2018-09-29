@@ -18,23 +18,21 @@
 
 import Foundation
 
-
-
 public enum LocalNotificationEventType {
     case connectionRequestAccepted, connectionRequestPending, newConnection, conversationCreated
 }
 
 public enum LocalNotificationContentType : Equatable {
-    case undefined, image, video, audio, location, fileUpload, knock, text(String), reaction(emoji: String), ephemeral, hidden, participantsRemoved, participantsAdded, messageTimerUpdate(String?)
+    case undefined, image, video, audio, location, fileUpload, knock, text(String, isMention: Bool), reaction(emoji: String), ephemeral(isMention: Bool), hidden, participantsRemoved, participantsAdded, messageTimerUpdate(String?)
     
     static func typeForMessage(_ message: ZMConversationMessage) -> LocalNotificationContentType? {
         
         if message.isEphemeral {
-            return .ephemeral
+            return .ephemeral(isMention: false) // TODO re-enable mention notifications
         }
         
-        if let text = message.textMessageData?.messageText , !text.isEmpty {
-            return .text(text)
+        if let messageData = message.textMessageData, let text = messageData.messageText , !text.isEmpty {
+            return .text(text, isMention: false) // TODO re-enable mention notifications
         }
         
         if message.knockMessageData != nil {
@@ -66,7 +64,7 @@ public enum LocalNotificationContentType : Equatable {
             case .participantsRemoved:
                 return .participantsRemoved
             case .messageTimerUpdate:
-                let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(systemMessageData.messageTimer.doubleValue))
+                let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(systemMessageData.messageTimer?.doubleValue ?? 0))
                 if value == .none {
                     return .messageTimerUpdate(nil)
                 } else {

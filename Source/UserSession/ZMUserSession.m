@@ -35,7 +35,6 @@
 #import "ZMBlacklistVerificator.h"
 #import "NSURL+LaunchOptions.h"
 #import "WireSyncEngineLogs.h"
-#import "ZMCallFlowRequestStrategy.h"
 #import "ZMOperationLoop+Private.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ZMClientRegistrationStatus.h"
@@ -55,7 +54,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
-@property (nonatomic) ZMStoredLocalNotification *pendingLocalNotification;
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) NSMutableArray* observersToken;
 @property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
@@ -184,9 +182,6 @@ ZM_EMPTY_ASSERTING_INIT()
         FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:cacheLocation];
         self.managedObjectContext.zm_fileAssetCache = fileAssetCache;
         
-        CTCallCenter *callCenter = [[CTCallCenter alloc] init];
-        self.managedObjectContext.zm_coreTelephonyCallCenter = callCenter;
-        
         self.managedObjectContext.zm_searchUserCache = [[NSCache alloc] init];
         
         [self.syncManagedObjectContext performBlockAndWait:^{
@@ -224,7 +219,6 @@ ZM_EMPTY_ASSERTING_INIT()
             self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
                                                                                       cookieStorage:session.cookieStorage
                                                                         localNotificationDispatcher:self.localNotificationDispatcher
-                                                                                       mediaManager:mediaManager
                                                                                         flowManager:flowManager
                                                                                       storeProvider:storeProvider
                                                                          applicationStatusDirectory:self.applicationStatusDirectory
@@ -430,8 +424,10 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)openAppstore
 {
     NSURL *appStoreURL = [NSURL URLWithString:AppstoreURL];
-    [[UIApplication sharedApplication] openURL:appStoreURL];
-    [NSTimer scheduledTimerWithTimeInterval:30 target:self selector:@selector(didNotUpdateApp:) userInfo:nil repeats:NO];
+    if ([[UIApplication sharedApplication] canOpenURL:appStoreURL]) {
+        [[UIApplication sharedApplication] openURL:appStoreURL options:@{} completionHandler:NULL];
+        [NSTimer scheduledTimerWithTimeInterval:30 target:self selector:@selector(didNotUpdateApp:) userInfo:nil repeats:NO];
+    }
 }
 
 - (void)didNotUpdateApp:(NSTimer *)timer;
@@ -574,7 +570,6 @@ ZM_EMPTY_ASSERTING_INIT()
         self.hasCompletedInitialSync = YES;
         [self changeNetworkStateAndNotify];
         [self notifyThirdPartyServices];
-        [self processPendingNotificationActions];
     }];
 }
 

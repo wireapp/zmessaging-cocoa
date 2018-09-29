@@ -18,6 +18,7 @@
 
 import Foundation
 import WireLinkPreview
+import WireTesting
 @testable import WireSyncEngine
 
 class AddressBookUploadRequestStrategyTest : MessagingTest {
@@ -610,7 +611,7 @@ class AddressBookFake : WireSyncEngine.AddressBook, WireSyncEngine.AddressBookAc
     
     /// Create a fake contact
     func createContact(card: UInt) -> FakeAddressBookContact {
-        return FakeAddressBookContact(firstName: "tester \(card)", emailAddresses: ["tester_\(card)@example.com"], phoneNumbers: ["+155512300\(card.hashValue % 10)"], identifier: "\(card)")
+        return FakeAddressBookContact(firstName: "tester \(card)", emailAddresses: ["tester_\(card)@example.com"], phoneNumbers: ["+155512300\(card % 10)"], identifier: "\(card)")
     }
     
     /// Generate an infinite number of contacts
@@ -619,7 +620,7 @@ class AddressBookFake : WireSyncEngine.AddressBook, WireSyncEngine.AddressBookAc
 
 struct FakeAddressBookContact : WireSyncEngine.ContactRecord {
     
-    static var incrementalLocalIdentifier = 0
+    static var incrementalLocalIdentifier = ZMAtomicInteger(integer: 0)
     
     var firstName = ""
     var lastName = ""
@@ -635,8 +636,8 @@ struct FakeAddressBookContact : WireSyncEngine.ContactRecord {
         self.rawEmails = emailAddresses
         self.rawPhoneNumbers = phoneNumbers
         self.localIdentifier = identifier ?? {
-            FakeAddressBookContact.incrementalLocalIdentifier += 1
-            return "\(FakeAddressBookContact.incrementalLocalIdentifier)"
+            FakeAddressBookContact.incrementalLocalIdentifier.increment()
+            return "\(FakeAddressBookContact.incrementalLocalIdentifier.rawValue)"
         }()
     }
     

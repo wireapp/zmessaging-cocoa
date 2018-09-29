@@ -26,9 +26,12 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     // MARK: - Text Messages
     // MARK: Helpers
     
-    func textNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, isEphemeral: Bool = false) -> ZMLocalNotification? {
+    func textNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, mentionedUser: UserType? = nil, isEphemeral: Bool = false) -> ZMLocalNotification? {
         if isEphemeral { conversation.messageDestructionTimeout = .local(0.5) }
-        let message = conversation.appendMessage(withText: text ?? "Hello Hello!") as! ZMOTRMessage
+
+        
+        let mention = mentionedUser.map(papply(Mention.init, NSRange(location: 0, length: 8)))
+        let message = conversation.append(text: text ?? "Hello Hello!", mentions: mention.map { [$0] } ?? []) as! ZMOTRMessage
         message.serverTimestamp = Date.distantFuture
         message.sender = sender
         conversation.lastReadServerTimeStamp = Date()
@@ -61,8 +64,8 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     func testThatItShowsDefaultAlertBodyWhenHidePreviewSettingIsTrue() {
         // given
         let note1 = textNotification(oneOnOneConversation, sender: sender)
-        XCTAssertEqual(note1?.uiLocalNotification.alertTitle, "Super User")
-        XCTAssertEqual(note1?.uiLocalNotification.alertBody, "Hello Hello!")
+        XCTAssertEqual(note1?.content.title, "Super User")
+        XCTAssertEqual(note1?.content.body, "Hello Hello!")
         
         // when
         let moc = oneOnOneConversation.managedObjectContext!
@@ -73,15 +76,15 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         let note2 = textNotification(oneOnOneConversation, sender: sender)
         
         // then
-        XCTAssertNil(note2?.uiLocalNotification.alertTitle)
-        XCTAssertEqual(note2?.uiLocalNotification.alertBody, "New message")
+        XCTAssertEqual(note2?.content.title, "")
+        XCTAssertEqual(note2?.content.body, "New message")
     }
     
     func testThatItShowsShowsEphemeralStringEvenWhenHidePreviewSettingIsTrue() {
         // given
         let note1 = textNotification(oneOnOneConversation, sender: sender, isEphemeral: true)
-        XCTAssertNil(note1?.uiLocalNotification.alertTitle)
-        XCTAssertEqual(note1?.uiLocalNotification.alertBody, "Someone sent you a message")
+        XCTAssertEqual(note1?.content.title, "")
+        XCTAssertEqual(note1?.content.body, "Someone sent you a message")
         
         // when
         let moc = oneOnOneConversation.managedObjectContext!
@@ -92,8 +95,19 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         let note2 = textNotification(oneOnOneConversation, sender: sender, isEphemeral: true)
         
         // then
-        XCTAssertNil(note2?.uiLocalNotification.alertTitle)
-        XCTAssertEqual(note2?.uiLocalNotification.alertBody, "Someone sent you a message")
+        XCTAssertEqual(note2?.content.title, "")
+        XCTAssertEqual(note2?.content.body, "Someone sent you a message")
+    }
+    
+    func testThatItDoesNotSetThreadIdentifierForEphemeralMessages() {
+        // given
+        let note = textNotification(oneOnOneConversation, sender: sender, isEphemeral: true)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.content.title, "")
+        XCTAssertEqual(note!.content.body, "Someone sent you a message")
+        XCTAssertEqual(note!.content.threadIdentifier, "")
     }
     
     func testItCreatesMessageNotificationsCorrectly(){
@@ -143,7 +157,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     func testThatItSavesTheMessageNonce() {
         
         // given
-        let message = oneOnOneConversation.appendMessage(withText: "Hello Hello!") as! ZMOTRMessage
+        let message = oneOnOneConversation.append(text: "Hello Hello!") as! ZMOTRMessage
         message.serverTimestamp = Date.distantFuture
         message.sender = sender
         
@@ -165,6 +179,94 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         // then
         XCTAssertNil(note)
     }
+    
+    func testThatItDoesNotCreateANotificationWhenTheConversationIsSilencedAndOtherUserIsMentioned() {
+        // Given
+        groupConversation.isSilenced = true
+        
+        // When
+        let note = textNotification(groupConversation, sender: sender, mentionedUser: sender)
+        
+        // Then
+        XCTAssertNil(note)
+    }
+
+// TODO re-enable when mention notifications are back
+//    func testThatItDoesCreateANotificationWhenTheConversationIsSilencedAndSelfUserIsMentioned() {
+//        // Given
+//        groupConversation.isSilenced = true
+//
+//        // When
+//        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertNotNil(note)
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned() {
+//        // Given & When
+//        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "Mention from Super User: Hello Hello!")
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_UserWithoutName() {
+//        // Given
+//        sender.name = nil
+//
+//        // When
+//        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "New mention: Hello Hello!")
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_NoConversationName() {
+//        // Given & When
+//        let note = textNotification(groupConversationWithoutName, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "Super User mentioned you in a conversation: Hello Hello!")
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_UserWithoutNameNoConversationName() {
+//        // Given
+//        sender.name = nil
+//
+//        // When
+//        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "New mention: Hello Hello!")
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_OneOnOne() {
+//        // Given & When
+//        let note = textNotification(oneOnOneConversation, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "Mention: Hello Hello!")
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_OneOnOne_NoUserName() {
+//        // Given
+//        sender.name = nil
+//
+//        // Given
+//        let note = textNotification(oneOnOneConversation, sender: sender, mentionedUser: selfUser)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "New mention: Hello Hello!")
+//    }
+//
+//    func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_Ephemeral() {
+//        // Given & When
+//        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser, isEphemeral: true)
+//
+//        // Then
+//        XCTAssertEqual(note?.body, "Someone mentioned you")
+//    }
 
     func testThatItCreatesPushNotificationForMessageOfUnknownType() {
         XCTAssertEqual(bodyForUnknownNote(oneOnOneConversation, sender: sender), "New message")
@@ -214,7 +316,7 @@ extension ZMLocalNotificationTests_Message {
     
     func imageNote(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, isEphemeral : Bool = false) -> ZMLocalNotification? {
         if isEphemeral { conversation.messageDestructionTimeout = .local(10) }
-        let message = conversation.appendMessage(withImageData: verySmallJPEGData()) as! ZMAssetClientMessage
+        let message = conversation.append(imageFromData: verySmallJPEGData()) as! ZMAssetClientMessage
         message.serverTimestamp = Date.distantFuture
         message.sender = sender
         return ZMLocalNotification(message: message)
@@ -308,7 +410,7 @@ extension ZMLocalNotificationTests_Message {
         }
         
         let metadata = ZMFileMetadata(fileURL: fileType.testURL)
-        let message = conversation.appendMessage(with: metadata) as! ZMAssetClientMessage
+        let message = conversation.append(file: metadata) as! ZMAssetClientMessage
         message.serverTimestamp = Date.distantFuture
         message.sender = sender
         message.delivered = true
@@ -428,7 +530,7 @@ extension ZMLocalNotificationTests_Message {
     }
 
     func bodyForEditNote(_ conversation: ZMConversation, sender: ZMUser, text: String) -> String {
-        let message = conversation.appendMessage(withText: "Foo") as! ZMClientMessage
+        let message = conversation.append(text: "Foo") as! ZMClientMessage
         message.markAsSent()
         let note = editNote(message, sender: sender, text: text)
         XCTAssertNotNil(note)

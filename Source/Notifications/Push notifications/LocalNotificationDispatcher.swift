@@ -17,6 +17,7 @@
 //
 
 import Foundation
+import UserNotifications
 
 @objc public protocol ForegroundNotificationsDelegate: NSObjectProtocol {
 
@@ -35,6 +36,8 @@ import Foundation
     let callingNotifications: ZMLocalNotificationSet
     let failedMessageNotifications: ZMLocalNotificationSet
 
+    var notificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()
+
     unowned let application: ZMApplication
     weak var operationStatus: OperationStatus?
 
@@ -52,10 +55,10 @@ import Foundation
         ) {
         self.syncMOC = managedObjectContext
         self.foregroundNotificationDelegate = foregroundNotificationDelegate
-        self.eventNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherEventNotificationsKey", keyValueStore: managedObjectContext)
-        self.failedMessageNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherFailedNotificationsKey", keyValueStore: managedObjectContext)
-        self.callingNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherCallingNotificationsKey", keyValueStore: managedObjectContext)
-        self.messageNotifications = ZMLocalNotificationSet(application: application, archivingKey: "ZMLocalNotificationDispatcherMessageNotificationsKey", keyValueStore: managedObjectContext)
+        self.eventNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherEventNotificationsKey", keyValueStore: managedObjectContext)
+        self.failedMessageNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherFailedNotificationsKey", keyValueStore: managedObjectContext)
+        self.callingNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherCallingNotificationsKey", keyValueStore: managedObjectContext)
+        self.messageNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherMessageNotificationsKey", keyValueStore: managedObjectContext)
         self.application = application
         self.operationStatus = operationStatus
         self.isTornDown = false
@@ -81,7 +84,7 @@ import Foundation
         if operationStatus?.operationState == .foreground {
             self.foregroundNotificationDelegate?.didReceieveLocal(notification: note, application: application)
         } else {
-            application.scheduleLocalNotification(note.uiLocalNotification)
+            notificationCenter.add(note.request, withCompletionHandler: nil)
         }
     }
 
@@ -114,7 +117,7 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
             if let receivedMessage = ZMGenericMessage(from: event), receivedMessage.hasReaction(), receivedMessage.reaction.emoji.isEmpty {
                 UUID(uuidString: receivedMessage.reaction.messageId).apply(eventNotifications.cancelCurrentNotifications(messageNonce:))
             }
-
+            
             let note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
             note.apply(eventNotifications.addObject)
             note.apply(scheduleLocalNotification)

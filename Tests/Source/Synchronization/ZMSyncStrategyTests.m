@@ -28,7 +28,6 @@
 #import "MessagingTest.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMSyncStrategy+Internal.h"
-#import "ZMSyncStrategy+EventProcessing.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
 #import "ZMUpdateEventsBuffer.h"
 #import "ZMOperationLoop.h"
@@ -199,7 +198,6 @@
     self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:[[FakeCookieStorage alloc] init] requestCancellation:self application:self.application syncStateDelegate:self analytics:nil];
     self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider
                                                cookieStorage:nil
-                                                mediaManager:nil
                                                  flowManager:self.mockflowManager
                                 localNotificationsDispatcher:self.mockDispatcher
                                   applicationStatusDirectory:self.applicationStatusDirectory
@@ -591,8 +589,10 @@
     }
     
     // when
-    [self.sut fetchRequestBatchForEvents:events];
+    ZMFetchRequestBatch *fetchRequest = [self.sut prefetchRequestForUpdateEvents:events];
+    NOT_USED(fetchRequest);
     WaitForAllGroupsToBeEmpty(0.5);
+
 }
 
 - (void)testThatCallingNextRequestFetchesObjectsAndDistributesThemToTheChangeTracker

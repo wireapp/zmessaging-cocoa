@@ -19,6 +19,7 @@
 import Foundation
 import WireTesting
 import WireTransport.Testing
+import avs
 
 @testable import WireSyncEngine
 
@@ -119,6 +120,7 @@ extension IntegrationTest {
         
         pushRegistry = PushRegistryMock(queue: nil)
         application = ApplicationMock()
+        notificationCenter = UserNotificationCenterMock()
         mockTransportSession = MockTransportSession(dispatchGroup: self.dispatchGroup)
         mockTransportSession.cookieStorage = ZMPersistentCookieStorage(forServerName: "ztest.example.com", userIdentifier: currentUserIdentifier)
         WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self
@@ -155,6 +157,7 @@ extension IntegrationTest {
         groupConversation = nil
         groupConversationWithServiceUser = nil
         application = nil
+        notificationCenter = nil
         resetInMemoryDatabases()
         deleteSharedContainerContent()
         sharedContainerDirectory = nil
@@ -431,7 +434,7 @@ extension IntegrationTest {
     func prefetchClientByInsertingMessage(in mockConversation: MockConversation) {
         guard let convo = conversation(for: mockConversation) else { return }
         userSession?.performChanges {
-            convo.appendMessage(withText: "hum, t'es sûr?")
+            convo.append(text: "hum, t'es sûr?")
         }
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
@@ -535,13 +538,32 @@ extension IntegrationTest {
         
         return user!
     }
+    
+    @objc(performRemoteChangesExludedFromNotificationStream:)
+    func performRemoteChangesExludedFromNotificationStream(_ changes: @escaping (_ session: MockTransportSessionObjectCreation) -> Void) {
+        mockTransportSession.performRemoteChanges { session in
+            session.simulatePushChannelClosed()
+            changes(session)
+        }
         
+        mockTransportSession.responseGeneratorBlock = { (request) in
+            guard request.path.contains("/notifications") else { return nil }
+
+            self.mockTransportSession.responseGeneratorBlock = nil
+            return ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
+        }
+        
+        mockTransportSession.performRemoteChanges { session in
+            session.clearNotifications()
+            session.simulatePushChannelOpened()
+        }
+    }
 }
 
 extension IntegrationTest {
     @objc(remotelyAppendSelfConversationWithZMClearedForMockConversation:atTime:)
     func remotelyAppendSelfConversationWithZMCleared(for mockConversation: MockConversation, at time: Date) {
-        let genericMessage = ZMGenericMessage(clearedTimestamp: time, ofConversationWith: UUID(uuidString: mockConversation.identifier)!, nonce: UUID.create())
+        let genericMessage = ZMGenericMessage.message(content: ZMCleared(timestamp: time, conversationRemoteID: UUID(uuidString: mockConversation.identifier)!))
         mockTransportSession.performRemoteChanges { session in
             self.selfConversation.insertClientMessage(from: self.selfUser, data: genericMessage.data())
         }
@@ -549,7 +571,7 @@ extension IntegrationTest {
     
     @objc(remotelyAppendSelfConversationWithZMLastReadForMockConversation:atTime:)
     func remotelyAppendSelfConversationWithZMLastRead(for mockConversation: MockConversation, at time: Date) {
-        let genericMessage = ZMGenericMessage(lastRead: time, ofConversationWith: UUID(uuidString: mockConversation.identifier)!, nonce: UUID.create())
+        let genericMessage = ZMGenericMessage.message(content: ZMLastRead(timestamp: time, conversationRemoteID: UUID(uuidString: mockConversation.identifier)!))
         mockTransportSession.performRemoteChanges { session in
             self.selfConversation.insertClientMessage(from: self.selfUser, data: genericMessage.data())
         }
@@ -564,6 +586,10 @@ extension IntegrationTest : SessionManagerDelegate {
     
     public func sessionManagerActivated(userSession: ZMUserSession) {
         self.userSession = userSession
+        
+        if let notificationCenter = self.notificationCenter {
+            self.userSession?.localNotificationDispatcher.notificationCenter = notificationCenter
+        }
         
         userSession.syncManagedObjectContext.performGroupedBlock {
             userSession.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
