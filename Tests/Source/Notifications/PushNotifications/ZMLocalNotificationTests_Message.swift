@@ -265,6 +265,43 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         // Then
         XCTAssertEqual(note?.body, "Someone mentioned you")
     }
+    
+    func testThatItRemovesPreceedingAtSymbolsFromMentions() {
+        // Given users in a group conversation
+        let user1 = insertUser(with: UUID.create(), name: "@lice")
+        let user2 = insertUser(with: UUID.create(), name: "C@rol @ work")
+        
+        var conversation: ZMConversation!
+        syncMOC.performGroupedBlockAndWait {
+            conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            conversation.remoteIdentifier = UUID.create()
+            conversation.userDefinedName = "Mentions Group"
+            conversation.conversationType = .group
+            conversation.lastServerTimeStamp = Date()
+            conversation.lastReadServerTimeStamp = conversation.lastServerTimeStamp
+            conversation.mutableLastServerSyncedActiveParticipants.addObjects(from: [self.sender, user1, user2])
+            self.syncMOC.saveOrRollback()
+        }
+        
+        // mention both users
+        let text = "Hey @\(user1.name!) and @\(user2.name!)!"
+        let mention1 = Mention(range: NSMakeRange(4, user1.name!.count + 1), user: user1)
+        let mention2 = Mention(range: NSMakeRange(15, user2.name!.count + 1), user: user2)
+        
+        // create the message
+        let message = conversation.append(text: text, mentions: [mention1, mention2]) as! ZMOTRMessage
+        message.serverTimestamp = Date.distantFuture
+        message.sender = sender
+        conversation.lastReadServerTimeStamp = Date()
+        message.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(20)
+        
+        // When
+        let note = ZMLocalNotification(message: message)
+        XCTAssertNotNil(note)
+        
+        // Then
+        XCTAssertEqual(note!.body, "Super User: Hey \(user1.name!) and \(user2.name!)!")
+    }
 
     func testThatItCreatesPushNotificationForMessageOfUnknownType() {
         XCTAssertEqual(bodyForUnknownNote(oneOnOneConversation, sender: sender), "New message")
