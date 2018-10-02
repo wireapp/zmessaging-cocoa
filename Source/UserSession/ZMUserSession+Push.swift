@@ -190,10 +190,10 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
             else { return completionHandler([]) }
             
             let responder = self.sessionManager.foregroundNotificationResponder
-            let proceed = responder?.shouldPresentForegroundNotification(for: conv) ?? true
+            let shouldPresent = responder?.shouldPresentForegroundNotification(for: conv) ?? true
             
             var options = UNNotificationPresentationOptions()
-            if proceed { options.formIntersection([.alert, .sound]) }
+            if shouldPresent { options = [.alert, .sound] }
             
             completionHandler(options)
         }
