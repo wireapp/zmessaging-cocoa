@@ -210,7 +210,6 @@
 "push.notification.action.message.reply" = "Reply";
 "push.notification.action.message.reply.button.title" = "Send";
 "push.notification.action.message.reply.placeholder" = "Type a Message";
-"push.notification.action.conversation.mute" = "Mute";
 "push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "Accept";

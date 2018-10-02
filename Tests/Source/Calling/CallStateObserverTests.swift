@@ -89,8 +89,10 @@ class CallStateObserverTests : MessagingTest {
     }
     
     func testThatInstanceDoesntHaveRetainCycles() {
-        weak var instance = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
-        XCTAssertNil(instance)
+        var instance: CallStateObserver? = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
+        weak var weakInstance = instance
+        instance = nil
+        XCTAssertNil(weakInstance)
     }
     
     func testThatMissedCallMessageIsAppendedForCanceledCallByReceiver() {

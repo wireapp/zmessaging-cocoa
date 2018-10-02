@@ -107,7 +107,6 @@ extension NotificationAction {
 enum ConversationNotificationAction: String, NotificationAction {
     case open = "conversationOpenAction"
     case reply = "conversationDirectReplyAction"
-    case mute = "conversationMuteAction"
     case like = "messageLikeAction"
     case connect = "acceptConnectAction"
 
@@ -115,7 +114,6 @@ enum ConversationNotificationAction: String, NotificationAction {
         switch self {
         case .open: return "message.open"
         case .reply: return "message.reply"
-        case .mute: return "conversation.mute"
         case .like: return "message.like"
         case .connect: return "connection.accept"
         }
