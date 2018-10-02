@@ -27,16 +27,11 @@ class LocalNotificationDispatcherTests: MessagingTest {
     var conversation2: ZMConversation!
     
     var notificationCenter: UserNotificationCenterMock!
-    var notificationDelegate: MockForegroundNotificationDelegate!
     
     var scheduledRequests: [UNNotificationRequest] {
         return self.notificationCenter.scheduledRequests
     }
-    
-    var receivedForegroundNotifications: [ZMLocalNotification] {
-        return self.notificationDelegate.receivedLocalNotifications
-    }
-    
+
     var user1: ZMUser!
     var user2: ZMUser!
     
@@ -47,12 +42,7 @@ class LocalNotificationDispatcherTests: MessagingTest {
     override func setUp() {
         super.setUp()
         self.notificationCenter = UserNotificationCenterMock()
-        self.notificationDelegate = MockForegroundNotificationDelegate()
-        self.sut = LocalNotificationDispatcher(in: self.syncMOC,
-                                               foregroundNotificationDelegate: self.notificationDelegate,
-                                               application: self.application,
-                                               operationStatus: self.mockUserSession.operationStatus)
-        
+        self.sut = LocalNotificationDispatcher(in: self.syncMOC)
         self.sut.notificationCenter = self.notificationCenter
         
         [self.sut.eventNotifications,
@@ -88,7 +78,6 @@ class LocalNotificationDispatcherTests: MessagingTest {
     
     override func tearDown() {
         self.notificationCenter = nil
-        self.notificationDelegate = nil
         self.user1 = nil
         self.user2 = nil
         self.conversation1 = nil
@@ -115,7 +104,6 @@ extension LocalNotificationDispatcherTests {
         // THEN
         XCTAssertEqual(self.sut.messageNotifications.notifications.count, 1)
         XCTAssertEqual(self.scheduledRequests.count, 1)
-        XCTAssertEqual(self.receivedForegroundNotifications.count, 0)
         
         guard
             let note = self.sut.messageNotifications.notifications.first,
@@ -145,7 +133,6 @@ extension LocalNotificationDispatcherTests {
         // THEN
         XCTAssertEqual(self.sut.messageNotifications.notifications.count, 1)
         XCTAssertEqual(self.scheduledRequests.count, 1)
-        XCTAssertEqual(self.receivedForegroundNotifications.count, 0)
         
         guard
             let note = self.sut.messageNotifications.notifications.first,
@@ -155,25 +142,6 @@ extension LocalNotificationDispatcherTests {
         XCTAssertTrue(note.body.contains("User 1 set the message timer to"))
         XCTAssertEqual(note.body, request.content.body)
         XCTAssertEqual(note.id.uuidString, request.identifier)
-    }
-
-    func testThatItForwardsNotificationFromMessagesIfActive() {
-        // GIVEN
-        let text = UUID.create().transportString()
-        let message = self.conversation1.append(text: text) as! ZMClientMessage
-        message.sender = self.user1
-        self.mockUserSession.operationStatus.isInBackground = false
-
-        // WHEN
-        self.sut.process(message)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // THEN
-        XCTAssertEqual(self.scheduledRequests.count, 0)
-        XCTAssertEqual(self.receivedForegroundNotifications.count, 1)
-        
-        guard let note = self.receivedForegroundNotifications.first else { return XCTFail() }
-        XCTAssertTrue(note.body.contains(text))
     }
 
     func testThatItAddsNotificationOfDifferentConversationsToTheList() {
@@ -353,7 +321,6 @@ extension LocalNotificationDispatcherTests {
 
         // THEN
         XCTAssertEqual(self.scheduledRequests.count, 1)
-        XCTAssertEqual(self.receivedForegroundNotifications.count, 0)
         XCTAssertTrue(self.scheduledRequests.first!.content.body.contains(text))
     }
 
@@ -371,7 +338,6 @@ extension LocalNotificationDispatcherTests {
 
         // THEN
         XCTAssertEqual(self.scheduledRequests.count, 0)
-        XCTAssertEqual(self.receivedForegroundNotifications.count, 0)
     }
 
     func testThatItCancelsNotificationWhenUserDeletesLike() {
@@ -447,12 +413,13 @@ extension LocalNotificationDispatcherTests {
 }
 
 
-class MockForegroundNotificationDelegate: NSObject, ForegroundNotificationsDelegate {
+class MockForegroundNotificationResponder: NSObject, ForegroundNotificationResponder {
 
-    var receivedLocalNotifications: [ZMLocalNotification] = []
-
-    func didReceieveLocal(notification: ZMLocalNotification, application: ZMApplication) {
-        self.receivedLocalNotifications.append(notification)
+    var notificationPermissionRequests: [UUID] = []
+    
+    func shouldPresentForegroundNotification(for conversation: UUID) -> Bool {
+        notificationPermissionRequests.append(conversation)
+        return true
     }
 }
 
