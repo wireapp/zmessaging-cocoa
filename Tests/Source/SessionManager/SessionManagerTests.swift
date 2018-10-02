@@ -893,6 +893,44 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         self.sessionManager!.tearDownAllBackgroundSessions()
     }
     
+    func testThatItCallsForegroundNotificationResponderMethod() {
+        // GIVEN
+        let session = self.setupSession()
+        session.isPerformingSync = false
+        session.pushChannelIsOpen = true
+        
+        let responder = MockForegroundNotificationResponder()
+        self.sessionManager?.foregroundNotificationResponder = responder
+        
+        let selfConversation = ZMConversation(remoteID: currentUserIdentifier, createIfNeeded: false, in: session.managedObjectContext)
+        
+        let userInfo = NotificationUserInfo()
+        userInfo.conversationID = selfConversation?.remoteIdentifier
+        userInfo.selfUserID = currentUserIdentifier
+        
+        let category = WireSyncEngine.PushNotificationCategory.conversation.rawValue
+        
+        XCTAssertTrue(responder.notificationPermissionRequests.isEmpty)
+        
+        // WHEN
+        let completionExpectation = self.expectation(description: "Completed action")
+        self.sessionManager?.handleNotification(with: userInfo) { userSession in
+            userSession.handleInAppNotification(with: userInfo, categoryIdentifier: category) { _ in
+                completionExpectation.fulfill()
+            }
+        }
+        
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(responder.notificationPermissionRequests.count, 1)
+        XCTAssertEqual(responder.notificationPermissionRequests.first!, selfConversation?.remoteIdentifier)
+        
+        // CLEANUP
+        self.sessionManager!.tearDownAllBackgroundSessions()
+    }
+    
     func testThatItActivatesAccountWhichReceivesACallInTheBackground() {
         // GIVEN
         let manager = sessionManager!.accountManager

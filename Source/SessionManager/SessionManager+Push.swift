@@ -97,12 +97,6 @@ extension SessionManager: PKPushRegistryDelegate {
 
 // MARK: - UNUserNotificationCenterDelegate
 
-//extension SessionManager {
-//    var notificationCenter: UserNotificationCenter {
-//        return UNUserNotificationCenter.current()
-//    }
-//}
-
 @objc extension SessionManager: UNUserNotificationCenterDelegate {
     
     // Called by the OS when the app receieves a notification while in the

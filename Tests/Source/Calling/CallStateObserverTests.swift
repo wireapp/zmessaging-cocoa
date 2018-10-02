@@ -62,11 +62,7 @@ class CallStateObserverTests : MessagingTest {
 
             self.syncMOC.saveOrRollback()
             
-            self.localNotificationDispatcher = LocalNotificationDispatcher(
-                in: self.syncMOC,
-                foregroundNotificationDelegate: MockForegroundNotificationDelegate(),
-                application: self.application,
-                operationStatus: self.mockUserSession.operationStatus)
+            self.localNotificationDispatcher = LocalNotificationDispatcher(in: self.syncMOC)
             
             self.notificationCenter = UserNotificationCenterMock()
             self.localNotificationDispatcher.notificationCenter = self.notificationCenter
