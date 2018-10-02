@@ -26,11 +26,10 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     // MARK: - Text Messages
     // MARK: Helpers
     
-    func textNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, mentionedUser: UserType? = nil, isEphemeral: Bool = false) -> ZMLocalNotification? {
+    func textNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, mentions: [Mention] = [], isEphemeral: Bool = false) -> ZMLocalNotification? {
         if isEphemeral { conversation.messageDestructionTimeout = .local(0.5) }
         
-        let mention = mentionedUser.map(papply(Mention.init, NSRange(location: 0, length: 8)))
-        let message = conversation.append(text: text ?? "Hello Hello!", mentions: mention.map { [$0] } ?? []) as! ZMOTRMessage
+        let message = conversation.append(text: text ?? "Hello Hello!", mentions: mentions) as! ZMOTRMessage
         message.serverTimestamp = Date.distantFuture
         message.sender = sender
         conversation.lastReadServerTimeStamp = Date()
@@ -182,9 +181,11 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     func testThatItDoesNotCreateANotificationWhenTheConversationIsSilencedAndOtherUserIsMentioned() {
         // Given
         groupConversation.isSilenced = true
+        let text = "Hello hello @\(sender.name!)!"
+        let mention = Mention(range: NSMakeRange(12, sender.name!.count), user: sender)
         
         // When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: sender)
+        let note = textNotification(groupConversation, sender: sender,  text: text, mentions: [mention])
         
         // Then
         XCTAssertNil(note)
@@ -193,114 +194,123 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     func testThatItDoesCreateANotificationWhenTheConversationIsSilencedAndSelfUserIsMentioned() {
         // Given
         groupConversation.isSilenced = true
+        let text = "Hello hello @\(selfUser.name!)!"
+        let mention = Mention(range: NSMakeRange(12, selfUser.name!.count), user: selfUser)
         
         // When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+        let note = textNotification(groupConversation, sender: sender,  text: text, mentions: [mention])
         
         // Then
         XCTAssertNotNil(note)
     }
     
     func testThatItUsesCorrectBodyWhenSelfUserIsMentioned() {
-        // Given & When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+        // Given
+        let text = "Hello hello @\(selfUser.name!)!"
+        let mention = Mention(range: NSMakeRange(12, selfUser.name!.count), user: selfUser)
+        
+        // When
+        let note = textNotification(groupConversation, sender: sender, text: text, mentions: [mention])
         
         // Then
-        XCTAssertEqual(note?.body, "Mention from Super User: Hello Hello!")
+        XCTAssertEqual(note?.body, "Mention from Super User: Hello hello \(selfUser.name!)!")
     }
     
     func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_UserWithoutName() {
         // Given
         sender.name = nil
+        let text = "Hello hello @\(selfUser.name!)!"
+        let mention = Mention(range: NSMakeRange(12, selfUser.name!.count), user: selfUser)
         
         // When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+        let note = textNotification(groupConversation, sender: sender, text: text, mentions: [mention])
         
         // Then
-        XCTAssertEqual(note?.body, "New mention: Hello Hello!")
+        XCTAssertEqual(note?.body, "New mention: Hello hello \(selfUser.name!)!")
     }
     
     func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_NoConversationName() {
-        // Given & When
-        let note = textNotification(groupConversationWithoutName, sender: sender, mentionedUser: selfUser)
+        // Given
+        let text = "Hello hello @\(selfUser.name!)!"
+        let mention = Mention(range: NSMakeRange(12, selfUser.name!.count), user: selfUser)
+        
+        // When
+        let note = textNotification(groupConversationWithoutName, sender: sender, text: text, mentions: [mention])
         
         // Then
-        XCTAssertEqual(note?.body, "Super User mentioned you in a conversation: Hello Hello!")
+        XCTAssertEqual(note?.body, "Super User mentioned you in a conversation: Hello hello \(selfUser.name!)!")
     }
     
     func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_UserWithoutNameNoConversationName() {
         // Given
         sender.name = nil
+        let text = "Hello hello @\(selfUser.name!)!"
+        let mention = Mention(range: NSMakeRange(12, selfUser.name!.count), user: selfUser)
         
         // When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+        let note = textNotification(groupConversationWithoutName, sender: sender, text: text, mentions: [mention])
         
         // Then
-        XCTAssertEqual(note?.body, "New mention: Hello Hello!")
+        XCTAssertEqual(note?.body, "New mention: Hello hello \(selfUser.name!)!")
     }
     
     func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_OneOnOne() {
-        // Given & When
-        let note = textNotification(oneOnOneConversation, sender: sender, mentionedUser: selfUser)
+        // Given
+        let text = "Hello hello @\(selfUser.name!)!"
+        let mention = Mention(range: NSMakeRange(12, selfUser.name!.count), user: selfUser)
+        
+        // When
+        let note = textNotification(oneOnOneConversation, sender: sender, text: text, mentions: [mention])
         
         // Then
-        XCTAssertEqual(note?.body, "Mention: Hello Hello!")
+        XCTAssertEqual(note?.body, "Mention: Hello hello \(selfUser.name!)!")
     }
     
     func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_OneOnOne_NoUserName() {
         // Given
         sender.name = nil
-
-        // Given
-        let note = textNotification(oneOnOneConversation, sender: sender, mentionedUser: selfUser)
+        let text = "Hello hello @\(selfUser.name!)!"
+        let mention = Mention(range: NSMakeRange(12, selfUser.name!.count), user: selfUser)
+        
+        // When
+        let note = textNotification(oneOnOneConversation, sender: sender, text: text, mentions: [mention])
         
         // Then
-        XCTAssertEqual(note?.body, "New mention: Hello Hello!")
+        XCTAssertEqual(note?.body, "New mention: Hello hello \(selfUser.name!)!")
     }
     
     func testThatItUsesCorrectBodyWhenSelfUserIsMentioned_Ephemeral() {
-        // Given & When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser, isEphemeral: true)
+        // Given
+        let text = "Hello hello @\(selfUser.name!)!"
+        let mention = Mention(range: NSMakeRange(12, selfUser.name!.count), user: selfUser)
+        
+        // When
+        let note = textNotification(groupConversation, sender: sender, text: text, mentions: [mention], isEphemeral: true)
         
         // Then
         XCTAssertEqual(note?.body, "Someone mentioned you")
     }
     
     func testThatItRemovesPreceedingAtSymbolsFromMentions() {
-        // Given users in a group conversation
+        // Given
         let user1 = insertUser(with: UUID.create(), name: "@lice")
         let user2 = insertUser(with: UUID.create(), name: "C@rol @ work")
-        
-        var conversation: ZMConversation!
+
         syncMOC.performGroupedBlockAndWait {
-            conversation = ZMConversation.insertNewObject(in: self.syncMOC)
-            conversation.remoteIdentifier = UUID.create()
-            conversation.userDefinedName = "Mentions Group"
-            conversation.conversationType = .group
-            conversation.lastServerTimeStamp = Date()
-            conversation.lastReadServerTimeStamp = conversation.lastServerTimeStamp
-            conversation.mutableLastServerSyncedActiveParticipants.addObjects(from: [self.sender, user1, user2])
+            self.groupConversation.mutableLastServerSyncedActiveParticipants.addObjects(from: [user1, user2])
             self.syncMOC.saveOrRollback()
         }
-        
+
         // mention both users
         let text = "Hey @\(user1.name!) and @\(user2.name!)!"
         let mention1 = Mention(range: NSMakeRange(4, user1.name!.count + 1), user: user1)
         let mention2 = Mention(range: NSMakeRange(15, user2.name!.count + 1), user: user2)
-        
-        // create the message
-        let message = conversation.append(text: text, mentions: [mention1, mention2]) as! ZMOTRMessage
-        message.serverTimestamp = Date.distantFuture
-        message.sender = sender
-        conversation.lastReadServerTimeStamp = Date()
-        message.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(20)
-        
+
         // When
-        let note = ZMLocalNotification(message: message)
-        XCTAssertNotNil(note)
-        
+        let note = textNotification(groupConversation, sender: sender, text: text, mentions: [mention1, mention2])
+
         // Then
-        XCTAssertEqual(note!.body, "Super User: Hey \(user1.name!) and \(user2.name!)!")
+        XCTAssertEqual(note?.body, "Super User: Hey \(user1.name!) and \(user2.name!)!")
     }
 
     func testThatItCreatesPushNotificationForMessageOfUnknownType() {

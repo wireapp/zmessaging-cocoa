@@ -48,6 +48,7 @@ class ZMLocalNotificationTests: MessagingTest {
 
         syncMOC.performGroupedBlockAndWait {
             self.selfUser = ZMUser.selfUser(in: self.syncMOC)
+            self.selfUser.name = "Bob"
             self.selfUser.remoteIdentifier = UUID.create()
             self.syncMOC.saveOrRollback()
         }
