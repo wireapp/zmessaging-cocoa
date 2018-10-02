@@ -562,7 +562,6 @@ public protocol SessionManagerSwitchingDelegate: class {
     }
     
     fileprivate func configure(session userSession: ZMUserSession, for account: Account) {
-        userSession.requestToOpenViewDelegate = self
         userSession.sessionManager = self
         require(backgroundUserSessions[account.userIdentifier] == nil, "User session is already loaded")
         backgroundUserSessions[account.userIdentifier] = userSession
@@ -901,7 +900,7 @@ extension SessionManager : WireCallCenterCallStateObserver {
         switch callState {
         case .answered, .outgoing:
             for (_, session) in backgroundUserSessions where session.managedObjectContext == moc && activeUserSession != session {
-                session.open(conversation, at: nil)
+                showConversation(conversation, at: nil, in: session)
             }
         default:
             return

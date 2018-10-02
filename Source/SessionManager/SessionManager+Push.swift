@@ -191,7 +191,7 @@ public protocol ShowContentDelegate: class {
 
 extension SessionManager {
     
-    public func showConversation(_ conversation: ZMConversation, message: ZMConversationMessage?, in session: ZMUserSession) {
+    public func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?, in session: ZMUserSession) {
         activateAccount(for: session) {
             self.showContentDelegate?.showConversation(conversation, at: message)
         }

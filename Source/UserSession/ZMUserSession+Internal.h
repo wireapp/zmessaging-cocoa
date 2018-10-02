@@ -106,13 +106,6 @@
 @end
 
 
-@interface ZMUserSession (RequestToOpenConversation)
-
-+ (void)requestToOpenSyncConversationOnUI:(ZMConversation *)conversation;
-
-@end
-
-
 @interface ZMUserSession (ZMBackgroundFetch)
 
 - (void)enableBackgroundFetch;
