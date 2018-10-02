@@ -128,15 +128,6 @@ extension ZMUserSession {
     
 }
 
-@objc extension ZMUserSession: ForegroundNotificationsDelegate {
-    
-    public func didReceieveLocal(notification: ZMLocalNotification, application: ZMApplication) {
-        managedObjectContext.performGroupedBlock {
-            self.sessionManager?.localNotificationResponder?.processLocal(notification, forSession: self)
-        }
-    }
-}
-
 // MARK: - UNUserNotificationCenterDelegate
 
 /*
@@ -192,10 +183,20 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
             self.handleTrackingOnCallNotification(with: userInfo)
         }
         
-        showContent(for: userInfo)
-        
-        // pass in .alert to show in app notification
-        completionHandler([])
+        // foreground notification responder exists on the UI context, so we
+        // need to switch to that context
+        self.managedObjectContext.perform {
+            guard let conv = userInfo.conversation(in: self.managedObjectContext)?.remoteIdentifier
+            else { return completionHandler([]) }
+            
+            let responder = self.sessionManager.foregroundNotificationResponder
+            let shouldPresent = responder?.shouldPresentForegroundNotification(for: conv) ?? true
+            
+            var options = UNNotificationPresentationOptions()
+            if shouldPresent { options = [.alert, .sound] }
+            
+            completionHandler(options)
+        }
     }
     
     func handleNotificationResponse(actionIdentifier: String,

@@ -29,7 +29,7 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
 
     static let accountManagerURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("MockSessionManager.accounts")
     
-    var localNotificationResponder: LocalNotificationResponder? = nil
+    var foregroundNotificationResponder: ForegroundNotificationResponder? = nil
     var callKitDelegate: WireSyncEngine.CallKitDelegate? = nil
     var callNotificationStyle: CallNotificationStyle = .pushNotifications
     var accountManager: AccountManager = AccountManager(sharedDirectory: accountManagerURL)
