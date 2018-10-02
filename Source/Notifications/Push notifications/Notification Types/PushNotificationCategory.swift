@@ -50,9 +50,9 @@ enum PushNotificationCategory: String {
         case .missedCall:
             return [CallNotificationAction.callBack, CallNotificationAction.message]
         case .conversation:
-            return [ConversationNotificationAction.reply, ConversationNotificationAction.mute]
+            return [ConversationNotificationAction.reply]
         case .conversationIncludingLike:
-            return [ConversationNotificationAction.reply, ConversationNotificationAction.like, ConversationNotificationAction.mute]
+            return [ConversationNotificationAction.reply, ConversationNotificationAction.like]
         case .connect:
             return [ConversationNotificationAction.connect]
         }

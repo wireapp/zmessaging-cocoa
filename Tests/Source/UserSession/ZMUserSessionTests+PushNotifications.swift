@@ -95,21 +95,6 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         XCTAssertTrue(sender.isConnected)
     }
 
-    func testThatItMutesAndDoesNotShowConversation_ForPushNotificationCategoryConversationWithMuteAction() {
-        // given
-        let recorder = RequestToOpenViewsRecorder()
-        let userInfo = userInfoWithConversation()
-        let conversation = userInfo.conversation(in: uiMOC)!
-        simulateLoggedInUser()
-
-        // when
-        handle(conversationAction: .mute, category: .conversation, userInfo: userInfo)
-
-        // then
-        XCTAssertNil(recorder.lastRequestToShowConversation)
-        XCTAssertTrue(conversation.isSilenced)
-    }
-
     func testThatItAddsLike_ForPushNotificationCategoryConversationWithLikeAction() {
         // given
         let userInfo = userInfoWithConversation(hasMessage: true)
