@@ -31,7 +31,13 @@ public enum LocalNotificationContentType : Equatable {
             return .ephemeral(isMention: message.textMessageData?.isMentioningSelf ?? false)
         }
         
-        if let messageData = message.textMessageData, let text = messageData.messageText , !text.isEmpty {
+        if let messageData = message.textMessageData, var text = messageData.messageText , !text.isEmpty {
+            // strip @ symbol from mentions
+            messageData.mentions
+                .compactMap { Range($0.range, in: text)?.lowerBound }
+                .sorted(by: >)
+                .forEach { text.remove(at: $0) }
+            
             return .text(text, isMention: messageData.isMentioningSelf)
         }
         
