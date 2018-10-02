@@ -19,26 +19,6 @@
 import XCTest
 @testable import WireSyncEngine
 
-class RequestToOpenViewsRecorder: NSObject, ZMRequestsToOpenViewsDelegate {
-    
-    var lastRequestToShowMessage: (ZMUserSession, ZMConversation, ZMMessage)?
-    var lastRequestToShowConversation: (ZMUserSession, ZMConversation)?
-    var lastRequestToShowConversationsList: ZMUserSession?
-    
-    func userSession(_ userSession: ZMUserSession!, show message: ZMMessage!, in conversation: ZMConversation!) {
-        lastRequestToShowMessage = (userSession, conversation, message)
-    }
-    
-    func userSession(_ userSession: ZMUserSession!, show conversation: ZMConversation!) {
-        lastRequestToShowConversation = (userSession, conversation)
-    }
-    
-    func showConversationList(for userSession: ZMUserSession!) {
-        lastRequestToShowConversationsList = userSession
-    }
-    
-}
-
 class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
 
     typealias Category = WireSyncEngine.PushNotificationCategory
@@ -46,33 +26,25 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
     typealias CallAction = WireSyncEngine.CallNotificationAction
     
     func testThatItCallsShowConversationList_ForPushNotificationCategoryConversationWithoutConversation() {
-        // given
-        let recorder = RequestToOpenViewsRecorder()
-        sut.requestToOpenViewDelegate = recorder
-        
         // when
         handle(conversationAction: nil, category: .conversation, userInfo: NotificationUserInfo())
         
         // then
-        XCTAssertEqual(recorder.lastRequestToShowConversationsList, sut)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversationsList, sut)
     }
     
     func testThatItCallsShowConversationList_ForPushNotificationCategoryConnect() {
         // given
         let sender = ZMUser.insertNewObject(in: uiMOC)
         sender.remoteIdentifier = UUID()
-
-        let recorder = RequestToOpenViewsRecorder()
-        sut.requestToOpenViewDelegate = recorder
-
         let userInfo = userInfoWithConnectionRequest(from: sender)
 
         // when
         handle(conversationAction: nil, category: .connect, userInfo: userInfo)
 
         // then
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.0, sut)
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.0, sut)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
         XCTAssertFalse(sender.isConnected)
     }
 
@@ -81,23 +53,19 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         let sender = ZMUser.insertNewObject(in: uiMOC)
         sender.remoteIdentifier = UUID()
         
-        let recorder = RequestToOpenViewsRecorder()
-        sut.requestToOpenViewDelegate = recorder
-
         let userInfo = userInfoWithConnectionRequest(from: sender)
 
         // when
         handle(conversationAction: .connect, category: .connect, userInfo: userInfo)
 
         // then
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.0, sut)
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.0, sut)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
         XCTAssertTrue(sender.isConnected)
     }
 
     func testThatItMutesAndDoesNotShowConversation_ForPushNotificationCategoryConversationWithMuteAction() {
         // given
-        let recorder = RequestToOpenViewsRecorder()
         let userInfo = userInfoWithConversation()
         let conversation = userInfo.conversation(in: uiMOC)!
         simulateLoggedInUser()
@@ -106,7 +74,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         handle(conversationAction: .mute, category: .conversation, userInfo: userInfo)
 
         // then
-        XCTAssertNil(recorder.lastRequestToShowConversation)
+        XCTAssertNil(mockSessionManager.lastRequestToShowConversation)
         XCTAssertTrue(conversation.isSilenced)
     }
 
@@ -128,26 +96,20 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
 
     func testThatItCallsShowConversation_ForPushNotificationCategoryConversation() {
         // given
-        let recorder = RequestToOpenViewsRecorder()
-        sut.requestToOpenViewDelegate = recorder
-
         let userInfo = userInfoWithConversation()
 
         // when
         handle(conversationAction: nil, category: .conversation, userInfo: userInfo)
 
         // then
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.0, sut)
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.0, sut)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
     }
 
     func testThatItCallsShowConversationAndAcceptsCall_ForPushNotificationCategoryIncomingCallWithAcceptAction() {
         // given
         simulateLoggedInUser()
         createSelfClient()
-
-        let recorder = RequestToOpenViewsRecorder()
-        sut.requestToOpenViewDelegate = recorder
 
         let userInfo = userInfoWithConversation()
         let conversation = userInfo.conversation(in: uiMOC)!
@@ -160,8 +122,8 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
 
         // then
         XCTAssertTrue(callCenter.didCallAnswerCall);
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.0, sut)
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.0, sut)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID)
     }
 
     func testThatItDoesNotCallsShowConversationAndRejectsCall_ForPushNotificationCategoryIncomingCallWithIgnoreAction() {
@@ -169,9 +131,6 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         simulateLoggedInUser()
         createSelfClient()
         
-        let recorder = RequestToOpenViewsRecorder()
-        sut.requestToOpenViewDelegate = recorder
-
         let userInfo = userInfoWithConversation()
         let conversation = userInfo.conversation(in: uiMOC)!
 
@@ -183,7 +142,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
 
         // then
         XCTAssertTrue(callCenter.didCallRejectCall);
-        XCTAssertNil(recorder.lastRequestToShowConversation)
+        XCTAssertNil(mockSessionManager.lastRequestToShowConversation)
     }
 
     func testThatItCallsShowConversationButDoesNotCallBack_ForPushNotificationCategoryMissedCallWithCallBackAction() {
@@ -191,9 +150,6 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         simulateLoggedInUser()
         createSelfClient()
         
-        let recorder = RequestToOpenViewsRecorder()
-        sut.requestToOpenViewDelegate = recorder
-
         let userInfo = userInfoWithConversation()
         let callCenter = createCallCenter()
 
@@ -202,8 +158,8 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
 
         // then
         XCTAssertFalse(callCenter.didCallStartCall);
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.0, sut)
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.0, sut)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
     }
 
     func testThatItDoesNotCallShowConversationAndAppendsAMessage_ForPushNotificationCategoryConversationWithDirectReplyAction() {
@@ -211,9 +167,6 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         simulateLoggedInUser()
         sut.operationStatus.isInBackground = true
         
-        let recorder = RequestToOpenViewsRecorder()
-        sut.requestToOpenViewDelegate = recorder
-
         let userInfo = userInfoWithConversation()
         let conversation = userInfo.conversation(in: uiMOC)!
 
@@ -222,27 +175,23 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
 
         // then
         XCTAssertEqual(conversation.messages.count, 1);
-        XCTAssertNil(recorder.lastRequestToShowConversation)
+        XCTAssertNil(mockSessionManager.lastRequestToShowConversation)
     }
 
     func testThatOnLaunchItCallsShowConversationList_ForPushNotificationCategoryConversationWithoutConversation() {
         // given
         simulateLoggedInUser()
-        let recorder = RequestToOpenViewsRecorder()
-        sut.requestToOpenViewDelegate = recorder
 
         // when
         handle(conversationAction: nil, category: .conversation, userInfo: NotificationUserInfo())
 
         // then
-        XCTAssertEqual(recorder.lastRequestToShowConversationsList, sut)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversationsList, sut)
     }
 
     func testThatOnLaunchItCallsShowConversationConversation_ForPushNotificationCategoryConversation() {
         // given
         simulateLoggedInUser()
-        let recorder = RequestToOpenViewsRecorder()
-        sut.requestToOpenViewDelegate = recorder
         
         let userInfo = userInfoWithConversation()
 
@@ -250,8 +199,8 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         handle(conversationAction: nil, category: .conversation, userInfo: userInfo)
         
         // then
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.0, sut)
-        XCTAssertEqual(recorder.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.0, sut)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
     }
     
 }

@@ -744,7 +744,6 @@
 @end
 
 
-@end
 
 @implementation ZMUserSessionTests (Transport)
 

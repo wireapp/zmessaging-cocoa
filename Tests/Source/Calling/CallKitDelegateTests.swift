@@ -24,7 +24,6 @@ import OCMock
 
 @testable import WireSyncEngine
 
-@available(iOS 10.0, *)
 class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
 
     static let accountManagerURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("MockSessionManager.accounts")
@@ -48,6 +47,22 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
     
     func configureUserNotifications() {
         
+    }
+    
+    var lastRequestToShowMessage: (ZMUserSession, ZMConversation, ZMConversationMessage)?
+    var lastRequestToShowConversation: (ZMUserSession, ZMConversation)?
+    var lastRequestToShowConversationsList: ZMUserSession?
+        
+    func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?, in session: ZMUserSession) {
+                if let message = message {
+                    lastRequestToShowMessage = (session, conversation, message)
+                } else {
+                    lastRequestToShowConversation = (session, conversation)
+                }
+    }
+    
+    func showConversationList(in session: ZMUserSession) {
+        lastRequestToShowConversationsList = session
     }
 
     @objc public var updatePushTokenCalled = false
