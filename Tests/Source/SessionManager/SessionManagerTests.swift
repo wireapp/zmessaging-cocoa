@@ -842,9 +842,10 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
 
         // WHEN
         self.sessionManager?.handleNotification(with: userInfo) { userSession in
-            userSession.handleInAppNotification(with: userInfo,
-                                                categoryIdentifier: category,
-                                                completionHandler: { _ in })
+            userSession.handleNotificationResponse(actionIdentifier: "",
+                                                   categoryIdentifier: category,
+                                                   userInfo: userInfo,
+                                                   completionHandler: {})
         }
 
         XCTAssertTrue(self.wait(withTimeout: 0.1) { return self.sessionManager!.activeUserSession != nil })
