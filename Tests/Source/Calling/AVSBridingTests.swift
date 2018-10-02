@@ -45,7 +45,7 @@ class AVSBridingTests: MessagingTest {
         rawEnumWithFallback = WCALL_REASON_NORMAL
         rawInvalidEnumWithFallback = -1
         rawEnumWithoutFallback = 3
-        rawInvalidEnumWithoutFallback = 4
+        rawInvalidEnumWithoutFallback = 5
 
         userID = UUID()
         clientID = UUID().uuidString

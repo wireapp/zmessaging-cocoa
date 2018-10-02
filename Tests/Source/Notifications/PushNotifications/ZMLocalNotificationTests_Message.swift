@@ -99,6 +99,17 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         XCTAssertEqual(note2?.content.body, "Someone sent you a message")
     }
     
+    func testThatItDoesNotSetThreadIdentifierForEphemeralMessages() {
+        // given
+        let note = textNotification(oneOnOneConversation, sender: sender, isEphemeral: true)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.content.title, "")
+        XCTAssertEqual(note!.content.body, "Someone sent you a message")
+        XCTAssertEqual(note!.content.threadIdentifier, "")
+    }
+    
     func testItCreatesMessageNotificationsCorrectly(){
         
         //    "push.notification.add.message.oneonone" = "%1$@";
