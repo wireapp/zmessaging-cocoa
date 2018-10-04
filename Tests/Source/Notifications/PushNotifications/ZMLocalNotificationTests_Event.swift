@@ -221,7 +221,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     func testThatItDoesNotCreateANotifcationWhenTheConversationIsSilenced(){
         
         // given
-        oneOnOneConversation.isSilenced = true
+        oneOnOneConversation.mutedMessageTypes = .all
         let event = reactionEventInOneOnOneConversation()
         
         // when

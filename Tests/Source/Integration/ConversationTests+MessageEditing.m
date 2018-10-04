@@ -112,7 +112,7 @@
     XCTAssertFalse(convInfo.unreadCountChanged);
     XCTAssertTrue(convInfo.lastModifiedDateChanged);
     XCTAssertFalse(convInfo.connectionStateChanged);
-    XCTAssertFalse(convInfo.isSilencedChanged);
+    XCTAssertFalse(convInfo.mutedMessageTypesChanged);
     XCTAssertFalse(convInfo.conversationListIndicatorChanged);
     XCTAssertFalse(convInfo.clearedChanged);
     XCTAssertFalse(convInfo.securityLevelChanged);
@@ -357,7 +357,7 @@
     XCTAssertFalse(convInfo.unreadCountChanged);
     XCTAssertFalse(convInfo.lastModifiedDateChanged);
     XCTAssertFalse(convInfo.connectionStateChanged);
-    XCTAssertFalse(convInfo.isSilencedChanged);
+    XCTAssertFalse(convInfo.mutedMessageTypesChanged);
     XCTAssertFalse(convInfo.conversationListIndicatorChanged);
     XCTAssertFalse(convInfo.clearedChanged);
     XCTAssertFalse(convInfo.securityLevelChanged);

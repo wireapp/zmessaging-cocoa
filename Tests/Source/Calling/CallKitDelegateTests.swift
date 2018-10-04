@@ -725,7 +725,7 @@ class CallKitDelegateTest: MessagingTest {
     func testThatItIgnoresNewIncomingCall_v3_Incoming_Silenced() {
         // given
         let conversation = self.conversation()
-        conversation.isSilenced = true
+        conversation.mutedMessageTypes = .all
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when

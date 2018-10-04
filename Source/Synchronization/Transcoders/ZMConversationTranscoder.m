@@ -587,7 +587,8 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         if( conversation.silencedChangedTimestamp == nil) {
             conversation.silencedChangedTimestamp = [NSDate date];
         }
-        payload[ZMConversationInfoOTRMutedValueKey] = @(conversation.isSilenced);
+        
+        payload[ZMConversationInfoOTRMutedValueKey] = @(conversation.mutedStatus != 0); // TODO Silenced
         payload[ZMConversationInfoOTRMutedReferenceKey] = [conversation.silencedChangedTimestamp transportString];
         [updatedKeys addObject:ZMConversationSilencedChangedTimeStampKey];
     }

@@ -1,3 +1,3 @@
-github "wireapp/wire-ios-request-strategy" ~> 103.0
+github "wireapp/wire-ios-request-strategy" ~> 104.0
 github "wireapp/avs-ios-binaries" "4.7.157"
 github "wireapp/ZipArchive" "v2.1.3"
