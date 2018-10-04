@@ -21,6 +21,8 @@
 @import CoreData;
 @import WireRequestStrategy;
 
+extern NSString * const ConversationsPath;
+
 @protocol ZMObjectStrategyDirectory;
 
 @class ZMAuthenticationStatus;
