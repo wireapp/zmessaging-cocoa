@@ -186,14 +186,11 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
         // foreground notification responder exists on the UI context, so we
         // need to switch to that context
         self.managedObjectContext.perform {
-            guard let conv = userInfo.conversation(in: self.managedObjectContext)?.remoteIdentifier
-            else { return completionHandler([]) }
-            
             let responder = self.sessionManager.foregroundNotificationResponder
-            let shouldPresent = responder?.shouldPresentForegroundNotification(for: conv) ?? true
+            let shouldPresent = responder?.shouldPresentNotification(with: userInfo)
             
             var options = UNNotificationPresentationOptions()
-            if shouldPresent { options = [.alert, .sound] }
+            if shouldPresent ?? true { options = [.alert, .sound] }
             
             completionHandler(options)
         }
