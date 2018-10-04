@@ -88,7 +88,7 @@ public protocol SessionManagerSwitchingDelegate: class {
 
 @objc
 public protocol ForegroundNotificationResponder: class {
-    func shouldPresentForegroundNotification(for conversation: UUID) -> Bool
+    func shouldPresentNotification(with userInfo: NotificationUserInfo) -> Bool
 }
 
 /// The `SessionManager` class handles the creation of `ZMUserSession` and `UnauthenticatedSession`
