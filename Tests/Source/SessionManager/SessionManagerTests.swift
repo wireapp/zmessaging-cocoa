@@ -1119,3 +1119,13 @@ class TestReachability: NSObject, ReachabilityProvider, TearDownCapable {
         return NSObject()
     }
 }
+
+class MockForegroundNotificationResponder: NSObject, ForegroundNotificationResponder {
+    
+    var notificationPermissionRequests: [UUID] = []
+    
+    func shouldPresentNotification(with userInfo: NotificationUserInfo) -> Bool {
+        notificationPermissionRequests.append(userInfo.conversationID!)
+        return true
+    }
+}

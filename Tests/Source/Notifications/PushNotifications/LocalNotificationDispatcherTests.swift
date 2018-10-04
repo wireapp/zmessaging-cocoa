@@ -412,18 +412,6 @@ extension LocalNotificationDispatcherTests {
     }
 }
 
-
-class MockForegroundNotificationResponder: NSObject, ForegroundNotificationResponder {
-
-    var notificationPermissionRequests: [UUID] = []
-    
-    func shouldPresentForegroundNotification(for conversation: UUID) -> Bool {
-        notificationPermissionRequests.append(conversation)
-        return true
-    }
-}
-
-
 // Helper function inserted by Swift 4.2 migrator.
 fileprivate func convertToUNNotificationSoundName(_ input: String) -> UNNotificationSoundName {
 	return UNNotificationSoundName(rawValue: input)
