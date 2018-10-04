@@ -100,6 +100,8 @@ extension ZMUserSession {
 extension ZMUserSession {
     
     @objc public func receivedPushNotification(with payload: [AnyHashable: Any], completion: @escaping () -> Void) {
+        Logging.network.debug("Received push notification with payload: \(payload)")
+        
         guard let syncMoc = self.syncManagedObjectContext else {
             return
         }

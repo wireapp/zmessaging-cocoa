@@ -21,7 +21,6 @@
 @import WireDataModel;
 
 #import "ZMUserSession+Internal.h"
-#import "ZMOperationLoop+Background.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
