@@ -86,7 +86,7 @@
 {
     WaitForAllGroupsToBeEmpty(0.5);
     self.pushChannelObserverToken = nil;
-//    [self.pushNotificationStatus stopMocking];
+    self.callEventStatus = nil;
     self.pushNotificationStatus = nil;
     [self.mockPushChannel stopMocking];
     self.mockPushChannel = nil;
