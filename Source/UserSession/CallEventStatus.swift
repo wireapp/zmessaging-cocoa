@@ -24,7 +24,7 @@ import Foundation
 @objcMembers
 public class CallEventStatus: NSObject {
     
-    var eventProcessingTimoutInterval: TimeInterval = 3
+    var eventProcessingTimoutInterval: TimeInterval = 2
     
     fileprivate var observers: [() -> Void] = []
     fileprivate var eventProcessingTimer: Timer? = nil
