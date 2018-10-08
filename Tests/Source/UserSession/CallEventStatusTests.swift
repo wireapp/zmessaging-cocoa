@@ -44,9 +44,11 @@ class CallEventStatusTests: ZMTBaseTest {
         let processingDidComplete = expectation(description: "processingDidComplete")
         
         // when
-        sut.waitForCallEventProcessingToComplete {
+        let hasUnprocessedCallEvents = sut.waitForCallEventProcessingToComplete {
             processingDidComplete.fulfill()
         }
+        
+        XCTAssertFalse(hasUnprocessedCallEvents)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
@@ -57,12 +59,30 @@ class CallEventStatusTests: ZMTBaseTest {
         
         // expect
         let processingDidComplete = expectation(description: "processingDidComplete")
-        sut.waitForCallEventProcessingToComplete {
+        let hasUnprocessedCallEvents = sut.waitForCallEventProcessingToComplete {
             processingDidComplete.fulfill()
         }
         
         // when
         sut.finishedProcessingCallEvent()
+        XCTAssertTrue(hasUnprocessedCallEvents)
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
+    func testThatWaitForCallEventCompleteWhenScheduledCallEventIsProcessedWhenTimeoutTimerIsStillRunning() {
+        
+        // given
+        sut.scheduledCallEventForProcessing()
+        sut.finishedProcessingCallEvent()
+        
+        // expect
+        let processingDidComplete = expectation(description: "processingDidComplete")
+        let hasUnprocessedCallEvents = sut.waitForCallEventProcessingToComplete {
+            processingDidComplete.fulfill()
+        }
+        
+        // when
+        XCTAssertTrue(hasUnprocessedCallEvents)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
 

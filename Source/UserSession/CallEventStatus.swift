@@ -44,12 +44,18 @@ public class CallEventStatus: NSObject {
         eventProcessingTimer = nil
     }
     
-    public func waitForCallEventProcessingToComplete(_ completionHandler: @escaping () -> Void) {
-        guard callEventsWaitingToBeProcessed != 0 else {
-            return completionHandler()
+    /// Wait for all calling events to be processed and then calls the completion handler.
+    ///
+    /// Returns: true if there's was any processed calling events.
+    @discardableResult
+    public func waitForCallEventProcessingToComplete(_ completionHandler: @escaping () -> Void) -> Bool {
+        guard callEventsWaitingToBeProcessed != 0 || eventProcessingTimer != nil else {
+            completionHandler()
+            return false
         }
         
         observers.append(completionHandler)
+        return true
     }
     
     public func scheduledCallEventForProcessing() {
