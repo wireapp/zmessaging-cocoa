@@ -118,11 +118,11 @@ extension SearchTask {
     }
     
     func conversations(matchingQuery query: String) -> [ZMConversation] {
-        let nonTeamUserPredicate = NSPredicate(format: "%K.@count > 2",
+        let non1to1ConversationPredicate = NSPredicate(format: "%K.@count > 2",
             ZMConversationLastServerSyncedActiveParticipantsKey
         )
 
-        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [ZMConversation.predicate(forSearchQuery: query), nonTeamUserPredicate])
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [ZMConversation.predicate(forSearchQuery: query), non1to1ConversationPredicate])
 
         let fetchRequest = ZMConversation.sortedFetchRequest(with: predicate)
         fetchRequest?.sortDescriptors = [NSSortDescriptor(key: ZMNormalizedUserDefinedNameKey, ascending: true)]
