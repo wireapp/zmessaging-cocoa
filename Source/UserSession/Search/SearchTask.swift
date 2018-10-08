@@ -93,7 +93,21 @@ extension SearchTask {
             let connectedUsers = self.request.searchOptions.contains(.contacts) ? self.connectedUsers(matchingQuery: self.request.query) : []
             let teamMembers = self.request.searchOptions.contains(.teamMembers) ? self.teamMembers(matchingQuery: self.request.query, team: team) : []
             let conversations = self.request.searchOptions.contains(.conversations) ? self.conversations(matchingQuery: self.request.query) : []
-            let result = SearchResult(contacts: connectedUsers, teamMembers: teamMembers, addressBook: [], directory: [], conversations: conversations, services: [])
+
+            // Filter the 1 to 1 conversations which already exists in teamMembers
+            let teamUsers = teamMembers.map { $0.user }
+
+            let conversationsWithoutTeamMembers = conversations.filter{
+                if $0.conversationType != ZMConversationType.oneOnOne {
+                    return true
+                }
+                if let user = $0.activeParticipants.array.first as? ZMUser {
+                    return !teamUsers.contains(user)
+                }
+                return false
+            }
+
+            let result = SearchResult(contacts: connectedUsers, teamMembers: teamMembers, addressBook: [], directory: [], conversations: conversationsWithoutTeamMembers, services: [])
             
             self.session.managedObjectContext.performGroupedBlock {
                 self.result = self.result.union(withLocalResult: result.copy(on: self.session.managedObjectContext))
