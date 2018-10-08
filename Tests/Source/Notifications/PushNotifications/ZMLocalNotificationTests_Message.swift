@@ -558,4 +558,32 @@ extension ZMLocalNotificationTests_Message {
         XCTAssertEqual(bodyForEditNote(groupConversationWithoutName, sender: sender, text: "Edited Text"), "Super User in a conversation: Edited Text")
         XCTAssertEqual(bodyForEditNote(invalidConversation, sender: sender, text: "Edited Text"), "Super User in a conversation: Edited Text")
     }
+    
+    func testThatItGeneratesTheNotificationWithoutMuteInTheTeam() {
+        self.syncMOC.performGroupedAndWait { _ in
+            // GIVEN
+            let team = Team.insertNewObject(in: self.syncMOC)
+            team.name = "Wire Amazing Team"
+            let user = ZMUser.selfUser(in: self.syncMOC)
+            _ = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
+            self.syncMOC.saveOrRollback()
+        }
+        
+        XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // WHEN
+        let note = textNotification(self.oneOnOneConversation, sender: sender, text: "Hello", isEphemeral: false)!
+        
+        // THEN
+        XCTAssertEqual(note.category, "conversationCategoryWithLike")
+    
+    }
+    
+    func testThatItGeneratesTheNotificationWithMuteForNormalUser() {
+        // WHEN
+        let note = textNotification(oneOnOneConversation, sender: sender, text: "Hello", isEphemeral: false)!
+        
+        // THEN
+        XCTAssertEqual(note.category, "conversationCategoryWithLikeAndMute")
+    }
 }

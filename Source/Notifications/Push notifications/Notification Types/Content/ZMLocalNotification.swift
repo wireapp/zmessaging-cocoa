@@ -69,7 +69,7 @@ open class ZMLocalNotification: NSObject {
         self.type = builder.notificationType
         self.title = builder.titleText()
         self.body = builder.bodyText().escapingPercentageSymbols
-        self.category = builder.notificationType.category
+        self.category = builder.notificationType.category(hasTeam: builder.userInfo()?.teamName != nil)
         self.sound = builder.notificationType.sound
         self.userInfo = builder.userInfo()
         self.id = userInfo?.messageNonce ?? UUID()

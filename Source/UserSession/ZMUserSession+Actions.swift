@@ -84,7 +84,19 @@ private let zmLog = ZMSLog(tag: "Push")
             completionHandler()
         }
     }
-        
+    
+    public func muteConversation(with userInfo: NotificationUserInfo, completionHandler: @escaping () -> Void) {
+        let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Mute Conversation Action Handler")
+        let conversation = userInfo.conversation(in: managedObjectContext)
+
+        managedObjectContext.perform {
+            conversation?.mutedMessageTypes = .all
+            self.managedObjectContext.saveOrRollback()
+            activity?.end()
+            completionHandler()
+        }
+    }
+    
     public  func reply(with userInfo: NotificationUserInfo, message: String, completionHandler: @escaping () -> Void) {
         guard
             !message.isEmpty,

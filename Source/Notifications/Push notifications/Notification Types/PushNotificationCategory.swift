@@ -23,21 +23,19 @@ import UserNotifications
  * The categories of notifications supported by the app.
  */
 
-enum PushNotificationCategory: String {
+enum PushNotificationCategory: String, CaseIterable {
     
     case incomingCall = "incomingCallCategory"
     case missedCall = "missedCallCategory"
     case conversation = "conversationCategory"
-    case conversationIncludingLike = "conversationCategoryWithLike"
+    case conversationWithMute = "conversationCategoryWithMute"
+    case conversationWithLike = "conversationCategoryWithLike"
+    case conversationWithLikeAndMute = "conversationCategoryWithLikeAndMute"
     case connect = "connectCategory"
 
     /// All the supported categories.
     static var allCategories: Set<UNNotificationCategory> {
-        let categories = [PushNotificationCategory.incomingCall,
-                          PushNotificationCategory.missedCall,
-                          PushNotificationCategory.conversation,
-                          PushNotificationCategory.conversationIncludingLike,
-                          PushNotificationCategory.connect].map(\.userNotificationCategory)
+        let categories = PushNotificationCategory.allCases.map(\.userNotificationCategory)
 
         return Set(categories)
     }
@@ -51,8 +49,12 @@ enum PushNotificationCategory: String {
             return [CallNotificationAction.callBack, CallNotificationAction.message]
         case .conversation:
             return [ConversationNotificationAction.reply]
-        case .conversationIncludingLike:
+        case .conversationWithMute:
+            return [ConversationNotificationAction.reply, ConversationNotificationAction.mute]
+        case .conversationWithLike:
             return [ConversationNotificationAction.reply, ConversationNotificationAction.like]
+        case .conversationWithLikeAndMute:
+            return [ConversationNotificationAction.reply, ConversationNotificationAction.like, ConversationNotificationAction.mute]
         case .connect:
             return [ConversationNotificationAction.connect]
         }
