@@ -24,16 +24,11 @@ import OCMock
 
 @testable import WireSyncEngine
 
-@available(iOS 10.0, *)
 class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
 
     static let accountManagerURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("MockSessionManager.accounts")
-
-    deinit {
-        try? FileManager.default.removeItem(at: MockSessionManager.accountManagerURL)
-    }
-
-    var localNotificationResponder: LocalNotificationResponder? = nil
+    
+    var foregroundNotificationResponder: ForegroundNotificationResponder? = nil
     var callKitDelegate: WireSyncEngine.CallKitDelegate? = nil
     var callNotificationStyle: CallNotificationStyle = .pushNotifications
     var accountManager: AccountManager = AccountManager(sharedDirectory: accountManagerURL)
@@ -44,6 +39,30 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
         if let userSession = mockUserSession {
             completion(userSession)
         }
+    }
+    
+    func updateAppIconBadge(accountID: UUID, unreadCount: Int) {
+        
+    }
+    
+    func configureUserNotifications() {
+        
+    }
+    
+    var lastRequestToShowMessage: (ZMUserSession, ZMConversation, ZMConversationMessage)?
+    var lastRequestToShowConversation: (ZMUserSession, ZMConversation)?
+    var lastRequestToShowConversationsList: ZMUserSession?
+        
+    func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?, in session: ZMUserSession) {
+                if let message = message {
+                    lastRequestToShowMessage = (session, conversation, message)
+                } else {
+                    lastRequestToShowConversation = (session, conversation)
+                }
+    }
+    
+    func showConversationList(in session: ZMUserSession) {
+        lastRequestToShowConversationsList = session
     }
 
     @objc public var updatePushTokenCalled = false
@@ -713,7 +732,7 @@ class CallKitDelegateTest: MessagingTest {
     func testThatItIgnoresNewIncomingCall_v3_Incoming_Silenced() {
         // given
         let conversation = self.conversation()
-        conversation.isSilenced = true
+        conversation.mutedMessageTypes = .all
         let otherUser = self.otherUser(moc: self.uiMOC)
         
         // when

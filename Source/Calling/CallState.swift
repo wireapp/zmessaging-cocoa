@@ -47,6 +47,8 @@ public enum VideoState: Int32 {
     case badConnection = 2
     /// Sender has paused the video
     case paused = 3
+    /// Sender is sending a video of his/her desktop
+    case screenSharing = 4
 }
 
 /**

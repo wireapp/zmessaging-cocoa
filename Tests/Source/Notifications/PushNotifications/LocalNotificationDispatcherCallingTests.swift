@@ -32,10 +32,7 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
     override func setUp() {
         super.setUp()
         
-        sut = LocalNotificationDispatcher(in: syncMOC,
-                                          foregroundNotificationDelegate: MockForegroundNotificationDelegate(),
-                                          application: application,
-                                          operationStatus: self.mockUserSession.operationStatus)
+        sut = LocalNotificationDispatcher(in: syncMOC)
         
         notificationCenter = UserNotificationCenterMock()
         sut.notificationCenter = notificationCenter

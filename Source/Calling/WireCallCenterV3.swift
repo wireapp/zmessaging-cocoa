@@ -73,13 +73,16 @@ private let zmLog = ZMSLog(tag: "calling")
     var callSnapshots : [UUID : CallSnapshot] = [:]
 
     /// Used to collect incoming events (e.g. from fetching the notification stream) until AVS is ready to process them.
-    var bufferedEvents : [CallEvent]  = []
+    var bufferedEvents : [(event: CallEvent, completionHandler: () -> Void)]  = []
     
     /// Set to true once AVS calls the ReadyHandler. Setting it to `true` forwards all previously buffered events to AVS.
     var isReady : Bool = false {
         didSet {
             if isReady {
-                bufferedEvents.forEach(avsWrapper.received)
+                bufferedEvents.forEach { (event: CallEvent, completionHandler: () -> Void) in
+                    avsWrapper.received(callEvent: event)
+                    completionHandler()
+                }
                 bufferedEvents = []
             }
         }
@@ -501,14 +504,16 @@ extension WireCallCenterV3 {
         }
     }
 
-    /// Hanldes incoming OTR calling messages, and transmist them to AVS when it is ready to process events, or adds it to the `bufferedEvents`.
-    func received(data: Data, currentTimestamp: Date, serverTimestamp: Date, conversationId: UUID, userId: UUID, clientId: String) {
-        let callEvent = CallEvent(data: data, currentTimestamp: currentTimestamp, serverTimestamp: serverTimestamp, conversationId: conversationId, userId: userId, clientId: clientId)
-
+    /// Handles incoming OTR calling messages, and transmist them to AVS when it is ready to process events, or adds it to the `bufferedEvents`.
+    /// - parameter callEvent: calling event to process.
+    /// - parameter completionHandler: called after the call event has been processed (this will for example wait for AVS to signal that it's ready).
+    func processCallEvent(_ callEvent: CallEvent, completionHandler: @escaping () -> Void) {
+    
         if isReady {
             avsWrapper.received(callEvent: callEvent)
+            completionHandler()
         } else {
-            bufferedEvents.append(callEvent)
+            bufferedEvents.append((callEvent, completionHandler))
         }
     }
 

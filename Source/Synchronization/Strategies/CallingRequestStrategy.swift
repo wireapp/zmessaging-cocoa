@@ -31,11 +31,14 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     fileprivate let flowManager             : FlowManagerType
     fileprivate var callConfigRequestSync   : ZMSingleRequestSync! = nil
     fileprivate var callConfigCompletion    : CallConfigRequestCompletion? = nil
+    fileprivate let callEventStatus         : CallEventStatus
     
-    public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType) {
+    public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType, callEventStatus: CallEventStatus) {
         self.managedObjectContext = managedObjectContext
         self.genericMessageStrategy = GenericMessageRequestStrategy(context: managedObjectContext, clientRegistrationDelegate: clientRegistrationDelegate)
         self.flowManager = flowManager
+        self.callEventStatus = callEventStatus
+        
         super.init()
         
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
@@ -132,18 +135,25 @@ extension CallingRequestStrategy : ZMEventConsumer {
                     let clientId = event.senderClientID(),
                     let eventTimestamp = event.timeStamp()
                 else {
-                    zmLog.error("Ignoring calling message: \(genericMessage.debugDescription)")
+                    zmLog.error("ignoring calling message: \(genericMessage.debugDescription)")
                     continue
                 }
                 
                 self.zmLog.debug("received calling message")
                 
-                callCenter?.received(data: payload,
-                                     currentTimestamp: Date().addingTimeInterval(serverTimeDelta),
-                                     serverTimestamp: eventTimestamp,
-                                     conversationId: conversationUUID,
-                                     userId: senderUUID,
-                                     clientId: clientId)
+                let callEvent = CallEvent(data: payload,
+                                          currentTimestamp: Date().addingTimeInterval(serverTimeDelta),
+                                          serverTimestamp: eventTimestamp,
+                                          conversationId: conversationUUID,
+                                          userId: senderUUID,
+                                          clientId: clientId)
+                
+                callEventStatus.scheduledCallEventForProcessing()
+                
+                callCenter?.processCallEvent(callEvent, completionHandler: { [weak self] in
+                    self?.zmLog.debug("processed calling message")
+                    self?.callEventStatus.finishedProcessingCallEvent()
+                })
             }
         }
     }

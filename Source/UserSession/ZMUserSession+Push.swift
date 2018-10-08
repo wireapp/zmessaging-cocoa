@@ -100,6 +100,8 @@ extension ZMUserSession {
 extension ZMUserSession {
     
     @objc public func receivedPushNotification(with payload: [AnyHashable: Any], completion: @escaping () -> Void) {
+        Logging.network.debug("Received push notification with payload: \(payload)")
+        
         guard let syncMoc = self.syncManagedObjectContext else {
             return
         }
@@ -126,15 +128,6 @@ extension ZMUserSession {
         }
     }
     
-}
-
-@objc extension ZMUserSession: ForegroundNotificationsDelegate {
-    
-    public func didReceieveLocal(notification: ZMLocalNotification, application: ZMApplication) {
-        managedObjectContext.performGroupedBlock {
-            self.sessionManager?.localNotificationResponder?.processLocal(notification, forSession: self)
-        }
-    }
 }
 
 // MARK: - UNUserNotificationCenterDelegate
@@ -192,10 +185,17 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
             self.handleTrackingOnCallNotification(with: userInfo)
         }
         
-        open(userInfo.conversation(in: managedObjectContext), at: nil)
-        
-        // pass in .alert to show in app notification
-        completionHandler([])
+        // foreground notification responder exists on the UI context, so we
+        // need to switch to that context
+        self.managedObjectContext.perform {
+            let responder = self.sessionManager.foregroundNotificationResponder
+            let shouldPresent = responder?.shouldPresentNotification(with: userInfo)
+            
+            var options = UNNotificationPresentationOptions()
+            if shouldPresent ?? true { options = [.alert, .sound] }
+            
+            completionHandler(options)
+        }
     }
     
     func handleNotificationResponse(actionIdentifier: String,
@@ -209,8 +209,6 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
             ignoreCall(with: userInfo, completionHandler: completionHandler)
         case CallNotificationAction.accept.rawValue:
             acceptCall(with: userInfo, completionHandler: completionHandler)
-        case ConversationNotificationAction.mute.rawValue:
-            muteConversation(with: userInfo, completionHandler: completionHandler)
         case ConversationNotificationAction.like.rawValue:
             likeMessage(with: userInfo, completionHandler: completionHandler)
         case ConversationNotificationAction.reply.rawValue:
@@ -220,7 +218,7 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
         case ConversationNotificationAction.connect.rawValue:
             acceptConnectionRequest(with: userInfo, completionHandler: completionHandler)
         default:
-            open(userInfo.conversation(in: managedObjectContext), at: nil)
+            showContent(for: userInfo)
             completionHandler()
             break
         }

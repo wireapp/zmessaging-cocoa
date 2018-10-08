@@ -744,38 +744,6 @@
 @end
 
 
-@implementation ZMUserSessionTests (RequestToOpenConversation)
-
-- (void)testThatItCallsTheDelegateWhenRequestedToOpenAConversation
-{
-    // given
-    [[[self.transportSession stub] andReturn:nil] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
-    id mockDelegate = [OCMockObject mockForProtocol:@protocol(ZMRequestsToOpenViewsDelegate)];
-    self.sut.requestToOpenViewDelegate = mockDelegate;
-    __block NSManagedObjectID *conversationID;
-    __block ZMConversation *requestedConversation;
-    
-    // expect
-    [[mockDelegate expect] userSession:self.sut showConversation:ZM_ARG_SAVE(requestedConversation)];
-    
-    // when
-    [self.syncMOC performGroupedBlockAndWait:^{
-        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        [self.syncMOC saveOrRollback];
-        
-        conversationID = conversation.objectID;
-        [ZMUserSession requestToOpenSyncConversationOnUI:conversation];
-    }];
-    
-    // then
-    [self spinMainQueueWithTimeout:0.1];
-    [mockDelegate verify];
-    XCTAssertEqualObjects(requestedConversation.objectID, conversationID);
-    XCTAssertEqual(requestedConversation.managedObjectContext, self.uiMOC);
-    
-}
-
-@end
 
 @implementation ZMUserSessionTests (Transport)
 

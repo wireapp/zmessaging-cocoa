@@ -21,6 +21,8 @@ import Foundation
 // These are the "base" keys for messages. We append to these for the specific case.
 //
 private let ZMPushStringDefault             = "default"
+
+private let ZMPushStringEphemeralTitle      = "ephemeral.title"
 private let ZMPushStringEphemeral           = "ephemeral"
 
 // Title with team name
@@ -163,14 +165,16 @@ extension LocalNotificationType {
             arguments.append(senderName)
         }
         
-        return String.localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
+        return .localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
     }
     
     public func titleText(selfUser: ZMUser, conversation : ZMConversation? = nil) -> String? {
         
         if case .message(let contentType) = self {
             switch contentType {
-            case .ephemeral, .hidden:
+            case .ephemeral:
+                return .localizedStringWithFormat(ZMPushStringEphemeralTitle.pushFormatString)
+            case .hidden:
                 return nil
             default:
                 break
@@ -181,7 +185,7 @@ extension LocalNotificationType {
         let conversationName = conversation?.meaningfulDisplayName
         
         if let conversationName = conversationName, let teamName = teamName {
-            return String.localizedStringWithFormat(ZMPushStringTitle.pushFormatString, arguments: [conversationName, teamName])
+            return .localizedStringWithFormat(ZMPushStringTitle.pushFormatString, arguments: [conversationName, teamName])
         } else if let conversationName = conversationName {
             return conversationName
         } else if let teamName = teamName {
@@ -234,7 +238,7 @@ extension LocalNotificationType {
                 let key = baseKey + "." + MentionKey
                 return .localizedStringWithFormat(key.pushFormatString)
             case .ephemeral, .hidden:
-                return String.localizedStringWithFormat(baseKey.pushFormatString)
+                return .localizedStringWithFormat(baseKey.pushFormatString)
             case .messageTimerUpdate(let timerString):
                 if let string = timerString {
                     arguments.append(string)
@@ -254,7 +258,7 @@ extension LocalNotificationType {
         }
         
         let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey, mentionKey].compactMap({ $0 }).joined(separator: ".")
-        return String.localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
+        return .localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
     }
     
 }

@@ -37,6 +37,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let analytics: AnalyticsType?
     public let teamInvitationStatus: TeamInvitationStatus
     public let assetDeletionStatus: AssetDeletionStatus
+    public let callEventStatus: CallEventStatus
 
     public var notificationFetchStatus: BackgroundNotificationFetchStatus {
         return pushNotificationStatus.status
@@ -48,6 +49,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         self.requestCancellation = requestCancellation
         self.apnsConfirmationStatus = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: managedObjectContext, backgroundActivityFactory: BackgroundActivityFactory.sharedInstance())
         self.operationStatus = OperationStatus()
+        self.callEventStatus = CallEventStatus()
         self.analytics = analytics
         self.teamInvitationStatus = TeamInvitationStatus()
         self.operationStatus.isInBackground = application.applicationState == .background

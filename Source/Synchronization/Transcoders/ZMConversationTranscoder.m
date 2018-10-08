@@ -30,7 +30,7 @@
 
 static NSString* ZMLogTag ZM_UNUSED = @"Conversations";
 
-static NSString *const ConversationsPath = @"/conversations";
+NSString *const ConversationsPath = @"/conversations";
 static NSString *const ConversationIDsPath = @"/conversations/ids";
 
 NSUInteger ZMConversationTranscoderListPageSize = 100;
@@ -558,7 +558,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     }
     if (request == nil && (   [keys containsObject:ZMConversationArchivedChangedTimeStampKey]
                            || [keys containsObject:ZMConversationSilencedChangedTimeStampKey])) {
-        request = [self requestForUpdatingConversationSelfInfo:updatedConversation];
+        request = [updatedConversation requestForUpdatingSelfInfo];
     }
     if (request == nil) {
         ZMTrapUnableToGenerateRequest(keys, self);
@@ -577,40 +577,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     [request expireAfterInterval:ZMTransportRequestDefaultExpirationInterval];
     return [[ZMUpstreamRequest alloc] initWithKeys:[NSSet setWithObject:ZMConversationUserDefinedNameKey] transportRequest:request userInfo:nil];
 }
-
-- (ZMUpstreamRequest *)requestForUpdatingConversationSelfInfo:(ZMConversation *)conversation
-{
-    NSMutableDictionary *payload = [NSMutableDictionary dictionary];
-    NSMutableSet *updatedKeys = [NSMutableSet set];
-    
-    if ([conversation hasLocalModificationsForKey:ZMConversationSilencedChangedTimeStampKey]) {
-        if( conversation.silencedChangedTimestamp == nil) {
-            conversation.silencedChangedTimestamp = [NSDate date];
-        }
-        payload[ZMConversationInfoOTRMutedValueKey] = @(conversation.isSilenced);
-        payload[ZMConversationInfoOTRMutedReferenceKey] = [conversation.silencedChangedTimestamp transportString];
-        [updatedKeys addObject:ZMConversationSilencedChangedTimeStampKey];
-    }
-    
-    if ([conversation hasLocalModificationsForKey:ZMConversationArchivedChangedTimeStampKey]) {
-        if (conversation.archivedChangedTimestamp == nil) {
-            conversation.archivedChangedTimestamp = [NSDate date];
-        }
-        
-        payload[ZMConversationInfoOTRArchivedValueKey] = @(conversation.isArchived);
-        payload[ZMConversationInfoOTRArchivedReferenceKey] = [conversation.archivedChangedTimestamp transportString];
-        [updatedKeys addObject:ZMConversationArchivedChangedTimeStampKey];
-    }
-    
-    if (updatedKeys.count == 0) {
-        return nil;
-    }
-    
-    NSString *path = [NSString pathWithComponents:@[ConversationsPath, conversation.remoteIdentifier.transportString, @"self"]];
-    ZMTransportRequest *request = [ZMTransportRequest requestWithPath:path method:ZMMethodPUT payload:payload];
-    return [[ZMUpstreamRequest alloc] initWithKeys:updatedKeys transportRequest:request userInfo:nil];
-}
-
 
 - (ZMUpstreamRequest *)requestForInsertingObject:(ZMManagedObject *)managedObject forKeys:(NSSet *)keys;
 {

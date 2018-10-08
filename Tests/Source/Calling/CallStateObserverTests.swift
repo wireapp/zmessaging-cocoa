@@ -62,11 +62,7 @@ class CallStateObserverTests : MessagingTest {
 
             self.syncMOC.saveOrRollback()
             
-            self.localNotificationDispatcher = LocalNotificationDispatcher(
-                in: self.syncMOC,
-                foregroundNotificationDelegate: MockForegroundNotificationDelegate(),
-                application: self.application,
-                operationStatus: self.mockUserSession.operationStatus)
+            self.localNotificationDispatcher = LocalNotificationDispatcher(in: self.syncMOC)
             
             self.notificationCenter = UserNotificationCenterMock()
             self.localNotificationDispatcher.notificationCenter = self.notificationCenter
@@ -93,8 +89,10 @@ class CallStateObserverTests : MessagingTest {
     }
     
     func testThatInstanceDoesntHaveRetainCycles() {
-        weak var instance = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
-        XCTAssertNil(instance)
+        var instance: CallStateObserver? = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
+        weak var weakInstance = instance
+        instance = nil
+        XCTAssertNil(weakInstance)
     }
     
     func testThatMissedCallMessageIsAppendedForCanceledCallByReceiver() {
@@ -373,9 +371,9 @@ class CallStateObserverTests : MessagingTest {
         syncMOC.performGroupedBlock {
             self.conversation.lastServerTimeStamp = Date()
             self.conversation.isArchived = true
-            self.conversation.isSilenced = true
+            self.conversation.mutedMessageTypes = .all
             XCTAssert(self.conversation.isArchived)
-            XCTAssert(self.conversation.isSilenced)
+            XCTAssertEqual(self.conversation.mutedMessageTypes, .all)
             XCTAssertNil(self.conversation.clearedTimeStamp)
             self.syncMOC.saveOrRollback()
         }
@@ -394,7 +392,7 @@ class CallStateObserverTests : MessagingTest {
         
         // Then
         XCTAssert(conversationUI.isArchived)
-        XCTAssert(conversationUI.isSilenced)
+        XCTAssertEqual(conversationUI.mutedMessageTypes, .all)
     }
     
     func testThatSilencedUnarchivedConversationsGetUpdatedForIncomingCalls() {
@@ -403,14 +401,14 @@ class CallStateObserverTests : MessagingTest {
         let startDate = Date(timeIntervalSinceReferenceDate: 12345678)
         
         syncMOC.performGroupedBlock {
-            self.conversation.isSilenced = true
+            self.conversation.mutedMessageTypes = .all
             self.conversation.isArchived = false
             self.conversation.lastServerTimeStamp = Date()
             self.conversation.lastReadServerTimeStamp = self.conversation.lastServerTimeStamp
             self.conversation.remoteIdentifier = .create()
             self.conversation.lastModifiedDate = startDate
             
-            XCTAssertTrue(self.conversation.isSilenced)
+            XCTAssertEqual(self.conversation.mutedMessageTypes, .all)
             XCTAssertFalse(self.conversation.isArchived)
             
             otherConvo = ZMConversation.insertNewObject(in: self.syncMOC)

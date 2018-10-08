@@ -41,7 +41,6 @@
 
 NSString * const ZMPhoneVerificationCodeKey = @"code";
 NSNotificationName const ZMLaunchedWithPhoneVerificationCodeNotificationName = @"ZMLaunchedWithPhoneVerificationCode";
-NSNotificationName const ZMRequestToOpenSyncConversationNotificationName = @"ZMRequestToOpenSyncConversation";
 NSNotificationName const ZMUserSessionResetPushTokensNotificationName = @"ZMUserSessionResetPushTokensNotification";
 
 static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-client/id930944768?ls=1&mt=8";
@@ -195,12 +194,7 @@ ZM_EMPTY_ASSERTING_INIT()
             self.syncManagedObjectContext.zm_userImageCache = userImageCache;
             self.syncManagedObjectContext.zm_fileAssetCache = fileAssetCache;
             
-            self.localNotificationDispatcher = [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:self.syncManagedObjectContext
-                                                                                  foregroundNotificationDelegate:self
-                                                                                                     application:application
-                                                                                                 operationStatus:self.operationStatus];
-
-            
+            self.localNotificationDispatcher = [[LocalNotificationDispatcher alloc] initWithManagedObjectContext:self.syncManagedObjectContext];
             
             self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
                                                                                           userSession:self];
@@ -240,7 +234,6 @@ ZM_EMPTY_ASSERTING_INIT()
         
         [self registerForRegisteringPushTokenNotification];
         [self registerForBackgroundNotifications];
-        [self registerForRequestToOpenConversationNotification];
         
         [self enableBackgroundFetch];
 
@@ -326,19 +319,6 @@ ZM_EMPTY_ASSERTING_INIT()
            self.clientRegistrationStatus.currentPhase == ZMClientRegistrationPhaseRegistered;
 }
 
-- (void)registerForRequestToOpenConversationNotification
-{
-    ZM_WEAK(self);
-    [self.observersToken addObject:[NotificationInContext addObserverWithName:ZMRequestToOpenSyncConversationNotificationName
-                                        context:self.managedObjectContext.notificationContext
-                                         object:nil
-                                          queue:nil
-                                          using:^(NotificationInContext * note) {
-                                              ZM_STRONG(self);
-                                              [self didRequestToOpenSyncConversation:note];
-                                          }]];
-}
-
 - (void)registerForBackgroundNotifications;
 {
     [self.application registerObserverForDidEnterBackground:self selector:@selector(applicationDidEnterBackground:)];
@@ -364,20 +344,6 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     return self.storeProvider.applicationContainer;
 }
-
-- (void)didRequestToOpenSyncConversation:(NotificationInContext *)note
-{
-    ZM_WEAK(self);
-    [self.managedObjectContext performGroupedBlock:^{
-        ZM_STRONG(self);
-        NSManagedObjectID *objectID = note.object;
-        id managedObject = [self.managedObjectContext objectWithID:objectID];
-        if(managedObject != nil) {
-            [self.requestToOpenViewDelegate userSession:self showConversation:managedObject];
-        }
-    }];
-}
-
 
 - (void)saveOrRollbackChanges;
 {
@@ -621,23 +587,6 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
                                                             object:nil
                                                           userInfo:@{ ZMPhoneVerificationCodeKey : [URL codeForPhoneVerification] }];
     }
-}
-
-@end
-
-
-
-@implementation ZMUserSession (RequestToOpenConversation)
-
-+ (void)requestToOpenSyncConversationOnUI:(ZMConversation *)conversation;
-{
-    if (conversation.managedObjectContext == nil) {
-        return;
-    }
-    [[[NotificationInContext alloc] initWithName:ZMRequestToOpenSyncConversationNotificationName
-                                        context:conversation.managedObjectContext.notificationContext
-                                          object:conversation.objectID
-                                        userInfo:nil] post];
 }
 
 @end

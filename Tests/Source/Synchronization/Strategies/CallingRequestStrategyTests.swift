@@ -27,7 +27,7 @@ class CallingRequestStrategyTests : MessagingTest {
     override func setUp() {
         super.setUp()
         mockRegistrationDelegate = MockClientRegistrationDelegate()
-        sut = CallingRequestStrategy(managedObjectContext: uiMOC, clientRegistrationDelegate: mockRegistrationDelegate, flowManager: FlowManagerMock())
+        sut = CallingRequestStrategy(managedObjectContext: uiMOC, clientRegistrationDelegate: mockRegistrationDelegate, flowManager: FlowManagerMock(), callEventStatus: CallEventStatus())
     }
     
     override func tearDown() {

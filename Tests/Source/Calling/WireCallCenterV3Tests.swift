@@ -498,13 +498,14 @@ class WireCallCenterV3Tests: MessagingTest {
         let userId = UUID()
         let clientId = "foo"
         let data = self.verySmallJPEGData()
+        let callEvent = CallEvent(data: data, currentTimestamp: Date(), serverTimestamp: Date(), conversationId: oneOnOneConversationID, userId: userId, clientId: clientId)
         
         // when
-        sut.received(data: data, currentTimestamp: Date(), serverTimestamp: Date(), conversationId: oneOnOneConversationID, userId: userId, clientId: clientId)
+        sut.processCallEvent(callEvent, completionHandler: {})
         XCTAssertEqual((sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.count, 0)
         
         // and when
-        sut.setCallReady(version: 2)
+        sut.setCallReady(version: 3)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -515,6 +516,50 @@ class WireCallCenterV3Tests: MessagingTest {
             XCTAssertEqual(event.clientId, clientId)
             XCTAssertEqual(event.data, data)
         }
+    }
+    
+    func testThatItCallProcessCallEventCompletionHandler() {
+        // given
+        let userId = UUID()
+        let clientId = "foo"
+        let data = self.verySmallJPEGData()
+        let callEvent = CallEvent(data: data, currentTimestamp: Date(), serverTimestamp: Date(), conversationId: oneOnOneConversationID, userId: userId, clientId: clientId)
+        sut.setCallReady(version: 3)
+        
+        // expect
+        let calledCompletionHandler = expectation(description: "processCallEvent completion handler called")
+        
+        // when
+        sut.processCallEvent(callEvent, completionHandler: {
+            calledCompletionHandler.fulfill()
+        })
+        
+        // then
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
+    func testThatItCallProcessCallEventCompletionHandlerWhenEmptyingBuffer() {
+        // given
+        let userId = UUID()
+        let clientId = "foo"
+        let data = self.verySmallJPEGData()
+        let callEvent = CallEvent(data: data, currentTimestamp: Date(), serverTimestamp: Date(), conversationId: oneOnOneConversationID, userId: userId, clientId: clientId)
+        
+        // expect
+        let calledCompletionHandler = expectation(description: "processCallEvent completion handler called")
+        
+        // when
+        sut.processCallEvent(callEvent, completionHandler: {
+            calledCompletionHandler.fulfill()
+        })
+        XCTAssertEqual((sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.count, 0)
+        
+        // and when
+        sut.setCallReady(version: 2)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
     func testThatCBRIsEnabledOnAudioCBRChangeHandler_whenCallIsEstablished() {

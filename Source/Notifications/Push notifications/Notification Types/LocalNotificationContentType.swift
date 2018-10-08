@@ -28,11 +28,11 @@ public enum LocalNotificationContentType : Equatable {
     static func typeForMessage(_ message: ZMConversationMessage) -> LocalNotificationContentType? {
         
         if message.isEphemeral {
-            return .ephemeral(isMention: false) // TODO re-enable mention notifications
+            return .ephemeral(isMention: message.textMessageData?.isMentioningSelf ?? false)
         }
         
         if let messageData = message.textMessageData, let text = messageData.messageText , !text.isEmpty {
-            return .text(text, isMention: false) // TODO re-enable mention notifications
+            return .text(text, isMention: messageData.isMentioningSelf)
         }
         
         if message.knockMessageData != nil {

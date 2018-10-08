@@ -981,7 +981,7 @@
     XCTAssertEqualObjects(request.payload.asDictionary[@"otr_archived"], @(conversation.isArchived));
 }
 
-- (void)testThatSilencingAConversationIsSynchronizedToTheBackend
+- (void)testThatOnlyMentionsConversationIsSynchronizedToTheBackend
 {
     {
         // given
@@ -992,7 +992,7 @@
         
         // when
         [self.userSession performChanges:^{
-            conversation.isSilenced = YES;
+            conversation.isMutedDisplayingMentions = YES;
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         
@@ -1003,7 +1003,8 @@
         XCTAssertEqual(request.method, ZMMethodPUT);
         XCTAssertEqualObjects(conversation.lastServerTimeStamp, conversation.silencedChangedTimestamp);
         XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_ref"], conversation.silencedChangedTimestamp.transportString);
-        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted"], @(conversation.isSilenced));
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted"], @(conversation.isMutedDisplayingMentions));
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_status"], @(conversation.isMutedDisplayingMentions ? 1 : 0));
     }
     
     // Tears down context(s) &
@@ -1016,9 +1017,78 @@
         
         // then
         ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-        XCTAssertTrue(conversation.isSilenced);
+        XCTAssertTrue(conversation.isMutedDisplayingMentions);
+    }
+    
+}
+- (void)testThatSilencingAConversationIsSynchronizedToTheBackend
+{
+    {
+        // given
+        XCTAssertTrue([self login]);
+        [self.mockTransportSession resetReceivedRequests];
+
+        ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
+
+        // when
+        [self.userSession performChanges:^{
+            conversation.isFullyMuted = YES;
+        }];
+        WaitForAllGroupsToBeEmpty(0.5);
+
+        // then
+        ZMTransportRequest *request = self.mockTransportSession.receivedRequests.firstObject;
+        NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/self", self.groupConversation.identifier];
+        XCTAssertEqualObjects(request.path, expectedPath);
+        XCTAssertEqual(request.method, ZMMethodPUT);
+        XCTAssertEqualObjects(conversation.lastServerTimeStamp, conversation.silencedChangedTimestamp);
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_ref"], conversation.silencedChangedTimestamp.transportString);
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted"], @(conversation.isFullyMuted));
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_status"], @(conversation.isFullyMuted ? 3 : 0));
     }
 
+    // Tears down context(s) &
+    // Re-create contexts
+    [self recreateSessionManagerAndDeleteLocalData];
+
+    {
+        // Wait for sync to be done
+        XCTAssertTrue([self login]);
+
+        // then
+        ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
+        XCTAssertTrue(conversation.isFullyMuted);
+    }
+
+}
+
+- (void)testThatUnsilencing_OnlyMentionsConversation_IsSynchronizedToTheBackend
+{
+    // given
+    XCTAssertTrue([self login]);
+
+    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
+    [self.userSession performChanges:^{
+        conversation.isMutedDisplayingMentions = YES;
+    }];
+
+    WaitForAllGroupsToBeEmpty(0.5);
+    [self.mockTransportSession resetReceivedRequests];
+
+    // when
+    [self.userSession performChanges:^{
+        conversation.isMutedDisplayingMentions = NO;
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // then
+    ZMTransportRequest *request = self.mockTransportSession.receivedRequests.firstObject;
+    NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/self", self.groupConversation.identifier];
+    XCTAssertEqualObjects(request.path, expectedPath);
+    XCTAssertEqual(request.method, ZMMethodPUT);
+    XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted"], @0);
+    XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_ref"], conversation.lastServerTimeStamp.transportString);
+    XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_status"], @0);
 }
 
 - (void)testThatUnsilencingAConversationIsSynchronizedToTheBackend
@@ -1028,7 +1098,7 @@
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     [self.userSession performChanges:^{
-        conversation.isSilenced = YES;
+        conversation.isFullyMuted = YES;
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1036,7 +1106,7 @@
     
     // when
     [self.userSession performChanges:^{
-        conversation.isSilenced = NO;
+        conversation.isFullyMuted = NO;
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1047,8 +1117,8 @@
     XCTAssertEqual(request.method, ZMMethodPUT);
     XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted"], @0);
     XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_ref"], conversation.lastServerTimeStamp.transportString);
+    XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_status"], @0);
 }
-
 - (void)testThatWhenBlockingAUserTheOneOnOneConversationIsRemovedFromTheConversationList
 {
     // login
@@ -1088,31 +1158,30 @@
     (void)observer;
 }
 
-
 - (void)checkThatItUnarchives:(BOOL)shouldUnarchive silenced:(BOOL)isSilenced mockConversation:(MockConversation *)mockConversation withBlock:(void (^)(MockTransportSession<MockTransportSessionObjectCreation> *session))block
 {
     // given
     XCTAssertTrue([self login]);
-    
+
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
     [self.userSession performChanges:^{
         conversation.isArchived = YES;
         if (isSilenced) {
-            conversation.isSilenced = YES;
+            conversation.isFullyMuted = YES;
         }
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertTrue(conversation.isArchived);
     if (isSilenced) {
-        XCTAssertTrue(conversation.isSilenced);
+        XCTAssertTrue(conversation.isFullyMuted);
     }
-    
+
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         block(session);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
+
     // then
     if (shouldUnarchive) {
         XCTAssertFalse(conversation.isArchived);
@@ -1125,7 +1194,7 @@
 {
     // expect
     BOOL shouldUnarchive = YES;
-    
+
     // when
     [self checkThatItUnarchives:shouldUnarchive silenced:NO mockConversation:self.groupConversation withBlock:^(ZM_UNUSED id session) {
         ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Some text" mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
@@ -1138,7 +1207,7 @@
 {
     // expect
     BOOL shouldUnarchive = NO;
-    
+
     // when
     [self checkThatItUnarchives:shouldUnarchive silenced:YES mockConversation:self.groupConversation withBlock:^(ZM_UNUSED id session) {
         ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Some text" mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
@@ -1151,9 +1220,9 @@
 {
     // expect
     BOOL shouldUnarchive = YES;
-    
+
     ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMAsset assetWithOriginalWithImageSize:CGSizeMake(10, 10) mimeType:@"image/jpeg" size:123] nonce:NSUUID.createUUID];
-    
+
     // when
     [self checkThatItUnarchives:shouldUnarchive silenced:NO mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
         MockUser *fromUser = self.groupConversation.activeUsers.lastObject;
@@ -1165,9 +1234,9 @@
 {
     // expect
     BOOL shouldUnarchive = NO;
-    
+
     ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMAsset assetWithOriginalWithImageSize:CGSizeMake(10, 10) mimeType:@"image/jpeg" size:123] nonce:NSUUID.createUUID];
-    
+
     // when
     [self checkThatItUnarchives:shouldUnarchive silenced:YES mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
         MockUser *fromUser = self.groupConversation.activeUsers.lastObject;
@@ -1179,7 +1248,7 @@
 {
     // expect
     BOOL shouldUnarchive = YES;
-    
+
     // when
     [self checkThatItUnarchives:shouldUnarchive silenced:NO mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
         ZMGenericMessage *knock = [ZMGenericMessage messageWithContent:[ZMKnock knock] nonce:NSUUID.createUUID];
@@ -1192,7 +1261,7 @@
 {
     // expect
     BOOL shouldUnarchive = NO;
-    
+
     // when
     [self checkThatItUnarchives:shouldUnarchive silenced:YES mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
         ZMGenericMessage *knock = [ZMGenericMessage messageWithContent:[ZMKnock knock] nonce:NSUUID.createUUID];
@@ -1205,7 +1274,7 @@
 {
     // expect
     BOOL shouldUnarchive = NO;
-    
+
     // when
     [self checkThatItUnarchives:shouldUnarchive silenced:YES mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [self.groupConversation addUsersByUser:session.selfUser addedUsers:@[self.user5]];
@@ -1216,7 +1285,7 @@
 {
     // expect
     BOOL shouldUnarchive = NO;
-    
+
     // when
     [self checkThatItUnarchives:shouldUnarchive silenced:NO mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [self.groupConversation removeUsersByUser:session.selfUser removedUser:self.user2];
@@ -1227,7 +1296,7 @@
 {
     // expect
     BOOL shouldUnarchive = NO;
-    
+
     // when
     [self checkThatItUnarchives:shouldUnarchive silenced:YES mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [self.groupConversation removeUsersByUser:session.selfUser removedUser:self.user2];
@@ -1249,7 +1318,7 @@
 {
     // expect
     BOOL shouldUnarchive = NO;
-    
+
     // when
     [self checkThatItUnarchives:shouldUnarchive silenced:YES mockConversation:self.groupConversation withBlock:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         [self.groupConversation removeUsersByUser:session.selfUser removedUser:session.selfUser];

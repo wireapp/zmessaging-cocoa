@@ -427,7 +427,7 @@ extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMisse
         switch callState {
         case .incoming(video: let video, shouldRing: let shouldRing, degraded: _):
             if shouldRing {
-                if !conversation.isSilenced {
+                if conversation.mutedMessageTypes == .none {
                     reportIncomingCall(from: caller, in: conversation, video: video)
                 }
             } else {

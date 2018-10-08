@@ -57,7 +57,8 @@ public protocol SessionManagerType : class {
     
     var accountManager : AccountManager { get }
     var backgroundUserSessions: [UUID: ZMUserSession] { get }
-    weak var localNotificationResponder: LocalNotificationResponder? { get }
+    
+    weak var foregroundNotificationResponder: ForegroundNotificationResponder? { get }
     
     @available(iOS 10.0, *)
     var callKitDelegate : CallKitDelegate? { get }
@@ -71,6 +72,12 @@ public protocol SessionManagerType : class {
     
     /// Configure user notification settings. This will ask the user for permission to display notifications.
     func configureUserNotifications()
+    
+    /// Switch account and and ask UI to to navigate to a message in a conversation
+    func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?, in session: ZMUserSession)
+    
+    /// Switch account and and ask UI to navigate to the conversatio list
+    func showConversationList(in session: ZMUserSession)
 
     /// Needs to be called before we try to register another device because API requires password
     func update(credentials: ZMCredentials) -> Bool
@@ -78,13 +85,13 @@ public protocol SessionManagerType : class {
 }
 
 @objc
-public protocol LocalNotificationResponder : class {
-    func processLocal(_ notification: ZMLocalNotification, forSession session: ZMUserSession)
+public protocol SessionManagerSwitchingDelegate: class {
+    func confirmSwitchingAccount(completion: @escaping (Bool)->Void)
 }
 
 @objc
-public protocol SessionManagerSwitchingDelegate: class {
-    func confirmSwitchingAccount(completion: @escaping (Bool)->Void)
+public protocol ForegroundNotificationResponder: class {
+    func shouldPresentNotification(with userInfo: NotificationUserInfo) -> Bool
 }
 
 /// The `SessionManager` class handles the creation of `ZMUserSession` and `UnauthenticatedSession`
@@ -158,14 +165,14 @@ public protocol SessionManagerSwitchingDelegate: class {
     public let appVersion: String
     var isAppVersionBlacklisted = false
     public weak var delegate: SessionManagerDelegate? = nil
-    public weak var localNotificationResponder: LocalNotificationResponder?
     public let accountManager: AccountManager
     public fileprivate(set) var activeUserSession: ZMUserSession?
     public var urlHandler: SessionManagerURLHandler!
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
-    public weak var requestToOpenViewDelegate: ZMRequestsToOpenViewsDelegate?
+    public weak var showContentDelegate: ShowContentDelegate?
+    public weak var foregroundNotificationResponder: ForegroundNotificationResponder?
     public weak var switchingDelegate: SessionManagerSwitchingDelegate?
     public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
     
@@ -559,7 +566,6 @@ public protocol SessionManagerSwitchingDelegate: class {
     }
     
     fileprivate func configure(session userSession: ZMUserSession, for account: Account) {
-        userSession.requestToOpenViewDelegate = self
         userSession.sessionManager = self
         require(backgroundUserSessions[account.userIdentifier] == nil, "User session is already loaded")
         backgroundUserSessions[account.userIdentifier] = userSession
@@ -898,7 +904,7 @@ extension SessionManager : WireCallCenterCallStateObserver {
         switch callState {
         case .answered, .outgoing:
             for (_, session) in backgroundUserSessions where session.managedObjectContext == moc && activeUserSession != session {
-                session.open(conversation, at: nil)
+                showConversation(conversation, at: nil, in: session)
             }
         default:
             return
