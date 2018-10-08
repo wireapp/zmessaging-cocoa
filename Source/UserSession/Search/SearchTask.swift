@@ -93,6 +93,7 @@ extension SearchTask {
             let connectedUsers = self.request.searchOptions.contains(.contacts) ? self.connectedUsers(matchingQuery: self.request.query) : []
             let teamMembers = self.request.searchOptions.contains(.teamMembers) ? self.teamMembers(matchingQuery: self.request.query, team: team) : []
             let conversations = self.request.searchOptions.contains(.conversations) ? self.conversations(matchingQuery: self.request.query) : []
+
             let result = SearchResult(contacts: connectedUsers, teamMembers: teamMembers, addressBook: [], directory: [], conversations: conversations, services: [])
             
             self.session.managedObjectContext.performGroupedBlock {
@@ -117,7 +118,13 @@ extension SearchTask {
     }
     
     func conversations(matchingQuery query: String) -> [ZMConversation] {
-        let fetchRequest = ZMConversation.sortedFetchRequest(with: ZMConversation.predicate(forSearchQuery: query))
+        let non1to1ConversationPredicate = NSPredicate(format: "%K.@count > 2",
+            ZMConversationLastServerSyncedActiveParticipantsKey
+        )
+
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [ZMConversation.predicate(forSearchQuery: query), non1to1ConversationPredicate])
+
+        let fetchRequest = ZMConversation.sortedFetchRequest(with: predicate)
         fetchRequest?.sortDescriptors = [NSSortDescriptor(key: ZMNormalizedUserDefinedNameKey, ascending: true)]
         var conversations = context.executeFetchRequestOrAssert(fetchRequest) as? [ZMConversation] ?? []
         
