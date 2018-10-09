@@ -41,8 +41,11 @@ public extension ZMOperationLoop {
             }
             
             self.pushNotificationStatus.fetch(eventId: nonce, completionHandler: {
-                 self.callEventStatus.waitForCallEventProcessingToComplete {
-                    completionHandler()
+                 self.callEventStatus.waitForCallEventProcessingToComplete { [weak self] in
+                    guard let strongSelf = self else { return }
+                    strongSelf.syncMOC.performGroupedBlock {
+                        completionHandler()
+                    }
                 }
             })
         }
