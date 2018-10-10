@@ -341,11 +341,7 @@ extension ZMLocalNotificationTests_Message {
     // MARK: Tests
     
     func testItCreatesImageNotificationsCorrectly(){
-        //    "push.notification.add.image.oneonone" = "%1$@ shared a picture";
-        //    "push.notification.add.image.group" = "%1$@ shared a picture";
-        //    "push.notification.add.image.group.noconversationname" = "%1$@ shared a picture in a conversation";
-
-        XCTAssertEqual(bodyForImageNote(oneOnOneConversation, sender: sender), "shared a picture")
+        XCTAssertEqual(bodyForImageNote(oneOnOneConversation, sender: sender), "Shared a picture")
         XCTAssertEqual(bodyForImageNote(groupConversation, sender: sender), "Super User shared a picture")
         XCTAssertEqual(bodyForImageNote(groupConversationWithoutUserDefinedName, sender: sender), "Super User shared a picture")
         XCTAssertEqual(bodyForImageNote(groupConversationWithoutName, sender: sender), "Super User shared a picture in a conversation")
@@ -437,12 +433,7 @@ extension ZMLocalNotificationTests_Message {
     // MARK: Tests
     
     func testThatItCreatesFileAddNotificationsCorrectly() {
-        //    "push.notification.add.file.group" = "%1$@ shared a file"
-        //    "push.notification.add.file.group.noconversationname" = "%1$@ shared a file"
-        //    "push.notification.add.file.oneonone" = "%1$@ shared a file in a conversation"
-        //
-
-        XCTAssertEqual(bodyForAssetNote(.txt, conversation: oneOnOneConversation, sender: sender), "shared a file")
+        XCTAssertEqual(bodyForAssetNote(.txt, conversation: oneOnOneConversation, sender: sender), "Shared a file")
         XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversation, sender: sender), "Super User shared a file")
         XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversationWithoutUserDefinedName, sender: sender), "Super User shared a file")
         XCTAssertEqual(bodyForAssetNote(.txt, conversation: groupConversationWithoutName, sender: sender), "Super User shared a file in a conversation")
@@ -450,12 +441,7 @@ extension ZMLocalNotificationTests_Message {
     }
 
     func testThatItCreatesVideoAddNotificationsCorrectly() {
-        //    "push.notification.add.video.group" = "%1$@ shared a video
-        //    "push.notification.add.video.group.noconversationname" = "%1$@ shared a video"
-        //    "push.notification.add.video.oneonone" = "%1$@ shared a video in a conversation"
-        //
-
-        XCTAssertEqual(bodyForAssetNote(.video, conversation: oneOnOneConversation, sender: sender), "shared a video")
+        XCTAssertEqual(bodyForAssetNote(.video, conversation: oneOnOneConversation, sender: sender), "Shared a video")
         XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversation, sender: sender), "Super User shared a video")
         XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversationWithoutUserDefinedName, sender: sender), "Super User shared a video")
         XCTAssertEqual(bodyForAssetNote(.video, conversation: groupConversationWithoutName, sender: sender), "Super User shared a video in a conversation")
@@ -479,10 +465,6 @@ extension ZMLocalNotificationTests_Message {
     }
 
     func testThatItCreatesAudioNotificationsCorrectly() {
-        //    "push.notification.add.audio.group" = "%1$@ shared an audio message";
-        //    "push.notification.add.audio.group.noconversationname" = "%1$@ shared an audio message";
-        //    "push.notification.add.audio.oneonone" = "%1$@ shared an audio message in a conversation";
-
         XCTAssertEqual(bodyForAssetNote(.audio, conversation: oneOnOneConversation, sender: sender), "shared an audio message")
         XCTAssertEqual(bodyForAssetNote(.audio, conversation: groupConversation, sender: sender), "Super User shared an audio message")
         XCTAssertEqual(bodyForAssetNote(.audio, conversation: groupConversationWithoutUserDefinedName, sender: sender), "Super User shared an audio message")
@@ -548,10 +530,6 @@ extension ZMLocalNotificationTests_Message {
     }
 
     func testThatItCreatesANotificationForAnEditMessage(){
-        //    "push.notification.add.message.oneonone" = "%1$@";
-        //    "push.notification.add.message.group" = "%1$@: %2$@";
-        //    "push.notification.add.message.group.noconversationname" = "%1$@ in a conversation: %2$@";
-
         XCTAssertEqual(bodyForEditNote(oneOnOneConversation, sender: sender, text: "Edited Text"), "Edited Text")
         XCTAssertEqual(bodyForEditNote(groupConversation, sender: sender, text: "Edited Text"), "Super User: Edited Text")
         XCTAssertEqual(bodyForEditNote(groupConversationWithoutUserDefinedName, sender: sender, text: "Edited Text"), "Super User: Edited Text")
