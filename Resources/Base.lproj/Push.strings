@@ -102,7 +102,7 @@
 "push.notification.add.audio.group.nousername.noconversationname" = "New audio message in a conversation";
 "push.notification.add.audio.group.noconversationname" = "%1$@ shared an audio message in a conversation";
 
-"push.notification.add.audio.oneonone" = "shared an audio message";
+"push.notification.add.audio.oneonone" = "Shared an audio message";
 "push.notification.add.audio.oneonone.nousername" = "New audio message in a conversation";
 
 // FILE
