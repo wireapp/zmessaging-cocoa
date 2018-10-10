@@ -29,11 +29,14 @@
 
 
 "push.notification.default" = "Nuovo messaggio";
-"push.notification.ephemeral" = "Qualcuno ti ha mandato un messaggio";
-"push.notification.ephemeral.mention" = "Someone mentioned you";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ in %2$@";
+
+// Ephemeral
+"push.notification.ephemeral.title" = "Someone";
+"push.notification.ephemeral" = "Sent a message";
+"push.notification.ephemeral.mention" = "Mentioned you";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -81,7 +84,7 @@
 "push.notification.add.image.group.nousername.noconversationname" = "Nuova foto in una conversazione";
 "push.notification.add.image.group.noconversationname" = "%1$@ ha condiviso una foto in una conversazione";
 
-"push.notification.add.image.oneonone" = "ha condiviso un'immagine";
+"push.notification.add.image.oneonone" = "Ha condiviso un'immagine";
 "push.notification.add.image.oneonone.nousername" = "Nuova foto in una conversazione";
 
 // VIDEO
@@ -90,7 +93,7 @@
 "push.notification.add.video.group.nousername.noconversationname" = "Nuovo video in una conversazione";
 "push.notification.add.video.group.noconversationname" = "%1$@ ha condiviso un video in una conversazione";
 
-"push.notification.add.video.oneonone" = "ha condiviso un video";
+"push.notification.add.video.oneonone" = "Ha condiviso un video";
 "push.notification.add.video.oneonone.nousername" = "Nuovo video in una conversazione";
 
 // AUDIO
@@ -99,7 +102,7 @@
 "push.notification.add.audio.group.nousername.noconversationname" = "Nuovo messaggio vocale in una conversazione";
 "push.notification.add.audio.group.noconversationname" = "%1$@ ha condiviso un messaggio vocale in una conversazione";
 
-"push.notification.add.audio.oneonone" = "ha condiviso un messaggio vocale";
+"push.notification.add.audio.oneonone" = "Ha condiviso un messaggio vocale";
 "push.notification.add.audio.oneonone.nousername" = "Nuovo messaggio vocale in una conversazione";
 
 // FILE
@@ -108,7 +111,7 @@
 "push.notification.add.file.group.nousername.noconversationname" = "Nuovo file in una conversazione";
 "push.notification.add.file.group.noconversationname" = "%1$@ ha condiviso un file in una conversazione";
 
-"push.notification.add.file.oneonone" = "ha condiviso un file";
+"push.notification.add.file.oneonone" = "Ha condiviso un file";
 "push.notification.add.file.oneonone.nousername" = "Nuovo file in una conversazione";
 
 // LOCATION
@@ -117,7 +120,7 @@
 "push.notification.add.location.group.nousername.noconversationname" = "Nuova posizione in una conversazione";
 "push.notification.add.location.group.noconversationname" = "%1$@ ha condiviso la posizione in una conversazione";
 
-"push.notification.add.location.oneonone" = "ha condiviso una posizione";
+"push.notification.add.location.oneonone" = "Ha condiviso una posizione";
 "push.notification.add.location.oneonone.nousername" = "Nuova posizione in una conversazione";
 
 // SELF ADDED/REMOVED TO GROUP
@@ -209,7 +212,7 @@
 "push.notification.action.message.open" = "Apri";
 "push.notification.action.message.reply" = "Rispondi";
 "push.notification.action.message.reply.button.title" = "Invia";
-"push.notification.action.message.reply.placeholder" = "Write a Message";
+"push.notification.action.message.reply.placeholder" = "Type a Message";
 "push.notification.action.conversation.mute" = "Silenzia";
 "push.notification.action.message.like" = "♥";
 

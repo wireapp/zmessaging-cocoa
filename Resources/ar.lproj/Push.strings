@@ -29,11 +29,14 @@
 
 
 "push.notification.default" = "رسالة جديدة";
-"push.notification.ephemeral" = "أرسل أحدهم رسالة لك";
-"push.notification.ephemeral.mention" = "Someone mentioned you";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ في %2$@";
+
+// Ephemeral
+"push.notification.ephemeral.title" = "Someone";
+"push.notification.ephemeral" = "Sent a message";
+"push.notification.ephemeral.mention" = "Mentioned you";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -209,7 +212,7 @@
 "push.notification.action.message.open" = "افتح";
 "push.notification.action.message.reply" = "رد";
 "push.notification.action.message.reply.button.title" = "إرسال";
-"push.notification.action.message.reply.placeholder" = "Write a Message";
+"push.notification.action.message.reply.placeholder" = "Type a Message";
 "push.notification.action.conversation.mute" = "كتم الصوت";
 "push.notification.action.message.like" = "♥";
 

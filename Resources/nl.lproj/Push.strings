@@ -29,11 +29,14 @@
 
 
 "push.notification.default" = "Nieuw bericht";
-"push.notification.ephemeral" = "Iemand heeft je een bericht gestuurd";
-"push.notification.ephemeral.mention" = "Someone mentioned you";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ in %2$@";
+
+// Ephemeral
+"push.notification.ephemeral.title" = "Someone";
+"push.notification.ephemeral" = "Sent a message";
+"push.notification.ephemeral.mention" = "Mentioned you";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -81,7 +84,7 @@
 "push.notification.add.image.group.nousername.noconversationname" = "Een nieuwe afbeelding in een gesprek";
 "push.notification.add.image.group.noconversationname" = "%1$@ heeft een foto in een gesprek gedeeld";
 
-"push.notification.add.image.oneonone" = "deelde een foto";
+"push.notification.add.image.oneonone" = "Deelde een foto";
 "push.notification.add.image.oneonone.nousername" = "Een nieuwe afbeelding in een gesprek";
 
 // VIDEO
@@ -90,7 +93,7 @@
 "push.notification.add.video.group.nousername.noconversationname" = "Nieuwe video in een gesprek";
 "push.notification.add.video.group.noconversationname" = "%1$@ heeft een video in een gesprek gedeeld";
 
-"push.notification.add.video.oneonone" = "deelde een video";
+"push.notification.add.video.oneonone" = "Deelde een video";
 "push.notification.add.video.oneonone.nousername" = "Nieuwe video in een gesprek";
 
 // AUDIO
@@ -99,7 +102,7 @@
 "push.notification.add.audio.group.nousername.noconversationname" = "Nieuw audio-bericht in een gesprek";
 "push.notification.add.audio.group.noconversationname" = "%1$@ heeft een audio-bericht in een conversatie gedeeld";
 
-"push.notification.add.audio.oneonone" = "deelde een audio bericht";
+"push.notification.add.audio.oneonone" = "Deelde een audio bericht";
 "push.notification.add.audio.oneonone.nousername" = "Nieuw audio-bericht in een gesprek";
 
 // FILE
@@ -108,7 +111,7 @@
 "push.notification.add.file.group.nousername.noconversationname" = "Nieuw bestand in een gesprek";
 "push.notification.add.file.group.noconversationname" = "%1$@ deelde een bestand in een gesprek";
 
-"push.notification.add.file.oneonone" = "deelde een bestand";
+"push.notification.add.file.oneonone" = "Deelde een bestand";
 "push.notification.add.file.oneonone.nousername" = "Nieuw bestand in een gesprek";
 
 // LOCATION
@@ -117,7 +120,7 @@
 "push.notification.add.location.group.nousername.noconversationname" = "Nieuwe locatie in een gesprek";
 "push.notification.add.location.group.noconversationname" = "%1$@ deelde een locatie in een gesprek";
 
-"push.notification.add.location.oneonone" = "deelde een locatie";
+"push.notification.add.location.oneonone" = "Deel een locatie";
 "push.notification.add.location.oneonone.nousername" = "Nieuwe locatie in een gesprek";
 
 // SELF ADDED/REMOVED TO GROUP
@@ -209,7 +212,7 @@
 "push.notification.action.message.open" = "Openen";
 "push.notification.action.message.reply" = "Reageer";
 "push.notification.action.message.reply.button.title" = "Stuur";
-"push.notification.action.message.reply.placeholder" = "Write a Message";
+"push.notification.action.message.reply.placeholder" = "Type a Message";
 "push.notification.action.conversation.mute" = "Dempen";
 "push.notification.action.message.like" = "♥";
 

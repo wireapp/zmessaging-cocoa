@@ -29,11 +29,14 @@
 
 
 "push.notification.default" = "Nowa wiadomość";
-"push.notification.ephemeral" = "Someone sent you a message";
-"push.notification.ephemeral.mention" = "Someone mentioned you";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ w %2$@";
+
+// Ephemeral
+"push.notification.ephemeral.title" = "Someone";
+"push.notification.ephemeral" = "Sent a message";
+"push.notification.ephemeral.mention" = "Mentioned you";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -81,7 +84,7 @@
 "push.notification.add.image.group.nousername.noconversationname" = "Nowe zdjęcie w rozmowie";
 "push.notification.add.image.group.noconversationname" = "%1$@ przesłał zdjęcie w rozmowie";
 
-"push.notification.add.image.oneonone" = "udostępniane zdjęcie";
+"push.notification.add.image.oneonone" = "Udostępnił obrazek";
 "push.notification.add.image.oneonone.nousername" = "Nowe zdjęcie w rozmowie";
 
 // VIDEO
@@ -90,7 +93,7 @@
 "push.notification.add.video.group.nousername.noconversationname" = "Nowy film w wątku";
 "push.notification.add.video.group.noconversationname" = "%1$@ przesłał film wideo w rozmowie";
 
-"push.notification.add.video.oneonone" = "udostępniane wideo";
+"push.notification.add.video.oneonone" = "Udostępniane wideo";
 "push.notification.add.video.oneonone.nousername" = "Nowy film w rozmowie";
 
 // AUDIO
@@ -99,7 +102,7 @@
 "push.notification.add.audio.group.nousername.noconversationname" = "Nowa wiadomość audio w rozmowie";
 "push.notification.add.audio.group.noconversationname" = "%1$@ przesłał wiadomość audio w rozmowie";
 
-"push.notification.add.audio.oneonone" = "shared an audio message";
+"push.notification.add.audio.oneonone" = "Udostępnij wiadomość audio";
 "push.notification.add.audio.oneonone.nousername" = "Nowa wiadomość audio w rozmowie";
 
 // FILE
@@ -108,7 +111,7 @@
 "push.notification.add.file.group.nousername.noconversationname" = "Nowy plik w rozmowie";
 "push.notification.add.file.group.noconversationname" = "%1$@ przesłał film wideo w rozmowie";
 
-"push.notification.add.file.oneonone" = "udostępniany plik";
+"push.notification.add.file.oneonone" = "Udostępniany plik";
 "push.notification.add.file.oneonone.nousername" = "Nowy plik w rozmowie";
 
 // LOCATION
@@ -117,7 +120,7 @@
 "push.notification.add.location.group.nousername.noconversationname" = "Nowa lokalizacja w rozmowie";
 "push.notification.add.location.group.noconversationname" = "%1$@ przesłał lokalizację w rozmowie";
 
-"push.notification.add.location.oneonone" = "udostępniana lokalizacja";
+"push.notification.add.location.oneonone" = "Udostępniana lokalizacja";
 "push.notification.add.location.oneonone.nousername" = "Nowa lokalizacja w rozmowie";
 
 // SELF ADDED/REMOVED TO GROUP
@@ -209,7 +212,7 @@
 "push.notification.action.message.open" = "Otwórz";
 "push.notification.action.message.reply" = "Odpowiedz";
 "push.notification.action.message.reply.button.title" = "Wyślij";
-"push.notification.action.message.reply.placeholder" = "Write a Message";
+"push.notification.action.message.reply.placeholder" = "Type a Message";
 "push.notification.action.conversation.mute" = "Wycisz";
 "push.notification.action.message.like" = "♥";
 
