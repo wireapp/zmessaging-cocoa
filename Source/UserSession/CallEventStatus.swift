@@ -46,6 +46,8 @@ public class CallEventStatus: NSObject {
     
     /// Wait for all calling events to be processed and then calls the completion handler.
     ///
+    /// NOTE it is not guranteed that completion handler is called on the same thread as the caller.
+    ///
     /// Returns: true if there's was any unprocessed calling events.
     @discardableResult
     public func waitForCallEventProcessingToComplete(_ completionHandler: @escaping () -> Void) -> Bool {
