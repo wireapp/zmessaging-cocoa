@@ -203,6 +203,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     
     func testThatItDoesCreateANotificationWhenTheConversationIsSilencedAndSelfUserIsMentioned() {
         // Given
+        selfUser.teamIdentifier = UUID()
         groupConversation.mutedMessageTypes = .nonMentions
         
         // When
@@ -210,6 +211,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         
         // Then
         XCTAssertNotNil(note)
+        selfUser.teamIdentifier = nil
     }
     
     func testThatItUsesCorrectBodyWhenSelfUserIsMentioned() {

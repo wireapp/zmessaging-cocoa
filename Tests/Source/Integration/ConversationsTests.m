@@ -814,7 +814,7 @@
         
         // when
         [self.userSession performChanges:^{
-            conversation.isMutedDisplayingMentions = YES;
+            conversation.isFullyMuted = YES;
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         
@@ -825,8 +825,8 @@
         XCTAssertEqual(request.method, ZMMethodPUT);
         XCTAssertEqualObjects(conversation.lastServerTimeStamp, conversation.silencedChangedTimestamp);
         XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_ref"], conversation.silencedChangedTimestamp.transportString);
-        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted"], @(conversation.isMutedDisplayingMentions));
-        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_status"], @(conversation.isMutedDisplayingMentions ? 1 : 0));
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted"], @(conversation.isFullyMuted));
+        XCTAssertEqualObjects(request.payload.asDictionary[@"otr_muted_status"], @(conversation.isFullyMuted ? 3 : 0));
     }
     
     // Tears down context(s) &
@@ -839,7 +839,7 @@
         
         // then
         ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-        XCTAssertTrue(conversation.isMutedDisplayingMentions);
+        XCTAssertTrue(conversation.isFullyMuted);
     }
     
 }
