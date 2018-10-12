@@ -482,7 +482,7 @@
 
 }
 
-- (void)testThatItOTRAssetCantExpire
+- (void)testThatItOTRAssetCanExpire
 {
     // given
     XCTAssertTrue([self login]);
@@ -504,8 +504,9 @@
     [self spinMainQueueWithTimeout:0.5];
     
     // then
-    XCTAssertFalse(message.isExpired);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStatePending);
+    XCTAssertTrue(message.isExpired);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateFailedToSend);
+    XCTAssertEqual(conversation.conversationListIndicator, ZMConversationListIndicatorExpiredMessage);
 
     [ZMMessage setDefaultExpirationTime:defaultExpirationTime];
     
