@@ -27,16 +27,11 @@ class LocalNotificationDispatcherTests: MessagingTest {
     var conversation2: ZMConversation!
     
     var notificationCenter: UserNotificationCenterMock!
-    var notificationDelegate: MockForegroundNotificationDelegate!
     
     var scheduledRequests: [UNNotificationRequest] {
         return self.notificationCenter.scheduledRequests
     }
-    
-    var receivedForegroundNotifications: [ZMLocalNotification] {
-        return self.notificationDelegate.receivedLocalNotifications
-    }
-    
+
     var user1: ZMUser!
     var user2: ZMUser!
     
@@ -47,12 +42,7 @@ class LocalNotificationDispatcherTests: MessagingTest {
     override func setUp() {
         super.setUp()
         self.notificationCenter = UserNotificationCenterMock()
-        self.notificationDelegate = MockForegroundNotificationDelegate()
-        self.sut = LocalNotificationDispatcher(in: self.syncMOC,
-                                               foregroundNotificationDelegate: self.notificationDelegate,
-                                               application: self.application,
-                                               operationStatus: self.mockUserSession.operationStatus)
-        
+        self.sut = LocalNotificationDispatcher(in: self.syncMOC)
         self.sut.notificationCenter = self.notificationCenter
         
         [self.sut.eventNotifications,
@@ -88,7 +78,6 @@ class LocalNotificationDispatcherTests: MessagingTest {
     
     override func tearDown() {
         self.notificationCenter = nil
-        self.notificationDelegate = nil
         self.user1 = nil
         self.user2 = nil
         self.conversation1 = nil
@@ -105,7 +94,7 @@ extension LocalNotificationDispatcherTests {
     func testThatItCreatesNotificationFromMessagesIfNotActive() {
         // GIVEN
         let text = UUID.create().transportString()
-        let message = self.conversation1.appendMessage(withText: text) as! ZMClientMessage
+        let message = self.conversation1.append(text: text) as! ZMClientMessage
         message.sender = self.user1
         
         // WHEN
@@ -115,7 +104,6 @@ extension LocalNotificationDispatcherTests {
         // THEN
         XCTAssertEqual(self.sut.messageNotifications.notifications.count, 1)
         XCTAssertEqual(self.scheduledRequests.count, 1)
-        XCTAssertEqual(self.receivedForegroundNotifications.count, 0)
         
         guard
             let note = self.sut.messageNotifications.notifications.first,
@@ -145,7 +133,6 @@ extension LocalNotificationDispatcherTests {
         // THEN
         XCTAssertEqual(self.sut.messageNotifications.notifications.count, 1)
         XCTAssertEqual(self.scheduledRequests.count, 1)
-        XCTAssertEqual(self.receivedForegroundNotifications.count, 0)
         
         guard
             let note = self.sut.messageNotifications.notifications.first,
@@ -157,30 +144,11 @@ extension LocalNotificationDispatcherTests {
         XCTAssertEqual(note.id.uuidString, request.identifier)
     }
 
-    func testThatItForwardsNotificationFromMessagesIfActive() {
-        // GIVEN
-        let text = UUID.create().transportString()
-        let message = self.conversation1.appendMessage(withText: text) as! ZMClientMessage
-        message.sender = self.user1
-        self.mockUserSession.operationStatus.isInBackground = false
-
-        // WHEN
-        self.sut.process(message)
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // THEN
-        XCTAssertEqual(self.scheduledRequests.count, 0)
-        XCTAssertEqual(self.receivedForegroundNotifications.count, 1)
-        
-        guard let note = self.receivedForegroundNotifications.first else { return XCTFail() }
-        XCTAssertTrue(note.body.contains(text))
-    }
-
     func testThatItAddsNotificationOfDifferentConversationsToTheList() {
         // GIVEN
-        let message1 = self.conversation1.appendMessage(withText: "foo1") as! ZMClientMessage
+        let message1 = self.conversation1.append(text: "foo1") as! ZMClientMessage
         message1.sender = self.user1
-        let message2 = self.conversation2.appendMessage(withText: "boo2") as! ZMClientMessage
+        let message2 = self.conversation2.append(text: "boo2") as! ZMClientMessage
         message2.sender = self.user2
 
         // WHEN
@@ -209,7 +177,7 @@ extension LocalNotificationDispatcherTests {
     func testThatWhenFailingAMessageItSchedulesANotification() {
         self.syncMOC.performGroupedBlockAndWait {
             // GIVEN
-            let message = self.conversation1.appendMessage(withText: "bar") as! ZMClientMessage
+            let message = self.conversation1.append(text: "bar") as! ZMClientMessage
             message.sender = self.user1
 
             // WHEN
@@ -254,7 +222,7 @@ extension LocalNotificationDispatcherTests {
 
     func testThatItCancelsReadNotificationsIfTheLastReadChanges() {
         // GIVEN
-        let message = conversation1.appendMessage(withText: "foo") as! ZMClientMessage
+        let message = conversation1.append(text: "foo") as! ZMClientMessage
         message.sender = user1
         let note1 = ZMLocalNotification(expiredMessage: message)!
         let note2 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
@@ -276,7 +244,7 @@ extension LocalNotificationDispatcherTests {
         // GIVEN
         self.syncMOC.setPersistentStoreMetadata(NSNumber(value: true), key: LocalNotificationDispatcher.ZMShouldHideNotificationContentKey)
         self.syncMOC.saveOrRollback()
-        let message = self.conversation1.appendMessage(withText: "foo") as! ZMClientMessage
+        let message = self.conversation1.append(text: "foo") as! ZMClientMessage
         message.sender = self.user1
 
         // WHEN
@@ -286,13 +254,13 @@ extension LocalNotificationDispatcherTests {
         // THEN
         XCTAssertEqual(self.scheduledRequests.count, 1)
         XCTAssertEqual(self.scheduledRequests[0].content.body, "New message")
-        XCTAssertEqual(self.scheduledRequests[0].content.sound, UNNotificationSound(named: "new_message_apns.caf"))
+        XCTAssertEqual(self.scheduledRequests[0].content.sound, UNNotificationSound(named: convertToUNNotificationSoundName("new_message_apns.caf")))
     }
 
     func testThatItDoesNotCreateNotificationForTwoMessageEventsWithTheSameNonce() {
 
         // GIVEN
-        let message = self.conversation1.appendMessage(withText: "foobar") as! ZMClientMessage
+        let message = self.conversation1.append(text: "foobar") as! ZMClientMessage
         message.sender = self.user1
 
         // WHEN
@@ -316,7 +284,7 @@ extension LocalNotificationDispatcherTests {
         // GIVEN
         let url = Bundle(for: LocalNotificationDispatcherTests.self).url(forResource: "video", withExtension: "mp4")
         let audioMetadata = ZMAudioMetadata(fileURL: url!, duration: 100)
-        let message = self.conversation1.appendMessage(with: audioMetadata) as! ZMAssetClientMessage
+        let message = self.conversation1.append(file: audioMetadata) as! ZMAssetClientMessage
         message.sender = self.user1
 
         // WHEN
@@ -353,7 +321,6 @@ extension LocalNotificationDispatcherTests {
 
         // THEN
         XCTAssertEqual(self.scheduledRequests.count, 1)
-        XCTAssertEqual(self.receivedForegroundNotifications.count, 0)
         XCTAssertTrue(self.scheduledRequests.first!.content.body.contains(text))
     }
 
@@ -371,7 +338,6 @@ extension LocalNotificationDispatcherTests {
 
         // THEN
         XCTAssertEqual(self.scheduledRequests.count, 0)
-        XCTAssertEqual(self.receivedForegroundNotifications.count, 0)
     }
 
     func testThatItCancelsNotificationWhenUserDeletesLike() {
@@ -380,9 +346,10 @@ extension LocalNotificationDispatcherTests {
         let sender = ZMUser.insertNewObject(in: self.syncMOC)
         sender.remoteIdentifier = UUID.create()
 
-        let message = conversation.appendMessage(withText: "text") as! ZMClientMessage
-        let reaction1 = ZMGenericMessage(emojiString: "❤️", messageID: message.nonce!, nonce: UUID.create())
-        let reaction2 = ZMGenericMessage(emojiString: "", messageID: message.nonce!, nonce: UUID.create())
+        let message = conversation.append(text: "text") as! ZMClientMessage
+        
+        let reaction1 = ZMGenericMessage.message(content: ZMReaction(emoji: "❤️", messageID: message.nonce!))
+        let reaction2 = ZMGenericMessage.message(content: ZMReaction(emoji: "", messageID: message.nonce!))
 
         let event1 = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction1, senderID: sender.remoteIdentifier!)
         let event2 = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction2, senderID: sender.remoteIdentifier!)
@@ -405,7 +372,7 @@ extension LocalNotificationDispatcherTests {
 extension LocalNotificationDispatcherTests {
     
     func payloadForEncryptedOTRMessage(text: String, nonce: UUID) -> [String: Any] {
-        let message = ZMGenericMessage.message(text: text, nonce: nonce)
+        let message = ZMGenericMessage.message(content: ZMText.text(with: text), nonce: nonce)
         return self.payloadForOTRAsset(with: message)
     }
     
@@ -445,13 +412,7 @@ extension LocalNotificationDispatcherTests {
     }
 }
 
-
-class MockForegroundNotificationDelegate: NSObject, ForegroundNotificationsDelegate {
-
-    var receivedLocalNotifications: [ZMLocalNotification] = []
-
-    func didReceieveLocal(notification: ZMLocalNotification, application: ZMApplication) {
-        self.receivedLocalNotifications.append(notification)
-    }
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertToUNNotificationSoundName(_ input: String) -> UNNotificationSoundName {
+	return UNNotificationSoundName(rawValue: input)
 }
-

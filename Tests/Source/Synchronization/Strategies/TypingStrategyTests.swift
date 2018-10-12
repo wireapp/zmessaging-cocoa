@@ -191,7 +191,7 @@ extension TypingStrategyTests {
         // given
         
         //edit message is an allowed type that can fire a otr-message-add notification
-        let message = ZMGenericMessage(editMessage: UUID.create(), newText: "demo", nonce: UUID.create())
+        let message = ZMGenericMessage.message(content: ZMMessageEdit.edit(with: ZMText.text(with: "demo"), replacingMessageId: UUID.create()))
         let payload = payloadForOTRMessageAdd(with: message) as ZMTransportData
         let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
         
@@ -207,16 +207,16 @@ extension TypingStrategyTests {
     
     func testThatDoesntForwardOTRMessageAddEventsForNonTextTypes() {
         // given
-        //delete-message should not fire an Add Events notification
-        let message = ZMGenericMessage(deleteMessage: UUID.create(), nonce: UUID.create())
+        // delete-message should not fire an Add Events notification
+        let message = ZMGenericMessage.message(content: ZMMessageDelete(messageID: UUID.create()))
         tryToForwardOTRMessageWithoutReply(with: message)
     }
     
     func testThatDoesntForwardOTRMessageAddEventsForConfirmations() {
         
         // given
-        //confirmations should not fire an Add Events notification
-        let message = ZMGenericMessage(confirmation: UUID.create(), type: .DELIVERED, nonce: UUID.create())
+        // confirmations should not fire an Add Events notification
+        let message = ZMGenericMessage.message(content: ZMConfirmation.confirm(messageId: UUID.create()))
         tryToForwardOTRMessageWithoutReply(with: message)
     }
     
@@ -491,7 +491,7 @@ extension TypingStrategyTests {
         })
 
         // when
-        _ = conversation.appendMessage(withText: "foo")
+        _ = conversation.append(text: "foo")
         
         // then
         withExtendedLifetime(token) {
@@ -524,7 +524,7 @@ extension TypingStrategyTests {
                 TypingStrategy.clearTranscoderStateForTyping(in: conversation)
                 XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             } else if delay == .appendMessage {
-                conversation.appendMessage(withText: "foo")
+                conversation.append(text: "foo")
                 XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             }
         }

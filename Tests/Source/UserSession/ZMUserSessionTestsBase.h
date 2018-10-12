@@ -28,7 +28,6 @@
 # import "ZMUserSession+Registration.h"
 # import "ZMUserSessionRegistrationNotification.h"
 
-#import "ZMOperationLoop+Background.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMCredentials.h"
 #import "ZMSyncStrategy.h"

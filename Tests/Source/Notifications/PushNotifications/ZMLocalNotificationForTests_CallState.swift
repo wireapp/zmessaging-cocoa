@@ -108,7 +108,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         // then
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "called")
-        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.conversation.rawValue)
+        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.conversationWithMute.rawValue)
         XCTAssertEqual(note.sound, .newMessage)
     }
     

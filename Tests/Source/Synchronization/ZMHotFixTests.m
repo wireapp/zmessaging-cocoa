@@ -398,7 +398,7 @@
         conversation.conversationType = ZMConversationTypeOneOnOne;
         conversation.remoteIdentifier = NSUUID.createUUID;
 
-        uploadedImageMessage = [conversation appendOTRMessageWithImageData:self.mediumJPEGData nonce:NSUUID.createUUID];
+        uploadedImageMessage = (id)[conversation appendImageFromData:self.mediumJPEGData nonce:NSUUID.createUUID];
         [uploadedImageMessage markAsSent];
         uploadedImageMessage.uploadState = AssetUploadStateDone;
         uploadedImageMessage.assetId = NSUUID.createUUID;
@@ -406,7 +406,7 @@
         XCTAssertTrue(uploadedImageMessage.hasDownloadedImage);
         XCTAssertEqual(uploadedImageMessage.uploadState, AssetUploadStateDone);
 
-        notUploadedImageMessage = [conversation appendOTRMessageWithImageData:self.mediumJPEGData nonce:NSUUID.createUUID];
+        notUploadedImageMessage = (id)[conversation appendImageFromData:self.mediumJPEGData nonce:NSUUID.createUUID];
         notUploadedImageMessage.uploadState = AssetUploadStateUploadingFullAsset;
         XCTAssertFalse(notUploadedImageMessage.delivered);
         XCTAssertTrue(notUploadedImageMessage.hasDownloadedImage);

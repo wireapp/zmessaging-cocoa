@@ -62,7 +62,6 @@ extension ZMConversationTranscoder {
             localNotificationDispatcher.process(message)
         }
     }
-
 }
 
 extension ZMConversation {
@@ -72,5 +71,46 @@ extension ZMConversation {
     
     @objc public var accessRolePayload: String? {
         return accessRole?.rawValue
+    }
+    
+    @objc
+    public func requestForUpdatingSelfInfo() -> ZMUpstreamRequest? {
+        guard let remoteIdentifier = self.remoteIdentifier else {
+            return nil
+        }
+        
+        var payload: [String: Any] = [:]
+        var updatedKeys: Set<String> = Set()
+        
+        if hasLocalModifications(forKey: ZMConversationSilencedChangedTimeStampKey) {
+            if silencedChangedTimestamp == nil {
+                silencedChangedTimestamp = Date()
+            }
+            
+            payload[ZMConversationInfoOTRMutedValueKey] = mutedMessageTypes != .none
+            payload[ZMConversationInfoOTRMutedStatusValueKey] = mutedMessageTypes.rawValue
+            payload[ZMConversationInfoOTRMutedReferenceKey] = silencedChangedTimestamp?.transportString()
+            
+            updatedKeys.insert(ZMConversationSilencedChangedTimeStampKey)
+        }
+        
+        if hasLocalModifications(forKey: ZMConversationArchivedChangedTimeStampKey) {
+            if archivedChangedTimestamp == nil {
+                archivedChangedTimestamp = Date()
+            }
+            
+            payload[ZMConversationInfoOTRArchivedValueKey] = isArchived
+            payload[ZMConversationInfoOTRArchivedReferenceKey] = archivedChangedTimestamp?.transportString()
+            
+            updatedKeys.insert(ZMConversationArchivedChangedTimeStampKey)
+        }
+        
+        guard !updatedKeys.isEmpty else {
+            return nil
+        }
+        
+        let path = NSString.path(withComponents: [ConversationsPath, remoteIdentifier.transportString(), "self"])
+        let request = ZMTransportRequest(path: path, method: .methodPUT, payload: payload as NSDictionary)
+        return ZMUpstreamRequest(keys: updatedKeys, transportRequest: request)
     }
 }

@@ -18,9 +18,26 @@
 
 import Foundation
 
+extension PushNotificationCategory {
+    func addMuteIfNeeded(hasTeam: Bool) -> PushNotificationCategory {
+        guard !hasTeam else {
+            return self
+        }
+        
+        switch self {
+        case .conversation:
+            return .conversationWithMute
+        case .conversationWithLike:
+            return .conversationWithLikeAndMute
+        default:
+            return self
+        }
+    }
+}
+
 extension LocalNotificationType {
     
-    var category: String {
+    func category(hasTeam: Bool) -> String {
         let category: PushNotificationCategory
         
         switch self {
@@ -31,24 +48,24 @@ extension LocalNotificationType {
             case .terminating(reason: .timeout):
                 category = .missedCall
             default :
-                category = .conversation
+                category = PushNotificationCategory.conversation.addMuteIfNeeded(hasTeam: hasTeam)
             }
         case .event(let eventType):
             switch eventType {
             case .connectionRequestPending, .conversationCreated:
                 category = .connect
             default:
-                category = .conversation
+                category = PushNotificationCategory.conversation.addMuteIfNeeded(hasTeam: hasTeam)
             }
         case .message(let contentType):
             switch contentType {
             case .audio, .video, .fileUpload, .image, .text, .location:
-                category = .conversationIncludingLike
+                category = PushNotificationCategory.conversationWithLike.addMuteIfNeeded(hasTeam: hasTeam)
             default:
-                category = .conversation
+                category = PushNotificationCategory.conversation.addMuteIfNeeded(hasTeam: hasTeam)
             }
         case .failedMessage:
-            category = .conversation
+            category = PushNotificationCategory.conversation.addMuteIfNeeded(hasTeam: hasTeam)
         }
         
         return category.rawValue

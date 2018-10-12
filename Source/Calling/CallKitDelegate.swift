@@ -90,7 +90,7 @@ public class CallKitDelegate : NSObject {
         configuration.ringtoneSound = NotificationSound.call.name
         
         if let image = UIImage(named: "logo") {
-            configuration.iconTemplateImageData = UIImagePNGRepresentation(image)
+            configuration.iconTemplateImageData = image.pngData()
         }
         
         return configuration
@@ -427,7 +427,7 @@ extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMisse
         switch callState {
         case .incoming(video: let video, shouldRing: let shouldRing, degraded: _):
             if shouldRing {
-                if !conversation.isSilenced {
+                if conversation.mutedMessageTypes == .none {
                     reportIncomingCall(from: caller, in: conversation, video: video)
                 }
             } else {

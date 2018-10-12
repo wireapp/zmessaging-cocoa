@@ -62,18 +62,14 @@ class CallStateObserverTests : MessagingTest {
 
             self.syncMOC.saveOrRollback()
             
-            self.localNotificationDispatcher = LocalNotificationDispatcher(
-                in: self.syncMOC,
-                foregroundNotificationDelegate: MockForegroundNotificationDelegate(),
-                application: self.application,
-                operationStatus: self.mockUserSession.operationStatus)
+            self.localNotificationDispatcher = LocalNotificationDispatcher(in: self.syncMOC)
             
             self.notificationCenter = UserNotificationCenterMock()
             self.localNotificationDispatcher.notificationCenter = self.notificationCenter
         }
 
-        senderUI = uiMOC.object(with: sender.objectID) as! ZMUser
-        conversationUI = uiMOC.object(with: conversation.objectID) as! ZMConversation
+        senderUI = uiMOC.object(with: sender.objectID) as? ZMUser
+        conversationUI = uiMOC.object(with: conversation.objectID) as? ZMConversation
         sut = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
         uiMOC.zm_callCenter = mockCallCenter
     }
@@ -93,8 +89,10 @@ class CallStateObserverTests : MessagingTest {
     }
     
     func testThatInstanceDoesntHaveRetainCycles() {
-        weak var instance = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
-        XCTAssertNil(instance)
+        var instance: CallStateObserver? = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
+        weak var weakInstance = instance
+        instance = nil
+        XCTAssertNil(weakInstance)
     }
     
     func testThatMissedCallMessageIsAppendedForCanceledCallByReceiver() {
@@ -225,7 +223,7 @@ class CallStateObserverTests : MessagingTest {
     func testThatWeSendNotificationWhenCallIsEstablished() {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
-        mockCallCenter?.mockActiveCalls = [conversationUI.remoteIdentifier! : .established]
+        mockCallCenter?.setMockCallState(.established, conversationId: conversation.remoteIdentifier!, callerId: mockCallCenter!.selfUserId, isVideo: false)
         mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
         
         // expect
@@ -241,7 +239,7 @@ class CallStateObserverTests : MessagingTest {
     func testThatWeSendNotificationWhenCallHasEstablishedDataChannel() {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
-        mockCallCenter?.mockActiveCalls = [conversationUI.remoteIdentifier! : .establishedDataChannel]
+        mockCallCenter?.setMockCallState(.establishedDataChannel, conversationId: conversation.remoteIdentifier!, callerId: mockCallCenter!.selfUserId, isVideo: false)
         mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
         
         // expect
@@ -257,7 +255,7 @@ class CallStateObserverTests : MessagingTest {
     func testThatWeSendNotificationWhenCallTerminates() {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
-        mockCallCenter?.mockActiveCalls = [conversationUI.remoteIdentifier! : .established]
+        mockCallCenter?.setMockCallState(.established, conversationId: conversation.remoteIdentifier!, callerId: mockCallCenter!.selfUserId, isVideo: false)
         mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
         sut.callCenterDidChange(callState: .established, conversation: conversationUI, caller: senderUI, timestamp: Date(), previousCallState: nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -272,7 +270,7 @@ class CallStateObserverTests : MessagingTest {
         }
         
         // when
-        mockCallCenter?.mockActiveCalls = [:]
+        mockCallCenter?.removeMockActiveCalls()
         sut.callCenterDidChange(callState: .none, conversation: conversationUI, caller: senderUI, timestamp: Date(), previousCallState: nil)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
@@ -319,7 +317,7 @@ class CallStateObserverTests : MessagingTest {
         // given
         syncMOC.performGroupedBlock {
             self.conversation.lastServerTimeStamp = Date()
-            self.conversation.appendMessage(withText: "test")
+            self.conversation.append(text: "test")
             self.conversation.clearMessageHistory()
             XCTAssert(self.conversation.isArchived)
             XCTAssertNotNil(self.conversation.clearedTimeStamp)
@@ -373,9 +371,9 @@ class CallStateObserverTests : MessagingTest {
         syncMOC.performGroupedBlock {
             self.conversation.lastServerTimeStamp = Date()
             self.conversation.isArchived = true
-            self.conversation.isSilenced = true
+            self.conversation.mutedMessageTypes = .all
             XCTAssert(self.conversation.isArchived)
-            XCTAssert(self.conversation.isSilenced)
+            XCTAssertEqual(self.conversation.mutedMessageTypes, .all)
             XCTAssertNil(self.conversation.clearedTimeStamp)
             self.syncMOC.saveOrRollback()
         }
@@ -394,7 +392,7 @@ class CallStateObserverTests : MessagingTest {
         
         // Then
         XCTAssert(conversationUI.isArchived)
-        XCTAssert(conversationUI.isSilenced)
+        XCTAssertEqual(conversationUI.mutedMessageTypes, .all)
     }
     
     func testThatSilencedUnarchivedConversationsGetUpdatedForIncomingCalls() {
@@ -403,14 +401,14 @@ class CallStateObserverTests : MessagingTest {
         let startDate = Date(timeIntervalSinceReferenceDate: 12345678)
         
         syncMOC.performGroupedBlock {
-            self.conversation.isSilenced = true
+            self.conversation.mutedMessageTypes = .all
             self.conversation.isArchived = false
             self.conversation.lastServerTimeStamp = Date()
             self.conversation.lastReadServerTimeStamp = self.conversation.lastServerTimeStamp
             self.conversation.remoteIdentifier = .create()
             self.conversation.lastModifiedDate = startDate
             
-            XCTAssertTrue(self.conversation.isSilenced)
+            XCTAssertEqual(self.conversation.mutedMessageTypes, .all)
             XCTAssertFalse(self.conversation.isArchived)
             
             otherConvo = ZMConversation.insertNewObject(in: self.syncMOC)

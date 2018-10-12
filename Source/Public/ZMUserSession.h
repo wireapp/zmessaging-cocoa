@@ -79,7 +79,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 
 @property (nonatomic, readonly) id <LocalStoreProviderProtocol> storeProvider;
 @property (nonatomic, weak) id<SessionManagerType> sessionManager;
-@property (nonatomic, weak) id<ZMRequestsToOpenViewsDelegate> requestToOpenViewDelegate;
 @property (nonatomic, weak) id<ZMThirdPartyServicesDelegate> thirdPartyServicesDelegate;
 @property (atomic, readonly) ZMNetworkState networkState;
 @property (atomic) BOOL isNotificationContentHidden;
@@ -132,17 +131,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 @property (nonatomic, readonly) CallingRequestStrategy *callingStrategy;
 
 @end
-
-
-@protocol ZMRequestsToOpenViewsDelegate <NSObject>
-
-/// This will be called when the UI should display a conversation, message or the conversation list.
-- (void)userSession:(ZMUserSession *)userSession showMessage:(ZMMessage *)message inConversation:(ZMConversation *)conversation;
-- (void)userSession:(ZMUserSession *)userSession showConversation:(ZMConversation *)conversation;
-- (void)showConversationListForUserSession:(ZMUserSession *)userSession;
-
-@end
-
 
 
 @protocol ZMThirdPartyServicesDelegate <NSObject>

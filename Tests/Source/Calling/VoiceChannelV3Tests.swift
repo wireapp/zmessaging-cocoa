@@ -53,7 +53,7 @@ class VoiceChannelV3Tests : MessagingTest {
     
     func testThatItStartsACall_whenTheresNotAnIncomingCall() {
         // given
-        wireCallCenterMock?.mockCallState = .none
+        wireCallCenterMock?.removeMockActiveCalls()
         
         // when
         _ = sut.join(video: false)
@@ -64,8 +64,8 @@ class VoiceChannelV3Tests : MessagingTest {
     
     func testThatItAnswers_whenTheresAnIncomingCall() {
         // given
-        wireCallCenterMock?.mockCallState = .incoming(video: false, shouldRing: false, degraded: false)
-        
+        wireCallCenterMock?.setMockCallState(.incoming(video: false, shouldRing: false, degraded: false), conversationId: conversation!.remoteIdentifier!, callerId: UUID(), isVideo: false)
+
         // when
         _ = sut.join(video: false)
         
@@ -75,8 +75,8 @@ class VoiceChannelV3Tests : MessagingTest {
     
     func testThatItDoesntAnswer_whenTheresAnIncomingDegradedCall() {
         // given
-        wireCallCenterMock?.mockCallState = .incoming(video: false, shouldRing: false, degraded: true)
-        
+        wireCallCenterMock?.setMockCallState(.incoming(video: false, shouldRing: false, degraded: true), conversationId: conversation!.remoteIdentifier!, callerId: UUID(), isVideo: false)
+
         // when
         _ = sut.join(video: false)
         

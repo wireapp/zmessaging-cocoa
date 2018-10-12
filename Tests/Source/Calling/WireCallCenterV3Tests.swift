@@ -50,11 +50,7 @@ class WireCallCenterV3Tests: MessagingTest {
     var groupConversationID : UUID!
     var clientID: String!
     var mockTransport : WireCallCenterTransportMock!
-    var oneOnOneConversationIDRef : [CChar]!
-    var groupConversationIDRef : [CChar]!
-    var otherUserIDRef : [CChar]!
-    var context : UnsafeMutableRawPointer!
-    
+
     override func setUp() {
         super.setUp()
         
@@ -79,10 +75,6 @@ class WireCallCenterV3Tests: MessagingTest {
         mockAVSWrapper = MockAVSWrapper(userId: selfUserID, clientId: clientID, observer: nil)
         mockTransport = WireCallCenterTransportMock()
         sut = WireCallCenterV3(userId: selfUserID, clientId: clientID, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: mockTransport)
-        oneOnOneConversationIDRef = oneOnOneConversationID.transportString().cString(using: .utf8)
-        groupConversationIDRef = groupConversationID.transportString().cString(using: .utf8)
-        otherUserIDRef = otherUserID.transportString().cString(using: .utf8)
-        context = Unmanaged.passUnretained(self.sut).toOpaque()
     }
     
     override func tearDown() {
@@ -92,15 +84,11 @@ class WireCallCenterV3Tests: MessagingTest {
         selfUserID = nil
         oneOnOneConversation = nil
         oneOnOneConversationID = nil
-        oneOnOneConversationIDRef = nil
         groupConversation = nil
         groupConversationID = nil
-        groupConversationIDRef = nil
         mockTransport = nil
         mockAVSWrapper = nil
-        otherUserIDRef = nil
-        context = nil
-        
+
         super.tearDown()
     }
     
@@ -125,45 +113,41 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatTheIncomingCallHandlerPostsTheRightNotification_IsVideo() {
         checkThatItPostsNotification(expectedCallState: .incoming(video: true, shouldRing: false, degraded: false), expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
-            WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef,
-                                               messageTime: 0,
-                                               userId: otherUserIDRef,
-                                               isVideoCall: 1,
-                                               shouldRing: 0,
-                                               contextRef: context)
+            sut.handleIncomingCall(conversationId: oneOnOneConversationID,
+                                   messageTime: Date(),
+                                   userId: otherUserID,
+                                   isVideoCall: true,
+                                   shouldRing: false)
         }
     }
     
     func testThatTheIncomingCallHandlerPostsTheRightNotification() {
         checkThatItPostsNotification(expectedCallState: .incoming(video: false, shouldRing: false, degraded: false), expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
-            WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef,
-                                               messageTime: 0,
-                                               userId: otherUserIDRef,
-                                               isVideoCall: 0,
-                                               shouldRing: 0,
-                                               contextRef: context)
+            sut.handleIncomingCall(conversationId: oneOnOneConversationID,
+                                   messageTime: Date(),
+                                   userId: otherUserID,
+                                   isVideoCall: false,
+                                   shouldRing: false)
         }
     }
     
     func testThatTheIncomingCallHandlerPostsTheRightNotification_IsVideo_ShouldRing() {
         checkThatItPostsNotification(expectedCallState: .incoming(video: true, shouldRing: true, degraded: false), expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
-            WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef,
-                                               messageTime: 0,
-                                               userId: otherUserIDRef,
-                                               isVideoCall: 1,
-                                               shouldRing: 1,
-                                               contextRef: context)
+            sut.handleIncomingCall(conversationId: oneOnOneConversationID,
+                                   messageTime: Date(),
+                                   userId: otherUserID,
+                                   isVideoCall: true,
+                                   shouldRing: true)
         }
     }
     
     func testThatTheIncomingCallHandlerPostsTheRightNotification_ShouldRing() {
         checkThatItPostsNotification(expectedCallState: .incoming(video: false, shouldRing: true, degraded: false), expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
-            WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef,
-                                               messageTime: 0,
-                                               userId: otherUserIDRef,
-                                               isVideoCall: 0,
-                                               shouldRing: 1,
-                                               contextRef: context)
+            sut.handleIncomingCall(conversationId: oneOnOneConversationID,
+                                   messageTime: Date(),
+                                   userId: otherUserID,
+                                   isVideoCall: false,
+                                   shouldRing: true)
         }
     }
     
@@ -172,9 +156,6 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         let conversationId = UUID()
         let userId = UUID()
-        let conversationIdRef = conversationId.transportString().cString(using: .utf8)
-        let userIdRef = userId.transportString().cString(using: .utf8)
-        let context = Unmanaged.passUnretained(self.sut).toOpaque()
         let isVideo = false
         let timestamp = Date()
         
@@ -189,7 +170,7 @@ class WireCallCenterV3Tests: MessagingTest {
         }
         
         // when
-        WireSyncEngine.missedCallHandler(conversationId: conversationIdRef, messageTime: UInt32(timestamp.timeIntervalSince1970), userId: userIdRef, isVideoCall: 0, contextRef: context)
+        sut.handleMissedCall(conversationId: conversationId, messageTime: timestamp, userId: userId, isVideoCall: false)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -198,33 +179,33 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatTheAnsweredCallHandlerPostsTheRightNotification() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         checkThatItPostsNotification(expectedCallState: .answered(degraded: false), expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
-            WireSyncEngine.answeredCallHandler(conversationId: oneOnOneConversationIDRef, contextRef: context)
+            sut.handleAnsweredCall(conversationId: oneOnOneConversationID)
         }
     }
     
     func testThatTheEstablishedHandlerPostsTheRightNotification() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         checkThatItPostsNotification(expectedCallState: .established, expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
-            WireSyncEngine.establishedCallHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
+            sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID)
         }
     }
     
     func testThatTheEstablishedHandlerSetsTheStartTime() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNil(sut.establishedDate)
         
         // when
         checkThatItPostsNotification(expectedCallState: .established, expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
-            WireSyncEngine.establishedCallHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
+            sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID)
         }
         
         // then
@@ -233,19 +214,19 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatTheEstablishedHandlerDoesntSetTheStartTimeIfCallIsAlreadyEstablished() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNil(sut.establishedDate)
         
         // call is established
-        WireSyncEngine.establishedCallHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNotNil(sut.establishedDate)
         let previousEstablishedDate = sut.establishedDate
         spinMainQueue(withTimeout: 0.1)
         
         // when
-        WireSyncEngine.establishedCallHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -254,28 +235,28 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatTheClosedCallHandlerPostsTheRightNotification() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         checkThatItPostsNotification(expectedCallState: .terminating(reason: .canceled), expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
-            WireSyncEngine.closedCallHandler(reason: WCALL_REASON_CANCELED, conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, contextRef: context)
+            sut.handleCallEnd(reason: .canceled, conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID)
         }
     }
     
     func testThatTheMediaStopppedCallHandlerPostsTheRightNotification() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         checkThatItPostsNotification(expectedCallState: .mediaStopped, expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
-            WireSyncEngine.mediaStoppedChangeHandler(conversationIdRef: oneOnOneConversationIDRef, contextRef: context)
+            self.sut.handleMediaStopped(conversationId: oneOnOneConversationID)
         }
     }
     
     func testThatOtherIncomingCallsAreRejectedWhenWeAnswerCall() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
-        WireSyncEngine.incomingCallHandler(conversationId: groupConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
+        sut.handleIncomingCall(conversationId: groupConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
@@ -288,7 +269,7 @@ class WireCallCenterV3Tests: MessagingTest {
     func testThatOtherOutgoingCallsAreCanceledWhenWeAnswerCall() {
         // given
         XCTAssertTrue(sut.startCall(conversation: groupConversation, video: false))
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
@@ -300,7 +281,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatOtherIncomingCallsAreRejectedWhenWeStartCall() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
@@ -312,7 +293,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatItRejectsACall_Group() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: groupConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: groupConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // expect
@@ -326,7 +307,7 @@ class WireCallCenterV3Tests: MessagingTest {
         
         // when
         sut.rejectCall(conversationId: oneOnOneConversationID)
-        WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING, conversationId: groupConversationIDRef, messageTime: 0, userId: otherUserIDRef, contextRef: context)
+        sut.handleCallEnd(reason: .stillOngoing, conversationId: groupConversationID, messageTime: Date(), userId: otherUserID)
 
         // then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
@@ -335,7 +316,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatItRejectsACall_1on1() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // expect
@@ -349,7 +330,7 @@ class WireCallCenterV3Tests: MessagingTest {
         
         // when
         sut.rejectCall(conversationId: oneOnOneConversationID)
-        WireSyncEngine.closedCallHandler(reason: WCALL_REASON_STILL_ONGOING, conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, contextRef: context)
+        sut.handleCallEnd(reason: .stillOngoing, conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID)
 
         // then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
@@ -358,7 +339,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatItAnswersACall_oneToOne() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         checkThatItPostsNotification(expectedCallState: .answered(degraded: false), expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
@@ -378,8 +359,8 @@ class WireCallCenterV3Tests: MessagingTest {
             user.remoteIdentifier = UUID()
             groupConversation.mutableLastServerSyncedActiveParticipants.add(user)
         }
-        
-        WireSyncEngine.incomingCallHandler(conversationId: groupConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+
+        sut.handleIncomingCall(conversationId: groupConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         checkThatItPostsNotification(expectedCallState: .answered(degraded: false), expectedCallerId: otherUserID, expectedConversationId: groupConversationID) {
@@ -393,7 +374,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatItAnswersACall_audioOnly() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 1, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: true, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         checkThatItPostsNotification(expectedCallState: .answered(degraded: false), expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
@@ -408,7 +389,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatItAnswersACall_withVideo() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 1, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: true, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         checkThatItPostsNotification(expectedCallState: .answered(degraded: false), expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
@@ -495,7 +476,7 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatItSetsTheCallStartTimeBeforePostingTheNotification() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNil(sut.establishedDate)
         
@@ -506,8 +487,8 @@ class WireCallCenterV3Tests: MessagingTest {
         }
         
         // when
-        WireSyncEngine.establishedCallHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
-        
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID)
+
         // then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
     }
@@ -516,15 +497,15 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         let userId = UUID()
         let clientId = "foo"
-        let context = Unmanaged.passUnretained(self.sut).toOpaque()
         let data = self.verySmallJPEGData()
+        let callEvent = CallEvent(data: data, currentTimestamp: Date(), serverTimestamp: Date(), conversationId: oneOnOneConversationID, userId: userId, clientId: clientId)
         
         // when
-        sut.received(data: data, currentTimestamp: Date(), serverTimestamp: Date(), conversationId: oneOnOneConversationID, userId: userId, clientId: clientId)
+        sut.processCallEvent(callEvent, completionHandler: {})
         XCTAssertEqual((sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.count, 0)
         
         // and when
-        WireSyncEngine.readyHandler(version: 2, contextRef: context)
+        sut.setCallReady(version: 3)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -537,16 +518,59 @@ class WireCallCenterV3Tests: MessagingTest {
         }
     }
     
+    func testThatItCallProcessCallEventCompletionHandler() {
+        // given
+        let userId = UUID()
+        let clientId = "foo"
+        let data = self.verySmallJPEGData()
+        let callEvent = CallEvent(data: data, currentTimestamp: Date(), serverTimestamp: Date(), conversationId: oneOnOneConversationID, userId: userId, clientId: clientId)
+        sut.setCallReady(version: 3)
+        
+        // expect
+        let calledCompletionHandler = expectation(description: "processCallEvent completion handler called")
+        
+        // when
+        sut.processCallEvent(callEvent, completionHandler: {
+            calledCompletionHandler.fulfill()
+        })
+        
+        // then
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
+    func testThatItCallProcessCallEventCompletionHandlerWhenEmptyingBuffer() {
+        // given
+        let userId = UUID()
+        let clientId = "foo"
+        let data = self.verySmallJPEGData()
+        let callEvent = CallEvent(data: data, currentTimestamp: Date(), serverTimestamp: Date(), conversationId: oneOnOneConversationID, userId: userId, clientId: clientId)
+        
+        // expect
+        let calledCompletionHandler = expectation(description: "processCallEvent completion handler called")
+        
+        // when
+        sut.processCallEvent(callEvent, completionHandler: {
+            calledCompletionHandler.fulfill()
+        })
+        XCTAssertEqual((sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.count, 0)
+        
+        // and when
+        sut.setCallReady(version: 2)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
     func testThatCBRIsEnabledOnAudioCBRChangeHandler_whenCallIsEstablished() {
         // given
-        let context = Unmanaged.passUnretained(self.sut).toOpaque()
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        WireSyncEngine.establishedCallHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
-        WireSyncEngine.constantBitRateChangeHandler(userId: otherUserIDRef, enabled: 1, contextRef: context)
+        sut.handleConstantBitRateChange(enabled: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -555,194 +579,190 @@ class WireCallCenterV3Tests: MessagingTest {
     
     func testThatCBRIsEnabledOnAudioCBRChangeHandler_whenDataChannelIsEstablished() {
         // given
-        let context = Unmanaged.passUnretained(self.sut).toOpaque()
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        WireSyncEngine.dataChannelEstablishedHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
+        sut.handleDataChannelEstablishement(conversationId: oneOnOneConversationID, userId: otherUserID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // when
-        WireSyncEngine.constantBitRateChangeHandler(userId: otherUserIDRef, enabled: 1, contextRef: context)
+        sut.handleConstantBitRateChange(enabled: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // then
         XCTAssertTrue(sut.isContantBitRate(conversationId: oneOnOneConversationID))
     }
-    
+
     func testThatCBRIsDisabledOnAudioCBRChangeHandler() {
         // given
-        let context = Unmanaged.passUnretained(self.sut).toOpaque()
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        WireSyncEngine.establishedCallHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        WireSyncEngine.constantBitRateChangeHandler(userId: otherUserIDRef, enabled: 1, contextRef: context)
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))        
+
+        sut.handleConstantBitRateChange(enabled: true)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertTrue(sut.isContantBitRate(conversationId: oneOnOneConversationID))
-        
+
         // when
-        WireSyncEngine.constantBitRateChangeHandler(userId: otherUserIDRef, enabled: 0, contextRef: context)
+        sut.handleConstantBitRateChange(enabled: false)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
         XCTAssertFalse(sut.isContantBitRate(conversationId: oneOnOneConversationID))
     }
-    
+
     func testThatCBRIsNotEnabledOnAudioCBRChangeHandlerWhenCallIsNotEstablished() {
         // given
-        let context = Unmanaged.passUnretained(self.sut).toOpaque()
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // when
-        WireSyncEngine.constantBitRateChangeHandler(userId: otherUserIDRef, enabled: 0, contextRef: context)
+        sut.handleConstantBitRateChange(enabled: false)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // then
         XCTAssertFalse(sut.isContantBitRate(conversationId: oneOnOneConversationID))
     }
-    
+
     func testThatCBRIsNotEnabledAfterCallIsTerminated() {
         // given
-        let context = Unmanaged.passUnretained(self.sut).toOpaque()
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        WireSyncEngine.establishedCallHandler(conversationId: oneOnOneConversationIDRef, userId: otherUserIDRef, contextRef: context)
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        WireSyncEngine.constantBitRateChangeHandler(userId: otherUserIDRef, enabled: 1, contextRef: context)
+
+        sut.handleConstantBitRateChange(enabled: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // when
-        WireSyncEngine.closedCallHandler(reason: WCALL_REASON_NORMAL, conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, contextRef: context)
+        sut.handleCallEnd(reason: .normal, conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // then
         XCTAssertFalse(sut.isContantBitRate(conversationId: oneOnOneConversationID))
     }
-    
+
     func testThatActiveCallsOnlyIncludeExpectedCallStates() {
         // given
         let activeCallStates: [CallState] = [CallState.established,
                                              CallState.establishedDataChannel]
-        
+
         let nonActiveCallStates: [CallState] = [CallState.incoming(video: false, shouldRing: false, degraded: false),
                                            CallState.outgoing(degraded: false),
                                            CallState.answered(degraded: false),
                                            CallState.terminating(reason: CallClosedReason.normal),
                                            CallState.none,
                                            CallState.unknown]
-        
+
         // then
         for callState in nonActiveCallStates {
             sut.createSnapshot(callState: callState, members: [], callStarter: nil, video: false, for: groupConversation.remoteIdentifier!)
             XCTAssertEqual(sut.activeCalls.count, 0)
         }
-        
+
         for callState in activeCallStates {
             sut.createSnapshot(callState: callState, members: [], callStarter: nil, video: false, for: groupConversation.remoteIdentifier!)
             XCTAssertEqual(sut.activeCalls.count, 1)
         }
     }
-    
+
 }
 
 // MARK: - Ignoring Calls
 
 extension WireCallCenterV3Tests {
-    
+
     func testThatItWhenIgnoringACallItWillSetsTheCallStateToIncomingInactive() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // when
         sut.rejectCall(conversationId: oneOnOneConversationID)
-        
+
         // then
         XCTAssertEqual(sut.callState(conversationId: oneOnOneConversationID), .incoming(video: false, shouldRing: false, degraded: false))
     }
-    
+
     func testThatItWhenRejectingAOneOnOneCallItWilltSetTheCallStateToIncomingInactive() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // when
         sut.rejectCall(conversationId: oneOnOneConversationID)
-        
+
         // then
         XCTAssertEqual(sut.callState(conversationId: oneOnOneConversationID), .incoming(video: false, shouldRing: false, degraded: false))
     }
-    
+
     func testThatItWhenClosingAGroupCallItWillSetsTheCallStateToIncomingInactive() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: groupConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: groupConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // when
         sut.closeCall(conversationId: groupConversationID)
-        
+
         // then
         XCTAssertEqual(sut.callState(conversationId: groupConversationID), .incoming(video: false, shouldRing: false, degraded: false))
     }
-    
+
     func testThatItWhenClosingAOneOnOneCallItDoesNotSetTheCallStateToIncomingInactive() {
         // given
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // when
         sut.closeCall(conversationId: oneOnOneConversationID)
-        
+
         // then
         XCTAssertNotEqual(sut.callState(conversationId: oneOnOneConversationID), .incoming(video: false, shouldRing: false, degraded: false))
     }
-    
+
 }
 
-
 // MARK: - Participants
+
 extension WireCallCenterV3Tests {
 
     func testThatItCreatesAParticipantSnapshotForAnIncomingCall() {
         // when
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // then
         XCTAssertEqual(sut.callParticipants(conversationId: oneOnOneConversationID), [otherUserID])
     }
-    
-    func callBackMemberHandler(conversationIdRef: UnsafePointer<Int8>?, userId: UUID, audioEstablished: Bool, context: UnsafeMutableRawPointer?) {
+
+    func callBackMemberHandler(conversationId: UUID, userId: UUID, audioEstablished: Bool) {
         mockAVSWrapper.mockMembers = [AVSCallMember(userId: userId, audioEstablished: audioEstablished)]
-        WireSyncEngine.groupMemberHandler(conversationIdRef: conversationIdRef, contextRef: context)
+        sut.handleGroupMemberChange(conversationId: conversationId)
     }
-    
+
     func testThatItUpdatesTheParticipantsWhenGroupHandlerIsCalled() {
         // when
         _ = sut.startCall(conversation: oneOnOneConversation, video: false)
-        callBackMemberHandler(conversationIdRef: oneOnOneConversationIDRef, userId: otherUserID, audioEstablished: false, context: context)
+        callBackMemberHandler(conversationId: oneOnOneConversationID, userId: otherUserID, audioEstablished: false)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // then
         XCTAssertEqual(sut.callParticipants(conversationId: oneOnOneConversationID), [otherUserID])
     }
-    
+
     func testThatItUpdatesTheStateForParticipant() {
         // when
-        WireSyncEngine.incomingCallHandler(conversationId: oneOnOneConversationIDRef, messageTime: 0, userId: otherUserIDRef, isVideoCall: 0, shouldRing: 1, contextRef: context)
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // then
         let connectingState = sut.state(forUser: otherUserID, in: oneOnOneConversationID)
         XCTAssertEqual(connectingState, CallParticipantState.connecting)
-        
+
         // when
-        callBackMemberHandler(conversationIdRef: oneOnOneConversationIDRef, userId: otherUserID, audioEstablished: true, context: context)
+        callBackMemberHandler(conversationId: oneOnOneConversationID, userId: otherUserID, audioEstablished: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // then
         let connectedState = sut.state(forUser: otherUserID, in: oneOnOneConversationID)
         XCTAssertEqual(connectedState, CallParticipantState.connected(videoState: .stopped))
@@ -750,15 +770,15 @@ extension WireCallCenterV3Tests {
 }
 
 // MARK: - Call Config
+
 extension WireCallCenterV3Tests {
     
     func testThatCallConfigRequestsAreForwaredToTransportAndAVS() {
         // given
         mockTransport.mockCallConfigResponse = ("call_config", 200)
-        let context = Unmanaged.passUnretained(self.sut).toOpaque()
         
         // when
-        XCTAssertEqual(WireSyncEngine.requestCallConfigHandler(handle: nil, contextRef: context), 0)
+        sut.handleCallConfigRefreshRequest()
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then

@@ -24,19 +24,20 @@
 
 #import "MessagingTest.h"
 #import "ZMSyncStrategy.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import <WireSyncEngine/ZMUserSession.h>
 #import "MockModelObjectContextFactory.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
-#import "ZMOperationLoop+Background.h"
 
 @interface ZMOperationLoopTests : MessagingTest
 
 @property (nonatomic) ZMOperationLoop *sut;
 @property (nonatomic) id transportSession;
 @property (nonatomic) id syncStrategy;
-@property (nonatomic) id pushNotificationStatus;
+@property (nonatomic) PushNotificationStatus *pushNotificationStatus;
+@property (nonatomic) CallEventStatus *callEventStatus;
 @property (nonatomic) id mockPushChannel;
 @property (nonatomic) NSMutableArray *pushChannelNotifications;
 @property (nonatomic) id pushChannelObserverToken;
@@ -56,14 +57,15 @@
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.transportSession];
     
-    self.pushNotificationStatus = [OCMockObject mockForClass:PushNotificationStatus.class];
+    self.callEventStatus = [[CallEventStatus alloc] init];
+    self.pushNotificationStatus = [[PushNotificationStatus alloc] initWithManagedObjectContext:self.syncMOC];
     self.mockPushChannel = [OCMockObject niceMockForClass:[ZMPushChannelConnection class]];
     
     // I expect this to be called, at least until we implement the soft sync
     [[[self.syncStrategy stub] andReturn:self.syncMOC] syncMOC];
     
-    
     [(ApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturn:self.pushNotificationStatus] pushNotificationStatus];
+    [(ApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturn:self.callEventStatus] callEventStatus];
     [(ZMSyncStrategy *)[[self.syncStrategy stub] andReturn:applicationStatusDirectory] applicationStatusDirectory];
 
     self.sut = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
@@ -84,7 +86,7 @@
 {
     WaitForAllGroupsToBeEmpty(0.5);
     self.pushChannelObserverToken = nil;
-    [self.pushNotificationStatus stopMocking];
+    self.callEventStatus = nil;
     self.pushNotificationStatus = nil;
     [self.mockPushChannel stopMocking];
     self.mockPushChannel = nil;
@@ -836,12 +838,12 @@
              };
 }
 
-- (NSDictionary *)payLoadForMessageAddEvent
+- (NSDictionary *)payloadForMessageAddEvent
 {
-    return [self payLoadForMessageAddEventWithNonce:NSUUID.createUUID];
+    return [self payloadForMessageAddEventWithNonce:NSUUID.createUUID];
 }
 
-- (NSDictionary *)payLoadForMessageAddEventWithNonce:(NSUUID *)uuid
+- (NSDictionary *)payloadForMessageAddEventWithNonce:(NSUUID *)uuid
 {
     return @{
             @"conversation": [[NSUUID createUUID] transportString],
@@ -853,6 +855,16 @@
             @"from": [[NSUUID createUUID] transportString],
             @"type": @"conversation.message-add"
             };
+}
+
+- (NSDictionary *)noticePushPayloadWithUUID:(NSUUID *)uuid
+{
+    return  @{@"aps" : @{},
+              @"data" : @{
+                      @"data" : @{ @"id" : uuid.transportString },
+                      @"type" : @"notice"
+                      }
+              };
 }
 
 - (NSDictionary *)encryptedPushPayload
@@ -872,25 +884,18 @@
 - (void)testThatItForwardsEventsFromSilentPushesToThePushNotificationStatus
 {
     // given
-    NSUUID *identifier = NSUUID.createUUID;
-    NSDictionary *eventPayload = [self payLoadForMessageAddEvent];
+    NSUUID *identifier = NSUUID.timeBasedUUID;
+    NSDictionary *eventPayload = [self payloadForMessageAddEvent];
     NSDictionary *pushPayload = [self pushPayloadForEventPayload:@[eventPayload] identifier:identifier];
     NSArray *events = [ZMUpdateEvent eventsArrayFromPushChannelData:pushPayload[@"data"][@"data"]];
     XCTAssertNotNil(events);
-    
-    // expect
-    [[self.pushNotificationStatus expect] fetchEventId:identifier completionHandler:[OCMArg checkWithBlock:^BOOL(dispatch_block_t handler) {
-        handler();
-        return YES;
-    }]];
     
     // when
     [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^{}];
     WaitForAllGroupsToBeEmpty(1.0);
     
     // then
-    [self.pushNotificationStatus verify];
-    [self.syncStrategy verify];
+    XCTAssertEqual(self.pushNotificationStatus.status, BackgroundNotificationFetchStatusInProgress);
 }
 
 
@@ -900,46 +905,81 @@
     self.sut.apsSignalKeyStore = [self prepareSelfClientForAPSSignalingStore];
     NSDictionary *pushPayload = [self encryptedPushPayload];
     
-    // expect
-    [[self.pushNotificationStatus expect] fetchEventId:OCMOCK_ANY completionHandler:[OCMArg checkWithBlock:^BOOL(dispatch_block_t handler) {
-        handler();
-        return YES;
-    }]];
-
     // when
     [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^{}];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    [self.syncStrategy verify];
-    [self.pushNotificationStatus verify];
+    XCTAssertEqual(self.pushNotificationStatus.status, BackgroundNotificationFetchStatusInProgress);
     [self clearKeyChainData];
 }
 
 - (void)testThatItForwardsNoticeNotificationsToThePushNotificationStatus
 {
     // given
-    NSUUID *notificationID = NSUUID.createUUID;
-
     XCTAssertTrue([self.syncMOC saveOrRollback]);
     WaitForAllGroupsToBeEmpty(0.5);
 
-    NSDictionary *pushPayload =  @{@"aps" : @{},
-                                   @"data" : @{
-                                           @"data" : @{ @"id" : notificationID.transportString },
-                                           @"type" : @"notice"
-                                           }
-                                   };
-
-    // expect
-    [[self.pushNotificationStatus expect] fetchEventId:notificationID completionHandler:OCMOCK_ANY];
+    NSUUID *notificationID = NSUUID.timeBasedUUID;
+    NSDictionary *pushPayload = [self noticePushPayloadWithUUID:notificationID];
 
     // when
     [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^{}];
     WaitForAllGroupsToBeEmpty(1.0);
 
     // then
-    [self.pushNotificationStatus verify];
+    XCTAssertEqual(self.pushNotificationStatus.status, BackgroundNotificationFetchStatusInProgress);
+}
+
+- (void)testThatItCallsCompletionHandlerWhenEventsAreDownloaded
+{
+    // given
+    XCTAssertTrue([self.syncMOC saveOrRollback]);
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    NSUUID *notificationID = NSUUID.timeBasedUUID;
+    NSDictionary *pushPayload = [self noticePushPayloadWithUUID:notificationID];
+    
+    // expect
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Called completion handler"];
+    [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^{
+        [expectation fulfill];
+    }];
+    WaitForAllGroupsToBeEmpty(1.0);
+    
+    // when
+    [self.pushNotificationStatus didFetchEventIds:@[notificationID] finished:YES];
+    
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+}
+
+- (void)testThatItCallsCompletionHandlerAfterCallEventsHaveBeenProcessed
+{
+    // given
+    XCTAssertTrue([self.syncMOC saveOrRollback]);
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    NSUUID *notificationID = NSUUID.timeBasedUUID;
+    NSDictionary *pushPayload = [self noticePushPayloadWithUUID:notificationID];
+    
+    // expect
+    __block BOOL completionHandlerHasBeenCalled = NO;
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Called completion handler"];
+    [self.sut fetchEventsFromPushChannelPayload:pushPayload completionHandler:^{
+        [expectation fulfill];
+        completionHandlerHasBeenCalled = YES;
+    }];
+    WaitForAllGroupsToBeEmpty(1.0);
+    
+    // when
+    [self.callEventStatus scheduledCallEventForProcessing];
+    [self.pushNotificationStatus didFetchEventIds:@[notificationID] finished:YES];
+    WaitForAllGroupsToBeEmpty(1.0);
+    
+    XCTAssertFalse(completionHandlerHasBeenCalled);
+    
+    [self.callEventStatus finishedProcessingCallEvent];
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 @end

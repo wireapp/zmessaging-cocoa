@@ -297,7 +297,7 @@ class SessionManagerTests: IntegrationTest {
         XCTAssertEqual(realSessionManager.backgroundUserSessions[account2.userIdentifier], realSessionManager.activeUserSession)
         
         withExtendedLifetime(destroyToken) {
-            NotificationCenter.default.post(Notification(name: Notification.Name.UIApplicationDidReceiveMemoryWarning))
+            NotificationCenter.default.post(Notification(name: UIApplication.didReceiveMemoryWarningNotification))
         }
         
         // THEN
@@ -610,7 +610,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // WHEN
-        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidReceiveMemoryWarning, object: nil)
+        NotificationCenter.default.post(name: UIApplication.didReceiveMemoryWarningNotification, object: nil)
         
         // THEN
         XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
@@ -665,7 +665,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // WHEN
-        NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidReceiveMemoryWarning, object: nil)
+        NotificationCenter.default.post(name: UIApplication.didReceiveMemoryWarningNotification, object: nil)
         
         // THEN
         XCTAssertNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
@@ -842,9 +842,10 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
 
         // WHEN
         self.sessionManager?.handleNotification(with: userInfo) { userSession in
-            userSession.handleInAppNotification(with: userInfo,
-                                                categoryIdentifier: category,
-                                                completionHandler: { _ in })
+            userSession.handleNotificationResponse(actionIdentifier: "",
+                                                   categoryIdentifier: category,
+                                                   userInfo: userInfo,
+                                                   completionHandler: {})
         }
 
         XCTAssertTrue(self.wait(withTimeout: 0.1) { return self.sessionManager!.activeUserSession != nil })
@@ -889,6 +890,44 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         // THEN
         XCTAssertEqual(self.sessionManager!.activeUserSession, session)
 
+        // CLEANUP
+        self.sessionManager!.tearDownAllBackgroundSessions()
+    }
+    
+    func testThatItCallsForegroundNotificationResponderMethod() {
+        // GIVEN
+        let session = self.setupSession()
+        session.isPerformingSync = false
+        session.pushChannelIsOpen = true
+        
+        let responder = MockForegroundNotificationResponder()
+        self.sessionManager?.foregroundNotificationResponder = responder
+        
+        let selfConversation = ZMConversation(remoteID: currentUserIdentifier, createIfNeeded: false, in: session.managedObjectContext)
+        
+        let userInfo = NotificationUserInfo()
+        userInfo.conversationID = selfConversation?.remoteIdentifier
+        userInfo.selfUserID = currentUserIdentifier
+        
+        let category = WireSyncEngine.PushNotificationCategory.conversation.rawValue
+        
+        XCTAssertTrue(responder.notificationPermissionRequests.isEmpty)
+        
+        // WHEN
+        let completionExpectation = self.expectation(description: "Completed action")
+        self.sessionManager?.handleNotification(with: userInfo) { userSession in
+            userSession.handleInAppNotification(with: userInfo, categoryIdentifier: category) { _ in
+                completionExpectation.fulfill()
+            }
+        }
+        
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(responder.notificationPermissionRequests.count, 1)
+        XCTAssertEqual(responder.notificationPermissionRequests.first!, selfConversation?.remoteIdentifier)
+        
         // CLEANUP
         self.sessionManager!.tearDownAllBackgroundSessions()
     }
@@ -1078,5 +1117,15 @@ class TestReachability: NSObject, ReachabilityProvider, TearDownCapable {
     
     func addReachabilityObserver(on queue: OperationQueue?, block: @escaping ReachabilityObserverBlock) -> Any {
         return NSObject()
+    }
+}
+
+class MockForegroundNotificationResponder: NSObject, ForegroundNotificationResponder {
+    
+    var notificationPermissionRequests: [UUID] = []
+    
+    func shouldPresentNotification(with userInfo: NotificationUserInfo) -> Bool {
+        notificationPermissionRequests.append(userInfo.conversationID!)
+        return true
     }
 }

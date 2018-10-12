@@ -261,7 +261,7 @@ extension String {
     
     /// Returns the base64 encoded string of the SHA hash of the string
     var base64EncodedSHADigest : String {
-        return self.data(using: String.Encoding.utf8)!.zmSHA256Digest().base64EncodedString(options: [])
+        return Data(self.utf8).zmSHA256Digest().base64EncodedString(options: [])
     }
     
 }
