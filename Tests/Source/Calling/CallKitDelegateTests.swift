@@ -41,14 +41,6 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
         }
     }
     
-    func updateAppIconBadge(accountID: UUID, unreadCount: Int) {
-        
-    }
-    
-    func configureUserNotifications() {
-        
-    }
-    
     var lastRequestToShowMessage: (ZMUserSession, ZMConversation, ZMConversationMessage)?
     var lastRequestToShowConversation: (ZMUserSession, ZMConversation)?
     var lastRequestToShowConversationsList: ZMUserSession?

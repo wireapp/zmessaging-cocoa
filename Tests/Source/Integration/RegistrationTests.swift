@@ -44,7 +44,6 @@ class RegistrationTests : IntegrationTest {
         user.credentials = .email(address: email, password: "BadAttitude")
         user.accentColorValue = .vividRed
         user.acceptedTermsOfService = true
-        user.profileImageData = Data()
         user.marketingConsent = true
     }
 

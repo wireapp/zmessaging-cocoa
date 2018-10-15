@@ -413,7 +413,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
     [self.managedObjectContext performGroupedBlock:^{
         ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-        [PostLoginAuthenticationNotification notifyAuthenticationInvalidatedWithError:[NSError userSessionErrorWithErrorCode:ZMUserSessionAccessTokenExpired userInfo:selfUser.credentialsUserInfo] context:self.managedObjectContext];
+        [PostLoginAuthenticationNotification notifyAuthenticationInvalidatedWithError:[NSError userSessionErrorWithErrorCode:ZMUserSessionAccessTokenExpired userInfo:selfUser.loginCredentials.dictionaryRepresentation] context:self.managedObjectContext];
     }];
 }
 
