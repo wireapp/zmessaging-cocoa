@@ -315,7 +315,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     
     if (error.code == ZMUserSessionNeedsPasswordToRegisterClient) {
         // help the user by providing the email associated with this account
-        error = [NSError errorWithDomain:error.domain code:error.code userInfo:[ZMUser selfUserInContext:self.managedObjectContext].credentialsUserInfo];
+        error = [NSError errorWithDomain:error.domain code:error.code userInfo:[ZMUser selfUserInContext:self.managedObjectContext].loginCredentials.dictionaryRepresentation];
     }
     
     if (error.code == ZMUserSessionNeedsPasswordToRegisterClient ||
@@ -417,7 +417,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     [self.cookieStorage deleteKeychainItems];
 
     ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-    NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:selfUser.credentialsUserInfo];
+    NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:selfUser.loginCredentials.dictionaryRepresentation];
     [PostLoginAuthenticationNotification notifyAuthenticationInvalidatedWithError:outError context:self.managedObjectContext];
 }
 

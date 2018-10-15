@@ -499,7 +499,7 @@ public protocol ForegroundNotificationResponder: class {
         guard let authenticatedAccount = account, authenticatedAccount.isAuthenticated else {
             completion(nil)
             createUnauthenticatedSession()
-            delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: nil))
+            delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: account?.loginCredentials?.dictionaryRepresentation))
             return
         }
         
@@ -702,6 +702,9 @@ extension SessionManager {
             if let userProfileImage = selfUser.imageSmallProfileData {
                 account.imageData = userProfileImage
             }
+
+            account.loginCredentials = selfUser.loginCredentials
+
             //an optional `teamImageData` image could be saved here
             accountManager.addOrUpdate(account)
         }

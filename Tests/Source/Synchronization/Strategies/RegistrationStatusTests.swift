@@ -95,7 +95,6 @@ class RegistrationStatusTests : MessagingTest{
         user.accentColorValue = .brightOrange
         user.verificationCode = code
         user.acceptedTermsOfService = true
-        user.profileImageData = Data()
         user.marketingConsent = true
     }
 

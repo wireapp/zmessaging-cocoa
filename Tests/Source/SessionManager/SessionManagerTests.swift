@@ -362,6 +362,7 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssertEqual(account.teamName, teamName)
         XCTAssertEqual(account.imageData, image?.data)
         XCTAssertNil(account.teamImageData)
+        XCTAssertEqual(account.loginCredentials, selfUser.loginCredentials)
     }
     
     func testThatItUpdatesAccountAfterTeamNameChanges() {
