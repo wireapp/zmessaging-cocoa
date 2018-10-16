@@ -3,14 +3,13 @@ resources:
   - repository: wire-ios-shared-resources
     type: github
     name: wireapp/wire-ios-shared-resources
-    ref: refs/heads/feature/azure
+    ref: refs/heads/feature/azure # Branch to fetch the jobs template from 
     endpoint: wireapp
 
+trigger:
+  branches:
+    include:
+      - develop
+
 jobs:
-  - job: Test
-    pool:
-      vmImage: "macOS 10.13"
-    steps:
-    - template: Azure/build-and-test/build-and-test.yml@wire-ios-shared-resources
-      parameters:
-        branch: feature/azure
+  - template: Azure/framework-pipelines.yml@wire-ios-shared-resources
