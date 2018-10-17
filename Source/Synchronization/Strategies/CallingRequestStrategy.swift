@@ -139,7 +139,7 @@ extension CallingRequestStrategy : ZMEventConsumer {
                     continue
                 }
                 
-                self.zmLog.debug("received calling message")
+                self.zmLog.debug("received calling message, timestamp \(eventTimestamp), serverTimeDelta \(serverTimeDelta)")
                 
                 let callEvent = CallEvent(data: payload,
                                           currentTimestamp: Date().addingTimeInterval(serverTimeDelta),

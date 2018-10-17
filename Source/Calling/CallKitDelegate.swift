@@ -303,6 +303,7 @@ extension CallKitDelegate {
         
         associatedCallUUIDs.forEach { (callUUID) in
             calls.removeValue(forKey: callUUID)
+            log("provider.reportCallEndedAt: \(String(describing: timestamp))")
             provider.reportCall(with: callUUID, endedAt: timestamp, reason: reason)
         }
     }
