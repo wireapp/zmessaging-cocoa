@@ -684,8 +684,10 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     // then
     XCTAssertEqual(recorder.notifications.count, 2lu);
     XCTAssertEqual(recorder.notifications.firstObject.event, PostLoginAuthenticationEventObjCAuthenticationInvalidated);
-    XCTAssertEqualObjects(recorder.notifications.firstObject.error, [NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:@{ ZMEmailCredentialKey: IntegrationTest.SelfUserEmail }]);
     XCTAssertEqual(recorder.notifications.lastObject.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
+
+    XCTAssertEqual(recorder.notifications.firstObject.error.code, ZMUserSessionClientDeletedRemotely);
+    XCTAssertEqualObjects([recorder.notifications.firstObject.error.userInfo objectForKey:ZMEmailCredentialKey], IntegrationTest.SelfUserEmail);
 }
 
 - (void)testThatItCanRegisterNewClientAfterDeletingSelfClientAndReceivingNeedsPasswordToRegisterClient
