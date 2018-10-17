@@ -209,8 +209,8 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     private let closedCallHandler: CloseCallHandler = { reason, conversationId, messageTime, userId, contextRef in
-        AVSWrapper.withCallCenter(contextRef, reason, conversationId, messageTime, userId) {
-            $0.handleCallEnd(reason: $1, conversationId: $2, messageTime: $3, userId: $4)
+        AVSWrapper.withCallCenter(contextRef, reason, conversationId, messageTime) {
+            $0.handleCallEnd(reason: $1, conversationId: $2, messageTime: $3, userId: UUID(rawValue: userId))
         }
     }
 

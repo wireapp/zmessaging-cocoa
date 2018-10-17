@@ -29,11 +29,14 @@
 
 
 "push.notification.default" = "Uusi viesti";
-"push.notification.ephemeral" = "Someone sent you a message";
-"push.notification.ephemeral.mention" = "Someone mentioned you";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ %2$@ :ssa";
+
+// Ephemeral
+"push.notification.ephemeral.title" = "Someone";
+"push.notification.ephemeral" = "Sent a message";
+"push.notification.ephemeral.mention" = "Mentioned you";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -81,7 +84,7 @@
 "push.notification.add.image.group.nousername.noconversationname" = "Uusi kuva keskustelussa";
 "push.notification.add.image.group.noconversationname" = "%1$@ jakoi kuvan keskustelussa";
 
-"push.notification.add.image.oneonone" = "jakoi kuvan";
+"push.notification.add.image.oneonone" = "Jakoi kuvan";
 "push.notification.add.image.oneonone.nousername" = "Uusi kuva keskustelussa";
 
 // VIDEO
@@ -90,7 +93,7 @@
 "push.notification.add.video.group.nousername.noconversationname" = "Uusi video keskustelussa";
 "push.notification.add.video.group.noconversationname" = "%1$@ jakoi videon keskustelussa";
 
-"push.notification.add.video.oneonone" = "jakoi videon";
+"push.notification.add.video.oneonone" = "Jakoi videon";
 "push.notification.add.video.oneonone.nousername" = "Uusi video keskustelussa";
 
 // AUDIO
@@ -99,7 +102,7 @@
 "push.notification.add.audio.group.nousername.noconversationname" = "Uusi ääniviesti keskustelussa";
 "push.notification.add.audio.group.noconversationname" = "%1$@ jakoi ääniviestin keskustelussa";
 
-"push.notification.add.audio.oneonone" = "shared an audio message";
+"push.notification.add.audio.oneonone" = "Jakoi ääniviestin";
 "push.notification.add.audio.oneonone.nousername" = "Uusi ääniviesti keskustelussa";
 
 // FILE
@@ -108,7 +111,7 @@
 "push.notification.add.file.group.nousername.noconversationname" = "Uusi tiedosto keskustelussa";
 "push.notification.add.file.group.noconversationname" = "%1$@ jakoi tiedoston keskustelussa";
 
-"push.notification.add.file.oneonone" = "jakoi tiedoston";
+"push.notification.add.file.oneonone" = "Jakoi tiedoston";
 "push.notification.add.file.oneonone.nousername" = "Uusi tiedosto keskustelussa";
 
 // LOCATION
@@ -117,7 +120,7 @@
 "push.notification.add.location.group.nousername.noconversationname" = "Uusi sijainti keskustelussa";
 "push.notification.add.location.group.noconversationname" = "%1$@ jakoi sijainnin keskustelussa";
 
-"push.notification.add.location.oneonone" = "jakoi sijainnin";
+"push.notification.add.location.oneonone" = "Jakoi sijainnin";
 "push.notification.add.location.oneonone.nousername" = "Uusi sijainti keskustelussa";
 
 // SELF ADDED/REMOVED TO GROUP
@@ -209,7 +212,7 @@
 "push.notification.action.message.open" = "Avaa";
 "push.notification.action.message.reply" = "Vastaa";
 "push.notification.action.message.reply.button.title" = "Lähetä";
-"push.notification.action.message.reply.placeholder" = "Write a Message";
+"push.notification.action.message.reply.placeholder" = "Type a Message";
 "push.notification.action.conversation.mute" = "Mykistä";
 "push.notification.action.message.like" = "♥";
 

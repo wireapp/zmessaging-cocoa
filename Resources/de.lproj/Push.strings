@@ -29,11 +29,14 @@
 
 
 "push.notification.default" = "Neue Nachricht";
-"push.notification.ephemeral" = "Jemand hat dir eine Nachricht gesendet";
-"push.notification.ephemeral.mention" = "Jemand hat dich erwähnt";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ in %2$@";
+
+// Ephemeral
+"push.notification.ephemeral.title" = "Jemand";
+"push.notification.ephemeral" = "Temporäre Nachricht";
+"push.notification.ephemeral.mention" = "Hat dich erwähnt";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -90,7 +93,7 @@
 "push.notification.add.video.group.nousername.noconversationname" = "Jemand hat ein Video in einer Unterhaltung geteilt";
 "push.notification.add.video.group.noconversationname" = "%1$@ hat ein Video in einer Unterhaltung geteilt";
 
-"push.notification.add.video.oneonone" = "hat ein Video geteilt";
+"push.notification.add.video.oneonone" = "Hat ein Video geteilt";
 "push.notification.add.video.oneonone.nousername" = "Jemand hat ein Video in einer Unterhaltung geteilt";
 
 // AUDIO
@@ -99,7 +102,7 @@
 "push.notification.add.audio.group.nousername.noconversationname" = "Neue Audio-Nachricht in einer Unterhaltung";
 "push.notification.add.audio.group.noconversationname" = "%1$@ hat eine Audio-Nachricht in einer Unterhaltung geteilt";
 
-"push.notification.add.audio.oneonone" = "hat eine Audio-Nachricht geteilt";
+"push.notification.add.audio.oneonone" = "Hat eine Audio-Nachricht geteilt";
 "push.notification.add.audio.oneonone.nousername" = "Neue Audio-Nachricht in einer Unterhaltung";
 
 // FILE
@@ -108,7 +111,7 @@
 "push.notification.add.file.group.nousername.noconversationname" = "Jemand hat eine Datei in einer Unterhaltung geteilt";
 "push.notification.add.file.group.noconversationname" = "%1$@ hat eine Datei in einer Unterhaltung geteilt";
 
-"push.notification.add.file.oneonone" = "hat eine Datei geteilt";
+"push.notification.add.file.oneonone" = "Hat eine Datei geteilt";
 "push.notification.add.file.oneonone.nousername" = "Jemand hat eine Datei in einer Unterhaltung geteilt";
 
 // LOCATION
@@ -117,7 +120,7 @@
 "push.notification.add.location.group.nousername.noconversationname" = "Jemand hat einen Standort in einer Unterhaltung geteilt";
 "push.notification.add.location.group.noconversationname" = "%1$@ hat einen Standort in einer Unterhaltung geteilt";
 
-"push.notification.add.location.oneonone" = "hat einen Standort geteilt";
+"push.notification.add.location.oneonone" = "Hat einen Standort geteilt";
 "push.notification.add.location.oneonone.nousername" = "Jemand hat einen Standort in einer Unterhaltung geteilt";
 
 // SELF ADDED/REMOVED TO GROUP

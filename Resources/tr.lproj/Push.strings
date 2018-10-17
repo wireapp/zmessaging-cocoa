@@ -29,11 +29,14 @@
 
 
 "push.notification.default" = "Yeni Mesaj";
-"push.notification.ephemeral" = "Biri size mesaj gönderdi";
-"push.notification.ephemeral.mention" = "Someone mentioned you";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%2$@'de %1$@";
+
+// Ephemeral
+"push.notification.ephemeral.title" = "Someone";
+"push.notification.ephemeral" = "Sent a message";
+"push.notification.ephemeral.mention" = "Mentioned you";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -81,7 +84,7 @@
 "push.notification.add.image.group.nousername.noconversationname" = "Bir konuşmada yeni bir fotoğraf";
 "push.notification.add.image.group.noconversationname" = "%1$@, bir konuşmada fotoğraf paylaştı";
 
-"push.notification.add.image.oneonone" = "bir resim paylaştı";
+"push.notification.add.image.oneonone" = "Bir resim paylaştı";
 "push.notification.add.image.oneonone.nousername" = "Bir konuşmada yeni bir fotoğraf";
 
 // VIDEO
@@ -90,7 +93,7 @@
 "push.notification.add.video.group.nousername.noconversationname" = "Bir konuşmada yeni bir fotoğraf";
 "push.notification.add.video.group.noconversationname" = "%1$@, bir konuşmada video paylaştı";
 
-"push.notification.add.video.oneonone" = "bir video paylaştı";
+"push.notification.add.video.oneonone" = "Bir video paylaştı";
 "push.notification.add.video.oneonone.nousername" = "Bir konuşmada yeni bir video";
 
 // AUDIO
@@ -99,7 +102,7 @@
 "push.notification.add.audio.group.nousername.noconversationname" = "Bir konuşmada yeni sesli mesaj";
 "push.notification.add.audio.group.noconversationname" = "%1$@, bir konuşmada sesli mesaj paylaştı";
 
-"push.notification.add.audio.oneonone" = "bir sesli mesaj paylaşıldı";
+"push.notification.add.audio.oneonone" = "Bir sesli mesaj paylaştı";
 "push.notification.add.audio.oneonone.nousername" = "Bir konuşmada yeni sesli mesaj";
 
 // FILE
@@ -108,7 +111,7 @@
 "push.notification.add.file.group.nousername.noconversationname" = "Bir konuşmada yeni bir dosya";
 "push.notification.add.file.group.noconversationname" = "%1$@, bir konuşmada dosya paylaştı";
 
-"push.notification.add.file.oneonone" = "bir dosya paylaştı";
+"push.notification.add.file.oneonone" = "Bir dosya paylaştı";
 "push.notification.add.file.oneonone.nousername" = "Bir konuşmada yeni bir dosya";
 
 // LOCATION
@@ -117,7 +120,7 @@
 "push.notification.add.location.group.nousername.noconversationname" = "Bir konuşmada yeni bir konum";
 "push.notification.add.location.group.noconversationname" = "%1$@, bir konuşmada konum paylaştı";
 
-"push.notification.add.location.oneonone" = "bir konum paylaştı";
+"push.notification.add.location.oneonone" = "Bir konum paylaştı";
 "push.notification.add.location.oneonone.nousername" = "Bir konuşmada yeni bir konum";
 
 // SELF ADDED/REMOVED TO GROUP
@@ -209,7 +212,7 @@
 "push.notification.action.message.open" = "Aç";
 "push.notification.action.message.reply" = "Cevapla";
 "push.notification.action.message.reply.button.title" = "Gönder";
-"push.notification.action.message.reply.placeholder" = "Write a Message";
+"push.notification.action.message.reply.placeholder" = "Type a Message";
 "push.notification.action.conversation.mute" = "Sustur";
 "push.notification.action.message.like" = "♥";
 

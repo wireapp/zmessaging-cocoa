@@ -29,11 +29,14 @@
 
 
 "push.notification.default" = "新訊息";
-"push.notification.ephemeral" = "收到限時訊息";
-"push.notification.ephemeral.mention" = "某人提及你";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%2$@的%1$@";
+
+// Ephemeral
+"push.notification.ephemeral.title" = "某人";
+"push.notification.ephemeral" = "發送一則消息";
+"push.notification.ephemeral.mention" = "提及您";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@：%2$@";
@@ -99,7 +102,7 @@
 "push.notification.add.audio.group.nousername.noconversationname" = "在對話當中有一則新語音留言";
 "push.notification.add.audio.group.noconversationname" = "%1$@ 在對話中分享了一則新語音留言";
 
-"push.notification.add.audio.oneonone" = "分享了一段語音訊息";
+"push.notification.add.audio.oneonone" = "分享了一則語音訊息";
 "push.notification.add.audio.oneonone.nousername" = "在對話當中有一則新語音留言";
 
 // FILE
@@ -209,7 +212,7 @@
 "push.notification.action.message.open" = "開啟";
 "push.notification.action.message.reply" = "回覆";
 "push.notification.action.message.reply.button.title" = "發送";
-"push.notification.action.message.reply.placeholder" = "撰寫訊息";
+"push.notification.action.message.reply.placeholder" = "請輸入一段訊息";
 "push.notification.action.conversation.mute" = "靜音";
 "push.notification.action.message.like" = "♥";
 

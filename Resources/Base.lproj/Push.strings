@@ -84,7 +84,7 @@
 "push.notification.add.image.group.nousername.noconversationname" = "New picture in a conversation";
 "push.notification.add.image.group.noconversationname" = "%1$@ shared a picture in a conversation";
 
-"push.notification.add.image.oneonone" = "shared a picture";
+"push.notification.add.image.oneonone" = "Shared a picture";
 "push.notification.add.image.oneonone.nousername" = "New picture in a conversation";
 
 // VIDEO
@@ -93,7 +93,7 @@
 "push.notification.add.video.group.nousername.noconversationname" = "New video in a conversation";
 "push.notification.add.video.group.noconversationname" = "%1$@ shared a video in a conversation";
 
-"push.notification.add.video.oneonone" = "shared a video";
+"push.notification.add.video.oneonone" = "Shared a video";
 "push.notification.add.video.oneonone.nousername" = "New video in a conversation";
 
 // AUDIO
@@ -102,7 +102,7 @@
 "push.notification.add.audio.group.nousername.noconversationname" = "New audio message in a conversation";
 "push.notification.add.audio.group.noconversationname" = "%1$@ shared an audio message in a conversation";
 
-"push.notification.add.audio.oneonone" = "shared an audio message";
+"push.notification.add.audio.oneonone" = "Shared an audio message";
 "push.notification.add.audio.oneonone.nousername" = "New audio message in a conversation";
 
 // FILE
@@ -111,7 +111,7 @@
 "push.notification.add.file.group.nousername.noconversationname" = "New file in a conversation";
 "push.notification.add.file.group.noconversationname" = "%1$@ shared a file in a conversation";
 
-"push.notification.add.file.oneonone" = "shared a file";
+"push.notification.add.file.oneonone" = "Shared a file";
 "push.notification.add.file.oneonone.nousername" = "New file in a conversation";
 
 // LOCATION
@@ -120,7 +120,7 @@
 "push.notification.add.location.group.nousername.noconversationname" = "New location in a conversation";
 "push.notification.add.location.group.noconversationname" = "%1$@ shared a location in a conversation";
 
-"push.notification.add.location.oneonone" = "shared a location";
+"push.notification.add.location.oneonone" = "Shared a location";
 "push.notification.add.location.oneonone.nousername" = "New location in a conversation";
 
 // SELF ADDED/REMOVED TO GROUP
@@ -213,6 +213,7 @@
 "push.notification.action.message.reply" = "Reply";
 "push.notification.action.message.reply.button.title" = "Send";
 "push.notification.action.message.reply.placeholder" = "Type a Message";
+"push.notification.action.conversation.mute" = "Mute";
 "push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "Accept";

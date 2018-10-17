@@ -29,11 +29,14 @@
 
 
 "push.notification.default" = "Новое сообщение";
-"push.notification.ephemeral" = "Вам отправлено сообщение";
-"push.notification.ephemeral.mention" = "Вас упомянули";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ в %2$@";
+
+// Ephemeral
+"push.notification.ephemeral.title" = "Кто-то";
+"push.notification.ephemeral" = "Отправил(а) вам сообщение";
+"push.notification.ephemeral.mention" = "Вас упомянули";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -81,7 +84,7 @@
 "push.notification.add.image.group.nousername.noconversationname" = "Новая картинка в разговоре";
 "push.notification.add.image.group.noconversationname" = "%1$@ поделился картинкой в разговоре";
 
-"push.notification.add.image.oneonone" = "поделился(-лась) картинкой";
+"push.notification.add.image.oneonone" = "Поделился(-лась) картинкой";
 "push.notification.add.image.oneonone.nousername" = "Новая картинка в беседе";
 
 // VIDEO
@@ -90,17 +93,17 @@
 "push.notification.add.video.group.nousername.noconversationname" = "Новое видео в разговоре";
 "push.notification.add.video.group.noconversationname" = "%1$@ поделился(-лась) видео в разговоре";
 
-"push.notification.add.video.oneonone" = "поделился(-лась) видео";
+"push.notification.add.video.oneonone" = "Поделился(-лась) видео";
 "push.notification.add.video.oneonone.nousername" = "Новое видео в разговоре";
 
 // AUDIO
 "push.notification.add.audio.group" = "%1$@ поделился(-лась) звуковым сообщением";
 "push.notification.add.audio.group.nousername" = "Новое аудиосообщение";
 "push.notification.add.audio.group.nousername.noconversationname" = "Новое звуковое сообщение в разговоре";
-"push.notification.add.audio.group.noconversationname" = "%1$@ поделился(-лась) аудио сообщением в разговоре";
+"push.notification.add.audio.group.noconversationname" = "%1$@ поделился(-лась) аудиосообщением в разговоре";
 
-"push.notification.add.audio.oneonone" = "поделился(-лась) аудио сообщением";
-"push.notification.add.audio.oneonone.nousername" = "Новое аудио сообщение в разговоре";
+"push.notification.add.audio.oneonone" = "Поделился(-лась) аудиосообщением";
+"push.notification.add.audio.oneonone.nousername" = "Новое аудиосообщение в разговоре";
 
 // FILE
 "push.notification.add.file.group" = "%1$@ поделился(-лась) файлом";
@@ -108,7 +111,7 @@
 "push.notification.add.file.group.nousername.noconversationname" = "Новый файл в разговоре";
 "push.notification.add.file.group.noconversationname" = "%1$@ поделился(-лась) файлом в разговоре";
 
-"push.notification.add.file.oneonone" = "поделился(-лась) файлом";
+"push.notification.add.file.oneonone" = "Поделился(-лась) файлом";
 "push.notification.add.file.oneonone.nousername" = "Новый файл в разговоре";
 
 // LOCATION
@@ -117,7 +120,7 @@
 "push.notification.add.location.group.nousername.noconversationname" = "Новое местоположение в разговоре";
 "push.notification.add.location.group.noconversationname" = "%1$@ поделился(-лась) местоположением в разговоре";
 
-"push.notification.add.location.oneonone" = "поделился(-лась) местоположением";
+"push.notification.add.location.oneonone" = "Поделился(-лась) местоположением";
 "push.notification.add.location.oneonone.nousername" = "Новое местоположение в разговоре";
 
 // SELF ADDED/REMOVED TO GROUP
@@ -209,8 +212,8 @@
 "push.notification.action.message.open" = "Открыть";
 "push.notification.action.message.reply" = "Ответить";
 "push.notification.action.message.reply.button.title" = "Отправить";
-"push.notification.action.message.reply.placeholder" = "Написать сообщение";
-"push.notification.action.conversation.mute" = "Выкл.звук";
+"push.notification.action.message.reply.placeholder" = "Введите сообщение";
+"push.notification.action.conversation.mute" = "Микрофон";
 "push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "Принять";

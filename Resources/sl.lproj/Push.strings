@@ -29,11 +29,14 @@
 
 
 "push.notification.default" = "Novo sporočilo";
-"push.notification.ephemeral" = "Someone sent you a message";
-"push.notification.ephemeral.mention" = "Someone mentioned you";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%1$@ v %2$@";
+
+// Ephemeral
+"push.notification.ephemeral.title" = "Someone";
+"push.notification.ephemeral" = "Sent a message";
+"push.notification.ephemeral.mention" = "Mentioned you";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -81,7 +84,7 @@
 "push.notification.add.image.group.nousername.noconversationname" = "Nova slika v pogovoru";
 "push.notification.add.image.group.noconversationname" = "%1$@ je delil(-a) sliko v pogovoru";
 
-"push.notification.add.image.oneonone" = "je delil(-a) sliko";
+"push.notification.add.image.oneonone" = "Je delil(-a) sliko";
 "push.notification.add.image.oneonone.nousername" = "Nova slika v pogovoru";
 
 // VIDEO
@@ -90,7 +93,7 @@
 "push.notification.add.video.group.nousername.noconversationname" = "Nov video v pogovoru";
 "push.notification.add.video.group.noconversationname" = "%1$@ je delil(-a) video v pogovoru";
 
-"push.notification.add.video.oneonone" = "je delil(-a) video";
+"push.notification.add.video.oneonone" = "Je delil(-a) video";
 "push.notification.add.video.oneonone.nousername" = "Nov video v pogovoru";
 
 // AUDIO
@@ -99,7 +102,7 @@
 "push.notification.add.audio.group.nousername.noconversationname" = "Novo zvočno sporočilo v pogovoru";
 "push.notification.add.audio.group.noconversationname" = "%1$@ je delil(-a) zvočno sporočilo v pogovoru";
 
-"push.notification.add.audio.oneonone" = "shared an audio message";
+"push.notification.add.audio.oneonone" = "Je delil(-a) zvočno sporočilo";
 "push.notification.add.audio.oneonone.nousername" = "Novo zvočno sporočilo v pogovoru";
 
 // FILE
@@ -108,7 +111,7 @@
 "push.notification.add.file.group.nousername.noconversationname" = "Nova zbirka v pogovoru";
 "push.notification.add.file.group.noconversationname" = "%1$@ je delil(-a) zbirko v pogovoru";
 
-"push.notification.add.file.oneonone" = "je delil(-a) zbirko";
+"push.notification.add.file.oneonone" = "Je delil(-a) zbirko";
 "push.notification.add.file.oneonone.nousername" = "Nova zbirka v pogovoru";
 
 // LOCATION
@@ -117,7 +120,7 @@
 "push.notification.add.location.group.nousername.noconversationname" = "Nova lokacija v pogovoru";
 "push.notification.add.location.group.noconversationname" = "%1$@ je delil(-a) lokacijo v pogovoru";
 
-"push.notification.add.location.oneonone" = "je delil(-a) lokacijo";
+"push.notification.add.location.oneonone" = "Je delil(-a) lokacijo";
 "push.notification.add.location.oneonone.nousername" = "Nova lokacija v pogovoru";
 
 // SELF ADDED/REMOVED TO GROUP
@@ -209,7 +212,7 @@
 "push.notification.action.message.open" = "Odpri";
 "push.notification.action.message.reply" = "Odgovori";
 "push.notification.action.message.reply.button.title" = "Pošlji";
-"push.notification.action.message.reply.placeholder" = "Write a Message";
+"push.notification.action.message.reply.placeholder" = "Type a Message";
 "push.notification.action.conversation.mute" = "Utišaj";
 "push.notification.action.message.like" = "♥";
 

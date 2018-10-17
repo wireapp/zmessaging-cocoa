@@ -29,11 +29,14 @@
 
 
 "push.notification.default" = "新しいメッセージ";
-"push.notification.ephemeral" = "メッセージを受信しました";
-"push.notification.ephemeral.mention" = "Someone mentioned you";
 
 // Push Title: [Conversation Name] in [Team Name]
 "push.notification.title" = "%2$@ に%1$@ 人";
+
+// Ephemeral
+"push.notification.ephemeral.title" = "Someone";
+"push.notification.ephemeral" = "Sent a message";
+"push.notification.ephemeral.mention" = "Mentioned you";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -81,7 +84,7 @@
 "push.notification.add.image.group.nousername.noconversationname" = "会話での新しい写真";
 "push.notification.add.image.group.noconversationname" = "%1$@が新しい写真をシェアしました";
 
-"push.notification.add.image.oneonone" = "写真を共有します";
+"push.notification.add.image.oneonone" = "写真が共有されました";
 "push.notification.add.image.oneonone.nousername" = "新しい写真";
 
 // VIDEO
@@ -90,7 +93,7 @@
 "push.notification.add.video.group.nousername.noconversationname" = "新しいビデオ";
 "push.notification.add.video.group.noconversationname" = "%1$@が新しいビデオをシェアしました";
 
-"push.notification.add.video.oneonone" = "ビデオを共有します";
+"push.notification.add.video.oneonone" = "ビデオを共有しました";
 "push.notification.add.video.oneonone.nousername" = "新しいビデオ";
 
 // AUDIO
@@ -99,7 +102,7 @@
 "push.notification.add.audio.group.nousername.noconversationname" = "新しい音声メッセージ";
 "push.notification.add.audio.group.noconversationname" = "%1$@が音声メッセージをシェアしました";
 
-"push.notification.add.audio.oneonone" = "音声メッセージを共有しました";
+"push.notification.add.audio.oneonone" = "音声メッセージが共有されました";
 "push.notification.add.audio.oneonone.nousername" = "新しい音声メッセージ";
 
 // FILE
@@ -108,7 +111,7 @@
 "push.notification.add.file.group.nousername.noconversationname" = "新しいファイル";
 "push.notification.add.file.group.noconversationname" = "%1$@が新しいファイルをシェアしました";
 
-"push.notification.add.file.oneonone" = "ファイルを共有します";
+"push.notification.add.file.oneonone" = "ファイルが共有されました";
 "push.notification.add.file.oneonone.nousername" = "新しいファイル";
 
 // LOCATION
@@ -117,7 +120,7 @@
 "push.notification.add.location.group.nousername.noconversationname" = "新しい位置情報";
 "push.notification.add.location.group.noconversationname" = "%1$@が位置情報をシェアしました";
 
-"push.notification.add.location.oneonone" = "場所を共有します";
+"push.notification.add.location.oneonone" = "場所を共有しました";
 "push.notification.add.location.oneonone.nousername" = "新しい位置情報";
 
 // SELF ADDED/REMOVED TO GROUP
@@ -209,7 +212,7 @@
 "push.notification.action.message.open" = "開く";
 "push.notification.action.message.reply" = "返信";
 "push.notification.action.message.reply.button.title" = "送信";
-"push.notification.action.message.reply.placeholder" = "Write a Message";
+"push.notification.action.message.reply.placeholder" = "Type a Message";
 "push.notification.action.conversation.mute" = "ミュート";
 "push.notification.action.message.like" = "♥";
 

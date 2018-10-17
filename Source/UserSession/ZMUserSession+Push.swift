@@ -209,6 +209,8 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
             ignoreCall(with: userInfo, completionHandler: completionHandler)
         case CallNotificationAction.accept.rawValue:
             acceptCall(with: userInfo, completionHandler: completionHandler)
+        case ConversationNotificationAction.mute.rawValue:
+            muteConversation(with: userInfo, completionHandler: completionHandler)
         case ConversationNotificationAction.like.rawValue:
             likeMessage(with: userInfo, completionHandler: completionHandler)
         case ConversationNotificationAction.reply.rawValue:
