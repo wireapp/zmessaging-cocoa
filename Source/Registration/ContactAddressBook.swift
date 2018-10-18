@@ -20,13 +20,11 @@ import Foundation
 import Contacts
 
 /// iOS Contacts-based address book
-@available(iOS 9.0, *)
 class ContactAddressBook : AddressBook {
     
     let store = CNContactStore()
 }
 
-@available(iOS 9.0, *)
 extension ContactAddressBook : AddressBookAccessor {
     
     /// Gets a specific address book user by the local address book indentifier
@@ -76,9 +74,6 @@ extension ContactAddressBook : AddressBookAccessor {
 }
 
 
-
-
-@available(iOS 9.0, *)
 extension CNContact : ContactRecord {
     
     var rawEmails : [String] {
@@ -108,7 +103,6 @@ extension CNContact : ContactRecord {
 
 extension ZMAddressBookContact {
     
-    @available(iOS 9.0, *)
     convenience init?(contact: CNContact,
                       phoneNumberNormalizer: @escaping AddressBook.Normalizer,
                       emailNormalizer: @escaping AddressBook.Normalizer) {

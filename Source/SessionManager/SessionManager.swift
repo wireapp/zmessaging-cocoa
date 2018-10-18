@@ -60,7 +60,6 @@ public protocol SessionManagerType : class {
     
     weak var foregroundNotificationResponder: ForegroundNotificationResponder? { get }
     
-    @available(iOS 10.0, *)
     var callKitDelegate : CallKitDelegate? { get }
     var callNotificationStyle: CallNotificationStyle { get }
     
@@ -200,16 +199,7 @@ public protocol ForegroundNotificationResponder: class {
     
     private static var token: Any?
     
-    private var _callKitDelegate : AnyObject?
-    @available(iOS 10.0, *)
-    public var callKitDelegate : CallKitDelegate? {
-        get {
-            return _callKitDelegate as? CallKitDelegate
-        }
-        set {
-            _callKitDelegate = newValue
-        }
-    }
+    public var callKitDelegate : CallKitDelegate?
     
     /// The entry point for SessionManager; call this instead of the initializers.
     ///
@@ -666,7 +656,6 @@ public protocol ForegroundNotificationResponder: class {
         }
     }
     
-    @available(iOS 10.0, *)
     private func updateCallNotificationStyle() {
         switch callNotificationStyle {
         case .pushNotifications:

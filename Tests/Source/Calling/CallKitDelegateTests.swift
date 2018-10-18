@@ -76,7 +76,6 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
     
 }
 
-@available(iOS 10.0, *)
 class MockCallKitProvider: CXProvider {
 
     public var timesSetDelegateCalled: Int = 0
@@ -118,7 +117,6 @@ class MockCallKitProvider: CXProvider {
 
 }
 
-@available(iOS 10.0, *)
 class MockCallObserver : CXCallObserver {
     
     public var mockCalls : [CXCall] = []
@@ -129,7 +127,6 @@ class MockCallObserver : CXCallObserver {
     
 }
 
-@available(iOS 10.0, *)
 class MockCallKitCallController: CXCallController {
     
     public override var callObserver: CXCallObserver {
@@ -154,7 +151,6 @@ class MockCallKitCallController: CXCallController {
     }
 }
 
-@available(iOS 10.0, *)
 class MockCallAnswerAction : CXAnswerCallAction {
     
     var isFulfilled : Bool = false
@@ -170,7 +166,6 @@ class MockCallAnswerAction : CXAnswerCallAction {
     
 }
 
-@available(iOS 10.0, *)
 class MockStartCallAction : CXStartCallAction {
     
     var isFulfilled : Bool = false
@@ -186,7 +181,6 @@ class MockStartCallAction : CXStartCallAction {
     
 }
 
-@available(iOS 10.0, *)
 class MockProvider : CXProvider {
     
     var connectingCalls : Set<UUID> = Set()
@@ -206,7 +200,6 @@ class MockProvider : CXProvider {
     
 }
 
-@available(iOS 10.0, *)
 class CallKitDelegateTest: MessagingTest {
     var sut: WireSyncEngine.CallKitDelegate!
     var callKitProvider: MockCallKitProvider!

@@ -36,7 +36,6 @@ private struct CallKitCall {
 }
 
 @objc
-@available(iOS 10.0, *)
 public class CallKitDelegate : NSObject {
     
     fileprivate let provider : CXProvider
@@ -114,7 +113,6 @@ public class CallKitDelegate : NSObject {
 
 }
 
-@available(iOS 10.0, *)
 extension CallKitDelegate {
 
     func callIdentifiers(from customIdentifier : String) -> (UUID, UUID)? {
@@ -176,7 +174,6 @@ extension CallKitDelegate {
     }
 }
 
-@available(iOS 10.0, *)
 extension CallKitDelegate {
     
     func requestMuteCall(in conversation: ZMConversation, muted:  Bool) {
@@ -309,7 +306,6 @@ extension CallKitDelegate {
     }
 }
 
-@available(iOS 10.0, *)
 extension CallKitDelegate : CXProviderDelegate {
     
     public func providerDidBegin(_ provider: CXProvider) {
@@ -420,7 +416,6 @@ extension CallKitDelegate : CXProviderDelegate {
     }
 }
 
-@available(iOS 10.0, *)
 extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
     
     public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?) {
@@ -448,7 +443,6 @@ extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMisse
     
 }
 
-@available(iOS 10.0, *)
 extension ZMConversation {
     
     var callKitHandle: CXHandle? {
@@ -493,7 +487,6 @@ extension ZMConversation {
     
 }
 
-@available(iOS 10.0, *)
 extension CXCallAction {
     
     func conversation(in context : NSManagedObjectContext) -> ZMConversation? {
@@ -504,7 +497,6 @@ extension CXCallAction {
 
 extension CallClosedReason {
     
-    @available(iOS 10.0, *)
     var CXCallEndedReason : CXCallEndedReason {
         switch self {
         case .timeout:

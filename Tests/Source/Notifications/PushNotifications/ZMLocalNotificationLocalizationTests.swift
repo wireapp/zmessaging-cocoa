@@ -19,7 +19,6 @@
 import XCTest
 @testable import WireSyncEngine
 
-@available(iOS 10.0, *)
 class ZMLocalNotificationLocalizationTests: ZMLocalNotificationTests {
     
     func testThatItLocalizesCallkitCallerName() {
