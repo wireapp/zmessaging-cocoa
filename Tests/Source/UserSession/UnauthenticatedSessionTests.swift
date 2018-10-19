@@ -108,6 +108,7 @@ final class TestUnauthenticatedTransportSession: NSObject, UnauthenticatedTransp
     }
     
     func tearDown() {}
+    let environment: BackendEnvironmentProvider = BackendEnvironment(wireEnvironment: .staging)
 }
 
 
@@ -265,7 +266,7 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
 
         // then
         XCTAssertEqual(account.userIdentifier, userId)
-        XCTAssertNotNil(account.cookieStorage().authenticationCookieData)
+        XCTAssertNotNil(account.cookieStorage(for: transportSession.environment).authenticationCookieData)
     }
 
     func testThatItParsesCookieDataAndDoesCallTheDelegateIfTheCookieIsValidAndThereIsAUserIdKeyId() throws {
@@ -278,7 +279,7 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
 
         // then
         XCTAssertEqual(account.userIdentifier, userId)
-        XCTAssertNotNil(account.cookieStorage().authenticationCookieData)
+        XCTAssertNotNil(account.cookieStorage(for: transportSession.environment).authenticationCookieData)
     }
 
     func testThatItDoesNotParseAnAccountWithWrongUserIdKey() {

@@ -16,16 +16,18 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+import WireTransport
+
 extension Account {
 
-    func cookieStorage() -> ZMPersistentCookieStorage {
-        let backendURL = ZMBackendEnvironment(userDefaults: .standard).backendURL.host!
+    func cookieStorage(for environment: BackendEnvironmentProvider) -> ZMPersistentCookieStorage {
+        let backendURL = environment.backendURL.host!
         return ZMPersistentCookieStorage(forServerName: backendURL, userIdentifier: userIdentifier)
     }
     
     
-    public var isAuthenticated : Bool {
-        return cookieStorage().authenticationCookieData != nil
+    public func isAuthenticated(with environment: BackendEnvironmentProvider) -> Bool {
+        return cookieStorage(for: environment).authenticationCookieData != nil
     }
 
 }

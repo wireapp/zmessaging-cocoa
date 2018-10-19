@@ -29,7 +29,8 @@ class RegistrationTests : IntegrationTest {
     var teamToRegister: UnregisteredTeam!
     var user: UnregisteredUser!
     var email: String!
-
+    let environment = BackendEnvironment(type: .wire(.staging))
+    
     override func setUp() {
         super.setUp()
         delegate = TestRegistrationStatusDelegate()
@@ -240,7 +241,7 @@ class RegistrationTests : IntegrationTest {
         // Then
         let selected = sessionManager?.accountManager.selectedAccount
         XCTAssertNotNil(selected)
-        XCTAssertEqual(selected?.cookieStorage().isAuthenticated, true)
+        XCTAssertEqual(selected?.cookieStorage(for: environment).isAuthenticated, true)
     }
 
     func testThatItSignalsAnErrorIfTeamCreationFails() {
@@ -285,7 +286,7 @@ class RegistrationTests : IntegrationTest {
         // Then
         let selected = sessionManager?.accountManager.selectedAccount
         XCTAssertNotNil(selected)
-        XCTAssertEqual(selected?.cookieStorage().isAuthenticated, true)
+        XCTAssertEqual(selected?.cookieStorage(for: environment).isAuthenticated, true)
     }
 
     func testThatItSignalsAnErrorIfUserCreationFails() {

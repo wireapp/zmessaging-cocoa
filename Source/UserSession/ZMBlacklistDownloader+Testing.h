@@ -19,10 +19,12 @@
 
 #import "ZMBlacklistDownloader.h"
 
+@protocol BackendEnvironmentProvider;
+
 @interface ZMBlacklistDownloader (Testing)
 
 - (instancetype)initWithURLSession:(NSURLSession *)session
-                               env:(ZMBackendEnvironment *)env
+                               env:(id<BackendEnvironmentProvider>)env
               successCheckInterval:(NSTimeInterval)successCheckInterval
               failureCheckInterval:(NSTimeInterval)failureCheckInterval
                       userDefaults:(NSUserDefaults *)userDefaults
