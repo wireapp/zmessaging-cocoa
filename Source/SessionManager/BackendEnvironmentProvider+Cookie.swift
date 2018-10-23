@@ -18,16 +18,13 @@
 
 import WireTransport
 
-extension Account {
-
-    func cookieStorage(for environment: BackendEnvironmentProvider) -> ZMPersistentCookieStorage {
-        let backendURL = environment.backendURL.host!
-        return ZMPersistentCookieStorage(forServerName: backendURL, userIdentifier: userIdentifier)
+extension BackendEnvironmentProvider {
+    func cookieStorage(for account: Account) -> ZMPersistentCookieStorage {
+        let backendURL = self.backendURL.host!
+        return ZMPersistentCookieStorage(forServerName: backendURL, userIdentifier: account.userIdentifier)
     }
     
-    
-    public func isAuthenticated(with environment: BackendEnvironmentProvider) -> Bool {
-        return cookieStorage(for: environment).authenticationCookieData != nil
+    public func isAuthenticated(_ account: Account) -> Bool {
+        return cookieStorage(for: account).authenticationCookieData != nil
     }
-
 }

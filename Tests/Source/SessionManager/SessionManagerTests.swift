@@ -91,7 +91,7 @@ class SessionManagerTests: IntegrationTest {
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
         let manager = AccountManager(sharedDirectory: sharedContainer)
         let account = Account(userName: "", userIdentifier: currentUserIdentifier)
-        account.cookieStorage(for: sessionManager!.environment).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         manager.addAndSelect(account)
 
         var completed = false
@@ -122,7 +122,7 @@ class SessionManagerTests: IntegrationTest {
         
         // GIVEN
         let account = self.createAccount()
-        account.cookieStorage(for: sessionManager!.environment).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
         
@@ -185,7 +185,7 @@ class SessionManagerTests: IntegrationTest {
         
         // GIVEN
         let account = self.createAccount()
-        account.cookieStorage(for: sessionManager!.environment).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
         
@@ -245,10 +245,10 @@ class SessionManagerTests: IntegrationTest {
         
         // GIVEN
         let account1 = self.createAccount()
-        account1.cookieStorage(for: sessionManager!.environment).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account1).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         let account2 = self.createAccount(with: UUID.create())
-        account2.cookieStorage(for: sessionManager!.environment).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account2).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
         
@@ -572,7 +572,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
     func testThatItDoesNotUnloadActiveUserSessionFromMemoryWarning() {
         // GIVEN
         let account = self.createAccount()
-        account.cookieStorage(for: sessionManager!.environment).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
         
@@ -628,7 +628,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
     func testThatItUnloadBackgroundUserSessionFromMemoryWarning() {
         // GIVEN
         let account = self.createAccount()
-        account.cookieStorage(for: sessionManager!.environment).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
         
@@ -771,7 +771,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         let manager = self.sessionManager!.accountManager
         let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
         manager.addOrUpdate(account)
-        account.cookieStorage(for: sessionManager!.environment).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         manager.addAndSelect(account)
         
         var session: ZMUserSession! = nil
@@ -943,11 +943,11 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         // GIVEN
         let manager = sessionManager!.accountManager
         let account1 = Account(userName: "Test Account 1", userIdentifier: currentUserIdentifier)
-        account1.cookieStorage(for: sessionManager!.environment).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account1).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         manager.addOrUpdate(account1)
         let account2 = Account(userName: "Test Account 2", userIdentifier: UUID())
-        account2.cookieStorage(for: sessionManager!.environment).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account2).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         manager.addOrUpdate(account2)
         
         // Make account 1 the active session

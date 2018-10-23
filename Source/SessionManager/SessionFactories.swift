@@ -55,7 +55,7 @@ open class AuthenticatedSessionFactory {
         let transportSession = ZMTransportSession(
             baseURL: environment.backendURL,
             websocketURL: environment.backendWSURL,
-            cookieStorage: account.cookieStorage(for: environment),
+            cookieStorage: environment.cookieStorage(for: account),
             reachability: reachability,
             initialAccessToken: nil,
             applicationGroupIdentifier: nil

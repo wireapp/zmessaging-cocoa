@@ -496,7 +496,7 @@ public protocol ForegroundNotificationResponder: class {
          - completion: called when session is loaded or when session fails to load
      */
     internal func loadSession(for account: Account?, completion: @escaping (ZMUserSession?) -> Void) {
-        guard let authenticatedAccount = account, authenticatedAccount.isAuthenticated(with: environment) else {
+        guard let authenticatedAccount = account, environment.isAuthenticated(authenticatedAccount) else {
             completion(nil)
             createUnauthenticatedSession()
             delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: account?.loginCredentials?.dictionaryRepresentation))
@@ -509,7 +509,7 @@ public protocol ForegroundNotificationResponder: class {
     public func deleteAccountData(for account: Account) {
         log.debug("Deleting the data for \(account.userName) -- \(account.userIdentifier)")
         
-        account.cookieStorage(for: environment).deleteKeychainItems()
+        environment.cookieStorage(for: account).deleteKeychainItems()
         
         let accountID = account.userIdentifier
         self.accountManager.remove(account)
