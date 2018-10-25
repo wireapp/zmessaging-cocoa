@@ -46,23 +46,6 @@
     self.lastReceivedNotification = notification;
 }
 
-- (void)testThatItInitializesTheBackendEnvironments
-{
-    // given
-    ZMBackendEnvironment *prod = [ZMBackendEnvironment environmentWithType:ZMBackendEnvironmentTypeProduction];
-    ZMBackendEnvironment *staging = [ZMBackendEnvironment environmentWithType:ZMBackendEnvironmentTypeStaging];
-    
-    // then
-    XCTAssertEqualObjects(prod.backendURL, [NSURL URLWithString:@"https://prod-nginz-https.wire.com"]);
-    XCTAssertEqualObjects(staging.backendURL, [NSURL URLWithString:@"https://staging-nginz-https.zinfra.io"]);
-    
-    XCTAssertEqualObjects(prod.backendWSURL, [NSURL URLWithString:@"https://prod-nginz-ssl.wire.com"]);
-    XCTAssertEqualObjects(staging.backendWSURL, [NSURL URLWithString:@"https://staging-nginz-ssl.zinfra.io"]);
-    
-    XCTAssertEqualObjects(prod.blackListURL, [NSURL URLWithString:@"https://clientblacklist.wire.com/prod/ios"]);
-    XCTAssertEqualObjects(staging.blackListURL, [NSURL URLWithString:@"https://clientblacklist.wire.com/staging/ios"]);
-}
-
 - (void)testThatItSetsTheUserAgentOnStart;
 {
     // given
@@ -744,38 +727,6 @@
 @end
 
 
-@implementation ZMUserSessionTests (RequestToOpenConversation)
-
-- (void)testThatItCallsTheDelegateWhenRequestedToOpenAConversation
-{
-    // given
-    [[[self.transportSession stub] andReturn:nil] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
-    id mockDelegate = [OCMockObject mockForProtocol:@protocol(ZMRequestsToOpenViewsDelegate)];
-    self.sut.requestToOpenViewDelegate = mockDelegate;
-    __block NSManagedObjectID *conversationID;
-    __block ZMConversation *requestedConversation;
-    
-    // expect
-    [[mockDelegate expect] userSession:self.sut showConversation:ZM_ARG_SAVE(requestedConversation)];
-    
-    // when
-    [self.syncMOC performGroupedBlockAndWait:^{
-        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        [self.syncMOC saveOrRollback];
-        
-        conversationID = conversation.objectID;
-        [ZMUserSession requestToOpenSyncConversationOnUI:conversation];
-    }];
-    
-    // then
-    [self spinMainQueueWithTimeout:0.1];
-    [mockDelegate verify];
-    XCTAssertEqualObjects(requestedConversation.objectID, conversationID);
-    XCTAssertEqual(requestedConversation.managedObjectContext, self.uiMOC);
-    
-}
-
-@end
 
 @implementation ZMUserSessionTests (Transport)
 

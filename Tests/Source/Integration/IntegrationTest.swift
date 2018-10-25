@@ -60,7 +60,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     let transportSession: ZMTransportSession
 
-    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: ZMBackendEnvironment, reachability: ReachabilityProvider & TearDownCapable) {
+    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: BackendEnvironment, reachability: ReachabilityProvider & TearDownCapable) {
         self.transportSession = transportSession
         super.init(
             appVersion: "0.0.0",
@@ -89,12 +89,11 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
 }
 
-
 final class MockUnauthenticatedSessionFactory: UnauthenticatedSessionFactory {
 
     let transportSession: UnauthenticatedTransportSessionProtocol
     
-    init(transportSession: UnauthenticatedTransportSessionProtocol, environment: ZMBackendEnvironment, reachability: ReachabilityProvider) {
+    init(transportSession: UnauthenticatedTransportSessionProtocol, environment: BackendEnvironment, reachability: ReachabilityProvider) {
         self.transportSession = transportSession
         super.init(environment: environment, reachability: reachability)
     }
@@ -210,7 +209,7 @@ extension IntegrationTest {
     func createSessionManager() {
         guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else { return XCTFail() }
         StorageStack.shared.createStorageAsInMemory = useInMemoryStore
-        let environment = ZMBackendEnvironment(type: .staging)
+        let environment = BackendEnvironment(type: .wire(.staging))
         let reachability = TestReachability()
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
@@ -231,7 +230,8 @@ extension IntegrationTest {
             delegate: self,
             application: application,
             pushRegistry: pushRegistry,
-            dispatchGroup: self.dispatchGroup
+            dispatchGroup: self.dispatchGroup,
+            environment: environment
         )
         
         sessionManager?.start(launchOptions: [:])
@@ -434,7 +434,7 @@ extension IntegrationTest {
     func prefetchClientByInsertingMessage(in mockConversation: MockConversation) {
         guard let convo = conversation(for: mockConversation) else { return }
         userSession?.performChanges {
-            convo.appendMessage(withText: "hum, t'es sûr?")
+            convo.append(text: "hum, t'es sûr?")
         }
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
@@ -563,7 +563,7 @@ extension IntegrationTest {
 extension IntegrationTest {
     @objc(remotelyAppendSelfConversationWithZMClearedForMockConversation:atTime:)
     func remotelyAppendSelfConversationWithZMCleared(for mockConversation: MockConversation, at time: Date) {
-        let genericMessage = ZMGenericMessage(clearedTimestamp: time, ofConversationWith: UUID(uuidString: mockConversation.identifier)!, nonce: UUID.create())
+        let genericMessage = ZMGenericMessage.message(content: ZMCleared(timestamp: time, conversationRemoteID: UUID(uuidString: mockConversation.identifier)!))
         mockTransportSession.performRemoteChanges { session in
             self.selfConversation.insertClientMessage(from: self.selfUser, data: genericMessage.data())
         }
@@ -571,7 +571,7 @@ extension IntegrationTest {
     
     @objc(remotelyAppendSelfConversationWithZMLastReadForMockConversation:atTime:)
     func remotelyAppendSelfConversationWithZMLastRead(for mockConversation: MockConversation, at time: Date) {
-        let genericMessage = ZMGenericMessage(lastRead: time, ofConversationWith: UUID(uuidString: mockConversation.identifier)!, nonce: UUID.create())
+        let genericMessage = ZMGenericMessage.message(content: ZMLastRead(timestamp: time, conversationRemoteID: UUID(uuidString: mockConversation.identifier)!))
         mockTransportSession.performRemoteChanges { session in
             self.selfConversation.insertClientMessage(from: self.selfUser, data: genericMessage.data())
         }

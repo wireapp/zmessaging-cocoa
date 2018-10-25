@@ -182,7 +182,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         }
     }
     
-    ZMLogWithLevelAndTag(ZMLogLevelInfo, ZMTAG_EVENT_PROCESSING, @"Downloaded %li event(s)", parsedEvents.count);
+    ZMLogWithLevelAndTag(ZMLogLevelInfo, ZMTAG_EVENT_PROCESSING, @"Downloaded %lu event(s)", (unsigned long)parsedEvents.count);
     
     [syncStrategy processUpdateEvents:parsedEvents ignoreBuffer:YES];
     [self.pushNotificationStatus didFetchEventIds:eventIds finished:!self.listPaginator.hasMoreToFetch];

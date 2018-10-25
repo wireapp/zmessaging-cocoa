@@ -52,7 +52,7 @@
 - (void)createSUTWithCompletionHandler:(void (^)(NSString *minVersion, NSArray *excludedVersions))completionHandler
 {
     self.sut = [[ZMBlacklistDownloader alloc] initWithURLSession:self.URLSession
-                                                             env:[[ZMBackendEnvironment alloc] initWithUserDefaults:NSUserDefaults.standardUserDefaults]
+                                                             env:[[BackendEnvironment alloc] initWithWireEnvironment:WireEnvironmentTypeStaging]
                                             successCheckInterval:self.successCheckTimeInterval
                                             failureCheckInterval:self.failureCheckTimeInterval
                                                     userDefaults:[NSUserDefaults standardUserDefaults]
@@ -137,7 +137,8 @@
     else {
         data = object;
     }
-    ZMBackendEnvironment *env = [[ZMBackendEnvironment alloc] initWithUserDefaults:NSUserDefaults.standardUserDefaults];
+    
+    BackendEnvironment *env = [[BackendEnvironment alloc] initWithWireEnvironment:WireEnvironmentTypeStaging];
     NSURL *url = env.blackListURL;
     [self stubRequest:[NSURLRequest requestWithURL:url] withResponseData:data responseError:responseError HTTPStatusCode:statusCode];
 }

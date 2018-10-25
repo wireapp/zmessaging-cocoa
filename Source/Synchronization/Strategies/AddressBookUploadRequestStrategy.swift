@@ -167,7 +167,6 @@ extension AddressBookUploadRequestStrategy : ZMSingleRequestTranscoder {
     }
     
     /// Remove address book entries for users previously matching the given contact IDs
-    @available(iOS 10.0, *)
     private func deleteEntriesForUsers(contactIDs: Set<String>) {
         let fetch = AddressBookEntry.fetchRequest()
         fetch.predicate = NSPredicate(format: "%K IN %@", AddressBookEntry.Fields.localIdentifier.rawValue, contactIDs)

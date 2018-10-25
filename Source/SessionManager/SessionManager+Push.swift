@@ -97,12 +97,6 @@ extension SessionManager: PKPushRegistryDelegate {
 
 // MARK: - UNUserNotificationCenterDelegate
 
-//extension SessionManager {
-//    var notificationCenter: UserNotificationCenter {
-//        return UNUserNotificationCenter.current()
-//    }
-//}
-
 @objc extension SessionManager: UNUserNotificationCenterDelegate {
     
     // Called by the OS when the app receieves a notification while in the
@@ -178,24 +172,29 @@ extension SessionManager: PKPushRegistryDelegate {
     }
 }
 
-// MARK: - ZMRequestsToOpenViewsDelegate
+// MARK: - ShowContentDelegate
 
-extension SessionManager: ZMRequestsToOpenViewsDelegate {
-    public func showConversationList(for userSession: ZMUserSession!) {
-        self.activateAccount(for: userSession) {
-            self.requestToOpenViewDelegate?.showConversationList(for: userSession)
+
+@objc
+public protocol ShowContentDelegate: class {
+    
+    func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?)
+    func showConversationList()
+    
+}
+
+extension SessionManager {
+    
+    public func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?, in session: ZMUserSession) {
+        activateAccount(for: session) {
+            self.showContentDelegate?.showConversation(conversation, at: message)
         }
     }
     
-    public func userSession(_ userSession: ZMUserSession!, show conversation: ZMConversation!) {
-        self.activateAccount(for: userSession) {
-            self.requestToOpenViewDelegate?.userSession(userSession, show: conversation)
+    public func showConversationList(in session: ZMUserSession) {
+        activateAccount(for: session) {
+            self.showContentDelegate?.showConversationList()
         }
     }
     
-    public func userSession(_ userSession: ZMUserSession!, show message: ZMMessage!, in conversation: ZMConversation!) {
-        self.activateAccount(for: userSession) {
-            self.requestToOpenViewDelegate?.userSession(userSession, show: message, in: conversation)
-        }
-    }
 }

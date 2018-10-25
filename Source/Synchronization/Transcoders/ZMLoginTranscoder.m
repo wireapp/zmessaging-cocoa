@@ -35,11 +35,10 @@ static ZMTransportRequestMethod const LoginMethod = ZMMethodPOST;
 NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
 
 
-@interface ZMLoginTranscoder () <ZMRequestVerificationEmailObserver>
+@interface ZMLoginTranscoder ()
 
 @property (nonatomic, weak) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic, readonly) ZMSingleRequestSync *verificationResendRequest;
-@property (nonatomic) id emailResendObserverToken;
 @property (nonatomic, weak) id<ZMSGroupQueue> groupQueue;
 
 @end
@@ -68,9 +67,7 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
         self.authenticationStatus = authenticationStatus;
         _timedDownstreamSync = timedDownstreamSync ?: [[ZMTimedSingleRequestSync alloc] initWithSingleRequestTranscoder:self everyTimeInterval:0 groupQueue:groupQueue];
         _verificationResendRequest = verificationResendRequest ?: [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self groupQueue:groupQueue];
-        
-        self.emailResendObserverToken = [ZMUserSessionRegistrationNotification addObserverForRequestForVerificationEmail:self context:authenticationStatus];
-        
+
         _loginWithPhoneNumberSync = [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self groupQueue:groupQueue];
     }
     return self;
@@ -109,10 +106,6 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
         [self.timedDownstreamSync readyForNextRequestIfNotBusy];
         request = [self.timedDownstreamSync nextRequest];
     }
-    if(authenticationStatus.currentPhase == ZMAuthenticationPhaseWaitingForEmailVerification)
-    {
-        request = [self.timedDownstreamSync nextRequest];
-    }
 
     return request;
 }
@@ -129,30 +122,12 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
     return @[];
 }
 
-- (void)didReceiveRequestToResendValidationEmail
-{
-    [self.groupQueue performGroupedBlock:^{
-        [self.verificationResendRequest readyForNextRequest];
-        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-    }];
-}
-
-- (BOOL)isWaitingForEmailVerification
-{
-    ZMAuthenticationPhase authenticationPhase = self.authenticationStatus.currentPhase;
-    return authenticationPhase == ZMAuthenticationPhaseWaitingForEmailVerification || authenticationPhase == ZMAuthenticationPhaseLoginWithEmail;
-}
-
 - (ZMTransportRequest *)requestForSingleRequestSync:(ZMSingleRequestSync *)sync
 {
     if (sync == self.timedDownstreamSync ||
         sync == self.loginWithPhoneNumberSync) {
         return [self loginRequest];
-    }
-    else if (sync == self.verificationResendRequest) {
-        return [self resendEmailVerificationRequest];
-    }
-    else {
+    } else {
         return nil;
     }
 }
@@ -184,21 +159,6 @@ NSTimeInterval DefaultPendingValidationLoginAttemptInterval = 5;
     }
     return [[ZMTransportRequest alloc] initWithPath:ZMLoginURL method:LoginMethod payload:payload authentication:ZMTransportRequestAuthCreatesCookieAndAccessToken];
 
-}
-
-- (ZMTransportRequest *)resendEmailVerificationRequest
-{
-    ZMAuthenticationStatus * authenticationStatus = self.authenticationStatus;
-    NSString *email;
-    if(authenticationStatus.currentPhase == ZMAuthenticationPhaseWaitingForEmailVerification) {
-        email = authenticationStatus.loginCredentials.email;
-    }
-    if (email.length == 0) {
-        return nil;
-    }
-    NSDictionary *payload = @{@"email" : email,
-                              @"locale" : [NSLocale formattedLocaleIdentifier] };
-    return [[ZMTransportRequest alloc] initWithPath:ZMResendVerificationURL method:ZMMethodPOST payload:payload authentication:ZMTransportRequestAuthNone];
 }
 
 - (void)didReceiveResponse:(ZMTransportResponse *)response forSingleRequest:(ZMSingleRequestSync *)sync

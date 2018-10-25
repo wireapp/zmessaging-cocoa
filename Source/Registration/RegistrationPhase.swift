@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2017 Wire Swiss GmbH
+// Copyright (C) 2018 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,16 +16,16 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-extension Account {
+import Foundation
 
-    func cookieStorage() -> ZMPersistentCookieStorage {
-        let backendURL = ZMBackendEnvironment(userDefaults: .standard).backendURL.host!
-        return ZMPersistentCookieStorage(forServerName: backendURL, userIdentifier: userIdentifier)
-    }
-    
-    
-    public var isAuthenticated : Bool {
-        return cookieStorage().authenticationCookieData != nil
-    }
+/**
+ * Phases of registration.
+ */
 
+public enum RegistrationPhase: Equatable {
+    case sendActivationCode(credential: UnverifiedCredential)
+    case checkActivationCode(credential: UnverifiedCredential, code: String)
+    case createUser(user: UnregisteredUser)
+    case createTeam(team: UnregisteredTeam)
+    case none
 }

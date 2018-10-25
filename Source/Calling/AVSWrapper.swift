@@ -16,40 +16,9 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-
 import Foundation
 import avs
 
-public struct AVSCallMember : Hashable {
-    
-    let remoteId: UUID
-    let audioEstablished: Bool
-    let videoState: VideoState
-    let networkCondition: NetworkCondition
-    
-    init?(wcallMember: wcall_member) {
-        guard let remoteId = UUID(cString:wcallMember.userid) else { return nil }
-        self.remoteId = remoteId
-        audioEstablished = (wcallMember.audio_estab != 0)
-        videoState = VideoState(rawValue: wcallMember.video_recv) ?? .stopped
-        networkCondition = .normal
-    }
-    
-    init(userId : UUID, audioEstablished: Bool = false, videoState: VideoState = .stopped, networkCondition: NetworkCondition = .normal) {
-        self.remoteId = userId
-        self.audioEstablished = audioEstablished
-        self.videoState = videoState
-        self.networkCondition = networkCondition
-    }
-    
-    public var hashValue: Int {
-        return remoteId.hashValue
-    }
-    
-    public static func ==(lhs: AVSCallMember, rhs: AVSCallMember) -> Bool {
-        return lhs.remoteId == rhs.remoteId
-    }
-}
 
 public enum NetworkCondition: Int32 {
     case normal = 1
@@ -57,28 +26,12 @@ public enum NetworkCondition: Int32 {
     case poor = 3
 }
 
-public enum VideoState: Int32 {
-    /// Sender is not sending video
-    case stopped = 0
-    /// Sender is sending video
-    case started = 1
-    /// Sender is sending video but currently has a bad connection
-    case badConnection = 2
-    /// Sender has paused the video
-    case paused = 3
-}
+private let zmLog = ZMSLog(tag: "calling")
 
-public enum AVSCallType: Int32 {
-    case normal = 0
-    case video = 1
-    case audioOnly = 2
-}
-
-public enum AVSConversationType: Int32 {
-    case oneToOne = 0
-    case group = 1
-    case conference = 2
-}
+/**
+ * The type of objects that can provide an interface to calling APIs.
+ * This provides strong typing, dependency injection and better testing.
+ */
 
 public protocol AVSWrapperType {
     init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?)
@@ -94,11 +47,19 @@ public protocol AVSWrapperType {
     func update(callConfig: String?, httpStatusCode: Int)
 }
 
-/// Wraps AVS calls for dependency injection and better testing
-public class AVSWrapper : AVSWrapperType {
 
-    private let handle : UnsafeMutableRawPointer
-    
+/**
+ * An object that provides an interface to the AVS APIs.
+ */
+
+public class AVSWrapper: AVSWrapperType {
+
+    /// The wrapped `wcall` instance.
+    private let handle: UnsafeMutableRawPointer
+
+    // MARK: - Initialization
+
+    /// Initializes avs.
     private static var initialize: () -> Void = {
         let resultValue = wcall_init()
         if resultValue != 0 {
@@ -106,9 +67,17 @@ public class AVSWrapper : AVSWrapperType {
         }
         return {}
     }()
-    
+
+    /**
+     * Creates the wrapper around `wcall`.
+     * - parameter userId: The identifier of the user that owns the calling center.
+     * - parameter clientId: The identifier of the current client (this device).
+     * - parameter observer: The raw pointer to the object that will receive events from AVS.
+     * This must be a pointer to a `WireCallCenterV3` object. If it isn't, the notifications
+     * won't be handled.
+     */
+
     required public init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?) {
-        
         AVSWrapper.initialize()
         
         handle = wcall_create(userId.transportString(),
@@ -125,55 +94,68 @@ public class AVSWrapper : AVSWrapperType {
                               constantBitRateChangeHandler,
                               videoStateChangeHandler,
                               observer)
-        
+
         wcall_set_data_chan_estab_handler(handle, dataChannelEstablishedHandler)
         wcall_set_group_changed_handler(handle, groupMemberHandler, observer)
         wcall_set_network_quality_handler(handle, networkQualityHandler, 5, observer)
+        wcall_set_media_stopped_handler(handle, mediaStoppedChangeHandler)
     }
-    
+
+    // MARK: - Convenience Methods
+
+    /// Requests AVS to initiate a call.
     public func startCall(conversationId: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool) -> Bool {
         let didStart = wcall_start(handle, conversationId.transportString(), callType.rawValue, conversationType.rawValue, useCBR ? 1 : 0)
         return didStart == 0
     }
-    
+
+    /// Marks the call as answered in AVS.
     public func answerCall(conversationId: UUID, callType: AVSCallType, useCBR: Bool) -> Bool {
         let didAnswer = wcall_answer(handle, conversationId.transportString(), callType.rawValue, useCBR ? 1 : 0)
         return didAnswer == 0
     }
-    
+
+    /// Marks the call as ended in AVS.
     public func endCall(conversationId: UUID) {
         wcall_end(handle, conversationId.transportString())
     }
-    
+
+    /// Marks the call as rejected in AVS.
     public func rejectCall(conversationId: UUID) {
         wcall_reject(handle, conversationId.transportString())
     }
-    
+
+    /// Closes the `wcall` handler. This object becomes invalid after this method is called.
     public func close() {
         wcall_destroy(handle)
     }
-    
+
+    /// Changes the video state in AVS for the given conversation.
     public func setVideoState(conversationId: UUID, videoState: VideoState) {
         wcall_set_video_send_state(handle, conversationId.transportString(), videoState.rawValue)
     }
-    
+
+    /// Passes the response of the calling config request to AVS.
     public func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {
         wcall_resp(handle, Int32(httpStatus), "", context)
     }
-    
+
+    /// Notifies AVS that we received a remote event.
     public func received(callEvent: CallEvent) {
         callEvent.data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
             let currentTime = UInt32(callEvent.currentTimestamp.timeIntervalSince1970)
             let serverTime = UInt32(callEvent.serverTimestamp.timeIntervalSince1970)
-            
+            zmLog.debug("wcall_recv_msg: currentTime = \(currentTime), serverTime = \(serverTime)")
             wcall_recv_msg(handle, bytes, callEvent.data.count, currentTime, serverTime, callEvent.conversationId.transportString(), callEvent.userId.transportString(), callEvent.clientId)
         }
     }
-    
+
+    /// Updates the calling config.
     public func update(callConfig: String?, httpStatusCode: Int) {
         wcall_config_update(handle, httpStatusCode == 200 ? 0 : EPROTO, callConfig ?? "")
     }
-        
+
+    /// Returns the list of members in the conversation.
     public func members(in conversationId: UUID) -> [AVSCallMember] {
         guard let membersRef = wcall_get_members(handle, conversationId.transportString()) else { return [] }
         
@@ -189,4 +171,101 @@ public class AVSWrapper : AVSWrapperType {
         
         return callMembers
     }
+
+    // MARK: - C Callback Handlers
+
+    private let constantBitRateChangeHandler: ConstantBitRateChangeHandler = { _, enabledFlag, contextRef in
+        AVSWrapper.withCallCenter(contextRef, enabledFlag) {
+            $0.handleConstantBitRateChange(enabled: $1)
+        }
+    }
+
+    private let videoStateChangeHandler: VideoStateChangeHandler = { userId, state, contextRef in
+        AVSWrapper.withCallCenter(contextRef, userId, state) {
+            $0.handleVideoStateChange(userId: $1, newState: $2)
+        }
+    }
+
+    private let incomingCallHandler: IncomingCallHandler = { conversationId, messageTime, userId, isVideoCall, shouldRing, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, isVideoCall, shouldRing) {
+            $0.handleIncomingCall(conversationId: $1, messageTime: $2, userId: $3, isVideoCall: $4, shouldRing: $5)
+        }
+    }
+
+    private let missedCallHandler: MissedCallHandler = { conversationId, messageTime, userId, isVideoCall, contextRef in
+        zmLog.debug("missedCallHandler: messageTime = \(messageTime)")
+        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, isVideoCall) {
+            $0.handleMissedCall(conversationId: $1, messageTime: $2, userId: $3, isVideoCall: $4)
+        }
+    }
+
+    private let answeredCallHandler: AnsweredCallHandler = { conversationId, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationId) {
+            $0.handleAnsweredCall(conversationId: $1)
+        }
+    }
+
+    private let dataChannelEstablishedHandler: DataChannelEstablishedHandler = { conversationId, userId, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationId, userId) {
+            $0.handleDataChannelEstablishement(conversationId: $1, userId: $2)
+        }
+    }
+
+    private let establishedCallHandler: CallEstablishedHandler = { conversationId, userId, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationId, userId) {
+            $0.handleEstablishedCall(conversationId: $1, userId: $2)
+        }
+    }
+
+    private let closedCallHandler: CloseCallHandler = { reason, conversationId, messageTime, userId, contextRef in
+        zmLog.debug("closedCallHandler: messageTime = \(messageTime)")
+        AVSWrapper.withCallCenter(contextRef, reason, conversationId, messageTime) {
+            $0.handleCallEnd(reason: $1, conversationId: $2, messageTime: $3, userId: UUID(rawValue: userId))
+        }
+    }
+
+    private let callMetricsHandler: CallMetricsHandler = { conversationId, metrics, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationId, metrics) {
+            $0.handleCallMetrics(conversationId: $1, metrics: $2)
+        }
+    }
+
+    private let requestCallConfigHandler: CallConfigRefreshHandler = { handle, contextRef in
+        zmLog.debug("AVS: requestCallConfigHandler \(String(describing: handle)) \(String(describing: contextRef))")
+        return AVSWrapper.withCallCenter(contextRef) {
+            $0.handleCallConfigRefreshRequest()
+        }
+    }
+
+    private let readyHandler: CallReadyHandler = { version, contextRef in
+        AVSWrapper.withCallCenter(contextRef) {
+            $0.setCallReady(version: version)
+        }
+    }
+
+    private let sendCallMessageHandler: CallMessageSendHandler = { token, conversationId, senderUserId, senderClientId, _, _, data, dataLength, _, contextRef in
+        guard let token = token else {
+            return EINVAL
+        }
+
+        let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
+        let transformedData = Data(buffer: bytes)
+
+        return AVSWrapper.withCallCenter(contextRef, conversationId, senderUserId, senderClientId) {
+            $0.handleCallMessageRequest(token: token, conversationId: $1, senderUserId: $2, senderClientId: $3, data: transformedData)
+        }
+    }
+
+    private let groupMemberHandler: CallGroupChangedHandler = { conversationIdRef, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationIdRef) {
+            $0.handleGroupMemberChange(conversationId: $1)
+        }
+    }
+
+    private let mediaStoppedChangeHandler: MediaStoppedChangeHandler = { conversationIdRef, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationIdRef) {
+            $0.handleMediaStopped(conversationId: $1)
+        }
+    }
+
 }

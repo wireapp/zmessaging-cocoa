@@ -62,54 +62,8 @@ internal enum BuildType {
     }
 }
 
-extension ZMBackendEnvironmentType {
-    var backendHost: String {
-        switch self {
-        case .production:
-            return "prod-nginz-https.wire.com"
-        case .staging:
-            return "staging-nginz-https.zinfra.io"
-        }
-    }
-    
-    var websocketHost: String {
-        switch self {
-        case .production:
-            return "prod-nginz-ssl.wire.com"
-        case .staging:
-            return "staging-nginz-ssl.zinfra.io"
-        }
-    }
-    
-    var frontendHost: String {
-        switch self {
-        case .production:
-            return "wire.com"
-        case .staging:
-            return "staging-website.zinfra.io"
-        }
-    }
-    
-    var blacklistEndpoint: String {
-        switch self {
-        case .production:
-            return "clientblacklist.wire.com/prod/ios"
-        case .staging:
-            return "clientblacklist.wire.com/staging/ios"
-        }
-    }
-}
-
-extension ZMBackendEnvironment {
-    static func setupEnvironments() {
-        [ZMBackendEnvironmentType.production, .staging].forEach {
-            ZMBackendEnvironment.setupEnvironment(of: $0,
-                                                  withBackendHost: $0.backendHost,
-                                                  wsHost: $0.websocketHost,
-                                                  blackListEndpoint: $0.blacklistEndpoint,
-                                                  frontendHost: $0.frontendHost)
-        }
-        
+extension BuildType {
+    static func setupBuildTypes() {
         ZMAPNSEnvironment.setupForProduction(withCertificateName: BuildType.production.certificateName)
         [BuildType.alpha, .development, .internal].forEach {
             ZMAPNSEnvironment.setupForEnterprise(withBundleId: $0.bundleID, withCertificateName: $0.certificateName)

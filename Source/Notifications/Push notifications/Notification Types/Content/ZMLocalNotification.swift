@@ -69,7 +69,7 @@ open class ZMLocalNotification: NSObject {
         self.type = builder.notificationType
         self.title = builder.titleText()
         self.body = builder.bodyText().escapingPercentageSymbols
-        self.category = builder.notificationType.category
+        self.category = builder.notificationType.category(hasTeam: builder.userInfo()?.teamName != nil)
         self.sound = builder.notificationType.sound
         self.userInfo = builder.userInfo()
         self.id = userInfo?.messageNonce ?? UUID()
@@ -83,7 +83,7 @@ open class ZMLocalNotification: NSObject {
         let content = UNMutableNotificationContent()
         content.body = self.body
         content.categoryIdentifier = self.category
-        content.sound = UNNotificationSound(named: sound.name)
+        content.sound = UNNotificationSound(named: convertToUNNotificationSoundName(sound.name))
 
         if let title = self.title {
             content.title = title
@@ -93,8 +93,12 @@ open class ZMLocalNotification: NSObject {
             content.userInfo = userInfo.storage
         }
 
+        // only group non ephemeral messages
         if let conversationID = self.conversationID {
-            content.threadIdentifier = conversationID.transportString()
+            switch self.type {
+            case .message(.ephemeral): break
+            default: content.threadIdentifier = conversationID.transportString()
+            }            
         }
 
         return content
@@ -126,11 +130,8 @@ extension ZMLocalNotification {
     
     /// Returns true if it is a ephemeral notification, else false.
     public var isEphemeral: Bool {
-        guard case .message(let contentType) = type else {
-            return false
-        }
-
-        return contentType == .ephemeral
+        guard case .message(.ephemeral) = type else { return false }
+        return true
     }
 
 }
@@ -146,4 +147,9 @@ extension ZMLocalNotification {
     public func sender(in moc: NSManagedObjectContext) -> ZMUser? {
         return userInfo?.sender(in: moc)
     }
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertToUNNotificationSoundName(_ input: String) -> UNNotificationSoundName {
+	return UNNotificationSoundName(rawValue: input)
 }

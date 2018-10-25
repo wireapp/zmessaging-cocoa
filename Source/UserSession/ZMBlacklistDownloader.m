@@ -60,7 +60,7 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 @property (nonatomic) dispatch_queue_t queue;
 
 /// Backend environment to use
-@property (nonatomic) ZMBackendEnvironment *env;
+@property (nonatomic) id<BackendEnvironmentProvider> env;
 
 /// Callback to be called when the blacklisted versions change
 @property (nonatomic, copy) void(^completionHandler)(NSString *, NSArray *);
@@ -109,11 +109,12 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 @implementation ZMBlacklistDownloader
 
 - (instancetype)initWithDownloadInterval:(NSTimeInterval)downloadInterval
+                             environment:(id<BackendEnvironmentProvider>)environment
                             workingGroup:(ZMSDispatchGroup *)workingGroup
                              application:(id<ZMApplication>)application
                        completionHandler:(void (^)(NSString *, NSArray *))completionHandler {
     return [self initWithURLSession:nil
-                                env:[[ZMBackendEnvironment alloc] initWithUserDefaults:NSUserDefaults.standardUserDefaults]
+                                env:environment
                successCheckInterval:downloadInterval
                failureCheckInterval:UnsuccessfulDownloadRetryInterval
                        userDefaults:[NSUserDefaults standardUserDefaults]
@@ -125,7 +126,7 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 
 
 - (instancetype)initWithURLSession:(NSURLSession *)session
-                               env:(ZMBackendEnvironment *)env
+                               env:(id<BackendEnvironmentProvider>)env
               successCheckInterval:(NSTimeInterval)successCheckInterval
               failureCheckInterval:(NSTimeInterval)failureCheckInterval
                       userDefaults:(NSUserDefaults *)userDefaults

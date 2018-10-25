@@ -397,7 +397,7 @@
     // expect
     id editUserObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
     id editUserObserverToken = [self.userSession.userProfile addObserver:editUserObserver];
-    [[editUserObserver expect] didSentVerificationEmail];
+    [[editUserObserver expect] didSendVerificationEmail];
     
     id userObserver = [OCMockObject mockForProtocol:@protocol(ZMUserObserver)];
     id userObserverToken = [UserChangeInfo addObserver:userObserver forUser:selfUser userSession:self.userSession];
@@ -481,7 +481,7 @@
         }
         return nil;
     };
-    [[editingObserver expect] didSentVerificationEmail];
+    [[editingObserver expect] didSendVerificationEmail];
     [[editingObserver expect] passwordUpdateRequestDidFail];
     
     // when

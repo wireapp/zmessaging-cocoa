@@ -139,6 +139,13 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory refetchGroupConversations:context];
                      }],
+                    
+                    /// We need to refetch all conversations in order to receive the correct status of the mute state.
+                    [ZMHotFixPatch
+                     patchWithVersion:@"198.0.0"
+                     patchCode:^(NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory refetchAllConversations:context];
+                     }],
                     ];
     });
     return patches;

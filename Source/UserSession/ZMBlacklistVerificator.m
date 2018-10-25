@@ -18,6 +18,7 @@
 
 
 @import WireSystem;
+@import WireTransport;
 
 #import "ZMBlacklistVerificator+Testing.h"
 #import "ZMBlacklistDownloader.h"
@@ -31,12 +32,14 @@
 
 - (instancetype)initWithCheckInterval:(NSTimeInterval)checkInterval
                               version:(NSString *)version
-                         workingGroup:(ZMSDispatchGroup *)workingGroup
+                          environment:(id<BackendEnvironmentProvider>)environment
+                         workingGroup:(ZMSDispatchGroup * _Nullable)workingGroup
                           application:(id<ZMApplication>)application
                     blacklistCallback:(void (^)(BOOL))blacklistCallback
 {
     return [self initWithCheckInterval:checkInterval
                                version:version
+                           environment:environment
                           workingGroup:workingGroup
                            application:application
                      blacklistCallback:blacklistCallback
@@ -45,6 +48,7 @@
 
 - (instancetype)initWithCheckInterval:(NSTimeInterval)checkInterval
                               version:(NSString *)version
+                          environment:(id<BackendEnvironmentProvider>)environment
                          workingGroup:(ZMSDispatchGroup *)workingGroup
                           application:(id<ZMApplication>)application
                     blacklistCallback:(void (^)(BOOL))blacklistCallback
@@ -53,6 +57,7 @@
     self = [super init];
     if(self) {
         self.downloader = [[blacklistClass alloc] initWithDownloadInterval:checkInterval
+                                                               environment:environment
                                                               workingGroup:workingGroup
                                                                application:application
                                                          completionHandler:^(NSString *minVersion, NSArray *excludedVersions) {

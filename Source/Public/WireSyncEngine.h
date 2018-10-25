@@ -45,12 +45,9 @@
 #import <WireSyncEngine/ZMTyping.h>
 #import <WireSyncEngine/ZMSyncStateDelegate.h>
 #import <WireSyncEngine/ZMUserSession+OperationLoop.h>
-#import <WireSyncEngine/ZMOperationLoop+Background.h>
 #import <WireSyncEngine/ZMSimpleListRequestPaginator.h>
 #import <WireSyncEngine/ZMLoginTranscoder.h>
 #import <WireSyncEngine/ZMLoginCodeRequestTranscoder.h>
-#import <WireSyncEngine/ZMRegistrationTranscoder.h>
-#import <WireSyncEngine/ZMPhoneNumberVerificationTranscoder.h>
 #import <WireSyncEngine/ZMHotFix.h>
 #import <WireSyncEngine/ZMSyncStrategy.h>
 #import <WireSyncEngine/ZMObjectStrategyDirectory.h>

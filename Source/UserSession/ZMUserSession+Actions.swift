@@ -22,67 +22,54 @@ private let zmLog = ZMSLog(tag: "Push")
 
 @objc extension ZMUserSession {
     
-    public func handleNotification(_ note: ZMStoredLocalNotification) {
-        guard let category = PushNotificationCategory(rawValue: note.category) else {
-            return handleDefaultCategoryNotification(note)
-        }
-        
-        switch category {
-        case .connect:
-            handleConnectionRequestCategoryNotification(note)
-        case .incomingCall, .missedCall:
-            handleCallCategoryNotification(note)
-        default:
-            handleDefaultCategoryNotification(note)
-        }
-    }
-    
     // MARK: - Foreground Actions
     
-    public func handleConnectionRequestCategoryNotification(_ note : ZMStoredLocalNotification) {
-        guard
-            let senderID = note.senderID,
-            let sender = ZMUser.fetch(withRemoteIdentifier: senderID, in: managedObjectContext)
-            else { return }
+    public func acceptConnectionRequest(with userInfo: NotificationUserInfo, completionHandler: @escaping () -> Void) {
         
-        if note.actionIdentifier == ConversationNotificationAction.connect.rawValue {
-            sender.accept()
-            managedObjectContext.saveOrRollback()
-        }
+        guard let senderID = userInfo.senderID,
+              let sender = ZMUser.fetch(withRemoteIdentifier: senderID, in: managedObjectContext),
+              let conversation = sender.connection?.conversation
+        else { return }
         
-        open(sender.connection?.conversation, at: nil)
+        sender.accept()
+        managedObjectContext.saveOrRollback()
+        showConversation(conversation)
+        completionHandler()
     }
     
-    public func handleCallCategoryNotification(_ note : ZMStoredLocalNotification) {
-        guard let actionIdentifier = note.actionIdentifier, actionIdentifier == CallNotificationAction.accept.rawValue,
-            let callState = note.conversation?.voiceChannel?.state
-        else {
-            open(note.conversation, at: nil)
-            return
+    public func acceptCall(with userInfo: NotificationUserInfo, completionHandler: @escaping () -> Void) {
+        
+        guard let conversation = userInfo.conversation(in: managedObjectContext) else { return }
+        
+        defer {
+            showConversation(conversation)
+            completionHandler()
         }
+        
+        guard let callState = conversation.voiceChannel?.state else { return }
         
         if case let .incoming(video: video, shouldRing: _, degraded: _) = callState, callCenter?.activeCallConversations(in: self).count == 0 {
-            _ = note.conversation?.voiceChannel?.join(video: video, userSession: self)
+            _ = conversation.voiceChannel?.join(video: video, userSession: self)
         }
-        
-        open(note.conversation, at: nil)
     }
     
-    public func handleDefaultCategoryNotification(_ note: ZMStoredLocalNotification) {
-        open(note.conversation, at: nil)
-    }
-    
-    func open(_ conversation: ZMConversation?, at message : ZMMessage?) {
-        guard let strongDelegate = requestToOpenViewDelegate else { return }
+    func showContent(for userInfo: NotificationUserInfo) {
+        if let conversation = userInfo.conversation(in: managedObjectContext) {
             
-        if conversation == nil {
-            strongDelegate.showConversationList(for: self)
-        }
-        else if message == nil {
-            strongDelegate.userSession(self, show: conversation)
+            if let message = userInfo.message(in: conversation, managedObjectContext: managedObjectContext) as? ZMClientMessage,
+                let textMessageData = message.textMessageData, textMessageData.isMentioningSelf {
+                showConversation(conversation, at: conversation.firstUnreadMessageMentioningSelf)
+            } else {
+                showConversation(conversation)
+            }
+            
         } else {
-            strongDelegate.userSession(self, show: message, in: conversation)
+            sessionManager?.showConversationList(in: self)
         }
+    }
+        
+    fileprivate func showConversation(_ conversation: ZMConversation, at message : ZMConversationMessage? = nil) {
+        sessionManager?.showConversation(conversation, at: message, in: self)
     }
     
     // MARK: - Background Actions
@@ -98,12 +85,12 @@ private let zmLog = ZMSLog(tag: "Push")
         }
     }
     
-    public  func muteConversation(with userInfo: NotificationUserInfo, completionHandler: @escaping () -> Void) {
+    public func muteConversation(with userInfo: NotificationUserInfo, completionHandler: @escaping () -> Void) {
         let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Mute Conversation Action Handler")
         let conversation = userInfo.conversation(in: managedObjectContext)
 
         managedObjectContext.perform {
-            conversation?.isSilenced = true
+            conversation?.mutedMessageTypes = .all
             self.managedObjectContext.saveOrRollback()
             activity?.end()
             completionHandler()
@@ -137,7 +124,7 @@ private let zmLog = ZMSLog(tag: "Push")
         }
         
         enqueueChanges {
-            guard let message = conversation.appendMessage(withText: message) else { return /* failure */ }
+            guard let message = conversation.append(text: message) else { return /* failure */ }
             self.messageReplyObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { [weak self] in
                 self?.updateBackgroundTask(with: message)
             })

@@ -38,13 +38,13 @@ class ZMLocalNotificationTests: MessagingTest {
         otherUser1 = insertUser(with: UUID.create(), name: "Other User1")
         otherUser2 = insertUser(with: UUID.create(), name: "Other User2")
         userWithNoName = insertUser(with: UUID.create(), name: nil)
-        oneOnOneConversation = insertConversation(with: UUID.create(), name: "Super Conversation", type: .oneOnOne, isSilenced: false)
-        groupConversation = insertConversation(with: UUID.create(), name: "Super Conversation", type: .group, isSilenced: false)
+        oneOnOneConversation = insertConversation(with: UUID.create(), name: "Super Conversation", type: .oneOnOne, mutedMessages: .none)
+        groupConversation = insertConversation(with: UUID.create(), name: "Super Conversation", type: .group, mutedMessages: .none)
         
         // an empty conversation will have no meaninful display name
-        groupConversationWithoutName = insertConversation(with: UUID.create(), name: nil, type: .group, isSilenced: false, isEmpty: true)
-        groupConversationWithoutUserDefinedName = insertConversation(with: UUID.create(), name: nil, type: .group, isSilenced: false)
-        invalidConversation = insertConversation(with: UUID.create(), name: nil, type: .invalid, isSilenced: false)
+        groupConversationWithoutName = insertConversation(with: UUID.create(), name: nil, type: .group, mutedMessages: .none, isEmpty: true)
+        groupConversationWithoutUserDefinedName = insertConversation(with: UUID.create(), name: nil, type: .group, mutedMessages: .none)
+        invalidConversation = insertConversation(with: UUID.create(), name: nil, type: .invalid, mutedMessages: .none)
 
         syncMOC.performGroupedBlockAndWait {
             self.selfUser = ZMUser.selfUser(in: self.syncMOC)
@@ -80,14 +80,14 @@ class ZMLocalNotificationTests: MessagingTest {
         return user
     }
     
-    func insertConversation(with remoteID: UUID, name: String?, type: ZMConversationType, isSilenced: Bool, isEmpty: Bool = false) -> ZMConversation {
+    func insertConversation(with remoteID: UUID, name: String?, type: ZMConversationType, mutedMessages: MutedMessageTypes, isEmpty: Bool = false) -> ZMConversation {
         var conversation: ZMConversation!
         syncMOC.performGroupedBlockAndWait {
             conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.remoteIdentifier = remoteID
             conversation.userDefinedName = name
             conversation.conversationType = type
-            conversation.isSilenced = isSilenced
+            conversation.mutedMessageTypes = mutedMessages
             conversation.lastServerTimeStamp = Date()
             conversation.lastReadServerTimeStamp = conversation.lastServerTimeStamp
             if !isEmpty { conversation.mutableLastServerSyncedActiveParticipants.addObjects(from: [self.sender, self.otherUser1]) }

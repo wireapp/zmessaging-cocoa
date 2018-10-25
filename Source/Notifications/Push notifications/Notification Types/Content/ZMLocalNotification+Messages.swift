@@ -59,7 +59,14 @@ extension ZMLocalNotification {
         
         func shouldCreateNotification() -> Bool {
             
-            if sender.isSelfUser || conversation.isSilenced { return false }
+            let isSelfMentioned = message.textMessageData?.isMentioningSelf == true
+            
+            let allNotificationsMuted = conversation.mutedMessageTypes == .all
+            let onlyNonMentionsMuted = conversation.mutedMessageTypes == .nonMentions
+            
+            if sender.isSelfUser ||
+                allNotificationsMuted ||
+                onlyNonMentionsMuted && !isSelfMentioned { return false }
             
             if let timeStamp = message.serverTimestamp,
                let lastRead = conversation.lastReadServerTimeStamp,

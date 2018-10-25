@@ -89,7 +89,6 @@
 {
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     
-    XCTAssertNil(self.sut.registrationUser);
     XCTAssertNil(self.sut.registrationPhoneNumberThatNeedsAValidationCode);
     XCTAssertNil(self.sut.loginPhoneNumberThatNeedsAValidationCode);
     XCTAssertNil(self.sut.loginCredentials);
@@ -110,118 +109,9 @@
     [self.uiMOC setPersistentStoreMetadata:nil forKey:@"PersistedClientId"];
 }
 
-- (void)testThatItSetsIgnoreCookiesWhenEmailRegistrationUserIsSet
-{
-    XCTAssertEqual([ZMPersistentCookieStorage cookiesPolicy], NSHTTPCookieAcceptPolicyAlways);
-    ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithEmail:@"some@example.com" password:@"password"];
-    [self.sut prepareForRegistrationOfUser:regUser];
-    XCTAssertEqual([ZMPersistentCookieStorage cookiesPolicy], NSHTTPCookieAcceptPolicyNever);
-}
-
-- (void)testThatItSetsAcceptCookiesWhenPhoneNumberRegistrationUserIsSet
-{
-    [ZMPersistentCookieStorage setCookiesPolicy:NSHTTPCookieAcceptPolicyNever];
-    ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithPhoneNumber:@"1234567890" phoneVerificationCode:@"123456"];
-    [self.sut prepareForRegistrationOfUser:regUser];
-    XCTAssertEqual([ZMPersistentCookieStorage cookiesPolicy], NSHTTPCookieAcceptPolicyAlways);
-}
-
-- (void)testThatItSetsAcceptCookiesWhenLoginCredentialsAreSet
-{
-    //given
-    ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithEmail:@"some@example.com" password:@"password"];
-    
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.registrationCallback = ^(__unused  ZMUserSessionRegistrationNotificationType type, __unused NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual([ZMPersistentCookieStorage cookiesPolicy], NSHTTPCookieAcceptPolicyAlways);
-        [expectation fulfill];
-    };
-    
-    // when
-    [self.sut prepareForRegistrationOfUser:regUser];
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut didCompleteRegistrationSuccessfullyWithResponse:nil]; // We don't care about response in here
-    }];
-    
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-}
-
 @end
 
 @implementation ZMAuthenticationStatusTests (PrepareMethods)
-
-- (void)testThatItCanRegisterWithPhoneAfterSettingTheRegistrationUser
-{
-    // given
-    NSString *phone = @"+49123456789000";
-    NSString *code = @"123456";
-    
-    ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithPhoneNumber:phone phoneVerificationCode:code];
-    
-    // when
-    [self.sut prepareForRegistrationOfUser:regUser];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseRegisterWithPhone);
-    XCTAssertEqualObjects(self.sut.registrationUser.phoneNumber, phone);
-    XCTAssertEqualObjects(self.sut.registrationUser.phoneVerificationCode, code);
-}
-
-- (void)testThatItCanRegisterWithEmailAfterSettingTheRegistrationUser
-{
-    // given
-    NSString *email = @"foo@foo.bar";
-    NSString *pass = @"123456xcxc";
-    
-    ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithEmail:email password:pass];
-    
-    // when
-    [self.sut prepareForRegistrationOfUser:regUser];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseRegisterWithEmail);
-    XCTAssertEqualObjects(self.sut.registrationUser.emailAddress, email);
-    XCTAssertEqualObjects(self.sut.registrationUser.password, pass);
-}
-
-- (void)testThatItCanRegisterWithEmailInvitationAfterSettingTheRegistrationUser
-{
-    // given
-    NSString *email = @"foo@foo.bar";
-    NSString *pass = @"123456xcxc";
-    NSString *code = @"12392sdksld";
-    
-    ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithEmail:email password:pass invitationCode:code];
-    
-    // when
-    [self.sut prepareForRegistrationOfUser:regUser];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseRegisterWithEmail);
-    XCTAssertEqualObjects(self.sut.registrationUser.emailAddress, email);
-    XCTAssertEqualObjects(self.sut.registrationUser.password, pass);
-    XCTAssertEqualObjects(self.sut.registrationUser.invitationCode, code);
-}
-
-- (void)testThatItCanRegisterWithPhoneInvitationAfterSettingTheRegistrationUser
-{
-    // given
-    NSString *phone = @"+4923238293822";
-    NSString *code = @"12392sdksld";
-    
-    ZMCompleteRegistrationUser *regUser = [ZMCompleteRegistrationUser registrationUserWithPhoneNumber:phone invitationCode:code];
-    
-    // when
-    [self.sut prepareForRegistrationOfUser:regUser];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseRegisterWithPhone);
-    XCTAssertEqualObjects(self.sut.registrationUser.phoneNumber, phone);
-    XCTAssertEqualObjects(self.sut.registrationUser.invitationCode, code);
-}
 
 - (void)testThatItCanLoginWithEmailAfterSettingCredentials
 {
@@ -259,22 +149,6 @@
 
 }
 
-- (void)testThatItCanRequestPhoneVerificationCodeForRegistrationAfterRequestingTheCode
-{
-    // given
-    NSString *phone = @"+49(123)45678900";
-    NSString *normalizedPhone = [phone copy];
-    [ZMPhoneNumberValidator validateValue:&normalizedPhone error:nil];
-    
-    // when
-    [self.sut prepareForRequestingPhoneVerificationCodeForRegistration:phone];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseRequestPhoneVerificationCodeForRegistration);
-    XCTAssertEqualObjects(self.sut.registrationPhoneNumberThatNeedsAValidationCode, normalizedPhone);
-    XCTAssertNotEqualObjects(normalizedPhone, phone, @"Should not have changed original phone");
-}
-
 - (void)testThatItCanRequestPhoneVerificationCodeForLoginAfterRequestingTheCode
 {
     // given
@@ -291,148 +165,10 @@
     XCTAssertNotEqualObjects(normalizedPhone, phone, @"Should not have changed original phone");
 }
 
-- (void)testThatItCanVerifyPhoneCodeForRegistrationAfterSettingRegistrationCode
-{
-    // given
-    NSString *phone = @"+49(123)45678900";
-    NSString *code = @"123456";
-    ZMPhoneCredentials *credentials = [ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code];
-    
-    // when
-    [self.sut prepareForRegistrationPhoneVerificationWithCredentials:credentials];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseVerifyPhoneForRegistration);
-    XCTAssertEqualObjects(self.sut.registrationPhoneValidationCredentials, credentials);
-}
-
 @end
 
 
 @implementation ZMAuthenticationStatusTests (CompletionMethods)
-
-- (void)testThatItTriesToLogInAfterCompletingEmailRegistration
-{
-    // given
-    NSString *email = @"gfdgfgdfg@fds.sgf";
-    NSString *password = @"#$4tewt343$";
-    
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.registrationCallback = ^(ZMUserSessionRegistrationNotificationType type, NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertNil(error);
-        XCTAssertEqual(type, ZMRegistrationNotificationEmailVerificationDidSucceed);
-        [expectation fulfill];
-    };
-    
-    // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut prepareForRegistrationOfUser:[ZMCompleteRegistrationUser registrationUserWithEmail:email password:password]];
-        [self.sut didCompleteRegistrationSuccessfullyWithResponse:nil]; // We don't care about response in here
-    }];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseLoginWithEmail);
-    XCTAssertNil(self.sut.registrationUser);
-    XCTAssertEqualObjects(self.sut.loginCredentials.email, email);
-    XCTAssertEqualObjects(self.sut.loginCredentials.password, password);
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-}
-
-- (void)testThatItWaitsForEmailValidationWhenRegistrationFailsBecauseOfDuplicatedEmail
-{
-    // given
-    NSString *email = @"gfdgfgdfg@fds.sgf";
-    NSString *password = @"#$4tewt343$";
-    
-    NSError *expectedError = [NSError userSessionErrorWithErrorCode:ZMUserSessionEmailIsAlreadyRegistered userInfo:@{}];
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.registrationCallback = ^(ZMUserSessionRegistrationNotificationType type, NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(error.code, expectedError.code);
-        XCTAssertEqual(type, ZMUserSessionEmailIsAlreadyRegistered);
-        [expectation fulfill];
-    };
-    
-    // when
-    [self.sut prepareForRegistrationOfUser:[ZMCompleteRegistrationUser registrationUserWithEmail:email password:password]];
-    [self.sut didFailRegistrationWithDuplicatedEmail];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
-    XCTAssertNil(self.sut.registrationUser);
-    XCTAssertNil(self.sut.loginCredentials);
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
-}
-
-- (void)testThatItResetsWhenRegistrationFails
-{
-    // expect
-    NSError *expectedError = [NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidPhoneNumber userInfo:nil];
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.registrationCallback = ^(ZMUserSessionRegistrationNotificationType type, NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(error, expectedError);
-        XCTAssertEqual(type, ZMRegistrationNotificationRegistrationDidFail);
-        [expectation fulfill];
-    };
-    
-    // when
-    [self.sut prepareForRegistrationOfUser:[ZMCompleteRegistrationUser registrationUserWithEmail:@"Foo@example.com" password:@"#@$123"]];
-    [self.sut didFailRegistrationForOtherReasons:expectedError];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
-    XCTAssertNil(self.sut.registrationUser);
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
-}
-
-- (void)testThatItResetsWhenCompletingTheRequestForPhoneRegistrationCode
-{
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.registrationCallback = ^(ZMUserSessionRegistrationNotificationType type, __unused NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(type, ZMRegistrationNotificationPhoneNumberVerificationCodeRequestDidSucceed);
-        [expectation fulfill];
-    };
-    
-    // when
-    [self.sut prepareForRequestingPhoneVerificationCodeForRegistration:@"+4912345678"];
-    [self.sut didCompleteRequestForPhoneRegistrationCodeSuccessfully];
-    
-    // then
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
-    XCTAssertNil(self.sut.registrationPhoneNumberThatNeedsAValidationCode);
-}
-
-- (void)testThatItResetsWhenFailingTheRequestForPhoneRegistrationCode
-{
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.registrationCallback = ^(ZMUserSessionRegistrationNotificationType type, __unused NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(type, ZMRegistrationNotificationPhoneNumberVerificationCodeRequestDidFail);
-        [expectation fulfill];
-    };
-    
-    // when
-    [self.sut prepareForRequestingPhoneVerificationCodeForRegistration:@"+4912345678"];
-    [self.sut didFailRequestForPhoneRegistrationCode:[NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidCredentials userInfo:nil]];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
-    XCTAssertNil(self.sut.registrationPhoneNumberThatNeedsAValidationCode);
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
-
-}
 
 - (void)testThatItResetsWhenCompletingTheRequestForPhoneLoginCode
 {
@@ -483,53 +219,6 @@
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
 }
 
-- (void)testThatItResetsWhenCompletingPhoneVerification
-{
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.registrationCallback = ^(ZMUserSessionRegistrationNotificationType type, __unused NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(type, ZMRegistrationNotificationPhoneNumberVerificationDidSucceed);
-        [expectation fulfill];
-    };
-    
-    // when
-    [self.sut prepareForRegistrationPhoneVerificationWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:@"+4912345678900" verificationCode:@"123456"]];
-    [self.sut didCompletePhoneVerificationSuccessfully];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
-    XCTAssertNil(self.sut.loginPhoneNumberThatNeedsAValidationCode);
-    
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
-
-}
-
-- (void)testThatItResetsWhenFailingPhoneVerificationNotForDuplicatedPhone
-{
-    // expect
-    NSError *expectedError = [NSError userSessionErrorWithErrorCode:ZMUserSessionPhoneNumberIsAlreadyRegistered userInfo:nil];
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.registrationCallback = ^(ZMUserSessionRegistrationNotificationType type, NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(type, ZMRegistrationNotificationPhoneNumberVerificationDidFail);
-        XCTAssertEqual(error, expectedError);
-        [expectation fulfill];
-    };
-    
-    // when
-    [self.sut prepareForRegistrationPhoneVerificationWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:@"+4912345678900" verificationCode:@"123456"]];
-    [self.sut didFailPhoneVerificationForRegistration:expectedError];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
-    XCTAssertNil(self.sut.loginPhoneNumberThatNeedsAValidationCode);
-    
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
-}
-
 - (void)testThatItResetsWhenFailingEmailLogin
 {
     // expect
@@ -556,37 +245,6 @@
     // then
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertNil(self.sut.loginCredentials);
-    
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
-}
-
-- (void)testThatItWaitsForEmailWhenFailingLoginBecauseOfPendingValidaton
-{
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(event, PreLoginAuthenticationEventObjcAuthenticationDidFail);
-        XCTAssertEqualObjects(error, [NSError userSessionErrorWithErrorCode:ZMUserSessionAccountIsPendingActivation userInfo:nil]);
-        [expectation fulfill];
-    };
-    
-    // given
-    NSString *email = @"gfdgfgdfg@fds.sgf";
-    NSString *password = @"#$4tewt343$";
-    ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
-    
-    // when
-    [self performPretendingUiMocIsSyncMoc:^{
-        [self.sut prepareForLoginWithCredentials:credentials];
-    }];
-    [self.sut didFailLoginWithEmailBecausePendingValidation];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseWaitingForEmailVerification);
-    XCTAssertEqualObjects(self.sut.loginCredentials, credentials);
     
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
 }

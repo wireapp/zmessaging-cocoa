@@ -32,7 +32,6 @@
 @class ZMSyncStrategy;
 @class ZMOperationLoop;
 @class ZMPushRegistrant;
-@class ZMStoredLocalNotification;
 @class ZMAPNSEnvironment;
 @class UserProfileUpdateStatus;
 @class ClientUpdateStatus;
@@ -103,13 +102,6 @@
 @interface NSManagedObjectContext (NetworkState)
 
 @property BOOL isOffline;
-
-@end
-
-
-@interface ZMUserSession (RequestToOpenConversation)
-
-+ (void)requestToOpenSyncConversationOnUI:(ZMConversation *)conversation;
 
 @end
 

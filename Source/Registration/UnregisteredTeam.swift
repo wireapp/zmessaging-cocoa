@@ -18,15 +18,20 @@
 
 import Foundation
 
-public struct TeamToRegister {
+/**
+ * An object containing the details required to create a team.
+ */
+
+public struct UnregisteredTeam: Equatable {
+
     public let teamName: String
     public let email: String
     public let emailCode: String
     public let fullName: String
     public let password: String
     public let accentColor: ZMAccentColor
-    let locale: String
-    let label: UUID?
+    public let locale: String
+    public let label: UUID?
 
     public init(teamName: String, email: String, emailCode: String, fullName: String, password: String, accentColor: ZMAccentColor) {
         self.teamName = teamName
@@ -53,18 +58,5 @@ public struct TeamToRegister {
             "password" : password,
             "label" : label?.uuidString ?? UUID().uuidString
             ] as ZMTransportData
-    }
-}
-
-extension TeamToRegister: Equatable {
-    public static func ==(lhs: TeamToRegister, rhs: TeamToRegister) -> Bool {
-        return lhs.teamName == rhs.teamName &&
-            lhs.email == rhs.email &&
-            lhs.emailCode == rhs.emailCode &&
-            lhs.fullName == rhs.fullName &&
-            lhs.password == rhs.password &&
-            lhs.accentColor == rhs.accentColor &&
-            lhs.locale == rhs.locale &&
-            lhs.label == rhs.label
     }
 }

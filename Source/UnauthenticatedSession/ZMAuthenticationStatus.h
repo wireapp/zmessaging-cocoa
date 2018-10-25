@@ -25,7 +25,6 @@
 #import "ZMClientRegistrationStatus+Internal.h"
 
 @class UserInfo;
-@class ZMCompleteRegistrationUser;
 @class ZMCredentials;
 @class ZMEmailCredentials;
 @class ZMPhoneCredentials;
@@ -47,12 +46,8 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
     ZMAuthenticationPhaseLoginWithPhone,
     ZMAuthenticationPhaseLoginWithEmail,
     ZMAuthenticationPhaseWaitingToImportBackup,
-    ZMAuthenticationPhaseRequestPhoneVerificationCodeForRegistration,
     ZMAuthenticationPhaseRequestPhoneVerificationCodeForLogin,
-    ZMAuthenticationPhaseVerifyPhoneForRegistration,
-    ZMAuthenticationPhaseRegisterWithEmail,
-    ZMAuthenticationPhaseRegisterWithPhone,
-    ZMAuthenticationPhaseWaitingForEmailVerification,
+    ZMAuthenticationPhaseVerifyPhone,
     ZMAuthenticationPhaseAuthenticated
 };
 
@@ -63,7 +58,6 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 
 @property (nonatomic, readonly) ZMCredentials *loginCredentials;
 @property (nonatomic, readonly) ZMPhoneCredentials *registrationPhoneValidationCredentials;
-@property (nonatomic, readonly) ZMCompleteRegistrationUser *registrationUser;
 
 @property (nonatomic, readonly) BOOL isWaitingForBackupImport;
 @property (nonatomic, readonly) BOOL completedRegistration;
@@ -79,27 +73,14 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 
 - (id)addAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
 
-- (void)prepareForRegistrationOfUser:(ZMCompleteRegistrationUser *)user;
 - (void)prepareForLoginWithCredentials:(ZMCredentials *)credentials;
 - (void)continueAfterBackupImportStep;
-- (void)cancelWaitingForEmailVerification;
-- (void)prepareForRequestingPhoneVerificationCodeForRegistration:(NSString *)phone;
 - (void)prepareForRequestingPhoneVerificationCodeForLogin:(NSString *)phone;
-- (void)prepareForRegistrationPhoneVerificationWithCredentials:(ZMPhoneCredentials *)phoneCredentials;
-
-- (void)didCompleteRegistrationSuccessfullyWithResponse:(ZMTransportResponse *)response;
-
-- (void)didFailRegistrationWithDuplicatedEmail;
-- (void)didFailRegistrationForOtherReasons:(NSError *)error;
-
-- (void)didCompleteRequestForPhoneRegistrationCodeSuccessfully;
-- (void)didFailRequestForPhoneRegistrationCode:(NSError *)error;
 
 - (void)didCompleteRequestForLoginCodeSuccessfully;
 - (void)didFailRequestForLoginCode:(NSError *)error;
 
 - (void)didCompletePhoneVerificationSuccessfully;
-- (void)didFailPhoneVerificationForRegistration:(NSError *)error;
 
 - (void)loginSucceededWithResponse:(ZMTransportResponse *)response;
 - (void)loginSucceededWithUserInfo:(UserInfo *)userInfo;

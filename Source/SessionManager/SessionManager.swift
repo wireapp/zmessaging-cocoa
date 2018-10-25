@@ -25,7 +25,7 @@ import PushKit
 
 
 private let log = ZMSLog(tag: "SessionManager")
-public typealias LaunchOptions = [UIApplicationLaunchOptionsKey : Any]
+public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 
 
 @objc public enum CallNotificationStyle : UInt {
@@ -57,9 +57,9 @@ public protocol SessionManagerType : class {
     
     var accountManager : AccountManager { get }
     var backgroundUserSessions: [UUID: ZMUserSession] { get }
-    weak var localNotificationResponder: LocalNotificationResponder? { get }
     
-    @available(iOS 10.0, *)
+    weak var foregroundNotificationResponder: ForegroundNotificationResponder? { get }
+    
     var callKitDelegate : CallKitDelegate? { get }
     var callNotificationStyle: CallNotificationStyle { get }
     
@@ -71,17 +71,26 @@ public protocol SessionManagerType : class {
     
     /// Configure user notification settings. This will ask the user for permission to display notifications.
     func configureUserNotifications()
+    
+    /// Switch account and and ask UI to to navigate to a message in a conversation
+    func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?, in session: ZMUserSession)
+    
+    /// Switch account and and ask UI to navigate to the conversatio list
+    func showConversationList(in session: ZMUserSession)
 
-}
-
-@objc
-public protocol LocalNotificationResponder : class {
-    func processLocal(_ notification: ZMLocalNotification, forSession session: ZMUserSession)
+    /// Needs to be called before we try to register another device because API requires password
+    func update(credentials: ZMCredentials) -> Bool
+    
 }
 
 @objc
 public protocol SessionManagerSwitchingDelegate: class {
     func confirmSwitchingAccount(completion: @escaping (Bool)->Void)
+}
+
+@objc
+public protocol ForegroundNotificationResponder: class {
+    func shouldPresentNotification(with userInfo: NotificationUserInfo) -> Bool
 }
 
 /// The `SessionManager` class handles the creation of `ZMUserSession` and `UnauthenticatedSession`
@@ -155,14 +164,14 @@ public protocol SessionManagerSwitchingDelegate: class {
     public let appVersion: String
     var isAppVersionBlacklisted = false
     public weak var delegate: SessionManagerDelegate? = nil
-    public weak var localNotificationResponder: LocalNotificationResponder?
     public let accountManager: AccountManager
     public fileprivate(set) var activeUserSession: ZMUserSession?
     public var urlHandler: SessionManagerURLHandler!
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
-    public weak var requestToOpenViewDelegate: ZMRequestsToOpenViewsDelegate?
+    public weak var showContentDelegate: ShowContentDelegate?
+    public weak var foregroundNotificationResponder: ForegroundNotificationResponder?
     public weak var switchingDelegate: SessionManagerSwitchingDelegate?
     public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
     
@@ -182,6 +191,7 @@ public protocol SessionManagerSwitchingDelegate: class {
     
     fileprivate let sessionLoadingQueue : DispatchQueue = DispatchQueue(label: "sessionLoadingQueue")
     
+    let environment: BackendEnvironmentProvider
     let sharedContainerURL: URL
     let dispatchGroup: ZMSDispatchGroup?
     fileprivate var accountTokens : [UUID : [Any]] = [:]
@@ -190,16 +200,11 @@ public protocol SessionManagerSwitchingDelegate: class {
     
     private static var token: Any?
     
-    private var _callKitDelegate : AnyObject?
-    @available(iOS 10.0, *)
-    public var callKitDelegate : CallKitDelegate? {
-        get {
-            return _callKitDelegate as? CallKitDelegate
-        }
-        set {
-            _callKitDelegate = newValue
-        }
-    }
+    public var callKitDelegate : CallKitDelegate?
+    
+    private static let runOnce: Void = {
+        BuildType.setupBuildTypes()
+    }()
     
     /// The entry point for SessionManager; call this instead of the initializers.
     ///
@@ -209,7 +214,8 @@ public protocol SessionManagerSwitchingDelegate: class {
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
-        blacklistDownloadInterval : TimeInterval,
+        environment: BackendEnvironmentProvider,
+        blacklistDownloadInterval: TimeInterval,
         completion: @escaping (SessionManager) -> Void
         ) {
         
@@ -220,6 +226,7 @@ public protocol SessionManagerSwitchingDelegate: class {
                 analytics: analytics,
                 delegate: delegate,
                 application: application,
+                environment: environment,
                 blacklistDownloadInterval: blacklistDownloadInterval
             ))
             
@@ -237,11 +244,10 @@ public protocol SessionManagerSwitchingDelegate: class {
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
-        blacklistDownloadInterval : TimeInterval
+        environment: BackendEnvironmentProvider,
+        blacklistDownloadInterval: TimeInterval
         ) {
         
-        ZMBackendEnvironment.setupEnvironments()
-        let environment = ZMBackendEnvironment(userDefaults: .standard)
         let group = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
         let flowManager = FlowManager(mediaManager: mediaManager)
 
@@ -267,11 +273,13 @@ public protocol SessionManagerSwitchingDelegate: class {
             reachability: reachability,
             delegate: delegate,
             application: application,
-            pushRegistry: PKPushRegistry(queue: nil)
+            pushRegistry: PKPushRegistry(queue: nil),
+            environment: environment
         )
         
         self.blacklistVerificator = ZMBlacklistVerificator(checkInterval: blacklistDownloadInterval,
                                                            version: appVersion,
+                                                           environment: environment,
                                                            working: nil,
                                                            application: application,
                                                            blacklistCallback:
@@ -284,7 +292,7 @@ public protocol SessionManagerSwitchingDelegate: class {
                 }
         })
      
-        self.memoryWarningObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.UIApplicationDidReceiveMemoryWarning,
+        self.memoryWarningObserver = NotificationCenter.default.addObserver(forName: UIApplication.didReceiveMemoryWarningNotification,
                                                                             object: nil,
                                                                             queue: nil,
                                                                             using: {[weak self] _ in
@@ -295,8 +303,8 @@ public protocol SessionManagerSwitchingDelegate: class {
             self.tearDownAllBackgroundSessions()
         })
         
-        NotificationCenter.default.addObserver(self, selector: #selector(applicationWillEnterForeground(_:)), name: .UIApplicationWillEnterForeground, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive(_:)), name: .UIApplicationDidBecomeActive, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(applicationWillEnterForeground(_:)), name: UIApplication.willEnterForegroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive(_:)), name: UIApplication.didBecomeActiveNotification, object: nil)
     }
 
     init(
@@ -308,10 +316,12 @@ public protocol SessionManagerSwitchingDelegate: class {
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
         pushRegistry: PushRegistry,
-        dispatchGroup: ZMSDispatchGroup? = nil
+        dispatchGroup: ZMSDispatchGroup? = nil,
+        environment: BackendEnvironmentProvider
         ) {
 
         SessionManager.enableLogsByEnvironmentVariable()
+        self.environment = environment
         self.appVersion = appVersion
         self.application = application
         self.delegate = delegate
@@ -486,10 +496,10 @@ public protocol SessionManagerSwitchingDelegate: class {
          - completion: called when session is loaded or when session fails to load
      */
     internal func loadSession(for account: Account?, completion: @escaping (ZMUserSession?) -> Void) {
-        guard let authenticatedAccount = account, authenticatedAccount.isAuthenticated else {
+        guard let authenticatedAccount = account, environment.isAuthenticated(authenticatedAccount) else {
             completion(nil)
             createUnauthenticatedSession()
-            delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: nil))
+            delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: account?.loginCredentials?.dictionaryRepresentation))
             return
         }
         
@@ -499,7 +509,7 @@ public protocol SessionManagerSwitchingDelegate: class {
     public func deleteAccountData(for account: Account) {
         log.debug("Deleting the data for \(account.userName) -- \(account.userIdentifier)")
         
-        account.cookieStorage().deleteKeychainItems()
+        environment.cookieStorage(for: account).deleteKeychainItems()
         
         let accountID = account.userIdentifier
         self.accountManager.remove(account)
@@ -556,7 +566,6 @@ public protocol SessionManagerSwitchingDelegate: class {
     }
     
     fileprivate func configure(session userSession: ZMUserSession, for account: Account) {
-        userSession.requestToOpenViewDelegate = self
         userSession.sessionManager = self
         require(backgroundUserSessions[account.userIdentifier] == nil, "User session is already loaded")
         backgroundUserSessions[account.userIdentifier] = userSession
@@ -657,7 +666,6 @@ public protocol SessionManagerSwitchingDelegate: class {
         }
     }
     
-    @available(iOS 10.0, *)
     private func updateCallNotificationStyle() {
         switch callNotificationStyle {
         case .pushNotifications:
@@ -693,6 +701,9 @@ extension SessionManager {
             if let userProfileImage = selfUser.imageSmallProfileData {
                 account.imageData = userProfileImage
             }
+
+            account.loginCredentials = selfUser.loginCredentials
+
             //an optional `teamImageData` image could be saved here
             accountManager.addOrUpdate(account)
         }
@@ -895,7 +906,7 @@ extension SessionManager : WireCallCenterCallStateObserver {
         switch callState {
         case .answered, .outgoing:
             for (_, session) in backgroundUserSessions where session.managedObjectContext == moc && activeUserSession != session {
-                session.open(conversation, at: nil)
+                showConversation(conversation, at: nil, in: session)
             }
         default:
             return

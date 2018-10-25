@@ -194,7 +194,7 @@ class SessionManagerTests_Backup: IntegrationTest {
             conversation.messageDestructionTimeout = .local(0.5)
             let moc = sessionManager!.activeUserSession!.managedObjectContext!
             
-            let message = conversation.appendMessage(withText: "foo") as! ZMClientMessage
+            let message = conversation.append(text: "foo") as! ZMClientMessage
             message.nonce = nonce
             message.sender = ZMUser.insertNewObject(in: moc)
             message.sender?.remoteIdentifier = .create()

@@ -21,7 +21,6 @@
 @import WireDataModel;
 
 #import "ZMUserSession+Internal.h"
-#import "ZMOperationLoop+Background.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
@@ -107,20 +106,6 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
         [self.syncManagedObjectContext processPendingChanges];
     }];
 }
-
-- (void)processPendingNotificationActions
-{
-    if (self.pendingLocalNotification == nil) {
-        return;
-    }
-    
-    [self.managedObjectContext performGroupedBlock: ^{
-        [self handleNotification:self.pendingLocalNotification];
-        self.pendingLocalNotification = nil;
-    }];
-    
-}
-
 
 @end
 

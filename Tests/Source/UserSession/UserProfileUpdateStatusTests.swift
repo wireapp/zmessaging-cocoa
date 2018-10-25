@@ -1153,7 +1153,7 @@ class TestUserProfileUpdateObserver : NSObject, UserProfileUpdateObserver {
         invokedCallbacks.append(.emailUpdateDidFail(error: error))
     }
     
-    func didSentVerificationEmail() {
+    func didSendVerificationEmail() {
         invokedCallbacks.append(.emailDidSendVerification)
     }
     

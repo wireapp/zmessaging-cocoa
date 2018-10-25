@@ -137,6 +137,11 @@ import Foundation
         refetchConversations(matching: predicate, in: context)
     }
     
+    /// Marks all conversations to be refetched.
+    public static func refetchAllConversations(_ context: NSManagedObjectContext) {
+        refetchConversations(matching: NSPredicate(value: true), in: context)
+    }
+    
     private static func refetchConversations(matching predicate: NSPredicate, in context: NSManagedObjectContext) {
         let request = ZMConversation.sortedFetchRequest(with: predicate)
         let conversations = context.executeFetchRequestOrAssert(request) as? [ZMConversation]

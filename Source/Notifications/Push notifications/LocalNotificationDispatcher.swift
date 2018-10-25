@@ -19,17 +19,10 @@
 import Foundation
 import UserNotifications
 
-@objc public protocol ForegroundNotificationsDelegate: NSObjectProtocol {
-
-    func didReceieveLocal(notification: ZMLocalNotification, application: ZMApplication)
-}
-
 /// Creates and cancels local notifications
 @objcMembers public class LocalNotificationDispatcher: NSObject {
 
     public static let ZMShouldHideNotificationContentKey = "ZMShouldHideNotificationContentKey"
-
-    private(set) weak var foregroundNotificationDelegate: ForegroundNotificationsDelegate?
 
     let eventNotifications: ZMLocalNotificationSet
     let messageNotifications: ZMLocalNotificationSet
@@ -38,29 +31,19 @@ import UserNotifications
 
     var notificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()
 
-    unowned let application: ZMApplication
-    weak var operationStatus: OperationStatus?
-
     let syncMOC: NSManagedObjectContext
     fileprivate(set) var isTornDown: Bool
     fileprivate var observers: [Any] = []
 
     var localNotificationBuffer = [ZMLocalNotification]()
 
-    @objc(initWithManagedObjectContext:foregroundNotificationDelegate:application:operationStatus:)
-    public init(in managedObjectContext: NSManagedObjectContext,
-                foregroundNotificationDelegate: ForegroundNotificationsDelegate,
-                application: ZMApplication,
-                operationStatus: OperationStatus
-        ) {
+    @objc(initWithManagedObjectContext:)
+    public init(in managedObjectContext: NSManagedObjectContext) {
         self.syncMOC = managedObjectContext
-        self.foregroundNotificationDelegate = foregroundNotificationDelegate
         self.eventNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherEventNotificationsKey", keyValueStore: managedObjectContext)
         self.failedMessageNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherFailedNotificationsKey", keyValueStore: managedObjectContext)
         self.callingNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherCallingNotificationsKey", keyValueStore: managedObjectContext)
         self.messageNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherMessageNotificationsKey", keyValueStore: managedObjectContext)
-        self.application = application
-        self.operationStatus = operationStatus
         self.isTornDown = false
         super.init()
         observers.append(
@@ -76,16 +59,8 @@ import UserNotifications
         precondition(self.isTornDown)
     }
 
-    /// Dispatches the given message notification depending on the current application
-    /// state. If the app is active, then the notification is directed to the user
-    /// session, otherwise it is directed to the system via UIApplication.
-    ///
     func scheduleLocalNotification(_ note: ZMLocalNotification) {
-        if operationStatus?.operationState == .foreground {
-            self.foregroundNotificationDelegate?.didReceieveLocal(notification: note, application: application)
-        } else {
-            notificationCenter.add(note.request, withCompletionHandler: nil)
-        }
+        notificationCenter.add(note.request, withCompletionHandler: nil)
     }
 
     /// Determines if the notification content should be hidden as reflected in the store

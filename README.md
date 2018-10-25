@@ -3,7 +3,7 @@
 [![Wire logo](https://github.com/wireapp/wire/blob/master/assets/header-small.png?raw=true)](https://wire.com/jobs/)
 
 
-[![CircleCI](https://circleci.com/gh/wireapp/wire-ios-sync-engine.svg?style=shield)](https://circleci.com/gh/wireapp/wire-ios-sync-engine) [![codecov](https://codecov.io/gh/wireapp/wire-ios-sync-engine/branch/develop/graph/badge.svg)](https://codecov.io/gh/wireapp/wire-ios-sync-engine)
+[![Azure Pipelines Build Status](https://dev.azure.com/wireswiss/Wire%20iOS/_apis/build/status/Frameworks/wire-ios-sync-engine?branchName=develop)](https://dev.azure.com/wireswiss/Wire%20iOS/_build/latest?definitionId=31&branchName=develop) [![codecov](https://codecov.io/gh/wireapp/wire-ios-sync-engine/branch/develop/graph/badge.svg)](https://codecov.io/gh/wireapp/wire-ios-sync-engine)
 
 This repository is part of the source code of Wire. You can find more information at [wire.com](https://wire.com) or by contacting opensource@wire.com.
 
@@ -20,7 +20,7 @@ Additional documentation is available in the [Wire iOS wiki](https://github.com/
 
 # How to build
 
-*iOS SyncEngine* is build with Xcode 8 using Swift 3.
+*iOS SyncEngine* is build with Xcode 10 using Swift 4.
 
 It is using [Carthage](https://github.com/Carthage/Carthage) to manage dependencies. To pull the dependencies binaries run `carthage bootstrap —-platform ios`.
 

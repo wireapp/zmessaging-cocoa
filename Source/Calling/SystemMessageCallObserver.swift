@@ -16,13 +16,11 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-
 import Foundation
-
 
 private let log = ZMSLog(tag: "Calling System Message")
 
-/// Inserts a calling system message for V3 calls
+/// Inserts a calling system message for V3 calls.
 final class CallSystemMessageGenerator: NSObject {
     
     var startDateByConversation = [ZMConversation: Date]()
@@ -40,7 +38,7 @@ final class CallSystemMessageGenerator: NSObject {
             connectDateByConversation[conversation] = Date()
         case .terminating(reason: let reason):
         systemMessage = appendCallEndedSystemMessage(reason: reason, conversation: conversation, caller: caller, timestamp: timestamp, previousCallState:previousCallState)
-        case .none, .unknown, .answered, .establishedDataChannel, .incoming:
+        case .none, .unknown, .answered, .establishedDataChannel, .incoming, .mediaStopped:
             break
         }
         return systemMessage

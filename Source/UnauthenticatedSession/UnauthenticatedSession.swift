@@ -65,10 +65,8 @@ public class UnauthenticatedSession: NSObject {
             requestStrategies: [
                 ZMLoginTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus),
                 ZMLoginCodeRequestTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
-                ZMRegistrationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
-                ZMPhoneNumberVerificationTranscoder(groupQueue: groupQueue, authenticationStatus: authenticationStatus)!,
-                EmailVerificationStrategy(groupQueue: groupQueue, status: registrationStatus),
-                TeamRegistrationStrategy(groupQueue: groupQueue, status: registrationStatus, userInfoParser: self)
+                RegistationCredentialVerificationStrategy(groupQueue: groupQueue, status: registrationStatus),
+                RegistrationStrategy(groupQueue: groupQueue, status: registrationStatus, userInfoParser: self)
             ]
         )
     }
@@ -105,7 +103,7 @@ extension UnauthenticatedSession: UserInfoParser {
 
     public func upgradeToAuthenticatedSession(with userInfo: UserInfo) {
         let account = Account(userName: "", userIdentifier: userInfo.identifier)
-        let cookieStorage = account.cookieStorage()
+        let cookieStorage = transportSession.environment.cookieStorage(for: account)
         cookieStorage.authenticationCookieData = userInfo.cookieData
         self.authenticationStatus.authenticationCookieData = userInfo.cookieData
         self.delegate?.session(session: self, createdAccount: account)

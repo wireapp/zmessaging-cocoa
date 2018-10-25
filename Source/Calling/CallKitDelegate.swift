@@ -36,7 +36,6 @@ private struct CallKitCall {
 }
 
 @objc
-@available(iOS 10.0, *)
 public class CallKitDelegate : NSObject {
     
     fileprivate let provider : CXProvider
@@ -90,7 +89,7 @@ public class CallKitDelegate : NSObject {
         configuration.ringtoneSound = NotificationSound.call.name
         
         if let image = UIImage(named: "logo") {
-            configuration.iconTemplateImageData = UIImagePNGRepresentation(image)
+            configuration.iconTemplateImageData = image.pngData()
         }
         
         return configuration
@@ -114,7 +113,6 @@ public class CallKitDelegate : NSObject {
 
 }
 
-@available(iOS 10.0, *)
 extension CallKitDelegate {
 
     func callIdentifiers(from customIdentifier : String) -> (UUID, UUID)? {
@@ -176,7 +174,6 @@ extension CallKitDelegate {
     }
 }
 
-@available(iOS 10.0, *)
 extension CallKitDelegate {
     
     func requestMuteCall(in conversation: ZMConversation, muted:  Bool) {
@@ -303,12 +300,12 @@ extension CallKitDelegate {
         
         associatedCallUUIDs.forEach { (callUUID) in
             calls.removeValue(forKey: callUUID)
+            log("provider.reportCallEndedAt: \(String(describing: timestamp))")
             provider.reportCall(with: callUUID, endedAt: timestamp, reason: reason)
         }
     }
 }
 
-@available(iOS 10.0, *)
 extension CallKitDelegate : CXProviderDelegate {
     
     public func providerDidBegin(_ provider: CXProvider) {
@@ -419,7 +416,6 @@ extension CallKitDelegate : CXProviderDelegate {
     }
 }
 
-@available(iOS 10.0, *)
 extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
     
     public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?) {
@@ -427,7 +423,7 @@ extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMisse
         switch callState {
         case .incoming(video: let video, shouldRing: let shouldRing, degraded: _):
             if shouldRing {
-                if !conversation.isSilenced {
+                if conversation.mutedMessageTypes == .none {
                     reportIncomingCall(from: caller, in: conversation, video: video)
                 }
             } else {
@@ -447,7 +443,6 @@ extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMisse
     
 }
 
-@available(iOS 10.0, *)
 extension ZMConversation {
     
     var callKitHandle: CXHandle? {
@@ -492,7 +487,6 @@ extension ZMConversation {
     
 }
 
-@available(iOS 10.0, *)
 extension CXCallAction {
     
     func conversation(in context : NSManagedObjectContext) -> ZMConversation? {
@@ -503,7 +497,6 @@ extension CXCallAction {
 
 extension CallClosedReason {
     
-    @available(iOS 10.0, *)
     var CXCallEndedReason : CXCallEndedReason {
         switch self {
         case .timeout:

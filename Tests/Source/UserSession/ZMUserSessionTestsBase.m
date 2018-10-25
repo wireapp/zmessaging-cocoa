@@ -166,7 +166,6 @@
     self.validCookie = nil;
     self.thirdPartyServices = nil;
     self.sut.thirdPartyServicesDelegate = nil;
-    self.sut.requestToOpenViewDelegate = nil;
     self.mockSessionManager = nil;
 
     [self.transportSession stopMocking];
