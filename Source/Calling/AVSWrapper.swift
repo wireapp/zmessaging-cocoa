@@ -19,13 +19,6 @@
 import Foundation
 import avs
 
-
-public enum NetworkCondition: Int32 {
-    case normal = 1
-    case medium = 2
-    case poor = 3
-}
-
 private let zmLog = ZMSLog(tag: "calling")
 
 /**
@@ -263,6 +256,12 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     private let mediaStoppedChangeHandler: MediaStoppedChangeHandler = { conversationIdRef, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationIdRef) {
+            $0.handleMediaStopped(conversationId: $1)
+        }
+    }
+
+    private let networkQualityHandler: NetworkQualityChangeHandler = { conversationIdRef, userIdRef, quality, rtt, uploss, downloss, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationIdRef) {
             $0.handleMediaStopped(conversationId: $1)
         }

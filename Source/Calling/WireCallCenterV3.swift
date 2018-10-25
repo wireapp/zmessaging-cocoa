@@ -159,6 +159,7 @@ extension WireCallCenterV3 {
             isGroup: group,
             isConstantBitRate: false,
             videoState: video ? .started : .stopped,
+            networkQuality: .normal,
             conversationObserverToken: token
         )
     }
@@ -275,6 +276,10 @@ extension WireCallCenterV3 {
         }
 
         return conversations
+    }
+
+    public func networkQuality(conversationId: UUID) -> NetworkQuality {
+        return callSnapshots[conversationId]?.networkQuality ?? .normal
     }
 
 }

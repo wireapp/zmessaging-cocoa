@@ -51,13 +51,14 @@ extension SelfPostingNotification {
 // MARK:- Network Condition observer
 
 public protocol NetworkConditionObserver : class {
-    func callCenterDidChange(networkCondition: NetworkCondition)
+    func callCenterDidChange(networkQuality: NetworkQuality)
 }
 
-struct WireCallCenterNetworkConditionNotification : SelfPostingNotification {
-    static let notificationName = Notification.Name("WireCallCenterNetworkConditionNotification")
+struct WireCallCenterNetworkQualityNotification : SelfPostingNotification {
+    static let notificationName = Notification.Name("WireCallCenterNetworkQualityNotification")
     public let conversationId: UUID
-    public let networkCondition: NetworkCondition
+    public let userId: UUID
+    public let networkQuality: NetworkQuality
 }
 
 // MARK:- CBR observer
@@ -327,10 +328,10 @@ extension WireCallCenterV3 {
     /// Register observer when constant audio bit rate is enabled/disabled
     /// Returns a token which needs to be retained as long as the observer should be active.
     internal class func addNetworkConditionObserver(observer: NetworkConditionObserver, for conversation: ZMConversation, context: NSManagedObjectContext) -> Any {
-        return NotificationInContext.addObserver(name: WireCallCenterNetworkConditionNotification.notificationName, context: context.notificationContext, queue: .main) { [weak observer] note in
-            if let note = note.userInfo[WireCallCenterNetworkConditionNotification.userInfoKey] as? WireCallCenterNetworkConditionNotification {
+        return NotificationInContext.addObserver(name: WireCallCenterNetworkQualityNotification.notificationName, context: context.notificationContext, queue: .main) { [weak observer] note in
+            if let note = note.userInfo[WireCallCenterNetworkQualityNotification.userInfoKey] as? WireCallCenterNetworkQualityNotification {
                 if note.conversationId == conversation.remoteIdentifier {
-                    observer?.callCenterDidChange(networkCondition: note.networkCondition)
+                    observer?.callCenterDidChange(networkQuality: note.networkQuality)
                 }
             }
         }

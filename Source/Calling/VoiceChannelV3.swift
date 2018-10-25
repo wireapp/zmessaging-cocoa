@@ -93,10 +93,10 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         return self.callCenter?.isContantBitRate(conversationId: remoteIdentifier) ?? false
     }
 
-    public var networkCondition: NetworkCondition {
+    public var networkQuality: NetworkQuality {
         guard let remoteIdentifier = conversation?.remoteIdentifier, let callCenter = self.callCenter else { return .normal }
 
-        return callCenter.networkCondition(inConversation: remoteIdentifier)
+        return callCenter.networkQuality(conversationId: remoteIdentifier)
     }
     
     public var initiator : ZMUser? {

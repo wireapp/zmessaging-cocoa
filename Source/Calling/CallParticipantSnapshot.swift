@@ -22,9 +22,9 @@ class CallParticipantsSnapshot {
     
     public private(set) var members : OrderedSetState<AVSCallMember>
 
-    // We take the worst condition of all the legs
-    public var networkCondition: NetworkCondition {
-        return members.map { $0.networkCondition }
+    // We take the worst quality of all the legs
+    public var networkQuality: NetworkQuality {
+        return members.map { $0.networkQuality }
             .sorted() { $0.rawValue < $1.rawValue }
             .last ?? .normal
     }
@@ -74,10 +74,10 @@ class CallParticipantsSnapshot {
         update(updatedMember: AVSCallMember(userId: userId, audioEstablished: true, videoState: callMember.videoState))
     }
 
-    func callParticpantNetworkConditionChanged(userId: UUID, networkCondition: NetworkCondition) {
+    func callParticpantNetworkQualityChanged(userId: UUID, networkQuality: NetworkQuality) {
         guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
 
-        update(updatedMember: AVSCallMember(userId: userId, audioEstablished: true, videoState: callMember.videoState, networkCondition: networkCondition))
+        update(updatedMember: AVSCallMember(userId: userId, audioEstablished: true, videoState: callMember.videoState, networkQuality: networkQuality))
     }
     
     func update(updatedMember: AVSCallMember) {

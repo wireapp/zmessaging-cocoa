@@ -424,6 +424,7 @@
 		F1A94BD21F010287003083D9 /* UnauthenticatedSession+Login.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A94BD11F010287003083D9 /* UnauthenticatedSession+Login.swift */; };
 		F1A989BA1FD03E1B00B8A82E /* ZMLocalizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F1A989BC1FD03E1B00B8A82E /* ZMLocalizable.strings */; };
 		F1ACD2CD201F6E070089BEF6 /* ConversationsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E6CD176194F435F00BAE83E /* ConversationsTests.m */; };
+		F1B5D53D2181FDA300986911 /* NetworkQuality.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B5D53C2181FDA300986911 /* NetworkQuality.swift */; };
 		F1C1F3EE1FCF0C85007273E3 /* ZMUserSessionErrorCode+Localized.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C1F3ED1FCF0C85007273E3 /* ZMUserSessionErrorCode+Localized.swift */; };
 		F1C1F3F01FCF18C5007273E3 /* NSError+Localized.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C1F3EF1FCF18C5007273E3 /* NSError+Localized.swift */; };
 		F1C51FE71FB49660009C2269 /* RegistrationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C51FE61FB49660009C2269 /* RegistrationStatus.swift */; };
@@ -1047,6 +1048,7 @@
 		F1A989CC1FD03E2D00B8A82E /* et */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = et; path = et.lproj/ZMLocalizable.strings; sourceTree = "<group>"; };
 		F1A989CD1FD03E2E00B8A82E /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/ZMLocalizable.strings; sourceTree = "<group>"; };
 		F1A989CE1FD0579F00B8A82E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/ZMLocalizable.strings; sourceTree = "<group>"; };
+		F1B5D53C2181FDA300986911 /* NetworkQuality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkQuality.swift; sourceTree = "<group>"; };
 		F1C1F3ED1FCF0C85007273E3 /* ZMUserSessionErrorCode+Localized.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSessionErrorCode+Localized.swift"; sourceTree = "<group>"; };
 		F1C1F3EF1FCF18C5007273E3 /* NSError+Localized.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSError+Localized.swift"; sourceTree = "<group>"; };
 		F1C51FE61FB49660009C2269 /* RegistrationStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationStatus.swift; sourceTree = "<group>"; };
@@ -1349,6 +1351,7 @@
 				5E8BB89F2147F5BC00EEA64B /* CallSnapshot.swift */,
 				16C4BD9F20A309CD00BCDB17 /* CallParticipantSnapshot.swift */,
 				5EC2C5902137F80E00C6CE35 /* CallState.swift */,
+				F1B5D53C2181FDA300986911 /* NetworkQuality.swift */,
 				5EC2C58E2137F5EE00C6CE35 /* CallClosedReason.swift */,
 				5E8BB89D2147E9DF00EEA64B /* AVSWrapper+Handlers.swift */,
 				5E8BB8982147CD3F00EEA64B /* AVSBridging.swift */,
@@ -2687,6 +2690,7 @@
 				872A2EE61FFFBC2A00900B22 /* ServiceUser.swift in Sources */,
 				BF2A9D5D1D6B63DB00FA7DBC /* StoreUpdateEvent.swift in Sources */,
 				09C77C531BA6C77000E2163F /* UserClientRequestStrategy.swift in Sources */,
+				F1B5D53D2181FDA300986911 /* NetworkQuality.swift in Sources */,
 				5EC2C593213827BF00C6CE35 /* WireCallCenterV3+Events.swift in Sources */,
 				F1C1F3EE1FCF0C85007273E3 /* ZMUserSessionErrorCode+Localized.swift in Sources */,
 				166264742166093800300F45 /* CallEventStatus.swift in Sources */,

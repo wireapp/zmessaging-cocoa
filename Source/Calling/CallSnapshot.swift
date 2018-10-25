@@ -30,6 +30,7 @@ struct CallSnapshot {
     let isGroup: Bool
     let isConstantBitRate: Bool
     let videoState: VideoState
+    let networkQuality: NetworkQuality
     var conversationObserverToken : NSObjectProtocol?
 
     /**
@@ -45,6 +46,7 @@ struct CallSnapshot {
                             isGroup: isGroup,
                             isConstantBitRate: isConstantBitRate,
                             videoState: videoState,
+                            networkQuality: networkQuality,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -61,6 +63,7 @@ struct CallSnapshot {
                             isGroup: isGroup,
                             isConstantBitRate: enabled,
                             videoState: videoState,
+                            networkQuality: networkQuality,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -77,6 +80,25 @@ struct CallSnapshot {
                             isGroup: isGroup,
                             isConstantBitRate: isConstantBitRate,
                             videoState: videoState,
+                            networkQuality: networkQuality,
                             conversationObserverToken: conversationObserverToken)
     }
+
+    /**
+     * Updates the snapshot with the new network condition.
+     * - parameter networkCondition: The new network condition.
+     */
+
+    func updateNetworkQuality(_ networkQuality: NetworkQuality) -> CallSnapshot {
+        return CallSnapshot(callParticipants: callParticipants,
+                            callState: callState,
+                            callStarter: callStarter,
+                            isVideo: isVideo,
+                            isGroup: isGroup,
+                            isConstantBitRate: isConstantBitRate,
+                            videoState: videoState,
+                            networkQuality: networkQuality,
+                            conversationObserverToken: conversationObserverToken)
+    }
+
 }
