@@ -110,7 +110,8 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
      ZMClientRegistrationPhaseWaitingForSelfUser
      [We fetch the selfUser]
                 |
-     [User has email address?]      --> NO  --> ZMClientRegistrationPhaseWaitingForEmailVerfication
+     [User has email address,
+      and it's not the SSO user]    --> NO  --> ZMClientRegistrationPhaseWaitingForEmailVerfication
                                                 [user adds email and password, we fetch user from BE]
                                             --> ZMClientRegistrationPhaseUnregistered
                                                 [Client is registered]
@@ -208,7 +209,10 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (BOOL)isAddingEmailNecessary
 {
-    return ![self.managedObjectContext registeredOnThisDevice] && self.isWaitingForSelfUserEmail;
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+    return ![self.managedObjectContext registeredOnThisDevice] &&
+            self.isWaitingForSelfUserEmail &&
+           !selfUser.usesCompanyLogin;
 }
 
 - (void)prepareForClientRegistration

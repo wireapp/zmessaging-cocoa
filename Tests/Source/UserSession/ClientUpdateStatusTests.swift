@@ -187,51 +187,6 @@ class ClientUpdateStatusTests: MessagingTest {
         }
     }
     
-    func testThatItDoesNotCallCompletionHandlerAfterDeletingClient_MoreClientsToDelete() {
-        // given
-        let selfClient = insertSelfClient()
-        let client = insertNewClient()
-        self.syncMOC.performGroupedBlockAndWait { () -> Void in
-            client.markForDeletion()
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        self.sut.needsToFetchClients(andVerifySelfClient: true)
-        self.sut.didFetchClients([client, selfClient])
-        XCTAssertEqual(self.sut.currentPhase, ClientUpdatePhase.done)
-        self.receivedNotifications.removeAll()
-
-        // when
-        let credentials = ZMEmailCredentials(email: "hallo@example.com", password: "secret123456")
-        self.sut.deleteClients(withCredentials: credentials)
-        XCTAssertEqual(self.sut.currentPhase, ClientUpdatePhase.deletingClients)
-
-        self.sut.didDeleteClient()
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertEqual(self.sut.currentPhase, ClientUpdatePhase.deletingClients)
-        XCTAssertEqual(self.receivedNotifications.count, 0)
-        
-        // when
-        self.syncMOC.delete(client)
-        self.syncMOC.saveOrRollback()
-        
-        self.sut.didDeleteClient()
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // then
-        XCTAssertEqual(self.sut.currentPhase, ClientUpdatePhase.done)
-        XCTAssertEqual(self.receivedNotifications.count, 1)
-        let note = self.receivedNotifications.first
-        if let note = note {
-            XCTAssertEqual(note.type, ZMClientUpdateNotificationType.deletionCompleted)
-            XCTAssertNil(note.error)
-        } else {
-            XCTFail("no notification received")
-        }
-    }
-    
     func testThatItReturnsAnErrorIfSelfClientWasRemovedRemotely() {
         // given
         _ = insertSelfClient()

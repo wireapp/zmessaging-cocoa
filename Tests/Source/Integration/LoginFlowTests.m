@@ -768,7 +768,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
                     return [client.remoteIdentifier isEqualToString:idToDelete];
                 }];
                 XCTAssertNotNil(clientToDelete);
-                [self.userSession deleteClient:clientToDelete];
+                [self.userSession deleteClient:clientToDelete withCredentials:nil];
             }];
         }
         else if (event == PostLoginAuthenticationEventObjCClientRegistrationDidSucceed) {

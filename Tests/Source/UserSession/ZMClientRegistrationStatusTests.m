@@ -366,6 +366,18 @@
     XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseUnregistered);
 }
 
+- (void)testThatItDoesNotRequireEmailRegistrationForTeamUser
+{
+    // given
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+    selfUser.remoteIdentifier = [NSUUID UUID];
+    selfUser.emailAddress = nil;
+    selfUser.phoneNumber = nil;
+    selfUser.usesCompanyLogin = YES;
+    
+    // then
+    XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseUnregistered);
+}
 
 @end
 
