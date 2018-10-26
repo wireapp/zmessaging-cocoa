@@ -26,15 +26,26 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     // MARK: - Text Messages
     // MARK: Helpers
     
-    func textNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, mentionedUser: UserType? = nil, isEphemeral: Bool = false) -> ZMLocalNotification? {
+    func textNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, mentionedUser: UserType? = nil, replyingTo: ZMUser? = nil, isEphemeral: Bool = false) -> ZMLocalNotification? {
         if isEphemeral { conversation.messageDestructionTimeout = .local(0.5) }
         
-        let mention = mentionedUser.map(papply(Mention.init, NSRange(location: 0, length: 8)))
-        let message = conversation.append(text: text ?? "Hello Hello!", mentions: mention.map { [$0] } ?? []) as! ZMOTRMessage
-        message.serverTimestamp = Date.distantFuture
-        message.sender = sender
         conversation.lastReadServerTimeStamp = Date()
+        
+        let mention = mentionedUser.map(papply(Mention.init, NSRange(location: 0, length: 8)))
+        var quotedMessage: ZMOTRMessage?
+        
+        if let user = replyingTo {
+            quotedMessage = (conversation.append(text: "Don't quote me on this...") as! ZMOTRMessage)
+            quotedMessage!.sender = user
+            quotedMessage!.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(10)
+        }
+
+        let message = conversation.append(text: text ?? "Hello Hello!", mentions: mention.map { [$0] } ?? []) as! ZMOTRMessage
+//        message.serverTimestamp = Date.distantFuture
+        message.sender = sender
+        message.quote = quotedMessage
         message.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(20)
+        
         return ZMLocalNotification(message: message)
     }
     
@@ -179,6 +190,8 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         XCTAssertNil(note)
     }
     
+    // MARK: Mentions
+    
     func testThatItDoesNotCreateANotificationWhenTheConversationIsSilencedAndOtherUserIsMentioned() {
         // Given
         groupConversation.mutedMessageTypes = .all
@@ -280,6 +293,34 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         XCTAssertEqual(note?.body, "Mentioned you")
     }
 
+    // MARK: Replies
+    
+    func testThatItCreatesNotificationWhenConversationIsSilencesAndSelfIsQuoted() {
+        XCTFail()
+    }
+    
+    func testThatItDoesNotCreateNotificationWhenConversationIsSilencesAndOtherIsQuoted() {
+        XCTFail()
+    }
+    
+    func testThatItCreatesCorrectBodyWhenSelfIsQuoted() {
+        XCTFail()
+    }
+    
+    func testThatItCreatesCorrectBodyWhenOtherIsQuoted() {
+        XCTFail()
+    }
+    
+    func testThatItCreatesCorrectBodyWhenSelfIsQuoted_Ephemeral() {
+        XCTFail()
+    }
+
+    func testThatItPrioritizesMentionsOverReply() {
+        XCTFail()
+    }
+    
+    // MARK: Misc
+    
     func testThatItCreatesPushNotificationForMessageOfUnknownType() {
         XCTAssertEqual(bodyForUnknownNote(oneOnOneConversation, sender: sender), "New message")
         XCTAssertEqual(bodyForUnknownNote(groupConversation, sender: sender), "Super User: new message")
