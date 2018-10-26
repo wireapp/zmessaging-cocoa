@@ -70,15 +70,6 @@
 "push.notification.add.message.oneonone.mention" = "Mention: %1$@";
 "push.notification.add.message.oneonone.nousername.mention" = "New mention: %1$@";
 
-// UNKNOWN MESSAGE
-"push.notification.add.unknown.group.mention" = "%1$@: new mention";
-"push.notification.add.unknown.group.nousername.mention" = "New mention";
-"push.notification.add.unknown.group.nousername.noconversationname.mention" = "New mention";
-"push.notification.add.unknown.group.noconversationname.mention" = "%1$@ mentioned you";
-
-"push.notification.add.unknown.oneonone.mention" = "New mention";
-"push.notification.add.unknown.oneonone.nousername.mention" = "New mention";
-
 // Message with quote
 
 // 2 Components: Sender, Message
@@ -90,15 +81,6 @@
 // 1 Component: Message
 "push.notification.add.message.oneonone.reply" = "Reply: %1$@";
 "push.notification.add.message.oneonone.nousername.reply" = "New reply: %1$@";
-
-// 1 Component: Sender
-"push.notification.add.unknown.group.reply" = "%1$@: new reply";
-"push.notification.add.unknown.group.nousername.reply" = "New reply";
-"push.notification.add.unknown.group.nousername.noconversationname.reply" = "New reply";
-"push.notification.add.unknown.group.noconversationname.reply" = "%1$@ replied to your message";
-
-"push.notification.add.unknown.oneonone.reply" = "New reply";
-"push.notification.add.unknown.oneonone.nousername.reply" = "New reply";
 
 
 // IMAGE
