@@ -23,16 +23,32 @@ public enum LocalNotificationEventType {
 }
 
 public enum LocalNotificationContentType : Equatable {
-    case undefined, image, video, audio, location, fileUpload, knock, text(String, isMention: Bool), reaction(emoji: String), ephemeral(isMention: Bool), hidden, participantsRemoved, participantsAdded, messageTimerUpdate(String?)
+    
+    case undefined
+    case text(String, isMention: Bool, isReply: Bool)
+    case image
+    case video
+    case audio
+    case location
+    case fileUpload
+    case knock
+    case reaction(emoji: String)
+    case hidden
+    case ephemeral(isMention: Bool, isReply: Bool)
+    case participantsRemoved
+    case participantsAdded
+    case messageTimerUpdate(String?)
     
     static func typeForMessage(_ message: ZMConversationMessage) -> LocalNotificationContentType? {
         
         if message.isEphemeral {
-            return .ephemeral(isMention: message.textMessageData?.isMentioningSelf ?? false)
+            // TODO: extract reply
+            return .ephemeral(isMention: message.textMessageData?.isMentioningSelf ?? false, isReply: true)
         }
         
         if let messageData = message.textMessageData, let text = messageData.messageText , !text.isEmpty {
-            return .text(text, isMention: messageData.isMentioningSelf)
+            // TODO: extract reply
+            return .text(text, isMention: messageData.isMentioningSelf, isReply: true)
         }
         
         if message.knockMessageData != nil {
@@ -57,7 +73,7 @@ public enum LocalNotificationContentType : Equatable {
             return .location
         }
         
-        if let systemMessageData = message.systemMessageData{
+        if let systemMessageData = message.systemMessageData {
             switch systemMessageData.systemMessageType {
             case .participantsAdded:
                 return .participantsAdded
