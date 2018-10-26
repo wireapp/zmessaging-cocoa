@@ -26,7 +26,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     // MARK: - Text Messages
     // MARK: Helpers
     
-    func textNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, mentionedUser: UserType? = nil, replyingTo: ZMUser? = nil, isEphemeral: Bool = false) -> ZMLocalNotification? {
+    func textNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, mentionedUser: UserType? = nil, quotedUser: ZMUser? = nil, isEphemeral: Bool = false) -> ZMLocalNotification? {
         if isEphemeral { conversation.messageDestructionTimeout = .local(0.5) }
         
         conversation.lastReadServerTimeStamp = Date()
@@ -34,9 +34,9 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         let mention = mentionedUser.map(papply(Mention.init, NSRange(location: 0, length: 8)))
         var quotedMessage: ZMOTRMessage?
         
-        if let user = replyingTo {
+        if let quotedUser = quotedUser {
             quotedMessage = (conversation.append(text: "Don't quote me on this...") as! ZMOTRMessage)
-            quotedMessage!.sender = user
+            quotedMessage!.sender = quotedUser
             quotedMessage!.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(10)
         }
 
@@ -295,28 +295,99 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
 
     // MARK: Replies
     
-    func testThatItCreatesNotificationWhenConversationIsSilencesAndSelfIsQuoted() {
+    func testThatItDoesNotCreateANotificationWhenTheConversationIsSilencedAndOtherUserIsQuoted() {
         XCTFail()
     }
     
-    func testThatItDoesNotCreateNotificationWhenConversationIsSilencesAndOtherIsQuoted() {
+    func testThatItDoesNotCreateANotificationWhenTheConversationIsFullySilencedAndSelfUserIsQuoted() {
+        XCTFail()
+    }
+    
+    func testThatItDoesCreateANotificationWhenTheConversationIsSilencedAndSelfUserIsQuoted() {
         XCTFail()
     }
     
     func testThatItCreatesCorrectBodyWhenSelfIsQuoted() {
-        XCTFail()
+        // Given & When
+        let note = textNotification(groupConversation, sender: sender, quotedUser: selfUser)
+        
+        // Then
+        XCTAssertEqual(note?.body, "Reply from Super User: Hello Hello!")
+    }
+    
+    func testThatItCreatesCorrectBodyWhenSelfIsQuoted_NoUserName() {
+        // Given
+        sender.name = nil
+        
+        // When
+        let note = textNotification(groupConversation, sender: sender, quotedUser: selfUser)
+        
+        // Then
+        XCTAssertEqual(note?.body, "New reply: Hello Hello!")
+    }
+    
+    func testThatItCreatesCorrectBodyWhenSelfIsQuoted_NoConversationName() {
+        // Given & When
+        let note = textNotification(groupConversationWithoutName, sender: sender, quotedUser: selfUser)
+        
+        // Then
+        XCTAssertEqual(note?.body, "Super User replied to your message in a conversation: Hello Hello!")
+    }
+    
+    func testThatItCreatesCorrectBodyWhenSelfIsQuoted_NoUserName_NoConversationName() {
+        // Given
+        sender.name = nil
+        
+        // When
+        let note = textNotification(groupConversationWithoutName, sender: sender, quotedUser: selfUser)
+        
+        // Then
+        XCTAssertEqual(note?.body, "New reply: Hello Hello!")
+    }
+    
+    func testThatItCreatesCorrectBodyWhenSelfIsQuoted_OneOnOne() {
+        // Given & When
+        let note = textNotification(oneOnOneConversation, sender: sender, quotedUser: selfUser)
+        
+        // Then
+        XCTAssertEqual(note?.body, "Reply: Hello Hello!")
+    }
+    
+    func testThatItCreatesCorrectBodyWhenSelfIsQuoted_OneOnOne_NoUserName() {
+        // Given
+        sender.name = nil
+        
+        // When
+        let note = textNotification(oneOnOneConversation, sender: sender, quotedUser: selfUser)
+        
+        // Then
+        XCTAssertEqual(note?.body, "New reply: Hello Hello!")
+    }
+    
+    
+    func testThatItCreatesCorrectBodyWhenSelfIsQuoted_Ephemeral() {
+        // Given & When
+        let note = textNotification(groupConversation, sender: sender, quotedUser: selfUser, isEphemeral: true)
+        
+        // Then
+        XCTAssertEqual(note?.title, "Someone")
+        XCTAssertEqual(note?.body, "Replied to your message")
     }
     
     func testThatItCreatesCorrectBodyWhenOtherIsQuoted() {
-        XCTFail()
+        // Given & When
+        let note = textNotification(groupConversation, sender: sender, quotedUser: sender)
+        
+        // Then
+        XCTAssertEqual(note?.body, "Super User: Hello Hello!")
     }
     
-    func testThatItCreatesCorrectBodyWhenSelfIsQuoted_Ephemeral() {
-        XCTFail()
-    }
-
     func testThatItPrioritizesMentionsOverReply() {
-        XCTFail()
+        // Given & When
+        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser, quotedUser: selfUser)
+        
+        // Then
+        XCTAssertEqual(note?.body, "Mention from Super User: Hello Hello!")
     }
     
     // MARK: Misc
