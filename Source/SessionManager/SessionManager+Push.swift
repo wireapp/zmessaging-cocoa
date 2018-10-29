@@ -84,12 +84,14 @@ extension SessionManager: PKPushRegistryDelegate {
         
         withSession(for: account, perform: { userSession in
             log.debug("Forwarding push payload to user session with account \(account.userIdentifier)")
-            
             userSession.receivedPushNotification(with: payload.dictionaryPayload, completion: { [weak self] in
-                log.debug("Processing push payload completed")
-                self?.notificationsTracker?.registerNotificationProcessingCompleted()
-                activity.end()
-                completion()
+                log.debug("Sending delivery receipts")
+                userSession.applicationStatusDirectory.apnsConfirmationStatus.registerCompletionHandler {
+                    log.debug("Processing push payload completed")
+                    self?.notificationsTracker?.registerNotificationProcessingCompleted()
+                    activity.end()
+                    completion()
+                }
             })
         })
     }
