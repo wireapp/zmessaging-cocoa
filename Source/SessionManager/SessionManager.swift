@@ -202,8 +202,9 @@ public protocol ForegroundNotificationResponder: class {
     
     public var callKitDelegate : CallKitDelegate?
     
-    private static let runOnce: Void = {
+    private static let runOnce: () -> Void = {
         BuildType.setupBuildTypes()
+        return {}
     }()
     
     /// The entry point for SessionManager; call this instead of the initializers.
@@ -220,6 +221,7 @@ public protocol ForegroundNotificationResponder: class {
         ) {
         
         token = FileManager.default.executeWhenFileSystemIsAccessible {
+            runOnce()
             completion(SessionManager(
                 appVersion: appVersion,
                 mediaManager: mediaManager,
