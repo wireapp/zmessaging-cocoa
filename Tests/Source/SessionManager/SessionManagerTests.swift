@@ -365,8 +365,7 @@ class SessionManagerTests_Teams: IntegrationTest {
         super.setUp()
         createSelfUserAndConversation()
     }
-
-
+    
     
     func testThatItUpdatesAccountAfterLoginWithTeamName() {
         // given
