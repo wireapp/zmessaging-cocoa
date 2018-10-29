@@ -119,9 +119,9 @@ extension ZMUserSession {
             
             // once notification processing is finished, it's safe to update the badge
             let completionHandler = {
-                completion()
                 let unreadCount = Int(ZMConversation.unreadConversationCount(in: syncMoc))
                 self.sessionManager?.updateAppIconBadge(accountID: accountID, unreadCount: unreadCount)
+                completion()
             }
             
             self.operationLoop.fetchEvents(fromPushChannelPayload: payload, completionHandler: completionHandler)
