@@ -202,6 +202,10 @@ public protocol ForegroundNotificationResponder: class {
     
     public var callKitDelegate : CallKitDelegate?
     
+    private static let runOnce: Void = {
+        BuildType.setupBuildTypes()
+    }()
+    
     /// The entry point for SessionManager; call this instead of the initializers.
     ///
     public static func create(
@@ -214,8 +218,8 @@ public protocol ForegroundNotificationResponder: class {
         blacklistDownloadInterval: TimeInterval,
         completion: @escaping (SessionManager) -> Void
         ) {
+        
         token = FileManager.default.executeWhenFileSystemIsAccessible {
-            BuildType.setupBuildTypes()
             completion(SessionManager(
                 appVersion: appVersion,
                 mediaManager: mediaManager,
