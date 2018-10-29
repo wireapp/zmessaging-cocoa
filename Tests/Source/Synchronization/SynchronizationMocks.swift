@@ -27,7 +27,6 @@ import avs
 @objcMembers
 public class MockApplicationStatus : NSObject, ApplicationStatus, DeliveryConfirmationDelegate, ClientRegistrationDelegate, ZMRequestCancellation {
 
-
     public var notificationFetchStatus = BackgroundNotificationFetchStatus.done
 
     public var confirmationDelegate : DeliveryConfirmationDelegate { return self }
@@ -93,6 +92,10 @@ public class MockApplicationStatus : NSObject, ApplicationStatus, DeliveryConfir
     
     public func didConfirmMessage(_ messageNonce: UUID) {
         messagesConfirmed.insert(messageNonce)
+    }
+
+    public func registerCompletionHandler(completion: @escaping () -> Void) {
+        completion()
     }
     
     public var didRequestSlowSync = false
