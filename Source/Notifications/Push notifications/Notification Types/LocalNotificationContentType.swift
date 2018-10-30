@@ -42,13 +42,17 @@ public enum LocalNotificationContentType : Equatable {
     static func typeForMessage(_ message: ZMConversationMessage) -> LocalNotificationContentType? {
         
         if message.isEphemeral {
-            // TODO: extract reply
-            return .ephemeral(isMention: message.textMessageData?.isMentioningSelf ?? false, isReply: true)
+            if let messageData = message.textMessageData {
+                return .ephemeral(isMention: messageData.isMentioningSelf, isReply: messageData.isQuotingSelf)
+            }
+            else {
+                return .ephemeral(isMention: false, isReply: false)
+            }
         }
         
         if let messageData = message.textMessageData, let text = messageData.messageText , !text.isEmpty {
             // TODO: extract reply
-            return .text(text, isMention: messageData.isMentioningSelf, isReply: true)
+            return .text(text, isMention: messageData.isMentioningSelf, isReply: messageData.isQuotingSelf)
         }
         
         if message.knockMessageData != nil {
