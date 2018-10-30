@@ -32,18 +32,18 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         conversation.lastReadServerTimeStamp = Date()
         
         let mention = mentionedUser.map(papply(Mention.init, NSRange(location: 0, length: 8)))
-        var quotedMessage: ZMOTRMessage?
+        let mentions = mention.map { [$0] } ?? []
+        
+        var quotedMessage: ZMClientMessage?
         
         if let quotedUser = quotedUser {
-            quotedMessage = (conversation.append(text: "Don't quote me on this...") as! ZMOTRMessage)
-            quotedMessage!.sender = quotedUser
-            quotedMessage!.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(10)
+            quotedMessage = conversation.append(text: "Don't quote me on this...") as? ZMClientMessage
+            quotedMessage?.sender = quotedUser
+            quotedMessage?.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(10)
         }
-
-        let message = conversation.append(text: text ?? "Hello Hello!", mentions: mention.map { [$0] } ?? []) as! ZMOTRMessage
-//        message.serverTimestamp = Date.distantFuture
+        
+        let message = conversation.append(text: text ?? "Hello Hello!", mentions: mentions, replyingTo: quotedMessage) as! ZMOTRMessage
         message.sender = sender
-        message.quote = quotedMessage
         message.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(20)
         
         return ZMLocalNotification(message: message)
