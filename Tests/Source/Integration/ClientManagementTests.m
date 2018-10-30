@@ -149,7 +149,7 @@
 
     // when
     [self.userSession performChanges:^{
-        [self.userSession deleteClients:@[fetchClients.firstObject] withCredentials:credentials];
+        [self.userSession deleteClient:fetchClients.firstObject withCredentials:credentials];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

@@ -307,6 +307,30 @@ class SessionManagerTests: IntegrationTest {
         // THEN
         XCTAssertEqual([account1.userIdentifier], observer.destroyedUserSessions)
     }
+
+    func testThatSessionManagerSetsUpAPNSEnvironmentOnLaunch() {
+        // GIVEN
+        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
+
+        let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
+
+        // WHEN
+        SessionManager.create(appVersion: "0.0.0",
+                              mediaManager: mediaManager,
+                              analytics: nil,
+                              delegate: nil,
+                              application: application,
+                              environment: sessionManager!.environment,
+                              blacklistDownloadInterval : 60) { _ in
+                                sessionManagerExpectation.fulfill()
+        }
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+
+
+        // THEN
+        let environment = ZMAPNSEnvironment()
+        XCTAssertNotNil(environment.appIdentifier)
+    }
 }
 
 extension IntegrationTest {
