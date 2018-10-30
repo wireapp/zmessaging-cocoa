@@ -82,7 +82,6 @@
 "push.notification.add.message.oneonone.reply" = "Reply: %1$@";
 "push.notification.add.message.oneonone.nousername.reply" = "New reply: %1$@";
 
-
 // IMAGE
 "push.notification.add.image.group" = "%1$@ shared a picture";
 "push.notification.add.image.group.nousername" = "New picture";
