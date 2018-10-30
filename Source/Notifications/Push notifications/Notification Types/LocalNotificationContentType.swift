@@ -51,7 +51,6 @@ public enum LocalNotificationContentType : Equatable {
         }
         
         if let messageData = message.textMessageData, let text = messageData.messageText , !text.isEmpty {
-            // TODO: extract reply
             return .text(text, isMention: messageData.isMentioningSelf, isReply: messageData.isQuotingSelf)
         }
         
