@@ -617,7 +617,7 @@ static ZMReachability *sharedReachabilityMock = nil;
 {
     NSUUID *nonce = [NSUUID createUUID];
     ZMClientMessage *message = [[ZMClientMessage alloc] initWithNonce:nonce managedObjectContext:self.syncMOC];
-    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:text mentions:@[] linkPreviews:@[]] nonce:nonce];
+    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:text mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:nonce];
     [message addData:textMessage.data];
     return message;
 }

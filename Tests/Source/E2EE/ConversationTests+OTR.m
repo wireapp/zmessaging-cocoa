@@ -38,8 +38,8 @@
     NSUUID *nonce1 = [NSUUID createUUID];
     NSUUID *nonce2 = [NSUUID createUUID];
     
-    ZMGenericMessage *genericMessage1 = [ZMGenericMessage messageWithContent:[ZMText textWith:expectedText1 mentions:@[] linkPreviews:@[]] nonce:nonce1];
-    ZMGenericMessage *genericMessage2 = [ZMGenericMessage messageWithContent:[ZMText textWith:expectedText2 mentions:@[] linkPreviews:@[]] nonce:nonce2];
+    ZMGenericMessage *genericMessage1 = [ZMGenericMessage messageWithContent:[ZMText textWith:expectedText1 mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:nonce1];
+    ZMGenericMessage *genericMessage2 = [ZMGenericMessage messageWithContent:[ZMText textWith:expectedText2 mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:nonce2];
     
     [self testThatItAppendsMessageToConversation:self.groupConversation withBlock:^NSArray *(MockTransportSession<MockTransportSessionObjectCreation> * __unused session){
         
@@ -544,7 +544,7 @@
     // when receiving a new message
     NSString *otherUserMessageText = @"Are you still there?";
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> __unused *session) {
-        ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:otherUserMessageText mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+        ZMGenericMessage *genericMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:otherUserMessageText mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:genericMessage.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -569,7 +569,7 @@
     XCTAssertTrue([self login]);
     
     NSString *expectedText = @"The sky above the port was the color of ";
-    ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:expectedText mentions:@[] linkPreviews:@[]]  nonce:NSUUID.createUUID];
+    ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:expectedText mentions:@[] linkPreviews:@[] replyingTo:nil]  nonce:NSUUID.createUUID];
     
 
     MockConversation *mockConversation = self.groupConversation;
@@ -699,7 +699,7 @@
     XCTAssertTrue(conversation.isArchived);
     
     // when
-    ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Foo bar" mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+    ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Foo bar" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
         [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject
                                                       toClient:self.selfUser.clients.anyObject
@@ -1099,7 +1099,7 @@
         NOT_USED(session);
         MockUserClient *mockSelfClient = self.selfUser.clients.anyObject;
         MockUserClient *mockUser5Client = self.user5.clients.anyObject;
-        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Test 123" mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Test 123" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
         NSData *messageData = [MockUserClient encryptedWithData:message.data from:mockUser5Client to:mockSelfClient];
         [self.groupConversationWithOnlyConnected insertOTRMessageFromClient:mockUser5Client toClient:mockSelfClient data:messageData];
     }];
@@ -1561,7 +1561,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // WHEN
-    ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Test" mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+    ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Test" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused transportSession) {
         MockUserClient *newClient = [transportSession registerClientForUser:self.user1 label:@"test-it" type:@"permanent"];
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:newClient toClient:self.selfUser.clients.anyObject data:message.data];
@@ -1582,7 +1582,7 @@
                                                        expectedSecurityLevel:(ZMConversationSecurityLevel)expectedSecurityLevel
 {
     NSString *expectedText = @"The sky above the port was the color of ";
-    ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:expectedText mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+    ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:expectedText mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
     
     XCTAssertTrue([self login]);
     
@@ -2252,7 +2252,7 @@
     MockUserClient *mockUser1Client = self.user1.clients.anyObject;
     
     // when sending the fist message
-    ZMGenericMessage *firstMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:firstMessageText mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+    ZMGenericMessage *firstMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:firstMessageText mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
 
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
         

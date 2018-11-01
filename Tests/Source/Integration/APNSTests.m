@@ -202,7 +202,7 @@
         // given
         XCTAssertTrue([self login]);
 
-        ZMGenericMessage *textMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Hello" mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+        ZMGenericMessage *textMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Hello" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
         
         [self closePushChannelAndWaitUntilClosed]; // do not use websocket
         
