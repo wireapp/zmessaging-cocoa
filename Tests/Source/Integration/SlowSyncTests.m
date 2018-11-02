@@ -308,7 +308,7 @@
 
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Hello, Test!" mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Hello, Test!" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
         [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -340,7 +340,7 @@
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Hello, Test!" mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Hello, Test!" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
         [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);

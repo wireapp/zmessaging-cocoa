@@ -629,10 +629,10 @@ extension ZMLocalNotificationTests_Message {
 extension ZMLocalNotificationTests_Message {
 
     func editNote(_ message: ZMOTRMessage, sender: ZMUser, text: String) -> ZMLocalNotification? {
-        let editMessage = ZMOTRMessage.edit(message, newText: text)
-        editMessage?.serverTimestamp = Date.distantFuture
-        editMessage!.sender = sender
-        return ZMLocalNotification(message: editMessage as! ZMClientMessage)
+        message.textMessageData?.editText(text, mentions: [], fetchLinkPreview: false)
+        message.serverTimestamp = Date.distantFuture
+        message.sender = sender
+        return ZMLocalNotification(message: message as! ZMClientMessage)
     }
 
     func bodyForEditNote(_ conversation: ZMConversation, sender: ZMUser, text: String) -> String {
