@@ -54,17 +54,20 @@ private let zmLog = ZMSLog(tag: "Push")
     }
     
     func showContent(for userInfo: NotificationUserInfo) {
-        if let conversation = userInfo.conversation(in: managedObjectContext) {
-            
-            if let message = userInfo.message(in: conversation, managedObjectContext: managedObjectContext) as? ZMClientMessage,
-                let textMessageData = message.textMessageData, textMessageData.isMentioningSelf {
-                showConversation(conversation, at: conversation.firstUnreadMessageMentioningSelf)
-            } else {
-                showConversation(conversation)
-            }
-            
-        } else {
+        
+        guard let conversation = userInfo.conversation(in: managedObjectContext) else {
             sessionManager?.showConversationList(in: self)
+            return
+        }
+        
+        guard let message = userInfo.message(in: conversation, managedObjectContext: managedObjectContext) as? ZMClientMessage else {
+            return showConversation(conversation)
+        }
+        
+        if let textMessageData = message.textMessageData, textMessageData.isMentioningSelf {
+            showConversation(conversation, at: conversation.firstUnreadMessageMentioningSelf)
+        } else {
+            showConversation(conversation, at: message)
         }
     }
         
