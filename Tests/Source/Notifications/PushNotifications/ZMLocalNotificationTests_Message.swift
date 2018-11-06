@@ -26,6 +26,16 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     // MARK: - Text Messages
     // MARK: Helpers
     
+    /**
+     *  Some (but not all) of these tests require the team identifier to be
+     *  set. These tests should be called used this method.
+     */
+    func teamTest(_ block: () -> Void) {
+        selfUser.teamIdentifier = UUID()
+        block()
+        selfUser.teamIdentifier = nil
+    }
+    
     func textNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, mentionedUser: UserType? = nil, quotedUser: ZMUser? = nil, isEphemeral: Bool = false) -> ZMLocalNotification? {
         if isEphemeral { conversation.messageDestructionTimeout = .local(0.5) }
         
@@ -193,38 +203,42 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     // MARK: Mentions
     
     func testThatItDoesNotCreateANotificationWhenTheConversationIsSilencedAndOtherUserIsMentioned() {
-        // Given
-        groupConversation.mutedMessageTypes = .all
-        
-        // When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: sender)
-        
-        // Then
-        XCTAssertNil(note)
+        teamTest {
+            // Given
+            groupConversation.mutedMessageTypes = .all
+            
+            // When
+            let note = textNotification(groupConversation, sender: sender, mentionedUser: sender)
+            
+            // Then
+            XCTAssertNil(note)
+        }
     }
     
     func testThatItDoesNotCreateANotificationWhenTheConversationIsFullySilencedAndSelfUserIsMentioned() {
-        // Given
-        groupConversation.mutedMessageTypes = .all
-        
-        // When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
-        
-        // Then
-        XCTAssertNil(note)
+        teamTest {
+            // Given
+            groupConversation.mutedMessageTypes = .all
+            
+            // When
+            let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+            
+            // Then
+            XCTAssertNil(note)
+        }
     }
     
     func testThatItDoesCreateANotificationWhenTheConversationIsSilencedAndSelfUserIsMentioned() {
-        // Given
-        selfUser.teamIdentifier = UUID()
-        groupConversation.mutedMessageTypes = .nonMentions
-        
-        // When
-        let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
-        
-        // Then
-        XCTAssertNotNil(note)
-        selfUser.teamIdentifier = nil
+        teamTest {
+            // Given
+            groupConversation.mutedMessageTypes = .regular
+            
+            // When
+            let note = textNotification(groupConversation, sender: sender, mentionedUser: selfUser)
+            
+            // Then
+            XCTAssertNotNil(note)
+        }
     }
     
     func testThatItUsesCorrectBodyWhenSelfUserIsMentioned() {
@@ -295,17 +309,44 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
 
     // MARK: Replies
     
-//    func testThatItDoesNotCreateANotificationWhenTheConversationIsSilencedAndOtherUserIsQuoted() {
-//        XCTFail()
-//    }
-//    
-//    func testThatItDoesNotCreateANotificationWhenTheConversationIsFullySilencedAndSelfUserIsQuoted() {
-//        XCTFail()
-//    }
-//    
-//    func testThatItDoesCreateANotificationWhenTheConversationIsSilencedAndSelfUserIsQuoted() {
-//        XCTFail()
-//    }
+    func testThatItDoesNotCreateANotificationWhenTheConversationIsFullySilencedAndSelfUserIsQuoted() {
+        teamTest {
+            // Given
+            groupConversation.mutedMessageTypes = .all
+            
+            // When
+            let note = textNotification(groupConversation, sender: sender, quotedUser: selfUser)
+            
+            // Then
+            XCTAssertNil(note)
+        }
+    }
+    
+    func testThatItDoesNotCreateANotificationWhenTheConversationIsSilencedAndOtherUserIsQuoted() {
+        teamTest {
+            // Given
+            groupConversation.mutedMessageTypes = .regular
+            
+            // When
+            let note = textNotification(groupConversation, sender: sender, quotedUser: otherUser1)
+            
+            // Then
+            XCTAssertNil(note)
+        }
+    }
+    
+    func testThatItCreatesANotificationWhenTheConversationIsSilencedAndSelfUserIsQuoted() {
+        teamTest {
+            // Given
+            groupConversation.mutedMessageTypes = .regular
+            
+            // When
+            let note = textNotification(groupConversation, sender: sender, quotedUser: selfUser)
+            
+            // Then
+            XCTAssertNotNil(note)
+        }
+    }
     
     func testThatItCreatesCorrectBodyWhenSelfIsQuoted() {
         // Given & When
