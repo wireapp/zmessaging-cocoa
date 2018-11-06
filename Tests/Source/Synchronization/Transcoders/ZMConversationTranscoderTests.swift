@@ -32,10 +32,10 @@ extension ZMConversation {
     
     @objc var isMutedDisplayingMentions: Bool {
         get {
-            return mutedMessageTypes == .nonMentions
+            return mutedMessageTypes == .regular
         }
         set {
-            mutedMessageTypes = newValue ? .nonMentions : .none
+            mutedMessageTypes = newValue ? .regular : .none
         }
     }
 }
