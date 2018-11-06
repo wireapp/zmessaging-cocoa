@@ -50,7 +50,7 @@ extension SelfPostingNotification {
 
 // MARK:- Network Condition observer
 
-public protocol NetworkConditionObserver : class {
+public protocol NetworkQualityObserver : class {
     func callCenterDidChange(networkQuality: NetworkQuality)
 }
 
@@ -321,13 +321,13 @@ extension WireCallCenterV3 {
 
     /// Register observer when constant audio bit rate is enabled/disabled
     /// Returns a token which needs to be retained as long as the observer should be active.
-    public class func addNetworkConditionObserver(observer: NetworkConditionObserver, for conversation: ZMConversation, userSession: ZMUserSession) -> Any {
-        return addNetworkConditionObserver(observer: observer, for: conversation, context: userSession.managedObjectContext)
+    public class func addNetworkQualityObserver(observer: NetworkQualityObserver, for conversation: ZMConversation, userSession: ZMUserSession) -> Any {
+        return addNetworkQualityObserver(observer: observer, for: conversation, context: userSession.managedObjectContext)
     }
 
-    /// Register observer when constant audio bit rate is enabled/disabled
+    /// Register observer when network quality changes
     /// Returns a token which needs to be retained as long as the observer should be active.
-    internal class func addNetworkConditionObserver(observer: NetworkConditionObserver, for conversation: ZMConversation, context: NSManagedObjectContext) -> Any {
+    internal class func addNetworkQualityObserver(observer: NetworkQualityObserver, for conversation: ZMConversation, context: NSManagedObjectContext) -> Any {
         return NotificationInContext.addObserver(name: WireCallCenterNetworkQualityNotification.notificationName, context: context.notificationContext, queue: .main) { [weak observer] note in
             if let note = note.userInfo[WireCallCenterNetworkQualityNotification.userInfoKey] as? WireCallCenterNetworkQualityNotification {
                 if note.conversationId == conversation.remoteIdentifier {
