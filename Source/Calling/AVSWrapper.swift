@@ -261,10 +261,11 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    private let networkQualityHandler: NetworkQualityChangeHandler = { conversationIdRef, userIdRef, quality, rtt, uploss, downloss, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationIdRef) {
-            $0.handleMediaStopped(conversationId: $1)
-        }
+    private let networkQualityHandler: NetworkQualityChangeHandler = { conversationIdRef, userIdRef, quality, _, _, _, contextRef in
+        guard let quality = NetworkQuality(rawValue: quality) else { return }
+        AVSWrapper.withCallCenter(contextRef, conversationIdRef, userIdRef, { (callCenter, conversationId, userId) in
+            callCenter.handleNetworkQualityChange(conversationId: conversationId, userId: userId, quality: quality)
+        })
     }
 
 }
