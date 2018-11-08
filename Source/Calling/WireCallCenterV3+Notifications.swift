@@ -48,7 +48,7 @@ extension SelfPostingNotification {
     }
 }
 
-// MARK:- Network Condition observer
+// MARK:- Network Quality observer
 
 public protocol NetworkQualityObserver : class {
     func callCenterDidChange(networkQuality: NetworkQuality)

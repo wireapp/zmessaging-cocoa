@@ -83,5 +83,20 @@ class VoiceChannelV3Tests : MessagingTest {
         // then
         XCTAssertFalse(wireCallCenterMock!.didCallAnswerCall)
     }
+
+    func testThatItForwardsNetworkQualityFromCallCenter() {
+        // given
+        let calledId = UUID()
+        wireCallCenterMock?.setMockCallState(.established, conversationId: conversation!.remoteIdentifier!, callerId: calledId, isVideo: false)
+        let quality = NetworkQuality.poor
+        XCTAssertEqual(sut.networkQuality, .normal)
+
+        // when
+        wireCallCenterMock?.handleNetworkQualityChange(conversationId: conversation!.remoteIdentifier!, userId: calledId, quality: quality)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
+        // then
+        XCTAssertEqual(sut.networkQuality, quality)
+    }
+
 }
