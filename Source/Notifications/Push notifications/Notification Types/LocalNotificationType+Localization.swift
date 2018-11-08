@@ -69,6 +69,7 @@ private let OneOnOneKey = "oneonone"
 private let GroupKey = "group"
 private let SelfKey = "self"
 private let MentionKey = "mention"
+private let ReplyKey = "reply"
 private let NoConversationNameKey = "noconversationname"
 private let NoUserNameKey = "nousername"
 
@@ -222,31 +223,39 @@ extension LocalNotificationType {
             arguments.append(senderName)
         }
         
-        var mentionKey: String? = nil
+        var mentionOrReplyKey: String? = nil
         
         switch self {
         case .message(let contentType):
             switch contentType {
-            case let .text(content, isMention: isMention):
+            case let .text(content, isMention, isReply):
                 arguments.append(content)
-                mentionKey = isMention ? MentionKey : nil
+                mentionOrReplyKey = isMention ? MentionKey : (isReply ? ReplyKey : nil)
+            
             case .reaction(emoji: let emoji):
                 arguments.append(emoji)
+            
             case .knock:
                 arguments.append(NSNumber(value: 1))
-            case .ephemeral(isMention: true):
-                let key = baseKey + "." + MentionKey
+            
+            case let .ephemeral(isMention, isReply):
+                mentionOrReplyKey = isMention ? MentionKey : (isReply ? ReplyKey : nil)
+                let key = [baseKey, mentionOrReplyKey].compactMap { $0 }.joined(separator: ".")
                 return .localizedStringWithFormat(key.pushFormatString)
-            case .ephemeral, .hidden:
+            
+            case .hidden:
                 return .localizedStringWithFormat(baseKey.pushFormatString)
+            
             case .messageTimerUpdate(let timerString):
                 if let string = timerString {
                     arguments.append(string)
                 }
                 conversationTypeKey = nil
+            
             case .participantsAdded, .participantsRemoved:
                 conversationTypeKey = nil // System messages don't follow the template and is missing the `group` suffix
                 senderKey = SelfKey
+            
             default:
                 break
             }
@@ -257,7 +266,7 @@ extension LocalNotificationType {
             arguments.append(conversationName)
         }
         
-        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey, mentionKey].compactMap({ $0 }).joined(separator: ".")
+        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey, mentionOrReplyKey].compactMap({ $0 }).joined(separator: ".")
         return .localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
     }
     

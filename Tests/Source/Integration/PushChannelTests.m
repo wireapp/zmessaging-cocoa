@@ -53,12 +53,12 @@
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
         // send new message remotely
-        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:testMessage1 mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:testMessage1 mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
         MockUserClient *fromClient = self.user1.clients.anyObject, *toClient = self.selfUser.clients.anyObject;
         [self.groupConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
         [self spinMainQueueWithTimeout:0.2];
         
-        ZMGenericMessage *secondMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:testMessage2 mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+        ZMGenericMessage *secondMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:testMessage2 mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
         [self.groupConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:secondMessage.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -90,7 +90,7 @@
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
             NOT_USED(session);
         // will create a notification that is not transient
-        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Food" mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Food" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
         [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
