@@ -24,7 +24,7 @@ class CallParticipantsSnapshot {
 
     // We take the worst quality of all the legs
     public var networkQuality: NetworkQuality {
-        return members.map { $0.networkQuality }
+        return members.map(\.networkQuality)
             .sorted() { $0.rawValue < $1.rawValue }
             .last ?? .normal
     }
