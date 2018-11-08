@@ -412,7 +412,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         
         // Then
         XCTAssertEqual(note?.title, "Someone")
-        XCTAssertEqual(note?.body, "Replied to your message")
+        XCTAssertEqual(note?.body, "Replied to you")
     }
     
     func testThatItCreatesCorrectBodyWhenOtherIsQuoted() {

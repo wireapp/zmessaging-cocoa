@@ -37,7 +37,7 @@
 "push.notification.ephemeral.title" = "Хтось";
 "push.notification.ephemeral" = "Надіслав повідомлення";
 "push.notification.ephemeral.mention" = "Згадав вас";
-"push.notification.ephemeral.reply" = "Replied to your message";
+"push.notification.ephemeral.reply" = "Replied to you";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";

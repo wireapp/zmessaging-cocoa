@@ -37,7 +37,7 @@
 "push.notification.ephemeral.title" = "Keegi";
 "push.notification.ephemeral" = "Saatis sõnumi";
 "push.notification.ephemeral.mention" = "Mainis sind";
-"push.notification.ephemeral.reply" = "Replied to your message";
+"push.notification.ephemeral.reply" = "Replied to you";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";

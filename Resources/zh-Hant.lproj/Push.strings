@@ -37,7 +37,7 @@
 "push.notification.ephemeral.title" = "某人";
 "push.notification.ephemeral" = "發送一則消息";
 "push.notification.ephemeral.mention" = "提及您";
-"push.notification.ephemeral.reply" = "Replied to your message";
+"push.notification.ephemeral.reply" = "Replied to you";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@：%2$@";

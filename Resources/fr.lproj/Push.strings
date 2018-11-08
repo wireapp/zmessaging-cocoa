@@ -37,7 +37,7 @@
 "push.notification.ephemeral.title" = "Quelqu’un";
 "push.notification.ephemeral" = "A envoyé un message";
 "push.notification.ephemeral.mention" = "Vous a mentionné";
-"push.notification.ephemeral.reply" = "Replied to your message";
+"push.notification.ephemeral.reply" = "Replied to you";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@ : %2$@";
