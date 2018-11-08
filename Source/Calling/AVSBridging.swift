@@ -55,6 +55,10 @@ extension CallClosedReason: AVSValue {
     }
 }
 
+extension NetworkQuality: AVSEnum {
+    typealias AVSType = RawValue
+}
+
 extension Bool: AVSValue {
     init(rawValue: Int32) {
         self = rawValue == 1
