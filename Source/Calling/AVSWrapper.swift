@@ -90,7 +90,8 @@ public class AVSWrapper: AVSWrapperType {
 
         wcall_set_data_chan_estab_handler(handle, dataChannelEstablishedHandler)
         wcall_set_group_changed_handler(handle, groupMemberHandler, observer)
-        wcall_set_network_quality_handler(handle, networkQualityHandler, 5, observer)
+        let timerIntervalInSeconds: Int32 = 5
+        wcall_set_network_quality_handler(handle, networkQualityHandler, timerIntervalInSeconds, observer)
         wcall_set_media_stopped_handler(handle, mediaStoppedChangeHandler)
     }
 
