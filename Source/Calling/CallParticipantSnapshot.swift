@@ -77,7 +77,7 @@ class CallParticipantsSnapshot {
     func callParticpantNetworkQualityChanged(userId: UUID, networkQuality: NetworkQuality) {
         guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
 
-        update(updatedMember: AVSCallMember(userId: userId, audioEstablished: true, videoState: callMember.videoState, networkQuality: networkQuality))
+        update(updatedMember: AVSCallMember(userId: userId, audioEstablished: callMember.audioEstablished, videoState: callMember.videoState, networkQuality: networkQuality))
     }
     
     func update(updatedMember: AVSCallMember) {

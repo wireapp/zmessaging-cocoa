@@ -319,7 +319,7 @@ extension WireCallCenterV3 {
         }
     }
 
-    /// Register observer when constant audio bit rate is enabled/disabled
+    /// Register observer when network quality changes
     /// Returns a token which needs to be retained as long as the observer should be active.
     public class func addNetworkQualityObserver(observer: NetworkQualityObserver, for conversation: ZMConversation, userSession: ZMUserSession) -> Any {
         return addNetworkQualityObserver(observer: observer, for: conversation, context: userSession.managedObjectContext)
