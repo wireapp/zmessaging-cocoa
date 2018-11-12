@@ -301,7 +301,27 @@ extension CallKitDelegate {
         associatedCallUUIDs.forEach { (callUUID) in
             calls.removeValue(forKey: callUUID)
             log("provider.reportCallEndedAt: \(String(describing: timestamp))")
-            provider.reportCall(with: callUUID, endedAt: timestamp, reason: reason)
+            provider.reportCall(with: callUUID, endedAt: timestamp?.clampForCallKit() ?? Date(), reason: reason)
+        }
+    }
+}
+
+fileprivate extension Date {
+    func clampForCallKit() -> Date {
+        let twoWeeksBefore = Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date()
+        
+        return clamp(between: twoWeeksBefore, and: Date())
+    }
+    
+    func clamp(between fromDate: Date, and toDate: Date) -> Date {
+        if timeIntervalSinceReferenceDate < fromDate.timeIntervalSinceReferenceDate {
+            return fromDate
+        }
+        else if timeIntervalSinceReferenceDate > toDate.timeIntervalSinceReferenceDate {
+            return toDate
+        }
+        else {
+            return self
         }
     }
 }

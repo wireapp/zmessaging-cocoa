@@ -95,9 +95,11 @@ class MockCallKitProvider: CXProvider {
     
     public var timesReportCallEndedAtCalled: Int = 0
     public var lastEndedReason: CXCallEndedReason = .answeredElsewhere
+    public var lastEndedDate: Date? = nil
     override func reportCall(with UUID: UUID, endedAt dateEnded: Date?, reason endedReason: CXCallEndedReason) {
         timesReportCallEndedAtCalled += 1
         lastEndedReason = endedReason
+        lastEndedDate = dateEnded
     }
     
     public var timesReportOutgoingCallConnectedAtCalled: Int = 0
@@ -761,6 +763,24 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 1)
         XCTAssertEqual(self.callKitProvider.lastEndedReason, .remoteEnded)
+    }
+    
+    func testThatItReportCallEndedAt_v3_Terminating_inTheFuture() {
+        // given
+        let conversation = self.conversation()
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        sut.requestStartCall(in: conversation, video: false)
+        
+        // when
+        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversation: conversation, caller: otherUser, timestamp: Date(timeIntervalSinceNow: 10000), previousCallState: nil)
+        
+        // then
+        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 1)
+        XCTAssertEqual(self.callKitProvider.lastEndedReason, .remoteEnded)
+        XCTAssertEqual(Int(self.callKitProvider.lastEndedDate!.timeIntervalSinceNow), 0)
     }
     
     func testThatItReportCallEndedAt_v3_Terminating_lostMedia() {

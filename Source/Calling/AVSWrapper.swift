@@ -188,7 +188,9 @@ public class AVSWrapper: AVSWrapperType {
 
     private let missedCallHandler: MissedCallHandler = { conversationId, messageTime, userId, isVideoCall, contextRef in
         zmLog.debug("missedCallHandler: messageTime = \(messageTime)")
-        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, isVideoCall) {
+        let nonZeroMessageTime: UInt32 = messageTime != 0 ? messageTime : UInt32(Date().timeIntervalSince1970)
+
+        AVSWrapper.withCallCenter(contextRef, conversationId, nonZeroMessageTime, userId, isVideoCall) {
             $0.handleMissedCall(conversationId: $1, messageTime: $2, userId: $3, isVideoCall: $4)
         }
     }
@@ -213,7 +215,9 @@ public class AVSWrapper: AVSWrapperType {
 
     private let closedCallHandler: CloseCallHandler = { reason, conversationId, messageTime, userId, contextRef in
         zmLog.debug("closedCallHandler: messageTime = \(messageTime)")
-        AVSWrapper.withCallCenter(contextRef, reason, conversationId, messageTime) {
+        let nonZeroMessageTime: UInt32 = messageTime != 0 ? messageTime : UInt32(Date().timeIntervalSince1970)
+
+        AVSWrapper.withCallCenter(contextRef, reason, conversationId, nonZeroMessageTime) {
             $0.handleCallEnd(reason: $1, conversationId: $2, messageTime: $3, userId: UUID(rawValue: userId))
         }
     }
