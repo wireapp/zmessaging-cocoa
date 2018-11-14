@@ -59,8 +59,8 @@
 "push.notification.add.unknown.oneonone.nousername" = "nowa wiadomość";
 
 // Message with mention
-
 // 2 Components: Sender, Message
+
 "push.notification.add.message.group.mention" = "Mention from %1$@: %2$@";
 "push.notification.add.message.group.nousername.mention" = "New mention: %1$@";
 "push.notification.add.message.group.nousername.noconversationname.mention" = "New mention: %1$@";
@@ -71,8 +71,8 @@
 "push.notification.add.message.oneonone.nousername.mention" = "New mention: %1$@";
 
 // Message with quote
-
 // 2 Components: Sender, Message
+
 "push.notification.add.message.group.reply" = "Reply from %1$@: %2$@";
 "push.notification.add.message.group.nousername.reply" = "New reply: %1$@";
 "push.notification.add.message.group.nousername.noconversationname.reply" = "New reply: %1$@";
