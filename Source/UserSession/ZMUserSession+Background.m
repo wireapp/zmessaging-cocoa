@@ -93,6 +93,10 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     NSArray *storedNotifications = self.storedDidSaveNotifications.storedNotifications.copy;
     [self.storedDidSaveNotifications clear];
 
+    if (storedNotifications.count == 0) {
+        return;
+    }
+    
     for (NSDictionary *changes in storedNotifications) {
         [NSManagedObjectContext mergeChangesFromRemoteContextSave:changes intoContexts:@[self.managedObjectContext]];
         [self.syncManagedObjectContext performGroupedBlock:^{
@@ -105,6 +109,8 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.syncManagedObjectContext processPendingChanges];
     }];
+    
+    [self.managedObjectContext saveOrRollback];
 }
 
 @end
