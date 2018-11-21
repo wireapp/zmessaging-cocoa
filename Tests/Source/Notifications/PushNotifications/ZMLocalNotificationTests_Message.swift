@@ -151,8 +151,8 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         }
     }
     
-    func testThatItDuplicatesPercentageSignsInTextAndConversationName() {
-        XCTAssertEqual(bodyForNote(groupConversation, sender: sender, text: "Today we grew by 100%"), "Super User: Today we grew by 100%%")
+    func testThatItDoesNotDuplicatePercentageSignsInTextAndConversationName() {
+        XCTAssertEqual(bodyForNote(groupConversation, sender: sender, text: "Today we grew by 100%"), "Super User: Today we grew by 100%")
     }
     
     func testThatItSavesTheSenderOfANotification() {
