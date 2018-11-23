@@ -73,7 +73,7 @@ extension SessionManager: PKPushRegistryDelegate {
         
         guard let accountId = payload.dictionaryPayload.accountId(),
               let account = self.accountManager.account(with: accountId),
-              let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "Process PushKit payload", expirationHandler: { [weak self] in
+              let activity = BackgroundActivityFactory.shared.startBackgroundActivity(withName: "Process PushKit payload", expirationHandler: { [weak self] in
                 log.debug("Processing push payload expired")
                 self?.notificationsTracker?.registerProcessingExpired()
               }) else {
@@ -88,7 +88,7 @@ extension SessionManager: PKPushRegistryDelegate {
             userSession.receivedPushNotification(with: payload.dictionaryPayload, completion: { [weak self] in
                 log.debug("Processing push payload completed")
                 self?.notificationsTracker?.registerNotificationProcessingCompleted()
-                activity.end()
+                BackgroundActivityFactory.shared.endBackgroundActivity(activity)
                 completion()
             })
         })

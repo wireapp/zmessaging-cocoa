@@ -215,24 +215,30 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)appDidEnterBackground:(NSNotification *)note
 {
     NOT_USED(note);
-    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"enter background"];
+    BackgroundActivity *activity = [BackgroundActivityFactory.sharedFactory startBackgroundActivityWithName:@"enter background"];
     [self.notificationDispatcher applicationDidEnterBackground];
     [self.syncMOC performGroupedBlock:^{
         self.applicationStatusDirectory.operationStatus.isInBackground = YES;
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-        [activity endActivity];
+
+        if (activity) {
+            [BackgroundActivityFactory.sharedFactory endBackgroundActivity:activity];
+        }
     }];
 }
 
 - (void)appWillEnterForeground:(NSNotification *)note
 {
     NOT_USED(note);
-    ZMBackgroundActivity *activity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"enter foreground"];
+    BackgroundActivity *activity = [BackgroundActivityFactory.sharedFactory startBackgroundActivityWithName:@"enter foreground"];
     [self.notificationDispatcher applicationWillEnterForeground];
     [self.syncMOC performGroupedBlock:^{
         self.applicationStatusDirectory.operationStatus.isInBackground = NO;
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-        [activity endActivity];
+
+        if (activity) {
+            [BackgroundActivityFactory.sharedFactory endBackgroundActivity:activity];
+        }
     }];
 }
 

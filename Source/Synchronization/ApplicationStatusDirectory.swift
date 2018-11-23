@@ -47,7 +47,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     
     public init(withManagedObjectContext managedObjectContext : NSManagedObjectContext, cookieStorage : ZMPersistentCookieStorage, requestCancellation: ZMRequestCancellation, application : ZMApplication, syncStateDelegate: ZMSyncStateDelegate, analytics: AnalyticsType? = nil) {
         self.requestCancellation = requestCancellation
-        self.apnsConfirmationStatus = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: managedObjectContext, backgroundActivityFactory: BackgroundActivityFactory.sharedInstance())
+        self.apnsConfirmationStatus = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: managedObjectContext, backgroundActivityFactory: BackgroundActivityFactory.shared)
         self.operationStatus = OperationStatus()
         self.callEventStatus = CallEventStatus()
         self.analytics = analytics

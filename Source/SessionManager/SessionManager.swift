@@ -360,9 +360,8 @@ public protocol ForegroundNotificationResponder: class {
         // we must set these before initializing the PushDispatcher b/c if the app
         // received a push from terminated state, it requires these properties to be
         // non nil in order to process the notification
-        BackgroundActivityFactory.sharedInstance().application = UIApplication.shared
-        BackgroundActivityFactory.sharedInstance().mainGroupQueue = groupQueue
-        
+        BackgroundActivityFactory.shared.activityManager = UIApplication.shared
+
         if let analytics = analytics {
             self.notificationsTracker = NotificationsTracker(analytics: analytics)
         } else {

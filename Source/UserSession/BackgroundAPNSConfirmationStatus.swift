@@ -26,7 +26,7 @@ import UIKit
     
     let backgroundTime : TimeInterval = 25
     fileprivate var tornDown = false
-    fileprivate var messageNonces : [UUID : ZMBackgroundActivity] = [:]
+    fileprivate var messageNonces : [UUID : BackgroundActivity] = [:]
     private unowned var application : ZMApplication
     private unowned var managedObjectContext : NSManagedObjectContext
     private unowned var backgroundActivityFactory : BackgroundActivityFactory
@@ -51,7 +51,7 @@ import UIKit
     
     // Called after a confirmation message has been created from an event received via APNS
     public func needsToConfirmMessage(_ messageNonce: UUID) {
-        let backgroundTask = backgroundActivityFactory.backgroundActivity(withName: "\(BackgroundAPNSConfirmationStatus.backgroundNameBase) \(messageNonce.transportString())") { [weak self] in
+        let backgroundTask = backgroundActivityFactory.startBackgroundActivity(withName: "\(BackgroundAPNSConfirmationStatus.backgroundNameBase) \(messageNonce.transportString())") { [weak self] in
             guard let strongSelf = self else { return }
             // The message failed to send in time. We won't continue trying.
             strongSelf.managedObjectContext.performGroupedBlock{
@@ -66,15 +66,15 @@ import UIKit
     // Called after a confirmation message has made the round-trip to the backend and was successfully sent
     public func didConfirmMessage(_ messageNonce: UUID) {
         managedObjectContext.performGroupedBlock{
-            guard let task = self.messageNonces.removeValue(forKey: messageNonce) else { return }
-            task.end()
+            guard let activity = self.messageNonces.removeValue(forKey: messageNonce) else { return }
+            BackgroundActivityFactory.shared.endBackgroundActivity(activity)
         }
     }
 }
 
 extension BackgroundAPNSConfirmationStatus: TearDownCapable {
     public func tearDown(){
-        messageNonces.values.forEach{$0.end()}
+        messageNonces.values.forEach(BackgroundActivityFactory.shared.endBackgroundActivity)
         messageNonces.removeAll()
         tornDown = true
     }

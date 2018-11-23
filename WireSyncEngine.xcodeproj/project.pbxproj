@@ -272,6 +272,7 @@
 		5E0EB1F72100A14A00B5DC2B /* CompanyLoginRequesterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0EB1F52100A13200B5DC2B /* CompanyLoginRequesterTests.swift */; };
 		5E0EB1F92100A46F00B5DC2B /* MockCompanyLoginRequesterDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0EB1F82100A46F00B5DC2B /* MockCompanyLoginRequesterDelegate.swift */; };
 		5E1FD7A5210B2694003D2C3D /* NotificationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD7A4210B2694003D2C3D /* NotificationAction.swift */; };
+		5E2C354D21A806A80034F1EE /* MockBackgroundActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E2C354C21A806A80034F1EE /* MockBackgroundActivityManager.swift */; };
 		5E6716912174CA6700522E61 /* MockUser+LoginCredentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E67168F2174CA6300522E61 /* MockUser+LoginCredentials.swift */; };
 		5E8BB8992147CD3F00EEA64B /* AVSBridging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8BB8982147CD3F00EEA64B /* AVSBridging.swift */; };
 		5E8BB89C2147CE1600EEA64B /* AVSCallMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8BB89B2147CE1600EEA64B /* AVSCallMember.swift */; };
@@ -836,6 +837,7 @@
 		5E0EB1F52100A13200B5DC2B /* CompanyLoginRequesterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginRequesterTests.swift; sourceTree = "<group>"; };
 		5E0EB1F82100A46F00B5DC2B /* MockCompanyLoginRequesterDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCompanyLoginRequesterDelegate.swift; sourceTree = "<group>"; };
 		5E1FD7A4210B2694003D2C3D /* NotificationAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationAction.swift; sourceTree = "<group>"; };
+		5E2C354C21A806A80034F1EE /* MockBackgroundActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockBackgroundActivityManager.swift; sourceTree = "<group>"; };
 		5E67168F2174CA6300522E61 /* MockUser+LoginCredentials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockUser+LoginCredentials.swift"; sourceTree = "<group>"; };
 		5E8BB8982147CD3F00EEA64B /* AVSBridging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVSBridging.swift; sourceTree = "<group>"; };
 		5E8BB89B2147CE1600EEA64B /* AVSCallMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVSCallMember.swift; sourceTree = "<group>"; };
@@ -1485,6 +1487,7 @@
 				3E1858B31951D69B005FE78F /* MemoryLeaksObserver.m */,
 				5463C88F193F38A6006799DE /* ZMTimingTests.h */,
 				5463C890193F38A6006799DE /* ZMTimingTests.m */,
+				5E2C354C21A806A80034F1EE /* MockBackgroundActivityManager.swift */,
 				54BD32D01A5ACCF9008EB1B0 /* Test-Bridging-Header.h */,
 				16A5FE20215B584200AEEBBD /* MockLinkPreviewDetector.swift */,
 				87AEA67B1EFBD27700C94BF3 /* DiskDatabaseTest.swift */,
@@ -2475,6 +2478,7 @@
 				5E8EE1FC20FDCCE200DB1F9B /* CompanyLoginRequestDetectorTests.swift in Sources */,
 				54ADA7631E3B3D8E00B90C7D /* IntegrationTest+Encryption.swift in Sources */,
 				F991CE161CB55512004D8465 /* ZMUser+Testing.m in Sources */,
+				5E2C354D21A806A80034F1EE /* MockBackgroundActivityManager.swift in Sources */,
 				F9D1CD141DF6C131002F6E80 /* SyncStatusTests.swift in Sources */,
 				3EEA678C199D079600AF7665 /* UserTests.m in Sources */,
 				09531F1C1AE9644800B8556A /* ZMLoginCodeRequestTranscoderTests.m in Sources */,

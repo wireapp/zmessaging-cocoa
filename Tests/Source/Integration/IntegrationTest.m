@@ -19,6 +19,7 @@
 #import <XCTest/XCTest.h>
 
 @import avs;
+@import UIKit;
 
 #import "IntegrationTest.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
@@ -36,7 +37,9 @@
 
 - (void)setUp {
     [super setUp];
-    
+    BackgroundActivityFactory.sharedFactory.activityManager = UIApplication.sharedApplication;
+    [BackgroundActivityFactory.sharedFactory resume];
+
     self.mockMediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
     
     id mockAPNSEnvironment = [OCMockObject niceMockForClass:[ZMAPNSEnvironment class]];
@@ -50,6 +53,7 @@
 
 - (void)tearDown {
     [self _tearDown];
+    BackgroundActivityFactory.sharedFactory.activityManager = nil;
     
     [self.mockMediaManager stopMocking];
     self.mockMediaManager = nil;
