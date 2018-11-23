@@ -139,6 +139,8 @@ static ZMReachability *sharedReachabilityMock = nil;
 - (void)setUp;
 {
     [super setUp];
+    BackgroundActivityFactory.sharedFactory.activityManager = UIApplication.sharedApplication;
+    [BackgroundActivityFactory.sharedFactory resume];
     
     NSFileManager *fm = NSFileManager.defaultManager;
     NSString *bundleIdentifier = [NSBundle bundleForClass:self.class].bundleIdentifier;
@@ -232,6 +234,8 @@ static ZMReachability *sharedReachabilityMock = nil;
 
 - (void)tearDown;
 {
+    BackgroundActivityFactory.sharedFactory.activityManager = nil;
+
     [self.mockSyncStrategy stopMocking];
     self.mockSyncStrategy = nil;
     [self.mockOperationLoop stopMocking];
