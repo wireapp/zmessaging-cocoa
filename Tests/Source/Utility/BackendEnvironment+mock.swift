@@ -18,8 +18,8 @@
 
 import Foundation
 
-extension BackendEnvironment {
-    static var mockEnvironment: BackendEnvironment {
+public extension BackendEnvironment {
+    @objc public static var mockEnvironment: BackendEnvironment {
         return BackendEnvironment(backendURL: URL(string: "http://example.com")!, backendWSURL: URL(string: "http://example.com")!, blackListURL: URL(string: "http://example.com")!, frontendURL: URL(string: "http://example.com")!)
     }
 }

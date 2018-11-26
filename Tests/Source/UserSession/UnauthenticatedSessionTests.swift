@@ -108,7 +108,8 @@ final class TestUnauthenticatedTransportSession: NSObject, UnauthenticatedTransp
     }
     
     func tearDown() {}
-    let environment: BackendEnvironmentProvider = BackendEnvironment(wireEnvironment: .staging)
+    let environment: BackendEnvironmentProvider = BackendEnvironment.mockEnvironment
+
 }
 
 
