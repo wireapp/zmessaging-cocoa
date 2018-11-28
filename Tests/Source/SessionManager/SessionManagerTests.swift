@@ -320,7 +320,7 @@ class SessionManagerTests: IntegrationTest {
                               analytics: nil,
                               delegate: nil,
                               application: application,
-                              environment: sessionManager!.environment,
+                              environment: BackendEnvironment.mockEnvironment,
                               blacklistDownloadInterval : 60) { _ in
                                 sessionManagerExpectation.fulfill()
         }
