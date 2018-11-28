@@ -153,6 +153,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[AddressBookUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory],
                                    self.clientMessageTranscoder,
                                    [[AvailabilityRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory],
+                                   [[UserPropertyRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory],
                                    [[UserProfileRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC
                                                                                   applicationStatus:applicationStatusDirectory
                                                                             userProfileUpdateStatus:applicationStatusDirectory.userProfileUpdateStatus],

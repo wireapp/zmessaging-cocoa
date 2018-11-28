@@ -83,13 +83,7 @@ NSTimeInterval ZMSelfStrategyPendingValidationRequestInterval = 5;
         self.clientStatus = clientRegistrationStatus;
         self.syncStatus = syncStatus;
         self.upstreamObjectSync = upstreamObjectSync;
-        if (self.upstreamObjectSync == nil) {
-            NSArray<NSString *> *keysToSync = @[NameKey, AccentColorValueKey];
-            self.upstreamObjectSync = [[ZMUpstreamModifiedObjectSync alloc]
-                                       initWithTranscoder:self entityName:ZMUser.entityName
-                                       keysToSync:keysToSync
-                                       managedObjectContext:moc];
-        }
+        NSAssert(self.upstreamObjectSync != nil, @"upstreamObjectSync is nil");
         self.downstreamSelfUserSync = [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self groupQueue:self.managedObjectContext];
         self.needsToBeUdpatedFromBackend = [ZMUser predicateForNeedingToBeUpdatedFromBackend];
         _timedDownstreamSync = [[ZMTimedSingleRequestSync alloc] initWithSingleRequestTranscoder:self everyTimeInterval:ZMSelfStrategyPendingValidationRequestInterval groupQueue:self.managedObjectContext];
