@@ -37,7 +37,7 @@ class KeySetTests: MessagingTest {
     func testThatItCanIterate() {
         // given
         let sut = KeySet(["foo", "bar"])
-        var result: [WireDataModel.KeyPath] = []
+        var result: [WireDataModel.StringKeyPath] = []
         
         // when
         for k in sut {
@@ -46,7 +46,7 @@ class KeySetTests: MessagingTest {
 
         // then
         XCTAssertEqual(result.count, 2)
-        XCTAssertTrue(result.contains(KeyPath.keyPathForString("foo")))
-        XCTAssertTrue(result.contains(KeyPath.keyPathForString("bar")))
+        XCTAssertTrue(result.contains(StringKeyPath.keyPathForString("foo")))
+        XCTAssertTrue(result.contains(StringKeyPath.keyPathForString("bar")))
     }
 }

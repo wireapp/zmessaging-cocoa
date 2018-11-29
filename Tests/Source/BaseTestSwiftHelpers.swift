@@ -22,7 +22,7 @@ import WireTesting
 import WireDataModel
 
 
-func AssertKeyPathDictionaryHasOptionalValue<T: NSObject>(_ dictionary: @autoclosure () -> [WireDataModel.KeyPath: T?], key: @autoclosure () -> WireDataModel.KeyPath, expected: @autoclosure () -> T, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
+func AssertKeyPathDictionaryHasOptionalValue<T: NSObject>(_ dictionary: @autoclosure () -> [WireDataModel.StringKeyPath: T?], key: @autoclosure () -> WireDataModel.StringKeyPath, expected: @autoclosure () -> T, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
     if let v = dictionary()[key()] {
         AssertOptionalEqual(v, expression2: expected(), message, file: file, line: line)
     } else {
@@ -31,7 +31,7 @@ func AssertKeyPathDictionaryHasOptionalValue<T: NSObject>(_ dictionary: @autoclo
 }
 
 
-func AssertKeyPathDictionaryHasOptionalNilValue<T: NSObject>(_ dictionary: @autoclosure () -> [WireDataModel.KeyPath: T?], key: @autoclosure () -> WireDataModel.KeyPath, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
+func AssertKeyPathDictionaryHasOptionalNilValue<T: NSObject>(_ dictionary: @autoclosure () -> [WireDataModel.StringKeyPath: T?], key: @autoclosure () -> WireDataModel.StringKeyPath, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
     if let v = dictionary()[key()] {
         AssertOptionalNil(v, message , file: file, line: line)
     } else {
