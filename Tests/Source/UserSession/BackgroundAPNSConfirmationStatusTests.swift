@@ -100,7 +100,7 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
         XCTAssertFalse(sut.needsToSyncMessages)
     }
     
-    func testThat_CanSendMessage_IsSetToTrue_OneMessageTimedOut_OneMessageNew() {
+    func testThatItExpiresMultipleMessages() {
         // given
         let uuid1 = UUID.create()
         let uuid2 = UUID.create()
@@ -114,7 +114,7 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertTrue(sut.needsToSyncMessages)
+        XCTAssertFalse(sut.needsToSyncMessages)
     }
 }
 
