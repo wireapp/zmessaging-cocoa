@@ -209,7 +209,7 @@ extension IntegrationTest {
     func createSessionManager() {
         guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else { return XCTFail() }
         StorageStack.shared.createStorageAsInMemory = useInMemoryStore
-        let environment = BackendEnvironment(type: .wire(.staging))
+        let environment = BackendEnvironment.mockEnvironment
         let reachability = TestReachability()
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(

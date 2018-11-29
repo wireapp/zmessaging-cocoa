@@ -48,7 +48,7 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
             }
             
             localNotificationDispatcher?.processEvents(decryptedUpdateEvents, liveEvents: true, prefetchResult: nil)
-            syncMOC.enqueueDelayedSave()
+            syncMOC.saveOrRollback()
         }
     }
     
