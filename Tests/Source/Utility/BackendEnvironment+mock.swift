@@ -20,6 +20,6 @@ import Foundation
 
 public extension BackendEnvironment {
     @objc public static var mockEnvironment: BackendEnvironment {
-        return BackendEnvironment(backendURL: URL(string: "https://example.com")!, backendWSURL: URL(string: "https://example.com")!, blackListURL: URL(string: "https://example.com")!, frontendURL: URL(string: "https://example.com")!)
+        return BackendEnvironment(backendURL: URL(string: "http://example.com")!, backendWSURL: URL(string: "http://example.com")!, blackListURL: URL(string: "https://clientblacklist.wire.com/prod/ios")!, frontendURL: URL(string: "http://example.com")!)
     }
 }
