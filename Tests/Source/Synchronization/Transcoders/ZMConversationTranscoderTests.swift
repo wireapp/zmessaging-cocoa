@@ -364,7 +364,30 @@ extension ZMConversationTranscoderTests_Swift : ZMSyncStateDelegate {
 }
 
 // MARK: - Update events
+
 extension ZMConversationTranscoderTests_Swift {
+    
+    func testThatItHandlesReceiptModeUpdateEvent() {
+        self.syncMOC.performAndWait {
+            
+            // GIVEN
+            let payload = [
+                "from": self.user.remoteIdentifier!.transportString(),
+                "conversation": self.conversation.remoteIdentifier!.transportString(),
+                "time": NSDate().transportString(),
+                "data": 1,
+                "type": "conversation.receipt-mode-update"
+                ] as [String: Any]
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+            
+            // WHEN
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN
+            XCTAssertEqual(self.conversation.hasReadReceiptsEnabled, true)
+        }
+    }
+    
     func testThatItHandlesAccessModeUpdateEvent() {
         self.syncMOC.performAndWait {
 

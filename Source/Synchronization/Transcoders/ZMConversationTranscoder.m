@@ -332,6 +332,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         case ZMUpdateEventTypeConversationConnectRequest:
         case ZMUpdateEventTypeConversationAccessModeUpdate:
         case ZMUpdateEventTypeConversationMessageTimerUpdate:
+        case ZMUpdateEventTypeConversationReceiptModeUpdate:
             return YES;
         default:
             return NO;
@@ -469,6 +470,8 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         case ZMUpdateEventTypeConversationMessageTimerUpdate:
             [self processDestructionTimerUpdateEvent:event inConversation:conversation];
             break;
+        case ZMUpdateEventTypeConversationReceiptModeUpdate:
+            [self processReceiptModeUpdate:event inConversation:conversation];
         default:
             break;
     }
@@ -590,8 +593,12 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     }];
     
     NSMutableDictionary *payload = [@{ @"users" : participantUUIDs } mutableCopy];
-    if(insertedConversation.userDefinedName != nil) {
+    if (insertedConversation.userDefinedName != nil) {
         payload[@"name"] = insertedConversation.userDefinedName;
+    }
+    
+    if (insertedConversation.hasReadReceiptsEnabled) {
+        payload[@"receipt_mode"] = @(1);
     }
 
     if (insertedConversation.team.remoteIdentifier != nil) {
