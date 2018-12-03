@@ -31,13 +31,13 @@ class MockLinkPreviewDetector: LinkPreviewDetectorType {
         case tweetWithPicture = "http://twitter.com/jcvd/status/fullsplitbetweentruckspic"
     }
     
-    func downloadLinkPreviews(inText text: String, excluding: [Range<Int>], completion: @escaping ([LinkPreview]) -> Void) {
+    func downloadLinkPreviews(inText text: String, excluding: [Range<Int>], completion: @escaping ([WireLinkPreview.LinkPreview]) -> Void) {
         guard let linkPreviewURL = LinkPreviewURL(rawValue: text) else { return completion([]) }
         
         completion([linkPreview(linkPreviewURL)])
     }
         
-    func linkPreview(_ linkPreviewURL: LinkPreviewURL) -> LinkPreview {
+    func linkPreview(_ linkPreviewURL: LinkPreviewURL) -> WireLinkPreview.LinkPreview {
         
         switch linkPreviewURL {
         case .article:

@@ -397,6 +397,7 @@
 		F132C105203F02C700C58933 /* ZMConversationTranscoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 54294A1F19472D4E007BE3CE /* ZMConversationTranscoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F132C114203F20AB00C58933 /* ZMHotFixDirectoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F132C113203F20AB00C58933 /* ZMHotFixDirectoryTests.swift */; };
 		F13A26E120456002004F8E47 /* ConversationTests+Guests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13A26E020456002004F8E47 /* ConversationTests+Guests.swift */; };
+		F13ADE7A21B5322400B6E736 /* SwiftProtobuf.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F13ADE7921B5322400B6E736 /* SwiftProtobuf.framework */; };
 		F148F6671FB9AA7600BD6909 /* UnregisteredTeam.swift in Sources */ = {isa = PBXBuildFile; fileRef = F148F6661FB9AA7600BD6909 /* UnregisteredTeam.swift */; };
 		F148F6691FBAF55800BD6909 /* TeamRegistrationStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F148F6681FBAF55800BD6909 /* TeamRegistrationStrategyTests.swift */; };
 		F148F66B1FBAFAF600BD6909 /* RegistrationStatusTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F148F66A1FBAFAF600BD6909 /* RegistrationStatusTestHelper.swift */; };
@@ -1000,6 +1001,7 @@
 		F130BF272062C05600DBE261 /* SessionManager+Backup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionManager+Backup.swift"; sourceTree = "<group>"; };
 		F132C113203F20AB00C58933 /* ZMHotFixDirectoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMHotFixDirectoryTests.swift; sourceTree = "<group>"; };
 		F13A26E020456002004F8E47 /* ConversationTests+Guests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+Guests.swift"; sourceTree = "<group>"; };
+		F13ADE7921B5322400B6E736 /* SwiftProtobuf.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftProtobuf.framework; path = Carthage/Build/iOS/SwiftProtobuf.framework; sourceTree = "<group>"; };
 		F14417221FD946F100CB2850 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Push.strings"; sourceTree = "<group>"; };
 		F14417231FD946F200CB2850 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "zh-Hant"; path = "zh-Hant.lproj/Push.stringsdict"; sourceTree = "<group>"; };
 		F14417241FD946F200CB2850 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/ZMLocalizable.strings"; sourceTree = "<group>"; };
@@ -1145,6 +1147,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F13ADE7A21B5322400B6E736 /* SwiftProtobuf.framework in Frameworks */,
 				878B823A20A1DD00007455CA /* HTMLString.framework in Frameworks */,
 				09B978FE1B679F4B00A30B38 /* OCMock.framework in Frameworks */,
 				54E03A6E1E93CEF20089AC69 /* WireMockTransport.framework in Frameworks */,
@@ -1413,6 +1416,7 @@
 		540029B61918CA8500578793 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				F13ADE7921B5322400B6E736 /* SwiftProtobuf.framework */,
 				878B823720A1DCE7007455CA /* HTMLString.framework */,
 				D59F3A0F20691A0F0023474F /* ZipArchive.framework */,
 				54E03A551E93CEED0089AC69 /* WireCryptobox.framework */,
@@ -2449,13 +2453,14 @@
 				"$(SRCROOT)/Carthage/Build/iOS/avs.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/ZipArchive.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/HTMLString.framework",
+				"$(SRCROOT)/Carthage/Build/iOS/SwiftProtobuf.framework",
 			);
 			name = "Copy Carthage Frameworks";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# to run locally, replace with $(BUILT_PRODUCTS_DIR)/WireSyncEngine.framework\n/usr/local/bin/carthage copy-frameworks";
+			shellScript = "# to run locally, replace with $(BUILT_PRODUCTS_DIR)/WireSyncEngine.framework\n/usr/local/bin/carthage copy-frameworks\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
