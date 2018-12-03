@@ -62,6 +62,15 @@ extension ZMConversationTranscoder {
             localNotificationDispatcher.process(message)
         }
     }
+    
+    @objc (processReceiptModeUpdate:inConversation:)
+    public func processReceiptModeUpdate(event: ZMUpdateEvent, in conversation: ZMConversation) {
+        precondition(event.type == .conversationReceiptModeUpdate, "invalid update event type")
+        
+        guard let readReceiptMode = event.payload["data"] as? Int else { return }
+        
+        conversation.hasReadReceiptsEnabled = readReceiptMode > 0
+    }
 }
 
 extension ZMConversation {
