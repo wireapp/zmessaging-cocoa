@@ -31,13 +31,13 @@ class MockLinkPreviewDetector: LinkPreviewDetectorType {
         case tweetWithPicture = "http://twitter.com/jcvd/status/fullsplitbetweentruckspic"
     }
     
-    func downloadLinkPreviews(inText text: String, excluding: [Range<Int>], completion: @escaping ([LinkPreview]) -> Void) {
+    func downloadLinkPreviews(inText text: String, excluding: [Range<Int>], completion: @escaping ([LinkMetadata]) -> Void) {
         guard let linkPreviewURL = LinkPreviewURL(rawValue: text) else { return completion([]) }
         
         completion([linkPreview(linkPreviewURL)])
     }
         
-    func linkPreview(_ linkPreviewURL: LinkPreviewURL) -> LinkPreview {
+    func linkPreview(_ linkPreviewURL: LinkPreviewURL) -> LinkMetadata {
         
         switch linkPreviewURL {
         case .article:
@@ -48,7 +48,7 @@ class MockLinkPreviewDetector: LinkPreviewDetectorType {
                                                    summary: "Wasting your time",
                                                    imageAsset: nil)
             
-            let article = Article(protocolBuffer: buffer)
+            let article = ArticleMetadata(protocolBuffer: buffer)
             
             return article
         case .articleWithPicture:
@@ -59,7 +59,7 @@ class MockLinkPreviewDetector: LinkPreviewDetectorType {
                                              summary: "Wasting your time",
                                              imageAsset: randomAsset())
             
-            let article = Article(protocolBuffer: buffer)
+            let article = ArticleMetadata(protocolBuffer: buffer)
             article.imageData = [mockImageData]
             article.imageURLs = [mockImageURL]
             
@@ -73,7 +73,7 @@ class MockLinkPreviewDetector: LinkPreviewDetectorType {
                                                    imageAsset: nil,
                                                    tweet: ZMTweet.tweet(withAuthor: "Jean-Claude Van Damme", username: "JCVDG05U"))
             
-            let tweet = TwitterStatus(protocolBuffer: buffer)
+            let tweet = TwitterStatusMetadata(protocolBuffer: buffer)
             
             return tweet
         case .tweetWithPicture:
@@ -85,7 +85,7 @@ class MockLinkPreviewDetector: LinkPreviewDetectorType {
                                                    imageAsset: randomAsset(),
                                                    tweet: ZMTweet.tweet(withAuthor: "Jean-Claude Van Damme", username: "JCVDG05U"))
             
-            let twitterStatus = TwitterStatus(protocolBuffer: buffer)
+            let twitterStatus = TwitterStatusMetadata(protocolBuffer: buffer)
             twitterStatus.imageData = [mockImageData]
             twitterStatus.imageURLs = [mockImageURL]
             

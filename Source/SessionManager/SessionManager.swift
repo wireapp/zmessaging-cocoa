@@ -847,21 +847,29 @@ extension SessionManager: PostLoginAuthenticationObserver {
 }
 
 extension SessionManager {
-    @objc dynamic fileprivate func applicationDidBecomeActive(_ note: Notification) {
-        notificationsTracker?.dispatchEvent()
-    }
 }
 
-// MARK: - Unread Conversation Count
+// MARK: - Application lifetime notifications
 
-extension SessionManager: ZMConversationListObserver {
-    
+extension SessionManager {
     @objc fileprivate func applicationWillEnterForeground(_ note: Notification) {
+        BackgroundActivityFactory.shared.resume()
+        
         updateAllUnreadCounts()
         
         // Delete expired url scheme verification tokens
         CompanyLoginVerificationToken.flushIfNeeded()
     }
+    
+    @objc fileprivate func applicationDidBecomeActive(_ note: Notification) {
+        notificationsTracker?.dispatchEvent()
+    }
+
+}
+
+// MARK: - Unread Conversation Count
+
+extension SessionManager: ZMConversationListObserver {
     
     public func conversationListDidChange(_ changeInfo: ConversationListChangeInfo) {
         
