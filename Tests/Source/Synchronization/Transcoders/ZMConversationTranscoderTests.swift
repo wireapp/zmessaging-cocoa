@@ -375,7 +375,7 @@ extension ZMConversationTranscoderTests_Swift {
                 "from": self.user.remoteIdentifier!.transportString(),
                 "conversation": self.conversation.remoteIdentifier!.transportString(),
                 "time": NSDate().transportString(),
-                "data": 1,
+                "data": ["receipt_mode": 1],
                 "type": "conversation.receipt-mode-update"
                 ] as [String: Any]
             let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
