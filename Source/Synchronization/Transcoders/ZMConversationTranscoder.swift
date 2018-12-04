@@ -68,9 +68,14 @@ extension ZMConversationTranscoder {
         precondition(event.type == .conversationReceiptModeUpdate, "invalid update event type")
         
         guard let payload = event.payload["data"] as? [String : AnyHashable],
-              let readReceiptMode = payload["receipt_mode"] as? Int else { return }
+              let readReceiptMode = payload["receipt_mode"] as? Int,
+              let serverTimestamp = event.timeStamp(),
+              let senderUUID = event.senderUUID(),
+              let sender = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext)
+        else { return }
         
         conversation.hasReadReceiptsEnabled = readReceiptMode > 0
+        conversation.appendMessageReceiptModeChangedMessage(fromUser: sender, timestamp: serverTimestamp, enabled: conversation.hasReadReceiptsEnabled)
     }
 }
 
