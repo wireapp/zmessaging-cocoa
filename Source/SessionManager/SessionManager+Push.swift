@@ -118,6 +118,8 @@ extension SessionManager: PKPushRegistryDelegate {
                                        didReceive response: UNNotificationResponse,
                                        withCompletionHandler completionHandler: @escaping () -> Void)
     {
+        // Resume background task creation.
+        BackgroundActivityFactory.shared.resume()
         // route to user session
         handleNotification(with: response.notification.userInfo) { userSession in
             userSession.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
