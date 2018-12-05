@@ -90,6 +90,7 @@ import WireTesting
     }
 
     @objc func reset() {
+        triggerExpiration()
         limit = 1
         isExpiring = false
         tasks.removeAll()

@@ -208,7 +208,8 @@
                                   [factory profileImageAssetRequestWithData:localUser.imageSmallProfileData],
                                   [ZMTransportRequest requestWithPath:@"/self" method:ZMMethodPUT payload:assetsUpdatePayload],
                                   [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@", smallProfileImageIdentifier, selfUserIdentifier]],
-                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@", mediumImageIdentifier, selfUserIdentifier]]
+                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@", mediumImageIdentifier, selfUserIdentifier]],
+                                  [ZMTransportRequest requestWithPath:@"properties/WIRE_RECEIPT_MODE" method:ZMMethodGET payload:nil],
                                   ]];
     
     // then
@@ -250,6 +251,7 @@
                                   [ZMTransportRequest requestGetFromPath:@"/self"],
                                   [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@", previewProfileAssetIdentifier]],
                                   [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@", completeProfileAssetIdentifier]],
+                                  [ZMTransportRequest requestWithPath:@"properties/WIRE_RECEIPT_MODE" method:ZMMethodGET payload:nil],
                                   ]];
     
     // then
