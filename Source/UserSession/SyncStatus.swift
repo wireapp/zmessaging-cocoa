@@ -124,6 +124,9 @@ extension Notification.Name {
     }
     
     public func forceSlowSync() {
+        // Refetch user settings.
+        ZMUser.selfUser(in: managedObjectContext).needsPropertiesUpdate = true
+        // Set the status.
         currentSyncPhase = SyncPhase.fetchingLastUpdateEventID.nextPhase!
         syncStateDelegate.didStartSync()
     }
