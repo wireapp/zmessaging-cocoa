@@ -51,6 +51,7 @@ static NSString *ZMLogTag = @"Push";
 performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 {
     NOT_USED(application);
+    [BackgroundActivityFactory.sharedFactory resume];
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.operationLoop.syncStrategy.missingUpdateEventsTranscoder startDownloadingMissingNotifications];
         [self.operationStatus startBackgroundFetchWithCompletionHandler:completionHandler];
