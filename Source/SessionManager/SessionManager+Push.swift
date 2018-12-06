@@ -35,7 +35,7 @@ extension PKPushRegistry: PushRegistry {}
 
 extension PKPushPayload {
     fileprivate var stringIdentifier: String {
-        if let data = dictionaryPayload["data"] as? [String : String], let id = data["id"] {
+        if let data = dictionaryPayload["data"] as? [AnyHashable : Any], let innerData = data["data"] as? [AnyHashable : Any], let id = innerData["id"] {
             return "Payload: data.id = \(id)"
         } else {
             return self.description
