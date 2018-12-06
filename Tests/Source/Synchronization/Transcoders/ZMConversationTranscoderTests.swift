@@ -411,6 +411,7 @@ extension ZMConversationTranscoderTests_Swift {
     func testThatItInsertsSystemMessageDisabled_WhenReceivingReceiptModeUpdateEvent() {
         self.syncMOC.performAndWait {
             // GIVEN
+            conversation.hasReadReceiptsEnabled = true
             let event = receiptModeUpdateEvent(enabled: false)
             
             // WHEN
