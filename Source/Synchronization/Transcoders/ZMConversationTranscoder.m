@@ -471,7 +471,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
             [self processDestructionTimerUpdateEvent:event inConversation:conversation];
             break;
         case ZMUpdateEventTypeConversationReceiptModeUpdate:
-            [self processReceiptModeUpdate:event inConversation:conversation];
+            [self processReceiptModeUpdate:event inConversation:conversation lastServerTimestamp:previousLastServerTimestamp];
         default:
             break;
     }
