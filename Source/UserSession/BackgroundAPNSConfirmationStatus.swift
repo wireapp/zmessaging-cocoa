@@ -51,7 +51,7 @@ import UIKit
     
     // Called after a confirmation message has been created from an event received via APNS
     public func needsToConfirmMessage(_ messageNonce: UUID) {
-        let backgroundTask = backgroundActivityFactory.startBackgroundActivity(withName: "\(BackgroundAPNSConfirmationStatus.backgroundNameBase) \(messageNonce.transportString())") { [weak self] in
+        let backgroundTask = backgroundActivityFactory.startBackgroundActivity(withName: "Confirming message with nonce: \(messageNonce.transportString())") { [weak self] in
             guard let strongSelf = self else { return }
             // The message failed to send in time. We won't continue trying.
             strongSelf.managedObjectContext.performGroupedBlock{
