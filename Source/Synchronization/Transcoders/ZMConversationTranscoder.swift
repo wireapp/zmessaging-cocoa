@@ -74,8 +74,11 @@ extension ZMConversationTranscoder {
               let sender = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext)
         else { return }
         
-        conversation.hasReadReceiptsEnabled = readReceiptMode > 0
-        conversation.appendMessageReceiptModeChangedMessage(fromUser: sender, timestamp: serverTimestamp, enabled: conversation.hasReadReceiptsEnabled)
+        let newValue = readReceiptMode > 0
+        guard newValue != conversation.hasReadReceiptsEnabled else { return }
+        
+        conversation.hasReadReceiptsEnabled = newValue
+        conversation.appendMessageReceiptModeChangedMessage(fromUser: sender, timestamp: serverTimestamp, enabled: newValue)
     }
 }
 
