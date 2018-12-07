@@ -24,25 +24,31 @@ private let zmLog = ZMSLog(tag: "calling")
 /// the app is launched via push notification since then we need keep the app running until we've processed all
 /// call events.
 @objcMembers
-public class CallEventStatus: NSObject {
-    
+public class CallEventStatus: NSObject, ZMTimerClient {
+        
     var eventProcessingTimoutInterval: TimeInterval = 2
     
     fileprivate var observers: [() -> Void] = []
-    fileprivate var eventProcessingTimer: Timer? = nil
+    fileprivate var eventProcessingTimer: ZMTimer? = nil
+    
     fileprivate var callEventsWaitingToBeProcessed: Int = 0 {
         didSet {
             if callEventsWaitingToBeProcessed == 0 {
-                eventProcessingTimer = Timer.scheduledTimer(withTimeInterval: eventProcessingTimoutInterval, repeats: false) { [weak self] (timer) in
-                    self?.observers.forEach({ $0() })
-                    self?.observers = []
-                }
+                zmLog.debug("CallEventStatus: all events processed, starting timer")
+                eventProcessingTimer = ZMTimer.init(target: self, operationQueue: .main)
+                eventProcessingTimer?.fire(afterTimeInterval: eventProcessingTimoutInterval)
             }
         }
     }
     
+    public func timerDidFire(_ timer: ZMTimer!) {
+        zmLog.debug("CallEventStatus: finished timer")
+        observers.forEach({ $0() })
+        observers = []
+        eventProcessingTimer = nil
+    }
+    
     deinit {
-        eventProcessingTimer?.invalidate()
         eventProcessingTimer = nil
     }
     
