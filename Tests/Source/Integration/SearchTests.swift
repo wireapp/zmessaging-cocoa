@@ -194,7 +194,9 @@ class SearchTests : IntegrationTest {
         guard let user = searchForConnectedUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
         
         // when
-        user.requestPreviewProfileImage()
+        userSession?.enqueueChanges {
+            user.requestPreviewProfileImage()
+        }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -421,7 +423,9 @@ class SearchTests : IntegrationTest {
         
         // when
         mockTransportSession.resetReceivedRequests()
-        user.requestPreviewProfileImage()
+        userSession?.enqueueChanges {
+            user.requestPreviewProfileImage()
+        }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
