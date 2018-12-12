@@ -53,6 +53,7 @@ extension ZMConversation {
                     }
                 }
             } else if response.httpStatus == 204 {
+                self.hasReadReceiptsEnabled = enabled
                 completion(.success)
             } else {
                 completion(.failure(ReadReceiptModeError(response: response) ?? .unknown))
