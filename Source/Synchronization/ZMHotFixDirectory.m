@@ -146,6 +146,14 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory refetchAllConversations:context];
                      }],
+                    
+                    /// We need to refetch all group conversations and the self-user-read-receipt setting after the introduction of read receipts.
+                    [ZMHotFixPatch
+                     patchWithVersion:@"213.1.4"
+                     patchCode:^(NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory refetchUserProperties:context];
+                         [ZMHotFixDirectory refetchGroupConversations:context];
+                     }],
                     ];
     });
     return patches;
