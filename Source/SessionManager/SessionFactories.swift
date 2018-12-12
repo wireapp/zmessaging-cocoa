@@ -53,8 +53,7 @@ open class AuthenticatedSessionFactory {
 
     func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
         let transportSession = ZMTransportSession(
-            baseURL: environment.backendURL,
-            websocketURL: environment.backendWSURL,
+            environment: environment,
             cookieStorage: environment.cookieStorage(for: account),
             reachability: reachability,
             initialAccessToken: nil,
