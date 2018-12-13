@@ -133,7 +133,7 @@ import Foundation
     
     /// Marks all group conversations to be refetched.
     public static func refetchGroupConversations(_ context: NSManagedObjectContext) {
-        let predicate = NSPredicate(format: "conversationType == %d", ZMConversationType.group.rawValue)
+        let predicate = NSPredicate(format: "conversationType == %d AND lastServerSyncedActiveParticipants CONTAINS %@", ZMConversationType.group.rawValue, ZMUser.selfUser(in: context))
         refetchConversations(matching: predicate, in: context)
     }
     
