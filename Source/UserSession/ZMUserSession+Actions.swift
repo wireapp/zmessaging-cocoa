@@ -195,7 +195,7 @@ private let zmLog = ZMSLog(tag: "Push")
     
     func updateBackgroundTask(with message : ZMConversationMessage) {
         switch message.deliveryState {
-        case .sent, .delivered:
+        case .sent, .delivered, .read:
             operationStatus.finishBackgroundTask(withTaskResult: .finished)
         case .failedToSend:
             operationStatus.finishBackgroundTask(withTaskResult: .failed)
