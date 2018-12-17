@@ -390,7 +390,7 @@
     XCTAssertEqual(imageMessage2.deliveryState, ZMDeliveryStateSent);
 }
 
-- (void)testThatItSendsFailedSessionOTRAssetMessageAfterMissingClientsAreFetchedButSessionIsNotCreated
+- (void)testThatItSendsFailedSessionOTRMessageAfterMissingClientsAreFetchedButSessionIsNotCreated
 {
     // GIVEN
     XCTAssertTrue([self login]);
@@ -436,7 +436,7 @@
             continue;
         }
         
-        ZMOtrAssetMeta *otrMessage = [ZMOtrAssetMeta parseFromData:req.binaryData];
+        ZMNewOtrMessage *otrMessage = [ZMNewOtrMessage parseFromData:req.binaryData];
         XCTAssertNotNil(otrMessage);
         
         NSArray <ZMUserEntry *>* userEntries = otrMessage.recipients;
