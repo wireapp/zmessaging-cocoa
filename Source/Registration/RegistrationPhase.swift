@@ -23,8 +23,8 @@ import Foundation
  */
 
 public enum RegistrationPhase: Equatable {
-    case sendActivationCode(credential: UnverifiedCredential)
-    case checkActivationCode(credential: UnverifiedCredential, code: String)
+    case sendActivationCode(credentials: UnverifiedCredentials)
+    case checkActivationCode(credentials: UnverifiedCredentials, code: String)
     case createUser(user: UnregisteredUser)
     case createTeam(team: UnregisteredTeam)
     case none

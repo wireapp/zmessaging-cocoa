@@ -37,7 +37,7 @@ class RegistrationStrategyTests: MessagingTest {
         user.name = "M. Jordan"
         user.accentColorValue = .brightOrange
         user.verificationCode = "23"
-        user.credentials = .phone(number: "+4912345678900")
+        user.credentials = .phone("+4912345678900")
         user.acceptedTermsOfService = true
         user.marketingConsent = true
     }

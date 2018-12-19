@@ -38,9 +38,8 @@ extension UnregisteredUser {
             payload["phone"] = number
             payload["phone_code"] = verificationCode!
 
-        case .email(let address, let password):
+        case .email(let address):
             payload["email"] = address
-            payload["password"] = password
             payload["email_code"] = verificationCode!
         }
 
@@ -48,6 +47,7 @@ extension UnregisteredUser {
         payload["name"] = name!
         payload["locale"] = NSLocale.formattedLocaleIdentifier()
         payload["label"] = CookieLabel.current.value
+        payload["password"] = password
 
         return payload as ZMTransportData
     }

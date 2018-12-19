@@ -90,8 +90,9 @@ class RegistrationStatusTests : MessagingTest{
         team = UnregisteredTeam(teamName: "Dream Team", email: email, emailCode: "23", fullName: "M. Jordan", password: "qwerty", accentColor: .brightOrange)
 
         user = UnregisteredUser()
-        user.credentials = UnregisteredUser.Credentials.email(address: email, password: "qwerty")
+        user.credentials = UnverifiedCredentials.email(email)
         user.name = "M. Jordan"
+        user.password = "qwerty"
         user.accentColorValue = .brightOrange
         user.verificationCode = code
         user.acceptedTermsOfService = true
@@ -140,7 +141,7 @@ class RegistrationStatusTests : MessagingTest{
         sut.sendActivationCode(to: .email(email))
 
         // then
-        XCTAssertEqual(sut.phase, .sendActivationCode(credential: .email(email)))
+        XCTAssertEqual(sut.phase, .sendActivationCode(credentials: .email(email)))
     }
 
     func testThatItInformsTheDelegateAboutActivationCodeSendingSuccess() {
@@ -179,7 +180,7 @@ class RegistrationStatusTests : MessagingTest{
         sut.checkActivationCode(credential: .email(email), code: code)
 
         // then
-        XCTAssertEqual(sut.phase, .checkActivationCode(credential: .email(email), code: code))
+        XCTAssertEqual(sut.phase, .checkActivationCode(credentials: .email(email), code: code))
     }
 
     func testThatItInformsTheDelegateAboutCheckActivationCodeSuccess() {

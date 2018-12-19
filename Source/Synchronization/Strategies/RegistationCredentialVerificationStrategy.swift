@@ -37,13 +37,13 @@ extension RegistationCredentialVerificationStrategy : ZMSingleRequestTranscoder 
         var path : String
 
         switch (currentStatus.phase) {
-        case let .sendActivationCode(credential):
+        case let .sendActivationCode(credentials):
             path = "/activate/send"
-            payload = [credential.type: credential.rawValue,
+            payload = [credentials.type: credentials.rawValue,
                        "locale": NSLocale.formattedLocaleIdentifier()!]
-        case let .checkActivationCode(credential, code):
+        case let .checkActivationCode(credentials, code):
             path = "/activate"
-            payload = [credential.type: credential.rawValue,
+            payload = [credentials.type: credentials.rawValue,
                        "code": code,
                        "dryrun": true]
         default:
