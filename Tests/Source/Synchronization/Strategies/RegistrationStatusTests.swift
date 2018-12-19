@@ -177,7 +177,7 @@ class RegistrationStatusTests : MessagingTest{
     // MARK: - Check activation code tests
     func testThatItAdvancesToCheckActivationCodeStateAfterTriggeringCheck() {
         // when
-        sut.checkActivationCode(credential: .email(email), code: code)
+        sut.checkActivationCode(credentials: .email(email), code: code)
 
         // then
         XCTAssertEqual(sut.phase, .checkActivationCode(credentials: .email(email), code: code))
@@ -185,7 +185,7 @@ class RegistrationStatusTests : MessagingTest{
 
     func testThatItInformsTheDelegateAboutCheckActivationCodeSuccess() {
         // given
-        sut.checkActivationCode(credential: .email(email), code: code)
+        sut.checkActivationCode(credentials: .email(email), code: code)
         XCTAssertEqual(delegate.activationCodeValidatedCalled, 0)
         XCTAssertEqual(delegate.activationCodeValidationFailedCalled, 0)
 
@@ -200,7 +200,7 @@ class RegistrationStatusTests : MessagingTest{
     func testThatItInformsTheDelegateAboutCheckActivationCodeError() {
         // given
         let error = NSError(domain: "some", code: 2, userInfo: [:])
-        sut.checkActivationCode(credential: .email(email), code: code)
+        sut.checkActivationCode(credentials: .email(email), code: code)
         XCTAssertEqual(delegate.activationCodeValidatedCalled, 0)
         XCTAssertEqual(delegate.activationCodeValidationFailedCalled, 0)
 

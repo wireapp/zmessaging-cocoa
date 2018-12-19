@@ -38,10 +38,10 @@ public protocol RegistrationStatusDelegate: class {
     /// The activation code could not be sent because of an error.
     func activationCodeSendingFailed(with error: Error)
 
-    /// The registered credential was activated sucessfully.
+    /// The registered credentials was activated sucessfully.
     func activationCodeValidated()
 
-    /// The registered credential could not be created because of an error.
+    /// The registered credentials could not be created because of an error.
     func activationCodeValidationFailed(with error: Error)
 }
 
@@ -80,23 +80,23 @@ public class RegistrationStatus: RegistrationStatusProtocol {
     // MARK: - Actions
 
     /**
-     * Sends the activation code to validate the given credential.
-     * - parameter credential: The credential (phone or email) to activate.
+     * Sends the activation code to validate the given credentials.
+     * - parameter credentials: The credentials (phone or email) to activate.
      */
 
-    public func sendActivationCode(to credential: UnverifiedCredentials) {
-        phase = .sendActivationCode(credentials: credential)
+    public func sendActivationCode(to credentials: UnverifiedCredentials) {
+        phase = .sendActivationCode(credentials: credentials)
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
 
     /**
-     * Verifies the activation code for the specified credential witht he backend.
-     * - parameter credential: The credential (phone or email) to activate.
+     * Verifies the activation code for the specified credentials witht he backend.
+     * - parameter credentials: The credentials (phone or email) to activate.
      * - parameter code: The activation code sent by the backend that needs to be verified.
      */
 
-    public func checkActivationCode(credential: UnverifiedCredentials, code: String) {
-        phase = .checkActivationCode(credentials: credential, code: code)
+    public func checkActivationCode(credentials: UnverifiedCredentials, code: String) {
+        phase = .checkActivationCode(credentials: credentials, code: code)
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
 
