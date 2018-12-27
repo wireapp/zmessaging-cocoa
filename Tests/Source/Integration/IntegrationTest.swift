@@ -60,11 +60,10 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     let transportSession: ZMTransportSession
 
-    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: BackendEnvironment, reachability: ReachabilityProvider & TearDownCapable) {
+    init(application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: BackendEnvironment, reachability: ReachabilityProvider & TearDownCapable) {
         self.transportSession = transportSession
         super.init(
             appVersion: "0.0.0",
-            apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
             flowManager: flowManager,
@@ -80,7 +79,6 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
             flowManager: flowManager,
             analytics: analytics,
             transportSession: transportSession,
-            apnsEnvironment: apnsEnvironment,
             application: application,
             appVersion: appVersion,
             storeProvider: storeProvider
@@ -213,7 +211,6 @@ extension IntegrationTest {
         let reachability = TestReachability()
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-            apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
             flowManager: FlowManagerMock(),

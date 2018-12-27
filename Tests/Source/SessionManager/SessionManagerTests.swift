@@ -37,7 +37,6 @@ class SessionManagerTests: IntegrationTest {
         let reachability = TestReachability()
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-            apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
             flowManager: FlowManagerMock(),
@@ -143,7 +142,6 @@ class SessionManagerTests: IntegrationTest {
                                 let environment = BackendEnvironment.mockEnvironment
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    apnsEnvironment: self.apnsEnvironment!,
                                     application: application,
                                     mediaManager: mediaManager,
                                     flowManager: FlowManagerMock(),
@@ -206,7 +204,6 @@ class SessionManagerTests: IntegrationTest {
                                 let environment = BackendEnvironment.mockEnvironment
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    apnsEnvironment: self.apnsEnvironment!,
                                     application: application,
                                     mediaManager: mediaManager,
                                     flowManager: FlowManagerMock(),
@@ -269,7 +266,6 @@ class SessionManagerTests: IntegrationTest {
                                 let environment = BackendEnvironment.mockEnvironment
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    apnsEnvironment: self.apnsEnvironment!,
                                     application: application,
                                     mediaManager: mediaManager,
                                     flowManager: FlowManagerMock(),
@@ -308,29 +304,6 @@ class SessionManagerTests: IntegrationTest {
         XCTAssertEqual([account1.userIdentifier], observer.destroyedUserSessions)
     }
 
-    func testThatSessionManagerSetsUpAPNSEnvironmentOnLaunch() {
-        // GIVEN
-        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
-
-        let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
-
-        // WHEN
-        SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: mediaManager,
-                              analytics: nil,
-                              delegate: nil,
-                              application: application,
-                              environment: BackendEnvironment.mockEnvironment,
-                              blacklistDownloadInterval : 60) { _ in
-                                sessionManagerExpectation.fulfill()
-        }
-        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
-
-
-        // THEN
-        let environment = ZMAPNSEnvironment()
-        XCTAssertNotNil(environment.appIdentifier)
-    }
 }
 
 extension IntegrationTest {
@@ -615,7 +588,6 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                                 let environment = BackendEnvironment.mockEnvironment
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    apnsEnvironment: self.apnsEnvironment!,
                                     application: application,
                                     mediaManager: mediaManager,
                                     flowManager: FlowManagerMock(),
@@ -671,7 +643,6 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                         let environment = BackendEnvironment.mockEnvironment
                         let reachability = TestReachability()
                         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                            apnsEnvironment: self.apnsEnvironment!,
                             application: application,
                             mediaManager: mediaManager,
                             flowManager: FlowManagerMock(),

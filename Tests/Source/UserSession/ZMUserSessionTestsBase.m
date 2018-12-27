@@ -109,18 +109,12 @@
     [[self.operationLoop stub] tearDown];
     [[[self.operationLoop stub] andReturn:self.syncStrategy] syncStrategy];
     
-    self.apnsEnvironment = [OCMockObject niceMockForClass:[ZMAPNSEnvironment class]];
-    [[[self.apnsEnvironment stub] andReturn:@"com.wire.ent"] appIdentifier];
-    [[[self.apnsEnvironment stub] andReturn:@"APNS"] transportTypeForTokenType:ZMAPNSTypeNormal];
-    [[[self.apnsEnvironment stub] andReturn:@"APNS_VOIP"] transportTypeForTokenType:ZMAPNSTypeVoIP];
-    
     self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
     
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
                                                   mediaManager:self.mediaManager
                                                    flowManager:self.flowManagerMock
                                                      analytics:nil
-                                               apnsEnvironment:self.apnsEnvironment
                                                  operationLoop:self.operationLoop
                                                    application:self.application
                                                     appVersion:@"00000"
@@ -184,9 +178,6 @@
     
     [(id)self.syncStrategy stopMocking];
     self.syncStrategy = nil;
-    
-    [self.apnsEnvironment stopMocking];
-    self.apnsEnvironment = nil;
     
     id tempSut = self.sut;
     self.sut = nil;

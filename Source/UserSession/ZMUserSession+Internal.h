@@ -32,7 +32,6 @@
 @class ZMSyncStrategy;
 @class ZMOperationLoop;
 @class ZMPushRegistrant;
-@class ZMAPNSEnvironment;
 @class UserProfileUpdateStatus;
 @class ClientUpdateStatus;
 @class AVSFlowManager;
@@ -82,7 +81,6 @@
                             mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                                analytics:(id<AnalyticsType>)analytics
-                         apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion

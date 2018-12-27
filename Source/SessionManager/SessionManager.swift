@@ -202,11 +202,6 @@ public protocol ForegroundNotificationResponder: class {
     
     public var callKitDelegate : CallKitDelegate?
     
-    private static let runOnce: () -> Void = {
-        BuildType.setupBuildTypes()
-        return {}
-    }()
-    
     /// The entry point for SessionManager; call this instead of the initializers.
     ///
     public static func create(
@@ -221,7 +216,6 @@ public protocol ForegroundNotificationResponder: class {
         ) {
         
         token = FileManager.default.executeWhenFileSystemIsAccessible {
-            runOnce()
             completion(SessionManager(
                 appVersion: appVersion,
                 mediaManager: mediaManager,
@@ -258,7 +252,6 @@ public protocol ForegroundNotificationResponder: class {
         let unauthenticatedSessionFactory = UnauthenticatedSessionFactory(environment: environment, reachability: reachability)
         let authenticatedSessionFactory = AuthenticatedSessionFactory(
             appVersion: appVersion,
-            apnsEnvironment: nil,
             application: application,
             mediaManager: mediaManager,
             flowManager: flowManager,

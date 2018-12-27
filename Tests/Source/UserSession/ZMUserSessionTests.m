@@ -63,7 +63,6 @@
                                                              flowManager:self.flowManagerMock
                                                                analytics:nil
                                                         transportSession:transportSession
-                                                         apnsEnvironment:nil
                                                              application:self.application
                                                               appVersion:version
                                                            storeProvider:self.storeProvider];
@@ -209,7 +208,6 @@
                                                                     mediaManager:self.mediaManager
                                                                      flowManager:self.flowManagerMock
                                                                        analytics:nil
-                                                                 apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
@@ -414,7 +412,6 @@
                                                                     mediaManager:self.mediaManager
                                                                      flowManager:self.flowManagerMock
                                                                        analytics:nil
-                                                                 apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"

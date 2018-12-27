@@ -77,7 +77,6 @@
 @property (nonatomic) ThirdPartyServices *thirdPartyServices;
 @property (nonatomic) id requestAvailableNotification;
 @property (nonatomic) id operationLoop;
-@property (nonatomic) id apnsEnvironment;
 @property (nonatomic) ZMClientRegistrationStatus * clientRegistrationStatus;
 @property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 @property (nonatomic) id<LocalStoreProviderProtocol> storeProvider;
