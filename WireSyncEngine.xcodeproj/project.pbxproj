@@ -335,6 +335,7 @@
 		87AEA67D1EFBF46600C94BF3 /* DiskDatabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87AEA67B1EFBD27700C94BF3 /* DiskDatabaseTest.swift */; };
 		87B30C5C1FA756220054DFB1 /* FlowManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87B30C5B1FA756220054DFB1 /* FlowManagerTests.swift */; };
 		87D003FF1BB5810D00472E06 /* APSSignalingKeyStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D003FE1BB5810D00472E06 /* APSSignalingKeyStoreTests.swift */; };
+		87D2555921D6275800D03789 /* BuildTypeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D2555821D6275800D03789 /* BuildTypeTests.swift */; };
 		87D4625D1C3D526D00433469 /* DeleteAccountRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D4625C1C3D526D00433469 /* DeleteAccountRequestStrategyTests.swift */; };
 		A907771A192E33A500141F13 /* SlowSyncTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D85D997334755E841D13EA /* SlowSyncTests.m */; };
 		A9692F8A1986476900849241 /* NSString_NormalizationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A9692F881986476900849241 /* NSString_NormalizationTests.m */; };
@@ -908,6 +909,7 @@
 		87AEA67B1EFBD27700C94BF3 /* DiskDatabaseTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DiskDatabaseTest.swift; sourceTree = "<group>"; };
 		87B30C5B1FA756220054DFB1 /* FlowManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowManagerTests.swift; sourceTree = "<group>"; };
 		87D003FE1BB5810D00472E06 /* APSSignalingKeyStoreTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = APSSignalingKeyStoreTests.swift; sourceTree = "<group>"; };
+		87D2555821D6275800D03789 /* BuildTypeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildTypeTests.swift; sourceTree = "<group>"; };
 		87D4625C1C3D526D00433469 /* DeleteAccountRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeleteAccountRequestStrategyTests.swift; sourceTree = "<group>"; };
 		87DF28C61F680495007E1702 /* PushDispatcherTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PushDispatcherTests.swift; sourceTree = "<group>"; };
 		A9692F881986476900849241 /* NSString_NormalizationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSString_NormalizationTests.m; sourceTree = "<group>"; };
@@ -1566,6 +1568,7 @@
 				874A16932052C64B001C6760 /* UserExpirationObserverTests.swift */,
 				874A1749205812B6001C6760 /* ZMUserSessionTests.swift */,
 				166264922166517A00300F45 /* CallEventStatusTests.swift */,
+				87D2555821D6275800D03789 /* BuildTypeTests.swift */,
 			);
 			path = UserSession;
 			sourceTree = "<group>";
@@ -2601,6 +2604,7 @@
 				F190E0DD1E8E7C9D003E81F8 /* SlowSyncTests+Swift.swift in Sources */,
 				BFAB67B01E535B4B00D67C1A /* TextSearchTests.swift in Sources */,
 				F9ABE8561EFD56BF00D83214 /* TeamDownloadRequestStrategyTests.swift in Sources */,
+				87D2555921D6275800D03789 /* BuildTypeTests.swift in Sources */,
 				16466C0E1F9F7EDF00E3F970 /* ZMConversationTranscoderTests.swift in Sources */,
 				5430FF151CE4A359004ECFFE /* FileTransferTests.m in Sources */,
 				545434AE19AB6ADA003892D9 /* ZMUserTranscoderTests.m in Sources */,

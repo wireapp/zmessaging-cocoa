@@ -18,7 +18,7 @@
 
 import WireSystem
 
-enum BuildType {
+enum BuildType: Equatable {
     case production
     case alpha
     case development
@@ -45,8 +45,8 @@ enum BuildType {
             return "com.wire.dev.ent"
         case .internal:
             return "com.wire.int.ent"
-        case .custom:
-            return "com.wire.custom" // ???
+        case .custom(let bundleID):
+            return bundleID
         }
     }
     
