@@ -92,6 +92,12 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         
         return self.callCenter?.isContantBitRate(conversationId: remoteIdentifier) ?? false
     }
+
+    public var networkQuality: NetworkQuality {
+        guard let remoteIdentifier = conversation?.remoteIdentifier, let callCenter = self.callCenter else { return .normal }
+
+        return callCenter.networkQuality(conversationId: remoteIdentifier)
+    }
     
     public var initiator : ZMUser? {
         guard let context = conversation?.managedObjectContext,
@@ -204,6 +210,10 @@ extension VoiceChannelV3 : CallActionsInternal {
 }
 
 extension VoiceChannelV3 : CallObservers {
+
+    public func addNetworkQualityObserver(_ observer: NetworkQualityObserver) -> Any {
+        return WireCallCenterV3.addNetworkQualityObserver(observer: observer, for: conversation!, context: conversation!.managedObjectContext!)
+    }
     
     /// Add observer of voice channel state. Returns a token which needs to be retained as long as the observer should be active.
     public func addCallStateObserver(_ observer: WireCallCenterCallStateObserver) -> Any {

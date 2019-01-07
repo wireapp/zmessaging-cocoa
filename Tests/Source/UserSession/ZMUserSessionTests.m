@@ -46,23 +46,6 @@
     self.lastReceivedNotification = notification;
 }
 
-- (void)testThatItInitializesTheBackendEnvironments
-{
-    // given
-    ZMBackendEnvironment *prod = [ZMBackendEnvironment environmentWithType:ZMBackendEnvironmentTypeProduction];
-    ZMBackendEnvironment *staging = [ZMBackendEnvironment environmentWithType:ZMBackendEnvironmentTypeStaging];
-    
-    // then
-    XCTAssertEqualObjects(prod.backendURL, [NSURL URLWithString:@"https://prod-nginz-https.wire.com"]);
-    XCTAssertEqualObjects(staging.backendURL, [NSURL URLWithString:@"https://staging-nginz-https.zinfra.io"]);
-    
-    XCTAssertEqualObjects(prod.backendWSURL, [NSURL URLWithString:@"https://prod-nginz-ssl.wire.com"]);
-    XCTAssertEqualObjects(staging.backendWSURL, [NSURL URLWithString:@"https://staging-nginz-ssl.zinfra.io"]);
-    
-    XCTAssertEqualObjects(prod.blackListURL, [NSURL URLWithString:@"https://clientblacklist.wire.com/prod/ios"]);
-    XCTAssertEqualObjects(staging.blackListURL, [NSURL URLWithString:@"https://clientblacklist.wire.com/staging/ios"]);
-}
-
 - (void)testThatItSetsTheUserAgentOnStart;
 {
     // given
@@ -80,7 +63,6 @@
                                                              flowManager:self.flowManagerMock
                                                                analytics:nil
                                                         transportSession:transportSession
-                                                         apnsEnvironment:nil
                                                              application:self.application
                                                               appVersion:version
                                                            storeProvider:self.storeProvider];
@@ -226,7 +208,6 @@
                                                                     mediaManager:self.mediaManager
                                                                      flowManager:self.flowManagerMock
                                                                        analytics:nil
-                                                                 apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
@@ -431,7 +412,6 @@
                                                                     mediaManager:self.mediaManager
                                                                      flowManager:self.flowManagerMock
                                                                        analytics:nil
-                                                                 apnsEnvironment:self.apnsEnvironment
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"

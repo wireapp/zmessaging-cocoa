@@ -90,6 +90,8 @@ public class AVSWrapper: AVSWrapperType {
 
         wcall_set_data_chan_estab_handler(handle, dataChannelEstablishedHandler)
         wcall_set_group_changed_handler(handle, groupMemberHandler, observer)
+        let timerIntervalInSeconds: Int32 = 5
+        wcall_set_network_quality_handler(handle, networkQualityHandler, timerIntervalInSeconds, observer)
         wcall_set_media_stopped_handler(handle, mediaStoppedChangeHandler)
     }
 
@@ -137,7 +139,7 @@ public class AVSWrapper: AVSWrapperType {
         callEvent.data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
             let currentTime = UInt32(callEvent.currentTimestamp.timeIntervalSince1970)
             let serverTime = UInt32(callEvent.serverTimestamp.timeIntervalSince1970)
-            
+            zmLog.debug("wcall_recv_msg: currentTime = \(currentTime), serverTime = \(serverTime)")
             wcall_recv_msg(handle, bytes, callEvent.data.count, currentTime, serverTime, callEvent.conversationId.transportString(), callEvent.userId.transportString(), callEvent.clientId)
         }
     }
@@ -185,7 +187,10 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     private let missedCallHandler: MissedCallHandler = { conversationId, messageTime, userId, isVideoCall, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, isVideoCall) {
+        zmLog.debug("missedCallHandler: messageTime = \(messageTime)")
+        let nonZeroMessageTime: UInt32 = messageTime != 0 ? messageTime : UInt32(Date().timeIntervalSince1970)
+
+        AVSWrapper.withCallCenter(contextRef, conversationId, nonZeroMessageTime, userId, isVideoCall) {
             $0.handleMissedCall(conversationId: $1, messageTime: $2, userId: $3, isVideoCall: $4)
         }
     }
@@ -209,7 +214,10 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     private let closedCallHandler: CloseCallHandler = { reason, conversationId, messageTime, userId, contextRef in
-        AVSWrapper.withCallCenter(contextRef, reason, conversationId, messageTime) {
+        zmLog.debug("closedCallHandler: messageTime = \(messageTime)")
+        let nonZeroMessageTime: UInt32 = messageTime != 0 ? messageTime : UInt32(Date().timeIntervalSince1970)
+
+        AVSWrapper.withCallCenter(contextRef, reason, conversationId, nonZeroMessageTime) {
             $0.handleCallEnd(reason: $1, conversationId: $2, messageTime: $3, userId: UUID(rawValue: userId))
         }
     }
@@ -256,6 +264,12 @@ public class AVSWrapper: AVSWrapperType {
         AVSWrapper.withCallCenter(contextRef, conversationIdRef) {
             $0.handleMediaStopped(conversationId: $1)
         }
+    }
+
+    private let networkQualityHandler: NetworkQualityChangeHandler = { conversationIdRef, userIdRef, quality, rtt, uplinkLoss, downlinkLoss, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationIdRef, userIdRef, quality, { (callCenter, conversationId, userId, quality) in
+            callCenter.handleNetworkQualityChange(conversationId: conversationId, userId: userId, quality: quality)
+        })
     }
 
 }

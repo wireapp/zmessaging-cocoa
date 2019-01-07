@@ -29,7 +29,7 @@ import Foundation
     @objc optional func emailUpdateDidFail(_ error: Error!)
     
     /// Invoked when the email was sent to the backend
-    @objc optional func didSentVerificationEmail()
+    @objc optional func didSendVerificationEmail()
     
     /// Invoked when requesting the phone number verification code failed
     @objc optional func phoneNumberVerificationCodeRequestDidFail(_ error: Error!)
@@ -110,7 +110,7 @@ extension UserProfileUpdateStatus {
             case .didRemovePhoneNumber:
                 observer.didRemovePhoneNumber?()
             case .phoneNumberVerificationCodeRequestDidFail(let error):
-                observer.phoneNumberVerificationCodeRequestDidFail?(error);
+                observer.phoneNumberVerificationCodeRequestDidFail?(error)
             case .phoneNumberChangeDidFail(let error):
                 observer.phoneNumberChangeDidFail?(error)
             case .passwordUpdateDidFail:
@@ -118,7 +118,7 @@ extension UserProfileUpdateStatus {
             case .phoneNumberVerificationCodeRequestDidSucceed:
                 observer.phoneNumberVerificationCodeRequestDidSucceed?()
             case .emailDidSendVerification:
-                observer.didSentVerificationEmail?()
+                observer.didSendVerificationEmail?()
             case .didCheckAvailabilityOfHandle(let handle, let available):
                 observer.didCheckAvailiabilityOfHandle?(handle: handle, available: available)
             case .didFailToCheckAvailabilityOfHandle(let handle):

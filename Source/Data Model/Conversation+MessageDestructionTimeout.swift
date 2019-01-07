@@ -37,7 +37,7 @@ public enum MessageDestructionTimerError: Error {
     }
 }
 
-fileprivate extension ZMTransportResponse {
+extension ZMTransportResponse {
     var updateEvent: ZMUpdateEvent? {
         return payload.flatMap(papply(flip(ZMUpdateEvent.init), nil))
     }

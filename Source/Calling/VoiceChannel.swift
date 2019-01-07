@@ -56,6 +56,7 @@ public protocol CallProperties : NSObjectProtocol {
     var isVideoCall: Bool { get }
     var initiator: ZMUser? { get }
     var videoState: VideoState { get set }
+    var networkQuality: NetworkQuality { get }
     
     func state(forParticipant: ZMUser) -> CallParticipantState
     func setVideoCaptureDevice(_ device: CaptureDevice) throws
@@ -92,8 +93,10 @@ public protocol CallObservers : NSObjectProtocol {
     
     /// Add observer of constant bit rate audio. Returns a token which needs to be retained as long as the observer should be active.
     func addConstantBitRateObserver(_ observer: ConstantBitRateAudioObserver) -> Any
-    
+
+    /// Add observer of network quality. Returns a token which needs to be retained as long as the observer should be active.
+    func addNetworkQualityObserver(_ observer: NetworkQualityObserver) -> Any
+
     /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.
     static func addCallStateObserver(_ observer: WireCallCenterCallStateObserver, userSession: ZMUserSession) -> Any
-    
 }

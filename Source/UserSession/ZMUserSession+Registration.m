@@ -34,21 +34,6 @@
 #import "ZMUserSessionRegistrationNotification.h"
 #import "ZMAuthenticationStatus_Internal.h"
 
-@implementation ZMUser (ZMRegistrationUser)
-
-- (void)updateFromRegistrationUser:(ZMCompleteRegistrationUser *)registrationUser inSession:(ZMUserSession *)session {
-    self.name = registrationUser.name;
-    if(registrationUser.profileImageData != nil) {
-        [session.profileUpdate updateImageWithImageData:registrationUser.profileImageData];
-    }
-    self.phoneNumber = registrationUser.phoneNumber;
-    self.emailAddress = registrationUser.emailAddress;
-    self.accentColorValue = registrationUser.accentColorValue;
-}
-
-@end
-
-
 @implementation ZMUserSession (Registration)
 
 - (BOOL)registeredOnThisDevice

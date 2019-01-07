@@ -41,14 +41,6 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
         }
     }
     
-    func updateAppIconBadge(accountID: UUID, unreadCount: Int) {
-        
-    }
-    
-    func configureUserNotifications() {
-        
-    }
-    
     var lastRequestToShowMessage: (ZMUserSession, ZMConversation, ZMConversationMessage)?
     var lastRequestToShowConversation: (ZMUserSession, ZMConversation)?
     var lastRequestToShowConversationsList: ZMUserSession?
@@ -69,15 +61,21 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
     func updatePushToken(for session: ZMUserSession) {
         updatePushTokenCalled = true
     }
-    
-    deinit {
-        try? FileManager.default.removeItem(at: MockSessionManager.accountManagerURL)
+
+    func updateAppIconBadge(accountID: UUID, unreadCount: Int) {
+        // no-op
     }
     
+    func configureUserNotifications() {
+        // no-op
+    }
+
+    func update(credentials: ZMCredentials) -> Bool {
+        return false
+    }
     
 }
 
-@available(iOS 10.0, *)
 class MockCallKitProvider: CXProvider {
 
     public var timesSetDelegateCalled: Int = 0
@@ -97,9 +95,11 @@ class MockCallKitProvider: CXProvider {
     
     public var timesReportCallEndedAtCalled: Int = 0
     public var lastEndedReason: CXCallEndedReason = .answeredElsewhere
+    public var lastEndedDate: Date? = nil
     override func reportCall(with UUID: UUID, endedAt dateEnded: Date?, reason endedReason: CXCallEndedReason) {
         timesReportCallEndedAtCalled += 1
         lastEndedReason = endedReason
+        lastEndedDate = dateEnded
     }
     
     public var timesReportOutgoingCallConnectedAtCalled: Int = 0
@@ -119,7 +119,6 @@ class MockCallKitProvider: CXProvider {
 
 }
 
-@available(iOS 10.0, *)
 class MockCallObserver : CXCallObserver {
     
     public var mockCalls : [CXCall] = []
@@ -130,7 +129,6 @@ class MockCallObserver : CXCallObserver {
     
 }
 
-@available(iOS 10.0, *)
 class MockCallKitCallController: CXCallController {
     
     public override var callObserver: CXCallObserver {
@@ -155,7 +153,6 @@ class MockCallKitCallController: CXCallController {
     }
 }
 
-@available(iOS 10.0, *)
 class MockCallAnswerAction : CXAnswerCallAction {
     
     var isFulfilled : Bool = false
@@ -171,7 +168,6 @@ class MockCallAnswerAction : CXAnswerCallAction {
     
 }
 
-@available(iOS 10.0, *)
 class MockStartCallAction : CXStartCallAction {
     
     var isFulfilled : Bool = false
@@ -187,7 +183,6 @@ class MockStartCallAction : CXStartCallAction {
     
 }
 
-@available(iOS 10.0, *)
 class MockProvider : CXProvider {
     
     var connectingCalls : Set<UUID> = Set()
@@ -207,7 +202,6 @@ class MockProvider : CXProvider {
     
 }
 
-@available(iOS 10.0, *)
 class CallKitDelegateTest: MessagingTest {
     var sut: WireSyncEngine.CallKitDelegate!
     var callKitProvider: MockCallKitProvider!
@@ -769,6 +763,24 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
         XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 1)
         XCTAssertEqual(self.callKitProvider.lastEndedReason, .remoteEnded)
+    }
+    
+    func testThatItReportCallEndedAt_v3_Terminating_inTheFuture() {
+        // given
+        let conversation = self.conversation()
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        sut.requestStartCall(in: conversation, video: false)
+        
+        // when
+        sut.callCenterDidChange(callState: .terminating(reason: .normal), conversation: conversation, caller: otherUser, timestamp: Date(timeIntervalSinceNow: 10000), previousCallState: nil)
+        
+        // then
+        XCTAssertEqual(self.callKitProvider.timesReportNewIncomingCallCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallConnectedAtCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportOutgoingCallStartedConnectingCalled, 0)
+        XCTAssertEqual(self.callKitProvider.timesReportCallEndedAtCalled, 1)
+        XCTAssertEqual(self.callKitProvider.lastEndedReason, .remoteEnded)
+        XCTAssertEqual(Int(self.callKitProvider.lastEndedDate!.timeIntervalSinceNow), 0)
     }
     
     func testThatItReportCallEndedAt_v3_Terminating_lostMedia() {

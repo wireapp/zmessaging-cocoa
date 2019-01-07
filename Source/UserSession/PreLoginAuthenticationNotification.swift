@@ -121,28 +121,36 @@ public extension ZMAuthenticationStatus {
     }
 }
 
-
 extension ZMUser {
-    
+
+    @objc public var loginCredentials: LoginCredentials {
+        return LoginCredentials(emailAddress: self.emailAddress,
+                                phoneNumber: self.phoneNumber,
+                                hasPassword: self.emailAddress != nil,
+                                usesCompanyLogin: self.usesCompanyLogin)
+    }
+
+}
+
+
+extension LoginCredentials {
+
     /// This will be used to set user info on the NSError
-    @objc
-    public var credentialsUserInfo : Dictionary<String, Any> {
-        
-        var userInfo : [String : Any] = [:]
-        
+    @objc public var dictionaryRepresentation: [String: Any] {
+        var userInfo: [String: Any] = [:]
+        userInfo[ZMUserLoginCredentialsKey] = self
+        userInfo[ZMUserHasPasswordKey] = hasPassword
+        userInfo[ZMUserUsesCompanyLoginCredentialKey] = usesCompanyLogin
+
         if let emailAddress = emailAddress, !emailAddress.isEmpty {
             userInfo[ZMEmailCredentialKey] = emailAddress
         }
-        
+
         if let phoneNumber = phoneNumber, !phoneNumber.isEmpty {
             userInfo[ZMPhoneCredentialKey] = phoneNumber
         }
 
-        if self.usesCompanyLogin {
-            userInfo[ZMUserUsesCompanyLoginCredentialKey] = true
-        }
-        
         return userInfo
     }
-    
+
 }

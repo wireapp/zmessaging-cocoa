@@ -30,17 +30,6 @@
 
 @implementation ZMUserSession (OTR)
 
-- (void)deleteClient:(UserClient *)client
-{
-    [client markForDeletion];
-    [client.managedObjectContext saveOrRollback];
-    
-    [self.syncManagedObjectContext performGroupedBlock:^{
-        [self.clientUpdateStatus deleteClientsWithCredentials:self.clientRegistrationStatus.emailCredentials];
-        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-    }];
-}
-
 - (void)fetchAllClients
 {
     [self.syncManagedObjectContext performGroupedBlock:^{
@@ -50,12 +39,10 @@
 }
 
 
-- (void)deleteClients:(NSArray<UserClient *> *)clients withCredentials:(ZMEmailCredentials *)emailCredentials
+- (void)deleteClient:(UserClient *)client withCredentials:(ZMEmailCredentials *)emailCredentials
 {
-    for (UserClient *client in clients){
-        [client markForDeletion];
-    }
-    [[clients.firstObject managedObjectContext] saveOrRollback];
+    [client markForDeletion];
+    [[client managedObjectContext] saveOrRollback];
     
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.clientUpdateStatus deleteClientsWithCredentials:emailCredentials];

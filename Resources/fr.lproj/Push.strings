@@ -37,6 +37,7 @@
 "push.notification.ephemeral.title" = "Quelqu’un";
 "push.notification.ephemeral" = "A envoyé un message";
 "push.notification.ephemeral.mention" = "Vous a mentionné";
+"push.notification.ephemeral.reply" = "Vous a répondu";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@ : %2$@";
@@ -69,14 +70,17 @@
 "push.notification.add.message.oneonone.mention" = "Mention : %1$@";
 "push.notification.add.message.oneonone.nousername.mention" = "Nouvelle mention : %1$@";
 
-// UNKNOWN MESSAGE
-"push.notification.add.unknown.group.mention" = "%1$@ : nouvelle mention";
-"push.notification.add.unknown.group.nousername.mention" = "Nouvelle mention";
-"push.notification.add.unknown.group.nousername.noconversationname.mention" = "Nouvelle mention";
-"push.notification.add.unknown.group.noconversationname.mention" = "%1$@ vous a mentionné";
+// Message with quote
+// 2 Components: Sender, Message
 
-"push.notification.add.unknown.oneonone.mention" = "Nouvelle mention";
-"push.notification.add.unknown.oneonone.nousername.mention" = "Nouvelle mention";
+"push.notification.add.message.group.reply" = "Réponse de %1$@: %2$@";
+"push.notification.add.message.group.nousername.reply" = "Nouvelle réponse : %1$@";
+"push.notification.add.message.group.nousername.noconversationname.reply" = "Nouvelle réponse : %1$@";
+"push.notification.add.message.group.noconversationname.reply" = "%1$@ vous a répondu dans une conversation : %2$@";
+
+// 1 Component: Message
+"push.notification.add.message.oneonone.reply" = "Réponse : %1$@";
+"push.notification.add.message.oneonone.nousername.reply" = "Nouvelle réponse : %1$@";
 
 // IMAGE
 "push.notification.add.image.group" = "%1$@ a partagé une image";

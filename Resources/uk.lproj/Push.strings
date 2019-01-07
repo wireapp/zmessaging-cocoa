@@ -37,6 +37,7 @@
 "push.notification.ephemeral.title" = "Хтось";
 "push.notification.ephemeral" = "Надіслав повідомлення";
 "push.notification.ephemeral.mention" = "Згадав вас";
+"push.notification.ephemeral.reply" = "Відповів(-ла) вам";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -69,14 +70,17 @@
 "push.notification.add.message.oneonone.mention" = "Згадка: %1$@";
 "push.notification.add.message.oneonone.nousername.mention" = "Нова згадка: %1$@";
 
-// UNKNOWN MESSAGE
-"push.notification.add.unknown.group.mention" = "%1$@: нова згадка";
-"push.notification.add.unknown.group.nousername.mention" = "Нова згадка";
-"push.notification.add.unknown.group.nousername.noconversationname.mention" = "Нова згадка";
-"push.notification.add.unknown.group.noconversationname.mention" = "%1$@ згадав(-ла) вас";
+// Message with quote
+// 2 Components: Sender, Message
 
-"push.notification.add.unknown.oneonone.mention" = "Нова згадка";
-"push.notification.add.unknown.oneonone.nousername.mention" = "Нова згадка";
+"push.notification.add.message.group.reply" = "Відповідь від %1$@: %2$@";
+"push.notification.add.message.group.nousername.reply" = "Нова відповідь: %1$@";
+"push.notification.add.message.group.nousername.noconversationname.reply" = "Нова відповідь: %1$@";
+"push.notification.add.message.group.noconversationname.reply" = "%1$@ відповів(-ла) на ваше повідомлення в розмові: %2$@";
+
+// 1 Component: Message
+"push.notification.add.message.oneonone.reply" = "Відповідь: %1$@";
+"push.notification.add.message.oneonone.nousername.reply" = "Нова відповідь: %1$@";
 
 // IMAGE
 "push.notification.add.image.group" = "%1$@ поділився(-лась) картинкою";

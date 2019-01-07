@@ -28,7 +28,6 @@ import Foundation
         return sessionManager.callNotificationStyle
     }
     
-    @available(iOS 10.0, *)
     internal var callKitDelegate : CallKitDelegate? {
         return sessionManager.callKitDelegate
     }

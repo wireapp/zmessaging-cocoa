@@ -851,7 +851,7 @@
     }
 }
 
-- (void)expectSyncObjectsToProcessEvents:(BOOL)process liveEvents:(BOOL)liveEvents decryptEvents:(BOOL)decyptEvents returnIDsForPrefetching:(BOOL)returnIDs withEvents:(id)events;
+- (void)expectSyncObjectsToProcessEvents:(BOOL)process liveEvents:(BOOL)liveEvents decryptEvents:(BOOL)decyptEvents returnIDsForPrefetching:(BOOL)returnIDs withEvents:(NSArray *)events;
 {
     NOT_USED(decyptEvents);
     
@@ -861,9 +861,9 @@
         }
         
         if (process) {
-            [[obj expect] processEvents:[OCMArg checkWithBlock:^BOOL(NSArray *receivedEvents) {
-                return [receivedEvents isEqualToArray:events];
-            }] liveEvents:liveEvents prefetchResult:OCMOCK_ANY];
+            for (id event in events) {
+                [[obj expect] processEvents:@[event] liveEvents:YES prefetchResult:OCMOCK_ANY];
+            }
         } else {
             [[obj reject] processEvents:OCMOCK_ANY liveEvents:liveEvents prefetchResult:OCMOCK_ANY];
         }

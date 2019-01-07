@@ -52,6 +52,11 @@
                BlueprintName = "WireSyncEngine-iOS-Tests"
                ReferencedContainer = "container:WireSyncEngine.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "SessionManagerTests/testThatSessionManagerSetsUpAPNSEnvironmentOnLaunch()">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
       <MacroExpansion>

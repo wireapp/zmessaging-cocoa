@@ -20,47 +20,25 @@
 import WireTesting
 import WireMockTransport
 
-class FakeBackgroundActivityFactory : BackgroundActivityFactory {
-    var nameToHandler : [String : (() -> Void)] = [:]
-    
-    override func backgroundActivity(withName name: String, expirationHandler handler: @escaping (() -> Void)) -> ZMBackgroundActivity? {
-        nameToHandler[name] = handler
-        return ZMBackgroundActivity()
-    }
-    
-    // simulates the expirationHandler being called
-    func callHandler(_ messageNonce: UUID){
-        guard let handler = nameToHandler.removeValue(forKey: "\(BackgroundAPNSConfirmationStatus.backgroundNameBase) \(messageNonce.transportString())") else { return }
-        mainGroupQueue?.performGroupedBlock({ 
-            handler()
-        })
-    }
-    
-    func tearDown(){
-        nameToHandler = [:]
-    }
-}
-
 class BackgroundAPNSConfirmationStatusTests : MessagingTest {
 
     var sut : BackgroundAPNSConfirmationStatus!
-    var fakeBGActivityFactory : FakeBackgroundActivityFactory!
+    var activityManager : MockBackgroundActivityManager!
 
     override func setUp() {
         super.setUp()
         application.setBackground()
-        fakeBGActivityFactory = FakeBackgroundActivityFactory()
-        fakeBGActivityFactory.mainGroupQueue = uiMOC // this mimics the real BackgroundActivityFactory
-        sut = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: syncMOC, backgroundActivityFactory: fakeBGActivityFactory)
+        activityManager = MockBackgroundActivityManager()
+        BackgroundActivityFactory.shared.activityManager = activityManager
+        sut = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: syncMOC, backgroundActivityFactory: .shared)
     }
     
     override func tearDown() {
-        fakeBGActivityFactory?.tearDown()
+        activityManager.reset()
+        activityManager = nil
+        BackgroundActivityFactory.shared.activityManager = nil
         sut.tearDown()
         sut = nil
-        fakeBGActivityFactory.mainGroupQueue = nil
-        fakeBGActivityFactory.tearDown()
-        fakeBGActivityFactory = nil
         super.tearDown()
     }
     
@@ -115,14 +93,14 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // when
-        fakeBGActivityFactory.callHandler(uuid1)
+        activityManager.triggerExpiration()
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertFalse(sut.needsToSyncMessages)
     }
     
-    func testThat_CanSendMessage_IsSetToTrue_OneMessageTimedOut_OneMessageNew() {
+    func testThatItExpiresMultipleMessages() {
         // given
         let uuid1 = UUID.create()
         let uuid2 = UUID.create()
@@ -132,11 +110,11 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // when
-        fakeBGActivityFactory.callHandler(uuid1)
+        activityManager.triggerExpiration()
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertTrue(sut.needsToSyncMessages)
+        XCTAssertFalse(sut.needsToSyncMessages)
     }
 }
 

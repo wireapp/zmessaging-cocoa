@@ -32,10 +32,10 @@ extension ZMConversation {
     
     @objc var isMutedDisplayingMentions: Bool {
         get {
-            return mutedMessageTypes == .nonMentions
+            return mutedMessageTypes == .regular
         }
         set {
-            mutedMessageTypes = newValue ? .nonMentions : .none
+            mutedMessageTypes = newValue ? .regular : .none
         }
     }
 }
@@ -364,7 +364,80 @@ extension ZMConversationTranscoderTests_Swift : ZMSyncStateDelegate {
 }
 
 // MARK: - Update events
+
 extension ZMConversationTranscoderTests_Swift {
+    
+    // MARK: Receipt Mode
+    
+    func receiptModeUpdateEvent(enabled: Bool) -> ZMUpdateEvent {
+        let payload = [
+            "from": self.user.remoteIdentifier!.transportString(),
+            "conversation": self.conversation.remoteIdentifier!.transportString(),
+            "time": NSDate().transportString(),
+            "data": ["receipt_mode": enabled ? 1 : 0],
+            "type": "conversation.receipt-mode-update"
+            ] as [String: Any]
+        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+    }
+    
+    
+    func testThatItUpdatesHasReadReceiptsEnabled_WhenReceivingReceiptModeUpdateEvent() {
+        self.syncMOC.performAndWait {
+            // GIVEN
+            let event = receiptModeUpdateEvent(enabled: true)
+            
+            // WHEN
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN
+            XCTAssertEqual(self.conversation.hasReadReceiptsEnabled, true)
+        }
+    }
+    
+    func testThatItInsertsSystemMessageEnabled_WhenReceivingReceiptModeUpdateEvent() {
+        self.syncMOC.performAndWait {
+            // GIVEN
+            let event = receiptModeUpdateEvent(enabled: true)
+            
+            // WHEN
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN
+            guard let message = self.conversation?.recentMessages.last as? ZMSystemMessage else { return XCTFail() }
+            XCTAssertEqual(message.systemMessageType, .readReceiptsEnabled)
+        }
+    }
+    
+    func testThatItInsertsSystemMessageDisabled_WhenReceivingReceiptModeUpdateEvent() {
+        self.syncMOC.performAndWait {
+            // GIVEN
+            let event = receiptModeUpdateEvent(enabled: false)
+            
+            // WHEN
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN
+            guard let message = self.conversation?.recentMessages.last as? ZMSystemMessage else { return XCTFail() }
+            XCTAssertEqual(message.systemMessageType, .readReceiptsDisabled)
+        }
+    }
+    
+    func testThatItDoesntInsertsSystemMessage_WhenReceivingReceiptModeUpdateEventWhichHasAlreadybeenApplied() {
+        self.syncMOC.performAndWait {
+            // GIVEN
+            let event = receiptModeUpdateEvent(enabled: true)
+            conversation.lastServerTimeStamp = event.timeStamp()
+            
+            // WHEN
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN
+            XCTAssertEqual(self.conversation?.recentMessages.count, 0)
+        }
+    }
+    
+    // MARK: Access Mode
+    
     func testThatItHandlesAccessModeUpdateEvent() {
         self.syncMOC.performAndWait {
 
@@ -395,6 +468,8 @@ extension ZMConversationTranscoderTests_Swift {
             XCTAssertEqual(self.conversation.accessRole, newAccessRole)
         }
     }
+    
+    // MARK: Message Timer
     
     func testThatItHandlesMessageTimerUpdateEvent_Value() {
         syncMOC.performGroupedBlockAndWait {

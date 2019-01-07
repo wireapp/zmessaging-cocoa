@@ -95,4 +95,65 @@ class CallParticipantsSnapshotTests : MessagingTest {
             XCTAssertTrue(first.audioEstablished)
         }
     }
+
+    func testThatItTakesTheWorstNetworkQualityFromParticipants() {
+        // given
+        let normalQuality = AVSCallMember(userId: UUID(), audioEstablished: true, videoState: .started, networkQuality: .normal)
+        let mediumQuality = AVSCallMember(userId: UUID(), audioEstablished: true, videoState: .started, networkQuality: .medium)
+        let poorQuality = AVSCallMember(userId: UUID(), audioEstablished: true, videoState: .started, networkQuality: .poor)
+
+        let sut = WireSyncEngine.CallParticipantsSnapshot(conversationId: UUID(),
+                                                          members: [],
+                                                          callCenter: mockWireCallCenterV3)
+        XCTAssertEqual(sut.networkQuality, .normal)
+
+        // when
+        sut.callParticipantsChanged(participants: [normalQuality])
+        // then
+        XCTAssertEqual(sut.networkQuality, .normal)
+
+        // when
+        sut.callParticipantsChanged(participants: [mediumQuality, normalQuality])
+        // then
+        XCTAssertEqual(sut.networkQuality, .medium)
+
+        // when
+        sut.callParticipantsChanged(participants: [poorQuality, normalQuality])
+        // then
+        XCTAssertEqual(sut.networkQuality, .poor)
+
+        // when
+        sut.callParticipantsChanged(participants: [mediumQuality, poorQuality])
+        // then
+        XCTAssertEqual(sut.networkQuality, .poor)
+    }
+
+    func testThatItUpdatesNetworkQualityWhenItChangesForParticipant() {
+        // given
+        let callMember1 = AVSCallMember(userId: UUID(), audioEstablished: true, networkQuality: .normal)
+        let callMember2 = AVSCallMember(userId: UUID(), audioEstablished: true, networkQuality: .normal)
+        let sut = WireSyncEngine.CallParticipantsSnapshot(conversationId: UUID(),
+                                                          members: [callMember1, callMember2],
+                                                          callCenter: mockWireCallCenterV3)
+        XCTAssertEqual(sut.networkQuality, .normal)
+
+        // when
+        sut.callParticpantNetworkQualityChanged(userId: callMember1.remoteId, networkQuality: .medium)
+
+        // then
+        XCTAssertEqual(sut.networkQuality, .medium)
+
+        // when
+        sut.callParticpantNetworkQualityChanged(userId: callMember2.remoteId, networkQuality: .poor)
+
+        // then
+        XCTAssertEqual(sut.networkQuality, .poor)
+
+        // when
+        sut.callParticpantNetworkQualityChanged(userId: callMember1.remoteId, networkQuality: .normal)
+        sut.callParticpantNetworkQualityChanged(userId: callMember2.remoteId, networkQuality: .normal)
+
+        // then
+        XCTAssertEqual(sut.networkQuality, .normal)
+    }
 }

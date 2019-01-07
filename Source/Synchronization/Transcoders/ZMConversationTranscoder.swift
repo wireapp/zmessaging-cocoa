@@ -62,6 +62,25 @@ extension ZMConversationTranscoder {
             localNotificationDispatcher.process(message)
         }
     }
+    
+    @objc (processReceiptModeUpdate:inConversation:lastServerTimestamp:)
+    public func processReceiptModeUpdate(event: ZMUpdateEvent, in conversation: ZMConversation, lastServerTimestamp: Date) {
+        precondition(event.type == .conversationReceiptModeUpdate, "invalid update event type")
+        
+        guard let payload = event.payload["data"] as? [String : AnyHashable],
+              let readReceiptMode = payload["receipt_mode"] as? Int,
+              let serverTimestamp = event.timeStamp(),
+              let senderUUID = event.senderUUID(),
+              let sender = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext)
+        else { return }
+        
+        // Discard event if it has already been applied
+        guard serverTimestamp.compare(lastServerTimestamp) == .orderedDescending else { return }
+        
+        let newValue = readReceiptMode > 0
+        conversation.hasReadReceiptsEnabled = newValue
+        conversation.appendMessageReceiptModeChangedMessage(fromUser: sender, timestamp: serverTimestamp, enabled: newValue)
+    }
 }
 
 extension ZMConversation {

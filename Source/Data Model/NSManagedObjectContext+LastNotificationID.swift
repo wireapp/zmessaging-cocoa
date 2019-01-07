@@ -34,7 +34,7 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
                     previousValue.compare(withType1: value) != .orderedAscending {
                 return
             }
-            
+            Logging.eventProcessing.debug("Setting zm_lastNotificationID = \( newValue?.transportString() ?? "nil" )")
             self.setPersistentStoreMetadata(newValue?.uuidString, key: lastUpdateEventIDKey)
         }
         

@@ -43,12 +43,25 @@ protocol SelfPostingNotification {
 extension SelfPostingNotification {
     static var userInfoKey : String { return notificationName.rawValue }
     
-    func post(in context: NotificationContext) {
-        NotificationInContext(name: type(of:self).notificationName, context: context, userInfo: [type(of:self).userInfoKey : self]).post()
+    func post(in context: NotificationContext, object: AnyObject? = nil) {
+        NotificationInContext(name: type(of:self).notificationName, context: context, object:object, userInfo: [type(of:self).userInfoKey : self]).post()
     }
 }
 
-/// MARK - CBR observer
+// MARK:- Network Quality observer
+
+public protocol NetworkQualityObserver : class {
+    func callCenterDidChange(networkQuality: NetworkQuality)
+}
+
+struct WireCallCenterNetworkQualityNotification : SelfPostingNotification {
+    static let notificationName = Notification.Name("WireCallCenterNetworkQualityNotification")
+    public let conversationId: UUID
+    public let userId: UUID
+    public let networkQuality: NetworkQuality
+}
+
+// MARK:- CBR observer
 
 public protocol ConstantBitRateAudioObserver : class {
     func callCenterDidChange(constantAudioBitRateAudioEnabled: Bool)
@@ -60,7 +73,7 @@ struct WireCallCenterCBRNotification : SelfPostingNotification {
     public let enabled: Bool
 }
 
-/// MARK - Call state observer
+// MARK:- Call state observer
 
 public protocol WireCallCenterCallStateObserver : class {
     
@@ -86,7 +99,7 @@ public struct WireCallCenterCallStateNotification : SelfPostingNotification {
     let previousCallState: CallState?
 }
 
-/// MARK - Missed call observer
+// MARK:- Missed call observer
 
 public protocol WireCallCenterMissedCallObserver : class {
     func callCenterMissedCall(conversation: ZMConversation, caller: ZMUser, timestamp: Date, video: Bool)
@@ -102,7 +115,7 @@ public struct WireCallCenterMissedCallNotification : SelfPostingNotification {
     let video: Bool
 }
 
-/// MARK - CallParticipantObserver
+// MARK:- CallParticipantObserver
 
 public protocol WireCallCenterCallParticipantObserver : class {
     
@@ -129,7 +142,7 @@ public struct WireCallCenterCallParticipantNotification : SelfPostingNotificatio
     
 }
 
-/// MARK - VoiceGainObserver
+// MARK:- VoiceGainObserver
 
 @objc
 public protocol VoiceGainObserver : class {
@@ -161,7 +174,7 @@ public class VoiceGainNotification : NSObject  {
 
 extension WireCallCenterV3 {
     
-    // MARK - Observer
+    // MARK: - Observer
     
     
     /// Register observer of the call center call state. This will inform you when there's an incoming call etc.
@@ -302,10 +315,25 @@ extension WireCallCenterV3 {
                 let observer = observer,
                 let user = ZMUser(remoteID: note.userId, createIfNeeded: false, in: context)
                 else { return }
-            
             observer.voiceGainDidChange(forParticipant: user, volume: note.volume)
         }
     }
-    
-}
 
+    /// Register observer when network quality changes
+    /// Returns a token which needs to be retained as long as the observer should be active.
+    public class func addNetworkQualityObserver(observer: NetworkQualityObserver, for conversation: ZMConversation, userSession: ZMUserSession) -> Any {
+        return addNetworkQualityObserver(observer: observer, for: conversation, context: userSession.managedObjectContext)
+    }
+
+    /// Register observer when network quality changes
+    /// Returns a token which needs to be retained as long as the observer should be active.
+    internal class func addNetworkQualityObserver(observer: NetworkQualityObserver, for conversation: ZMConversation, context: NSManagedObjectContext) -> Any {
+        return NotificationInContext.addObserver(name: WireCallCenterNetworkQualityNotification.notificationName, context: context.notificationContext, queue: .main) { [weak observer] note in
+            if let note = note.userInfo[WireCallCenterNetworkQualityNotification.userInfoKey] as? WireCallCenterNetworkQualityNotification {
+                if note.conversationId == conversation.remoteIdentifier {
+                    observer?.callCenterDidChange(networkQuality: note.networkQuality)
+                }
+            }
+        }
+    }
+}

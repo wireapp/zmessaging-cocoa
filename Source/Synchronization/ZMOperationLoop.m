@@ -270,7 +270,12 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     // this generates the request
     ZMTransportRequestGenerator generator = [self requestGenerator];
     
-    ZMBackgroundActivity * const enqueueActivity = [[BackgroundActivityFactory sharedInstance] backgroundActivityWithName:@"executeNextOperation"];
+    BackgroundActivity * const enqueueActivity = [BackgroundActivityFactory.sharedFactory startBackgroundActivityWithName:@"executeNextOperation"];
+
+    if (!enqueueActivity) {
+        return;
+    }
+
     ZM_WEAK(self);
     [self.syncMOC performGroupedBlock:^{
         ZM_STRONG(self);
@@ -279,7 +284,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
             ZMTransportEnqueueResult *result = [self.transportSession attemptToEnqueueSyncRequestWithGenerator:generator];
             enqueueMore = result.didGenerateNonNullRequest && result.didHaveLessRequestThanMax;
         }
-        [enqueueActivity endActivity];
+        [BackgroundActivityFactory.sharedFactory endBackgroundActivity:enqueueActivity];
     }];
 }
 

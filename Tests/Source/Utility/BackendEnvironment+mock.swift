@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2017 Wire Swiss GmbH
+// Copyright (C) 2018 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,16 +16,10 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-extension Account {
+import Foundation
 
-    func cookieStorage() -> ZMPersistentCookieStorage {
-        let backendURL = ZMBackendEnvironment(userDefaults: .standard).backendURL.host!
-        return ZMPersistentCookieStorage(forServerName: backendURL, userIdentifier: userIdentifier)
+public extension BackendEnvironment {
+    @objc public static var mockEnvironment: BackendEnvironment {
+        return BackendEnvironment(backendURL: URL(string: "http://example.com")!, backendWSURL: URL(string: "http://example.com")!, blackListURL: URL(string: "https://clientblacklist.wire.com/prod/ios")!, frontendURL: URL(string: "http://example.com")!)
     }
-    
-    
-    public var isAuthenticated : Bool {
-        return cookieStorage().authenticationCookieData != nil
-    }
-
 }

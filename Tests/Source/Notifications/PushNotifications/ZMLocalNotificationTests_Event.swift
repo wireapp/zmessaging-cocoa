@@ -21,34 +21,6 @@ import XCTest
 
 class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     
-    // MARK: - Conversation Create
-    
-    func testThatItCreatesConversationCreateNotification() {
-        
-        // "push.notification.conversation.create" = "%1$@ created a group conversation with you"
-        
-        // when
-        let note = noteWithPayload(nil, from: sender, in: groupConversation, type: EventConversationCreate)
-        
-        // then
-        XCTAssertNotNil(note)
-        XCTAssertEqual(note!.body, "Super User created a group")
-    }
-    
-    func testThatItCreatesConversationCreateNotification_NoUsername() {
-        
-        // "push.notification.conversation.create.nousername" = "Someone created a group conversation with you"
-        
-        // when
-        let note = noteWithPayload(nil, fromUserID: nil, in: groupConversation, type: EventConversationCreate)
-        
-         // then
-        XCTAssertNotNil(note)
-        XCTAssertEqual(note!.body, "Someone created a group")
-    }
-    
-    // MARK: - Connection
-    
     // MARK: Helpers
     
     func payloadForConnectionRequest(to remoteID: UUID, status: String) -> [AnyHashable: Any] {
@@ -78,7 +50,92 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         return note
     }
     
-    // MARK: Tests
+    func createUpdateEvent(_ nonce: UUID, conversationID: UUID, genericMessage: ZMGenericMessage, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+        let payload : [String : Any] = [
+            "id": UUID.create().transportString(),
+            "conversation": conversationID.transportString(),
+            "from": senderID.transportString(),
+            "time": Date().transportString(),
+            "data": ["text": genericMessage.data().base64String()],
+            "type": "conversation.otr-message-add"
+        ]
+        
+        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
+    }
+    
+    func reactionEventInOneOnOneConversation() -> ZMUpdateEvent {
+        let message = oneOnOneConversation.append(text: "text") as! ZMClientMessage
+        let reaction = ZMGenericMessage.message(content: ZMReaction(emoji: "❤️", messageID: message.nonce!))
+        let event = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction, senderID: sender.remoteIdentifier!)
+        return event
+    }
+    
+    func alertBody(_ conversation: ZMConversation, aSender: ZMUser) -> String? {
+        
+        // given
+        let message = conversation.append(text: "text") as! ZMClientMessage
+        let reaction = ZMGenericMessage.message(content: ZMReaction(emoji: "❤️", messageID: message.nonce!))
+        let event = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction, senderID: aSender.remoteIdentifier!)
+        
+        // when
+        let note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: syncMOC)
+        
+        // then
+        XCTAssertNotNil(note)
+        return note!.body
+    }
+    
+    func note(_ conversation: ZMConversation, aSender: ZMUser) -> ZMLocalNotification? {
+        
+        // given
+        let message = conversation.append(text: "text") as! ZMClientMessage
+        let reaction = ZMGenericMessage.message(content: ZMReaction(emoji: "❤️", messageID: message.nonce!))
+        let event = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction, senderID: aSender.remoteIdentifier!)
+        
+        // when
+        let note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: syncMOC)
+        
+        return note
+    }
+    
+    // MARK: - Group Conversation Created
+    
+    func testThatItCreatesConversationCreateNotification() {
+        
+        // "push.notification.conversation.create" = "%1$@ created a group conversation with you"
+        
+        // when
+        let note = noteWithPayload(nil, from: sender, in: groupConversation, type: EventConversationCreate)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.body, "Super User created a group")
+    }
+    
+    func testThatItCreatesConversationCreateNotification_NoUsername() {
+        
+        // "push.notification.conversation.create.nousername" = "Someone created a group conversation with you"
+        
+        // when
+        let note = noteWithPayload(nil, fromUserID: nil, in: groupConversation, type: EventConversationCreate)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.body, "Someone created a group")
+    }
+    
+    func testThatItDoesntCreateConversationCreateNotification_OneToOne() {
+        
+        // We don't want to create a notification for fake team one-to-one conversations
+        
+        // when
+        let note = noteWithPayload(nil, fromUserID: nil, in: oneOnOneConversation, type: EventConversationCreate)
+        
+        // then
+        XCTAssertNil(note)
+    }
+    
+    // MARK: - User Connections
     
     func testThatItCreatesNewConnectionNotification() {
         
@@ -152,58 +209,6 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     }
     
     // MARK: - Reactions
-    
-    // MARK: Helpers
-    
-    func createUpdateEvent(_ nonce: UUID, conversationID: UUID, genericMessage: ZMGenericMessage, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
-        let payload : [String : Any] = [
-            "id": UUID.create().transportString(),
-            "conversation": conversationID.transportString(),
-            "from": senderID.transportString(),
-            "time": Date().transportString(),
-            "data": ["text": genericMessage.data().base64String()],
-            "type": "conversation.otr-message-add"
-        ]
-        
-        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
-    }
-    
-    func reactionEventInOneOnOneConversation() -> ZMUpdateEvent {
-        let message = oneOnOneConversation.append(text: "text") as! ZMClientMessage
-        let reaction = ZMGenericMessage.message(content: ZMReaction(emoji: "❤️", messageID: message.nonce!))
-        let event = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction, senderID: sender.remoteIdentifier!)
-        return event
-    }
-    
-    func alertBody(_ conversation: ZMConversation, aSender: ZMUser) -> String? {
-        
-        // given
-        let message = conversation.append(text: "text") as! ZMClientMessage
-        let reaction = ZMGenericMessage.message(content: ZMReaction(emoji: "❤️", messageID: message.nonce!))
-        let event = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction, senderID: aSender.remoteIdentifier!)
-        
-        // when
-        let note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: syncMOC)
-        
-        // then
-        XCTAssertNotNil(note)
-        return note!.body
-    }
-    
-    func note(_ conversation: ZMConversation, aSender: ZMUser) -> ZMLocalNotification? {
-        
-        // given
-        let message = conversation.append(text: "text") as! ZMClientMessage
-        let reaction = ZMGenericMessage.message(content: ZMReaction(emoji: "❤️", messageID: message.nonce!))
-        let event = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction, senderID: aSender.remoteIdentifier!)
-        
-        // when
-        let note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: syncMOC)
-        
-        return note
-    }
-    
-    // MARK: Tests
     
     func testThatItCreatesANotifcationForAReaction_SelfUserIsSenderOfOriginalMessage_OtherUserSendsLike(){
         
@@ -345,6 +350,8 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         XCTAssertNil(note)
     }
     
+    // MARK: - Message Timer System Message
+    
     func testThatItCreatesANotificationForMessageTimerUpdateSystemMessages() {
         // given
         let message = groupConversation.appendMessageTimerUpdateMessage(fromUser: otherUser1, timer: 86400, timestamp: Date())
@@ -452,6 +459,8 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         XCTAssertNotNil(note)
         XCTAssertEqual(note?.body, "Someone turned off the message timer in a conversation")
     }
+    
+    // MARK: - Notification title
 
     func testThatItAddsATitleIfTheUserIsPartOfATeam() {
         self.syncMOC.performGroupedBlockAndWait {

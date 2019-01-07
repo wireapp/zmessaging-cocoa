@@ -17,10 +17,18 @@
 //
 
 import Foundation
+import WireUtilities
 
 class CallParticipantsSnapshot {
     
     public private(set) var members : OrderedSetState<AVSCallMember>
+
+    // We take the worst quality of all the legs
+    public var networkQuality: NetworkQuality {
+        return members.array.map(\.networkQuality)
+            .sorted() { $0.rawValue < $1.rawValue }
+            .last ?? .normal
+    }
     
     fileprivate unowned var callCenter : WireCallCenterV3
     fileprivate let conversationId : UUID
@@ -65,6 +73,12 @@ class CallParticipantsSnapshot {
         guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
         
         update(updatedMember: AVSCallMember(userId: userId, audioEstablished: true, videoState: callMember.videoState))
+    }
+
+    func callParticpantNetworkQualityChanged(userId: UUID, networkQuality: NetworkQuality) {
+        guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
+
+        update(updatedMember: AVSCallMember(userId: userId, audioEstablished: callMember.audioEstablished, videoState: callMember.videoState, networkQuality: networkQuality))
     }
     
     func update(updatedMember: AVSCallMember) {

@@ -66,10 +66,11 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
         
         if lastEventIdIsNewerThan(eventId: eventId){
             // We have already fetched the event and will therefore immediately call the completion handler
+            Logging.eventProcessing.info("Already fetched event with [\(eventId)]")
             return completionHandler()
         }
         
-        Logging.eventProcessing.info("Scheduling to fetch events notified by push")
+        Logging.eventProcessing.info("Scheduling to fetch events notified by push [\(eventId)]")
         
         eventIdRanking.add(eventId)
         completionHandlers[eventId] = completionHandler
@@ -92,6 +93,7 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
         
         Logging.eventProcessing.info("Finished to fetching all available events")
         
+        // We take all events that are older than or equal to zm_lastNotificationID and add highest ranking event ID
         for eventId in completionHandlers.keys.filter({  self.lastEventIdIsNewerThan(eventId: $0) || highestRankingEventId == $0 }) {
             let completionHandler = completionHandlers.removeValue(forKey: eventId)
             completionHandler?()

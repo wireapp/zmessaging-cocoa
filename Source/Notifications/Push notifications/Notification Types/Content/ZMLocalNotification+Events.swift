@@ -191,6 +191,10 @@ private class ConversationCreateEventNotificationBuilder: EventNotificationBuild
         return LocalNotificationType.event(.conversationCreated)
     }
     
+    override func shouldCreateNotification() -> Bool {
+        return super.shouldCreateNotification() && conversation?.conversationType == .group
+    }
+    
 }
 
 

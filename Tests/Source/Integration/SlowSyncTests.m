@@ -208,7 +208,8 @@
                                   [factory profileImageAssetRequestWithData:localUser.imageSmallProfileData],
                                   [ZMTransportRequest requestWithPath:@"/self" method:ZMMethodPUT payload:assetsUpdatePayload],
                                   [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@", smallProfileImageIdentifier, selfUserIdentifier]],
-                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@", mediumImageIdentifier, selfUserIdentifier]]
+                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@", mediumImageIdentifier, selfUserIdentifier]],
+                                  [ZMTransportRequest requestWithPath:@"properties/WIRE_RECEIPT_MODE" method:ZMMethodGET payload:nil],
                                   ]];
     
     // then
@@ -250,6 +251,7 @@
                                   [ZMTransportRequest requestGetFromPath:@"/self"],
                                   [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@", previewProfileAssetIdentifier]],
                                   [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@", completeProfileAssetIdentifier]],
+                                  [ZMTransportRequest requestWithPath:@"properties/WIRE_RECEIPT_MODE" method:ZMMethodGET payload:nil],
                                   ]];
     
     // then
@@ -308,7 +310,7 @@
 
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Hello, Test!" mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Hello, Test!" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
         [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -340,7 +342,7 @@
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
-        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Hello, Test!" mentions:@[] linkPreviews:@[]] nonce:NSUUID.createUUID];
+        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Hello, Test!" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
         [self.groupConversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     WaitForAllGroupsToBeEmpty(0.5);

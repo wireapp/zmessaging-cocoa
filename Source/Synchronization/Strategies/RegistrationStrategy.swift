@@ -18,7 +18,7 @@
 
 import Foundation
 
-final class TeamRegistrationStrategy : NSObject {
+final class RegistrationStrategy : NSObject {
     let registrationStatus: RegistrationStatusProtocol
     weak var userInfoParser: UserInfoParser?
     var registrationSync: ZMSingleRequestSync!
@@ -31,10 +31,12 @@ final class TeamRegistrationStrategy : NSObject {
     }
 }
 
-extension TeamRegistrationStrategy : ZMSingleRequestTranscoder {
+extension RegistrationStrategy : ZMSingleRequestTranscoder {
     func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         switch (registrationStatus.phase) {
-        case let .createTeam(team: team):
+        case let .createUser(user):
+            return ZMTransportRequest(path: "/register", method: .methodPOST, payload: user.payload)
+        case let .createTeam(team):
             return ZMTransportRequest(path: "/register", method: .methodPOST, payload: team.payload)
         default:
             fatal("Generating request for invalid phase: \(registrationStatus.phase)")
@@ -51,6 +53,9 @@ extension TeamRegistrationStrategy : ZMSingleRequestTranscoder {
             let error = NSError.blacklistedEmail(with: response) ??
                 NSError.invalidActivationCode(with: response) ??
                 NSError.emailAddressInUse(with: response) ??
+                NSError.phoneNumberIsAlreadyRegisteredError(with: response) ??
+                NSError.invalidEmail(with: response) ??
+                NSError.invalidPhoneNumber(withReponse: response) ??
                 NSError.unauthorizedEmailError(with: response) ??
                 NSError(code: .unknownError, userInfo: [:])
             registrationStatus.handleError(error)
@@ -58,10 +63,10 @@ extension TeamRegistrationStrategy : ZMSingleRequestTranscoder {
     }
 }
 
-extension TeamRegistrationStrategy : RequestStrategy {
+extension RegistrationStrategy : RequestStrategy {
     func nextRequest() -> ZMTransportRequest? {
         switch (registrationStatus.phase) {
-        case .createTeam:
+        case .createTeam, .createUser:
             registrationSync.readyForNextRequestIfNotBusy()
             return registrationSync.nextRequest()
         default:

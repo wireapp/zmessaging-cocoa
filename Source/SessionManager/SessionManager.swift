@@ -60,7 +60,6 @@ public protocol SessionManagerType : class {
     
     weak var foregroundNotificationResponder: ForegroundNotificationResponder? { get }
     
-    @available(iOS 10.0, *)
     var callKitDelegate : CallKitDelegate? { get }
     var callNotificationStyle: CallNotificationStyle { get }
     
@@ -79,6 +78,9 @@ public protocol SessionManagerType : class {
     /// Switch account and and ask UI to navigate to the conversatio list
     func showConversationList(in session: ZMUserSession)
 
+    /// Needs to be called before we try to register another device because API requires password
+    func update(credentials: ZMCredentials) -> Bool
+    
 }
 
 @objc
@@ -189,6 +191,7 @@ public protocol ForegroundNotificationResponder: class {
     
     fileprivate let sessionLoadingQueue : DispatchQueue = DispatchQueue(label: "sessionLoadingQueue")
     
+    let environment: BackendEnvironmentProvider
     let sharedContainerURL: URL
     let dispatchGroup: ZMSDispatchGroup?
     fileprivate var accountTokens : [UUID : [Any]] = [:]
@@ -197,16 +200,7 @@ public protocol ForegroundNotificationResponder: class {
     
     private static var token: Any?
     
-    private var _callKitDelegate : AnyObject?
-    @available(iOS 10.0, *)
-    public var callKitDelegate : CallKitDelegate? {
-        get {
-            return _callKitDelegate as? CallKitDelegate
-        }
-        set {
-            _callKitDelegate = newValue
-        }
-    }
+    public var callKitDelegate : CallKitDelegate?
     
     /// The entry point for SessionManager; call this instead of the initializers.
     ///
@@ -216,7 +210,8 @@ public protocol ForegroundNotificationResponder: class {
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
-        blacklistDownloadInterval : TimeInterval,
+        environment: BackendEnvironmentProvider,
+        blacklistDownloadInterval: TimeInterval,
         completion: @escaping (SessionManager) -> Void
         ) {
         
@@ -227,6 +222,7 @@ public protocol ForegroundNotificationResponder: class {
                 analytics: analytics,
                 delegate: delegate,
                 application: application,
+                environment: environment,
                 blacklistDownloadInterval: blacklistDownloadInterval
             ))
             
@@ -244,11 +240,10 @@ public protocol ForegroundNotificationResponder: class {
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
-        blacklistDownloadInterval : TimeInterval
+        environment: BackendEnvironmentProvider,
+        blacklistDownloadInterval: TimeInterval
         ) {
         
-        ZMBackendEnvironment.setupEnvironments()
-        let environment = ZMBackendEnvironment(userDefaults: .standard)
         let group = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
         let flowManager = FlowManager(mediaManager: mediaManager)
 
@@ -257,7 +252,6 @@ public protocol ForegroundNotificationResponder: class {
         let unauthenticatedSessionFactory = UnauthenticatedSessionFactory(environment: environment, reachability: reachability)
         let authenticatedSessionFactory = AuthenticatedSessionFactory(
             appVersion: appVersion,
-            apnsEnvironment: nil,
             application: application,
             mediaManager: mediaManager,
             flowManager: flowManager,
@@ -274,11 +268,13 @@ public protocol ForegroundNotificationResponder: class {
             reachability: reachability,
             delegate: delegate,
             application: application,
-            pushRegistry: PKPushRegistry(queue: nil)
+            pushRegistry: PKPushRegistry(queue: nil),
+            environment: environment
         )
         
         self.blacklistVerificator = ZMBlacklistVerificator(checkInterval: blacklistDownloadInterval,
                                                            version: appVersion,
+                                                           environment: environment,
                                                            working: nil,
                                                            application: application,
                                                            blacklistCallback:
@@ -315,10 +311,12 @@ public protocol ForegroundNotificationResponder: class {
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
         pushRegistry: PushRegistry,
-        dispatchGroup: ZMSDispatchGroup? = nil
+        dispatchGroup: ZMSDispatchGroup? = nil,
+        environment: BackendEnvironmentProvider
         ) {
 
         SessionManager.enableLogsByEnvironmentVariable()
+        self.environment = environment
         self.appVersion = appVersion
         self.application = application
         self.delegate = delegate
@@ -355,9 +353,8 @@ public protocol ForegroundNotificationResponder: class {
         // we must set these before initializing the PushDispatcher b/c if the app
         // received a push from terminated state, it requires these properties to be
         // non nil in order to process the notification
-        BackgroundActivityFactory.sharedInstance().application = UIApplication.shared
-        BackgroundActivityFactory.sharedInstance().mainGroupQueue = groupQueue
-        
+        BackgroundActivityFactory.shared.activityManager = UIApplication.shared
+
         if let analytics = analytics {
             self.notificationsTracker = NotificationsTracker(analytics: analytics)
         } else {
@@ -493,10 +490,10 @@ public protocol ForegroundNotificationResponder: class {
          - completion: called when session is loaded or when session fails to load
      */
     internal func loadSession(for account: Account?, completion: @escaping (ZMUserSession?) -> Void) {
-        guard let authenticatedAccount = account, authenticatedAccount.isAuthenticated else {
+        guard let authenticatedAccount = account, environment.isAuthenticated(authenticatedAccount) else {
             completion(nil)
             createUnauthenticatedSession()
-            delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: nil))
+            delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: account?.loginCredentials?.dictionaryRepresentation))
             return
         }
         
@@ -506,7 +503,7 @@ public protocol ForegroundNotificationResponder: class {
     public func deleteAccountData(for account: Account) {
         log.debug("Deleting the data for \(account.userName) -- \(account.userIdentifier)")
         
-        account.cookieStorage().deleteKeychainItems()
+        environment.cookieStorage(for: account).deleteKeychainItems()
         
         let accountID = account.userIdentifier
         self.accountManager.remove(account)
@@ -663,7 +660,6 @@ public protocol ForegroundNotificationResponder: class {
         }
     }
     
-    @available(iOS 10.0, *)
     private func updateCallNotificationStyle() {
         switch callNotificationStyle {
         case .pushNotifications:
@@ -699,6 +695,9 @@ extension SessionManager {
             if let userProfileImage = selfUser.imageSmallProfileData {
                 account.imageData = userProfileImage
             }
+
+            account.loginCredentials = selfUser.loginCredentials
+
             //an optional `teamImageData` image could be saved here
             accountManager.addOrUpdate(account)
         }
@@ -841,21 +840,29 @@ extension SessionManager: PostLoginAuthenticationObserver {
 }
 
 extension SessionManager {
-    @objc dynamic fileprivate func applicationDidBecomeActive(_ note: Notification) {
-        notificationsTracker?.dispatchEvent()
-    }
 }
 
-// MARK: - Unread Conversation Count
+// MARK: - Application lifetime notifications
 
-extension SessionManager: ZMConversationListObserver {
-    
+extension SessionManager {
     @objc fileprivate func applicationWillEnterForeground(_ note: Notification) {
+        BackgroundActivityFactory.shared.resume()
+        
         updateAllUnreadCounts()
         
         // Delete expired url scheme verification tokens
         CompanyLoginVerificationToken.flushIfNeeded()
     }
+    
+    @objc fileprivate func applicationDidBecomeActive(_ note: Notification) {
+        notificationsTracker?.dispatchEvent()
+    }
+
+}
+
+// MARK: - Unread Conversation Count
+
+extension SessionManager: ZMConversationListObserver {
     
     public func conversationListDidChange(_ changeInfo: ConversationListChangeInfo) {
         

@@ -75,9 +75,11 @@ class ZMHotFixDirectoryTests: MessagingTest {
         }
     }
     
-    func testThatOnlyGroupConversationsAreUpdated() {
+    func testThatOnlyGroupConversationsWhereSelfUserIsAnActiveParticipantAreUpdated() {
         syncMOC.performGroupedBlockAndWait {
             // given
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            
             let c1 = ZMConversation.insertNewObject(in: self.syncMOC)
             c1.conversationType = .oneOnOne
             XCTAssertFalse(c1.needsToBeUpdatedFromBackend)
@@ -90,13 +92,19 @@ class ZMHotFixDirectoryTests: MessagingTest {
             c3.conversationType = .group
             XCTAssertFalse(c3.needsToBeUpdatedFromBackend)
             
+            let c4 = ZMConversation.insertNewObject(in: self.syncMOC)
+            c4.conversationType = .group
+            c4.mutableLastServerSyncedActiveParticipants.add(selfUser)
+            XCTAssertFalse(c4.needsToBeUpdatedFromBackend)
+            
             // when
             ZMHotFixDirectory.refetchGroupConversations(self.syncMOC)
             
             // then
             XCTAssertFalse(c1.needsToBeUpdatedFromBackend)
             XCTAssertFalse(c2.needsToBeUpdatedFromBackend)
-            XCTAssertTrue(c3.needsToBeUpdatedFromBackend)
+            XCTAssertFalse(c3.needsToBeUpdatedFromBackend)
+            XCTAssertTrue(c4.needsToBeUpdatedFromBackend)
         }
     }
 }

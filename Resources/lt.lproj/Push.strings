@@ -37,6 +37,7 @@
 "push.notification.ephemeral.title" = "Kažkas";
 "push.notification.ephemeral" = "Atsiuntė jums žinutę";
 "push.notification.ephemeral.mention" = "Jus paminėjo";
+"push.notification.ephemeral.reply" = "Atsakyta jums";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -69,14 +70,17 @@
 "push.notification.add.message.oneonone.mention" = "Paminėjimas: %1$@";
 "push.notification.add.message.oneonone.nousername.mention" = "Naujas paminėjimas: %1$@";
 
-// UNKNOWN MESSAGE
-"push.notification.add.unknown.group.mention" = "%1$@: naujas paminėjimas";
-"push.notification.add.unknown.group.nousername.mention" = "Naujas paminėjimas";
-"push.notification.add.unknown.group.nousername.noconversationname.mention" = "Naujas paminėjimas";
-"push.notification.add.unknown.group.noconversationname.mention" = "%1$@ jus paminėjo";
+// Message with quote
+// 2 Components: Sender, Message
 
-"push.notification.add.unknown.oneonone.mention" = "Naujas paminėjimas";
-"push.notification.add.unknown.oneonone.nousername.mention" = "Naujas paminėjimas";
+"push.notification.add.message.group.reply" = "Atsakymas iš %1$@: %2$@";
+"push.notification.add.message.group.nousername.reply" = "Naujas atsakymas: %1$@";
+"push.notification.add.message.group.nousername.noconversationname.reply" = "Naujas atsakymas: %1$@";
+"push.notification.add.message.group.noconversationname.reply" = "%1$@ atsakė jums susirašinėjime: %2$@";
+
+// 1 Component: Message
+"push.notification.add.message.oneonone.reply" = "Atsakymas: %1$@";
+"push.notification.add.message.oneonone.nousername.reply" = "Naujas atsakymas: %1$@";
 
 // IMAGE
 "push.notification.add.image.group" = "%1$@ pasidalino paveikslėliu";
@@ -213,7 +217,7 @@
 "push.notification.action.message.reply" = "Atsakyti";
 "push.notification.action.message.reply.button.title" = "Siųsti";
 "push.notification.action.message.reply.placeholder" = "Rašykite žinutę";
-"push.notification.action.conversation.mute" = "Išjungti pranešimus";
+"push.notification.action.conversation.mute" = "Nutildyti";
 "push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "Priimti";

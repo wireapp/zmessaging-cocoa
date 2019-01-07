@@ -19,6 +19,7 @@
 #import <XCTest/XCTest.h>
 
 @import avs;
+@import UIKit;
 
 #import "IntegrationTest.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
@@ -27,7 +28,6 @@
 @interface IntegrationTest ()
 
 @property (nonatomic, nullable) id mockMediaManager;
-@property (nonatomic, nullable) id mockAPNSEnvironment;
 
 @end
 
@@ -36,25 +36,21 @@
 
 - (void)setUp {
     [super setUp];
-    
+    BackgroundActivityFactory.sharedFactory.activityManager = UIApplication.sharedApplication;
+    [BackgroundActivityFactory.sharedFactory resume];
+
     self.mockMediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
-    
-    id mockAPNSEnvironment = [OCMockObject niceMockForClass:[ZMAPNSEnvironment class]];
-    [[[mockAPNSEnvironment stub] andReturn:@"com.wire.production"] appIdentifier];
-    [[[mockAPNSEnvironment stub] andReturn:@"APNS"] transportTypeForTokenType:ZMAPNSTypeNormal];
-    [[[mockAPNSEnvironment stub] andReturn:@"APNS_VOIP"] transportTypeForTokenType:ZMAPNSTypeVoIP];
-    self.mockAPNSEnvironment = mockAPNSEnvironment;
+ 
     self.currentUserIdentifier = [NSUUID createUUID];
     [self _setUp];
 }
 
 - (void)tearDown {
     [self _tearDown];
+    BackgroundActivityFactory.sharedFactory.activityManager = nil;
     
     [self.mockMediaManager stopMocking];
     self.mockMediaManager = nil;
-    [self.mockAPNSEnvironment stopMocking];
-    self.mockAPNSEnvironment = nil;
     self.currentUserIdentifier = nil;
     
     WaitForAllGroupsToBeEmpty(0.5);
@@ -81,11 +77,6 @@
 - (AVSMediaManager *)mediaManager
 {
     return self.mockMediaManager;
-}
-
-- (ZMAPNSEnvironment *)apnsEnvironment
-{
-    return self.mockAPNSEnvironment;
 }
 
 @end

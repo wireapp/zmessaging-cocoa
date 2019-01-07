@@ -17,12 +17,12 @@
 //
 
 import Foundation
+import WireTesting
 
-extension String {
+extension MockUser {
 
-    /// Escapes the notification text for display inside the notification body.
-    var escapingPercentageSymbols: String {
-        return self.replacingOccurrences(of: "%", with: "%%")
+    var loginCredentials: LoginCredentials {
+        return LoginCredentials(emailAddress: email, phoneNumber: phone, hasPassword: email != nil, usesCompanyLogin: false)
     }
 
 }

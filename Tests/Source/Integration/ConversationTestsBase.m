@@ -32,10 +32,14 @@
     [super setUp];
     self.testFiles = [NSMutableArray array];
     [self setupGroupConversationWithOnlyConnectedParticipants];
+
+    BackgroundActivityFactory.sharedFactory.activityManager = UIApplication.sharedApplication;
 }
 
 - (void)tearDown
 {
+    BackgroundActivityFactory.sharedFactory.activityManager = nil;
+
     [self.userSession.syncManagedObjectContext performGroupedBlockAndWait:^{
         [self.userSession.syncManagedObjectContext zm_teardownMessageObfuscationTimer];
     }];

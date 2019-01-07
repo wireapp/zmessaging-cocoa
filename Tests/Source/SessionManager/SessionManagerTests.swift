@@ -33,11 +33,10 @@ class SessionManagerTests: IntegrationTest {
     
     func createManager() -> SessionManager? {
         guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else { return nil }
-        let environment = ZMBackendEnvironment(type: .staging)
+        let environment = BackendEnvironment.mockEnvironment
         let reachability = TestReachability()
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-            apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
             flowManager: FlowManagerMock(),
@@ -54,7 +53,8 @@ class SessionManagerTests: IntegrationTest {
             delegate: delegate,
             application: application,
             pushRegistry: pushRegistry,
-            dispatchGroup: dispatchGroup
+            dispatchGroup: dispatchGroup,
+            environment: environment
         )
         
         sessionManager.start(launchOptions: [:])
@@ -90,7 +90,7 @@ class SessionManagerTests: IntegrationTest {
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
         let manager = AccountManager(sharedDirectory: sharedContainer)
         let account = Account(userName: "", userIdentifier: currentUserIdentifier)
-        account.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         manager.addAndSelect(account)
 
         var completed = false
@@ -121,7 +121,7 @@ class SessionManagerTests: IntegrationTest {
         
         // GIVEN
         let account = self.createAccount()
-        account.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
         
@@ -136,12 +136,12 @@ class SessionManagerTests: IntegrationTest {
                               analytics: nil,
                               delegate: nil,
                               application: application,
+                              environment: sessionManager!.environment,
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
-                                let environment = ZMBackendEnvironment(type: .staging)
+                                let environment = BackendEnvironment.mockEnvironment
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    apnsEnvironment: self.apnsEnvironment!,
                                     application: application,
                                     mediaManager: mediaManager,
                                     flowManager: FlowManagerMock(),
@@ -183,7 +183,7 @@ class SessionManagerTests: IntegrationTest {
         
         // GIVEN
         let account = self.createAccount()
-        account.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
         
@@ -198,12 +198,12 @@ class SessionManagerTests: IntegrationTest {
                               analytics: nil,
                               delegate: nil,
                               application: application,
+                              environment: sessionManager!.environment,
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
-                                let environment = ZMBackendEnvironment(type: .staging)
+                                let environment = BackendEnvironment.mockEnvironment
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    apnsEnvironment: self.apnsEnvironment!,
                                     application: application,
                                     mediaManager: mediaManager,
                                     flowManager: FlowManagerMock(),
@@ -242,10 +242,10 @@ class SessionManagerTests: IntegrationTest {
         
         // GIVEN
         let account1 = self.createAccount()
-        account1.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account1).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         let account2 = self.createAccount(with: UUID.create())
-        account2.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account2).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
         
@@ -260,12 +260,12 @@ class SessionManagerTests: IntegrationTest {
                               analytics: nil,
                               delegate: nil,
                               application: application,
+                              environment: sessionManager!.environment,
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
-                                let environment = ZMBackendEnvironment(type: .staging)
+                                let environment = BackendEnvironment.mockEnvironment
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    apnsEnvironment: self.apnsEnvironment!,
                                     application: application,
                                     mediaManager: mediaManager,
                                     flowManager: FlowManagerMock(),
@@ -303,6 +303,7 @@ class SessionManagerTests: IntegrationTest {
         // THEN
         XCTAssertEqual([account1.userIdentifier], observer.destroyedUserSessions)
     }
+
 }
 
 extension IntegrationTest {
@@ -362,6 +363,7 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssertEqual(account.teamName, teamName)
         XCTAssertEqual(account.imageData, image?.data)
         XCTAssertNil(account.teamImageData)
+        XCTAssertEqual(account.loginCredentials, selfUser.loginCredentials)
     }
     
     func testThatItUpdatesAccountAfterTeamNameChanges() {
@@ -567,7 +569,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
     func testThatItDoesNotUnloadActiveUserSessionFromMemoryWarning() {
         // GIVEN
         let account = self.createAccount()
-        account.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
         
@@ -580,12 +582,12 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                               analytics: nil,
                               delegate: nil,
                               application: application,
+                              environment: sessionManager!.environment,
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
-                                let environment = ZMBackendEnvironment(type: .staging)
+                                let environment = BackendEnvironment.mockEnvironment
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    apnsEnvironment: self.apnsEnvironment!,
                                     application: application,
                                     mediaManager: mediaManager,
                                     flowManager: FlowManagerMock(),
@@ -622,7 +624,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
     func testThatItUnloadBackgroundUserSessionFromMemoryWarning() {
         // GIVEN
         let account = self.createAccount()
-        account.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
         
@@ -635,12 +637,12 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                        analytics: nil,
                        delegate: nil,
                        application: application,
+                       environment: sessionManager!.environment,
                        blacklistDownloadInterval : 60) { sessionManager in
                         
-                        let environment = ZMBackendEnvironment(type: .staging)
+                        let environment = BackendEnvironment.mockEnvironment
                         let reachability = TestReachability()
                         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                            apnsEnvironment: self.apnsEnvironment!,
                             application: application,
                             mediaManager: mediaManager,
                             flowManager: FlowManagerMock(),
@@ -764,7 +766,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         let manager = self.sessionManager!.accountManager
         let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
         manager.addOrUpdate(account)
-        account.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         manager.addAndSelect(account)
         
         var session: ZMUserSession! = nil
@@ -936,11 +938,11 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         // GIVEN
         let manager = sessionManager!.accountManager
         let account1 = Account(userName: "Test Account 1", userIdentifier: currentUserIdentifier)
-        account1.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account1).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
         manager.addOrUpdate(account1)
         let account2 = Account(userName: "Test Account 2", userIdentifier: UUID())
-        account2.cookieStorage().authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account2).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         manager.addOrUpdate(account2)
         
         // Make account 1 the active session
@@ -977,7 +979,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
     // the background as soon as the SessionManager is created
     func testThatABackgroundTaskCanBeCreatedAfterCreatingSessionManager() {
         // WHEN
-        let activity = BackgroundActivityFactory.sharedInstance().backgroundActivity(withName: "PushActivity")
+        let activity = BackgroundActivityFactory.shared.startBackgroundActivity(withName: "PushActivity")
         
         // THEN
         XCTAssertNotNil(activity)

@@ -432,7 +432,13 @@ extension UserClientRequestStrategyTests {
         
         syncMOC.performGroupedBlockAndWait {
             // then
-            let expectedError = NSError(domain: NSError.ZMUserSessionErrorDomain, code: Int(ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue), userInfo: [ ZMEmailCredentialKey : emailAddress ])
+            let expectedError = NSError(domain: NSError.ZMUserSessionErrorDomain, code: Int(ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue), userInfo: [
+                ZMEmailCredentialKey: emailAddress,
+                ZMUserHasPasswordKey: true,
+                ZMUserUsesCompanyLoginCredentialKey: false,
+                ZMUserLoginCredentialsKey: LoginCredentials(emailAddress: emailAddress, phoneNumber: nil, hasPassword: true, usesCompanyLogin: false)
+            ])
+
             XCTAssertEqual(self.receivedAuthenticationEvents.count, 1, "should only receive one notification")
             guard let event = self.receivedAuthenticationEvents.first else { return XCTFail() }
             

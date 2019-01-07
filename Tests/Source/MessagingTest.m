@@ -40,8 +40,6 @@
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfStrategy.h"
 #import "ZMConnectionTranscoder.h"
-#import "ZMRegistrationTranscoder.h"
-#import "ZMPhoneNumberVerificationTranscoder.h"
 #import "ZMMissingUpdateEventsTranscoder.h"
 #import "ZMLastUpdateEventIDTranscoder.h"
 #import "ZMLoginTranscoder.h"
@@ -141,6 +139,8 @@ static ZMReachability *sharedReachabilityMock = nil;
 - (void)setUp;
 {
     [super setUp];
+    BackgroundActivityFactory.sharedFactory.activityManager = UIApplication.sharedApplication;
+    [BackgroundActivityFactory.sharedFactory resume];
     
     NSFileManager *fm = NSFileManager.defaultManager;
     NSString *bundleIdentifier = [NSBundle bundleForClass:self.class].bundleIdentifier;
@@ -234,6 +234,8 @@ static ZMReachability *sharedReachabilityMock = nil;
 
 - (void)tearDown;
 {
+    BackgroundActivityFactory.sharedFactory.activityManager = nil;
+
     [self.mockSyncStrategy stopMocking];
     self.mockSyncStrategy = nil;
     [self.mockOperationLoop stopMocking];
@@ -619,7 +621,7 @@ static ZMReachability *sharedReachabilityMock = nil;
 {
     NSUUID *nonce = [NSUUID createUUID];
     ZMClientMessage *message = [[ZMClientMessage alloc] initWithNonce:nonce managedObjectContext:self.syncMOC];
-    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:text mentions:@[] linkPreviews:@[]] nonce:nonce];
+    ZMGenericMessage *textMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:text mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:nonce];
     [message addData:textMessage.data];
     return message;
 }

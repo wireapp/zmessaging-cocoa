@@ -106,6 +106,19 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.0, sut)
         XCTAssertEqual(mockSessionManager.lastRequestToShowConversation?.1.remoteIdentifier, userInfo.conversationID!)
     }
+    
+    func testThatItCallsShowConversationAtMessage_ForPushNotificationCategoryConversation() {
+        // given
+        let userInfo = userInfoWithConversation(hasMessage: true)
+        
+        // when
+        handle(conversationAction: nil, category: .conversation, userInfo: userInfo)
+        
+        // then
+        XCTAssertEqual(mockSessionManager.lastRequestToShowMessage?.0, sut)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowMessage?.1.remoteIdentifier, userInfo.conversationID!)
+        XCTAssertEqual(mockSessionManager.lastRequestToShowMessage?.2.nonce, userInfo.messageNonce!)
+    }
 
     func testThatItCallsShowConversationAndAcceptsCall_ForPushNotificationCategoryIncomingCallWithAcceptAction() {
         // given

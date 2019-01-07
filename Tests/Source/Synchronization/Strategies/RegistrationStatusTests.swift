@@ -22,33 +22,38 @@ import Foundation
 
 class TestRegistrationStatusDelegate: RegistrationStatusDelegate {
 
-    var emailActivationCodeSentCalled = 0
-    func emailActivationCodeSent() {
-        emailActivationCodeSentCalled += 1
+    var activationCodeSentCalled = 0
+    func activationCodeSent() {
+        activationCodeSentCalled += 1
     }
 
-    var emailActivationCodeSendingFailedCalled = 0
-    var emailActivationCodeSendingFailedError: Error?
-    func emailActivationCodeSendingFailed(with error: Error) {
-        emailActivationCodeSendingFailedCalled += 1
-        emailActivationCodeSendingFailedError = error
+    var activationCodeSendingFailedCalled = 0
+    var activationCodeSendingFailedError: Error?
+    func activationCodeSendingFailed(with error: Error) {
+        activationCodeSendingFailedCalled += 1
+        activationCodeSendingFailedError = error
     }
 
-    var emailActivationCodeValidatedCalled = 0
-    func emailActivationCodeValidated() {
-        emailActivationCodeValidatedCalled += 1
+    var activationCodeValidatedCalled = 0
+    func activationCodeValidated() {
+        activationCodeValidatedCalled += 1
     }
 
-    var emailActivationCodeValidationFailedCalled = 0
-    var emailActivationCodeValidationFailedError: Error?
-    func emailActivationCodeValidationFailed(with error: Error) {
-        emailActivationCodeValidationFailedCalled += 1
-        emailActivationCodeValidationFailedError = error
+    var activationCodeValidationFailedCalled = 0
+    var activationCodeValidationFailedError: Error?
+    func activationCodeValidationFailed(with error: Error) {
+        activationCodeValidationFailedCalled += 1
+        activationCodeValidationFailedError = error
     }
 
     var teamRegisteredCalled = 0
     func teamRegistered() {
         teamRegisteredCalled += 1
+    }
+
+    var userRegisteredCalled = 0
+    func userRegistered() {
+        userRegisteredCalled += 1
     }
 
     var teamRegistrationFailedCalled = 0
@@ -57,6 +62,13 @@ class TestRegistrationStatusDelegate: RegistrationStatusDelegate {
         teamRegistrationFailedCalled += 1
         teamRegistrationFailedError = error
     }
+
+    var userRegistrationFailedCalled = 0
+    var userRegistrationError: Error?
+    func userRegistrationFailed(with error: Error) {
+        userRegistrationFailedCalled += 1
+        userRegistrationError = error
+    }
 }
 
 class RegistrationStatusTests : MessagingTest{
@@ -64,7 +76,8 @@ class RegistrationStatusTests : MessagingTest{
     var delegate: TestRegistrationStatusDelegate!
     var email: String!
     var code: String!
-    var team: TeamToRegister!
+    var team: UnregisteredTeam!
+    var user: UnregisteredUser!
 
     override func setUp() {
         super.setUp()
@@ -74,7 +87,15 @@ class RegistrationStatusTests : MessagingTest{
         sut.delegate = delegate
         email = "some@foo.bar"
         code = "123456"
-        team = WireSyncEngine.TeamToRegister(teamName: "Dream Team", email: email, emailCode: "23", fullName: "M. Jordan", password: "qwerty", accentColor: .brightOrange)
+        team = UnregisteredTeam(teamName: "Dream Team", email: email, emailCode: "23", fullName: "M. Jordan", password: "qwerty", accentColor: .brightOrange)
+
+        user = UnregisteredUser()
+        user.credentials = UnregisteredUser.Credentials.email(address: email, password: "qwerty")
+        user.name = "M. Jordan"
+        user.accentColorValue = .brightOrange
+        user.verificationCode = code
+        user.acceptedTermsOfService = true
+        user.marketingConsent = true
     }
 
     override func tearDown() {
@@ -83,6 +104,7 @@ class RegistrationStatusTests : MessagingTest{
         email = nil
         code = nil
         team = nil
+        user = nil
         super.tearDown()
     }
 
@@ -115,79 +137,79 @@ class RegistrationStatusTests : MessagingTest{
 
     func testThatItAdvancesToSendActivationCodeStateAfterTrigerringSendingStarts() {
         // when
-        sut.sendActivationCode(to: email)
+        sut.sendActivationCode(to: .email(email))
 
         // then
-        XCTAssertEqual(sut.phase, .sendActivationCode(email: email))
+        XCTAssertEqual(sut.phase, .sendActivationCode(credential: .email(email)))
     }
 
     func testThatItInformsTheDelegateAboutActivationCodeSendingSuccess() {
         // given
-        sut.sendActivationCode(to: email)
-        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 0)
-        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 0)
+        sut.sendActivationCode(to: .email(email))
+        XCTAssertEqual(delegate.activationCodeSentCalled, 0)
+        XCTAssertEqual(delegate.activationCodeSendingFailedCalled, 0)
 
         // when
         sut.success()
 
         //then
-        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 1)
-        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 0)
+        XCTAssertEqual(delegate.activationCodeSentCalled, 1)
+        XCTAssertEqual(delegate.activationCodeSendingFailedCalled, 0)
     }
 
     func testThatItInformsTheDelegateAboutActivationCodeSendingError() {
         // given
         let error = NSError(domain: "some", code: 2, userInfo: [:])
-        sut.sendActivationCode(to: email)
-        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 0)
-        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 0)
+        sut.sendActivationCode(to: .email(email))
+        XCTAssertEqual(delegate.activationCodeSentCalled, 0)
+        XCTAssertEqual(delegate.activationCodeSendingFailedCalled, 0)
 
         // when
         sut.handleError(error)
 
         //then
-        XCTAssertEqual(delegate.emailActivationCodeSentCalled, 0)
-        XCTAssertEqual(delegate.emailActivationCodeSendingFailedCalled, 1)
-        XCTAssertEqual(delegate.emailActivationCodeSendingFailedError as NSError?, error)
+        XCTAssertEqual(delegate.activationCodeSentCalled, 0)
+        XCTAssertEqual(delegate.activationCodeSendingFailedCalled, 1)
+        XCTAssertEqual(delegate.activationCodeSendingFailedError as NSError?, error)
     }
 
     // MARK: - Check activation code tests
     func testThatItAdvancesToCheckActivationCodeStateAfterTriggeringCheck() {
         // when
-        sut.checkActivationCode(email: email, code: code)
+        sut.checkActivationCode(credential: .email(email), code: code)
 
         // then
-        XCTAssertEqual(sut.phase, .checkActivationCode(email: email, code: code))
+        XCTAssertEqual(sut.phase, .checkActivationCode(credential: .email(email), code: code))
     }
 
     func testThatItInformsTheDelegateAboutCheckActivationCodeSuccess() {
         // given
-        sut.checkActivationCode(email: email, code: code)
-        XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 0)
-        XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 0)
+        sut.checkActivationCode(credential: .email(email), code: code)
+        XCTAssertEqual(delegate.activationCodeValidatedCalled, 0)
+        XCTAssertEqual(delegate.activationCodeValidationFailedCalled, 0)
 
         // when
         sut.success()
 
         //then
-        XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 1)
-        XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 0)
+        XCTAssertEqual(delegate.activationCodeValidatedCalled, 1)
+        XCTAssertEqual(delegate.activationCodeValidationFailedCalled, 0)
     }
 
     func testThatItInformsTheDelegateAboutCheckActivationCodeError() {
         // given
         let error = NSError(domain: "some", code: 2, userInfo: [:])
-        sut.checkActivationCode(email: email, code: code)
-        XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 0)
-        XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 0)
+        sut.checkActivationCode(credential: .email(email), code: code)
+        XCTAssertEqual(delegate.activationCodeValidatedCalled, 0)
+        XCTAssertEqual(delegate.activationCodeValidationFailedCalled, 0)
 
         // when
         sut.handleError(error)
 
         //then
-        XCTAssertEqual(delegate.emailActivationCodeValidatedCalled, 0)
-        XCTAssertEqual(delegate.emailActivationCodeValidationFailedCalled, 1)
-        XCTAssertEqual(delegate.emailActivationCodeValidationFailedError as NSError?, error)
+        XCTAssertEqual(delegate.activationCodeValidatedCalled, 0)
+        XCTAssertEqual(delegate.activationCodeValidationFailedCalled, 1)
+        XCTAssertEqual(delegate.activationCodeValidationFailedError as NSError?, error)
     }
 
     // MARK: - Team creation
@@ -229,6 +251,47 @@ class RegistrationStatusTests : MessagingTest{
         XCTAssertEqual(delegate.teamRegisteredCalled, 0)
         XCTAssertEqual(delegate.teamRegistrationFailedCalled, 1)
         XCTAssertEqual(delegate.teamRegistrationFailedError as NSError?, error)
+    }
+
+    // MARK: - User Creation
+
+    func testThatItAdvancesToCreateUserStateAfterTriggeringCreationStarts() {
+        // when
+        sut.create(user: user)
+
+        // then
+        XCTAssertEqual(sut.phase, .createUser(user: user))
+    }
+
+    func testThatItInformsTheDelegateAboutCreateUserSuccess() {
+        // given
+        sut.create(user: user)
+        XCTAssertEqual(delegate.userRegisteredCalled, 0)
+        XCTAssertEqual(delegate.userRegistrationFailedCalled, 0)
+
+        // when
+        sut.success()
+
+        //then
+        XCTAssertTrue(sut.completedRegistration)
+        XCTAssertEqual(delegate.userRegisteredCalled, 1)
+        XCTAssertEqual(delegate.userRegistrationFailedCalled, 0)
+    }
+
+    func testThatItInformsTheDelegateAboutCreateUserError() {
+        // given
+        let error = NSError(domain: "some", code: 2, userInfo: [:])
+        sut.create(user: user)
+        XCTAssertEqual(delegate.userRegisteredCalled, 0)
+        XCTAssertEqual(delegate.userRegistrationFailedCalled, 0)
+
+        // when
+        sut.handleError(error)
+
+        //then
+        XCTAssertEqual(delegate.userRegisteredCalled, 0)
+        XCTAssertEqual(delegate.userRegistrationFailedCalled, 1)
+        XCTAssertEqual(delegate.userRegistrationError as NSError?, error)
     }
 
 }

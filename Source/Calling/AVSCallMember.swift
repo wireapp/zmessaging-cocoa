@@ -34,6 +34,9 @@ public struct AVSCallMember: Hashable {
     /// The state of video connection.
     public let videoState: VideoState
 
+    /// Netwok quality of this leg
+    public let networkQuality: NetworkQuality
+
     // MARK: - Initialization
 
     /**
@@ -47,6 +50,7 @@ public struct AVSCallMember: Hashable {
         self.remoteId = remoteId
         audioEstablished = (wcallMember.audio_estab != 0)
         videoState = VideoState(rawValue: wcallMember.video_recv) ?? .stopped
+        networkQuality = .normal
     }
 
     /**
@@ -56,10 +60,11 @@ public struct AVSCallMember: Hashable {
      * - parameter videoState: The state of video connection. Defaults to `stopped`.
      */
 
-    public init(userId : UUID, audioEstablished: Bool = false, videoState: VideoState = .stopped) {
+    public init(userId : UUID, audioEstablished: Bool = false, videoState: VideoState = .stopped, networkQuality: NetworkQuality = .normal) {
         self.remoteId = userId
         self.audioEstablished = audioEstablished
         self.videoState = videoState
+        self.networkQuality = networkQuality
     }
 
     // MARK: - Properties

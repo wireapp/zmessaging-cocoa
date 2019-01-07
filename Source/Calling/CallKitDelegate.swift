@@ -36,7 +36,6 @@ private struct CallKitCall {
 }
 
 @objc
-@available(iOS 10.0, *)
 public class CallKitDelegate : NSObject {
     
     fileprivate let provider : CXProvider
@@ -114,7 +113,6 @@ public class CallKitDelegate : NSObject {
 
 }
 
-@available(iOS 10.0, *)
 extension CallKitDelegate {
 
     func callIdentifiers(from customIdentifier : String) -> (UUID, UUID)? {
@@ -176,7 +174,6 @@ extension CallKitDelegate {
     }
 }
 
-@available(iOS 10.0, *)
 extension CallKitDelegate {
     
     func requestMuteCall(in conversation: ZMConversation, muted:  Bool) {
@@ -303,12 +300,32 @@ extension CallKitDelegate {
         
         associatedCallUUIDs.forEach { (callUUID) in
             calls.removeValue(forKey: callUUID)
-            provider.reportCall(with: callUUID, endedAt: timestamp, reason: reason)
+            log("provider.reportCallEndedAt: \(String(describing: timestamp))")
+            provider.reportCall(with: callUUID, endedAt: timestamp?.clampForCallKit() ?? Date(), reason: reason)
         }
     }
 }
 
-@available(iOS 10.0, *)
+fileprivate extension Date {
+    func clampForCallKit() -> Date {
+        let twoWeeksBefore = Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date()
+        
+        return clamp(between: twoWeeksBefore, and: Date())
+    }
+    
+    func clamp(between fromDate: Date, and toDate: Date) -> Date {
+        if timeIntervalSinceReferenceDate < fromDate.timeIntervalSinceReferenceDate {
+            return fromDate
+        }
+        else if timeIntervalSinceReferenceDate > toDate.timeIntervalSinceReferenceDate {
+            return toDate
+        }
+        else {
+            return self
+        }
+    }
+}
+
 extension CallKitDelegate : CXProviderDelegate {
     
     public func providerDidBegin(_ provider: CXProvider) {
@@ -419,7 +436,6 @@ extension CallKitDelegate : CXProviderDelegate {
     }
 }
 
-@available(iOS 10.0, *)
 extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
     
     public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?) {
@@ -447,7 +463,6 @@ extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMisse
     
 }
 
-@available(iOS 10.0, *)
 extension ZMConversation {
     
     var callKitHandle: CXHandle? {
@@ -492,7 +507,6 @@ extension ZMConversation {
     
 }
 
-@available(iOS 10.0, *)
 extension CXCallAction {
     
     func conversation(in context : NSManagedObjectContext) -> ZMConversation? {
@@ -503,7 +517,6 @@ extension CXCallAction {
 
 extension CallClosedReason {
     
-    @available(iOS 10.0, *)
     var CXCallEndedReason : CXCallEndedReason {
         switch self {
         case .timeout:

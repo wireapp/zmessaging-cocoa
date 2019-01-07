@@ -517,47 +517,6 @@
     }];
 }
 
-- (void)testThatItRemovesPendingConfirmationsForDeletedMessages_54_0_1
-{
-    __block ZMClientMessage* confirmation = nil;
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // given
-        [self saveNewVersion];
-        [self.syncMOC setPersistentStoreMetadata:@YES forKey:@"HasHistory"];
-
-        ZMConversation *oneOnOneConversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-        oneOnOneConversation.conversationType = ZMConversationTypeOneOnOne;
-        oneOnOneConversation.remoteIdentifier = [NSUUID UUID];
-
-        ZMUser *otherUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-        otherUser.remoteIdentifier = [NSUUID UUID];
-        ZMClientMessage* incomingMessage = (ZMClientMessage *)[oneOnOneConversation appendMessageWithText:@"Test"];
-        incomingMessage.sender = otherUser;
-
-        confirmation = [incomingMessage confirmReception];
-        [self.syncMOC saveOrRollback];
-
-        XCTAssertNotNil(confirmation);
-        XCTAssert(!confirmation.isDeleted);
-
-        [incomingMessage setVisibleInConversation:nil];
-        [incomingMessage setHiddenInConversation:oneOnOneConversation];
-
-        // when
-        self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-        [self performIgnoringZMLogError:^{
-            [self.sut applyPatchesForCurrentVersion:@"54.0.1"];
-        }];
-    }];
-    [self.syncMOC performGroupedBlockAndWait:^{
-        [self.syncMOC saveOrRollback];
-    }];
-    [self.syncMOC performGroupedBlockAndWait:^{
-        // then
-        XCTAssertNil(confirmation.managedObjectContext);
-    }];
-}
-
 - (void)testThatItPurgesPinCachesInHostBundle_60_0_0
 {
     // given

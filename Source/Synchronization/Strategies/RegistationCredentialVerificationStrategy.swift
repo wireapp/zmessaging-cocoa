@@ -19,7 +19,7 @@
 import Foundation
 
 
-final class EmailVerificationStrategy : NSObject {
+final class RegistationCredentialVerificationStrategy : NSObject {
     let registrationStatus: RegistrationStatusProtocol
     var codeSendingSync: ZMSingleRequestSync!
 
@@ -30,20 +30,20 @@ final class EmailVerificationStrategy : NSObject {
     }
 }
 
-extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
+extension RegistationCredentialVerificationStrategy : ZMSingleRequestTranscoder {
     func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         let currentStatus = registrationStatus
         var payload : [String: Any]
         var path : String
 
         switch (currentStatus.phase) {
-        case let .sendActivationCode(email: email):
+        case let .sendActivationCode(credential):
             path = "/activate/send"
-            payload = ["email": email,
+            payload = [credential.type: credential.rawValue,
                        "locale": NSLocale.formattedLocaleIdentifier()!]
-        case let .checkActivationCode(email: email, code: code):
+        case let .checkActivationCode(credential, code):
             path = "/activate"
-            payload = ["email": email,
+            payload = [credential.type: credential.rawValue,
                        "code": code,
                        "dryrun": true]
         default:
@@ -61,11 +61,20 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
             let error : NSError
 
             switch (registrationStatus.phase) {
-            case .sendActivationCode:
-                error = NSError.blacklistedEmail(with: response) ??
+            case .sendActivationCode(let credentials):
+                let decodedError: NSError?
+                switch credentials {
+                case .email:
+                    decodedError = NSError.blacklistedEmail(with: response) ??
                     NSError.emailAddressInUse(with: response) ??
-                    NSError.invalidEmail(with: response) ??
-                    NSError(code: .unknownError, userInfo: [:])
+                    NSError.invalidEmail(with: response)
+
+                case .phone:
+                    decodedError = NSError.phoneNumberIsAlreadyRegisteredError(with: response) ??
+                    NSError.invalidPhoneNumber(withReponse: response)
+                }
+
+                error = decodedError ?? NSError(code: .unknownError, userInfo: [:])
             case .checkActivationCode:
                 error = NSError.invalidActivationCode(with: response) ??
                     NSError(code: .unknownError, userInfo: [:])
@@ -78,7 +87,7 @@ extension EmailVerificationStrategy : ZMSingleRequestTranscoder {
 
 }
 
-extension EmailVerificationStrategy : RequestStrategy {
+extension RegistationCredentialVerificationStrategy : RequestStrategy {
     func nextRequest() -> ZMTransportRequest? {
         switch (registrationStatus.phase) {
         case .sendActivationCode, .checkActivationCode:
