@@ -105,8 +105,8 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
         }];
     }
 
-    [self.managedObjectContext processPendingChanges];
-
+    // we only process pending changes on sync context bc changes on the
+    // ui context will be processed when we do the save.
     [self.syncManagedObjectContext performGroupedBlock:^{
         [self.syncManagedObjectContext processPendingChanges];
     }];
