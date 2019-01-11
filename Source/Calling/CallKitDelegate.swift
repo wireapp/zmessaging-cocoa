@@ -21,8 +21,6 @@ import CallKit
 import Intents
 import avs
 
-private let zmLog = ZMSLog(tag: "calling")
-
 private let identifierSeparator : Character = "+"
 
 private struct CallKitCall {
@@ -219,6 +217,8 @@ extension CallKitDelegate {
         let endCallActions = actionsToEndAllOngoingCalls(exceptIn: conversation)
         let transaction = CXTransaction(actions: endCallActions + [action])
         
+        log("request CXStartCallAction")
+        
         callController.request(transaction) { [weak self] (error) in
             if let error = error as? CXErrorCodeRequestTransactionError, error.code == .callUUIDAlreadyExists {
                 self?.requestAnswerCall(in: conversation, video: video)
@@ -236,6 +236,8 @@ extension CallKitDelegate {
         let endPreviousActions = actionsToEndAllOngoingCalls(exceptIn: conversation)
         let transaction = CXTransaction(actions: endPreviousActions + [action])
         
+        log("request CXAnswerCallAction")
+        
         callController.request(transaction) { [weak self] (error) in
             if let error = error {
                 self?.log("Cannot answer call: \(error)")
@@ -249,6 +251,8 @@ extension CallKitDelegate {
         let action = CXEndCallAction(call: callUUID)
         let transaction = CXTransaction(action: action)
         
+        log("request CXEndCallAction")
+        
         callController.request(transaction) { [weak self] (error) in
             if let error = error {
                 self?.log("Cannot end call: \(error)")
@@ -258,6 +262,7 @@ extension CallKitDelegate {
     }
     
     func reportIncomingCall(from user: ZMUser, in conversation: ZMConversation, video: Bool) {
+        
         guard let handle = conversation.callKitHandle else {
             return log("Cannot report incoming call: conversation is missing handle")
         }
@@ -277,6 +282,8 @@ extension CallKitDelegate {
         
         let callUUID = UUID()
         calls[callUUID] = CallKitCall(conversation: conversation)
+        
+        log("provider.reportNewIncomingCall")
         
         provider.reportNewIncomingCall(with: callUUID, update: update) { [weak self] (error) in
             if let error = error {

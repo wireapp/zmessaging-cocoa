@@ -33,7 +33,6 @@
 @class CallKitDelegate;
 @class CallingRequestStrategy;
 @class AVSMediaManager;
-@class ZMAPNSEnvironment;
 @class WireCallCenterV3;
 @class SessionManager;
 
@@ -72,7 +71,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
                          flowManager:(id<FlowManagerType>)flowManager
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession
-                     apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                          application:(id<ZMApplication>)application
                           appVersion:(NSString *)appVersion
                        storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;

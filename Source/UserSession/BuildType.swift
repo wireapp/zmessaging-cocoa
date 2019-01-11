@@ -18,19 +18,20 @@
 
 import WireSystem
 
-internal enum BuildType {
+enum BuildType: Equatable {
     case production
     case alpha
     case development
     case `internal`
+    case custom(bundleID: String)
 
-    init?(bundleID: String) {
+    init(bundleID: String) {
         switch bundleID {
         case "com.wearezeta.zclient.ios": self = .production
         case "com.wearezeta.zclient-alpha": self = .alpha
         case "com.wearezeta.zclient.ios-development": self = .development
         case "com.wearezeta.zclient.ios-internal": self = .internal
-        default: return nil
+        default: self = .custom(bundleID: bundleID)
         }
     }
     
@@ -44,6 +45,8 @@ internal enum BuildType {
             return "com.wire.dev.ent"
         case .internal:
             return "com.wire.int.ent"
+        case .custom(let bundleID):
+            return bundleID
         }
     }
     
@@ -57,16 +60,9 @@ internal enum BuildType {
             return "com.wearezeta.zclient.ios-development"
         case .internal:
             return "com.wearezeta.zclient.ios-internal"
+        case .custom(let bundleID):
+            return bundleID
         }
         
-    }
-}
-
-extension BuildType {
-    static func setupBuildTypes() {
-        ZMAPNSEnvironment.setupForProduction(withCertificateName: BuildType.production.certificateName)
-        [BuildType.alpha, .development, .internal].forEach {
-            ZMAPNSEnvironment.setupForEnterprise(withBundleId: $0.bundleID, withCertificateName: $0.certificateName)
-        }
     }
 }

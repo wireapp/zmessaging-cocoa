@@ -194,13 +194,10 @@ private let zmLog = ZMSLog(tag: "Push")
     }
     
     func updateBackgroundTask(with message : ZMConversationMessage) {
-        switch message.deliveryState {
-        case .sent, .delivered, .read:
+        if message.isSent {
             operationStatus.finishBackgroundTask(withTaskResult: .finished)
-        case .failedToSend:
+        } else if message.deliveryState == .failedToSend {
             operationStatus.finishBackgroundTask(withTaskResult: .failed)
-        default:
-            break
         }
     }
  

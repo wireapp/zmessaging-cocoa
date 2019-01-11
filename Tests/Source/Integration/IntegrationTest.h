@@ -26,7 +26,6 @@
 @class ApplicationMock;
 @class ZMUserSession;
 @class AVSMediaManager;
-@class ZMAPNSEnvironment;
 @class UnauthenticatedSession;
 @class MockUser;
 @class MockTeam;
@@ -43,7 +42,6 @@
 @property (nonatomic, null_unspecified) MockTransportSession *mockTransportSession;
 @property (nonatomic, readonly, nullable) ZMTransportSession *transportSession;
 @property (nonatomic, nullable) AVSMediaManager *mediaManager;
-@property (nonatomic, nullable) ZMAPNSEnvironment *apnsEnvironment;
 @property (nonatomic, nullable) ApplicationMock *application;
 @property (nonatomic, nullable) ZMUserSession *userSession;
 @property (nonatomic, null_unspecified) PushRegistryMock *pushRegistry;

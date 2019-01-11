@@ -52,7 +52,6 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMTransportSession *transportSession;
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
-@property (nonatomic) ZMAPNSEnvironment *apnsEnvironment;
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) NSMutableArray* observersToken;
 @property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
@@ -91,16 +90,10 @@ ZM_EMPTY_ASSERTING_INIT()
                         flowManager:(id<FlowManagerType>)flowManager
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession
-                     apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                          application:(id<ZMApplication>)application
                           appVersion:(NSString *)appVersion
                        storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
 {
-    if (apnsEnvironment == nil) {
-        apnsEnvironment = [[ZMAPNSEnvironment alloc] init];
-    }
-
-
     [storeProvider.contextDirectory.syncContext performBlockAndWait:^{
         storeProvider.contextDirectory.syncContext.analytics = analytics;
     }];
@@ -124,7 +117,6 @@ ZM_EMPTY_ASSERTING_INIT()
                              mediaManager:mediaManager
                               flowManager:flowManager
                                 analytics:analytics
-                          apnsEnvironment:apnsEnvironment
                             operationLoop:nil
                               application:application
                                appVersion:appVersion
@@ -136,7 +128,6 @@ ZM_EMPTY_ASSERTING_INIT()
                             mediaManager:(AVSMediaManager *)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                                analytics:(id<AnalyticsType>)analytics
-                         apnsEnvironment:(ZMAPNSEnvironment *)apnsEnvironment
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
@@ -163,7 +154,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                              [self pushChannelDidChange:note];
                                          }
         ]];
-        self.apnsEnvironment = apnsEnvironment;
         self.networkIsOnline = YES;
         self.managedObjectContext.isOffline = NO;
         
