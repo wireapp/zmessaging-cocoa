@@ -80,7 +80,7 @@ static MockBlacklistDownloader *generatedDownloader;
     XCTestExpectation *expectation = [self expectationWithDescription:@"Completion handler called"];
     ZMBlacklistVerificator * sut = [[ZMBlacklistVerificator alloc] initWithCheckInterval:1000
                                                                                  version:version
-                                                                             environment:[BackendEnvironment mockEnvironment]
+                                                                             environment:[[MockEnvironment alloc] init]
                                                                             workingGroup:self.syncMOC.dispatchGroup
                                                                              application:self.application
                                                                        blacklistCallback:^(BOOL result) {

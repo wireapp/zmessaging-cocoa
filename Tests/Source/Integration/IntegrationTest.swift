@@ -60,11 +60,10 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     let transportSession: ZMTransportSession
 
-    init(apnsEnvironment: ZMAPNSEnvironment?, application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: BackendEnvironment, reachability: ReachabilityProvider & TearDownCapable) {
+    init(application: ZMApplication, mediaManager: AVSMediaManager, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: BackendEnvironmentProvider, reachability: ReachabilityProvider & TearDownCapable) {
         self.transportSession = transportSession
         super.init(
             appVersion: "0.0.0",
-            apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
             flowManager: flowManager,
@@ -80,7 +79,6 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
             flowManager: flowManager,
             analytics: analytics,
             transportSession: transportSession,
-            apnsEnvironment: apnsEnvironment,
             application: application,
             appVersion: appVersion,
             storeProvider: storeProvider
@@ -93,7 +91,7 @@ final class MockUnauthenticatedSessionFactory: UnauthenticatedSessionFactory {
 
     let transportSession: UnauthenticatedTransportSessionProtocol
     
-    init(transportSession: UnauthenticatedTransportSessionProtocol, environment: BackendEnvironment, reachability: ReachabilityProvider) {
+    init(transportSession: UnauthenticatedTransportSessionProtocol, environment: BackendEnvironmentProvider, reachability: ReachabilityProvider) {
         self.transportSession = transportSession
         super.init(environment: environment, reachability: reachability)
     }
@@ -209,11 +207,10 @@ extension IntegrationTest {
     func createSessionManager() {
         guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else { return XCTFail() }
         StorageStack.shared.createStorageAsInMemory = useInMemoryStore
-        let environment = BackendEnvironment.mockEnvironment
+        let environment = MockEnvironment()
         let reachability = TestReachability()
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-            apnsEnvironment: apnsEnvironment,
             application: application,
             mediaManager: mediaManager,
             flowManager: FlowManagerMock(),

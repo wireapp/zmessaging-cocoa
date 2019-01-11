@@ -40,6 +40,7 @@
 
 - (void)applicationDidEnterBackground:(NSNotification *)note;
 - (void)applicationWillEnterForeground:(NSNotification *)note;
+- (void)mergeChangesFromStoredSaveNotificationsIfNeeded;
 
 @end
 
