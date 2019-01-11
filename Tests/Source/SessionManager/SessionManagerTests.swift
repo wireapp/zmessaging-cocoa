@@ -33,7 +33,7 @@ class SessionManagerTests: IntegrationTest {
     
     func createManager() -> SessionManager? {
         guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else { return nil }
-        let environment = BackendEnvironment.mockEnvironment
+        let environment = MockEnvironment()
         let reachability = TestReachability()
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
@@ -139,7 +139,7 @@ class SessionManagerTests: IntegrationTest {
                               environment: sessionManager!.environment,
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
-                                let environment = BackendEnvironment.mockEnvironment
+                                let environment = MockEnvironment()
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
                                     application: application,
@@ -201,7 +201,7 @@ class SessionManagerTests: IntegrationTest {
                               environment: sessionManager!.environment,
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
-                                let environment = BackendEnvironment.mockEnvironment
+                                let environment = MockEnvironment()
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
                                     application: application,
@@ -263,7 +263,7 @@ class SessionManagerTests: IntegrationTest {
                               environment: sessionManager!.environment,
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
-                                let environment = BackendEnvironment.mockEnvironment
+                                let environment = MockEnvironment()
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
                                     application: application,
@@ -585,7 +585,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                               environment: sessionManager!.environment,
                               blacklistDownloadInterval : 60) { sessionManager in
                                 
-                                let environment = BackendEnvironment.mockEnvironment
+                                let environment = MockEnvironment()
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
                                     application: application,
@@ -640,7 +640,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                        environment: sessionManager!.environment,
                        blacklistDownloadInterval : 60) { sessionManager in
                         
-                        let environment = BackendEnvironment.mockEnvironment
+                        let environment = MockEnvironment()
                         let reachability = TestReachability()
                         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
                             application: application,
