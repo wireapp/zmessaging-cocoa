@@ -228,6 +228,8 @@ ZM_EMPTY_ASSERTING_INIT()
         [self enableBackgroundFetch];
 
         self.storedDidSaveNotifications = [[ContextDidSaveNotificationPersistence alloc] initWithAccountContainer:self.storeProvider.accountContainer];
+        [self observeChangesOnShareExtension];
+        
         
         [self.syncManagedObjectContext performBlockAndWait:^{
             if (self.clientRegistrationStatus.currentPhase != ZMClientRegistrationPhaseRegistered) {
