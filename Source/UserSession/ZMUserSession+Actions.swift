@@ -136,14 +136,18 @@ private let zmLog = ZMSLog(tag: "Push")
         
         enqueueChanges {
             guard let message = conversation.append(text: message) else { return /* failure */ }
-            if let originalMessage = userInfo.message(in: conversation, managedObjectContext: self.managedObjectContext) as? ZMClientMessage,
-                originalMessage.needsReadConfirmation {
-                let confirmation = ZMGenericMessage.message(content: ZMConfirmation.confirm(messageId: originalMessage.nonce!, type: .READ))
-                conversation.appendClientMessage(with: confirmation)
-            }
+            self.setReadReceiptIfNeeded(with: userInfo, in: conversation)
             self.messageReplyObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { [weak self] in
                 self?.updateBackgroundTask(with: message)
             })
+        }
+    }
+    
+    private func setReadReceiptIfNeeded(with userInfo: NotificationUserInfo, in conversation: ZMConversation) {
+        if let originalMessage = userInfo.message(in: conversation, managedObjectContext: self.managedObjectContext) as? ZMClientMessage,
+            originalMessage.needsReadConfirmation {
+            let confirmation = ZMGenericMessage.message(content: ZMConfirmation.confirm(messageId: originalMessage.nonce!, type: .READ))
+            conversation.appendClientMessage(with: confirmation)
         }
     }
     
@@ -192,6 +196,7 @@ private let zmLog = ZMSLog(tag: "Push")
             
         enqueueChanges {
             guard let reaction = ZMMessage.addReaction(.like, toMessage: message) else { return }
+            self.setReadReceiptIfNeeded(with: userInfo, in: conversation)
             self.likeMesssageObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { [weak self] in
                 self?.updateBackgroundTask(with: reaction)
             })

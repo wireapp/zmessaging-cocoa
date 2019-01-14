@@ -217,6 +217,29 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         XCTAssertTrue(confirmationMessage.genericMessage?.hasConfirmation() ?? false)
     }
 
+    func testThatItAppendsReadReceipt_ForPushNotificationCategoryConversationWithLikeAction() {
+        // given
+        self.simulateLoggedInUser()
+        self.sut.operationStatus.isInBackground = true
+        
+        let userInfo = userInfoWithConversation(hasMessage: true)
+        let conversation = userInfo.conversation(in: self.uiMOC)!
+        
+        guard let originalMessage = conversation.messages[0] as? ZMClientMessage else { return XCTFail() }
+        ZMUser.selfUser(in: uiMOC).readReceiptsEnabled = true
+        originalMessage.genericMessage?.setExpectsReadConfirmation(true)?.data().apply(originalMessage.add)
+        
+        // when
+        handle(conversationAction: .like, category: .conversation, userInfo: userInfo)
+        
+        // then
+        guard let confirmationMessage = conversation.messages[1] as? ZMClientMessage else { return XCTFail() }
+        XCTAssertEqual(conversation.messages.count, 2)
+        XCTAssertFalse(confirmationMessage.isText)
+        XCTAssertEqual(originalMessage.reactions.count, 1)
+        XCTAssertTrue(confirmationMessage.genericMessage?.hasConfirmation() ?? false)
+    }
+    
     func testThatOnLaunchItCallsShowConversationList_ForPushNotificationCategoryConversationWithoutConversation() {
         // given
         simulateLoggedInUser()
