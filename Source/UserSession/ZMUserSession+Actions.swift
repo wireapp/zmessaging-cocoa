@@ -109,8 +109,7 @@ private let zmLog = ZMSLog(tag: "Push")
     public  func reply(with userInfo: NotificationUserInfo, message: String, completionHandler: @escaping () -> Void) {
         guard
             !message.isEmpty,
-            let conversation = userInfo.conversation(in: managedObjectContext),
-            let originalMessage = userInfo.message(in: conversation, managedObjectContext: managedObjectContext)
+            let conversation = userInfo.conversation(in: managedObjectContext)
             else { return completionHandler() }
 
         guard let activity = BackgroundActivityFactory.shared.startBackgroundActivity(withName: "DirectReply Action Handler") else {
@@ -137,7 +136,8 @@ private let zmLog = ZMSLog(tag: "Push")
         
         enqueueChanges {
             guard let message = conversation.append(text: message) else { return /* failure */ }
-            if originalMessage.needsReadConfirmation {
+            if let originalMessage = userInfo.message(in: conversation, managedObjectContext: self.managedObjectContext) as? ZMClientMessage,
+                originalMessage.needsReadConfirmation {
                 let confirmation = ZMGenericMessage.message(content: ZMConfirmation.confirm(messageId: originalMessage.nonce!, type: .READ))
                 conversation.appendClientMessage(with: confirmation)
             }
