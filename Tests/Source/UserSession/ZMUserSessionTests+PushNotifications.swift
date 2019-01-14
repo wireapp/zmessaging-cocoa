@@ -208,8 +208,8 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         self.handle(conversationAction: .reply, category: .conversation, userInfo: userInfo, userText: "Hello World")
         
         // then
-        guard let replyMessage = conversation.messages[1] as? ZMClientMessage else { return XCTFail() }
-        guard let confirmationMessage = conversation.messages[2] as? ZMClientMessage else { return XCTFail() }
+        guard let replyMessage = conversation.messages[1] as? ZMClientMessage,
+            let confirmationMessage = conversation.messages[2] as? ZMClientMessage else { return XCTFail() }
         XCTAssertEqual(conversation.messages.count, 3)
         XCTAssertTrue(originalMessage.isText)
         XCTAssertTrue(replyMessage.isText)
