@@ -75,8 +75,7 @@ class PushNotificationStatusTests: MessagingTest {
         sut.fetch(eventId: eventId2) { }
         
         // when
-        syncMOC.zm_lastNotificationID = eventId1
-        sut.didFetch(eventIds: [eventId1], finished: true)
+        sut.didFetch(eventIds: [eventId1], lastEventId: eventId1, finished: true)
         
         // then
         XCTAssertEqual(sut.status, .inProgress)
@@ -88,8 +87,7 @@ class PushNotificationStatusTests: MessagingTest {
         sut.fetch(eventId: eventId) { }
         
         // when
-        syncMOC.zm_lastNotificationID = eventId
-        sut.didFetch(eventIds: [eventId], finished: true)
+        sut.didFetch(eventIds: [eventId], lastEventId: eventId, finished: true)
         
         // then
         XCTAssertEqual(sut.status, .done)
@@ -101,8 +99,7 @@ class PushNotificationStatusTests: MessagingTest {
         sut.fetch(eventId: eventId) { }
         
         // when
-        syncMOC.zm_lastNotificationID = eventId
-        sut.didFetch(eventIds: [eventId], finished: false)
+        sut.didFetch(eventIds: [eventId], lastEventId: eventId, finished: false)
         
         // then
         XCTAssertEqual(sut.status, .done)
@@ -114,7 +111,7 @@ class PushNotificationStatusTests: MessagingTest {
         sut.fetch(eventId: eventId) { }
         
         // when
-        sut.didFetch(eventIds: [], finished: true)
+        sut.didFetch(eventIds: [], lastEventId: eventId, finished: true)
         
         // then
         XCTAssertEqual(sut.status, .done)
@@ -142,8 +139,7 @@ class PushNotificationStatusTests: MessagingTest {
         }
         
         // when
-        syncMOC.zm_lastNotificationID = eventId
-        sut.didFetch(eventIds: [eventId], finished: false)
+        sut.didFetch(eventIds: [eventId], lastEventId: eventId, finished: false)
         
         // then
         XCTAssertEqual(sut.status, .done)
@@ -160,8 +156,7 @@ class PushNotificationStatusTests: MessagingTest {
         }
         
         // when
-        syncMOC.zm_lastNotificationID = eventId
-        sut.didFetch(eventIds: [eventId], finished: true)
+        sut.didFetch(eventIds: [eventId], lastEventId: eventId, finished: true)
         
         // then
         XCTAssertEqual(sut.status, .done)
@@ -179,7 +174,7 @@ class PushNotificationStatusTests: MessagingTest {
         }
         
         // when
-        sut.didFetch(eventIds: [], finished: true)
+        sut.didFetch(eventIds: [], lastEventId: eventId, finished: true)
         
         // then
         XCTAssertEqual(sut.status, .done)

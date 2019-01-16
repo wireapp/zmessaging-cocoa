@@ -948,7 +948,7 @@
     WaitForAllGroupsToBeEmpty(1.0);
     
     // when
-    [self.pushNotificationStatus didFetchEventIds:@[notificationID] finished:YES];
+    [self.pushNotificationStatus didFetchEventIds:@[notificationID] lastEventId:notificationID finished:YES];
     
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
@@ -973,7 +973,7 @@
     
     // when
     [self.callEventStatus scheduledCallEventForProcessing];
-    [self.pushNotificationStatus didFetchEventIds:@[notificationID] finished:YES];
+    [self.pushNotificationStatus didFetchEventIds:@[notificationID] lastEventId:notificationID finished:YES];
     WaitForAllGroupsToBeEmpty(1.0);
     
     XCTAssertFalse(completionHandlerHasBeenCalled);
