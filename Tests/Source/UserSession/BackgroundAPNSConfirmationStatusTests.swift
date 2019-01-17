@@ -30,7 +30,7 @@ class BackgroundAPNSConfirmationStatusTests : MessagingTest {
         application.setBackground()
         activityManager = MockBackgroundActivityManager()
         BackgroundActivityFactory.shared.activityManager = activityManager
-        sut = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: syncMOC, backgroundActivityFactory: .shared)
+        sut = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: syncMOC)
     }
     
     override func tearDown() {

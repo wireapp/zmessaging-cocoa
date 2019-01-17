@@ -29,18 +29,15 @@ import UIKit
     fileprivate var messageNonces : [UUID : BackgroundActivity] = [:]
     private unowned var application : ZMApplication
     private unowned var managedObjectContext : NSManagedObjectContext
-    private unowned var backgroundActivityFactory : BackgroundActivityFactory
 
     open var needsToSyncMessages : Bool {
         return messageNonces.count > 0 && application.applicationState == .background
     }
     
     @objc public init(application: ZMApplication,
-                      managedObjectContext: NSManagedObjectContext,
-                      backgroundActivityFactory: BackgroundActivityFactory) {
+                      managedObjectContext: NSManagedObjectContext) {
         self.application = application
         self.managedObjectContext = managedObjectContext
-        self.backgroundActivityFactory = backgroundActivityFactory
         
         super.init()
     }
@@ -51,7 +48,7 @@ import UIKit
     
     // Called after a confirmation message has been created from an event received via APNS
     public func needsToConfirmMessage(_ messageNonce: UUID) {
-        let backgroundTask = backgroundActivityFactory.startBackgroundActivity(withName: "Confirming message with nonce: \(messageNonce.transportString())") { [weak self] in
+        let backgroundTask = BackgroundActivityFactory.shared.startBackgroundActivity(withName: "Confirming message with nonce: \(messageNonce.transportString())") { [weak self] in
             guard let strongSelf = self else { return }
             // The message failed to send in time. We won't continue trying.
             strongSelf.managedObjectContext.performGroupedBlock{
