@@ -123,11 +123,26 @@ extension IntegrationTest {
         WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self
         mockTransportSession.cookieStorage.deleteKeychainItems()
                 
-        createSessionManager()
+        createSessionManager()        
+    }
+    
+    func setupTimers() {
+        userSession?.syncManagedObjectContext.performGroupedAndWait() {
+            $0.zm_createMessageObfuscationTimer()
+        }
+        userSession?.managedObjectContext.zm_createMessageDeletionTimer()
+    }
+    
+    func destroyTimers() {
+        userSession?.syncManagedObjectContext.performGroupedAndWait() { 
+            $0.zm_teardownMessageObfuscationTimer()
+        }
+        userSession?.managedObjectContext.zm_teardownMessageDeletionTimer()
     }
     
     @objc
     func _tearDown() {
+        destroyTimers()
         sharedSearchDirectory?.tearDown()
         sharedSearchDirectory = nil
         userSession = nil
@@ -168,6 +183,7 @@ extension IntegrationTest {
     
     @objc
     func destroySessionManager() {
+        destroyTimers()
         userSession?.tearDown()
         userSession = nil
         sessionManager = nil
@@ -591,6 +607,8 @@ extension IntegrationTest : SessionManagerDelegate {
         userSession.syncManagedObjectContext.performGroupedBlock {
             userSession.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
         }
+        
+        setupTimers()
     }
     
     public func sessionManagerWillMigrateLegacyAccount() {

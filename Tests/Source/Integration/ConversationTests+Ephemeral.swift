@@ -21,11 +21,11 @@ import Foundation
 
 class ConversationTests_Ephemeral : ConversationTestsBase {
     
-    var obfuscationTimer : ZMMessageDestructionTimer {
+    var obfuscationTimer : ZMMessageDestructionTimer? {
         return userSession!.syncManagedObjectContext.zm_messageObfuscationTimer
     }
     
-    var deletionTimer : ZMMessageDestructionTimer {
+    var deletionTimer : ZMMessageDestructionTimer? {
         return userSession!.managedObjectContext.zm_messageDeletionTimer
     }
 }
@@ -56,8 +56,8 @@ extension ConversationTests_Ephemeral {
         XCTAssertEqual(mockTransportSession?.receivedRequests().count, 1)
         XCTAssertEqual(message.deliveryState, ZMDeliveryState.sent)
         XCTAssertTrue(message.isEphemeral)
-        XCTAssertEqual(obfuscationTimer.runningTimersCount, 1)
-        XCTAssertEqual(deletionTimer.runningTimersCount, 0)
+        XCTAssertEqual(obfuscationTimer?.runningTimersCount, 1)
+        XCTAssertEqual(deletionTimer?.runningTimersCount, 0)
     }
     
     func testThatItCreatesAndSendsAnEphemeralImageMessage(){
@@ -84,8 +84,8 @@ extension ConversationTests_Ephemeral {
         XCTAssertEqual(mockTransportSession?.receivedRequests().count, 2)
         XCTAssertEqual(message.deliveryState, ZMDeliveryState.sent)
         XCTAssertTrue(message.isEphemeral)
-        XCTAssertEqual(obfuscationTimer.runningTimersCount, 1)
-        XCTAssertEqual(deletionTimer.runningTimersCount, 0)
+        XCTAssertEqual(obfuscationTimer?.runningTimersCount, 1)
+        XCTAssertEqual(deletionTimer?.runningTimersCount, 0)
     }
     
     func testThatItDeletesAnEphemeralMessage(){
