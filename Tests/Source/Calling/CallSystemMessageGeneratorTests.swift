@@ -62,7 +62,7 @@ class CallSystemMessageGeneratorTests : MessagingTest {
     
     func testThatItAppendsPerformedCallSystemMessage_OutgoingCall_V3(){
         // given
-        let messageCount = conversation.messages.count
+        let messageCount = conversation.recentMessages.count
         
         // when
         let msg1 = sut.appendSystemMessageIfNeeded(callState: .outgoing(degraded: false), conversation: conversation, caller: selfUser, timestamp: nil, previousCallState: nil)
@@ -70,10 +70,10 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         let msg3 = sut.appendSystemMessageIfNeeded(callState: .terminating(reason: .canceled), conversation: conversation, caller: selfUser, timestamp: nil, previousCallState: nil)
         
         // then
-        XCTAssertEqual(conversation.messages.count, messageCount+1)
+        XCTAssertEqual(conversation.recentMessages.count, messageCount+1)
         XCTAssertNil(msg1)
         XCTAssertNil(msg2)
-        if let message = conversation.messages.lastObject as? ZMSystemMessage {
+        if let message = conversation.recentMessages.last as? ZMSystemMessage {
             XCTAssertEqual(message, msg3)
             XCTAssertEqual(message.systemMessageType, .performedCall)
             XCTAssertTrue(message.users.contains(selfUser))
@@ -84,7 +84,7 @@ class CallSystemMessageGeneratorTests : MessagingTest {
     
     func testThatItAppendsPerformedCallSystemMessage_IncomingCall_V3(){
         // given
-        let messageCount = conversation.messages.count
+        let messageCount = conversation.recentMessages.count
         
         // when
         let msg1 = sut.appendSystemMessageIfNeeded(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversation, caller: user, timestamp: nil, previousCallState: nil)
@@ -92,10 +92,10 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         let msg3 = sut.appendSystemMessageIfNeeded(callState: .terminating(reason: .canceled), conversation: conversation, caller: user, timestamp: nil, previousCallState: nil)
         
         // then
-        XCTAssertEqual(conversation.messages.count, messageCount+1)
+        XCTAssertEqual(conversation.recentMessages.count, messageCount+1)
         XCTAssertNil(msg1)
         XCTAssertNil(msg2)
-        if let message = conversation.messages.lastObject as? ZMSystemMessage {
+        if let message = conversation.recentMessages.last as? ZMSystemMessage {
             XCTAssertEqual(message, msg3)
             XCTAssertEqual(message.systemMessageType, .performedCall)
             XCTAssertTrue(message.users.contains(user))
@@ -106,7 +106,7 @@ class CallSystemMessageGeneratorTests : MessagingTest {
     
     func testThatItAppendsMissedCallSystemMessage_UnansweredIncomingCall_V3(){
         // given
-        let messageCount = conversation.messages.count
+        let messageCount = conversation.recentMessages.count
         
         // when
         let msg1 =  sut.appendSystemMessageIfNeeded(callState: .incoming(video:false, shouldRing: true, degraded: false), conversation: conversation, caller: user, timestamp: nil, previousCallState: nil)
@@ -116,9 +116,9 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         }
 
         // then
-        XCTAssertEqual(conversation.messages.count, messageCount+1)
+        XCTAssertEqual(conversation.recentMessages.count, messageCount+1)
         XCTAssertNil(msg1)
-        if let message = conversation.messages.lastObject as? ZMSystemMessage {
+        if let message = conversation.recentMessages.last as? ZMSystemMessage {
             XCTAssertEqual(message, msg2)
             XCTAssertEqual(message.systemMessageType, .missedCall)
             XCTAssertTrue(message.users.contains(user))

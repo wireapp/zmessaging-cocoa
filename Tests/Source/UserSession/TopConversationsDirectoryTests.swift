@@ -18,6 +18,7 @@
 
 import Foundation
 import XCTest
+import WireTesting
 @testable import WireSyncEngine
 
 class TopConversationsDirectoryTests : MessagingTest {
@@ -136,6 +137,7 @@ class TopConversationsDirectoryTests : MessagingTest {
     }
 
     func testThatItUpdatesTheConversationsWhenRefreshIsCalledSubsequently() {
+        var changesMerger: ManagedObjectContextChangesMerger! = ManagedObjectContextChangesMerger(managedObjectContexts: Set([uiMOC, syncMOC]))
         // GIVEN
         let conv1 = createConversation(in: uiMOC, fillWithNew: 5, old: 15)
         let conv2 = createConversation(in: uiMOC, fillWithNew: 10, old: 5)
@@ -157,6 +159,8 @@ class TopConversationsDirectoryTests : MessagingTest {
 
         // THEN
         XCTAssertEqual(sut.topConversations, [conv3, conv2, conv1])
+        
+        changesMerger = nil
     }
     
     func testThatItSetsTopConversationFromTheRightContext() {
@@ -355,7 +359,6 @@ extension TopConversationsDirectoryTests {
         (0..<messageCount.old).forEach {
             let message = conversation.append(text: "Message #\($0)") as! ZMMessage
             message.serverTimestamp = Date(timeIntervalSince1970: TimeInterval($0 * 100))
-            conversation.resortMessages(withUpdatedMessage: message)
         }
 
         XCTAssertTrue(uiMOC.saveOrRollback(), file: file, line: line)

@@ -51,15 +51,15 @@
         return @[nonce1, nonce2];
     } verify:^(ZMConversation *conversation) {
         //check that we successfully decrypted messages
-        XCTAssert(conversation.messages.count > 0);
-        if (conversation.messages.count < 2) {
+        XCTAssert(conversation.recentMessages.count > 0);
+        if (conversation.recentMessages.count < 2) {
             XCTFail(@"message count is too low");
         } else {
-            ZMClientMessage *msg1 = conversation.messages[conversation.messages.count - 2];
+            ZMClientMessage *msg1 = (ZMClientMessage *)conversation.recentMessages[conversation.recentMessages.count - 2];
             XCTAssertEqualObjects(msg1.nonce, nonce1);
             XCTAssertEqualObjects(msg1.genericMessage.text.content, expectedText1);
             
-            ZMClientMessage *msg2 = conversation.messages[conversation.messages.count - 1];
+            ZMClientMessage *msg2 = (ZMClientMessage *)conversation.recentMessages[conversation.recentMessages.count - 1];
             XCTAssertEqualObjects(msg2.nonce, nonce2);
             XCTAssertEqualObjects(msg2.genericMessage.text.content, expectedText2);
         }
@@ -550,7 +550,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    id<ZMConversationMessage> lastMessage = conversation.messages.lastObject;
+    id<ZMConversationMessage> lastMessage = conversation.recentMessages.lastObject;
     XCTAssertEqualObjects(lastMessage.textMessageData.messageText, otherUserMessageText);
     
     // and when resending
@@ -560,7 +560,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(conversation.messages.lastObject, message);
+    XCTAssertEqual(conversation.recentMessages.lastObject, message);
     XCTAssertEqual(message.deliveryState, ZMDeliveryStateSent);
 }
 
@@ -574,10 +574,10 @@
 
     MockConversation *mockConversation = self.groupConversation;
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
-    NSUInteger initialMessagesCount = conversation.messages.count;
+    NSUInteger initialMessagesCount = conversation.recentMessages.count;
     
     // Make sure this relationship is not a fault:
-    for (id obj in conversation.messages) {
+    for (id obj in conversation.recentMessages) {
         (void) obj;
     }
     
@@ -605,7 +605,7 @@
     XCTAssertTrue(note.lastModifiedDateChanged);
     XCTAssertFalse(note.connectionStateChanged);
     
-    ZMClientMessage *msg = conversation.messages[initialMessagesCount];
+    ZMClientMessage *msg = (ZMClientMessage *)conversation.recentMessages[initialMessagesCount];
     XCTAssertEqualObjects(msg.genericMessage.text.content, expectedText);
 }
 
@@ -637,10 +637,10 @@
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
     
     // Make sure this relationship is not a fault:
-    for (id obj in conversation.messages) {
+    for (id obj in conversation.recentMessages) {
         (void) obj;
     }
-    NSUInteger initialMessagesCount = conversation.messages.count;
+    NSUInteger initialMessagesCount = conversation.recentMessages.count;
     
     // when
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
@@ -658,7 +658,7 @@
     XCTAssertTrue(note.lastModifiedDateChanged);
     XCTAssertFalse(note.connectionStateChanged);
     
-    ZMAssetClientMessage *msg = conversation.messages[initialMessagesCount];
+    ZMAssetClientMessage *msg = (ZMAssetClientMessage *)conversation.recentMessages[initialMessagesCount];
     XCTAssertEqualObjects([msg.imageAssetStorage genericMessageFor:format], assetMessage);
 }
 
@@ -741,126 +741,6 @@
     XCTAssertNotNil(genericMessage);
 }
 
-- (void)testThatMessageWindowChangesWhenOTRAssetDataIsLoaded:(ZMImageFormat)format
-{
-    // given
-    MockConversationWindowObserver *observer = [self windowObserverAfterLogginInAndInsertingMessagesInMockConversation:self.groupConversation];
-    NSOrderedSet *initialMessageSet = observer.computedMessages;
-
-    NSData *encryptedImageData;
-    NSData *imageData = [self verySmallJPEGData];
-    ZMGenericMessage *message = [self otrAssetGenericMessage:format imageData:imageData encryptedData:&encryptedImageData];
-    
-    MockConversation *conversation = self.groupConversation;
-    ZMConversation *localGroupConversation = [self conversationForMockConversation:conversation];
-    
-    MockUserClient *selfClient = [self.selfUser.clients anyObject];
-    MockUserClient *senderClient = [self.user1.clients anyObject];
-    
-    // when
-    __block NSData *messageData;
-    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session){
-        NSUUID *assetId = [NSUUID createUUID];
-        messageData = [MockUserClient encryptedWithData:message.data from:senderClient to:selfClient];
-        [conversation insertOTRAssetFromClient:senderClient toClient:selfClient metaData:messageData imageData:encryptedImageData assetId:assetId isInline:format == ZMImageFormatPreview];
-        
-        [session createAssetWithData:encryptedImageData identifier:assetId.transportString contentType:@"" forConversation:self.groupConversation.identifier];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    [self spinMainQueueWithTimeout:0.5];
-    
-    ZMMessage *observedMessage = localGroupConversation.messages.lastObject;
-    MessageChangeObserver *messageObserver = [[MessageChangeObserver alloc] initWithMessage:observedMessage];
-    XCTAssertTrue([observedMessage isKindOfClass:ZMAssetClientMessage.class]);
-    
-    [observedMessage.imageMessageData requestImageDownload];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqual(messageObserver.notifications.count, 1lu);
-    
-    NSOrderedSet *currentMessageSet = observer.computedMessages;
-    NSOrderedSet *windowMessageSet = observer.window.messages;
-    
-    XCTAssertEqualObjects(currentMessageSet, windowMessageSet);
-    
-    for(NSUInteger i = 0; i < observer.window.size; ++ i) {
-        if(i == 0) {
-            ZMAssetClientMessage *windowMessage = currentMessageSet[i];
-            XCTAssertEqualObjects([windowMessage.imageAssetStorage genericMessageFor:format], message);
-            NSData *recievedImageData = [self.userSession.managedObjectContext.zm_fileAssetCache assetData:windowMessage format:format encrypted:NO];
-            XCTAssertEqualObjects(recievedImageData, imageData);
-        }
-        else {
-            XCTAssertEqual(currentMessageSet[i], initialMessageSet[i-1]);
-        }
-    }
-}
-
-- (void)testThatMessageWindowChangesWhenOTRAssetMediumIsLoaded
-{
-    // given
-    MockConversationWindowObserver *observer = [self windowObserverAfterLogginInAndInsertingMessagesInMockConversation:self.groupConversation];
-    NSOrderedSet *initialMessageSet = observer.computedMessages;
-    
-    NSData *encryptedImageData;
-    NSData *imageData = [self verySmallJPEGData];
-    ZMGenericMessage *message = [self otrAssetGenericMessage:ZMImageFormatMedium imageData:imageData encryptedData:&encryptedImageData];
-    
-    MockConversation *conversation = self.groupConversation;
-    ZMConversation *localGroupConversation = [self conversationForMockConversation:conversation];
-    
-    MockUserClient *selfClient = [self.selfUser.clients anyObject];
-    MockUserClient *senderClient = [self.user1.clients anyObject];
-    
-    // when
-    __block NSData *messageData;
-    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session){
-        NSUUID *assetId = [NSUUID createUUID];
-        messageData = [MockUserClient encryptedWithData:message.data from:senderClient to:selfClient];
-        [conversation insertOTRAssetFromClient:senderClient toClient:selfClient metaData:messageData imageData:encryptedImageData assetId:assetId isInline:NO];
-        
-        [session createAssetWithData:encryptedImageData identifier:assetId.transportString contentType:@"" forConversation:self.groupConversation.identifier];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    [self spinMainQueueWithTimeout:0.5];
-    
-    ZMMessage *observedMessage = localGroupConversation.messages.lastObject; // the last message is the "you are using a new device message"
-
-    MessageChangeObserver *messageObserver = [[MessageChangeObserver alloc] initWithMessage:observedMessage];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    XCTAssertTrue([observedMessage isKindOfClass:ZMAssetClientMessage.class]);
-    
-    [self.userSession performChanges:^{
-        [observedMessage.imageMessageData requestImageDownload];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    // then
-    XCTAssertEqual(messageObserver.notifications.count, 1lu);
-    
-    NSOrderedSet *currentMessageSet = observer.computedMessages;
-    NSOrderedSet *windowMessageSet = observer.window.messages;
-    
-    XCTAssertEqualObjects(currentMessageSet, windowMessageSet);
-    
-    for(NSUInteger i = 0; i < observer.window.size; ++ i) {
-        if(i == 0) {
-            ZMAssetClientMessage *windowMessage = currentMessageSet[i];
-            XCTAssertEqualObjects([windowMessage.imageAssetStorage genericMessageFor:ZMImageFormatMedium], message);
-            NSData *recievedImageData = [self.userSession.managedObjectContext.zm_fileAssetCache assetData:windowMessage format:ZMImageFormatMedium encrypted:NO];
-            XCTAssertEqualObjects(recievedImageData, imageData);
-        }
-        else {
-            XCTAssertEqual(currentMessageSet[i], initialMessageSet[i-1]);
-        }
-    }
-}
-
 - (void)testThatAssetMediumIsRedownloadedIfNoMessageDataIsStored
 {
     // GIVEN
@@ -882,7 +762,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    ZMAssetClientMessage *imageMessageData = (ZMAssetClientMessage *)conversation.messages.lastObject;
+    ZMAssetClientMessage *imageMessageData = (ZMAssetClientMessage *)conversation.recentMessages.lastObject;
 
     // WHEN
     // remove all stored data, like cache is cleared
@@ -920,7 +800,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    ZMAssetClientMessage *imageMessageData = (ZMAssetClientMessage *)conversation.messages.lastObject;
+    ZMAssetClientMessage *imageMessageData = (ZMAssetClientMessage *)conversation.recentMessages.lastObject;
     
     // WHEN
     // remove decrypted data, but keep encrypted, like we crashed during decryption
@@ -1058,7 +938,7 @@
     __block ZMClientMessage* message;
     [self.userSession performChanges:^{
         for (NSUInteger i = 0; i < numberOfMessages; i++) {
-            message = (id)[conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
+            message = (id)[conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.recentMessages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
             [NSThread sleepForTimeInterval:0.1];
         }
     }];
@@ -1108,7 +988,7 @@
     // then
     BOOL containsParticipantAddedMessage = NO;
     BOOL containsNewClientMessage = YES;
-    for (ZMMessage *message in conversation.messages) {
+    for (ZMMessage *message in conversation.recentMessages) {
         if ([message isKindOfClass:ZMSystemMessage.class] && [(ZMSystemMessage *)message systemMessageType] == ZMSystemMessageTypeParticipantsAdded) {
             switch ([(ZMSystemMessage *)message systemMessageType]) {
                 case ZMSystemMessageTypeParticipantsAdded:
@@ -1196,7 +1076,7 @@
     {
         // send a message to fetch all the missing client
         [self.userSession performChanges:^{
-            [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
+            [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.recentMessages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
     }
@@ -1206,7 +1086,7 @@
     // when
     __block ZMClientMessage* message;
     [self.userSession performChanges:^{
-        message = (id)[conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
+        message = (id)[conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.recentMessages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1233,7 +1113,7 @@
     {
         // send a message to fetch all the missing client
         [self.userSession performChanges:^{
-            [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
+            [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.recentMessages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
     }
@@ -1263,7 +1143,7 @@
     // when
     __block ZMClientMessage* message;
     [self.userSession performChanges:^{
-        message = (id)[conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
+        message = (id)[conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.recentMessages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
     }];
     [message.managedObjectContext saveOrRollback];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1309,7 +1189,7 @@
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     
     [self.userSession performChanges:^ {
-        [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
+        [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.recentMessages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     [self makeConversationSecured:conversation];
@@ -1337,7 +1217,7 @@
     // WHEN
     __block ZMClientMessage* message1;
     [self.userSession performChanges:^{ // this should cause conversation to degrade
-        message1 = (id)[conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
+        message1 = (id)[conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.recentMessages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
     }];
     
     // THEN
@@ -1366,7 +1246,7 @@
     // WHEN
     __block ZMClientMessage* message2;
     [self.userSession performChanges:^{
-        message2 = (id)[conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
+        message2 = (id)[conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.recentMessages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
     }];
 
     
@@ -1423,7 +1303,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = message.conversation;
-    ZMSystemMessage *lastMessage = [conversation.messages objectAtIndex:conversation.messages.count - 2];
+    ZMSystemMessage *lastMessage = (ZMSystemMessage *)[conversation.recentMessages objectAtIndex:conversation.recentMessages.count - 2];
     XCTAssertTrue([lastMessage isKindOfClass:[ZMSystemMessage class]]);
     
     NSArray<ZMUser *> *expectedUsers = @[[self userForMockUser:self.user1]];
@@ -1442,7 +1322,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = message.conversation;
-    ZMSystemMessage *lastMessage = [conversation.messages objectAtIndex:conversation.messages.count - 6];
+    ZMSystemMessage *lastMessage = (ZMSystemMessage *)[conversation.recentMessages objectAtIndex:conversation.recentMessages.count - 6];
     XCTAssertTrue([lastMessage isKindOfClass:[ZMSystemMessage class]]);
     
     NSArray<ZMUser *> *expectedUsers = @[[self userForMockUser:self.user1]];
@@ -1460,7 +1340,7 @@
     void (^secureConversationBlock)(ZMConversation *) = ^(ZMConversation *conversation) {
         // send a message to fetch all the missing client
         [self.userSession performChanges:^{
-            [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
+            [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.recentMessages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         [self makeConversationSecured:conversation];
@@ -1480,14 +1360,14 @@
     // when
     __block ZMClientMessage* message;
     [self.userSession performChanges:^{
-        message = (id)[conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
+        message = (id)[conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.recentMessages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
     }];
     [message.managedObjectContext saveOrRollback];
     WaitForAllGroupsToBeEmpty(0.5);
     
     XCTAssertNotNil(message.conversation);
     
-    ZMSystemMessage *lastMessage = [groupLocalConversation.messages objectAtIndex:groupLocalConversation.messages.count - 1];
+    ZMSystemMessage *lastMessage = (ZMSystemMessage *)[groupLocalConversation.recentMessages objectAtIndex:groupLocalConversation.recentMessages.count - 1];
     XCTAssertTrue([lastMessage isKindOfClass:[ZMSystemMessage class]]);
     
     XCTAssertEqual(message.conversation, conversation);
@@ -1516,7 +1396,7 @@
     [selfClient ignoreClient:localUser1.clients.anyObject];
     
     // then
-    ZMSystemMessage *lastMessage = [conversation.messages objectAtIndex:conversation.messages.count - 1];
+    ZMSystemMessage *lastMessage = (ZMSystemMessage *)[conversation.recentMessages objectAtIndex:conversation.recentMessages.count - 1];
     XCTAssertTrue([lastMessage isKindOfClass:[ZMSystemMessage class]]);
     
     NSArray<ZMUser *> *expectedUsers = @[localUser1];
@@ -1545,9 +1425,9 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // THEN
-    ZMSystemMessage *lastMessage = [conversation.messages objectAtIndex:conversation.messages.count - 2];
+    ZMSystemMessage *lastMessage = (ZMSystemMessage *)[conversation.recentMessages objectAtIndex:conversation.recentMessages.count - 2];
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
-    XCTAssertEqual(conversation.messages.count, 4lu); // 3x system message (new device & secured & new client) + appended client message
+    XCTAssertEqual(conversation.recentMessages.count, 4lu); // 3x system message (new device & secured & new client) + appended client message
     XCTAssertEqual(lastMessage.systemMessageData.systemMessageType, ZMSystemMessageTypeNewClient);
 }
 
@@ -1570,9 +1450,9 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // THEN
-    ZMSystemMessage *lastMessage = [conversation.messages objectAtIndex:conversation.messages.count - 2];
+    ZMSystemMessage *lastMessage = (ZMSystemMessage *)[conversation.recentMessages objectAtIndex:conversation.recentMessages.count - 2];
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
-    XCTAssertEqual(conversation.messages.count, 4lu); // 3x system message (new device & secured & new client) + appended client message
+    XCTAssertEqual(conversation.recentMessages.count, 4lu); // 3x system message (new device & secured & new client) + appended client message
     XCTAssertEqual(lastMessage.systemMessageData.systemMessageType, ZMSystemMessageTypeNewClient);
 }
 
@@ -1597,7 +1477,7 @@
     __block MockUserClient *newUser1Client;
     
     // Make sure this relationship is not a fault:
-    for (id obj in conversation.messages) {
+    for (id obj in conversation.recentMessages) {
         (void) obj;
     }
     
@@ -1605,7 +1485,7 @@
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     [observer clearNotifications];
     
-    NSOrderedSet *previousMessage = conversation.messages.copy;
+    NSOrderedSet *previousMessage = [NSMutableOrderedSet orderedSetWithArray:conversation.recentMessages];
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused transportSession) {
         newUser1Client = [transportSession registerClientForUser:self.user1 label:@"iphone-something" type:@"permanent"];
@@ -1627,7 +1507,7 @@
     
     XCTAssertEqual(conversation.securityLevel, expectedSecurityLevel);
 
-    NSMutableOrderedSet *messagesAfterInserting = conversation.messages.mutableCopy;
+    NSMutableOrderedSet *messagesAfterInserting = [NSMutableOrderedSet orderedSetWithArray:conversation.recentMessages];
     [messagesAfterInserting minusOrderedSet:previousMessage];
     
     if (shouldInsert) {
@@ -1686,11 +1566,11 @@
     [self setupInitialSecurityLevel:initialSecurityLevel inConversation:conversation];
     
     // Make sure this relationship is not a fault:
-    for (id obj in conversation.messages) {
+    for (id obj in conversation.recentMessages) {
         (void) obj;
     }
     
-    NSUInteger messageCountAfterSetup = conversation.messages.count;
+    NSUInteger messageCountAfterSetup = conversation.recentMessages.count;
     
     // when
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
@@ -1729,7 +1609,7 @@
     
     if (shouldInsert) {
         __block ZMSystemMessage *systemMessage;
-        [conversation.messages enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(id  _Nonnull msg, NSUInteger __unused idx, BOOL * _Nonnull stop) {
+        [conversation.recentMessages enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(id  _Nonnull msg, NSUInteger __unused idx, BOOL * _Nonnull stop) {
             if([msg isKindOfClass:ZMSystemMessage.class]) {
                 systemMessage = msg;
                 *stop = YES;
@@ -1743,7 +1623,7 @@
         XCTAssertEqual(systemMessage.systemMessageType, ZMSystemMessageTypeIgnoredClient);
     }
     else {
-        XCTAssertEqual(messageCountAfterSetup, conversation.messages.count);
+        XCTAssertEqual(messageCountAfterSetup, conversation.recentMessages.count);
     }
     
 }
@@ -1813,7 +1693,7 @@
 
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
     
-    ZMSystemMessage *lastMessage = [conversation.messages objectAtIndex:conversation.messages.count - 1];
+    ZMSystemMessage *lastMessage = (ZMSystemMessage *)[conversation.recentMessages objectAtIndex:conversation.recentMessages.count - 1];
     XCTAssertTrue([lastMessage isKindOfClass:[ZMSystemMessage class]]);
     
     XCTAssertEqual(lastMessage.systemMessageType, ZMSystemMessageTypeConversationIsSecure);
@@ -1869,7 +1749,7 @@
     
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
     
-    ZMSystemMessage *lastMessage = [conversation.messages objectAtIndex:conversation.messages.count - 1];
+    ZMSystemMessage *lastMessage = (ZMSystemMessage *)[conversation.recentMessages objectAtIndex:conversation.recentMessages.count - 1];
     XCTAssertTrue([lastMessage isKindOfClass:[ZMSystemMessage class]]);
     
     XCTAssertEqual(lastMessage.systemMessageType, ZMSystemMessageTypeConversationIsSecure);
@@ -1896,7 +1776,7 @@
     {
         // adding a message to fetch client
         [self.userSession performChanges:^{
-            [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
+            [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.recentMessages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         
@@ -1922,7 +1802,7 @@
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     [observer clearNotifications];
     
-    NSUInteger currentMessageCount = conversation.messages.count;
+    NSUInteger currentMessageCount = conversation.recentMessages.count;
     
     // when
     // (2) selfUser deletes remote selfUser client
@@ -1939,8 +1819,8 @@
         XCTAssertTrue(note.securityLevelChanged);
         
         XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
-        if (conversation.messages.count > currentMessageCount) {
-            ZMSystemMessage *lastMessage = [conversation.messages objectAtIndex:currentMessageCount];
+        if (conversation.recentMessages.count > currentMessageCount) {
+            ZMSystemMessage *lastMessage = (ZMSystemMessage *)[conversation.recentMessages objectAtIndex:currentMessageCount];
             XCTAssertTrue([lastMessage isKindOfClass:[ZMSystemMessage class]]);
             
             XCTAssertEqual(lastMessage.systemMessageType, ZMSystemMessageTypeConversationIsSecure);
@@ -1964,7 +1844,7 @@
     {
         // adding a message
         [self.userSession performChanges:^{
-            [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
+            [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.recentMessages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         [self makeConversationSecured:conversation];
@@ -1998,7 +1878,7 @@
         
         XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
         
-        ZMSystemMessage *lastMessage = [conversation.messages objectAtIndex:conversation.messages.count - 1];
+        ZMSystemMessage *lastMessage = (ZMSystemMessage *)[conversation.recentMessages objectAtIndex:conversation.recentMessages.count - 1];
         XCTAssertTrue([lastMessage isKindOfClass:[ZMSystemMessage class]]);
         
         XCTAssertEqual(lastMessage.systemMessageType, ZMSystemMessageTypeNewClient);
@@ -2029,7 +1909,7 @@
         
         XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
         
-        ZMSystemMessage *lastMessage = [conversation.messages objectAtIndex:conversation.messages.count - 1];
+        ZMSystemMessage *lastMessage = (ZMSystemMessage *)[conversation.recentMessages objectAtIndex:conversation.recentMessages.count - 1];
         XCTAssertTrue([lastMessage isKindOfClass:[ZMSystemMessage class]]);
         
         XCTAssertEqual(lastMessage.systemMessageType, ZMSystemMessageTypeConversationIsSecure);
@@ -2123,7 +2003,7 @@
     void (^secureConversationBlock)(ZMConversation *) = ^(ZMConversation *conversation) {
         // send a message to fetch all the missing client
         [self.userSession performChanges:^{
-            [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.messages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
+            [conversation appendText:[NSString stringWithFormat:@"Hey %lu", conversation.recentMessages.count] mentions:@[] fetchLinkPreview:YES nonce:[NSUUID createUUID]];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         [self makeConversationSecured:conversation];
@@ -2197,8 +2077,8 @@
     }];
     
     // then
-    id<ZMConversationMessage> lastMessage = conversation.messages.lastObject;
-    XCTAssertEqual(conversation.messages.count, 2lu);
+    id<ZMConversationMessage> lastMessage = conversation.recentMessages.lastObject;
+    XCTAssertEqual(conversation.recentMessages.count, 2lu);
     XCTAssertNotNil(lastMessage.systemMessageData);
     XCTAssertEqual(lastMessage.systemMessageData.systemMessageType, ZMSystemMessageTypeDecryptionFailed);
 }
@@ -2263,8 +2143,8 @@
     
     
     // then
-    NSUInteger previousNumberOfMessages = conversation.messages.count;
-    id<ZMConversationMessage> lastMessage = conversation.messages.lastObject;
+    NSUInteger previousNumberOfMessages = conversation.recentMessages.count;
+    id<ZMConversationMessage> lastMessage = conversation.recentMessages.lastObject;
     XCTAssertNil(lastMessage.systemMessageData);
     XCTAssertEqualObjects(lastMessage.textMessageData.messageText, firstMessageText);
     
@@ -2282,9 +2162,9 @@
     
     // then
     conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    NSUInteger newNumberOfMessages = conversation.messages.count;
+    NSUInteger newNumberOfMessages = conversation.recentMessages.count;
 
-    lastMessage = conversation.messages.lastObject;
+    lastMessage = conversation.recentMessages.lastObject;
     XCTAssertNil(lastMessage.systemMessageData);
     XCTAssertEqualObjects(lastMessage.textMessageData.messageText, firstMessageText);
     XCTAssertEqual(newNumberOfMessages, previousNumberOfMessages);

@@ -678,7 +678,7 @@ extension CallingV3Tests {
         let user = conversationUnderTest.connectedUser!
         fetchAllClients()
 
-        let messageCount = conversationUnderTest.messages.count;
+        let messageCount = conversationUnderTest.recentMessages.count;
         
         // expect
         expectation(forNotification: WireSyncEngine.WireCallCenterMissedCallNotification.notificationName, object: nil)
@@ -689,8 +689,8 @@ extension CallingV3Tests {
         
         // then
         // we receive a systemMessage that we missed a call
-        XCTAssertEqual(conversationUnderTest.messages.count, messageCount+1)
-        guard let systemMessage = conversationUnderTest.messages.lastObject as? ZMSystemMessage
+        XCTAssertEqual(conversationUnderTest.recentMessages.count, messageCount+1)
+        guard let systemMessage = conversationUnderTest.recentMessages.last as? ZMSystemMessage
         else {
             return XCTFail("Did not insert a system message")
         }
@@ -710,7 +710,7 @@ extension CallingV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         let user = conversationUnderTest.connectedUser!
-        let messageCount = conversationUnderTest.messages.count;
+        let messageCount = conversationUnderTest.recentMessages.count;
 
         // expect
         expectation(forNotification: WireSyncEngine.WireCallCenterMissedCallNotification.notificationName, object: nil)
@@ -720,7 +720,7 @@ extension CallingV3Tests {
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(conversationUnderTest.messages.count, messageCount+1)
+        XCTAssertEqual(conversationUnderTest.recentMessages.count, messageCount+1)
         XCTAssertFalse(conversationUnderTest.isArchived)
     }
     
@@ -730,7 +730,7 @@ extension CallingV3Tests {
         XCTAssertTrue(login())
         fetchAllClients()
         let user = conversationUnderTest.connectedUser!
-        let messageCount = conversationUnderTest.messages.count;
+        let messageCount = conversationUnderTest.recentMessages.count;
     
         // when
         otherStartCall(user: user)
@@ -739,8 +739,8 @@ extension CallingV3Tests {
         closeCall(user: user, reason: .canceled)
         
         // we receive a performed call systemMessage
-        XCTAssertEqual(conversationUnderTest.messages.count, messageCount+1)
-        guard let systemMessage = conversationUnderTest.messages.lastObject as? ZMSystemMessage
+        XCTAssertEqual(conversationUnderTest.recentMessages.count, messageCount+1)
+        guard let systemMessage = conversationUnderTest.recentMessages.last as? ZMSystemMessage
             else {
                 return XCTFail("Did not insert a system message")
         }
@@ -761,7 +761,7 @@ extension CallingV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         XCTAssertTrue(conversationUnderTest.isArchived)
-        let messageCount = conversationUnderTest.messages.count;
+        let messageCount = conversationUnderTest.recentMessages.count;
 
         // when
         otherStartCall(user: user)
@@ -770,7 +770,7 @@ extension CallingV3Tests {
         closeCall(user: user, reason: .canceled)
         
         // the conversation is unarchived
-        XCTAssertEqual(conversationUnderTest.messages.count, messageCount+1)
+        XCTAssertEqual(conversationUnderTest.recentMessages.count, messageCount+1)
         XCTAssertFalse(conversationUnderTest.isArchived)
     }
     

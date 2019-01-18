@@ -532,13 +532,12 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     }
 }
 
-- (void)appendSystemMessageForUpdateEvent:(ZMUpdateEvent *)event inConversation:(ZMConversation *)conversation
+- (void)appendSystemMessageForUpdateEvent:(ZMUpdateEvent *)event inConversation:(ZMConversation * ZM_UNUSED)conversation
 {
     ZMSystemMessage *systemMessage = [ZMSystemMessage createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.managedObjectContext];
     
     if (systemMessage != nil) {
         [self.localNotificationDispatcher processMessage:systemMessage];
-        [conversation resortMessagesWithUpdatedMessage:systemMessage];
     }
 }
 

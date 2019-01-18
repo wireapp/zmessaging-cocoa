@@ -99,7 +99,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
             self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
             
             // THEN
-            guard let message = self.conversation.messages.lastObject as? ZMSystemMessage else {
+            guard let message = self.conversation.recentMessages.last as? ZMSystemMessage else {
                 XCTFail()
                 return
             }
@@ -125,13 +125,13 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
                 "type": "conversation.member-join"
                 ] as [String: Any]
             let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
-            let messageCountBeforeProcessing = self.conversation.messages.count
+            let messageCountBeforeProcessing = self.conversation.recentMessages.count
             
             // WHEN
             self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
             
             // THEN
-            XCTAssertEqual(self.conversation.messages.count, messageCountBeforeProcessing)
+            XCTAssertEqual(self.conversation.recentMessages.count, messageCountBeforeProcessing)
         }
     }
     
@@ -157,7 +157,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
             self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
             
             // THEN
-            guard let message = self.conversation.messages.lastObject as? ZMSystemMessage else {
+            guard let message = self.conversation.recentMessages.last as? ZMSystemMessage else {
                 XCTFail()
                 return
             }
@@ -181,13 +181,13 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
                 "type": "conversation.member-leave"
                 ] as [String: Any]
             let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
-            let messageCountBeforeProcessing = self.conversation.messages.count
+            let messageCountBeforeProcessing = self.conversation.recentMessages.count
             
             // WHEN
             self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
             
             // THEN
-            XCTAssertEqual(self.conversation.messages.count, messageCountBeforeProcessing)
+            XCTAssertEqual(self.conversation.recentMessages.count, messageCountBeforeProcessing)
         }
     }
     
@@ -211,7 +211,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
             self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
             
             // THEN
-            guard let message = self.conversation.messages.lastObject as? ZMSystemMessage else {
+            guard let message = self.conversation.recentMessages.last as? ZMSystemMessage else {
                 XCTFail()
                 return
             }
@@ -243,7 +243,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
             self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
             
             // THEN
-            guard let message = self.conversation.messages.lastObject as? ZMSystemMessage else {
+            guard let message = self.conversation.recentMessages.last as? ZMSystemMessage else {
                 XCTFail()
                 return
             }
@@ -269,13 +269,13 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
                 "type": "conversation.rename"
                 ] as [String: Any]
             let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
-            let messageCountBeforeProcessing = self.conversation.messages.count
+            let messageCountBeforeProcessing = self.conversation.recentMessages.count
             
             // WHEN
             self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
             
             // THEN
-            XCTAssertEqual(self.conversation.messages.count, messageCountBeforeProcessing)
+            XCTAssertEqual(self.conversation.recentMessages.count, messageCountBeforeProcessing)
         }
     }
     
@@ -403,7 +403,7 @@ extension ZMConversationTranscoderTests_Swift {
             self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
             
             // THEN
-            guard let message = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            guard let message = self.conversation?.recentMessages.last as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(message.systemMessageType, .readReceiptsEnabled)
         }
     }
@@ -417,7 +417,7 @@ extension ZMConversationTranscoderTests_Swift {
             self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
             
             // THEN
-            guard let message = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            guard let message = self.conversation?.recentMessages.last as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(message.systemMessageType, .readReceiptsDisabled)
         }
     }
@@ -432,7 +432,7 @@ extension ZMConversationTranscoderTests_Swift {
             self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
             
             // THEN
-            XCTAssertEqual(self.conversation?.messages.count, 0)
+            XCTAssertEqual(self.conversation?.recentMessages.count, 0)
         }
     }
     
@@ -490,7 +490,7 @@ extension ZMConversationTranscoderTests_Swift {
             
             // THEN
             XCTAssertEqual(self.conversation?.messageDestructionTimeout!, MessageDestructionTimeout.synced(31536000))
-            guard let message = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            guard let message = self.conversation?.recentMessages.last as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(message.systemMessageType, .messageTimerUpdate)
             XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
         }
@@ -516,7 +516,7 @@ extension ZMConversationTranscoderTests_Swift {
             
             // THEN
             XCTAssertNil(self.conversation.messageDestructionTimeout)
-            guard let message = self.conversation.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            guard let message = self.conversation.recentMessages.last as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(message.systemMessageType, .messageTimerUpdate)
             XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
         }
@@ -551,7 +551,7 @@ extension ZMConversationTranscoderTests_Swift {
             
             // THEN: the local timeout still exists
             XCTAssertEqual(self.conversation?.messageDestructionTimeout!, MessageDestructionTimeout.local(.fiveMinutes))
-            guard let message = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            guard let message = self.conversation?.recentMessages.last as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(message.systemMessageType, .messageTimerUpdate)
             
             // but the system message timer reflects the update to the synced timeout
@@ -585,7 +585,7 @@ extension ZMConversationTranscoderTests_Swift {
             self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil) //First event
             
             XCTAssertEqual(self.conversation?.messageDestructionTimeout!, MessageDestructionTimeout.synced(messageTimer))
-            guard let firstMessage = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            guard let firstMessage = self.conversation?.recentMessages.last as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(firstMessage.systemMessageType, .messageTimerUpdate)
             XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, firstMessage)
             
@@ -593,7 +593,7 @@ extension ZMConversationTranscoderTests_Swift {
             
             // THEN
             XCTAssertEqual(self.conversation?.messageDestructionTimeout!, MessageDestructionTimeout.synced(messageTimer))
-            guard let secondMessage = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            guard let secondMessage = self.conversation?.recentMessages.last as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(firstMessage, secondMessage) //Check that no other messages are appended in the conversation
         }
     }
@@ -639,7 +639,7 @@ extension ZMConversationTranscoderTests_Swift {
             self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
             XCTAssertNil(self.conversation?.messageDestructionTimeout)
         
-            guard let firstMessage = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            guard let firstMessage = self.conversation?.recentMessages.last as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(firstMessage.systemMessageType, .messageTimerUpdate)
             XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, firstMessage)
         
@@ -648,7 +648,7 @@ extension ZMConversationTranscoderTests_Swift {
             
             // THEN
             XCTAssertNil(self.conversation?.messageDestructionTimeout)
-            guard let secondMessage = self.conversation?.messages.lastObject as? ZMSystemMessage else { return XCTFail() }
+            guard let secondMessage = self.conversation?.recentMessages.last as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(firstMessage, secondMessage) //Check that no other messages are appended in the conversation
         }
     }

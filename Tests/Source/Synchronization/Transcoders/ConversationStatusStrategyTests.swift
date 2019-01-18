@@ -48,14 +48,14 @@ class ConversationStatusStrategyTests: MessagingTest {
             conversation.remoteIdentifier = UUID.create()
             conversation.setLocallyModifiedKeys(Set(arrayLiteral: "lastReadServerTimeStamp"))
             
-            XCTAssertEqual(self.selfConversation.messages.count, 0)
+            XCTAssertEqual(self.selfConversation.recentMessages.count, 0)
 
             // when
             self.sut.objectsDidChange(Set(arrayLiteral: conversation))
             
             // then
-            XCTAssertEqual(self.selfConversation.messages.count, 1)
-            guard let message = self.selfConversation.messages.array.first as? ZMClientMessage else {
+            XCTAssertEqual(self.selfConversation.recentMessages.count, 1)
+            guard let message = self.selfConversation.recentMessages.first as? ZMClientMessage else {
                 XCTFail("should insert message into self conversation")
                 return
             }
@@ -72,14 +72,14 @@ class ConversationStatusStrategyTests: MessagingTest {
             conversation.remoteIdentifier = UUID.create()
             conversation.setLocallyModifiedKeys(Set(arrayLiteral: "clearedTimeStamp"))
             
-            XCTAssertEqual(self.selfConversation.messages.count, 0)
+            XCTAssertEqual(self.selfConversation.recentMessages.count, 0)
 
             // when
             self.sut.objectsDidChange(Set(arrayLiteral: conversation))
             
             // then
-            XCTAssertEqual(self.selfConversation.messages.count, 1)
-            guard let message = self.selfConversation.messages.array.first as? ZMClientMessage else {
+            XCTAssertEqual(self.selfConversation.recentMessages.count, 1)
+            guard let message = self.selfConversation.recentMessages.first as? ZMClientMessage else {
                 XCTFail("should insert message into self conversation")
                 return
             }
@@ -100,7 +100,7 @@ class ConversationStatusStrategyTests: MessagingTest {
             message.serverTimestamp = conversation.clearedTimeStamp
             message.visibleInConversation = conversation
             
-            XCTAssertFalse((conversation.messages.array.first as! NSManagedObject).isDeleted)
+            XCTAssertFalse(conversation.recentMessages.first!.isDeleted)
 
             // when
             self.sut.objectsDidChange(Set(arrayLiteral: conversation))
@@ -118,7 +118,7 @@ class ConversationStatusStrategyTests: MessagingTest {
             conversation.remoteIdentifier = UUID.create()
             conversation.setLocallyModifiedKeys(Set(arrayLiteral: "lastReadServerTimeStamp"))
             
-            XCTAssertEqual(self.selfConversation.messages.count, 0)
+            XCTAssertEqual(self.selfConversation.recentMessages.count, 0)
             
             // when
             let request = self.sut.fetchRequestForTrackedObjects()
@@ -130,8 +130,8 @@ class ConversationStatusStrategyTests: MessagingTest {
             }
             
             // then
-            XCTAssertEqual(self.selfConversation.messages.count, 1)
-            guard let message = self.selfConversation.messages.array.first as? ZMClientMessage else {
+            XCTAssertEqual(self.selfConversation.recentMessages.count, 1)
+            guard let message = self.selfConversation.recentMessages.first as? ZMClientMessage else {
                 XCTFail("should insert message into self conversation")
                 return
             }

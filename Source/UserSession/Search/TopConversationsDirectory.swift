@@ -126,8 +126,8 @@ fileprivate extension ZMConversation {
         guard let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date()) else { return 0 }
 
         var count = 0
-        for obj in messages.reverseObjectEnumerator() {
-            guard let message = obj as? ZMMessage, let timestamp = message.serverTimestamp else { continue }
+        for message in recentMessages.reversed() {
+            guard let timestamp = message.serverTimestamp else { continue }
             guard nil == message.systemMessageData else { continue }
             guard timestamp >= oneMonthAgo else { return count }
             count += 1

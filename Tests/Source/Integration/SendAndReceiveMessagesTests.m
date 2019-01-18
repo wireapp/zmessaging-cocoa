@@ -124,7 +124,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    id<ZMConversationMessage> lastMessage = conversation.messages.lastObject;
+    id<ZMConversationMessage> lastMessage = conversation.recentMessages.lastObject;
     XCTAssertEqualObjects(lastMessage.textMessageData.messageText, messageText);
 }
 
@@ -164,7 +164,7 @@
     ZMConversation *conversation =  [self conversationForMockConversation:self.groupConversation];
     NSString *convIDString = conversation.remoteIdentifier.transportString;
     
-    XCTAssertEqual(conversation.messages.count, 6u);
+    XCTAssertEqual(conversation.recentMessages.count, 6u);
     
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request){
         if ([request.path containsString:@"messages"] && request.method == ZMMethodPOST) {
@@ -176,7 +176,7 @@
     };
     
     // when
-    ZMMessage *previousMessage =  conversation.messages.lastObject;
+    ZMMessage *previousMessage =  conversation.recentMessages.lastObject;
     
     __block ZMMessage *failedToSendMessage;
     [self.userSession performChanges:^{
@@ -203,8 +203,8 @@
     
     ZMConversation *conversation =  [self conversationForMockConversation:self.groupConversation];
     
-    XCTAssertEqual(conversation.messages.count, 3u);
-    id<ZMConversationMessage> originalMessage = [conversation.messages lastObject];
+    XCTAssertEqual(conversation.recentMessages.count, 3u);
+    id<ZMConversationMessage> originalMessage = [conversation.recentMessages lastObject];
     XCTAssertEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [originalMessage.serverTimestamp timeIntervalSince1970], 0.1);
     [self spinMainQueueWithTimeout:0.5]; // if the tests run too fast the new message would otherwise have the same timestamp
     
@@ -231,7 +231,7 @@
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     
     NSDate *pastDate = [[NSDate date] dateByAddingTimeInterval:-100];
-    XCTAssertEqual(conversation.messages.count, 2u);
+    XCTAssertEqual(conversation.recentMessages.count, 2u);
     XCTAssertNil(conversation.lastReadServerTimeStamp);
     
     // when
@@ -255,7 +255,7 @@
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     
     NSDate *pastDate = [[NSDate date] dateByAddingTimeInterval:-100];
-    XCTAssertEqual(conversation.messages.count, 2u);
+    XCTAssertEqual(conversation.recentMessages.count, 2u);
     XCTAssertNil(conversation.lastReadServerTimeStamp);
     
     // when
@@ -288,11 +288,11 @@
                                            [self.groupConversation insertClientMessageFromUser:self.user3 data:genericMessage2.data];
                                            return @[nonce1, nonce2];
                                        } verify:^(ZMConversation *conversation) {
-                                           ZMClientMessage *msg1 = conversation.messages[conversation.messages.count - 2];
+                                           ZMClientMessage *msg1 = (ZMClientMessage *)conversation.recentMessages[conversation.recentMessages.count - 2];
                                            XCTAssertEqualObjects(msg1.nonce, nonce1, @"msg1 timestamp %f", msg1.serverTimestamp.timeIntervalSince1970);
                                            XCTAssertEqualObjects(msg1.genericMessage.text.content, expectedText1);
                                            
-                                           ZMClientMessage *msg2 = conversation.messages[conversation.messages.count - 1];
+                                           ZMClientMessage *msg2 = (ZMClientMessage *)conversation.recentMessages[conversation.recentMessages.count - 1];
                                            XCTAssertEqualObjects(msg2.nonce, nonce2, @"msg2 timestamp %f", msg2.serverTimestamp.timeIntervalSince1970);
                                            XCTAssertEqualObjects(msg2.genericMessage.text.content, expectedText2);
                                        }];
@@ -529,7 +529,7 @@
                               ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:expectedText mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:nonce];
                               [self.groupConversation encryptAndInsertDataFromClient:self.user2.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
                           } verify:^(ZMConversation *conversation) {
-                              ZMMessage *msg = conversation.messages[conversation.messages.count - 1];
+                              ZMMessage *msg = conversation.recentMessages[conversation.recentMessages.count - 1];
                               XCTAssertEqualObjects(msg.textMessageData.messageText, expectedText);
                           }];
 }
@@ -544,7 +544,7 @@
                           onRemoteMessageCreatedWith:^{
                               [self.groupConversation insertClientMessageFromUser:self.user2 data:message.data];
                           } verify:^(ZMConversation *conversation) {
-                              ZMClientMessage *msg = conversation.messages[conversation.messages.count - 1];
+                              ZMClientMessage *msg = (ZMClientMessage *)conversation.recentMessages[conversation.recentMessages.count - 1];
                               XCTAssertEqualObjects(msg.genericMessage.text.content, expectedText);
                           }];
 }
@@ -563,7 +563,7 @@
     XCTAssertNotEqual(groupConversation.displayName, newName);
     
     // make a copy of the current ones (since it's a relationship, it seems that [set copy] just doesn't work)
-    NSOrderedSet *previousMessages = [groupConversation.messages mutableCopy];
+    NSOrderedSet *previousMessages = [NSMutableOrderedSet orderedSetWithArray:groupConversation.recentMessages];
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -574,7 +574,7 @@
     WaitForAllGroupsToBeEmpty(0.1);
     
     // then
-    NSMutableOrderedSet *extraMessages = [groupConversation.messages mutableCopy];
+    NSMutableOrderedSet *extraMessages = [NSMutableOrderedSet orderedSetWithArray:groupConversation.recentMessages];
     [extraMessages minusOrderedSet:previousMessages];
     
     XCTAssertEqual(extraMessages.count, 2u);
@@ -606,7 +606,7 @@
     // given
     XCTAssert([self login]);
     ZMConversation *groupConversation = [self conversationForMockConversation:self.groupConversation];
-    NSUInteger initialMessageCount = groupConversation.messages.count;
+    NSUInteger initialMessageCount = groupConversation.recentMessages.count;
 
     NSUUID *firstMessageNonce = NSUUID.createUUID;
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session __unused) {
@@ -615,7 +615,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    NSSet *previousMessagesIDs = [groupConversation.messages.set mapWithBlock:^NSManagedObjectID *(ZMManagedObject *managedObject) {
+    NSSet *previousMessagesIDs = [groupConversation.recentMessages.set mapWithBlock:^NSManagedObjectID *(ZMManagedObject *managedObject) {
         return managedObject.objectID;
     }];
     XCTAssertNotNil(groupConversation);
@@ -627,8 +627,8 @@
     
     NSPredicate *objectIDPredicate = [NSPredicate predicateWithFormat:@"! (%@ CONTAINS objectID)", previousMessagesIDs];
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    NSOrderedSet <ZMMessage *>*allMessages = conversation.messages;
-    NSUInteger addedMessageCount = [conversation.messages filteredOrderedSetUsingPredicate:objectIDPredicate].count;
+    NSArray <ZMMessage *>*allMessages = conversation.recentMessages;
+    NSUInteger addedMessageCount = [conversation.recentMessages filteredArrayUsingPredicate:objectIDPredicate].count;
     
     // then
     XCTAssertEqual(allMessages.count - initialMessageCount, 2lu);
@@ -644,7 +644,7 @@
     XCTAssert([self login]);
 
     ZMConversation *groupConversation = [self conversationForMockConversation:self.groupConversation];
-    NSUInteger initialMessageCount = groupConversation.messages.count;
+    NSUInteger initialMessageCount = groupConversation.recentMessages.count;
     
     NSUUID *firstMessageNonce = NSUUID.createUUID;
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session __unused) {
@@ -653,7 +653,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    NSSet *previousMessagesIDs = [groupConversation.messages.set mapWithBlock:^NSManagedObjectID *(ZMManagedObject *managedObject) {
+    NSSet *previousMessagesIDs = [groupConversation.recentMessages.set mapWithBlock:^NSManagedObjectID *(ZMManagedObject *managedObject) {
         return managedObject.objectID;
     }];
     XCTAssertNotNil(groupConversation);
@@ -696,8 +696,8 @@
     
     NSPredicate *objectIDPredicate = [NSPredicate predicateWithFormat:@"! (%@ CONTAINS objectID)", previousMessagesIDs];
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    NSOrderedSet <ZMMessage *>*allMessages = conversation.messages;
-    NSOrderedSet <ZMMessage *>*addedMessages = [conversation.messages filteredOrderedSetUsingPredicate:objectIDPredicate];
+    NSArray <ZMMessage *>*allMessages = conversation.recentMessages;
+    NSArray <ZMMessage *>*addedMessages = [conversation.recentMessages filteredArrayUsingPredicate:objectIDPredicate];
     XCTAssertNotNil(addedMessages);
     
     // then
@@ -758,7 +758,7 @@
     }];
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    ZMSystemMessage *systemMessage = [conversation.messages lastObject];
+    ZMSystemMessage *systemMessage = (ZMSystemMessage *)[conversation.recentMessages lastObject];
     
     ZMUser *addedUser = [self userForMockUser:self.user4];
     ZMUser *removedUser = [self userForMockUser:self.user1];
@@ -780,7 +780,7 @@
     XCTAssert([self login]);
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     XCTAssertNotNil(conversation);
-    NSUInteger initialMessageCount = conversation.messages.count;
+    NSUInteger initialMessageCount = conversation.recentMessages.count;
     
     NSUUID *firstMessageNonce = NSUUID.createUUID;
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session __unused) {
@@ -789,7 +789,7 @@
     }];
     
     WaitForAllGroupsToBeEmpty(0.1);
-    XCTAssertEqual(conversation.messages.count - initialMessageCount, 1lu);
+    XCTAssertEqual(conversation.recentMessages.count - initialMessageCount, 1lu);
     
     // when
     [self performRemoteChangesNotInNotificationStream:^(id<MockTransportSessionObjectCreation> session __unused) {
@@ -798,8 +798,8 @@
     }];
     
     conversation = [self conversationForMockConversation:self.groupConversation];
-    NSOrderedSet<ZMMessage *> *allMessages = conversation.messages;
-    XCTAssertEqual(conversation.messages.count - initialMessageCount, 2lu);
+    NSArray<ZMMessage *> *allMessages = conversation.recentMessages;
+    XCTAssertEqual(conversation.recentMessages.count - initialMessageCount, 2lu);
 
     if (! [allMessages.lastObject isKindOfClass:ZMSystemMessage.class]) {
         return XCTFail(@"Wrong message type");
@@ -819,7 +819,7 @@
     }];
     
     conversation = [self conversationForMockConversation:self.groupConversation];
-    ZMSystemMessage *secondSystemMessage = (ZMSystemMessage *)conversation.messages.lastObject;
+    ZMSystemMessage *secondSystemMessage = (ZMSystemMessage *)conversation.recentMessages.lastObject;
 
     XCTAssertNotEqualObjects(systemMessage, secondSystemMessage);
     
@@ -831,7 +831,7 @@
     ZMUser *removedUser = [self userForMockUser:self.user3];
     
     // then
-    XCTAssertEqual(conversation.messages.count - initialMessageCount, 2lu);
+    XCTAssertEqual(conversation.recentMessages.count - initialMessageCount, 2lu);
     XCTAssertEqual(conversation.activeParticipants.count, 5lu);
     XCTAssertEqualObjects(secondSystemMessage.users, initialUsers);
     XCTAssertEqual(secondSystemMessage.addedUsers.count, 2lu);
@@ -847,7 +847,7 @@
     // given
     XCTAssert([self login]);
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    NSUInteger initialMessageCount = conversation.messages.count;
+    NSUInteger initialMessageCount = conversation.recentMessages.count;
     
     NSUUID *firstMessageNonce = NSUUID.createUUID;
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session __unused) {
@@ -856,7 +856,7 @@
     }];
     
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(conversation.messages.count - initialMessageCount, 1lu);
+    XCTAssertEqual(conversation.recentMessages.count - initialMessageCount, 1lu);
     
     // when
     // add new user to conversation
@@ -869,13 +869,13 @@
     }];
     
     conversation = [self conversationForMockConversation:self.groupConversation];
-    NSOrderedSet<ZMMessage *> *allMessages = conversation.messages;
+    NSArray<ZMMessage *> *allMessages = conversation.recentMessages;
     ZMSystemMessage *systemMessage = (ZMSystemMessage *)allMessages.lastObject;
     
     ZMUser *addedUser = systemMessage.addedUsers.anyObject;
     
     // then after fetching it should contain the full users
-    XCTAssertEqual(conversation.messages.count - initialMessageCount, 2lu);
+    XCTAssertEqual(conversation.recentMessages.count - initialMessageCount, 2lu);
     XCTAssertEqual(systemMessage.users.count, 4lu);
     XCTAssertEqual(systemMessage.removedUsers.count, 0lu);
     XCTAssertEqual(systemMessage.addedUsers.count, 1lu);
@@ -898,7 +898,7 @@
     XCTAssertNotEqual(groupConversation.displayName, newName1);
     
     // make a copy of the current ones (since it's a relationship, it seems that [set copy] just doesn't work)
-    NSOrderedSet *previousMessages = [groupConversation.messages mutableCopy];
+    NSOrderedSet *previousMessages = [NSMutableOrderedSet orderedSetWithArray:groupConversation.recentMessages];
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -913,7 +913,7 @@
     WaitForAllGroupsToBeEmpty(0.1);
     
     // then
-    NSMutableOrderedSet *extraMessages = [groupConversation.messages mutableCopy];
+    NSMutableOrderedSet *extraMessages = [NSMutableOrderedSet orderedSetWithArray:groupConversation.recentMessages];
     [extraMessages minusOrderedSet:previousMessages];
     
     XCTAssertEqual(extraMessages.count, 2u);
