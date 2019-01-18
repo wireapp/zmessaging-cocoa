@@ -77,7 +77,6 @@
     for (NSUInteger idx = 0; idx < count; idx++) {
         ZMMessage *message = [[ZMMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.managedObjectContext];
         message.serverTimestamp = [self.lastServerTimeStamp dateByAddingTimeInterval:5];
-        [self resortMessagesWithUpdatedMessage:message];
         self.lastServerTimeStamp = message.serverTimestamp;
     }
 }
@@ -89,7 +88,7 @@
     systemMessage.serverTimestamp = self.lastReadServerTimeStamp ?
     [self.lastReadServerTimeStamp dateByAddingTimeInterval:1000] :
     [NSDate dateWithTimeIntervalSince1970:1231234];
-    [self sortedAppendMessage:systemMessage];
+    [self appendMessage:systemMessage];
 }
 
 - (void)setHasExpiredMessage:(BOOL)hasUnreadUnsentMessage

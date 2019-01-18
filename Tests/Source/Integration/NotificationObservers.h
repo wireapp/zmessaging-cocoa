@@ -64,17 +64,3 @@ typedef void(^ObserverCallback)(NSObject *note);
 
 @end
 
-
-@interface MessageWindowChangeObserver : ChangeObserver <ZMConversationMessageWindowObserver>
-- (instancetype)initWithMessageWindow:(ZMConversationMessageWindow *)window;
-
-@end
-
-@interface MockConversationWindowObserver : NSObject <ZMConversationMessageWindowObserver>
-
-@property (nonatomic, readonly) NSOrderedSet *computedMessages; //< this is the list of messages according to the inial list + applying all notifications so far
-@property (nonatomic, readonly) ZMConversationMessageWindow *window;
-
-- (instancetype)initWithConversation:(ZMConversation *)conversation size:(NSUInteger)size;
-
-@end

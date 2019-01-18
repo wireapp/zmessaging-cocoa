@@ -53,13 +53,5 @@
 
 @property (nonatomic) MockConversation *groupConversationWithOnlyConnected;
 @property (nonatomic) MockConversation *emptyGroupConversation;
-@property (nonatomic) NSMutableArray *receivedConversationWindowChangeNotifications;
 
 @end
-
-@interface ConversationTestsBase (ConversationWindow) <ZMConversationMessageWindowObserver>
-
-- (MockConversationWindowObserver *)windowObserverAfterLogginInAndInsertingMessagesInMockConversation:(MockConversation *)mockConversation;
-
-@end
-

@@ -595,14 +595,14 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             self.checkLastMessage(in: teamConversation, isLeaveMessageFor: user, at: timestamp)
             self.checkLastMessage(in: teamAnotherConversation, isLeaveMessageFor: user, at: timestamp)
             
-            if let lastMessage = conversation.messages.lastObject as? ZMSystemMessage, lastMessage.systemMessageType == .teamMemberLeave {
+            if let lastMessage = conversation.recentMessages.last as? ZMSystemMessage, lastMessage.systemMessageType == .teamMemberLeave {
                 XCTFail("Should not append leave message to regular conversation")
             }
         }
     }
     
     private func checkLastMessage(in conversation: ZMConversation, isLeaveMessageFor user: ZMUser, at timestamp: Date,  file: StaticString = #file, line: UInt = #line) {
-        guard let lastMessage = conversation.messages.lastObject as? ZMSystemMessage else { XCTFail("Last message is not system message", file: file, line: line); return }
+        guard let lastMessage = conversation.recentMessages.last as? ZMSystemMessage else { XCTFail("Last message is not system message", file: file, line: line); return }
         guard lastMessage.systemMessageType == .teamMemberLeave else { XCTFail("System message is not teamMemberLeave: but '\(lastMessage.systemMessageType.rawValue)'", file: file, line: line); return }
         guard let serverTimestamp = lastMessage.serverTimestamp else { XCTFail("System message should have timestamp", file: file, line: line); return }
         XCTAssertEqual(serverTimestamp.timeIntervalSince1970, timestamp.timeIntervalSince1970, accuracy: 0.1, file: file, line:line)

@@ -773,7 +773,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     }];
 
     // expect
-    [(PushNotificationStatus *)[self.mockPushNotificationStatus expect] didFetchEventIds:eventIds finished:YES];
+    [(PushNotificationStatus *)[self.mockPushNotificationStatus expect] didFetchEventIds:eventIds lastEventId:OCMOCK_ANY finished:YES];
 
     XCTAssertNotNil(request);
 
@@ -796,7 +796,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
         }];
 
         // expect
-        [(PushNotificationStatus *)[self.mockPushNotificationStatus expect] didFetchEventIds:eventIds finished:NO];
+        [(PushNotificationStatus *)[self.mockPushNotificationStatus expect] didFetchEventIds:eventIds lastEventId:OCMOCK_ANY finished:NO];
 
         XCTAssertNotNil(request);
         [request completeWithResponse:response];
@@ -815,7 +815,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
         }];
 
         // expect
-        [(PushNotificationStatus *)[self.mockPushNotificationStatus expect] didFetchEventIds:eventIds finished:YES];
+        [(PushNotificationStatus *)[self.mockPushNotificationStatus expect] didFetchEventIds:eventIds lastEventId:OCMOCK_ANY finished:YES];
 
         XCTAssertNotNil(request);
         [request completeWithResponse:response];

@@ -69,6 +69,16 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
 {
     NOT_USED(note);
     [self notifyThirdPartyServices];
+    [self stopEphemeralTimers];
+}
+
+- (void)stopEphemeralTimers
+{
+    [self.syncManagedObjectContext performGroupedBlock:^{
+        [self.syncManagedObjectContext zm_teardownMessageObfuscationTimer];
+    }];
+
+    [self.managedObjectContext zm_teardownMessageDeletionTimer];
 }
 
 - (void)applicationWillEnterForeground:(NSNotification *)note;
