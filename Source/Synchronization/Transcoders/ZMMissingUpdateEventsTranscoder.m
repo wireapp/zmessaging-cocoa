@@ -262,7 +262,6 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         ZMTransportRequest *request = [self.listPaginator nextRequest];
 
         if (self.isFetchingStreamForAPNS && nil != request) {
-            [request forceToVoipSession];
             [self.notificationsTracker registerStartStreamFetching];
             [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.managedObjectContext block:^(__unused ZMTransportResponse * _Nonnull response) {
                 [self.notificationsTracker registerFinishStreamFetching];
