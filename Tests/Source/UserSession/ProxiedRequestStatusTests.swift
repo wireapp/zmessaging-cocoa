@@ -71,7 +71,7 @@ class ProxiedRequestsStatusTests: MessagingTest {
     func testCancelCancelsAssociatedDataTask() {
         // given
         let request = ProxyRequest(type: .giphy, path: "foo/bar", method: .methodGET, callback: nil)
-        let taskIdentifier = ZMTaskIdentifier(identifier: 0, sessionIdentifier: "123")!
+        let taskIdentifier = ZMTaskIdentifier(identifier: 0)!
         sut.executedRequests[request] = taskIdentifier
 
         // when
