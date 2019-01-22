@@ -47,6 +47,7 @@
 @protocol FlowManagerType;
 @protocol ZMApplication;
 @protocol LocalStoreProviderProtocol;
+@protocol EventProcessingTrackerProtocol;
 
 @interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory, TearDownCapable>
 
@@ -73,6 +74,7 @@
 @property (nonatomic, readonly, nonnull) NSArray<id<ZMEventConsumer>> *eventConsumers;
 @property (nonatomic, weak, readonly, nullable) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic, readonly) BOOL isReadyToProcessEvents;
+@property (nonatomic, nullable) id<EventProcessingTrackerProtocol> eventProcessingTracker;
 
 @end
 

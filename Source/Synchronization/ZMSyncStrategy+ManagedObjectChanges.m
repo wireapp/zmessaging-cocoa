@@ -50,6 +50,9 @@
         }] componentsJoinedByString:@", "];
         ZMLogWithLevelAndTag(ZMLogLevelDebug, ZMTAG_CORE_DATA, @"    Deleted: %@", description);
     }
+    
+    
+    [self.eventProcessingTracker registerCoreDataChangedBy:2.0];
 }
 
 - (void)managedObjectContextDidSave:(NSNotification *)note;

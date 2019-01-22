@@ -23,7 +23,6 @@
 @import WireTransport;
 @import WireDataModel;
 @import WireRequestStrategy;
-@import WireRequestStrategy;
 
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
@@ -122,7 +121,8 @@ ZM_EMPTY_ASSERTING_INIT()
         self.syncMOC = storeProvider.contextDirectory.syncContext;
         self.uiMOC = storeProvider.contextDirectory.uiContext;
         self.hotFix = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-
+        self.eventProcessingTracker = [[EventProcessingTracker alloc] init];
+        
         self.eventMOC = [NSManagedObjectContext createEventContextWithSharedContainerURL:storeProvider.applicationContainer userIdentifier:storeProvider.userIdentifier];
         [self.eventMOC addGroup:self.syncMOC.dispatchGroup];
         self.applicationStatusDirectory = applicationStatusDirectory;
@@ -231,6 +231,9 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)appWillEnterForeground:(NSNotification *)note
 {
     NOT_USED(note);
+
+    ZMLogWithLevelAndTag(0, ZMTAG_EVENT_PROCESSING, @"%@", self.eventProcessingTracker.debugDescription);
+    
     BackgroundActivity *activity = [BackgroundActivityFactory.sharedFactory startBackgroundActivityWithName:@"enter foreground"];
     [self.notificationDispatcher applicationWillEnterForeground];
     [self.syncMOC performGroupedBlock:^{
