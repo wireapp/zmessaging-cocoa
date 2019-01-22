@@ -137,7 +137,8 @@ public final class ServiceUserTests : IntegrationTest {
             XCTAssertNil(error)
             jobIsDone.fulfill()
         })
-        
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
         // then
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
@@ -152,6 +153,7 @@ public final class ServiceUserTests : IntegrationTest {
             XCTAssertNotNil(conversation)
             jobIsDone.fulfill()
         }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
