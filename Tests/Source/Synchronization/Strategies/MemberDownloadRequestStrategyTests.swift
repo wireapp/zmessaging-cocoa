@@ -131,7 +131,7 @@ class MemberDownloadRequestStrategyTests: MessagingTest {
                 "members": [
                     [
                         "user": member1UserId.transportString(),
-                        "permissions": ["self": 33, "copy": 0]
+                        "permissions": ["self": 17, "copy": 0]
                     ],
                     [
                         "user": member2UserId.transportString(),
@@ -158,9 +158,9 @@ class MemberDownloadRequestStrategyTests: MessagingTest {
             XCTAssertEqual(users.count, 2)
             users.forEach {
                 if $0.remoteIdentifier == member1UserId {
-                    XCTAssertEqual($0.permissions, [.createConversation, .removeConversationMember])
+                    XCTAssertEqual($0.membership?.permissions, [.createConversation, .addRemoveConversationMember])
                 } else {
-                    XCTAssertEqual($0.permissions, .admin)
+                    XCTAssertEqual($0.membership?.permissions, .admin)
                 }
             }
             XCTAssertEqual(Set(users.map { $0.remoteIdentifier! }), [member1UserId, member2UserId])
@@ -208,7 +208,7 @@ class MemberDownloadRequestStrategyTests: MessagingTest {
                 "members": [
                     [
                         "user": member1UserId.transportString(),
-                        "permissions": ["self": 33, "copy": 0]
+                        "permissions": ["self": 17, "copy": 0]
                     ],
                 ]
             ]
@@ -226,7 +226,7 @@ class MemberDownloadRequestStrategyTests: MessagingTest {
             let users = team.members.compactMap { $0.user }
             XCTAssertEqual(users.count, 1)
             guard let user1 = users.first, user1.remoteIdentifier == member1UserId  else { return XCTFail() }
-            XCTAssertEqual(user1.permissions, [.createConversation, .removeConversationMember])
+            XCTAssertEqual(user1.membership?.permissions, [.createConversation, .addRemoveConversationMember])
         }
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))

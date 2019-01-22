@@ -116,7 +116,7 @@ class PermissionsDownloadRequestStrategyTests: MessagingTest {
             // when
             let payload: [String: Any] = [
                 "user": user.remoteIdentifier!.transportString(),
-                "permissions": ["self": 33, "copy": 0]
+                "permissions": ["self": 17, "copy": 0]
             ]
 
             let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
@@ -130,7 +130,7 @@ class PermissionsDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             // then
             XCTAssertFalse(member.needsToBeUpdatedFromBackend)
-            XCTAssertEqual(member.permissions, [.createConversation, .removeConversationMember])
+            XCTAssertEqual(member.permissions, [.createConversation, .addRemoveConversationMember])
             XCTAssertEqual(member.user, user)
         }
 

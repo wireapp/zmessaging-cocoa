@@ -232,7 +232,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
             guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
             let payload: [String: Any] = [
                 "members": [
-                    ["user": UUID.create().transportString(), "permissions": NSNumber(value: Permissions.addConversationMember.rawValue)]
+                    ["user": UUID.create().transportString(), "permissions": NSNumber(value: Permissions.addRemoveConversationMember.rawValue)]
                 ]
             ]
             
