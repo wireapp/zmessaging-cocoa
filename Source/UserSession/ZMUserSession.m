@@ -238,6 +238,7 @@ ZM_EMPTY_ASSERTING_INIT()
         }];
         
         self.userExpirationObserver = [[UserExpirationObserver alloc] initWithManagedObjectContext:self.managedObjectContext];
+        [self startEphemeralTimers];
         
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
