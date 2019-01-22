@@ -55,6 +55,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var isTeamMember: Bool = false
     
+    var teamRole: TeamRole = .member
+    
     var canBeConnected: Bool = false
     
     var isServiceUser: Bool = true

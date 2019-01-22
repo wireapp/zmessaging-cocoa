@@ -1438,7 +1438,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         Team *team = [Team insertNewObjectInManagedObjectContext:self.syncMOC];
         team.remoteIdentifier = NSUUID.createUUID;
         Member *member = [Member getOrCreateMemberForUser:[ZMUser selfUserInContext:self.syncMOC] inTeam:team context:self.syncMOC];
-        [member setPermissionsObjC:PermissionsObjCMember];
+        [member setTeamRole:TeamRoleMember];
         NOT_USED(member);
         ZMConversation *insertedConversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:users inTeam:team];
         if (modifier) {
