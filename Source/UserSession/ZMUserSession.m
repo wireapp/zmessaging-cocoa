@@ -247,7 +247,6 @@ ZM_EMPTY_ASSERTING_INIT()
 
 - (void)tearDown
 {
-    [self stopEphemeralTimers];
     [self.observersToken removeAllObjects];
     [self.application unregisterObserverForStateChange:self];
     self.mediaManager = nil;
