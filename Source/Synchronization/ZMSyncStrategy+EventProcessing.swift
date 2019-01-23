@@ -46,12 +46,15 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
             for event in decryptedUpdateEvents {
                 for eventConsumer in self.eventConsumers {
                     eventConsumer.processEvents([event], liveEvents: true, prefetchResult: prefetchResult)
-                    self.eventProcessingTracker?.registerEventProcessed()
                 }
+                self.eventProcessingTracker?.registerEventProcessed()
             }
-            
             localNotificationDispatcher?.processEvents(decryptedUpdateEvents, liveEvents: true, prefetchResult: nil)
             syncMOC.saveOrRollback()
+            
+            self.eventProcessingTracker?.registerProcessingFinished()
+            Logging.eventProcessing.debug(self.eventProcessingTracker?.debugDescription ?? "")
+            
         }
         
     }

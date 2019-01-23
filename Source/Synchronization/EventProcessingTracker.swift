@@ -22,10 +22,11 @@ import WireDataModel
 @objc public protocol EventProcessingTrackerProtocol: class {
     func registerStartedProcessing()
     func registerEventProcessed()
-    
-    @objc(registerCoreDataChangedBy:)
-    func registerCoreDataChanged(by amount: Double)
+    func registerDataInsertionPerformed(amount: UInt)
+    func registerDataUpdatePerformed(amount: UInt)
+    func registerDataDeletionPerformed(amount: UInt)
     func registerSavePerformed()
+    func registerProcessingFinished()
     var debugDescription: String { get }
 }
 
@@ -35,9 +36,11 @@ import WireDataModel
     let eventName = "event.processing"
     
     enum Attributes: String {
-        case startedProcessing
+        case processingDuration
         case processedEvents
-        case coreDataChanges
+        case dataDeletionPerformed
+        case dataInsertionPerformed
+        case dataUpdatePerformed
         case savesPerformed
         
         var identifier: String {
@@ -52,24 +55,38 @@ import WireDataModel
     }
     
     @objc public func registerStartedProcessing() {
-        save(attribute: .startedProcessing, value: Date().timeIntervalSince1970)
+        save(attribute: .processingDuration, value: Date().timeIntervalSince1970)
     }
     
     @objc public func registerEventProcessed() {
         increment(attribute: .processedEvents)
     }
     
-    @objc public func registerCoreDataChanged(by amount: Double = 1) {
-        increment(attribute: .coreDataChanges, by: amount)
-    }
-    
     @objc public func registerSavePerformed() {
         increment(attribute: .savesPerformed)
     }
     
+    @objc public func registerDataInsertionPerformed(amount: UInt = 1) {
+        increment(attribute: .dataInsertionPerformed)
+    }
+    
+    @objc public func registerDataUpdatePerformed(amount: UInt = 1) {
+        increment(attribute: .dataUpdatePerformed)
+    }
+    
+    @objc public func registerDataDeletionPerformed(amount: UInt = 1) {
+        increment(attribute: .dataDeletionPerformed)
+    }
+    
+    public func registerProcessingFinished() {
+        let attribute = Attributes.processingDuration
+        let currentValue = (persistedAttributes(for: eventName)[attribute.identifier] as? Double) ?? 0
+        save(attribute: attribute, value: Date().timeIntervalSince1970 - currentValue)
+    }
+    
     private func increment(attribute: Attributes, by amount: Double = 1) {
         isolationQueue.sync {
-            var currentAttributes = persistedAttributes(for: eventName) ?? [:]
+            var currentAttributes = persistedAttributes(for: eventName)
             var value = (currentAttributes[attribute.identifier] as? Double) ?? 0
             value += amount
             currentAttributes[attribute.identifier] = value as NSObject
@@ -79,7 +96,7 @@ import WireDataModel
     
     private func save(attribute: Attributes, value: Double) {
         isolationQueue.sync {
-            var currentAttributes = persistedAttributes(for: eventName) ?? [:]
+            var currentAttributes = persistedAttributes(for: eventName)
             var currentValue = (currentAttributes[attribute.identifier] as? Double) ?? 0
             currentValue = value
             currentAttributes[attribute.identifier] = currentValue as NSObject
@@ -89,7 +106,8 @@ import WireDataModel
     
     public func dispatchEvent() {
         isolationQueue.sync {
-            if let attributes = persistedAttributes(for: eventName), !attributes.isEmpty {
+            let attributes = persistedAttributes(for: eventName)
+            if !attributes.isEmpty {
                 setPersistedAttributes(nil, for: eventName)
             }
         }
@@ -101,16 +119,15 @@ import WireDataModel
         } else {
             eventAttributes.removeValue(forKey: event)
         }
-        print(Date(), "EventProcessing", #function, event, eventAttributes[event] ?? [:])
     }
     
-    private func persistedAttributes(for event: String) -> [String : NSObject]? {
-        let value = eventAttributes[event] ?? [:]
-        print(Date(), "EventProcessing", #function, event, value)
-        return value
+    private func persistedAttributes(for event: String) -> [String : NSObject] {
+        return eventAttributes[event] ?? [:]
     }
     
     override public var debugDescription: String {
-        return "Events performed current values: \(persistedAttributes(for: eventName) ?? [:])"
+        let description = "Events performed current values: \(persistedAttributes(for: eventName) )"
+        dispatchEvent()
+        return description
     }
 }
