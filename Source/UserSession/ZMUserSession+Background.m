@@ -73,24 +73,6 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     [self stopEphemeralTimers];
 }
 
-- (void)startEphemeralTimers
-{
-    [self.syncManagedObjectContext performGroupedBlock:^{
-        [self.syncManagedObjectContext zm_createMessageObfuscationTimer];
-    }];
-    
-    [self.managedObjectContext zm_createMessageDeletionTimer];
-}
-
-- (void)stopEphemeralTimers
-{
-    [self.syncManagedObjectContext performGroupedBlock:^{
-        [self.syncManagedObjectContext zm_teardownMessageObfuscationTimer];
-    }];
-
-    [self.managedObjectContext zm_teardownMessageDeletionTimer];
-}
-
 - (void)applicationWillEnterForeground:(NSNotification *)note;
 {
     NOT_USED(note);
