@@ -52,7 +52,7 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
             localNotificationDispatcher?.processEvents(decryptedUpdateEvents, liveEvents: true, prefetchResult: nil)
             syncMOC.saveOrRollback()
             
-            self.eventProcessingTracker?.registerProcessingFinished()
+            self.eventProcessingTracker?.registerFinishedProcessing()
             Logging.eventProcessing.debug(self.eventProcessingTracker?.debugDescription ?? "")
             
         }

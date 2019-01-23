@@ -26,14 +26,15 @@ import WireDataModel
     func registerDataUpdatePerformed(amount: UInt)
     func registerDataDeletionPerformed(amount: UInt)
     func registerSavePerformed()
-    func registerProcessingFinished()
+    func registerFinishedProcessing()
+    func persistedAttributes(for event: String) -> [String : NSObject]
     var debugDescription: String { get }
 }
 
 @objc public class EventProcessingTracker: NSObject, EventProcessingTrackerProtocol {
 
     var eventAttributes = [String : [String : NSObject]]()
-    let eventName = "event.processing"
+    public let eventName = "event.processing"
     
     enum Attributes: String {
         case processingDuration
@@ -78,7 +79,7 @@ import WireDataModel
         increment(attribute: .dataDeletionPerformed)
     }
     
-    public func registerProcessingFinished() {
+    public func registerFinishedProcessing() {
         let attribute = Attributes.processingDuration
         let currentValue = (persistedAttributes(for: eventName)[attribute.identifier] as? Double) ?? 0
         save(attribute: attribute, value: Date().timeIntervalSince1970 - currentValue)
@@ -121,7 +122,7 @@ import WireDataModel
         }
     }
     
-    private func persistedAttributes(for event: String) -> [String : NSObject] {
+    public func persistedAttributes(for event: String) -> [String : NSObject] {
         return eventAttributes[event] ?? [:]
     }
     

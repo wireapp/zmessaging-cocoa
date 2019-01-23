@@ -231,9 +231,6 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)appWillEnterForeground:(NSNotification *)note
 {
     NOT_USED(note);
-
-    ZMLogWithLevelAndTag(0, ZMTAG_EVENT_PROCESSING, @"%@", self.eventProcessingTracker.debugDescription);
-    
     BackgroundActivity *activity = [BackgroundActivityFactory.sharedFactory startBackgroundActivityWithName:@"enter foreground"];
     [self.notificationDispatcher applicationWillEnterForeground];
     [self.syncMOC performGroupedBlock:^{
