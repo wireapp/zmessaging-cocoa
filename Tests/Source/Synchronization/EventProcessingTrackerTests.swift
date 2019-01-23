@@ -109,8 +109,8 @@ final class EventProcessingTrackerTests: XCTestCase {
         
         let attributes = sut.persistedAttributes(for: sut.eventName)
         XCTAssertNotNil(attributes)
-        XCTAssertTrue(dateStarted > date.timeIntervalSince1970) //initial saved date is the timestamp
-        XCTAssertTrue(dateFinished > 0.0) //ending date is the difference between current date and saved one
+        XCTAssertTrue(dateStarted >= date.timeIntervalSince1970) //initial saved date is the timestamp
+        XCTAssertTrue(dateFinished >= 0.0) //ending date is the difference between current date and saved one
     }
     
 }
