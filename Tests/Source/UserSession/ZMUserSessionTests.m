@@ -722,3 +722,22 @@
 }
 
 @end
+
+
+
+@implementation ZMUserSessionTests (Transport)
+
+- (void)testThatItCallsTheTransportSessionWithTheIdentifierAndHandlerIf_AddCompletionHandlerForBackgroundSessionWithIdentifier_IsCalled
+{
+    // given
+    dispatch_block_t handler = ^{};
+    NSString * const identifier = @"com.wearezeta.background_session";
+    
+    // expect
+    [[self.transportSession expect] addCompletionHandlerForBackgroundSessionWithIdentifier:identifier handler:handler];
+    
+    // when
+    [self.sut addCompletionHandlerForBackgroundURLSessionWithIdentifier:identifier handler:handler];
+}
+
+@end

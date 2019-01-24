@@ -181,12 +181,14 @@ class ProxiedRequestStrategyTests: MessagingTest {
         let request : ZMTransportRequest? = self.sut.nextRequest()
         
         // when
-        request?.callTaskCreationHandlers(withIdentifier: 1)
+        request?.callTaskCreationHandlers(withIdentifier: 1, sessionIdentifier: "123")
         
         // then
         self.spinMainQueue(withTimeout: 0.2)
         let (executedRequest, taskIdentifier) = requestsStatus.executedRequests.first!
         XCTAssertEqual(proxyRequest, executedRequest)
         XCTAssertEqual(taskIdentifier.identifier, 1)
+        XCTAssertEqual(taskIdentifier.sessionIdentifier, "123")
+        
     }
 }

@@ -104,6 +104,19 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 
 @end
 
+
+
+@interface ZMUserSession (Transport)
+
+/// This method should be called from inside @c application(application:handleEventsForBackgroundURLSession identifier:completionHandler:)
+/// and passed the NSURLSession and completionHandler to store after recreating the background session with the given identifier.
+/// @param identifier The identifier that should be used to recreate the background @c NSURLSession
+/// @param handler The completion block from the OS that should be stored
+- (void)addCompletionHandlerForBackgroundURLSessionWithIdentifier:(NSString *)identifier handler:(dispatch_block_t)handler;
+
+@end
+
+
 @interface ZMUserSession (LaunchOptions)
 
 - (void)didLaunchWithURL:(NSURL *)URL;

@@ -444,6 +444,22 @@ ZM_EMPTY_ASSERTING_INIT()
 
 @end
 
+
+
+@implementation ZMUserSession (Transport)
+
+- (void)addCompletionHandlerForBackgroundURLSessionWithIdentifier:(NSString *)identifier handler:(dispatch_block_t)handler
+{
+    [self.transportSession addCompletionHandlerForBackgroundSessionWithIdentifier:identifier handler:handler];
+}
+
+@end
+
+
+
+
+
+
 @implementation ZMUserSession(NetworkState)
 
 - (void)changeNetworkStateAndNotify;
