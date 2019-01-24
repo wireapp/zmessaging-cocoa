@@ -109,7 +109,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string> </string>
+			<string>time</string>
 			<key>other</key>
 			<string> %2$@ times </string>
 		</dict>
@@ -125,7 +125,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string> </string>
+			<string>time</string>
 			<key>other</key>
 			<string> %2$@ times </string>
 		</dict>
@@ -173,7 +173,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>@</string>
 			<key>one</key>
-			<string> </string>
+			<string>time</string>
 			<key>other</key>
 			<string> %1$@ times</string>
 		</dict>
