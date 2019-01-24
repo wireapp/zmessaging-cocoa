@@ -36,8 +36,7 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
         eventDecoder.processEvents(updateEvents) { [weak self] (decryptedUpdateEvents) in
             guard let `self` = self else { return }
             
-            self.eventProcessingTracker?.registerStartedProcessing()
-            
+            let date = Date()
             let fetchRequest = prefetchRequest(updateEvents: decryptedUpdateEvents)
             let prefetchResult = syncMOC.executeFetchRequestBatchOrAssert(fetchRequest)
             
@@ -52,8 +51,7 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
             localNotificationDispatcher?.processEvents(decryptedUpdateEvents, liveEvents: true, prefetchResult: nil)
             syncMOC.saveOrRollback()
             
-            self.eventProcessingTracker?.registerFinishedProcessing()
-            Logging.eventProcessing.debug(self.eventProcessingTracker?.debugDescription ?? "")
+            Logging.eventProcessing.debug("Events processed in \(-date.timeIntervalSinceNow): \(self.eventProcessingTracker?.debugDescription ?? "")")
             
         }
         

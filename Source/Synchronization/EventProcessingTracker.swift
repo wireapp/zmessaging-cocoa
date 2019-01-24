@@ -20,13 +20,11 @@ import Foundation
 import WireDataModel
 
 @objc public protocol EventProcessingTrackerProtocol: class {
-    func registerStartedProcessing()
     func registerEventProcessed()
     func registerDataInsertionPerformed(amount: UInt)
     func registerDataUpdatePerformed(amount: UInt)
     func registerDataDeletionPerformed(amount: UInt)
     func registerSavePerformed()
-    func registerFinishedProcessing()
     func persistedAttributes(for event: String) -> [String : NSObject]
     var debugDescription: String { get }
 }
@@ -37,7 +35,6 @@ import WireDataModel
     public let eventName = "event.processing"
     
     enum Attributes: String {
-        case processingDuration
         case processedEvents
         case dataDeletionPerformed
         case dataInsertionPerformed
@@ -53,10 +50,6 @@ import WireDataModel
     
     public override init() {
         super.init()
-    }
-    
-    @objc public func registerStartedProcessing() {
-        save(attribute: .processingDuration, value: Date().timeIntervalSince1970)
     }
     
     @objc public func registerEventProcessed() {
@@ -79,26 +72,20 @@ import WireDataModel
         increment(attribute: .dataDeletionPerformed)
     }
     
-    public func registerFinishedProcessing() {
-        let attribute = Attributes.processingDuration
-        let currentValue = (persistedAttributes(for: eventName)[attribute.identifier] as? Double) ?? 0
-        save(attribute: attribute, value: Date().timeIntervalSince1970 - currentValue)
-    }
-    
-    private func increment(attribute: Attributes, by amount: Double = 1) {
+    private func increment(attribute: Attributes, by amount: Int = 1) {
         isolationQueue.sync {
             var currentAttributes = persistedAttributes(for: eventName)
-            var value = (currentAttributes[attribute.identifier] as? Double) ?? 0
+            var value = (currentAttributes[attribute.identifier] as? Int) ?? 0
             value += amount
             currentAttributes[attribute.identifier] = value as NSObject
             setPersistedAttributes(currentAttributes, for: eventName)
         }
     }
     
-    private func save(attribute: Attributes, value: Double) {
+    private func save(attribute: Attributes, value: Int) {
         isolationQueue.sync {
             var currentAttributes = persistedAttributes(for: eventName)
-            var currentValue = (currentAttributes[attribute.identifier] as? Double) ?? 0
+            var currentValue = (currentAttributes[attribute.identifier] as? Int) ?? 0
             currentValue = value
             currentAttributes[attribute.identifier] = currentValue as NSObject
             setPersistedAttributes(currentAttributes, for: eventName)
@@ -127,7 +114,7 @@ import WireDataModel
     }
     
     override public var debugDescription: String {
-        let description = "Events performed current values: \(persistedAttributes(for: eventName) )"
+        let description = "\(persistedAttributes(for: eventName))"
         dispatchEvent()
         return description
     }

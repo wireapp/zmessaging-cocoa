@@ -95,22 +95,4 @@ final class EventProcessingTrackerTests: XCTestCase {
         XCTAssertEqual(attributes[attribute.identifier] as? Int, 1)
     }
     
-    
-    func testThatLengthIsCorrect() {
-        
-        let attribute = EventProcessingTracker.Attributes.processingDuration.identifier
-        
-        let date = Date()
-        sut.registerStartedProcessing()
-        let dateStarted = sut.persistedAttributes(for: sut.eventName)[attribute] as! Double
-        
-        sut.registerFinishedProcessing()
-        let dateFinished = sut.persistedAttributes(for: sut.eventName)[attribute] as! Double
-        
-        let attributes = sut.persistedAttributes(for: sut.eventName)
-        XCTAssertNotNil(attributes)
-        XCTAssertTrue(dateStarted >= date.timeIntervalSince1970) //initial saved date is the timestamp
-        XCTAssertTrue(dateFinished >= 0.0) //ending date is the difference between current date and saved one
-    }
-    
 }
