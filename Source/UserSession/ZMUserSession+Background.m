@@ -32,6 +32,7 @@ static NSString *ZMLogTag = @"Push";
 
 - (void)application:(id<ZMApplication>)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
 {
+    [self startEphemeralTimers];
     NSDictionary *payload = launchOptions[UIApplicationLaunchOptionsRemoteNotificationKey];
     if (payload != nil) {
         [self application:application didReceiveRemoteNotification:payload fetchCompletionHandler:^(UIBackgroundFetchResult result) {
@@ -72,15 +73,6 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     [self stopEphemeralTimers];
 }
 
-- (void)stopEphemeralTimers
-{
-    [self.syncManagedObjectContext performGroupedBlock:^{
-        [self.syncManagedObjectContext zm_teardownMessageObfuscationTimer];
-    }];
-
-    [self.managedObjectContext zm_teardownMessageDeletionTimer];
-}
-
 - (void)applicationWillEnterForeground:(NSNotification *)note;
 {
     NOT_USED(note);
@@ -89,7 +81,7 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     [self mergeChangesFromStoredSaveNotificationsIfNeeded];
     
     [ZMConversationList refetchAllListsInUserSession:self];
-    
+    [self startEphemeralTimers];
     // In the case that an ephemeral was sent via the share extension, we need
     // to ensure that they have timers running or are deleted/obfuscated if
     // needed. Note: ZMMessageTimer will only create a new timer for a message
