@@ -647,6 +647,33 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         XCTAssertFalse(team.needsToRedownloadMembers)
         XCTAssertEqual(member.team, team)
     }
+    
+    // MARK: - Team Conversation-Create
+    
+    func testThatItIgnoresTeamConversationCreateUpdateEvent() {
+        // given
+        let conversationId = UUID.create()
+        let teamId = UUID.create()
+        
+        syncMOC.performGroupedBlockAndWait {
+            _ = Team.fetchOrCreate(with: teamId, create: true, in: self.syncMOC, created: nil)
+        }
+        
+        let payload: [String: Any] = [
+            "type": "team.conversation-create",
+            "team": teamId.transportString(),
+            "time": Date().transportString(),
+            "data": ["conv": conversationId.transportString()]
+        ]
+        
+        // when
+        processEvent(fromPayload: payload)
+        
+        // then
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertNil(ZMConversation.fetch(withRemoteIdentifier: conversationId, in: self.syncMOC))
+        }
+    }
 
     // MARK: - Conversation-Delete (Guest)
 
