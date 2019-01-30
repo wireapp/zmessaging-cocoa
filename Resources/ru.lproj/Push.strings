@@ -35,7 +35,7 @@
 
 // Ephemeral
 "push.notification.ephemeral.title" = "Кто-то";
-"push.notification.ephemeral" = "Отправил(а) вам сообщение";
+"push.notification.ephemeral" = "Отправил(а) сообщение";
 "push.notification.ephemeral.mention" = "Вас упомянули";
 "push.notification.ephemeral.reply" = "Ответил(а) вам";
 
@@ -83,58 +83,58 @@
 "push.notification.add.message.oneonone.nousername.reply" = "Новый ответ: %1$@";
 
 // IMAGE
-"push.notification.add.image.group" = "%1$@ поделился(-лась) картинкой";
+"push.notification.add.image.group" = "%1$@ поделился(лась) изображением";
 "push.notification.add.image.group.nousername" = "Новое изображение";
-"push.notification.add.image.group.nousername.noconversationname" = "Новая картинка в разговоре";
-"push.notification.add.image.group.noconversationname" = "%1$@ поделился картинкой в разговоре";
+"push.notification.add.image.group.nousername.noconversationname" = "Новое изображение в разговоре";
+"push.notification.add.image.group.noconversationname" = "%1$@ поделился изображением в разговоре";
 
-"push.notification.add.image.oneonone" = "Поделился(-лась) картинкой";
-"push.notification.add.image.oneonone.nousername" = "Новая картинка в беседе";
+"push.notification.add.image.oneonone" = "Поделился(лась) изображением";
+"push.notification.add.image.oneonone.nousername" = "Новое изображение в разговоре";
 
 // VIDEO
-"push.notification.add.video.group" = "%1$@ поделился(-лась) видео";
+"push.notification.add.video.group" = "%1$@ поделился(лась) видео";
 "push.notification.add.video.group.nousername" = "Новое видео";
 "push.notification.add.video.group.nousername.noconversationname" = "Новое видео в разговоре";
-"push.notification.add.video.group.noconversationname" = "%1$@ поделился(-лась) видео в разговоре";
+"push.notification.add.video.group.noconversationname" = "%1$@ поделился(лась) видео в разговоре";
 
-"push.notification.add.video.oneonone" = "Поделился(-лась) видео";
+"push.notification.add.video.oneonone" = "Поделился(лась) видео";
 "push.notification.add.video.oneonone.nousername" = "Новое видео в разговоре";
 
 // AUDIO
-"push.notification.add.audio.group" = "%1$@ поделился(-лась) звуковым сообщением";
+"push.notification.add.audio.group" = "%1$@ поделился(лась) звуковым сообщением";
 "push.notification.add.audio.group.nousername" = "Новое аудиосообщение";
 "push.notification.add.audio.group.nousername.noconversationname" = "Новое звуковое сообщение в разговоре";
-"push.notification.add.audio.group.noconversationname" = "%1$@ поделился(-лась) аудиосообщением в разговоре";
+"push.notification.add.audio.group.noconversationname" = "%1$@ поделился(лась) аудиосообщением в разговоре";
 
-"push.notification.add.audio.oneonone" = "Поделился(-лась) аудиосообщением";
+"push.notification.add.audio.oneonone" = "Поделился(лась) аудиосообщением";
 "push.notification.add.audio.oneonone.nousername" = "Новое аудиосообщение в разговоре";
 
 // FILE
-"push.notification.add.file.group" = "%1$@ поделился(-лась) файлом";
+"push.notification.add.file.group" = "%1$@ поделился(лась) файлом";
 "push.notification.add.file.group.nousername" = "Новый файл";
 "push.notification.add.file.group.nousername.noconversationname" = "Новый файл в разговоре";
-"push.notification.add.file.group.noconversationname" = "%1$@ поделился(-лась) файлом в разговоре";
+"push.notification.add.file.group.noconversationname" = "%1$@ поделился(лась) файлом в разговоре";
 
-"push.notification.add.file.oneonone" = "Поделился(-лась) файлом";
+"push.notification.add.file.oneonone" = "Поделился(лась) файлом";
 "push.notification.add.file.oneonone.nousername" = "Новый файл в разговоре";
 
 // LOCATION
-"push.notification.add.location.group" = "%1$@ поделился(-лась) местоположением";
+"push.notification.add.location.group" = "%1$@ поделился(лась) местоположением";
 "push.notification.add.location.group.nousername" = "Новое местоположение";
 "push.notification.add.location.group.nousername.noconversationname" = "Новое местоположение в разговоре";
-"push.notification.add.location.group.noconversationname" = "%1$@ поделился(-лась) местоположением в разговоре";
+"push.notification.add.location.group.noconversationname" = "%1$@ поделился(лась) местоположением в разговоре";
 
-"push.notification.add.location.oneonone" = "Поделился(-лась) местоположением";
+"push.notification.add.location.oneonone" = "Поделился(лась) местоположением";
 "push.notification.add.location.oneonone.nousername" = "Новое местоположение в разговоре";
 
 // SELF ADDED/REMOVED TO GROUP
 "push.notification.member.join.self" = "%1$@ добавил(а) вас";
-"push.notification.member.join.self.noconversationname" = "%1$@ добавил вас в разговор";
+"push.notification.member.join.self.noconversationname" = "%1$@ добавил(а) вас в разговор";
 "push.notification.member.join.self.nousername.noconversationname" = "Вы были добавлены в разговор";
 "push.notification.member.join.self.nousername" = "Вы были добавлены";
 
 "push.notification.member.leave.self" = "%1$@ удалил(а) вас";
-"push.notification.member.leave.self.noconversationname" = "%1$@ удалил вас из разговора";
+"push.notification.member.leave.self.noconversationname" = "%1$@ удалил(а) вас из разговора";
 "push.notification.member.leave.self.nousername.noconversationname" = "Вы были удалены из разговора";
 "push.notification.member.leave.self.nousername" = "Вы были удалены";
 
@@ -159,18 +159,18 @@
 "push.notification.call.started.video.group.nousername.noconversationname" = "Кто-то вызывает с видео в разговоре";
 
 // VOICE CALLS
-"push.notification.call.started.oneonone" = "звонит";
-"push.notification.call.started.oneonone.nousername" = "Звонок";
+"push.notification.call.started.oneonone" = "вызывает";
+"push.notification.call.started.oneonone.nousername" = "Вызов";
 
-"push.notification.call.started.group" = "%1$@ звонит";
-"push.notification.call.started.group.nousername" = "Звонок";
+"push.notification.call.started.group" = "%1$@ вызывает";
+"push.notification.call.started.group.nousername" = "Вызов";
 "push.notification.call.started.group.noconversationname" = "%1$@ звонит в разговоре";
 "push.notification.call.started.group.nousername.noconversationname" = "Кто-то звонит в разговоре";
 
 // MISSED CALLS
 "push.notification.call.missed.group" = "%1$@ звонил(а)";
 "push.notification.call.missed.group.nousername" = "Кто-то звонил";
-"push.notification.call.missed.group.nousername.noconversationname" = "Пропущенный звонок в разговоре";
+"push.notification.call.missed.group.nousername.noconversationname" = "Пропущенный вызов в разговоре";
 "push.notification.call.missed.group.noconversationname" = "%1$@ звонил(а) в разговоре";
 
 "push.notification.call.missed.oneonone" = "звонил(а)";
@@ -178,27 +178,27 @@
 
 // CALLKIT
 "push.notification.callkit.call.started.group" = "%1$@ в %2$@";
-"push.notification.callkit.call.started.group.nousername.noconversationname" = "Звонок";
+"push.notification.callkit.call.started.group.nousername.noconversationname" = "Кто-то вызывает в разговоре";
 "push.notification.callkit.call.started.group.nousername" = "Звонок в %1$@";
-"push.notification.callkit.call.started.group.noconversationname" = "%1$@ звонит";
+"push.notification.callkit.call.started.group.noconversationname" = "%1$@ звонит в разговоре";
 
 // CONVERSATION CREATE
 "push.notification.conversation.create" = "%1$@ создал(а) группу";
-"push.notification.conversation.create.nousername" = "Кто-то создал(а) группу";
+"push.notification.conversation.create.nousername" = "Кто-то создал группу";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ хочет подключиться";
 "push.notification.connection.request.nousername" = "Кто-то хочет подключиться";
 
-"push.notification.connection.accepted" = "Вы и %@ сейчас подключены";
+"push.notification.connection.accepted" = "Вы и %@ теперь списках контактов";
 "push.notification.connection.accepted.nousername" = "У вас есть новый контакт";
 
 // FAILED MESSAGE
-"push.notification.failed.message.oneonone" = "Не удается отправить сообщение";
-"push.notification.failed.message.oneonone.nousername" = "Не удается отправить сообщение";
+"push.notification.failed.message.oneonone" = "Невозможно отправить сообщение";
+"push.notification.failed.message.oneonone.nousername" = "Невозможно отправить сообщение";
 
-"push.notification.failed.message.group" = "Не удается отправить сообщение";
-"push.notification.failed.message.group.noconversationname" = "Не удается отправить сообщение";
+"push.notification.failed.message.group" = "Невозможно отправить сообщение";
+"push.notification.failed.message.group.noconversationname" = "Невозможно отправить сообщение";
 
 // REACTIONS
 "push.notification.reaction.group" = "%1$@ %2$@ ваше сообщение";

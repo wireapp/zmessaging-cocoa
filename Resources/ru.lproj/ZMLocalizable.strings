@@ -22,7 +22,7 @@
 
 "user_session.error.blacklisted-email" = "Этот адрес электронной почты не разрешен";
 "user_session.error.email-exists" = "Данный адрес email уже зарегистрирован";
-"user_session.error.invalid-email" = "Недопустимый адрес email";
+"user_session.error.invalid-email" = "Этот адрес электронной почты недействителен";
 "user_session.error.invalid-code" = "Пожалуйста, введите правильный код";
-"user_session.error.unauthorized-email" = "Что-то пошло не так - пожалуйста, попробуйте еще раз";
-"user_session.error.unknown" = "Что-то пошло не так - пожалуйста, попробуйте еще раз";
+"user_session.error.unauthorized-email" = "Что-то пошло не так. Пожалуйста, попробуйте еще раз";
+"user_session.error.unknown" = "Что-то пошло не так. Пожалуйста, попробуйте еще раз";

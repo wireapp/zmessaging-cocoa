@@ -98,7 +98,7 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string> %2$@ times </string>
+        <string>%2$@次</string>
       </dict>
     </dict>
     <key>push.notification.knock.group.noconversationname</key>
@@ -112,7 +112,7 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string> %2$@ times </string>
+        <string>%2$@次</string>
       </dict>
     </dict>
     <key>push.notification.knock.group.nousername</key>
@@ -154,7 +154,7 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>other</key>
-        <string> %1$@ times</string>
+        <string>%1$@次</string>
       </dict>
     </dict>
     <key>push.notification.knock.oneonone.nousername</key>

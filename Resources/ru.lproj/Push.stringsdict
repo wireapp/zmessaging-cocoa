@@ -16,7 +16,7 @@
         <key>one</key>
         <string>Новое сообщение</string>
         <key>few</key>
-        <string>%2$@ сообщений</string>
+        <string>%2$@ сообщения</string>
         <key>many</key>
         <string>%2$@ сообщений</string>
         <key>other</key>
@@ -36,7 +36,7 @@
         <key>one</key>
         <string>Новое сообщение</string>
         <key>few</key>
-        <string>%1$@ сообщений</string>
+        <string>%1$@ сообщения</string>
         <key>many</key>
         <string>%1$@ сообщений</string>
         <key>other</key>
@@ -56,7 +56,7 @@
         <key>one</key>
         <string>Новое сообщение</string>
         <key>few</key>
-        <string>%2$@ сообщений</string>
+        <string>%2$@ сообщения</string>
         <key>many</key>
         <string>%2$@ сообщений</string>
         <key>other</key>
@@ -76,7 +76,7 @@
         <key>one</key>
         <string>Новое сообщение</string>
         <key>few</key>
-        <string>%1$@ сообщений</string>
+        <string>%1$@ сообщения</string>
         <key>many</key>
         <string>%1$@ сообщений</string>
         <key>other</key>
@@ -96,7 +96,7 @@
         <key>one</key>
         <string>один пропущенный вызов</string>
         <key>few</key>
-        <string>%2@ пропущенных вызовов</string>
+        <string>%2@ пропущенных вызова</string>
         <key>many</key>
         <string>%2@ пропущенных вызовов</string>
         <key>other</key>
@@ -116,7 +116,7 @@
         <key>one</key>
         <string>один пропущенный вызов</string>
         <key>few</key>
-        <string>%1$@ пропущенных вызовов</string>
+        <string>%1$@ пропущенных вызова</string>
         <key>many</key>
         <string>%1$@ пропущенных вызовов</string>
         <key>other</key>
@@ -196,7 +196,7 @@
         <key>one</key>
         <string>Пинг</string>
         <key>few</key>
-        <string>%1$@ пингов</string>
+        <string>%1$@ пинга</string>
         <key>many</key>
         <string>%1$@ пингов</string>
         <key>other</key>
@@ -236,7 +236,7 @@
         <key>one</key>
         <string>Пинг</string>
         <key>few</key>
-        <string>%2$@ пингов</string>
+        <string>%2$@ пинга</string>
         <key>many</key>
         <string>%2$@ пингов</string>
         <key>other</key>
