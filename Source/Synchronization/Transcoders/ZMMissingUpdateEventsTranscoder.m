@@ -142,7 +142,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
                 // the conversation to make sure it appears below the last message
                 timestamp = [conversation.lastModifiedDate dateByAddingTimeInterval:offset] ?: [NSDate date];
             }
-            [conversation appendNewPotentialGapSystemMessageWithUsers:conversation.activeParticipants.set
+            [conversation appendNewPotentialGapSystemMessageWithUsers:conversation.activeParticipants
                                                             timestamp:timestamp];
         }
     }
