@@ -22,6 +22,7 @@ extension URL {
     enum Host {
         static let connect = "connect"
         static let login = "login"
+        static let startSSO = "start-sso"
     }
     enum Path {
         static let success = "success"
