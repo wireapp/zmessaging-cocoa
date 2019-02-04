@@ -1052,11 +1052,57 @@ extension SessionManagerTests {
     }
 }
 
+class MockSessionManagerURLHandlerDelegate: NSObject, SessionManagerURLHandlerDelegate  {
+
+    var allowedAction: URLAction?
+
+    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) {
+        callback(action == allowedAction)
+    }
+
+}
+
+extension SessionManagerTests {
+
+    func testThatItLogsOutWithCompanyLoginURL() {
+        // GIVEN
+        let id = UUID(uuidString: "1E628B42-4C83-49B7-B2B4-EF27BFE503EF")!
+        let url = URL(string: "wire://start-sso/wire-\(id)")!
+
+        sut = createManager()
+
+        let urlDelegate = MockSessionManagerURLHandlerDelegate()
+        urlDelegate.allowedAction = URLAction.startCompanyLogin(code: id)
+        sut?.urlHandler.delegate = urlDelegate
+
+        // WHEN
+        let logoutExpectation = expectation(description: "The company login flow starts when the user adds .")
+
+        delegate.onLogout = { error in
+            let loginCode = error?.userInfo[SessionManager.companyLoginCodeKey]
+            XCTAssertEqual(loginCode as? UUID, id)
+            XCTAssertEqual(error?.userSessionErrorCode, .addAccountRequested)
+            logoutExpectation.fulfill()
+        }
+
+        sut?.urlHandler.openURL(url, options: [:])
+
+        // THEN
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 2))
+
+        // CLEANUP
+        self.sut!.tearDownAllBackgroundSessions()
+    }
+
+}
+
 // MARK: - Mocks
 class SessionManagerTestDelegate: SessionManagerDelegate {
-    
-    func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: @escaping () -> Void) {
-        userSessionCanBeTornDown()
+
+    var onLogout: ((NSError?) -> Void)?
+    func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: (() -> Void)?) {
+        onLogout?(error as NSError?)
+        userSessionCanBeTornDown?()
     }
     
     func sessionManagerDidFailToLogin(account: Account?, error: Error) {
@@ -1084,7 +1130,7 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     func sessionManagerWillMigrateLegacyAccount() {
         // no op
     }
-    
+
 }
 
 class SessionManagerObserverMock: SessionManagerCreatedSessionObserver, SessionManagerDestroyedSessionObserver {

@@ -138,9 +138,10 @@ extension URLAction {
         switch self {
         case .companyLoginSuccess(let userInfo):
             unauthenticatedSession.authenticationStatus.loginSucceeded(with: userInfo)
-        case .companyLoginFailure:
+        case .startCompanyLogin(let code):
+            unauthenticatedSession.authenticationStatus.notifyCompanyLoginCodeDidBecomeAvailable(code)
+        case .companyLoginFailure, .warnInvalidCompanyLogin:
             break // no-op (error should be handled in UI)
-
         default:
             fatalError("This action cannot be executed with an unauthenticated session.")
         }
@@ -200,10 +201,10 @@ public final class SessionManagerURLHandler: NSObject {
         }
     }
 
-    fileprivate func handle(action: URLAction, in unauthenticatedSessio: UnauthenticatedSession) {
+    fileprivate func handle(action: URLAction, in unauthenticatedSession: UnauthenticatedSession) {
         delegate?.sessionManagerShouldExecuteURLAction(action) { shouldExecute in
             if shouldExecute {
-                action.execute(in: unauthenticatedSessio)
+                action.execute(in: unauthenticatedSession)
             }
         }
     }
