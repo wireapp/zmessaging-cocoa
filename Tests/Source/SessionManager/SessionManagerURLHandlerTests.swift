@@ -105,4 +105,39 @@ final class SessionManagerURLHandlerTests: MessagingTest {
         XCTAssertEqual(delegate.calls.count, 1)
         XCTAssertEqual(delegate.calls[0].0, .connectBot(serviceUser: expectedUserData))
     }
+
+    func testThatItParsesCompanyLoginLink() {
+        // given
+        let id = UUID(uuidString: "4B1BEDB9-8899-4855-96AF-6CCED6F6F638")!
+        let url = URL(string: "wire://start-sso/wire-\(id)")!
+
+        // when
+        let action = URLAction(url: url)
+
+        // then
+        XCTAssertEqual(action, .startCompanyLogin(code: id))
+    }
+
+    func testThatItDiscardsInvalidCompanyLoginLink() {
+        // given
+        let url = URL(string: "wire://start-sso/wire-4B1BEDB9-8899-4855-96AF")!
+
+        // when
+        let action = URLAction(url: url)
+
+        // then
+        XCTAssertEqual(action, .warnInvalidCompanyLogin(error: .invalidLink))
+    }
+
+    func testThatItDiscardsCompanyLoginLinkWithExtraContent() {
+        // given
+        let id = UUID(uuidString: "4B1BEDB9-8899-4855-96AF-6CCED6F6F638")!
+        let url = URL(string: "wire://start-sso/wire-\(id)/content")!
+
+        // when
+        let action = URLAction(url: url)
+
+        // then
+        XCTAssertEqual(action, .warnInvalidCompanyLogin(error: .invalidLink))
+    }
 }

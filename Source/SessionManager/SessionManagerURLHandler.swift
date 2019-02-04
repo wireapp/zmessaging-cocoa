@@ -23,6 +23,9 @@ public enum URLAction: Equatable {
     case companyLoginSuccess(userInfo: UserInfo)
     case companyLoginFailure(error: CompanyLoginError)
 
+    case startCompanyLogin(code: UUID)
+    case warnInvalidCompanyLogin(error: ConmpanyLoginRequestError)
+
     var requiresAuthentication: Bool {
         switch self {
         case .connectBot: return true
@@ -45,6 +48,13 @@ extension URLAction {
         }
         
         switch host {
+        case URL.Host.startSSO:
+            if let uuidCode = url.pathComponents.last.flatMap(CompanyLoginRequestDetector.requestCode) {
+                self = .startCompanyLogin(code: uuidCode)
+            } else {
+                self = .warnInvalidCompanyLogin(error: .invalidLink)
+            }
+
         case URL.Host.connect:
             guard let service = components.query(for: "service"),
                 let provider = components.query(for: "provider"),
