@@ -19,7 +19,7 @@
 import Foundation
 
 /**
- * Errors that can occur when requesting a company login session from a linl.
+ * Errors that can occur when requesting a company login session from a link.
  */
 
 public enum ConmpanyLoginRequestError: Error, Equatable {
