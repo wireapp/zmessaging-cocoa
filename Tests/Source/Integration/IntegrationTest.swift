@@ -619,9 +619,9 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
     
-    public func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: @escaping () -> Void) {
+    public func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: (() -> Void)?) {
         self.userSession = nil
-        userSessionCanBeTornDown()
+        userSessionCanBeTornDown?()
     }
 
     public func sessionManagerDidBlacklistCurrentVersion() {

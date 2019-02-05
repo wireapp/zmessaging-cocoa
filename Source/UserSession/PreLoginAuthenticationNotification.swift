@@ -38,6 +38,9 @@ extension ZMAuthenticationStatus : NotificationContext { } // Mark ZMAuthenticat
 
     /// Invoked when we have provided correct credentials and have an opportunity to import backup
     @objc optional func authenticationReadyToImportBackup(existingAccount: Bool)
+
+    /// A company login code did become availble. This means that the user clicked an SSO link with a valid code.
+    @objc optional func companyLoginCodeDidBecomeAvailable(_ code: UUID)
 }
 
 private enum PreLoginAuthenticationEvent {
@@ -47,6 +50,7 @@ private enum PreLoginAuthenticationEvent {
     case authenticationDidSucceed
     case loginCodeRequestDidFail(NSError)
     case loginCodeRequestDidSucceed
+    case companyLoginCodeDidBecomeAvailable(UUID)
 }
 
 @objc public class PreLoginAuthenticationNotification : NSObject {
@@ -83,6 +87,8 @@ private enum PreLoginAuthenticationEvent {
                 observer.authenticationDidFail?(error)
             case .authenticationDidSucceed:
                 observer.authenticationDidSucceed?()
+            case .companyLoginCodeDidBecomeAvailable(let code):
+                observer.companyLoginCodeDidBecomeAvailable?(code)
             }
         }
     }
@@ -118,6 +124,10 @@ public extension ZMAuthenticationStatus {
     
     @objc public func notifyLoginCodeRequestDidSucceed() {
         PreLoginAuthenticationNotification.notify(of: .loginCodeRequestDidSucceed, context: self)
+    }
+
+    @objc public func notifyCompanyLoginCodeDidBecomeAvailable(_ code: UUID) {
+        PreLoginAuthenticationNotification.notify(of: .companyLoginCodeDidBecomeAvailable(code), context: self)
     }
 }
 

@@ -39,7 +39,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 
 @objc public protocol SessionManagerDelegate : SessionActivationObserver {
     func sessionManagerDidFailToLogin(account: Account?, error : Error)
-    func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: @escaping () -> Void)
+    func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: (() -> Void)?)
     func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillMigrateAccount(_ account: Account)
     func sessionManagerWillMigrateLegacyAccount()
@@ -432,9 +432,15 @@ public protocol ForegroundNotificationResponder: class {
         }
     }
     
-    public func addAccount() {
+    public func addAccount(userInfo: [String: Any]? = nil) {
         confirmSwitchingAccount { [weak self] in
-            self?.logoutCurrentSession(deleteCookie: false, error: NSError(code: .addAccountRequested, userInfo: nil))
+            let error = NSError(code: .addAccountRequested, userInfo: userInfo)
+            if self?.unauthenticatedSession != nil {
+                // If the user is already unauthenticated, we dont need to log out the current session
+                self?.delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: nil)
+            } else {
+                self?.logoutCurrentSession(deleteCookie: false, error: error)
+            }
         }
     }
     
@@ -917,6 +923,20 @@ extension SessionManager : WireCallCenterCallStateObserver {
     
 }
 
+extension SessionManager {
+
+    /// The SSO code provided by the user when clicking their company link. Points to a UUID object.
+    public static var companyLoginCodeKey: String {
+        return "WireCompanyLoginCode"
+    }
+
+    /// The timestamp when the user initiated the request.
+    public static var companyLoginRequestTimestampKey: String {
+        return "WireCompanyLoginTimesta;p"
+    }
+
+}
+
 extension SessionManager : PreLoginAuthenticationObserver {
     
     @objc public func authenticationDidSucceed() {
@@ -931,6 +951,11 @@ extension SessionManager : PreLoginAuthenticationObserver {
         }
         
         delegate?.sessionManagerDidFailToLogin(account: nil, error: error)
+    }
+
+    public func companyLoginCodeDidBecomeAvailable(_ code: UUID) {
+        addAccount(userInfo: [SessionManager.companyLoginCodeKey: code,
+                              SessionManager.companyLoginRequestTimestampKey: Date()])
     }
 }
 
