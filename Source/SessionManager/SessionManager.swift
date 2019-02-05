@@ -930,6 +930,11 @@ extension SessionManager {
         return "WireCompanyLoginCode"
     }
 
+    /// The timestamp when the user initiated the request.
+    public static var companyLoginRequestTimestampKey: String {
+        return "WireCompanyLoginTimesta;p"
+    }
+
 }
 
 extension SessionManager : PreLoginAuthenticationObserver {
@@ -949,7 +954,8 @@ extension SessionManager : PreLoginAuthenticationObserver {
     }
 
     public func companyLoginCodeDidBecomeAvailable(_ code: UUID) {
-        addAccount(userInfo: [SessionManager.companyLoginCodeKey: code])
+        addAccount(userInfo: [SessionManager.companyLoginCodeKey: code,
+                              SessionManager.companyLoginRequestTimestampKey: Date()])
     }
 }
 
