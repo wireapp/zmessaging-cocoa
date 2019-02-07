@@ -39,7 +39,7 @@ class UserTests_AccountDeletion: IntegrationTest {
         
         // then
         let user1 = self.user(for: self.user1)!
-        XCTAssertTrue(user1.accountIsDeleted)
+        XCTAssertTrue(user1.isAccountDeleted)
     }
     
     func testThatUserIsRemovedFromAllConversationsWhenDeleted() {

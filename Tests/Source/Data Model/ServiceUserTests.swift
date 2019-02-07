@@ -61,6 +61,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var isServiceUser: Bool = true
     
+    var isAccountDeleted: Bool = false
+    
     func requestPreviewProfileImage() {
         
     }

@@ -600,6 +600,28 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     }];
 }
 
+- (void)testThatItProcessEventOfTypeZMUpdateEventUserDelete
+{
+    // given
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user.name = @"Lucky Luke";
+        user.emailAddress = @"lucky@luke.example.com";
+        user.remoteIdentifier = [NSUUID createUUID];
+        
+        NSDictionary *payload = @{ @"type" : @"user.delete",
+                                   @"id" : user.remoteIdentifier.transportString,
+                                   @"time": [NSDate date].transportString };
+        ZMUpdateEvent *event = [[ZMUpdateEvent alloc] initWithUuid:[NSUUID createUUID] payload:payload transient:NO decrypted:YES source:ZMUpdateEventSourceWebSocket];
+        
+        // when
+        [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
+        
+        // then
+        XCTAssertTrue(user.isAccountDeleted);
+    }];
+}
+
 - (void)testThatItMergesDuplicateUsersWhenFetchingUsers
 {
     // given
