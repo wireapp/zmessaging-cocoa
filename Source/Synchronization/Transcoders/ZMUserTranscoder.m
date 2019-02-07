@@ -164,45 +164,13 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
            liveEvents:(BOOL)liveEvents
        prefetchResult:(__unused ZMFetchRequestBatchResult *)prefetchResult;
 {
-    if(!liveEvents) {
+    if (!liveEvents) {
         return;
     }
     
-    for(ZMUpdateEvent *event in events) {
+    for (ZMUpdateEvent *event in events) {
         [self processUpdateEvent:event];
     }
-}
-
-- (void)processUpdateEvent:(ZMUpdateEvent *)event;
-{
-// expected type
-//    @{
-//      @"type" : @"user.update",
-//      @"user" : @{
-//              @"id" : "4324324234234234234234234234",
-//              @"name" : @"Mario"
-//              }
-//      };
-    if(event.type != ZMUpdateEventTypeUserUpdate) {
-        return;
-    }
-    
-    NSDictionary *userData = [event.payload dictionaryForKey:@"user"];
-    if(userData == nil) {
-        ZMLogError(@"User update event missing user: %@", event.payload);
-        return;
-    }
-    
-    NSUUID *userId = [userData uuidForKey:@"id"];
-    if(userId == nil) {
-        ZMLogError(@"User update event missing id: %@", userData);
-        return;
-    }
-    
-    ZMUser *user = [ZMUser fetchAndMergeWith:userId createIfNeeded:YES in:self.managedObjectContext];
-    [user updateWithTransportData:userData authoritative:NO];
-    
-    return;
 }
 
 - (NSArray *)fetchConnectedUsersInContext:(NSManagedObjectContext *)context

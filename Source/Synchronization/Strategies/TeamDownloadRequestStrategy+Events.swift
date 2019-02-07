@@ -96,18 +96,12 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
         guard let removedUserId = (data[TeamEventPayloadKey.user.rawValue] as? String).flatMap(UUID.init) else { return }
         guard let user = ZMUser(remoteID: removedUserId, createIfNeeded: false, in: managedObjectContext) else { return }
         if let member = user.membership {
-            managedObjectContext.delete(member)
             if user.isSelfUser {
                 deleteAccount()
             } else {
-                // Remove member from all team conversations he was a participant of
-                team.conversations.filter {
-                    $0.lastServerSyncedActiveParticipants.contains(user)
-                }.forEach {
-                    $0.appendTeamMemberRemovedSystemMessage(user: user, at: event.timeStamp() ?? Date())
-                    $0.internalRemoveParticipants(Set(arrayLiteral: user), sender: user)
-                }
+                user.markAccountAsDeleted(at: event.timeStamp() ?? Date())
             }
+            managedObjectContext.delete(member)
         } else {
             log.error("Trying to delete non existent membership of \(user) in \(team)")
         }

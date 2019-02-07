@@ -47,22 +47,6 @@
     return @[self.user1, self.user2, self.user3, self.selfUser];
 }
 
-- (NSArray *)visibleUsersWithPicture
-{
-    NSMutableArray *usersWithPicture = [NSMutableArray array];
-    
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        NOT_USED(session);
-        for(MockUser *user in [self allVisibileUsers]) {
-            if(user.smallProfileImageIdentifier != nil) {
-                [usersWithPicture addObject:user];
-            }
-        }
-    }];
-    
-    return usersWithPicture;
-}
-
 - (void)testThatSelfUserImagesAreDownloaded
 {
     XCTAssertTrue([self login]);
