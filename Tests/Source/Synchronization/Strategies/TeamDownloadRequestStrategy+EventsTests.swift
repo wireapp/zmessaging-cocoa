@@ -492,7 +492,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         token = nil
     }
 
-    func testThatItRemovesAMemberFromAllTeamConversationsSheWasPartOfWhenReceivingAMemberLeaveForThatMember() {
+    func testThatItRemovesAMemberFromAllGroupConversationsSheWasPartOfWhenReceivingAMemberLeaveForThatMember() {
         let teamId = UUID.create()
         let teamConversationId = UUID.create(), conversationId = UUID.create()
         let userId = UUID.create()
@@ -534,7 +534,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             guard let teamConversation = ZMConversation.fetch(withRemoteIdentifier: teamConversationId, in: self.syncMOC) else { return XCTFail("No Team Conversation") }
             guard let conversation = ZMConversation.fetch(withRemoteIdentifier: conversationId, in: self.syncMOC) else { return XCTFail("No Conversation") }
             XCTAssertFalse(teamConversation.lastServerSyncedActiveParticipants.contains(user))
-            XCTAssert(conversation.lastServerSyncedActiveParticipants.contains(user))
+            XCTAssertFalse(conversation.lastServerSyncedActiveParticipants.contains(user))
         }
     }
     
