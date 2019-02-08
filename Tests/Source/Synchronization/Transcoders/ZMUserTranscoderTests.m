@@ -750,31 +750,6 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     }];
 }
 
-- (void)_testThatItDoesNotProcessUpdateEventWrongType
-{
-    // given
-    [self.syncMOC performGroupedBlockAndWait:^{
-        NSString *initialName = @"Mario";
-        NSString *initialEmail = @"mario@mario.example.com";
-        ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-        user.name = initialName;
-        user.emailAddress = initialEmail;
-        user.remoteIdentifier = [NSUUID createUUID];
-        
-        NSMutableDictionary *payload = [self samplePayloadForUserID:user.remoteIdentifier];
-        payload[@"type"] = @"user.foobarx";
-        
-        ZMUpdateEvent *event = [[ZMUpdateEvent alloc] initWithUuid:[NSUUID createUUID] payload:payload transient:NO decrypted:YES source:ZMUpdateEventSourceWebSocket];
-        
-        // when
-        [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
-        
-        // then
-        XCTAssertEqualObjects(initialName, user.name);
-        XCTAssertEqualObjects(initialEmail, user.emailAddress);
-    }];
-}
-
 - (void)testThatDonwloadedUsersAreMarkAsCompletedEvenIfThePayloadDoesNotContainThem
 {
 
