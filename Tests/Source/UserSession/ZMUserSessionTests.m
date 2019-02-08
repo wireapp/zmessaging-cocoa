@@ -521,6 +521,7 @@
     [self.sut applicationDidEnterBackground:nil];
     [self.sut applicationWillEnterForeground:nil];
     [self.sut applicationDidEnterBackground:nil];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.thirdPartyServices.uploadCount, 2u);
@@ -543,6 +544,7 @@
     [self.sut didStartSync];
     [self.sut didFinishSync];
     [self.sut applicationDidEnterBackground:nil];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.thirdPartyServices.uploadCount, 2u);
