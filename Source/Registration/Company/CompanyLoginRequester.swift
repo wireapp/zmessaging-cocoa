@@ -105,12 +105,12 @@ public class CompanyLoginRequester {
         backendHost: String,
         callbackScheme: String,
         defaults: UserDefaults = .shared(),
-        session: URLSessionProtocol = URLSession.shared
+        session: URLSessionProtocol? = nil
         ) {
         self.backendHost = backendHost
         self.callbackScheme = callbackScheme
         self.defaults = defaults
-        self.session = session
+        self.session = session ?? URLSession(configuration: .ephemeral)
     }
     
     // MARK: - Token Validation

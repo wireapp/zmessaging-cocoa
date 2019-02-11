@@ -28,6 +28,10 @@ class UserSessionSourceDummy: UserSessionSource {
     init() {
         activeUnauthenticatedSession = UnauthenticatedSession(transportSession: TestUnauthenticatedTransportSession(), reachability: TestReachability(), delegate: nil)
     }
+
+    deinit {
+        activeUnauthenticatedSession.tearDown()
+    }
 }
  
 class OpenerDelegate: SessionManagerURLHandlerDelegate {
