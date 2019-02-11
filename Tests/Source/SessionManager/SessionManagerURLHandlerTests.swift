@@ -22,10 +22,14 @@ import XCTest
 @testable import WireSyncEngine
 
 class UserSessionSourceDummy: UserSessionSource {
-    weak var activeUserSession: ZMUserSession? = nil
-    weak var unauthenticatedSession: UnauthenticatedSession? = nil
-}
+    var activeUserSession: ZMUserSession? = nil
+    var activeUnauthenticatedSession: UnauthenticatedSession
 
+    init() {
+        activeUnauthenticatedSession = UnauthenticatedSession(transportSession: TestUnauthenticatedTransportSession(), reachability: TestReachability(), delegate: nil)
+    }
+}
+ 
 class OpenerDelegate: SessionManagerURLHandlerDelegate {
     var calls: [(URLAction, (Bool) -> Void)] = []
     func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) {
