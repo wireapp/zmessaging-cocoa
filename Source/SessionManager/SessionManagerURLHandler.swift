@@ -181,13 +181,11 @@ public final class SessionManagerURLHandler: NSObject {
             handle(action: action, in: userSession)
 
         } else {
-
-            guard let unauthenticatedSession = userSessionSource?.unauthenticatedSession else {
+            guard let unauthenticatedSession = userSessionSource?.activeUnauthenticatedSession else {
                 return false
             }
 
             handle(action: action, in: unauthenticatedSession)
-
         }
 
         return true

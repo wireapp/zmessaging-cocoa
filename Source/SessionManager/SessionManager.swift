@@ -49,7 +49,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 @objc
 public protocol UserSessionSource: class {
     var activeUserSession: ZMUserSession? { get }
-    var unauthenticatedSession: UnauthenticatedSession? { get }
+    var activeUnauthenticatedSession: UnauthenticatedSession { get }
 }
 
 @objc
@@ -201,6 +201,10 @@ public protocol ForegroundNotificationResponder: class {
     private static var token: Any?
     
     public var callKitDelegate : CallKitDelegate?
+
+    public var activeUnauthenticatedSession: UnauthenticatedSession {
+        return unauthenticatedSession ?? createUnauthenticatedSession()
+    }
     
     /// The entry point for SessionManager; call this instead of the initializers.
     ///
@@ -556,13 +560,15 @@ public protocol ForegroundNotificationResponder: class {
                                                  unreadCountObserver
         ]
     }
-    
-    fileprivate func createUnauthenticatedSession() {
+
+    @discardableResult
+    fileprivate func createUnauthenticatedSession() -> UnauthenticatedSession {
         log.debug("Creating unauthenticated session")
         self.unauthenticatedSession?.tearDown()
         let unauthenticatedSession = unauthenticatedSessionFactory.session(withDelegate: self)
         self.unauthenticatedSession = unauthenticatedSession
         self.preLoginAuthenticationToken = unauthenticatedSession.addAuthenticationObserver(self)
+        return unauthenticatedSession
     }
     
     fileprivate func configure(session userSession: ZMUserSession, for account: Account) {
