@@ -404,6 +404,13 @@ public protocol ForegroundNotificationResponder: class {
     }
 
     private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
+        if let url = launchOptions[UIApplication.LaunchOptionsKey.url] as? URL {
+            if URLAction(url: url)?.causesLogout == true {
+                // Do not log in if the launch URL action causes a logout
+                return
+            }
+        }
+        
         loadSession(for: account) { [weak self] session in
             guard let `self` = self, let session = session else { return }
             self.updateCurrentAccount(in: session.managedObjectContext)
