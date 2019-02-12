@@ -25,6 +25,13 @@ public enum URLAction: Equatable {
 
     case startCompanyLogin(code: UUID)
     case warnInvalidCompanyLogin(error: ConmpanyLoginRequestError)
+    
+    var causesLogout: Bool {
+        switch self {
+        case .startCompanyLogin: return true
+        default: return false
+        }
+    }
 
     var requiresAuthentication: Bool {
         switch self {
