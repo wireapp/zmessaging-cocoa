@@ -64,7 +64,16 @@ import Foundation
         
         // Conversation Type Group are ongoing, active conversation
         conversations.filter { $0.conversationType == .group }.forEach {
-            $0.appendNewConversationSystemMessageIfNeeded()
+            
+            let fetchRequest = ZMMessage.sortedFetchRequest() as! NSFetchRequest<ZMMessage>
+            fetchRequest.fetchLimit = 1
+            let messages = context.fetchOrAssert(request: fetchRequest)
+            
+            if let firstSystemMessage = messages.first as? ZMSystemMessage, firstSystemMessage.systemMessageType == .newConversation {
+                return // Skip if conversation already has a .newConversation system message
+            }
+            
+            $0.appendNewConversationSystemMessage(at: Date.distantPast)
         }
     }
     

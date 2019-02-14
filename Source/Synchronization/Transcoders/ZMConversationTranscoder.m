@@ -47,6 +47,11 @@ static NSString *const ConversationAccessRoleKey = @"access_role";
 static NSString *const ConversationTeamIdKey = @"teamid";
 static NSString *const ConversationTeamManagedKey = @"managed";
 
+typedef NS_ENUM(NSUInteger, ZMConversationSource) {
+    ZMConversationSourceUpdateEvent,
+    ZMConversationSourceSlowSync
+};
+
 @interface ZMConversationTranscoder () <ZMSimpleListRequestPaginatorSync>
 
 @property (nonatomic) ZMUpstreamModifiedObjectSync *modifiedSync;
@@ -224,6 +229,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
 - (ZMConversation *)createConversationFromTransportData:(NSDictionary *)transportData
                                         serverTimeStamp:(NSDate *)serverTimeStamp
+                                                 source:(ZMConversationSource)source
 {
     // If the conversation is not a group conversation, we need to make sure that we check if there's any existing conversation without a remote identifier for that user.
     // If it is a group conversation, we don't need to.
@@ -232,7 +238,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     VerifyReturnNil(typeNumber != nil);
     ZMConversationType const type = [ZMConversation conversationTypeFromTransportData:typeNumber];
     if (type == ZMConversationTypeGroup || type == ZMConversationTypeSelf) {
-        return [self createGroupOrSelfConversationFromTransportData:transportData serverTimeStamp:serverTimeStamp];
+        return [self createGroupOrSelfConversationFromTransportData:transportData serverTimeStamp:serverTimeStamp source:source];
     } else {
         return [self createOneOnOneConversationFromTransportData:transportData type:type serverTimeStamp:serverTimeStamp];
     }
@@ -240,6 +246,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
 - (ZMConversation *)createGroupOrSelfConversationFromTransportData:(NSDictionary *)transportData
                                                    serverTimeStamp:(NSDate *)serverTimeStamp
+                                                            source:(ZMConversationSource)source
 {
     NSUUID * const convRemoteID = [transportData uuidForKey:@"id"];
     if(convRemoteID == nil) {
@@ -252,7 +259,13 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     
     if (conversation.conversationType != ZMConversationTypeSelf && conversationCreated) {
         // we just got a new conversation, we display new conversation header
-        [conversation appendNewConversationSystemMessageIfNeeded];
+        [conversation appendNewConversationSystemMessageAtTimestamp:serverTimeStamp];
+        
+        if (source == ZMConversationSourceSlowSync) {
+             // Slow synced conversations should be considered read from the start
+            conversation.lastReadServerTimeStamp = conversation.lastModifiedDate;
+        }
+        
         [self.managedObjectContext enqueueDelayedSave];
     }
     return conversation;
@@ -373,7 +386,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         return;
     }
     NSDate *serverTimestamp = [event.payload dateForKey:@"time"];
-    [self createConversationFromTransportData:payloadData serverTimeStamp:serverTimestamp];
+    [self createConversationFromTransportData:payloadData serverTimeStamp:serverTimestamp source:ZMConversationSourceUpdateEvent];
 }
 
 - (void)processEvents:(NSArray<ZMUpdateEvent *> *)events
@@ -814,7 +827,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     NSArray *conversations = [payload arrayForKey:@"conversations"];
     
     for (NSDictionary *rawConversation in [conversations asDictionaries]) {
-        ZMConversation *conversation = [self createConversationFromTransportData:rawConversation serverTimeStamp:nil];
+        ZMConversation *conversation = [self createConversationFromTransportData:rawConversation serverTimeStamp:[NSDate date] source:ZMConversationSourceSlowSync];
         conversation.needsToBeUpdatedFromBackend = NO;
         
         if (conversation != nil) {
