@@ -449,7 +449,6 @@
     }
     XCTAssertEqual(updatesCount, 1);
     XCTAssertEqual(moves.count, 1u);
-    XCTAssertEqual([(ZMMovedIndex *)moves.firstObject from], 1u);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject to], 0u);
 }
 
@@ -621,11 +620,11 @@
 
     ZMConversation *oneToOneConversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     MockUser *mockUser = [self createSentConnectionFromUserWithName:@"Hans" uuid:NSUUID.createUUID];
+    ZMConversation *newConnectionConversation = [[self userForMockUser:mockUser] oneToOneConversation];
     
     WaitForAllGroupsToBeEmpty(0.5);
 
     ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
-    ZMConversation *sentConversation = conversationList.firstObject;
 
     [self.mockTransportSession performRemoteChanges:^(__unused MockTransportSession<MockTransportSessionObjectCreation> *session) {
         ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"some message" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
@@ -634,11 +633,7 @@
     
     WaitForAllGroupsToBeEmpty(0.5);
     
-    NSUInteger from = [conversationList indexOfObject:sentConversation];
     XCTAssertEqualObjects(oneToOneConversation, conversationList[0]);
-    NSUInteger pendingIndex = [conversationList indexOfObject:sentConversation];
-    pendingIndex = conversationList.count;
-    
     ConversationListChangeObserver *conversationListChangeObserver = [[ConversationListChangeObserver alloc] initWithConversationList:conversationList];
     
     //when
@@ -662,11 +657,9 @@
     }
     XCTAssertGreaterThanOrEqual(updatesCount, 1);
     XCTAssertEqual(moves.count, 1u);
-    XCTAssertEqual([(ZMMovedIndex *)moves.firstObject from], from);
     XCTAssertEqual([(ZMMovedIndex *)moves.firstObject to], 0u);
-
     
-    XCTAssertEqualObjects(sentConversation, conversationList.firstObject);
+    XCTAssertEqualObjects(newConnectionConversation, conversationList[0]);
     XCTAssertEqualObjects(oneToOneConversation, conversationList[1]);
 }
 
@@ -1149,16 +1142,12 @@
 
 - (void)testThatAcceptingArchivedOutgoingRequest_Unarchives_ThisConversation
 {
+    // given
     XCTAssertTrue([self login]);
 
     MockUser *mockUser = [self createSentConnectionFromUserWithName:@"Hans" uuid:NSUUID.createUUID];
-    ZMConversationList *conversations = [ZMConversationList conversationsInUserSession:self.userSession];
-    ZMConversation *conversation = conversations.firstObject;
-    // expect
+    ZMConversation *conversation = [[self userForMockUser:mockUser] oneToOneConversation];
     
-    BOOL shouldUnarchive = YES;
-    
-    // when
     [self.userSession performChanges:^{
         conversation.isArchived = YES;
     }];
@@ -1172,11 +1161,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    if (shouldUnarchive) {
-        XCTAssertFalse(conversation.isArchived);
-    } else {
-        XCTAssertTrue(conversation.isArchived);
-    }
+    XCTAssertFalse(conversation.isArchived);
 }
 
 @end

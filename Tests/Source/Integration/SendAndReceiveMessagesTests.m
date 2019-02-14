@@ -225,14 +225,8 @@
 - (void)testThatItSetsTheLastReadWhenInsertingAText
 {
     // given
-    XCTAssert([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
+    XCTAssertTrue([self login]);
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    
-    NSDate *pastDate = [[NSDate date] dateByAddingTimeInterval:-100];
-    XCTAssertEqual(conversation.recentMessages.count, 2u);
-    XCTAssertNil(conversation.lastReadServerTimeStamp);
     
     // when
     __block ZMMessage *message;
@@ -242,21 +236,14 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertNotNil(conversation.lastReadServerTimeStamp);
-    XCTAssertNotEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [pastDate timeIntervalSince1970], 1.0);
+    XCTAssertEqualObjects(conversation.lastReadServerTimeStamp, message.serverTimestamp);
 }
 
 - (void)testThatItSetsTheLastReadWhenInsertingAKnock
 {
     // given
-    XCTAssert([self login]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
+    XCTAssertTrue([self login]);
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    
-    NSDate *pastDate = [[NSDate date] dateByAddingTimeInterval:-100];
-    XCTAssertEqual(conversation.recentMessages.count, 2u);
-    XCTAssertNil(conversation.lastReadServerTimeStamp);
     
     // when
     __block ZMMessage *message;
@@ -266,8 +253,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertNotNil(conversation.lastReadServerTimeStamp);
-    XCTAssertNotEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [pastDate timeIntervalSince1970], 1.0);
+    XCTAssertEqualObjects(conversation.lastReadServerTimeStamp, message.serverTimestamp);
 }
 
 - (void)testThatItAppendsClientMessages

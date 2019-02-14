@@ -613,7 +613,7 @@ extension ZMConversationTranscoderTests_Swift {
             let valuedPayload: [String: Any] = [
                 "from": selfUser.remoteIdentifier!.transportString(),
                 "conversation": self.conversation!.remoteIdentifier!.transportString(),
-                "time": NSDate().transportString(),
+                "time": NSDate(timeIntervalSinceNow: 0).transportString(),
                 "data": ["message_timer": valuedMessageTimerMillis],
                 "type": "conversation.message-timer-update"
             ]
@@ -621,7 +621,7 @@ extension ZMConversationTranscoderTests_Swift {
             let payload: [String: Any] = [
                 "from": selfUser.remoteIdentifier!.transportString(),
                 "conversation": self.conversation!.remoteIdentifier!.transportString(),
-                "time": NSDate().transportString(),
+                "time": NSDate(timeIntervalSinceNow: 100).transportString(),
                 "data": ["message_timer": 0],
                 "type": "conversation.message-timer-update"
             ]
