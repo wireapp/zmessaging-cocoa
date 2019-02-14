@@ -154,6 +154,13 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                          [ZMHotFixDirectory refetchUserProperties:context];
                          [ZMHotFixDirectory refetchGroupConversations:context];
                      }],
+                    
+                    /// We need to mark all .newConversation system messages as read after we start to treat them as a readable message
+                    [ZMHotFixPatch
+                     patchWithVersion:@"230.0.0"
+                     patchCode:^(NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory markAllNewConversationSystemMessagesAsRead:context];
+                     }],
                     ];
     });
     return patches;

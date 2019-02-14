@@ -107,4 +107,65 @@ class ZMHotFixDirectoryTests: MessagingTest {
             XCTAssertTrue(c4.needsToBeUpdatedFromBackend)
         }
     }
+    
+    func testThatAllNewConversationSystemMessagesAreMarkedAsRead_WhenConversationWasNeverRead() {
+        syncMOC.performGroupedBlockAndWait {
+            
+            // given
+            let timestamp = Date()
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            conversation.conversationType = .group
+            conversation.appendNewConversationSystemMessage(at: timestamp)
+            XCTAssertEqual(conversation.unreadMessages.count, 1)
+            
+            // when
+            ZMHotFixDirectory.markAllNewConversationSystemMessagesAsRead(self.syncMOC)
+            
+            // then
+            XCTAssertEqual(conversation.unreadMessages.count, 0)
+        }
+    }
+    
+    func testThatAllNewConversationSystemMessagesAreMarkedAsRead_WhenConversationWasReadEarlier() {
+        syncMOC.performGroupedBlockAndWait {
+            
+            // given
+            let timestamp = Date()
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            conversation.conversationType = .group
+            conversation.appendNewConversationSystemMessage(at: timestamp)
+            conversation.lastReadServerTimeStamp = timestamp.addingTimeInterval(-1)
+            XCTAssertEqual(conversation.unreadMessages.count, 1)
+            
+            // when
+            ZMHotFixDirectory.markAllNewConversationSystemMessagesAsRead(self.syncMOC)
+            
+            // then
+            XCTAssertEqual(conversation.unreadMessages.count, 0)
+        }
+    }
+    
+    func testThatAllNewConversationSystemMessagesAreMarkedAsRead_ButNotAnythingAfter() {
+        syncMOC.performGroupedBlockAndWait {
+            
+            // given
+            let user = ZMUser.insertNewObject(in: self.syncMOC)
+            user.remoteIdentifier = UUID()
+            let timestamp = Date()
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            conversation.conversationType = .group
+            conversation.appendNewConversationSystemMessage(at: timestamp)
+            let message = conversation.append(text: "Hello") as? ZMClientMessage
+            message?.sender = user
+            conversation.lastReadServerTimeStamp = timestamp.addingTimeInterval(-1)
+            XCTAssertEqual(conversation.unreadMessages.count, 2)
+            
+            // when
+            ZMHotFixDirectory.markAllNewConversationSystemMessagesAsRead(self.syncMOC)
+            
+            // then
+            XCTAssertEqual(conversation.unreadMessages.count, 1)
+        }
+    }
+    
 }

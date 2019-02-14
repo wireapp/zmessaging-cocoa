@@ -62,18 +62,51 @@ import Foundation
         let fetchRequest = ZMConversation.sortedFetchRequest()
         guard let conversations = context.executeFetchRequestOrAssert(fetchRequest) as? [ZMConversation] else { return }
         
-        // Conversation Type Group are ongoing, active conversation
-        conversations.filter { $0.conversationType == .group }.forEach {
+        // Add .newConversation system message in all group conversations if not already present
+        conversations.filter { $0.conversationType == .group }.forEach { conversation in
             
-            let fetchRequest = ZMMessage.sortedFetchRequest() as! NSFetchRequest<ZMMessage>
+            let fetchRequest = NSFetchRequest<ZMMessage>(entityName: ZMMessage.entityName())
+            fetchRequest.predicate = NSPredicate(format: "%K == %@", ZMMessageConversationKey, conversation.objectID)
+            fetchRequest.sortDescriptors = ZMMessage.defaultSortDescriptors()
             fetchRequest.fetchLimit = 1
+            
             let messages = context.fetchOrAssert(request: fetchRequest)
             
             if let firstSystemMessage = messages.first as? ZMSystemMessage, firstSystemMessage.systemMessageType == .newConversation {
                 return // Skip if conversation already has a .newConversation system message
             }
             
-            $0.appendNewConversationSystemMessage(at: Date.distantPast)
+            conversation.appendNewConversationSystemMessage(at: Date.distantPast)
+        }
+    }
+    
+    public static func markAllNewConversationSystemMessagesAsRead(_ context: NSManagedObjectContext) {
+        let fetchRequest = ZMConversation.sortedFetchRequest()
+        guard let conversations = context.executeFetchRequestOrAssert(fetchRequest) as? [ZMConversation] else { return }
+        
+        conversations.filter({ $0.conversationType == .group }).forEach { conversation in
+        
+            let fetchRequest = NSFetchRequest<ZMMessage>(entityName: ZMMessage.entityName())
+            fetchRequest.predicate = NSPredicate(format: "%K == %@", ZMMessageConversationKey, conversation.objectID)
+            fetchRequest.sortDescriptors = ZMMessage.defaultSortDescriptors()
+            fetchRequest.fetchLimit = 1
+            
+            let messages = context.fetchOrAssert(request: fetchRequest)
+            
+            // Mark the first .newConversation system message as read if it's not already read.
+            if let firstSystemMessage = messages.first as? ZMSystemMessage,firstSystemMessage.systemMessageType == .newConversation,
+               let serverTimestamp = firstSystemMessage.serverTimestamp {
+                
+                guard let lastReadServerTimeStamp = conversation.lastReadServerTimeStamp else {
+                    // if lastReadServerTimeStamp is nil the conversation was never read
+                    return conversation.lastReadServerTimeStamp = serverTimestamp
+                }
+                
+                if serverTimestamp > lastReadServerTimeStamp {
+                    // conversation was read but not up until our system message
+                    conversation.lastReadServerTimeStamp = serverTimestamp
+                }
+            }
         }
     }
     
