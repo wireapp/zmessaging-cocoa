@@ -63,6 +63,10 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var isAccountDeleted: Bool = false
     
+    var managedByWire: Bool = true
+    
+    var extendedMetadata: [[String : String]]? = nil
+    
     func requestPreviewProfileImage() {
         
     }
