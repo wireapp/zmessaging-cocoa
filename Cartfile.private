@@ -1,2 +1,2 @@
-github "wireapp/wire-ios-mocktransport" ~> 94.0 
+github "wireapp/wire-ios-mocktransport" "feature/session-switch"
 github "wireapp/wire-ios-testing" ~> 17.0
