@@ -54,7 +54,505 @@
             </BuildableReference>
             <SkippedTests>
                <Test
+                  Identifier = "APNSTests">
+               </Test>
+               <Test
+                  Identifier = "APSSignalingKeyStoreTests">
+               </Test>
+               <Test
+                  Identifier = "AVSBridingTests">
+               </Test>
+               <Test
+                  Identifier = "AddressBookSearchTests">
+               </Test>
+               <Test
+                  Identifier = "AddressBookUploadRequestStrategyTest">
+               </Test>
+               <Test
+                  Identifier = "AnalyticsTests">
+               </Test>
+               <Test
+                  Identifier = "ApplicationStatusDirectoryTests">
+               </Test>
+               <Test
+                  Identifier = "AssetDeletionRequestStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "AssetDeletionStatusTests">
+               </Test>
+               <Test
+                  Identifier = "AvailabilityTests">
+               </Test>
+               <Test
+                  Identifier = "BackgroundAPNSConfirmationStatusTests">
+               </Test>
+               <Test
+                  Identifier = "BackgroundTests">
+               </Test>
+               <Test
+                  Identifier = "BuildTypeTests">
+               </Test>
+               <Test
+                  Identifier = "CallEventStatusTests">
+               </Test>
+               <Test
+                  Identifier = "CallKitDelegateTest">
+               </Test>
+               <Test
+                  Identifier = "CallParticipantsSnapshotTests">
+               </Test>
+               <Test
+                  Identifier = "CallStateObserverTests">
+               </Test>
+               <Test
+                  Identifier = "CallSystemMessageGeneratorTests">
+               </Test>
+               <Test
+                  Identifier = "CallingRequestStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "ClientManagementTests">
+               </Test>
+               <Test
+                  Identifier = "ClientUpdateStatusTests">
+               </Test>
+               <Test
+                  Identifier = "CompanyLoginActionTests">
+               </Test>
+               <Test
+                  Identifier = "CompanyLoginRequestDetectorTests">
+               </Test>
+               <Test
+                  Identifier = "CompanyLoginRequesterTests">
+               </Test>
+               <Test
+                  Identifier = "CompanyLoginVerificationTokenTests">
+               </Test>
+               <Test
+                  Identifier = "ConnectionTests">
+               </Test>
+               <Test
+                  Identifier = "ConversationMessageTimerTests">
+               </Test>
+               <Test
+                  Identifier = "ConversationStatusStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "ConversationTests">
+               </Test>
+               <Test
+                  Identifier = "ConversationTestsBase">
+               </Test>
+               <Test
+                  Identifier = "ConversationTestsOTR">
+               </Test>
+               <Test
+                  Identifier = "ConversationTests_Confirmation">
+               </Test>
+               <Test
+                  Identifier = "ConversationTests_Ephemeral">
+               </Test>
+               <Test
+                  Identifier = "ConversationTests_Guests">
+               </Test>
+               <Test
+                  Identifier = "ConversationTests_MessageEditing">
+               </Test>
+               <Test
+                  Identifier = "ConversationTests_Participants">
+               </Test>
+               <Test
+                  Identifier = "ConversationTests_ReceiptMode">
+               </Test>
+               <Test
+                  Identifier = "Conversation_ParticipantsTests">
+               </Test>
+               <Test
+                  Identifier = "DeleteAccountRequestStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "DeleteMessagesTests">
+               </Test>
+               <Test
+                  Identifier = "DiskDatabaseTest">
+               </Test>
+               <Test
+                  Identifier = "DispatchQueueSerialAsyncTests">
+               </Test>
+               <Test
+                  Identifier = "EventDecoderTest">
+               </Test>
+               <Test
+                  Identifier = "EventProcessingTrackerTests">
+               </Test>
+               <Test
+                  Identifier = "FileTransferTests">
+               </Test>
+               <Test
+                  Identifier = "FlowManagerTests">
+               </Test>
+               <Test
+                  Identifier = "GiphyTests">
+               </Test>
+               <Test
+                  Identifier = "HistorySynchronizationStatusTests">
+               </Test>
+               <Test
+                  Identifier = "IntegrationTest">
+               </Test>
+               <Test
+                  Identifier = "IsTypingTests">
+               </Test>
+               <Test
+                  Identifier = "LinkPreviewTests">
+               </Test>
+               <Test
+                  Identifier = "LocalNotificationDispatcherCallingTests">
+               </Test>
+               <Test
+                  Identifier = "LocalNotificationDispatcherTests">
+               </Test>
+               <Test
+                  Identifier = "LoginFlowTests">
+               </Test>
+               <Test
+                  Identifier = "MemberDownloadRequestStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "MessagingTest">
+               </Test>
+               <Test
+                  Identifier = "MessagingTestTests">
+               </Test>
+               <Test
+                  Identifier = "NSString_NormalizationTests">
+               </Test>
+               <Test
+                  Identifier = "NSURL_LaunchOptionsTests">
+               </Test>
+               <Test
+                  Identifier = "NotificationsTrackerTests">
+               </Test>
+               <Test
+                  Identifier = "OTRTests">
+               </Test>
+               <Test
+                  Identifier = "ObjectTranscoderTests">
+               </Test>
+               <Test
+                  Identifier = "OperationStatusTests">
+               </Test>
+               <Test
+                  Identifier = "PermissionsDownloadRequestStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "ProxiedRequestStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "ProxiedRequestsStatusTests">
+               </Test>
+               <Test
+                  Identifier = "PushChannelTests">
+               </Test>
+               <Test
+                  Identifier = "PushNotificationStatusTests">
+               </Test>
+               <Test
+                  Identifier = "PushNotificationTokenTests">
+               </Test>
+               <Test
+                  Identifier = "PushTokenStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "RandomHandleGeneratorTests">
+               </Test>
+               <Test
+                  Identifier = "RegistrationCredentialVerificationStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "RegistrationStatusTests">
+               </Test>
+               <Test
+                  Identifier = "RegistrationStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "RequestLoopAnalyticsTrackerTests">
+               </Test>
+               <Test
+                  Identifier = "RequestStrategyTestBase">
+               </Test>
+               <Test
+                  Identifier = "SearchDirectoryTests">
+               </Test>
+               <Test
+                  Identifier = "SearchRequestTests">
+               </Test>
+               <Test
+                  Identifier = "SearchResultTests">
+               </Test>
+               <Test
+                  Identifier = "SearchTaskTests">
+               </Test>
+               <Test
+                  Identifier = "SearchTests">
+               </Test>
+               <Test
+                  Identifier = "SearchUserImageStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "SendAndReceiveMessagesTests">
+               </Test>
+               <Test
+                  Identifier = "ServiceUserTests">
+               </Test>
+               <Test
+                  Identifier = "SessionManagerAVSTests">
+               </Test>
+               <Test
+                  Identifier = "SessionManagerTests">
+               </Test>
+               <Test
                   Identifier = "SessionManagerTests/testThatSessionManagerSetsUpAPNSEnvironmentOnLaunch()">
+               </Test>
+               <Test
+                  Identifier = "SessionManagerTests_Backup">
+               </Test>
+               <Test
+                  Identifier = "SessionManagerTests_MultiUserSession">
+               </Test>
+               <Test
+                  Identifier = "SessionManagerTests_Teams">
+               </Test>
+               <Test
+                  Identifier = "SessionManagerURLHandlerTests">
+               </Test>
+               <Test
+                  Identifier = "SlowSyncTests">
+               </Test>
+               <Test
+                  Identifier = "SlowSyncTestsTeams">
+               </Test>
+               <Test
+                  Identifier = "StoreUpdateEventTests">
+               </Test>
+               <Test
+                  Identifier = "SyncStatusTests">
+               </Test>
+               <Test
+                  Identifier = "TeamDownloadRequestStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "TeamDownloadRequestStrategy_EventsTests">
+               </Test>
+               <Test
+                  Identifier = "TeamInvitationRequestStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "TeamInvitationStatusTests">
+               </Test>
+               <Test
+                  Identifier = "TeamSyncRequestStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "TeamTests">
+               </Test>
+               <Test
+                  Identifier = "TextSearchTests">
+               </Test>
+               <Test
+                  Identifier = "TopConversationsDirectoryTests">
+               </Test>
+               <Test
+                  Identifier = "TypingEventTests">
+               </Test>
+               <Test
+                  Identifier = "TypingStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "UnauthenticatedSessionTests">
+               </Test>
+               <Test
+                  Identifier = "UpdateEventsStoreMigrationTests">
+               </Test>
+               <Test
+                  Identifier = "UserClientRequestFactoryTests">
+               </Test>
+               <Test
+                  Identifier = "UserClientRequestStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "UserExpirationObserverTests">
+               </Test>
+               <Test
+                  Identifier = "UserHandleTests">
+               </Test>
+               <Test
+                  Identifier = "UserImageAssetUpdateStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "UserImageStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "UserProfileImageUpdateStatusTests">
+               </Test>
+               <Test
+                  Identifier = "UserProfileImageV3Tests">
+               </Test>
+               <Test
+                  Identifier = "UserProfileTests">
+               </Test>
+               <Test
+                  Identifier = "UserProfileUpdateRequestStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "UserProfileUpdateStatusTests">
+               </Test>
+               <Test
+                  Identifier = "UserSessionErrorTests">
+               </Test>
+               <Test
+                  Identifier = "UserSessionGiphyRequestStateTests">
+               </Test>
+               <Test
+                  Identifier = "UserTests">
+               </Test>
+               <Test
+                  Identifier = "UserTests_AccountDeletion">
+               </Test>
+               <Test
+                  Identifier = "VoiceChannelV3Tests">
+               </Test>
+               <Test
+                  Identifier = "WireCallCenterV3Tests">
+               </Test>
+               <Test
+                  Identifier = "ZMAPSMessageDecoderTests">
+               </Test>
+               <Test
+                  Identifier = "ZMAuthenticationStatusTests">
+               </Test>
+               <Test
+                  Identifier = "ZMBlacklistDownloaderTest">
+               </Test>
+               <Test
+                  Identifier = "ZMBlacklistVerificatorTest">
+               </Test>
+               <Test
+                  Identifier = "ZMClientRegistrationStatusTests">
+               </Test>
+               <Test
+                  Identifier = "ZMConnectionTranscoderTest">
+               </Test>
+               <Test
+                  Identifier = "ZMConversationAccessModeTests">
+               </Test>
+               <Test
+                  Identifier = "ZMConversationTest_TypingUser">
+               </Test>
+               <Test
+                  Identifier = "ZMConversationTranscoderTests">
+               </Test>
+               <Test
+                  Identifier = "ZMConversationTranscoderTests_Swift">
+               </Test>
+               <Test
+                  Identifier = "ZMConversationVoiceChannelTests">
+               </Test>
+               <Test
+                  Identifier = "ZMCredentialsTests">
+               </Test>
+               <Test
+                  Identifier = "ZMEncodedNSUUIDWithTimestampTests">
+               </Test>
+               <Test
+                  Identifier = "ZMHotFixDirectoryTests">
+               </Test>
+               <Test
+                  Identifier = "ZMHotFixTests">
+               </Test>
+               <Test
+                  Identifier = "ZMHotFixTests_Integration">
+               </Test>
+               <Test
+                  Identifier = "ZMLastUpdateEventIDTranscoderTests">
+               </Test>
+               <Test
+                  Identifier = "ZMLocalNotificationLocalizationTests">
+               </Test>
+               <Test
+                  Identifier = "ZMLocalNotificationSetTests">
+               </Test>
+               <Test
+                  Identifier = "ZMLocalNotificationTests">
+               </Test>
+               <Test
+                  Identifier = "ZMLocalNotificationTests_CallState">
+               </Test>
+               <Test
+                  Identifier = "ZMLocalNotificationTests_Event">
+               </Test>
+               <Test
+                  Identifier = "ZMLocalNotificationTests_ExpiredMessage">
+               </Test>
+               <Test
+                  Identifier = "ZMLocalNotificationTests_Message">
+               </Test>
+               <Test
+                  Identifier = "ZMLocalNotificationTests_SystemMessage">
+               </Test>
+               <Test
+                  Identifier = "ZMLoginCodeRequestTranscoderTests">
+               </Test>
+               <Test
+                  Identifier = "ZMLoginTranscoderTests">
+               </Test>
+               <Test
+                  Identifier = "ZMMissingUpdateEventsTranscoderTests">
+               </Test>
+               <Test
+                  Identifier = "ZMOperationLoopTests">
+               </Test>
+               <Test
+                  Identifier = "ZMSelfStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "ZMSimpleListRequestPaginatorTests">
+               </Test>
+               <Test
+                  Identifier = "ZMSyncStrategyTests">
+               </Test>
+               <Test
+                  Identifier = "ZMTypingTests">
+               </Test>
+               <Test
+                  Identifier = "ZMTypingUsersTests">
+               </Test>
+               <Test
+                  Identifier = "ZMTypingUsersTimeoutTests">
+               </Test>
+               <Test
+                  Identifier = "ZMUserConsentTests">
+               </Test>
+               <Test
+                  Identifier = "ZMUserSessionRelocationTests">
+               </Test>
+               <Test
+                  Identifier = "ZMUserSessionSwiftTests">
+               </Test>
+               <Test
+                  Identifier = "ZMUserSessionTests">
+               </Test>
+               <Test
+                  Identifier = "ZMUserSessionTestsBase">
+               </Test>
+               <Test
+                  Identifier = "ZMUserSessionTests_PushNotifications">
+               </Test>
+               <Test
+                  Identifier = "ZMUserSessionTimersTests">
+               </Test>
+               <Test
+                  Identifier = "ZMUserTranscoderTests">
                </Test>
             </SkippedTests>
          </TestableReference>
