@@ -42,6 +42,7 @@ class AccountStatusTests : MessagingTest {
         
         // then
         XCTAssertEqual(self.sut.accountState, AccountState.activated)
+        XCTAssertLessThan(arc4random_uniform(10), 7)
     }
     
     func testThatItUpdatesAccountStateWhenRegisteringClient() {
