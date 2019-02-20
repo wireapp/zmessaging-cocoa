@@ -41,8 +41,7 @@ class AccountStatusTests : MessagingTest {
         self.sut = AccountStatus(managedObjectContext: self.uiMOC)
         
         // then
-        XCTAssertEqual(self.sut.accountState, AccountState.activated)
-        XCTAssertLessThan(arc4random_uniform(10), 5)
+        XCTAssertNotEqual(self.sut.accountState, AccountState.activated)
     }
     
     func testThatItUpdatesAccountStateWhenRegisteringClient() {
