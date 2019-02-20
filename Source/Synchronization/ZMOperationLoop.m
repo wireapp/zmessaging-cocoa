@@ -243,6 +243,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
             return nil;
         }
         ZMTransportRequest *request = [self.syncStrategy nextRequest];
+        BackgroundActivity *activity = request ? [BackgroundActivityFactory.sharedFactory startBackgroundActivityWithName:[NSString stringWithFormat:@"Generated: %@ %@", request.methodAsString, request.path]] : nil;
         [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *response) {
             ZM_STRONG(self);
             
@@ -253,6 +254,9 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
             
             [self.syncStrategy.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_global_queue(0, 0) block:^{
                 [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
+                if (activity) {
+                    [BackgroundActivityFactory.sharedFactory endBackgroundActivity:activity];
+                }
             }];
         }]];
         
@@ -270,7 +274,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     // this generates the request
     ZMTransportRequestGenerator generator = [self requestGenerator];
     
-    BackgroundActivity * const enqueueActivity = [BackgroundActivityFactory.sharedFactory startBackgroundActivityWithName:@"executeNextOperation"];
+    BackgroundActivity *enqueueActivity = [BackgroundActivityFactory.sharedFactory startBackgroundActivityWithName:@"executeNextOperation"];
 
     if (!enqueueActivity) {
         return;
