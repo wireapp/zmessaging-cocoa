@@ -243,7 +243,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
             return nil;
         }
         ZMTransportRequest *request = [self.syncStrategy nextRequest];
-        BackgroundActivity *activity = request ? [BackgroundActivityFactory.sharedFactory startBackgroundActivityWithName:[NSString stringWithFormat:@"Generated: %@ %@", request.methodAsString, request.path]] : nil;
         [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *response) {
             ZM_STRONG(self);
             
@@ -251,13 +250,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
             
             // Check if there is something to do now and when the save completes
             [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-            
-            [self.syncStrategy.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_global_queue(0, 0) block:^{
-                [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-                if (activity) {
-                    [BackgroundActivityFactory.sharedFactory endBackgroundActivity:activity];
-                }
-            }];
         }]];
         
         return request;
