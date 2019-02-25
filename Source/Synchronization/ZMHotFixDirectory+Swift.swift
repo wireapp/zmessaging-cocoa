@@ -49,7 +49,7 @@ import Foundation
         guard let messages = context.executeFetchRequestOrAssert(fetchRequest) as? [ZMAssetClientMessage] else { return }
         
         messages.forEach { message in
-            message.uploadState = .uploadingFailed
+            message.updateTransferState(.uploadingFailed, synchronize: false)
             if nil != message.imageMessageData {
                 message.expire()
             }
