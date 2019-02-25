@@ -49,8 +49,8 @@ class UserRichProfileIntegrationTests : IntegrationTest {
     
     func testThatItHandlesErrorWhenUpdatingRichInfo() {
         // given
-        let entry1 = ZMUser.RichProfileField(type: "email", value: "some@email.com")
-        let entry2 = ZMUser.RichProfileField(type: "position", value: "Chief Testing Officer")
+        let entry1 = UserRichProfileField(type: "email", value: "some@email.com")
+        let entry2 = UserRichProfileField(type: "position", value: "Chief Testing Officer")
 
         mockTransportSession.performRemoteChanges {
             self.team = $0.insertTeam(withName: "Name", isBound: true)
@@ -76,8 +76,8 @@ class UserRichProfileIntegrationTests : IntegrationTest {
     
     func testThatItUpdatesRichInfoWhenItDoesHaveIt() {
         // given
-        let entry1 = ZMUser.RichProfileField(type: "email", value: "some@email.com")
-        let entry2 = ZMUser.RichProfileField(type: "position", value: "Chief Testing Officer")
+        let entry1 = UserRichProfileField(type: "email", value: "some@email.com")
+        let entry2 = UserRichProfileField(type: "position", value: "Chief Testing Officer")
         mockTransportSession.performRemoteChanges { _ in
             self.teamUser1.appendRichInfo(type: entry1.type, value: entry1.value)
             self.teamUser1.appendRichInfo(type: entry2.type, value: entry2.value)
