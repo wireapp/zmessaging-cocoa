@@ -45,7 +45,7 @@ final class DummyServiceUser: NSObject, ServiceUser {
     var canCreateConversation: Bool = true
     
     func canAccessCompanyInformation(of user: UserType) -> Bool {
-        return true
+        return false
     }
     
     func canAddUser(to conversation: ZMConversation) -> Bool {
