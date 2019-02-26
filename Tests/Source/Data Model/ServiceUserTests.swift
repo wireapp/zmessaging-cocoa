@@ -52,7 +52,7 @@ final class DummyServiceUser: NSObject, ServiceUser {
     }
     
     func canAddUser(to conversation: ZMConversation) -> Bool {
-        return true
+        return false
     }
     
     func canRemoveUser(from conversation: ZMConversation) -> Bool {
