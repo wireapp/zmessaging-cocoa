@@ -23,6 +23,42 @@ import XCTest
 
 final class DummyServiceUser: NSObject, ServiceUser {
     
+    var needsRichProfileUpdate: Bool = false
+    
+    var availability: Availability = .none
+    
+    var teamName: String? = nil
+    
+    var isBlocked: Bool = false
+    
+    var isExpired: Bool = false
+    
+    var isPendingApprovalBySelfUser: Bool = false
+    
+    var isPendingApprovalByOtherUser: Bool = false
+    
+    var isWirelessUser: Bool = false
+    
+    var expiresAfter: TimeInterval = 0
+    
+    var readReceiptsEnabled: Bool = true
+    
+    var richProfile: [UserRichProfileField] = []
+    
+    var canCreateConversation: Bool = false
+    
+    func canAccessCompanyInformation(of user: UserType) -> Bool {
+        return false
+    }
+    
+    func canAddUser(to conversation: ZMConversation) -> Bool {
+        return false
+    }
+    
+    func canRemoveUser(from conversation: ZMConversation) -> Bool {
+        return false
+    }
+    
     var previewImageData: Data? = nil
     
     var completeImageData: Data? = nil

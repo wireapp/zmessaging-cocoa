@@ -250,10 +250,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
             
             // Check if there is something to do now and when the save completes
             [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-            
-            [self.syncStrategy.syncMOC.dispatchGroup notifyOnQueue:dispatch_get_global_queue(0, 0) block:^{
-                [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-            }];
         }]];
         
         return request;
@@ -270,7 +266,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     // this generates the request
     ZMTransportRequestGenerator generator = [self requestGenerator];
     
-    BackgroundActivity * const enqueueActivity = [BackgroundActivityFactory.sharedFactory startBackgroundActivityWithName:@"executeNextOperation"];
+    BackgroundActivity *enqueueActivity = [BackgroundActivityFactory.sharedFactory startBackgroundActivityWithName:@"executeNextOperation"];
 
     if (!enqueueActivity) {
         return;
