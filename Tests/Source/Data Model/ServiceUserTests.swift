@@ -42,10 +42,10 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var richProfile: [UserRichProfileField] = []
     
-    var canCreateConversation: Bool = true
+    var canCreateConversation: Bool = false
     
     func canAccessCompanyInformation(of user: UserType) -> Bool {
-        return true
+        return false
     }
     
     func canAddUser(to conversation: ZMConversation) -> Bool {
@@ -53,7 +53,7 @@ final class DummyServiceUser: NSObject, ServiceUser {
     }
     
     func canRemoveUser(from conversation: ZMConversation) -> Bool {
-        return true
+        return false
     }
     
     var previewImageData: Data? = nil
