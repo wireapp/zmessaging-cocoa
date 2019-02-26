@@ -53,7 +53,7 @@ final class DummyServiceUser: NSObject, ServiceUser {
     }
     
     func canRemoveUser(from conversation: ZMConversation) -> Bool {
-        return true
+        return false
     }
     
     var previewImageData: Data? = nil
