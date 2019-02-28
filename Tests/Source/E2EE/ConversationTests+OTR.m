@@ -127,7 +127,7 @@
     UserClient *selfClient = selfUser.selfClient;
     XCTAssertEqual(selfClient.missingClients.count, 0u);
     XCTAssertFalse([message hasLocalModificationsForKey:@"uploadState"]);
-    XCTAssertEqual(message.uploadState, AssetUploadStateDone);
+    XCTAssertEqual(message.transferState, AssetTransferStateUploaded);
 }
 
 - (void)testThatItAsksForMissingClientsKeysWhenDeliveringOtrMessage
@@ -317,10 +317,10 @@
     ZMUpdateEventType lastEventType = [MockEvent typeFromString:lastEventPayload[@"type"]];
     
     XCTAssertNotEqual(lastEventType, ZMUpdateEventTypeConversationOtrMessageAdd);
-    XCTAssertEqual(message.deliveryState, ZMDeliveryStatePending);
+    XCTAssertEqual(message.deliveryState, ZMDeliveryStateFailedToSend);
     
     XCTAssertFalse([message hasLocalModificationsForKey:@"uploadState"]);
-    XCTAssertEqual(message.uploadState, AssetUploadStateUploadingFailed);
+    XCTAssertEqual(message.transferState, AssetTransferStateUploadingFailed);
     
 }
 
@@ -640,12 +640,11 @@
     for (id obj in conversation.recentMessages) {
         (void) obj;
     }
-    NSUInteger initialMessagesCount = conversation.recentMessages.count;
     
     // when
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     [observer clearNotifications];
-    ZMGenericMessage *assetMessage = [self remotelyInsertOTRImageIntoConversation:mockConversation imageFormat:format];
+    [self remotelyInsertOTRImageIntoConversation:mockConversation imageFormat:format];
     
     // then
     XCTAssertEqual(observer.notifications.count, 1u);
@@ -657,9 +656,6 @@
     XCTAssertFalse(note.nameChanged);
     XCTAssertTrue(note.lastModifiedDateChanged);
     XCTAssertFalse(note.connectionStateChanged);
-    
-    ZMAssetClientMessage *msg = (ZMAssetClientMessage *)conversation.recentMessages[initialMessagesCount];
-    XCTAssertEqualObjects([msg.imageAssetStorage genericMessageFor:format], assetMessage);
 }
 
 - (void)testThatItSendsANotificationWhenRecievingAOtrMediumAssetMessageThroughThePushChannel
@@ -748,36 +744,41 @@
 
     NSData *encryptedImageData;
     NSData *imageData = [self verySmallJPEGData];
-    ZMGenericMessage *message = [self otrAssetGenericMessage:ZMImageFormatMedium imageData:imageData encryptedData:&encryptedImageData];
+    ZMGenericMessage *genericMessage = [self otrAssetGenericMessage:ZMImageFormatMedium imageData:imageData encryptedData:&encryptedImageData];
     NSUUID *assetId = [NSUUID createUUID];
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
         
         MockUserClient *senderClient = self.user1.clients.anyObject;
         MockUserClient *toClient = self.selfUser.clients.anyObject;
-        NSData *messageData = [MockUserClient encryptedWithData:message.data from:senderClient to:toClient];
+        NSData *messageData = [MockUserClient encryptedWithData:genericMessage.data from:senderClient to:toClient];
         [self.groupConversation insertOTRAssetFromClient:senderClient toClient:toClient metaData:messageData imageData:encryptedImageData assetId:assetId isInline:NO];
         [session createAssetWithData:encryptedImageData identifier:assetId.transportString contentType:@"" forConversation:self.groupConversation.identifier];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    ZMAssetClientMessage *imageMessageData = (ZMAssetClientMessage *)conversation.recentMessages.lastObject;
+    ZMAssetClientMessage *assetMessage = (ZMAssetClientMessage *)conversation.recentMessages.lastObject;
 
     // WHEN
     // remove all stored data, like cache is cleared
-    [self.userSession.managedObjectContext.zm_fileAssetCache deleteAssetData:imageMessageData format:ZMImageFormatMedium encrypted:YES];
-    [self.userSession.managedObjectContext.zm_fileAssetCache deleteAssetData:imageMessageData format:ZMImageFormatMedium encrypted:NO];
+    [self.userSession.managedObjectContext.zm_fileAssetCache deleteAssetData:assetMessage format:ZMImageFormatMedium encrypted:YES];
+    [self.userSession.managedObjectContext.zm_fileAssetCache deleteAssetData:assetMessage format:ZMImageFormatMedium encrypted:NO];
     
+    // We no longer process incoming V2 assets so we need manually set some properties to simulate having received the asset
+    [self.userSession performChanges:^{
+        assetMessage.version = 2;
+        assetMessage.assetId = assetId;
+    }];
     
     // THEN
-    XCTAssertNil([[imageMessageData imageMessageData] imageData]);
+    XCTAssertNil([[assetMessage imageMessageData] imageData]);
     
     [self.userSession performChanges:^{
-        [imageMessageData.imageMessageData requestImageDownload];
+        [assetMessage.imageMessageData requestFileDownload];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertNotNil([[imageMessageData imageMessageData] imageData]);
+    XCTAssertNotNil([[assetMessage imageMessageData] imageData]);
 }
 
 - (void)testThatAssetMediumIsRedownloadedIfNoDecryptedMessageDataIsStored
@@ -787,33 +788,39 @@
     
     NSData *encryptedImageData;
     NSData *imageData = [self verySmallJPEGData];
-    ZMGenericMessage *message = [self otrAssetGenericMessage:ZMImageFormatMedium imageData:imageData encryptedData:&encryptedImageData];
+    ZMGenericMessage *genericMessage = [self otrAssetGenericMessage:ZMImageFormatMedium imageData:imageData encryptedData:&encryptedImageData];
     NSUUID *assetId = [NSUUID createUUID];
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
         MockUserClient *senderClient = self.user1.clients.anyObject;
         MockUserClient *toClient = self.selfUser.clients.anyObject;
-        NSData *messageData = [MockUserClient encryptedWithData:message.data from:senderClient to:toClient];
+        NSData *messageData = [MockUserClient encryptedWithData:genericMessage.data from:senderClient to:toClient];
         [self.groupConversation insertOTRAssetFromClient:senderClient toClient:toClient metaData:messageData imageData:encryptedImageData assetId:assetId isInline:NO];
         [session createAssetWithData:encryptedImageData identifier:assetId.transportString contentType:@"" forConversation:self.groupConversation.identifier];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    ZMAssetClientMessage *imageMessageData = (ZMAssetClientMessage *)conversation.recentMessages.lastObject;
+    ZMAssetClientMessage *assetMessage = (ZMAssetClientMessage *)conversation.recentMessages.lastObject;
     
     // WHEN
     // remove decrypted data, but keep encrypted, like we crashed during decryption
-    [self.userSession.managedObjectContext.zm_fileAssetCache storeAssetData:imageMessageData format:ZMImageFormatMedium encrypted:YES data:encryptedImageData];
-    [self.userSession.managedObjectContext.zm_fileAssetCache deleteAssetData:imageMessageData format:ZMImageFormatMedium encrypted:NO];
+    [self.userSession.managedObjectContext.zm_fileAssetCache storeAssetData:assetMessage format:ZMImageFormatMedium encrypted:YES data:encryptedImageData];
+    [self.userSession.managedObjectContext.zm_fileAssetCache deleteAssetData:assetMessage format:ZMImageFormatMedium encrypted:NO];
+    
+    // We no longer process incoming V2 assets so we need manually set some properties to simulate having received the asset
+    [self.userSession performChanges:^{
+        assetMessage.version = 2;
+        assetMessage.assetId = assetId;
+    }];
     
     // THEN
-    XCTAssertNil([[imageMessageData imageMessageData] imageData]);
+    XCTAssertNil([[assetMessage imageMessageData] imageData]);
     [self.userSession performChanges:^{
-        [imageMessageData.imageMessageData requestImageDownload];
+        [assetMessage.imageMessageData requestFileDownload];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertNotNil([[imageMessageData imageMessageData] imageData]);
+    XCTAssertNotNil([[assetMessage imageMessageData] imageData]);
 }
 
 @end
@@ -1259,40 +1266,6 @@
     XCTAssertNotNil(message2);
     XCTAssertEqual(message2.conversation.securityLevel, ZMConversationSecurityLevelNotSecure);
     XCTAssertEqual(message1.deliveryState, ZMDeliveryStateFailedToSend);
-}
-
-- (void)testThatItDoesNotSendAnUploadedFailedMessageForFileMessagesUploadingThePlaceholderWhenDegrading
-{
-    // Given
-    XCTAssertTrue([self login]);
-
-    [self establishSessionWithMockUser:self.user1];
-    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    [self makeConversationSecured:conversation];
-
-    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
-        [session registerClientForUser:self.user1 label:@"iPhone" type:@"permanent"];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    // When
-    __block ZMAssetClientMessage *message;
-    [self.userSession performChanges:^{
-        NSURL *fileURL = [self createTestFile:self.name];
-        ZMFileMetadata *fileMetadata = [[ZMFileMetadata alloc] initWithFileURL:fileURL thumbnail:nil];
-        message = (ZMAssetClientMessage *)[conversation appendFile:fileMetadata nonce:NSUUID.createUUID];
-    }];
-
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    // Then
-    XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
-    XCTAssert(message.isExpired);
-    XCTAssertEqual(message.uploadState, AssetUploadStateDone);
-    XCTAssertEqual(message.transferState, ZMFileTransferStateFailedUpload);
 }
 
 - (void)testThatItInsertsNewClientSystemMessageWhenReceivedMissingClients
