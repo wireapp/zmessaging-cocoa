@@ -98,4 +98,34 @@ class ZMHotFixTests_Integration: MessagingTest {
         }
     }
 
+    func testThatItUpdatesManagedByPropertyFromUser_From_235_0_0() {
+        syncMOC.performGroupedBlock {
+            // GIVEN
+            self.syncMOC.setPersistentStoreMetadata("235.0.0", key: "lastSavedVersion")
+            self.syncMOC.setPersistentStoreMetadata(NSNumber(booleanLiteral: true), key: "HasHistory")
+
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            selfUser.needsToBeUpdatedFromBackend = false
+            self.syncMOC.saveOrRollback()
+
+            XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend)
+
+
+            // WHEN
+            let sut = ZMHotFix(syncMOC: self.syncMOC)
+            self.performIgnoringZMLogError {
+                sut!.applyPatches(forCurrentVersion: "235.0.0")
+            }
+        }
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        syncMOC.performGroupedBlock {
+            self.syncMOC.saveOrRollback()
+        }
+        syncMOC.performGroupedBlock {
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend)
+        }
+    }
+
 }

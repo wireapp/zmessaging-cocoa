@@ -143,6 +143,13 @@ import Foundation
 
         context.enqueueDelayedSave()
     }
+
+    /// Refreshes the self user.
+    public static func refetchSelfUser(_ context: NSManagedObjectContext) {
+        let selfUser = ZMUser.selfUser(in: context)
+        selfUser.needsToBeUpdatedFromBackend = true
+        context.enqueueDelayedSave()
+    }
     
     /// Marks all connected users (including self) to be refetched.
     /// Unconnected users are refreshed with a call to `refreshData` when information is displayed.

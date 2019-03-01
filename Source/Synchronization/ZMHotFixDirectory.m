@@ -161,6 +161,13 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory markAllNewConversationSystemMessagesAsRead:context];
                      }],
+
+                    /// We need to refetch the managedBy flag of the user after the backend release.
+                    [ZMHotFixPatch
+                     patchWithVersion:@"235.0.1"
+                     patchCode:^(NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory refetchUserProperties:context];
+                     }],
                     ];
     });
     return patches;
