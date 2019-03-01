@@ -575,6 +575,7 @@ public protocol ForegroundNotificationResponder: class {
         let unauthenticatedSession = unauthenticatedSessionFactory.session(withDelegate: self)
         self.unauthenticatedSession = unauthenticatedSession
         self.preLoginAuthenticationToken = unauthenticatedSession.addAuthenticationObserver(self)
+        NotificationInContext(name: sessionManagerCreatedUnauthenticatedSessionNotificationName, context: self, object: unauthenticatedSession).post()
         return unauthenticatedSession
     }
     
@@ -979,6 +980,9 @@ extension SessionManager : PreLoginAuthenticationObserver {
     /// activating one or creating one in the background. No assumption should
     /// be made that the session is active.
     func sessionManagerCreated(userSession : ZMUserSession)
+
+    /// Invoked when the SessionManager creates a new unauthenticated session.
+    func sessionManagerCreated(unauthenticatedSession: UnauthenticatedSession)
 }
 
 @objc public protocol SessionManagerDestroyedSessionObserver: class {
@@ -987,11 +991,19 @@ extension SessionManager : PreLoginAuthenticationObserver {
     func sessionManagerDestroyedUserSession(for accountId : UUID)
 }
 
+private let sessionManagerCreatedUnauthenticatedSessionNotificationName = Notification.Name(rawValue: "ZMSessionManagerCreatedUnauthenticatedSessionNotification")
 private let sessionManagerCreatedSessionNotificationName = Notification.Name(rawValue: "ZMSessionManagerCreatedSessionNotification")
 private let sessionManagerDestroyedSessionNotificationName = Notification.Name(rawValue: "ZMSessionManagerDestroyedSessionNotification")
 
 extension SessionManager: NotificationContext {
-    
+
+    @objc public func addUnauthenticatedSessionManagerCreatedSessionObserver(_ observer: SessionManagerCreatedSessionObserver) -> Any {
+        return NotificationInContext.addObserver(
+            name: sessionManagerCreatedUnauthenticatedSessionNotificationName,
+            context: self)
+        { [weak observer] note in observer?.sessionManagerCreated(unauthenticatedSession: note.object as! UnauthenticatedSession) }
+    }
+
     @objc public func addSessionManagerCreatedSessionObserver(_ observer: SessionManagerCreatedSessionObserver) -> Any {
         return NotificationInContext.addObserver(
             name: sessionManagerCreatedSessionNotificationName,

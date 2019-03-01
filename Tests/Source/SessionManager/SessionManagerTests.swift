@@ -1136,10 +1136,15 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
 class SessionManagerObserverMock: SessionManagerCreatedSessionObserver, SessionManagerDestroyedSessionObserver {
     
     var createdUserSession: [ZMUserSession] = []
+    var createdUnauthenticatedSession: [UnauthenticatedSession] = []
     var destroyedUserSessions: [UUID] = []
     
     func sessionManagerCreated(userSession: ZMUserSession) {
         createdUserSession.append(userSession)
+    }
+
+    func sessionManagerCreated(unauthenticatedSession: UnauthenticatedSession) {
+        createdUnauthenticatedSession.append(unauthenticatedSession)
     }
     
     func sessionManagerDestroyedUserSession(for accountId: UUID) {
