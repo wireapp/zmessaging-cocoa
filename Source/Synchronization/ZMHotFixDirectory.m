@@ -166,7 +166,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                     [ZMHotFixPatch
                      patchWithVersion:@"235.0.1"
                      patchCode:^(NSManagedObjectContext *context) {
-                         [ZMHotFixDirectory refetchUserProperties:context];
+                         [ZMHotFixDirectory refetchSelfUser:context];
                      }],
                     ];
     });
