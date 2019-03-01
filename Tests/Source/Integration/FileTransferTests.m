@@ -154,7 +154,7 @@
     }];
     
     // then
-    XCTAssertEqual(message.downloadState, AssetDownloadStateUnavailable);
+    XCTAssertEqual(message.downloadState, AssetDownloadStateRemote);
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
@@ -211,7 +211,7 @@
     XCTAssertEqualObjects(message.assetId, assetID); // We should have received an asset ID to be able to download the file
     XCTAssertEqualObjects(message.nonce, nonce);
     XCTAssertEqual(message.transferState, AssetTransferStateUploaded);
-    XCTAssertEqual(message.downloadState, AssetDownloadStateUnavailable);
+    XCTAssertEqual(message.downloadState, AssetDownloadStateRemote);
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
@@ -227,7 +227,7 @@
     ZMTransportRequest *lastRequest = self.mockTransportSession.receivedRequests.lastObject;
     NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets/%@", conversation.remoteIdentifier.transportString, message.assetId.transportString];
     XCTAssertEqualObjects(lastRequest.path, expectedPath);
-    XCTAssertEqual(message.downloadState, AssetDownloadStateUnavailable);
+    XCTAssertEqual(message.downloadState, AssetDownloadStateRemote);
 }
 
 - (void)testThatItSendsTheRequestToDownloadAFileWhenItHasTheAssetID_AndSetsTheStateTo_FailedDownload_AfterFailedDecryption_Ephemeral
@@ -274,7 +274,7 @@
     // then
     XCTAssertEqualObjects(message.nonce, nonce);
     XCTAssertEqual(message.transferState, AssetTransferStateUploaded);
-    XCTAssertEqual(message.downloadState, AssetDownloadStateUnavailable);
+    XCTAssertEqual(message.downloadState, AssetDownloadStateRemote);
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
@@ -288,7 +288,7 @@
     ZMTransportRequest *lastRequest = self.mockTransportSession.receivedRequests.lastObject;
     NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/otr/assets/%@", conversation.remoteIdentifier.transportString, message.assetId.transportString];
     XCTAssertEqualObjects(lastRequest.path, expectedPath);
-    XCTAssertEqual(message.downloadState, AssetDownloadStateUnavailable);
+    XCTAssertEqual(message.downloadState, AssetDownloadStateRemote);
     XCTAssertTrue(message.isEphemeral);
 }
 
@@ -1548,7 +1548,7 @@
     ZMTransportRequest *lastRequest = self.mockTransportSession.receivedRequests.lastObject;
     NSString *expectedPath = [NSString stringWithFormat:@"/assets/v3/%@", assetID.transportString];
     XCTAssertEqualObjects(lastRequest.path, expectedPath);
-    XCTAssertEqual(message.downloadState, AssetDownloadStateUnavailable);
+    XCTAssertEqual(message.downloadState, AssetDownloadStateRemote);
 }
 
 @end
