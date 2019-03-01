@@ -717,7 +717,6 @@
         // then
         XCTAssertTrue(connectedUser.needsToBeUpdatedFromBackend);
         XCTAssertTrue(unconnectedUser.needsToBeUpdatedFromBackend);
-        XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend);
     }];
 }
 
