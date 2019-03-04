@@ -369,9 +369,7 @@
     
     // then
     XCTAssertNil(message.assetId);
-    // As soon as we delete the message on cancelation we can remove this check
-    // and assert the absence of the message instead
-    XCTAssertEqual(message.transferState, AssetTransferStateUploadingFailed); // TODO jacob do we delete it now?
+    XCTAssertEqual(message.transferState, AssetTransferStateUploadingFailed);
     XCTAssertTrue(message.isEphemeral);
 }
 
