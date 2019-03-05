@@ -110,13 +110,26 @@ extension SearchTask {
     func teamMembers(matchingQuery query : String, team: Team?) -> [Member] {
         var result =  team?.members(matchingQuery: query) ?? []
         
-        if request.searchOptions.contains(.onlyIncludeActiveTeamMembers) {
+        if request.searchOptions.contains(.excludeNonActiveTeamMembers) {
             let activeConversations = ZMUser.selfUser(in: context).activeConversations
             let activeContacts = Set(activeConversations.flatMap({ $0.activeParticipants }))
             
             result = result.filter({
                 if let user = $0.user {
                     return activeContacts.contains(user)
+                } else {
+                    return false
+                }
+            })
+        }
+        
+        if request.searchOptions.contains(.excludeNonActivePartners) {
+            let activeConversations = ZMUser.selfUser(in: context).activeConversations
+            let activeContacts = Set(activeConversations.flatMap({ $0.activeParticipants }))
+            
+            result = result.filter({
+                if let user = $0.user {
+                    return user.teamRole != .partner || user.handle == query || user.membership?.createdBy == ZMUser.selfUser(in: context) || activeContacts.contains(user) // TODO jacob normalize handle?
                 } else {
                     return false
                 }
