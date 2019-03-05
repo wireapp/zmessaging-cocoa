@@ -108,7 +108,22 @@ extension SearchTask {
     }
     
     func teamMembers(matchingQuery query : String, team: Team?) -> [Member] {
-        return team?.members(matchingQuery: query) ?? []
+        var result =  team?.members(matchingQuery: query) ?? []
+        
+        if request.searchOptions.contains(.onlyIncludeActiveTeamMembers) {
+            let activeConversations = ZMUser.selfUser(in: context).activeConversations
+            let activeContacts = Set(activeConversations.flatMap({ $0.activeParticipants }))
+            
+            result = result.filter({
+                if let user = $0.user {
+                    return activeContacts.contains(user)
+                } else {
+                    return false
+                }
+            })
+        }
+        
+        return result
     }
     
     func connectedUsers(matchingQuery query: String) -> [ZMUser] {

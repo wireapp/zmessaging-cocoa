@@ -22,12 +22,20 @@ import WireDataModel
 public struct SearchOptions : OptionSet {
     public let rawValue: Int
 
+    /// Users you are connected to via connection request
     public static let contacts = SearchOptions(rawValue: 1 << 0)
+    /// Users found in your address book
     public static let addressBook = SearchOptions(rawValue: 1 << 1)
+    /// Users which are a member of the same team as you
     public static let teamMembers = SearchOptions(rawValue: 1 << 2)
-    public static let directory = SearchOptions(rawValue: 1 << 3)
-    public static let conversations = SearchOptions(rawValue: 1 << 4)
-    public static let services = SearchOptions(rawValue: 1 << 5)
+    /// Only search team members which are in a conversation with you
+    public static let onlyIncludeActiveTeamMembers = SearchOptions(rawValue: 1 << 3)
+    /// Users from the public directory
+    public static let directory = SearchOptions(rawValue: 1 << 4)
+    /// Group conversations you are or were a participant of
+    public static let conversations = SearchOptions(rawValue: 1 << 5)
+    /// Services which are enabled in your team
+    public static let services = SearchOptions(rawValue: 1 << 6)
     
     public init(rawValue: Int) {
         self.rawValue = rawValue

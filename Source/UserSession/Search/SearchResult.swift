@@ -49,7 +49,7 @@ extension SearchResult {
         contacts = []
         teamMembers = []
         addressBook = []
-        directory = searchUsers.filter({ !$0.isConnected })
+        directory = searchUsers.filter({ !$0.isConnected && !$0.isTeamMember })
         conversations = []
         services = []
     }

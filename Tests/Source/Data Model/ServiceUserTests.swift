@@ -103,6 +103,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var extendedMetadata: [[String : String]]? = nil
     
+    var activeConversations: Set<ZMConversation> = Set()
+    
     func requestPreviewProfileImage() {
         
     }
