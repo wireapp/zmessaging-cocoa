@@ -379,6 +379,40 @@ class SearchTaskTests : MessagingTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
+    func testThatItIncludesNonActiveTeamMembers_WhenSelfUserWasCreatedByThem() {
+        // given
+        let resultArrived = expectation(description: "received result")
+        let team = Team.insertNewObject(in: uiMOC)
+        let userA = ZMUser.insertNewObject(in: uiMOC)
+        let memberA = Member.insertNewObject(in: uiMOC) // non-active team-member
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        
+        userA.name = "Member A"
+        userA.setHandle("abc")
+        
+        selfUser.membership?.permissions = .partner
+        selfUser.membership?.createdBy = userA
+        
+        memberA.team = team
+        memberA.user = userA
+        memberA.permissions = .admin
+        
+        uiMOC.saveOrRollback()
+        
+        let request = SearchRequest(query: "", searchOptions: [.teamMembers, .excludeNonActiveTeamMembers], team: team)
+        let task = SearchTask(request: request, context: mockUserSession.managedObjectContext, session: mockUserSession)
+        
+        // expect
+        task.onResult { (result, _) in
+            resultArrived.fulfill()
+            XCTAssertEqual(result.teamMembers, [memberA])
+        }
+        
+        // when
+        task.performLocalSearch()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
     func testThatItCanExcludeNonActivePartners() {
         // given
         let resultArrived = expectation(description: "received result")

@@ -92,7 +92,7 @@ extension SearchTask {
             
             let connectedUsers = self.request.searchOptions.contains(.contacts) ? self.connectedUsers(matchingQuery: self.request.normalizedQuery) : []
             let teamMembers = self.request.searchOptions.contains(.teamMembers) ? self.teamMembers(matchingQuery: self.request.normalizedQuery, team: team) : []
-            let conversations = self.request.searchOptions.contains(.conversations) ? self.conversations(matchingQuery: self.request.normalizedQuery) : []
+            let conversations = self.request.searchOptions.contains(.conversations) ? self.conversations(matchingQuery: self.request.query) : []
             let result = SearchResult(contacts: connectedUsers, teamMembers: teamMembers, addressBook: [], directory: [], conversations: conversations, services: [])
             
             self.session.managedObjectContext.performGroupedBlock {
@@ -113,10 +113,11 @@ extension SearchTask {
         if request.searchOptions.contains(.excludeNonActiveTeamMembers) {
             let activeConversations = ZMUser.selfUser(in: context).activeConversations
             let activeContacts = Set(activeConversations.flatMap({ $0.activeParticipants }))
+            let selfUser = ZMUser.selfUser(in: context)
             
             result = result.filter({
                 if let user = $0.user {
-                    return activeContacts.contains(user)
+                    return selfUser.membership?.createdBy == user || activeContacts.contains(user)
                 } else {
                     return false
                 }
