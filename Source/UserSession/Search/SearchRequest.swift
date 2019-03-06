@@ -59,4 +59,17 @@ public struct SearchRequest {
     let query : String
     let searchOptions: SearchOptions
     
+    var normalizedQuery: String {
+        return query.normalizedAndTrimmed()
+    }
+    
+}
+
+fileprivate extension String {
+    
+    func normalizedAndTrimmed() -> String {
+        guard let normalized = self.normalizedForSearch() as String? else { return "" }
+        return normalized.trimmingCharacters(in: .whitespaces)
+    }
+    
 }
