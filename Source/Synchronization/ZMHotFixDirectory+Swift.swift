@@ -191,6 +191,10 @@ import Foundation
         context.enqueueDelayedSave()
     }
     
+    public static func refetchTeamMembers(_ context: NSManagedObjectContext) {
+        ZMUser.selfUser(in: context).team?.needsToRedownloadMembers = true
+    }
+    
     /// Marks all conversations to be refetched.
     public static func refetchAllConversations(_ context: NSManagedObjectContext) {
         refetchConversations(matching: NSPredicate(value: true), in: context)

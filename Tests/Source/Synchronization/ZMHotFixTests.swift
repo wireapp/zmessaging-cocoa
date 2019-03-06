@@ -124,5 +124,30 @@ class ZMHotFixTests_Integration: MessagingTest {
             XCTAssertTrue(selfUser.needsToBeUpdatedFromBackend)
         }
     }
+    
+    func testThatItMarksTeamMembersToBeUpdatedFromTheBackend_238_0_0() {
+        syncMOC.performGroupedBlock {
+            // GIVEN
+            self.syncMOC.setPersistentStoreMetadata("238.0.0", key: "lastSavedVersion")
+            self.syncMOC.setPersistentStoreMetadata(NSNumber(booleanLiteral: true), key: "HasHistory")
+            
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            let team = Team.fetchOrCreate(with: UUID(), create: true, in: self.syncMOC, created: nil)!
+            _ = Member.getOrCreateMember(for: selfUser, in: team, context: self.syncMOC)
+            team.needsToRedownloadMembers = false
+            
+            // WHEN
+            let sut = ZMHotFix(syncMOC: self.syncMOC)
+            self.performIgnoringZMLogError {
+                sut!.applyPatches(forCurrentVersion: "238.0.1")
+            }
+        }
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        syncMOC.performGroupedBlock {
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            XCTAssertTrue(selfUser.team!.needsToRedownloadMembers)
+        }
+    }
 
 }

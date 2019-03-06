@@ -168,6 +168,13 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory refetchSelfUser:context];
                      }],
+                    
+                    /// We need to refetch the team members after createdBy and createdAt fields were introduced
+                    [ZMHotFixPatch
+                     patchWithVersion:@"238.0.1"
+                     patchCode:^(NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory refetchTeamMembers:context];
+                     }],
                     ];
     });
     return patches;
