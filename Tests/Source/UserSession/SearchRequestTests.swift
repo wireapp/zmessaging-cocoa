@@ -34,4 +34,15 @@ class SearchRequestTests : MessagingTest {
         XCTAssertEqual(request.query, croppedString)
     }
     
+    func testThatItNormalizesTheQuery() {
+        // given
+        let query = "Ã.b.ć "
+        
+        // when
+        let request = SearchRequest(query: query, searchOptions: [])
+        
+        // then
+        XCTAssertEqual(request.normalizedQuery, "abc")
+    }
+    
 }
