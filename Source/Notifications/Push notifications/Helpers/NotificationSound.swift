@@ -47,8 +47,16 @@ public enum NotificationSound {
     }
 
     private var customFileName: String? {
-        guard let soundName = UserDefaults.standard.object(forKey: preferenceKey) as? String else { return nil }
-        return ZMSound(rawValue: soundName)?.filename()
+        guard let soundName = UserDefaults.standard.object(forKey: preferenceKey) as? String,
+              let sound = ZMSound(rawValue: soundName)
+        else { return nil }
+        
+        switch self {
+        case .call:
+            return sound.filenameLongVersion()
+        default:
+            return sound.filename()
+        }
     }
 
 }
