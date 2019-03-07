@@ -680,6 +680,10 @@ public protocol ForegroundNotificationResponder: class {
         }
     }
     
+    @objc public func updateCallKitConfiguration() {
+        callKitDelegate?.updateConfiguration()
+    }
+    
     private func updateCallNotificationStyle() {
         switch callNotificationStyle {
         case .pushNotifications:

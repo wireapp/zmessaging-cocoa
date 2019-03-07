@@ -75,7 +75,11 @@ public class CallKitDelegate : NSObject {
         provider.invalidate()
     }
     
-    public static var providerConfiguration : CXProviderConfiguration {
+    public func updateConfiguration() {
+        provider.configuration = CallKitDelegate.providerConfiguration
+    }
+    
+    internal static var providerConfiguration : CXProviderConfiguration {
         
         let localizedName = Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "Wire"
         let configuration = CXProviderConfiguration(localizedName: localizedName)
