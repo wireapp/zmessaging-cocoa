@@ -123,10 +123,6 @@ public enum ZMSound: String, CustomStringConvertible {
         return (self.rawValue as NSString).appendingPathExtension(type(of: self).fileExtension)!
     }
     
-    public func filenameLongVersion() -> String {
-        return ("\(self.rawValue)-long" as NSString).appendingPathExtension(type(of: self).fileExtension)!
-    }
-    
     public var description: String {
         return self.rawValue.capitalized
     }
