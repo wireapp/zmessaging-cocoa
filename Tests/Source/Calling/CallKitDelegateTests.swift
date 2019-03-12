@@ -440,31 +440,54 @@ class CallKitDelegateTest: MessagingTest {
     
     // MARK: Performing Actions
     
-    /* Disabled for now, pending furter investigation
     func testThatCallAnswerActionIsFulfilledWhenCallIsEstablished() {
         // given
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        createOneOnOneConversation(user: otherUser)
+        let conversation = otherUser.oneToOneConversation!
         let provider = MockProvider(foo: true)
-        let conversation = self.conversation(type: .oneOnOne)
-        let action = MockCallAnswerAction(call: conversation.remoteIdentifier!)
+        sut.reportIncomingCall(from: otherUser, in: conversation, video: false)
+        let action = MockCallAnswerAction(call: sut.callUUID(for: conversation)!)
+        self.sut.provider(provider, perform: action)
         
         // when
-        self.sut.provider(provider, perform: action)
-        mockWireCallCenterV3.update(callState: .established, conversationId: conversation.remoteIdentifier!)
+        mockWireCallCenterV3.update(callState: .established, conversationId: conversation.remoteIdentifier!, callerId: otherUser.remoteIdentifier, isVideo: false)
         
         // then
         XCTAssertTrue(action.isFulfilled)
     }
     
-    func testThatCallAnswerActionFailWhenCallCantBeJoined() {
+    func testThatCallAnswerActionIsFulfilledWhenDataChannelIsEstablished() {
         // given
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        createOneOnOneConversation(user: otherUser)
+        let conversation = otherUser.oneToOneConversation!
         let provider = MockProvider(foo: true)
-        let conversation = self.conversation(type: .oneOnOne)
-        let action = MockCallAnswerAction(call: conversation.remoteIdentifier!)
+        sut.reportIncomingCall(from: otherUser, in: conversation, video: false)
+        let action = MockCallAnswerAction(call: sut.callUUID(for: conversation)!)
+        self.sut.provider(provider, perform: action)
         
         // when
-        self.sut.provider(provider, perform: action)
-        NotificationCenter.default.post(name: NSNotification.Name.ZMConversationVoiceChannelJoinFailed, object: conversation.remoteIdentifier!)
+        mockWireCallCenterV3.update(callState: .establishedDataChannel, conversationId: conversation.remoteIdentifier!, callerId: otherUser.remoteIdentifier, isVideo: false)
         
+        // then
+        XCTAssertTrue(action.isFulfilled)
+    }
+
+    /* Disabled for now, pending furter investigation
+    func testThatCallAnswerActionFailWhenCallCantBeJoined() {
+        // given
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        let provider = MockProvider(foo: true)
+        let conversation = self.conversation(type: .oneOnOne)
+        
+        sut.reportIncomingCall(from: otherUser, in: conversation, video: false)
+        let action = MockCallAnswerAction(call: sut.callUUID(for: conversation)!)
+        self.sut.provider(provider, perform: action)
+
+        // when
+        mockWireCallCenterV3.update(callState: .terminating(reason: .lostMedia), conversationId: conversation.remoteIdentifier!, callerId: otherUser.remoteIdentifier, isVideo: false)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         // then
         XCTAssertTrue(action.hasFailed)
     }

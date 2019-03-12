@@ -559,7 +559,7 @@ class CallObserver : WireCallCenterCallStateObserver {
         switch callState {
         case .answered(degraded: false):
             onAnswered?()
-        case .establishedDataChannel:
+        case .establishedDataChannel, .established:
             onEstablished?()
         case .terminating(reason: let reason):
             switch reason {
