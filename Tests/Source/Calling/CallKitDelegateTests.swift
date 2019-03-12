@@ -276,7 +276,7 @@ class CallKitDelegateTest: MessagingTest {
         super.tearDown()
     }
     
-    // Public API - provider configuration
+    // MARK: Provider configuration
     func testThatItReturnsTheProviderConfiguration() {
         // when
         let configuration = WireSyncEngine.CallKitDelegate.providerConfiguration
@@ -323,7 +323,8 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertTrue(callKitProvider.isInvalidated)
     }
     
-    // Public API - outgoing calls
+    // MARK: Reporting Actions
+    
     func testThatItReportsTheStartCallRequest() {
         // given
         let selfUser = ZMUser.selfUser(in: uiMOC)
@@ -437,7 +438,7 @@ class CallKitDelegateTest: MessagingTest {
         CallKitDelegateTestsMocking.stopMock(call)
     }
     
-    // Actions - answer / start call
+    // MARK: Performing Actions
     
     /* Disabled for now, pending furter investigation
     func testThatCallAnswerActionIsFulfilledWhenCallIsEstablished() {
@@ -533,7 +534,7 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertTrue(provider.connectedCalls.contains(callUUID))
     }
     
-    // Public API - report end on outgoing call
+    // MARK: Report end on outgoing call
     
     func testThatItReportsTheEndOfCall() {
         // given
@@ -598,7 +599,7 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertEqual(action.callUUID, callUUID)
     }
     
-    // Public API - activity & intents
+    //  MARK:  Activity & Intents
     
     func userActivityFor(contacts: [INPerson]?, isVideo: Bool = false) -> NSUserActivity {
 
@@ -699,7 +700,7 @@ class CallKitDelegateTest: MessagingTest {
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 0)
     }
     
-    // Observer API V3
+    // MARK: Observing call state
     
     func testThatItReportNewIncomingCall_v3_Incoming() {
         // given
