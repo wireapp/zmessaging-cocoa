@@ -185,7 +185,7 @@ class SearchTests : IntegrationTest {
         var userName : String? = nil
         
         mockTransportSession.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user1.smallProfileImageIdentifier!)?.data
+            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user1.previewProfileAssetIdentifier!)?.data
             userName = self.user1.name
         }
         
@@ -209,7 +209,7 @@ class SearchTests : IntegrationTest {
         var userName : String? = nil
         
         mockTransportSession.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.smallProfileImageIdentifier!)?.data
+            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.previewProfileAssetIdentifier!)?.data
             userName = self.user4.name
         }
         
@@ -283,45 +283,13 @@ class SearchTests : IntegrationTest {
         token = nil
     }
     
-    func testThatItSetsTheMediumImageForAnUnconnectedSearchUser() {
-        // given
-        var profileImageData : Data? = nil
-        var userName : String? = nil
-        
-        // We need not to have v3 profile pictures
-        user4.previewProfileAssetIdentifier = nil
-        user4.completeProfileAssetIdentifier = nil
-        
-        mockTransportSession.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.smallProfileImageIdentifier!)?.data
-            userName = self.user4.name
-        }
-        
-        XCTAssertTrue(login())
-        
-        guard let searchQuery = userName?.components(separatedBy: " ").last else { XCTFail(); return }
-        guard let searchUser = searchForDirectoryUser(withName: userName!, searchQuery: searchQuery) else { XCTFail(); return }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // when requesting medium image
-        searchUser.requestCompleteProfileImage()
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertEqual(searchUser.completeImageData, profileImageData)
-    }
-
     func testThatItRefetchesTheSearchUserIfItGotEvictedFromTheCache() {
         // given
         var profileImageData : Data? = nil
         var userName : String? = nil
 
-        // We need not to have v3 profile pictures
-        user4.previewProfileAssetIdentifier = nil
-        user4.completeProfileAssetIdentifier = nil
-
         mockTransportSession.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.smallProfileImageIdentifier!)?.data
+            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.completeProfileAssetIdentifier!)?.data
             userName = self.user4.name
         }
 
@@ -413,7 +381,7 @@ class SearchTests : IntegrationTest {
         var userName : String? = nil
         
         mockTransportSession.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user1.smallProfileImageIdentifier!)?.data
+            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user1.previewProfileAssetIdentifier!)?.data
             userName = self.user1.name
         }
         
@@ -443,7 +411,7 @@ class SearchTests : IntegrationTest {
         var userName : String? = nil
         
         mockTransportSession.performRemoteChanges { (changes) in
-            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.smallProfileImageIdentifier!)?.data
+            profileImageData = MockAsset.init(in: self.mockTransportSession.managedObjectContext, forID: self.user4.previewProfileAssetIdentifier!)?.data
             userName = self.user4.name
         }
         
