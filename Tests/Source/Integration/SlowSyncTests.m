@@ -173,68 +173,7 @@
 
 }
 
-- (void)testThatItGeneratesOnlyTheExpectedRequestsForUserWithoutV3ProfilePicture
-{
-    // when
-    [[self mockTransportSession] performRemoteChanges:^(id<MockTransportSessionObjectCreation> session) {
-        NOT_USED(session);
-        self.selfUser.completeProfileAssetIdentifier = nil;
-        self.selfUser.previewProfileAssetIdentifier = nil;
-    }];
-    XCTAssertTrue([self login]);
-    
-    __block NSString *selfUserIdentifier = nil;
-    __block NSString *previewProfileAssetIdentifier = nil;
-    __block NSString *completeProfileAssetIdentifier = nil;
-    __block NSString *smallProfileImageIdentifier = nil;
-    __block NSString *mediumImageIdentifier = nil;
-    [self.mockTransportSession.managedObjectContext performGroupedBlockAndWait:^{
-        selfUserIdentifier = self.selfUser.identifier;
-        previewProfileAssetIdentifier = self.selfUser.previewProfileAssetIdentifier;
-        completeProfileAssetIdentifier = self.selfUser.completeProfileAssetIdentifier;
-        smallProfileImageIdentifier = self.selfUser.smallProfileImageIdentifier;
-        mediumImageIdentifier = self.selfUser.mediumImageIdentifier;
-    }];
-    
-    NSDictionary *assetsUpdatePayload = @{ @"assets": @[ @{@"key" : previewProfileAssetIdentifier, @"type" : @"image", @"size" : @"preview"},
-                                                         @{@"key" : completeProfileAssetIdentifier, @"type" : @"image", @"size" : @"complete"}] };
-    
-    ZMUser *localUser = [ZMUser selfUserInContext:self.userSession.managedObjectContext];
-    AssetRequestFactory *factory = [[AssetRequestFactory alloc] init];
-
-    // given
-    NSArray *expectedRequests = [[self commonRequestsOnLogin] arrayByAddingObjectsFromArray: @[
-                                  [factory profileImageAssetRequestWithData:localUser.imageMediumData],
-                                  [factory profileImageAssetRequestWithData:localUser.imageSmallProfileData],
-                                  [ZMTransportRequest requestWithPath:@"/self" method:ZMMethodPUT payload:assetsUpdatePayload],
-                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@", smallProfileImageIdentifier, selfUserIdentifier]],
-                                  [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/%@?conv_id=%@", mediumImageIdentifier, selfUserIdentifier]],
-                                  [ZMTransportRequest requestWithPath:@"properties/WIRE_RECEIPT_MODE" method:ZMMethodGET payload:nil],
-                                  ]];
-    
-    // then
-    NSMutableArray *mutableRequests = [self.mockTransportSession.receivedRequests mutableCopy];
-    __block NSUInteger clientRegistrationCallCount = 0;
-    __block NSUInteger notificationStreamCallCount = 0;
-    [self.mockTransportSession.receivedRequests enumerateObjectsUsingBlock:^(ZMTransportRequest *request, NSUInteger idx, BOOL *stop) {
-        NOT_USED(stop);
-        NOT_USED(idx);
-        if ([request.path containsString:@"clients"] && request.method == ZMMethodPOST) {
-            [mutableRequests removeObject:request];
-            clientRegistrationCallCount++;
-        }
-        if ([request.path hasPrefix:@"/notifications?size=500"]) {
-            [mutableRequests removeObject:request];
-            notificationStreamCallCount++;
-        }
-    }];
-    XCTAssertEqual(clientRegistrationCallCount, 1u);
-    XCTAssertEqual(notificationStreamCallCount, 1u);
-    
-    AssertArraysContainsSameObjects(expectedRequests, mutableRequests);
-}
-
-- (void)testThatItGeneratesOnlyTheExpectedRequestsForUserWithV3ProfilePicture
+- (void)testThatItGeneratesOnlyTheExpectedRequestsForSelfUserProfilePicture
 {
     // when
     XCTAssertTrue([self login]);
@@ -248,7 +187,6 @@
     
     // given
     NSArray *expectedRequests = [[self commonRequestsOnLogin] arrayByAddingObjectsFromArray: @[
-                                  [ZMTransportRequest requestGetFromPath:@"/self"],
                                   [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@", previewProfileAssetIdentifier]],
                                   [ZMTransportRequest imageGetRequestFromPath:[NSString stringWithFormat:@"/assets/v3/%@", completeProfileAssetIdentifier]],
                                   [ZMTransportRequest requestWithPath:@"properties/WIRE_RECEIPT_MODE" method:ZMMethodGET payload:nil],

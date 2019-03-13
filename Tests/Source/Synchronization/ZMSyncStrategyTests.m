@@ -140,8 +140,6 @@
     self.syncStatusMock = [OCMockObject mockForClass:SyncStatus.class];
     self.operationStatusMock = [OCMockObject mockForClass:OperationStatus.class];
     self.userProfileImageUpdateStatus = [OCMockObject mockForClass:UserProfileImageUpdateStatus.class];
-    (void)[(UserProfileImageUpdateStatus *)[[self.userProfileImageUpdateStatus stub] andReturn:nil] fetchRequestForTrackedObjects];
-    [(UserProfileImageUpdateStatus *)[self.userProfileImageUpdateStatus stub] objectsDidChange:OCMOCK_ANY];
     self.mockflowManager = [[FlowManagerMock alloc] init];
     
     self.applicationStatusDirectoryMock = [OCMockObject niceMockForClass:ApplicationStatusDirectory.class];
