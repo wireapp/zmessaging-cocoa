@@ -133,14 +133,8 @@ public final class UserProfileImageUpdateStatus: NSObject {
         self.changeDelegate = delegate
         super.init()
         self.preprocessor?.delegate = self
-        
-        // Check if we should re-upload an existing v2 in case we never uploaded a v3 asset.
-        reuploadExisingImageIfNeeded()
     }
     
-    deinit {
-        log.debug("Deallocated")
-    }
 }
 
 // MARK: Main state transitions
@@ -261,45 +255,6 @@ extension UserProfileImageUpdateStatus: UserProfileImageUpdateProtocol {
             self.setState(state: .preprocess(image: imageData))
         }
     }
-}
-
-// Called internally with existing image data to reupload to v3 (no preprocessing needed)
-extension UserProfileImageUpdateStatus: ZMContextChangeTracker {
-
-    public func objectsDidChange(_ object: Set<NSManagedObject>) {
-        guard object.contains(ZMUser.selfUser(in: syncMOC)) else { return }
-        reuploadExisingImageIfNeeded()
-    }
-
-    public func fetchRequestForTrackedObjects() -> NSFetchRequest<NSFetchRequestResult>? {
-        return nil
-    }
-
-    public func addTrackedObjects(_ objects: Set<NSManagedObject>) {
-        // no-op
-    }
-
-    internal func reuploadExisingImageIfNeeded() {
-        // If the user updated to a build which added profile picture asset v3 support
-        // we want to re-upload existing pictures to `/assets/v3`.
-        let selfUser = ZMUser.selfUser(in: syncMOC)
-
-        // We need to ensure we already re-fetched the selfUser (see HotFix 76.0.0),
-        // as other clients could already have uploaded a v3 asset.
-        guard !selfUser.needsToBeUpdatedFromBackend else { return }
-
-        // We only want to re-upload in case the user did not yet upload a picture to `/assets/v3`.
-        guard nil == selfUser.previewProfileAssetIdentifier, nil == selfUser.completeProfileAssetIdentifier else { return }
-        guard let preview = selfUser.imageSmallProfileData, let complete = selfUser.imageMediumData else { return }
-        log.debug("V3 profile picture not found, re-uploading V2")
-        updatePreprocessedImages(preview: preview, complete: complete)
-    }
-
-    internal func updatePreprocessedImages(preview: Data, complete: Data) {
-        setState(state: .upload(image: preview), for: .preview)
-        setState(state: .upload(image: complete), for: .complete)
-    }
-
 }
 
 extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {

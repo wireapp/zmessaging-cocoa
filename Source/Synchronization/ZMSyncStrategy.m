@@ -337,7 +337,6 @@ ZM_EMPTY_ASSERTING_INIT()
             return nil;
         }];
         _allChangeTrackers = [_allChangeTrackers arrayByAddingObject:self.conversationStatusSync];
-        _allChangeTrackers = [_allChangeTrackers arrayByAddingObject:self.applicationStatusDirectory.userProfileImageUpdateStatus];
     }
     
     return _allChangeTrackers;
