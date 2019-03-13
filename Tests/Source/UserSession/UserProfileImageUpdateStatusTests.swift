@@ -563,6 +563,10 @@ extension UserProfileImageUpdateStatusTests {
         let completeData = "laaaarge".data(using: .utf8)!
         let previewId = "foo"
         let completeId = "bar"
+        
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.remoteIdentifier = UUID()
+        uiMOC.saveOrRollback()
 
         // WHEN
         self.sut.setState(state: .upload(image: previewData), for: .preview)
