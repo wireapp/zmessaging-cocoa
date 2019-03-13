@@ -49,19 +49,7 @@ class UserProfileImageV3Tests: IntegrationTest {
         XCTAssertEqual(local.imageMediumData, completeAsset?.data, "Complete asset should match remote data", file: file, line: line)
         XCTAssertEqual(local.imageSmallProfileData, previewAsset?.data, "Preview asset should match remote data", file: file, line: line)
     }
-    
-    func testThatSelfUserImagesAreUploadedAfterLoginIfThereWereOnlyV2() {
-        // GIVEN
-        mockTransportSession.performRemoteChanges { session in
-            self.selfUser.completeProfileAssetIdentifier = nil
-            self.selfUser.previewProfileAssetIdentifier = nil
-        }
-        XCTAssertTrue(login())
         
-        // THEN
-        checkProfileImagesMatch(local: ZMUser.selfUser(inUserSession: userSession!), remote: selfUser)
-    }
-    
     func testThatSelfUserImagesAreUploadedWhenThereAreNone() {
         // GIVEN
         mockTransportSession.performRemoteChanges { session in
