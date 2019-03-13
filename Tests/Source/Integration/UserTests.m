@@ -74,7 +74,7 @@
     XCTAssertTrue([self login]);
     
     ZMUser *someUser = [self userForMockUser:self.allVisibileUsers.firstObject];
-    someUser.imageSmallProfileData = [self verySmallJPEGData];
+    [someUser setImageData:self.verySmallJPEGData size:ProfileImageSizePreview];
     NSData *imageData = [someUser imageSmallProfileData];
     XCTAssertNotNil(imageData);
     
@@ -92,7 +92,7 @@
     XCTAssertTrue([self login]);
     
     ZMUser *someUser = [self userForMockUser:self.allVisibileUsers.firstObject];
-    someUser.imageMediumData = [self verySmallJPEGData];
+    [someUser setImageData:self.verySmallJPEGData size:ProfileImageSizeComplete];
     NSData *imageData = [someUser imageMediumData];
     XCTAssertNotNil(imageData);
     

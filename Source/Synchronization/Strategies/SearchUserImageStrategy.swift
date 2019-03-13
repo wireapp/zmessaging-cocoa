@@ -120,11 +120,7 @@ public class SearchUserImageStrategy : AbstractRequestStrategy {
         switch asset {
         case .asset(preview: let previewKey, complete: let completeKey):
             if let key = size == .preview ? previewKey : completeKey {
-                return UserImageStrategy.requestForFetchingV3Asset(with: key)
-            }
-        case .legacy(small: let previewUUID, medium: let completeUUID):
-            if let uuid = size == .preview ? previewUUID : completeUUID {
-                return UserImageStrategy.requestForFetchingAsset(with: uuid, forUserWith: user)
+                return ZMTransportRequest(getFromPath: "/assets/v3/\(key)")
             }
         }
         return nil

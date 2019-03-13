@@ -35,7 +35,7 @@
     
     FHAssertEqualObjects(failureRecorder, self.name, user.name);
     FHAssertEqualObjects(failureRecorder, self.remoteIdentifier, [user.identifier UUID]);
-    FHAssertEqualObjects(failureRecorder, self.mediumRemoteIdentifier, [user.mediumImageIdentifier UUID]);
+    FHAssertEqualObjects(failureRecorder, self.completeProfileAssetIdentifier, user.completeProfileAssetIdentifier);
 }
 
 @end

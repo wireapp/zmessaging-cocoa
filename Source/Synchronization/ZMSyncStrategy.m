@@ -167,7 +167,6 @@ ZM_EMPTY_ASSERTING_INIT()
                                    self.userTranscoder,
                                    self.lastUpdateEventIDTranscoder,
                                    self.missingUpdateEventsTranscoder,
-                                   [[UserImageStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory],
                                    [[LinkPreviewUploadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory],
                                    self.selfStrategy,
                                    self.callingRequestStrategy,

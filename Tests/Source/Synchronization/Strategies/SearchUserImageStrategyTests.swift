@@ -184,44 +184,6 @@ extension SearchUserImageStrategyTests {
         XCTAssertEqual(userIDs(in:request2), expectedUserIDs)
     }
     
-    
-    func testThatCompletingARequestUpdatesAssetKeysOnSearchUsers_LegacyIds() {
-        // given
-        let searchUsers = Array(setupSearchDirectory(userCount: 2))
-        let searchUser1 = searchUsers.first!
-        let searchUser2 = searchUsers.last!
-        searchUsers.forEach({ $0.requestPreviewProfileImage() })
-        
-        let smallAssetID1 = UUID(), mediumAssetID1 = UUID()
-        let smallAssetID2 = UUID(), mediumAssetID2 = UUID()
-        
-        let payload = [
-            userData(smallProfilePictureID: smallAssetID1, mediumPictureID: mediumAssetID1,  for: searchUser1.remoteIdentifier!),
-            userData(smallProfilePictureID: smallAssetID2, mediumPictureID: mediumAssetID2, for: searchUser2.remoteIdentifier!)
-        ]
-        let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
-        
-        // when
-        guard let request = sut.nextRequest() else { return XCTFail() }
-        request.complete(with: response)
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        if case SearchUserAssetKeys.legacy(small: let smallAssetID, medium: let mediumAssetID) = searchUser1.assetKeys! {
-            XCTAssertEqual(smallAssetID, smallAssetID1)
-            XCTAssertEqual(mediumAssetID, mediumAssetID1)
-        } else {
-            XCTFail()
-        }
-        
-        if case SearchUserAssetKeys.legacy(small: let smallAssetID, medium: let mediumAssetID) = searchUser2.assetKeys! {
-            XCTAssertEqual(smallAssetID, smallAssetID2)
-            XCTAssertEqual(mediumAssetID, mediumAssetID2)
-        } else {
-            XCTFail()
-        }
-    }
-
     func testThatCompletingARequestUpdatesAssetKeysOnSearchUsers_AssetKeys() {
         // Given
         let searchUsers = Array(setupSearchDirectory(userCount: 2))
@@ -255,47 +217,6 @@ extension SearchUserImageStrategyTests {
         if case SearchUserAssetKeys.asset(preview: let previewAssetKey, complete: let completeAssetKey) = searchUser2.assetKeys! {
             XCTAssertEqual(previewAssetKey, previewAssetKey2)
             XCTAssertEqual(completeAssetKey, completeAssetKey2)
-        } else {
-            XCTFail()
-        }
-    }
-
-    func testThatCompletingARequestUpdatesAssetKeysOnSearchUsers_MixedAssetKeysAndLegacy() {
-        // Given
-        let users = Array(setupSearchDirectory(userCount: 3))
-        let user1 = users[0], user2 = users[1], user3 = users[2]
-        let assetKey1 = "asset-key-1", assetKey2 = "asset-key-2"
-        let legacyId1 = UUID.create(), legacyId2 = UUID.create()
-        users.forEach({ $0.requestPreviewProfileImage() })
-
-        let payload = [
-            userData(previewAssetKey: assetKey1, for: user1.remoteIdentifier!),
-            userData(smallProfilePictureID: legacyId1, for: user2.remoteIdentifier!, assetPayload: assetPayload(previewAssetKey: assetKey2)),
-            userData(smallProfilePictureID: legacyId2, for: user3.remoteIdentifier!)
-        ]
-
-        let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
-
-        // When
-        guard let request = sut.nextRequest() else { return XCTFail() }
-        request.complete(with: response)
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // Then
-        if case SearchUserAssetKeys.asset(preview: let previewAssetKey, complete: _) = user1.assetKeys! {
-            XCTAssertEqual(previewAssetKey, assetKey1)
-        } else {
-            XCTFail()
-        }
-        
-        if case SearchUserAssetKeys.asset(preview: let previewAssetKey, complete: _) = user2.assetKeys! {
-            XCTAssertEqual(previewAssetKey, assetKey2)
-        } else {
-            XCTFail()
-        }
-        
-        if case SearchUserAssetKeys.legacy(small: let smallID, medium: _) = user3.assetKeys! {
-            XCTAssertEqual(smallID, legacyId2)
         } else {
             XCTFail()
         }
@@ -358,6 +279,7 @@ extension SearchUserImageStrategyTests {
 
 
 // MARK: - ImageAssets
+
 extension SearchUserImageStrategyTests {
     
     func requestPath(for assetID: UUID, of userID: UUID) -> String {

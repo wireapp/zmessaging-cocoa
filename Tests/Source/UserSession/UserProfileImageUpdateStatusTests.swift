@@ -607,8 +607,8 @@ extension UserProfileImageUpdateStatusTests {
     func testThatItSetsTheCorrectStateWhenThereIsASelfUserWithoutV3AssetIDs() {
         // GIVEN
         let selfUser = createSelfClient().user!
-        selfUser.imageMediumData = mediumJPEGData()
-        selfUser.imageSmallProfileData = verySmallJPEGData()
+        selfUser.setImage(data: mediumJPEGData(), size: .complete)
+        selfUser.setImage(data: verySmallJPEGData(), size: .preview)
         selfUser.needsToBeUpdatedFromBackend = false
         XCTAssertNil(selfUser.completeProfileAssetIdentifier)
         XCTAssertNil(selfUser.previewProfileAssetIdentifier)

@@ -176,8 +176,8 @@ extension UserProfileImageUpdateStatus {
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
         assetsToDelete.formUnion([selfUser.previewProfileAssetIdentifier, selfUser.completeProfileAssetIdentifier].compactMap { $0 })
         selfUser.updateAndSyncProfileAssetIdentifiers(previewIdentifier: previewAssetId, completeIdentifier: completeAssetId)
-        selfUser.imageSmallProfileData = self.resizedImages[.preview]
-        selfUser.imageMediumData = self.resizedImages[.complete]
+        selfUser.setImage(data: resizedImages[.preview], size: .preview)
+        selfUser.setImage(data: resizedImages[.complete], size: .complete)
         self.resetImageState()
         self.syncMOC.saveOrRollback()
         self.setState(state: .ready)

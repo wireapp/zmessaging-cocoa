@@ -690,48 +690,6 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     }];
 }
 
-
-- (void)testThatItUpdatesTheMediumImageRemoteIdentifierFromAnUpdateEvent;
-{
-    // given
-    NSUUID *remoteID = [NSUUID createUUID];
-    ZMUser *user = [self insertUserWithRemoteID:remoteID];
-    NSUUID *mediumImageRemoteID = [NSUUID createUUID];
-    
-    NSMutableDictionary *payload = [self samplePayloadForUserID:remoteID];
-    payload[@"user"][@"picture"] = @[
-                                    @{
-                                        @"content_length" : @51128,
-                                        @"data" : @"",
-                                        @"content_type" : @"image/webp",
-                                        @"id" : mediumImageRemoteID.transportString,
-                                        @"info" : @{
-                                                @"height" : @774,
-                                                @"tag" : @"medium",
-                                                @"original_width" : @600,
-                                                @"width" : @600,
-                                                @"correlation_id" : @"e6810025c-1bef-ee0f-8605e1ca-9511317",
-                                                @"original_height" : @774,
-                                                @"nonce" : @"8202b5ee6-04a3-8bb8-c83ce7a7-7fa8d79",
-                                                @"public" : @true
-                                                }
-                                        },
-                                    ];
-    
-    ZMUpdateEvent *event = [[ZMUpdateEvent alloc] initWithUuid:[NSUUID createUUID] payload:payload transient:NO decrypted:YES source:ZMUpdateEventSourceWebSocket];
-    
-    // when
-    [self.syncMOC performGroupedBlockAndWait:^{
-        [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    [self.syncMOC performGroupedBlockAndWait:^{
-        XCTAssertEqualObjects(user.mediumRemoteIdentifier, mediumImageRemoteID);
-    }];
-}
-
 - (void)testThatItDoesNotCrashWithUpdateEventWithInvalidUserData
 {
     // given
@@ -838,11 +796,10 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     user.name = @"Foo";
     user.accentColorValue = ZMAccentColorVividRed;
     user.emailAddress = @"foo@example.com";
-    user.mediumRemoteIdentifier =  [NSUUID createUUID];
-    user.localMediumRemoteIdentifier = user.mediumRemoteIdentifier;
-    user.localSmallProfileRemoteIdentifier = user.mediumRemoteIdentifier;
-    user.imageMediumData = [NSData dataWithBytes:(const char[]){'a'} length:1];
-    user.imageSmallProfileData = [NSData dataWithBytes:(const char[]){'b'} length:1];
+    user.completeProfileAssetIdentifier = @"123";
+    user.previewProfileAssetIdentifier = @"321";
+    [user setImageData:[NSData dataWithBytes:(const char[]){'a'} length:1] size:ProfileImageSizeComplete];
+    [user setImageData:[NSData dataWithBytes:(const char[]){'b'} length:1] size:ProfileImageSizePreview];
     user.phoneNumber = @"123";
     user.remoteIdentifier = [NSUUID createUUID];
     user.needsToBeUpdatedFromBackend = NO;
