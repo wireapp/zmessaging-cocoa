@@ -124,6 +124,8 @@ internal enum AssetTransportError: Error {
             default:
                 break
             }
+            
+            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
     }
     
