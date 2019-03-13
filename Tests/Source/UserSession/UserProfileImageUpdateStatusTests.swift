@@ -565,7 +565,8 @@ extension UserProfileImageUpdateStatusTests {
         let completeId = "bar"
 
         // WHEN
-        self.sut.updatePreprocessedImages(preview: previewData, complete: completeData)
+        self.sut.setState(state: .upload(image: previewData), for: .preview)
+        self.sut.setState(state: .upload(image: completeData), for: .complete)
         syncMOC.performGroupedBlockAndWait {
             _ = self.self.sut.consumeImage(for: .preview)
             _ = self.self.sut.consumeImage(for: .complete)
@@ -585,61 +586,3 @@ extension UserProfileImageUpdateStatusTests {
     }
 }
 
-// MARK: - Reuploading already preprocessed images
-extension UserProfileImageUpdateStatusTests {
-
-    func testThatItAdvancesStateWhenReuploadingPreprocessedImageData() {
-        // GIVEN
-        self.sut.updatePreprocessedImages(preview: verySmallJPEGData(), complete: mediumJPEGData())
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        syncMOC.performGroupedBlockAndWait {
-            // WHEN
-            _ = self.sut.consumeImage(for: .preview)
-            _ = self.sut.consumeImage(for: .complete)
-
-            // THEN
-            XCTAssertEqual(self.sut.imageState(for: .preview), .uploading)
-            XCTAssertEqual(self.sut.imageState(for: .complete), .uploading)
-        }
-    }
-
-    func testThatItSetsTheCorrectStateWhenThereIsASelfUserWithoutV3AssetIDs() {
-        // GIVEN
-        let selfUser = createSelfClient().user!
-        selfUser.setImage(data: mediumJPEGData(), size: .complete)
-        selfUser.setImage(data: verySmallJPEGData(), size: .preview)
-        selfUser.needsToBeUpdatedFromBackend = false
-        XCTAssertNil(selfUser.completeProfileAssetIdentifier)
-        XCTAssertNil(selfUser.previewProfileAssetIdentifier)
-        XCTAssertFalse(selfUser.needsToBeUpdatedFromBackend)
-
-        syncMOC.performGroupedBlockAndWait {
-            // WHEN
-            self.sut.reuploadExisingImageIfNeeded()
-            
-            // THEN
-            XCTAssertEqual(self.sut.imageState(for: .preview), .upload(image: self.verySmallJPEGData()))
-            XCTAssertEqual(self.sut.imageState(for: .complete), .upload(image: self.mediumJPEGData()))
-        }
-    }
-
-    func testThatItDoesNotSetTheCorrectStateWhenThereIsASelfUserWithV3AssetIDs() {
-        // GIVEN
-        let selfUser = createSelfClient().user!
-        selfUser.completeProfileAssetIdentifier = "complete-ID"
-        selfUser.previewProfileAssetIdentifier = "preview-ID"
-        XCTAssertNotNil(selfUser.completeProfileAssetIdentifier)
-        XCTAssertNotNil(selfUser.previewProfileAssetIdentifier)
-
-        syncMOC.performGroupedBlockAndWait {
-            // WHEN
-            self.sut.reuploadExisingImageIfNeeded()
-
-            // THEN
-            XCTAssertEqual(self.sut.imageState(for: .preview), .ready)
-            XCTAssertEqual(self.sut.imageState(for: .complete), .ready)
-        }
-    }
-
-}
