@@ -379,6 +379,7 @@ static ZMReachability *sharedReachabilityMock = nil;
     }]);
     
     FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:nil];
+    UserImageLocalCache *userImageCache = [[UserImageLocalCache alloc] initWithLocation:nil];
     
     [self.uiMOC addGroup:self.dispatchGroup];
     self.uiMOC.userInfo[@"TestName"] = self.name;
@@ -391,6 +392,7 @@ static ZMReachability *sharedReachabilityMock = nil;
         [self.syncMOC setZm_userInterfaceContext:self.uiMOC];
         [self.syncMOC setPersistentStoreMetadata:@(notificationContentVisible) forKey:@"ZMShouldNotificationContentKey"];
         self.syncMOC.zm_fileAssetCache = fileAssetCache;
+        self.syncMOC.zm_userImageCache = userImageCache;
     }];
     
     WaitForAllGroupsToBeEmpty(2);
@@ -407,6 +409,7 @@ static ZMReachability *sharedReachabilityMock = nil;
     [self.uiMOC setPersistentStoreMetadata:@(notificationContentVisible) forKey:@"ZMShouldNotificationContentKey"];
 
     self.uiMOC.zm_fileAssetCache = fileAssetCache;
+    self.uiMOC.zm_userImageCache = userImageCache;
 }
 
 - (id<ZMObjectStrategyDirectory>)createMockObjectStrategyDirectoryInMoc:(NSManagedObjectContext *)moc;
