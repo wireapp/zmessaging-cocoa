@@ -281,7 +281,7 @@ extension SearchUserImageStrategyTests {
         XCTAssertEqual(request.method, .methodGET);
         XCTAssertTrue(request.needsAuthentication);
         
-        let expectedPath = "/assets/v3/\(assetID)" //requestPath(for:assetID, of:searchUser.remoteIdentifier!)
+        let expectedPath = "/assets/v3/\(assetID)"
         XCTAssertEqual(request.path, expectedPath);
     }
     
