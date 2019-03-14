@@ -190,19 +190,11 @@ extension SearchUserImageStrategyTests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // Then
-        if case SearchUserAssetKeys.asset(preview: let previewAssetKey, complete: let completeAssetKey) = searchUser1.assetKeys! {
-            XCTAssertEqual(previewAssetKey, previewAssetKey1)
-            XCTAssertEqual(completeAssetKey, completeAssetKey1)
-        } else {
-            XCTFail()
-        }
+        XCTAssertEqual(searchUser1.assetKeys?.preview, previewAssetKey1)
+        XCTAssertEqual(searchUser1.assetKeys?.complete, completeAssetKey1)
         
-        if case SearchUserAssetKeys.asset(preview: let previewAssetKey, complete: let completeAssetKey) = searchUser2.assetKeys! {
-            XCTAssertEqual(previewAssetKey, previewAssetKey2)
-            XCTAssertEqual(completeAssetKey, completeAssetKey2)
-        } else {
-            XCTFail()
-        }
+        XCTAssertEqual(searchUser2.assetKeys?.preview, previewAssetKey2)
+        XCTAssertEqual(searchUser2.assetKeys?.complete, completeAssetKey2)
     }
 
     func testThatAFailingUserProfileRequestWithAPermanentErrorClearsThemFromTheDownloadQueue() {
