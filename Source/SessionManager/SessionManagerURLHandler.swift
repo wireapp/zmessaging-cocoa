@@ -164,7 +164,12 @@ extension URLAction {
         switch self {
         case .connectBot(let serviceUserData):
             session.startConversation(with: serviceUserData, completion: nil)
-
+//        case .openConversation(let id):
+//            ///TODO: open the conversation
+//            break
+//        case .openUserProfile(let id):
+//            ///TODO: open the user profile
+//            break
         default:
             fatalError("This action cannot be executed with an authenticated session.")
         }
@@ -212,16 +217,18 @@ public final class SessionManagerURLHandler: NSObject {
                 pendingAction = action
                 return true
             }
+            return true
 
-            handle(action: action, in: userSession)
+//            handle(action: action, in: userSession)
         } else if action.requiresAuthentication {
 
             guard let userSession = userSessionSource?.activeUserSession else {
                 pendingAction = action
                 return true
             }
+            return true
 
-            handle(action: action, in: userSession)
+//            handle(action: action, in: userSession)
 
         } else {
             guard let unauthenticatedSession = userSessionSource?.activeUnauthenticatedSession else {
@@ -237,7 +244,17 @@ public final class SessionManagerURLHandler: NSObject {
     fileprivate func handle(action: URLAction, in userSession: ZMUserSession) {
         delegate?.sessionManagerShouldExecuteURLAction(action) { shouldExecute in
             if shouldExecute {
-                action.execute(in: userSession)
+                switch action {
+                /// These actions are not related to SE
+                case .openConversation(id: _):
+                    ///TODO: open a conversation is possible
+                    break
+                case .openUserProfile(id: _):
+                    ///TODO:
+                    break
+                default:
+                    action.execute(in: userSession)
+                }
             }
         }
     }
