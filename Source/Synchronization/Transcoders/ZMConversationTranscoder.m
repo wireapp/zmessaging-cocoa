@@ -265,8 +265,6 @@ typedef NS_ENUM(NSUInteger, ZMConversationSource) {
              // Slow synced conversations should be considered read from the start
             conversation.lastReadServerTimeStamp = conversation.lastModifiedDate;
         }
-        
-        [self.managedObjectContext enqueueDelayedSave];
     }
     return conversation;
 }
