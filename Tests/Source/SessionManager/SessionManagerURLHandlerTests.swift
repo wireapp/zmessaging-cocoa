@@ -21,7 +21,7 @@ import Foundation
 import XCTest
 @testable import WireSyncEngine
 
-class UserSessionSourceDummy: UserSessionSource {
+final class UserSessionSourceDummy: UserSessionSource {
     var activeUserSession: ZMUserSession? = nil
     var activeUnauthenticatedSession: UnauthenticatedSession
 
@@ -34,7 +34,7 @@ class UserSessionSourceDummy: UserSessionSource {
     }
 }
  
-class OpenerDelegate: SessionManagerURLHandlerDelegate {
+final class OpenerDelegate: SessionManagerURLHandlerDelegate {
     var calls: [(URLAction, (Bool) -> Void)] = []
     func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) {
         calls.append((action, callback))
@@ -147,5 +147,56 @@ final class SessionManagerURLHandlerTests: MessagingTest {
 
         // then
         XCTAssertEqual(action, .warnInvalidCompanyLogin(error: .invalidLink))
+    }
+
+    // MARK: - Deep link
+
+    func testThatItParsesOpenConversationLink() {
+        // given
+        let uuidString = "fc43d637-6cc2-4d03-9185-2563c73d6ef2"
+        let url = URL(string: "wire://conversation/\(uuidString)")!
+        let uuid = UUID(uuidString: uuidString)!
+
+        // when
+        let action = URLAction(url: url)
+
+        // then
+        XCTAssertEqual(action, URLAction.openConversation(id: uuid))
+    }
+
+    func testThatItParsesOpenUserProfileLink() {
+        // given
+        let uuidString = "fc43d637-6cc2-4d03-9185-2563c73d6ef2"
+        let url = URL(string: "wire://user/\(uuidString)")!
+        let uuid = UUID(uuidString: uuidString)!
+
+
+        // when
+        let action = URLAction(url: url)
+
+        // then
+        XCTAssertEqual(action, URLAction.openUserProfile(id: uuid))
+    }
+
+    func testThatItDiscardsInvalidOpenUserProfileLink() {
+        // given
+        let url = URL(string: "wire://user/blahBlah)")!
+
+        // when
+        let action = URLAction(url: url)
+
+        // then
+        XCTAssertEqual(action, URLAction.warnInvalidDeepLink(error: .invalidLink))
+    }
+
+    func testThatItDiscardsInvalidOpenConversationLink() {
+        // given
+        let url = URL(string: "wire://conversation/foobar)")!
+
+        // when
+        let action = URLAction(url: url)
+
+        // then
+        XCTAssertEqual(action, URLAction.warnInvalidDeepLink(error: .invalidLink))
     }
 }

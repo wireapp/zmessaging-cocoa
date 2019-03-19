@@ -25,7 +25,11 @@ public enum URLAction: Equatable {
 
     case startCompanyLogin(code: UUID)
     case warnInvalidCompanyLogin(error: ConmpanyLoginRequestError)
-    
+
+    case openConversation(id: UUID)
+    case openUserProfile(id: UUID)
+    case warnInvalidDeepLink(error: DeepLinkRequestError)
+
     var causesLogout: Bool {
         switch self {
         case .startCompanyLogin: return true
@@ -36,6 +40,15 @@ public enum URLAction: Equatable {
     var requiresAuthentication: Bool {
         switch self {
         case .connectBot: return true
+        default: return false
+        }
+    }
+
+    var opensDeepLink: Bool {
+        switch self {
+        case .openConversation,
+             .openUserProfile:
+            return true
         default: return false
         }
     }
@@ -55,6 +68,22 @@ extension URLAction {
         }
         
         switch host {
+        case URL.DeepLink.user:
+            if let lastComponent = url.pathComponents.last,
+                let uuid = UUID(uuidString: lastComponent) {
+                self = .openUserProfile(id: uuid)
+            } else {
+                self = .warnInvalidDeepLink(error: .invalidLink)
+            }
+
+        case URL.DeepLink.conversation:
+            if let lastComponent = url.pathComponents.last,
+                let uuid = UUID(uuidString: lastComponent) {
+                self = .openConversation(id: uuid)
+            } else {
+                self = .warnInvalidDeepLink(error: .invalidLink)
+            }
+
         case URL.Host.startSSO:
             if let uuidCode = url.pathComponents.last.flatMap(CompanyLoginRequestDetector.requestCode) {
                 self = .startCompanyLogin(code: uuidCode)
@@ -178,7 +207,14 @@ public final class SessionManagerURLHandler: NSObject {
             return false
         }
 
-        if action.requiresAuthentication {
+        if action.opensDeepLink {
+            guard let userSession = userSessionSource?.activeUserSession else {
+                pendingAction = action
+                return true
+            }
+
+            handle(action: action, in: userSession)
+        } else if action.requiresAuthentication {
 
             guard let userSession = userSessionSource?.activeUserSession else {
                 pendingAction = action
