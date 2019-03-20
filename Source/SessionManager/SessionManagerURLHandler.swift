@@ -268,10 +268,10 @@ public final class SessionManagerURLHandler: NSObject {
         }
 
         ///update openUserProfile's associated value with session
-        var muteableAction = action
-        muteableAction.setUserSession(userSession: userSession)
+        var mutableAction = action
+        mutableAction.setUserSession(userSession: userSession)
 
-        if let result = delegate?.sessionManagerShouldExecuteURLAction(muteableAction, callback: callback) {
+        if let result = delegate?.sessionManagerShouldExecuteURLAction(mutableAction, callback: callback) {
             return result
         } else {
             return false
