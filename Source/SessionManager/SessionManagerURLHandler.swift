@@ -181,6 +181,13 @@ extension URLAction {
 }
 
 public protocol SessionManagerURLHandlerDelegate: class {
+
+    /// sessionManager executes a URLAction
+    ///
+    /// - Parameters:
+    ///   - action: the action to execute
+    ///   - callback: the callback with a bool shouldExecute, it should be called after the action is executed.
+    /// - Returns: return false if the Action is not executed
     func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) -> Bool
 }
 
