@@ -23,12 +23,22 @@ public struct User: Equatable {
         return lhs.id == rhs.id
     }
 
+    var userSession: ZMUserSession? {
+        didSet {
+            if let moc = userSession?.managedObjectContext,
+                let user = ZMUser.init(remoteID: id, createIfNeeded: false, in: moc) {
+                self.user = user
+            }
+        }
+    }
+
     private let id: UUID
-    var user: UserType?
+
+    private(set) public var user: UserType?
 
     init(id: UUID) {
         self.id = id
-        user = nil
+        userSession = nil
     }
 }
 
@@ -245,6 +255,11 @@ public final class SessionManagerURLHandler: NSObject {
             if shouldExecute {
                 action.execute(in: userSession)
             }
+        }
+
+        ///update openUserProfile's associated value with session
+        if case var .openUserProfile(user) = action {
+            user.userSession = userSession
         }
 
         if let result = delegate?.sessionManagerShouldExecuteURLAction(action, callback: callback) {
