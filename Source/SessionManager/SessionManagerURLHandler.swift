@@ -18,6 +18,20 @@
 
 import Foundation
 
+public struct User: Equatable {
+    public static func == (lhs: User, rhs: User) -> Bool {
+        return lhs.id == rhs.id
+    }
+
+    private let id: UUID
+    var user: UserType?
+
+    init(id: UUID) {
+        self.id = id
+        user = nil
+    }
+}
+
 public enum URLAction: Equatable {
     case connectBot(serviceUser: ServiceUserData)
     case companyLoginSuccess(userInfo: UserInfo)
@@ -27,7 +41,7 @@ public enum URLAction: Equatable {
     case warnInvalidCompanyLogin(error: ConmpanyLoginRequestError)
 
     case openConversation(id: UUID)
-    case openUserProfile(id: UUID)
+    case openUserProfile(user: User)
     case warnInvalidDeepLink(error: DeepLinkRequestError)
 
     var causesLogout: Bool {
@@ -65,7 +79,7 @@ extension URLAction {
         case URL.DeepLink.user:
             if let lastComponent = url.pathComponents.last,
                 let uuid = UUID(uuidString: lastComponent) {
-                self = .openUserProfile(id: uuid)
+                self = .openUserProfile(user: User(id: uuid))
             } else {
                 self = .warnInvalidDeepLink(error: .invalidLink)
             }
