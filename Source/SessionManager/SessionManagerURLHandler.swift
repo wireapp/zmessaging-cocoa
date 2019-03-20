@@ -32,13 +32,13 @@ public struct User: Equatable {
         }
     }
 
-    private let id: UUID
+    let id: UUID
 
     private(set) public var user: UserType?
 
     init(id: UUID) {
         self.id = id
-        userSession = nil
+//        userSession = nil
     }
 }
 
@@ -53,6 +53,16 @@ public enum URLAction: Equatable {
     case openConversation(id: UUID)
     case openUserProfile(user: User)
     case warnInvalidDeepLink(error: DeepLinkRequestError)
+
+    mutating func setUserSession(userSession: ZMUserSession) {
+        switch self {
+        case .openUserProfile(var user):
+            user.userSession = userSession
+            self = .openUserProfile(user: user)
+        default:
+            break
+        }
+    }
 
     var causesLogout: Bool {
         switch self {
@@ -258,11 +268,10 @@ public final class SessionManagerURLHandler: NSObject {
         }
 
         ///update openUserProfile's associated value with session
-        if case var .openUserProfile(user) = action {
-            user.userSession = userSession
-        }
+        var muteableAction = action
+        muteableAction.setUserSession(userSession: userSession)
 
-        if let result = delegate?.sessionManagerShouldExecuteURLAction(action, callback: callback) {
+        if let result = delegate?.sessionManagerShouldExecuteURLAction(muteableAction, callback: callback) {
             return result
         } else {
             return false
