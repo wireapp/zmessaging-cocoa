@@ -39,16 +39,10 @@ public enum URLAction: Equatable {
 
     var requiresAuthentication: Bool {
         switch self {
-        case .connectBot: return true
-        default: return false
-        }
-    }
-
-    var opensDeepLink: Bool {
-        switch self {
-        case .openConversation,
+        case .connectBot,
+             .openConversation,
              .openUserProfile:
-            return true
+             return true
         default: return false
         }
     }
@@ -187,7 +181,7 @@ extension URLAction {
 }
 
 public protocol SessionManagerURLHandlerDelegate: class {
-    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void)
+    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) -> Bool
 }
 
 public final class SessionManagerURLHandler: NSObject {
@@ -206,13 +200,7 @@ public final class SessionManagerURLHandler: NSObject {
             return false
         }
 
-        if action.opensDeepLink {
-            guard let _ = userSessionSource?.activeUserSession else {
-                pendingAction = action
-                return true
-            }
-        } else if action.requiresAuthentication {
-
+        if action.requiresAuthentication {
             guard let userSession = userSessionSource?.activeUserSession else {
                 pendingAction = action
                 return true
@@ -230,18 +218,34 @@ public final class SessionManagerURLHandler: NSObject {
         return true
     }
 
-    fileprivate func handle(action: URLAction, in userSession: ZMUserSession) {
-        delegate?.sessionManagerShouldExecuteURLAction(action) { shouldExecute in
+    @discardableResult
+    fileprivate func handle(action: URLAction, in userSession: ZMUserSession) -> Bool {
+        let callback: (Bool) -> () = { shouldExecute in
             if shouldExecute {
-                action.execute(in: userSession)                
+                action.execute(in: userSession)
             }
+        }
+
+        if let result = delegate?.sessionManagerShouldExecuteURLAction(action, callback: callback) {
+            return result
+        } else {
+            return false
         }
     }
 
     fileprivate func handle(action: URLAction, in unauthenticatedSession: UnauthenticatedSession) {
-        delegate?.sessionManagerShouldExecuteURLAction(action) { shouldExecute in
+        let _ = delegate?.sessionManagerShouldExecuteURLAction(action) { shouldExecute in
             if shouldExecute {
                 action.execute(in: unauthenticatedSession)
+            }
+        }
+    }
+    
+    public func executePendingAction(userSession: ZMUserSession) {
+        if let pendingAction = self.pendingAction {
+
+            if self.handle(action: pendingAction, in: userSession) { ///TODO: not nil pendingAction if return false
+                self.pendingAction = nil
             }
         }
     }
@@ -249,9 +253,6 @@ public final class SessionManagerURLHandler: NSObject {
 
 extension SessionManagerURLHandler: SessionActivationObserver {
     public func sessionManagerActivated(userSession: ZMUserSession) {
-        if let pendingAction = self.pendingAction {
-            self.handle(action: pendingAction, in: userSession)
-            self.pendingAction = nil
-        }
+        executePendingAction(userSession: userSession)
     }
 }
