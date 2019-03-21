@@ -23,12 +23,10 @@ public struct DeepLinkUser: Equatable {
         return lhs.id == rhs.id
     }
 
-    var userSession: ZMUserSession? {
-        didSet {
-            if let moc = userSession?.managedObjectContext,
-                let user = ZMUser.init(remoteID: id, createIfNeeded: false, in: moc) {
-                self.user = user
-            }
+    mutating func setUserSession(userSession: ZMUserSession) {
+        if let moc = userSession.managedObjectContext,
+            let user = ZMUser.init(remoteID: id, createIfNeeded: false, in: moc) {
+            self.user = user
         }
     }
 
@@ -56,7 +54,7 @@ public enum URLAction: Equatable {
     mutating func setUserSession(userSession: ZMUserSession) {
         switch self {
         case .openUserProfile(var deepLinkUser):
-            deepLinkUser.userSession = userSession
+            deepLinkUser.setUserSession(userSession: userSession)
             self = .openUserProfile(deepLinkUser: deepLinkUser)
         default:
             break
@@ -288,7 +286,8 @@ public final class SessionManagerURLHandler: NSObject {
     public func executePendingAction(userSession: ZMUserSession) {
         if let pendingAction = self.pendingAction {
 
-            if self.handle(action: pendingAction, in: userSession) { ///TODO: not nil pendingAction if return false
+            ///do not nil pendingAction if handle() return false. The pendingAction will be excuted later.
+            if handle(action: pendingAction, in: userSession) {
                 self.pendingAction = nil
             }
         }
