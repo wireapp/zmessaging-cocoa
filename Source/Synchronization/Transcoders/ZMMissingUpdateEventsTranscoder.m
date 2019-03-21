@@ -99,7 +99,7 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
 
 - (BOOL)isFetchingStreamForAPNS
 {
-    return self.pushNotificationStatus.status == BackgroundNotificationFetchStatusInProgress;
+    return self.applicationStatus.notificationFetchStatus == BackgroundNotificationFetchStatusInProgress;
 }
 
 - (BOOL)isFetchingStreamInBackground
