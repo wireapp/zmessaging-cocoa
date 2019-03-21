@@ -61,8 +61,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing
-         | ZMStrategyConfigurationOptionAllowsRequestsDuringSync
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync
          | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
 }
 

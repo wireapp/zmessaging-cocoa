@@ -128,6 +128,11 @@
     [self.syncMOC setPersistentStoreMetadata:@"0.1" forKey:@"lastSavedVersion"];
 }
 
+- (void)updateLastSavedVersion:(NSString *)lastSavedVersion
+{
+    [self.syncMOC setPersistentStoreMetadata:lastSavedVersion forKey:@"lastSavedVersion"];
+}
+
 - (void)testThatItOnlyCallsMethodsForVersionsNewerThanTheLastSavedVersion
 {
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -221,7 +226,7 @@
     [self.syncMOC performGroupedBlockAndWait:^{
 
         // given
-        [self saveNewVersion];
+        [self updateLastSavedVersion:@"40.3"];
 
         // when
         self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
@@ -261,8 +266,8 @@
 
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self saveNewVersion];
-
+        [self updateLastSavedVersion:@"40.22"];
+        
         [[NSFileManager defaultManager] createDirectoryAtURL:imageURL withIntermediateDirectories:YES attributes:nil error:nil];
         [[NSFileManager defaultManager] createDirectoryAtURL:conversationUrl withIntermediateDirectories:YES attributes:nil error:nil];
 
@@ -291,7 +296,7 @@
 
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self saveNewVersion];
+        [self updateLastSavedVersion:@"41.41"];
         userClient = [self createSelfClient];
 
         [ZMKeychain setData:verificationKey forAccount:@"APSVerificationKey"];
@@ -343,7 +348,7 @@
 
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self saveNewVersion];
+        [self updateLastSavedVersion:@"41.41"];
         userClient = [self createSelfClient];
         XCTAssertFalse(userClient.needsToUploadSignalingKeys);
         XCTAssertFalse([userClient hasLocalModificationsForKey:@"needsToUploadSignalingKeys"]);
@@ -393,7 +398,7 @@
 
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self saveNewVersion];
+        [self updateLastSavedVersion:@"41.10"];
         ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeOneOnOne;
         conversation.remoteIdentifier = NSUUID.createUUID;
@@ -523,7 +528,7 @@
     NSURL *directoryNotBeDeleted = [cachesDirectory URLByAppendingPathComponent:@"dontDeleteMe" isDirectory:YES];
 
     [self.syncMOC performGroupedBlockAndWait:^{
-        [self saveNewVersion];
+        [self updateLastSavedVersion:@"60.0.0"];
         // Create expected PINCache folders
         for (NSString *cache in PINCaches) {
             NSURL *cacheURL = [cachesDirectory URLByAppendingPathComponent:cache isDirectory:YES];
@@ -574,7 +579,7 @@
 
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self saveNewVersion];
+        [self updateLastSavedVersion:@"62.41"];
         connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
         connectedUser.connection.status = ZMConnectionStatusAccepted;
@@ -626,7 +631,7 @@
 
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
-        [self saveNewVersion];
+        [self updateLastSavedVersion:@"75.0.0"];
         connectedUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         connectedUser.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
         connectedUser.connection.status = ZMConnectionStatusAccepted;

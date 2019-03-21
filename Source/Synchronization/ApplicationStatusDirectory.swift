@@ -38,10 +38,6 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let teamInvitationStatus: TeamInvitationStatus
     public let assetDeletionStatus: AssetDeletionStatus
     public let callEventStatus: CallEventStatus
-
-    public var notificationFetchStatus: BackgroundNotificationFetchStatus {
-        return pushNotificationStatus.status
-    }
     
     fileprivate var callInProgressObserverToken : Any? = nil
     
@@ -104,6 +100,15 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
             return .synchronizing
         } else {
             return .eventProcessing
+        }
+    }
+    
+    public var notificationFetchStatus: BackgroundNotificationFetchStatus {
+        switch pushNotificationStatus.status {
+        case .done:
+            return .done
+        case .inProgress:
+            return syncStatus.isSyncing ? .done : .inProgress
         }
     }
     
