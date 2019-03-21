@@ -163,7 +163,7 @@ final class SessionManagerURLHandlerTests: MessagingTest {
         let action = URLAction(url: url)
 
         // then
-        XCTAssertEqual(action, URLAction.openConversation(id: uuid))
+        XCTAssertEqual(action, URLAction.openConversation(id: uuid, conversation: nil))
     }
 
     func testThatItParsesOpenUserProfileLink() {
@@ -177,7 +177,7 @@ final class SessionManagerURLHandlerTests: MessagingTest {
         let action = URLAction(url: url)
 
         // then
-        XCTAssertEqual(action, URLAction.openUserProfile(deepLinkUser: DeepLinkUser(id: uuid)))
+        XCTAssertEqual(action, URLAction.openConversation(id: uuid, conversation: nil))
     }
 
     func testThatItDiscardsInvalidOpenUserProfileLink() {
@@ -188,7 +188,7 @@ final class SessionManagerURLHandlerTests: MessagingTest {
         let action = URLAction(url: url)
 
         // then
-        XCTAssertEqual(action, URLAction.warnInvalidDeepLink(error: .invalidLink))
+        XCTAssertEqual(action, URLAction.warnInvalidDeepLink(error: .invalidUserLink))
     }
 
     func testThatItDiscardsInvalidOpenConversationLink() {
@@ -199,6 +199,6 @@ final class SessionManagerURLHandlerTests: MessagingTest {
         let action = URLAction(url: url)
 
         // then
-        XCTAssertEqual(action, URLAction.warnInvalidDeepLink(error: .invalidLink))
+        XCTAssertEqual(action, URLAction.warnInvalidDeepLink(error: .invalidConversationLink))
     }
 }
