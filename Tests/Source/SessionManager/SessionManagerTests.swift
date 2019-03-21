@@ -1052,12 +1052,14 @@ extension SessionManagerTests {
     }
 }
 
-class MockSessionManagerURLHandlerDelegate: NSObject, SessionManagerURLHandlerDelegate  {
+final class MockSessionManagerURLHandlerDelegate: NSObject, SessionManagerURLHandlerDelegate  {
 
     var allowedAction: URLAction?
 
-    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) {
+    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) -> Bool {
         callback(action == allowedAction)
+
+        return true
     }
 
 }
