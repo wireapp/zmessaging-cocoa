@@ -18,27 +18,6 @@
 
 import Foundation
 
-public struct DeepLinkUser: Equatable {
-    public static func == (lhs: DeepLinkUser, rhs: DeepLinkUser) -> Bool {
-        return lhs.id == rhs.id
-    }
-
-    mutating func setUserSession(userSession: ZMUserSession) {
-        if let moc = userSession.managedObjectContext,
-            let user = ZMUser.init(remoteID: id, createIfNeeded: false, in: moc) {
-            self.user = user
-        }
-    }
-
-    private let id: UUID
-
-    private(set) public var user: UserType?
-
-    init(id: UUID) {
-        self.id = id
-    }
-}
-
 public enum URLAction: Equatable {
     case connectBot(serviceUser: ServiceUserData)
     case companyLoginSuccess(userInfo: UserInfo)
@@ -47,15 +26,26 @@ public enum URLAction: Equatable {
     case startCompanyLogin(code: UUID)
     case warnInvalidCompanyLogin(error: ConmpanyLoginRequestError)
 
-    case openConversation(id: UUID)
-    case openUserProfile(deepLinkUser: DeepLinkUser)
+    case openConversation(id: UUID, conversation: ZMConversation?)
+    case openUserProfile(id: UUID, user: ZMUser?)
     case warnInvalidDeepLink(error: DeepLinkRequestError)
 
+
+    /// Update self's associated value with given userSession
+    ///
+    /// - Parameter userSession: the active ZMUserSession
     mutating func setUserSession(userSession: ZMUserSession) {
         switch self {
-        case .openUserProfile(var deepLinkUser):
-            deepLinkUser.setUserSession(userSession: userSession)
-            self = .openUserProfile(deepLinkUser: deepLinkUser)
+        case .openUserProfile(let id, _):
+            if let moc = userSession.managedObjectContext,
+                let user = ZMUser.init(remoteID: id, createIfNeeded: false, in: moc) {
+                self = .openUserProfile(id: id, user: user)
+            }
+        case .openConversation(let id, _):
+            if let moc = userSession.managedObjectContext,
+                let conversation = ZMConversation(remoteID: id, createIfNeeded: false, in: moc) {
+                self = .openConversation(id: id, conversation: conversation)
+            }
         default:
             break
         }
@@ -96,17 +86,17 @@ extension URLAction {
         case URL.DeepLink.user:
             if let lastComponent = url.pathComponents.last,
                 let uuid = UUID(uuidString: lastComponent) {
-                self = .openUserProfile(deepLinkUser: DeepLinkUser(id: uuid))
+                self = .openUserProfile(id: uuid, user: nil)
             } else {
-                self = .warnInvalidDeepLink(error: .invalidLink)
+                self = .warnInvalidDeepLink(error: .invalidUserLink)
             }
 
         case URL.DeepLink.conversation:
             if let lastComponent = url.pathComponents.last,
                 let uuid = UUID(uuidString: lastComponent) {
-                self = .openConversation(id: uuid)
+                self = .openConversation(id: uuid, conversation: nil)
             } else {
-                self = .warnInvalidDeepLink(error: .invalidLink)
+                self = .warnInvalidDeepLink(error: .invalidConversationLink)
             }
 
         case URL.Host.startSSO:

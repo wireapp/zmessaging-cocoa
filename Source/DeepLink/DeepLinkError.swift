@@ -23,7 +23,7 @@ import Foundation
  */
 
 public enum DeepLinkRequestError: Error, Equatable {
-    /// The Deep link provided by the user was invalid.
-    case invalidLink
+    case invalidUserLink
+    case invalidConversationLink
     case notLoggedIn
 }
