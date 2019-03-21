@@ -52,8 +52,7 @@
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync
-         | ZMStrategyConfigurationOptionAllowsRequestsDuringNotificationStreamFetch;
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
 }
 
 - (void)startRequestingLastUpdateEventIDWithoutPersistingIt

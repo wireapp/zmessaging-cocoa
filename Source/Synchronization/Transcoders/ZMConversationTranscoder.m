@@ -125,8 +125,7 @@ typedef NS_ENUM(NSUInteger, ZMConversationSource) {
 - (ZMStrategyConfigurationOption)configuration
 {
     return ZMStrategyConfigurationOptionAllowsRequestsDuringSync
-         | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing
-         | ZMStrategyConfigurationOptionAllowsRequestsDuringNotificationStreamFetch;
+         | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing;
 }
 
 - (NSArray<NSString *> *)keysToSync
