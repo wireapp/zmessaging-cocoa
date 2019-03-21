@@ -177,7 +177,7 @@ final class SessionManagerURLHandlerTests: MessagingTest {
         let action = URLAction(url: url)
 
         // then
-        XCTAssertEqual(action, URLAction.openUserProfile(id: uuid))
+        XCTAssertEqual(action, URLAction.openUserProfile(deepLinkUser: DeepLinkUser(id: uuid)))
     }
 
     func testThatItDiscardsInvalidOpenUserProfileLink() {

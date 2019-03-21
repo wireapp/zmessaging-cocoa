@@ -18,8 +18,8 @@
 
 import Foundation
 
-public struct User: Equatable {
-    public static func == (lhs: User, rhs: User) -> Bool {
+public struct DeepLinkUser: Equatable {
+    public static func == (lhs: DeepLinkUser, rhs: DeepLinkUser) -> Bool {
         return lhs.id == rhs.id
     }
 
@@ -32,13 +32,12 @@ public struct User: Equatable {
         }
     }
 
-    let id: UUID
+    private let id: UUID
 
     private(set) public var user: UserType?
 
     init(id: UUID) {
         self.id = id
-//        userSession = nil
     }
 }
 
@@ -51,14 +50,14 @@ public enum URLAction: Equatable {
     case warnInvalidCompanyLogin(error: ConmpanyLoginRequestError)
 
     case openConversation(id: UUID)
-    case openUserProfile(user: User)
+    case openUserProfile(deepLinkUser: DeepLinkUser)
     case warnInvalidDeepLink(error: DeepLinkRequestError)
 
     mutating func setUserSession(userSession: ZMUserSession) {
         switch self {
-        case .openUserProfile(var user):
-            user.userSession = userSession
-            self = .openUserProfile(user: user)
+        case .openUserProfile(var deepLinkUser):
+            deepLinkUser.userSession = userSession
+            self = .openUserProfile(deepLinkUser: deepLinkUser)
         default:
             break
         }
@@ -99,7 +98,7 @@ extension URLAction {
         case URL.DeepLink.user:
             if let lastComponent = url.pathComponents.last,
                 let uuid = UUID(uuidString: lastComponent) {
-                self = .openUserProfile(user: User(id: uuid))
+                self = .openUserProfile(deepLinkUser: DeepLinkUser(id: uuid))
             } else {
                 self = .warnInvalidDeepLink(error: .invalidLink)
             }
