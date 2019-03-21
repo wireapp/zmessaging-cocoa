@@ -209,6 +209,7 @@ public protocol SessionManagerURLHandlerDelegate: class {
     ///   - action: the action to execute
     ///   - callback: the callback with a bool shouldExecute, it should be called after the action is executed.
     /// - Returns: return false if the Action is not executed
+    @discardableResult
     func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) -> Bool
 }
 
@@ -266,7 +267,7 @@ public final class SessionManagerURLHandler: NSObject {
     }
 
     fileprivate func handle(action: URLAction, in unauthenticatedSession: UnauthenticatedSession) {
-        let _ = delegate?.sessionManagerShouldExecuteURLAction(action) { shouldExecute in
+        delegate?.sessionManagerShouldExecuteURLAction(action) { shouldExecute in
             if shouldExecute {
                 action.execute(in: unauthenticatedSession)
             }
