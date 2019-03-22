@@ -200,13 +200,9 @@ extension SessionManager {
     
     public func showConversation(_ conversation: ZMConversation,
                                  at message: ZMConversationMessage? = nil,
-                                 in session: ZMUserSession? = nil) {
-        if let session = session {
-            activateAccount(for: session) {
-                self.showContentDelegate?.showConversation(conversation, at: message)
-            }
-        } else {
-            showContentDelegate?.showConversation(conversation, at: message)
+                                 in session: ZMUserSession) {
+        activateAccount(for: session) {
+            self.showContentDelegate?.showConversation(conversation, at: message)
         }
     }
     

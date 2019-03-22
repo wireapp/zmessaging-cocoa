@@ -77,10 +77,10 @@ public protocol SessionManagerType : class {
     /// - Parameters:
     ///   - conversation: the conversation to switch
     ///   - message: the message to navigate
-    ///   - session: the session of the conversation, provide nil to stay in current session
+    ///   - session: the session of the conversation
     func showConversation(_ conversation: ZMConversation,
                           at message: ZMConversationMessage?,
-                          in session: ZMUserSession?)
+                          in session: ZMUserSession)
     
     /// Switch account and and ask UI to navigate to the conversatio list
     func showConversationList(in session: ZMUserSession)
