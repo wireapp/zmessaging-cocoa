@@ -229,26 +229,30 @@ public final class SessionManagerURLHandler: NSObject {
         self.userSessionSource = userSessionSource
     }
     
-    @objc
-    public func openURL(_ url: URL, options: [UIApplication.OpenURLOptionsKey: AnyObject]) {
+    @objc @discardableResult
+    public func openURL(_ url: URL, options: [UIApplication.OpenURLOptionsKey: AnyObject]) -> Bool {
         guard let action = URLAction(url: url) else {
-            return
+            return false
         }
 
         if action.requiresAuthentication {
+
             guard let userSession = userSessionSource?.activeUserSession else {
                 pendingAction = action
-                return
+                return true
             }
 
             handle(action: action, in: userSession)
+
         } else {
             guard let unauthenticatedSession = userSessionSource?.activeUnauthenticatedSession else {
-                return
+                return false
             }
 
             handle(action: action, in: unauthenticatedSession)
         }
+
+        return true
     }
 
     fileprivate func handle(action: URLAction, in userSession: ZMUserSession) {
