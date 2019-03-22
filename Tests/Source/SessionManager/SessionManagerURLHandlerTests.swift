@@ -36,10 +36,8 @@ final class UserSessionSourceDummy: UserSessionSource {
  
 final class OpenerDelegate: SessionManagerURLHandlerDelegate {
     var calls: [(URLAction, (Bool) -> Void)] = []
-    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) -> Bool {
+    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) {
         calls.append((action, callback))
-
-        return true
     }
 }
 

@@ -208,9 +208,7 @@ public protocol SessionManagerURLHandlerDelegate: class {
     /// - Parameters:
     ///   - action: the action to execute
     ///   - callback: the callback with a bool shouldExecute, it should be called after the action is executed.
-    /// - Returns: return false if the Action is not executed
-    @discardableResult
-    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) -> Bool
+    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void)
 }
 
 public final class SessionManagerURLHandler: NSObject {
@@ -247,8 +245,7 @@ public final class SessionManagerURLHandler: NSObject {
         return true
     }
 
-    @discardableResult
-    fileprivate func handle(action: URLAction, in userSession: ZMUserSession) -> Bool {
+    fileprivate func handle(action: URLAction, in userSession: ZMUserSession) {
         let callback: (Bool) -> () = { shouldExecute in
             if shouldExecute {
                 action.execute(in: userSession)
@@ -259,11 +256,7 @@ public final class SessionManagerURLHandler: NSObject {
         var mutableAction = action
         mutableAction.setUserSession(userSession: userSession)
 
-        if let result = delegate?.sessionManagerShouldExecuteURLAction(mutableAction, callback: callback) {
-            return result
-        } else {
-            return false
-        }
+        delegate?.sessionManagerShouldExecuteURLAction(mutableAction, callback: callback)
     }
 
     fileprivate func handle(action: URLAction, in unauthenticatedSession: UnauthenticatedSession) {
@@ -276,11 +269,8 @@ public final class SessionManagerURLHandler: NSObject {
     
     public func executePendingAction(userSession: ZMUserSession) {
         if let pendingAction = self.pendingAction {
-
-            ///do not nil pendingAction if handle() return false. The pendingAction will be excuted later.
-            if handle(action: pendingAction, in: userSession) {
-                self.pendingAction = nil
-            }
+            handle(action: pendingAction, in: userSession)
+            self.pendingAction = nil
         }
     }
 }

@@ -73,10 +73,20 @@ public protocol SessionManagerType : class {
     func configureUserNotifications()
     
     /// Switch account and and ask UI to to navigate to a message in a conversation
-    func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?, in session: ZMUserSession)
+    ///
+    /// - Parameters:
+    ///   - conversation: the conversation to switch
+    ///   - message: the message to navigate
+    ///   - session: the session of the conversation
+    func showConversation(_ conversation: ZMConversation,
+                          at message: ZMConversationMessage?,
+                          in session: ZMUserSession)
     
     /// Switch account and and ask UI to navigate to the conversatio list
     func showConversationList(in session: ZMUserSession)
+
+    /// ask UI to open the profile of a user
+    func showUserProfile(user: UserType)
 
     /// Needs to be called before we try to register another device because API requires password
     func update(credentials: ZMCredentials) -> Bool
