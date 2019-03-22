@@ -35,17 +35,25 @@ public enum URLAction: Equatable {
     ///
     /// - Parameter userSession: the active ZMUserSession
     mutating func setUserSession(userSession: ZMUserSession) {
+        guard let moc = userSession.managedObjectContext else {
+            return
+        }
+
         switch self {
         case .openUserProfile(let id, _):
-            if let moc = userSession.managedObjectContext,
-                let user = ZMUser.init(remoteID: id, createIfNeeded: false, in: moc) {
-                self = .openUserProfile(id: id, user: user)
+            guard let user = ZMUser.init(remoteID: id, createIfNeeded: false, in: moc) else {
+                self = .warnInvalidDeepLink(error: .invalidUserLink)
+                return
             }
+
+            self = .openUserProfile(id: id, user: user)
         case .openConversation(let id, _):
-            if let moc = userSession.managedObjectContext,
-                let conversation = ZMConversation(remoteID: id, createIfNeeded: false, in: moc) {
-                self = .openConversation(id: id, conversation: conversation)
+            guard let conversation = ZMConversation(remoteID: id, createIfNeeded: false, in: moc) else {
+                self = .warnInvalidDeepLink(error: .invalidConversationLink)
+                return
             }
+
+            self = .openConversation(id: id, conversation: conversation)
         default:
             break
         }
@@ -221,28 +229,26 @@ public final class SessionManagerURLHandler: NSObject {
         self.userSessionSource = userSessionSource
     }
     
-    @objc @discardableResult
-    public func openURL(_ url: URL, options: [UIApplication.OpenURLOptionsKey: AnyObject]) -> Bool {
+    @objc
+    public func openURL(_ url: URL, options: [UIApplication.OpenURLOptionsKey: AnyObject]) {
         guard let action = URLAction(url: url) else {
-            return false
+            return
         }
 
         if action.requiresAuthentication {
             guard let userSession = userSessionSource?.activeUserSession else {
                 pendingAction = action
-                return true
+                return
             }
 
             handle(action: action, in: userSession)
         } else {
             guard let unauthenticatedSession = userSessionSource?.activeUnauthenticatedSession else {
-                return false
+                return
             }
 
             handle(action: action, in: unauthenticatedSession)
         }
-
-        return true
     }
 
     fileprivate func handle(action: URLAction, in userSession: ZMUserSession) {
