@@ -44,17 +44,22 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
     var lastRequestToShowMessage: (ZMUserSession, ZMConversation, ZMConversationMessage)?
     var lastRequestToShowConversation: (ZMUserSession, ZMConversation)?
     var lastRequestToShowConversationsList: ZMUserSession?
-        
+    var lastRequestToShowUserProfile: UserType?
+
     func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?, in session: ZMUserSession) {
-                if let message = message {
-                    lastRequestToShowMessage = (session, conversation, message)
-                } else {
-                    lastRequestToShowConversation = (session, conversation)
-                }
+        if let message = message {
+            lastRequestToShowMessage = (session, conversation, message)
+        } else {
+            lastRequestToShowConversation = (session, conversation)
+        }
     }
     
     func showConversationList(in session: ZMUserSession) {
         lastRequestToShowConversationsList = session
+    }
+
+    func showUserProfile(user: UserType) {
+        lastRequestToShowUserProfile = user
     }
 
     @objc public var updatePushTokenCalled = false

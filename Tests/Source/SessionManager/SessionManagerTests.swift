@@ -1058,8 +1058,6 @@ final class MockSessionManagerURLHandlerDelegate: NSObject, SessionManagerURLHan
 
     func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) {
         callback(action == allowedAction)
-
-        return true
     }
 
 }
