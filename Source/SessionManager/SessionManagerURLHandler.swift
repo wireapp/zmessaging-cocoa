@@ -277,10 +277,20 @@ public final class SessionManagerURLHandler: NSObject {
         }
     }
     
-    public func executePendingAction(userSession: ZMUserSession) {
+    func executePendingAction(userSession: ZMUserSession) {
         if let pendingAction = self.pendingAction {
             handle(action: pendingAction, in: userSession)
             self.pendingAction = nil
+        }
+    }
+
+    public var hasUnhandledDeepLink: Bool {
+        switch pendingAction {
+        case .openUserProfile(_)?,
+             .openConversation(_)?:
+            return true
+        default:
+            return false
         }
     }
 }
