@@ -277,7 +277,7 @@ public final class SessionManagerURLHandler: NSObject {
         }
     }
     
-    func executePendingAction(userSession: ZMUserSession) {
+    private func executePendingAction(userSession: ZMUserSession) {
         if let pendingAction = self.pendingAction {
             handle(action: pendingAction, in: userSession)
             self.pendingAction = nil
