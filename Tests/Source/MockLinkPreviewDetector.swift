@@ -31,7 +31,7 @@ class MockLinkPreviewDetector: LinkPreviewDetectorType {
         case tweetWithPicture = "http://twitter.com/jcvd/status/fullsplitbetweentruckspic"
     }
     
-    func downloadLinkPreviews(inText text: String, excluding: [NSRange], completion: @escaping ([LinkMetadata]) -> Void) {
+    func downloadLinkPreviews(inText text: String, excluding: [Range<Int>], completion: @escaping ([LinkMetadata]) -> Void) {
         guard let linkPreviewURL = LinkPreviewURL(rawValue: text) else { return completion([]) }
         
         completion([linkPreview(linkPreviewURL)])
