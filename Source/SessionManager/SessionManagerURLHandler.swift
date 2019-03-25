@@ -68,10 +68,19 @@ public enum URLAction: Equatable {
 
     var requiresAuthentication: Bool {
         switch self {
-        case .connectBot,
-             .openConversation,
-             .openUserProfile:
+        case .openConversation,
+             .openUserProfile,
+             .connectBot:
              return true
+        default: return false
+        }
+    }
+
+    var opensDeepLink: Bool {
+        switch self {
+        case .openConversation,
+             .openUserProfile:
+            return true
         default: return false
         }
     }
@@ -228,14 +237,30 @@ public final class SessionManagerURLHandler: NSObject {
     internal init(userSessionSource: UserSessionSource) {
         self.userSessionSource = userSessionSource
     }
-    
+
     @objc @discardableResult
     public func openURL(_ url: URL, options: [UIApplication.OpenURLOptionsKey: AnyObject]) -> Bool {
         guard let action = URLAction(url: url) else {
             return false
         }
 
-        if action.requiresAuthentication {
+
+        if action.opensDeepLink {
+            guard let userSessionSource = userSessionSource else {
+                pendingAction = action
+                return true
+            }
+
+            if let userSession = userSessionSource.activeUserSession {
+                handle(action: action, in: userSession)
+            } else if userSessionSource.isSelectedAccountAuthenticated {
+                pendingAction = action
+                return true
+            } else {
+                handle(action: .warnInvalidDeepLink(error: .notLoggedIn), in: userSessionSource.activeUnauthenticatedSession)
+            }
+
+        } else if action.requiresAuthentication {
 
             guard let userSession = userSessionSource?.activeUserSession else {
                 pendingAction = action
@@ -281,16 +306,6 @@ public final class SessionManagerURLHandler: NSObject {
         if let pendingAction = self.pendingAction {
             handle(action: pendingAction, in: userSession)
             self.pendingAction = nil
-        }
-    }
-
-    public var hasUnhandledDeepLink: Bool {
-        switch pendingAction {
-        case .openUserProfile(_)?,
-             .openConversation(_)?:
-            return true
-        default:
-            return false
         }
     }
 }

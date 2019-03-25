@@ -50,7 +50,9 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 public protocol UserSessionSource: class {
     var activeUserSession: ZMUserSession? { get }
     var activeUnauthenticatedSession: UnauthenticatedSession { get }
+    var isSelectedAccountAuthenticated: Bool { get }
 }
+
 
 @objc
 public protocol SessionManagerType : class {
@@ -211,6 +213,14 @@ public protocol ForegroundNotificationResponder: class {
     private static var token: Any?
     
     public var callKitDelegate : CallKitDelegate?
+
+    public var isSelectedAccountAuthenticated: Bool {
+        guard let selectedAccount = accountManager.selectedAccount else {
+            return false
+        }
+
+        return environment.isAuthenticated(selectedAccount)
+    }
 
     public var activeUnauthenticatedSession: UnauthenticatedSession {
         return unauthenticatedSession ?? createUnauthenticatedSession()
