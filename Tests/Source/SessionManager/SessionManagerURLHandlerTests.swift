@@ -24,9 +24,7 @@ import XCTest
 final class UserSessionSourceDummy: UserSessionSource {
     var activeUserSession: ZMUserSession? = nil
     var activeUnauthenticatedSession: UnauthenticatedSession
-    var isSelectedAccountAuthenticated: Bool {
-        return true
-    }
+    var isSelectedAccountAuthenticated: Bool = true
 
     init() {
         activeUnauthenticatedSession = UnauthenticatedSession(transportSession: TestUnauthenticatedTransportSession(), reachability: TestReachability(), delegate: nil)
