@@ -38,7 +38,20 @@ import Foundation
     ///
     /// Returns a SearchTask which should be retained until the results arrive.
     public func perform(_ request: SearchRequest) -> SearchTask {
-        let task = SearchTask(request: request, context: searchContext, session: userSession)
+        let task = SearchTask(task: .search(searchRequest: request), context: searchContext, session: userSession)
+        
+        task.onResult { [weak self] (result, _) in
+            self?.observeSearchUsers(result)
+        }
+        
+        return task
+    }
+    
+    /// Lookup user by user Id
+    ///
+    /// Returns a SearchTask which should be retained until the results arrive.
+    public func lookup(userId: UUID) -> SearchTask {
+        let task = SearchTask(task: .lookup(userId: userId), context: searchContext, session: userSession)
         
         task.onResult { [weak self] (result, _) in
             self?.observeSearchUsers(result)

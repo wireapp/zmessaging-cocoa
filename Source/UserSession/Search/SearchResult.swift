@@ -69,6 +69,20 @@ extension SearchResult {
         services = searchUsersServices
     }
     
+    public init?(userLookupPayload: [AnyHashable : Any], userSession: ZMUserSession) {
+        guard let userLookupPayload = userLookupPayload as? [String : Any],
+              let searchUser = ZMSearchUser.searchUser(from: userLookupPayload, contextProvider: userSession) else {
+            return nil
+        }
+        
+        contacts = []
+        teamMembers = []
+        addressBook = []
+        directory = [searchUser]
+        conversations = []
+        services = []
+    }
+    
     func copy(on context: NSManagedObjectContext) -> SearchResult {
         
         let copiedContacts = contacts.compactMap { context.object(with: $0.objectID) as? ZMUser }
