@@ -48,7 +48,7 @@ import Foundation
     }
     
     /// Lookup a user by user Id and returns a search user in the directory results. If the user doesn't exists
-    /// or isn't available in public directory a empty directory result is returned.
+    /// an empty directory result is returned.
     ///
     /// Returns a SearchTask which should be retained until the results arrive.
     public func lookup(userId: UUID) -> SearchTask {
