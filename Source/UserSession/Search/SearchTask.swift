@@ -52,6 +52,14 @@ public class SearchTask {
         }
     }
     
+    convenience init(request: SearchRequest, context: NSManagedObjectContext, session: ZMUserSession) {
+        self.init(task: .search(searchRequest: request), context: context, session: session)
+    }
+    
+    convenience init(lookupUserId userId: UUID, context: NSManagedObjectContext, session: ZMUserSession) {
+        self.init(task: .lookup(userId: userId), context: context, session: session)
+    }
+    
     public init(task: Task, context: NSManagedObjectContext, session: ZMUserSession) {
         self.task = task
         self.session = session
@@ -216,6 +224,8 @@ extension SearchTask {
             request.add(ZMTaskCreatedHandler(on: self.context, block: { [weak self] (taskIdentifier) in
                 self?.userLookupTaskIdentifier = taskIdentifier
             }))
+            
+            self.session.transportSession.enqueueOneTime(request)
         }
         
     }

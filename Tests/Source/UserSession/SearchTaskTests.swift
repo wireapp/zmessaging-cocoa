@@ -935,6 +935,43 @@ class SearchTaskTests : MessagingTest {
         XCTAssertNil(components?.queryItems)
     }
     
+    // MARK: User lookup
+    
+    func testThatItSendsAUserLookupRequest() {
+        // given
+        let userId = UUID()
+        let task = SearchTask(lookupUserId: userId, context: mockUserSession.managedObjectContext, session: mockUserSession)
+        
+        // when
+        task.performUserLookup()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(mockTransportSession.receivedRequests().first?.path, "/users/\(userId.transportString())")
+    }
+    
+    func testThatItCallsCompletionHandlerForUserLookup() {
+        // given
+        let resultArrived = expectation(description: "received result")
+        
+        var userId: UUID!
+        mockTransportSession.performRemoteChanges { (remoteChanges) in
+            let mockUser = remoteChanges.insertUser(withName: "User A")
+            userId = UUID(uuidString: mockUser.identifier)!
+        }
+        let task = SearchTask(lookupUserId: userId, context: mockUserSession.managedObjectContext, session: mockUserSession)
+        
+        // expect
+        task.onResult { (result, _) in
+            resultArrived.fulfill()
+            XCTAssertEqual(result.directory.first?.name, "User A")
+        }
+        
+        // when
+        task.performUserLookup()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
     // MARK: Combined results
     
     func testThatRemoteResultsIncludePreviousLocalResults() {
