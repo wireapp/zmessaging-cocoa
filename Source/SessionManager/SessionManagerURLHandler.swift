@@ -44,7 +44,6 @@ public enum URLAction: Equatable {
 
         switch self {
         case .openUserProfile(let id, _):
-
             if let user = ZMUser.init(remoteID: id, createIfNeeded: false, in: moc) {
                 self = .openUserProfile(id: id, user: user)
             } else {
@@ -52,7 +51,6 @@ public enum URLAction: Equatable {
                 self = .connectToUser(id: id, searchTask: task)
             }
 
-            return
         case .openConversation(let id, _):
             guard let conversation = ZMConversation(remoteID: id, createIfNeeded: false, in: moc) else {
                 self = .warnInvalidDeepLink(error: .invalidConversationLink)
