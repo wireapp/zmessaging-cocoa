@@ -96,7 +96,8 @@ extension URLAction {
     init?(url: URL, validatingIn defaults: UserDefaults = .shared()) {
         guard let components = URLComponents(string: url.absoluteString),
             let host = components.host,
-            components.scheme == "wire" else {
+            let scheme = components.scheme,
+            scheme.starts(with: "wire") == true else {
             return nil
         }
         
