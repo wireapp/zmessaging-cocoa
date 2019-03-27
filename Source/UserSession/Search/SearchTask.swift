@@ -19,7 +19,7 @@
 import Foundation
 import WireUtilities
 
-public class SearchTask {
+final public class SearchTask {
     
     public enum Task {
         case search(searchRequest: SearchRequest)
@@ -91,6 +91,17 @@ public class SearchTask {
         performRemoteSearchForTeamUser()
         performRemoteSearchForServices()
         performUserLookup()
+    }
+}
+
+extension SearchTask: Equatable {
+    public static func == (lhs: SearchTask, rhs: SearchTask) -> Bool {
+        return lhs.session == rhs.session &&
+            lhs.userLookupTaskIdentifier == rhs.userLookupTaskIdentifier &&
+            lhs.directoryTaskIdentifier == rhs.directoryTaskIdentifier &&
+            lhs.handleTaskIdentifier == rhs.handleTaskIdentifier &&
+            lhs.servicesTaskIdentifier == rhs.servicesTaskIdentifier &&
+            lhs.context == rhs.context
     }
 }
 

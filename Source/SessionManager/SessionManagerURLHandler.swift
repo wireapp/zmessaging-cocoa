@@ -29,7 +29,7 @@ public enum URLAction: Equatable {
     case openConversation(id: UUID, conversation: ZMConversation?)
     case openUserProfile(id: UUID, user: ZMUser?)
 
-    case connectToUser(id: UUID)///TODO: a task?
+    case connectToUser(id: UUID, searchTask: SearchTask)
     case warnInvalidDeepLink(error: DeepLinkRequestError)
 
 
@@ -44,12 +44,15 @@ public enum URLAction: Equatable {
 
         switch self {
         case .openUserProfile(let id, _):
-            guard let user = ZMUser.init(remoteID: id, createIfNeeded: false, in: moc) else {
-                self = .warnInvalidDeepLink(error: .invalidUserLink)
-                return
+
+            if let user = ZMUser.init(remoteID: id, createIfNeeded: false, in: moc) {
+                self = .openUserProfile(id: id, user: user)
+            } else {
+                let task = searchDirectory.lookup(userId: id)
+                self = .connectToUser(id: id, searchTask: task)
             }
 
-            self = .openUserProfile(id: id, user: user)
+            return
         case .openConversation(let id, _):
             guard let conversation = ZMConversation(remoteID: id, createIfNeeded: false, in: moc) else {
                 self = .warnInvalidDeepLink(error: .invalidConversationLink)
