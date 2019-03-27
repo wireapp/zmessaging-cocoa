@@ -45,6 +45,7 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
     var lastRequestToShowConversation: (ZMUserSession, ZMConversation)?
     var lastRequestToShowConversationsList: ZMUserSession?
     var lastRequestToShowUserProfile: UserType?
+    var lastRequestToShowConnectionRequest: UUID?
 
     func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?, in session: ZMUserSession) {
         if let message = message {
@@ -61,6 +62,11 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
     func showUserProfile(user: UserType) {
         lastRequestToShowUserProfile = user
     }
+
+    func showConnectionRequest(userId: UUID) {
+        lastRequestToShowConnectionRequest = userId
+    }
+
 
     @objc public var updatePushTokenCalled = false
     func updatePushToken(for session: ZMUserSession) {
