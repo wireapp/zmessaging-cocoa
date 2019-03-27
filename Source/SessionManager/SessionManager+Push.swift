@@ -188,13 +188,13 @@ extension SessionManager: PKPushRegistryDelegate {
 
 // MARK: - ShowContentDelegate
 
-
-@objc
 public protocol ShowContentDelegate: class {
     func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?)
     func showConversationList()
     func showUserProfile(user: UserType)
+    func showConnectionRequest(userId: UUID)
 }
+
 
 extension SessionManager {
     
@@ -215,6 +215,10 @@ extension SessionManager {
 
     public func showUserProfile(user: UserType) {
         self.showContentDelegate?.showUserProfile(user: user)
+    }
+
+    public func showConnectionRequest(userId: UUID) {
+        self.showContentDelegate?.showConnectionRequest(userId: userId)
     }
 
 }
