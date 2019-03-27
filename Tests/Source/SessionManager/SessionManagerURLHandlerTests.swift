@@ -227,4 +227,26 @@ final class SessionManagerURLHandlerTests: MessagingTest {
         // then
         XCTAssertEqual(action, URLAction.warnInvalidDeepLink(error: .invalidConversationLink))
     }
+    
+    func testThatItDiscardsInvalidWireURLs() {
+        // given
+        let url = URL(string: "wire://userx/abc/def)")!
+        
+        // when
+        let action = URLAction(url: url)
+        
+        // then
+        XCTAssertEqual(action, URLAction.warnInvalidDeepLink(error: .malformedLink))
+    }
+    
+    func testThatItDiscardsInvalidConnectBotURLs() {
+        // given
+        let url = URL(string: "wire://connect/something)")!
+        
+        // when
+        let action = URLAction(url: url)
+        
+        // then
+        XCTAssertEqual(action, URLAction.warnInvalidDeepLink(error: .malformedLink))
+    }
 }

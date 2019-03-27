@@ -128,7 +128,8 @@ extension URLAction {
                 let provider = components.query(for: "provider"),
                 let serviceUUID = UUID(uuidString: service),
                 let providerUUID = UUID(uuidString: provider) else {
-                    return nil
+                    self = .warnInvalidDeepLink(error: .malformedLink)
+                    return
             }
             self = .connectBot(serviceUser: ServiceUserData(provider: providerUUID, service: serviceUUID))
 
@@ -136,7 +137,8 @@ extension URLAction {
             let pathComponents = url.pathComponents
 
             guard url.pathComponents.count >= 2 else {
-                return nil
+                self = .warnInvalidCompanyLogin(error: .invalidLink)
+                return
             }
 
             switch pathComponents[1] {
@@ -177,11 +179,13 @@ extension URLAction {
                 let error = CompanyLoginError(label: label)
                 self = .companyLoginFailure(error: error)
             default:
-                return nil
+                self = .warnInvalidCompanyLogin(error: .invalidLink)
+                return
             }
 
         default:
-            return nil
+            self = .warnInvalidDeepLink(error: .malformedLink)
+            return
         }
     }
     
