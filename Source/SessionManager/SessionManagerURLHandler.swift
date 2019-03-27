@@ -28,13 +28,16 @@ public enum URLAction: Equatable {
 
     case openConversation(id: UUID, conversation: ZMConversation?)
     case openUserProfile(id: UUID, user: ZMUser?)
+
+    case connectToUser(id: UUID)///TODO: a task?
     case warnInvalidDeepLink(error: DeepLinkRequestError)
 
 
-    /// Update self's associated value with given userSession
+    /// Update self's associated value with given userSession and searchDirectory (for lookup up unconnected user)
     ///
     /// - Parameter userSession: the active ZMUserSession
-    mutating func setUserSession(userSession: ZMUserSession) {
+    mutating func setUserSession(userSession: ZMUserSession,
+                                 searchDirectory: SearchDirectory) {
         guard let moc = userSession.managedObjectContext else {
             return
         }
@@ -226,6 +229,8 @@ public protocol SessionManagerURLHandlerDelegate: class {
     ///   - action: the action to execute
     ///   - callback: the callback with a bool shouldExecute, it should be called after the action is executed.
     func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void)
+
+    var searchDirectory: SearchDirectory! { get }
 }
 
 public final class SessionManagerURLHandler: NSObject {
@@ -287,11 +292,15 @@ public final class SessionManagerURLHandler: NSObject {
             }
         }
 
-        ///update openUserProfile's associated value with session
-        var mutableAction = action
-        mutableAction.setUserSession(userSession: userSession)
+        ///update openUserProfile's associated value with user session and
 
-        delegate?.sessionManagerShouldExecuteURLAction(mutableAction, callback: callback)
+        if let delegate = delegate {
+            var mutableAction = action
+            mutableAction.setUserSession(userSession: userSession,
+                                         searchDirectory: delegate.searchDirectory)
+
+            delegate.sessionManagerShouldExecuteURLAction(mutableAction, callback: callback)
+        }
     }
 
     fileprivate func handle(action: URLAction, in unauthenticatedSession: UnauthenticatedSession) {
