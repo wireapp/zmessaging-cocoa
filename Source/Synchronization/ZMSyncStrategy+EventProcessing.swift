@@ -49,7 +49,10 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
                 self.eventProcessingTracker?.registerEventProcessed()
             }
             localNotificationDispatcher?.processEvents(decryptedUpdateEvents, liveEvents: true, prefetchResult: nil)
+            
+            confirmMessagesAsDelivered()
             syncMOC.saveOrRollback()
+            
             
             Logging.eventProcessing.debug("Events processed in \(-date.timeIntervalSinceNow): \(self.eventProcessingTracker?.debugDescription ?? "")")
             
@@ -80,6 +83,37 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
         return fetchRequest
     }
     
+    func confirmMessagesAsDelivered() -> [ZMClientMessage] {
+        
+        let deliveredMessages = messagesThatNeedDeliveryReceipts()
+        var confirmationMessages: [ZMClientMessage] = []
+        
+        let confirmation = ZMConfirmation.confirm(messages: deliveredMessages.compactMap(\.nonce), type: .DELIVERED)
+        /*
+        if let confirmationMessage = append(message: confirmation, hidden: true) {
+            confirmationMessages.append(confirmationMessage)
+        }*/
+        
+        return confirmationMessages
+    }
+    
+    internal func messagesThatNeedDeliveryReceipts() -> [ZMMessage] {
+        
+        let selfUser = ZMUser.selfUser(in: syncMOC)
+        let fetchRequest = NSFetchRequest<ZMMessage>(entityName: ZMMessage.entityName())
+        fetchRequest.predicate = NSPredicate(format: //"(%K == %@ OR %K == %@) AND
+            "%K != %@",
+                                             //ZMMessageConversationKey, self,
+                                             //ZMMessageHiddenInConversationKey, self,
+                                             ZMMessageSenderKey, selfUser)
+        fetchRequest.sortDescriptors = ZMMessage.defaultSortDescriptors()
+        
+        let results = syncMOC.fetchOrAssert(request: fetchRequest)
+        let filteredResults = results.filter({
+            $0.deliveryState != .delivered && $0.deliveryState != .read
+        })
+        return filteredResults
+    }
 
 }
 
