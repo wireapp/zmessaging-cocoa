@@ -986,7 +986,6 @@
 		BFE53F541D5A2F7000398378 /* DeleteMessagesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeleteMessagesTests.swift; sourceTree = "<group>"; };
 		BFE7FCBE2101E50700D1165F /* CompanyLoginVerificationToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginVerificationToken.swift; sourceTree = "<group>"; };
 		CE5DC1A01DDA09F000D24DBA /* avs.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = avs.framework; path = Carthage/Build/iOS/avs.framework; sourceTree = "<group>"; };
-		CE99C4A11D37ACC60001D297 /* Ono.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Ono.framework; path = Carthage/Build/iOS/Ono.framework; sourceTree = "<group>"; };
 		CEF2DE7E1DB778F300451642 /* RequestLoopAnalyticsTracker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestLoopAnalyticsTracker.swift; sourceTree = "<group>"; };
 		D522571D2062552800562561 /* AssetDeletionRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetDeletionRequestStrategy.swift; sourceTree = "<group>"; };
 		D522571F206261AA00562561 /* AssetDeletionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetDeletionStatus.swift; sourceTree = "<group>"; };
@@ -1451,7 +1450,6 @@
 				54E03A601E93CEED0089AC69 /* WireUtilities.framework */,
 				CE5DC1A01DDA09F000D24DBA /* avs.framework */,
 				5442A7311E42244C00415104 /* libPhoneNumberiOS.framework */,
-				CE99C4A11D37ACC60001D297 /* Ono.framework */,
 				1E16CE861BF4BC5F00336616 /* ProtocolBuffers.framework */,
 				09B978F31B679B6200A30B38 /* OCMock.framework */,
 			);
@@ -2482,7 +2480,6 @@
 				"$(SRCROOT)/Carthage/Build/iOS/libPhoneNumberiOS.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/PINCache.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/WireDataModel.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/Ono.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/WireLinkPreview.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/WireRequestStrategy.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/avs.framework",
@@ -3104,6 +3101,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0994E1E31B835C4900A51721 /* project-debug.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = "$(SDKROOT)/usr/include/libxml2";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 			};
 			name = Debug;
@@ -3112,6 +3110,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0994E1E41B835C4900A51721 /* project.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = "$(SDKROOT)/usr/include/libxml2";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 			};
 			name = Release;
