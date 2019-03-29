@@ -52,7 +52,6 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
             confirmDeliveredMessages()
             syncMOC.saveOrRollback()
             
-            
             Logging.eventProcessing.debug("Events processed in \(-date.timeIntervalSinceNow): \(self.eventProcessingTracker?.debugDescription ?? "")")
             
         }
@@ -84,19 +83,18 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
     
     func confirmDeliveredMessages() {
         let deliveredMessages = messagesThatNeedDeliveryReceipts()
-        guard deliveredMessages.count > 0 else { return nil }
-        let confirmation = ZMGenericMessage.message(content: ZMConfirmation.confirm(messages: deliveredMessages.compactMap(\.nonce), type: .DELIVERED))
-        
+        guard deliveredMessages.count > 0 else { return }
+        let conversations = Set(deliveredMessages.compactMap(\.conversation))
+        for conversation in conversations {
+            let messages = deliveredMessages.filter { $0.conversation == conversation }
+            conversation.appendClientMessage(with: ZMGenericMessage.message(content: ZMConfirmation.confirm(messages: messages.compactMap(\.nonce), type: .DELIVERED)))
+        }
     }
     
     internal func messagesThatNeedDeliveryReceipts() -> [ZMMessage] {
-        
         let selfUser = ZMUser.selfUser(in: syncMOC)
         let fetchRequest = NSFetchRequest<ZMMessage>(entityName: ZMMessage.entityName())
-        fetchRequest.predicate = NSPredicate(format: //"%K != %@ AND %K != %@ AND
-                                            "%K != %@",
-                                             //ZMMessageDeliveryStateKey, ZMDeliveryState.delivered.rawValue,
-                                             //ZMMessageDeliveryStateKey, ZMDeliveryState.read.rawValue,
+        fetchRequest.predicate = NSPredicate(format: "%K != %@",
                                              ZMMessageSenderKey, selfUser)
         fetchRequest.sortDescriptors = ZMMessage.defaultSortDescriptors()
         
