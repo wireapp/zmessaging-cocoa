@@ -49,8 +49,7 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
                 self.eventProcessingTracker?.registerEventProcessed()
             }
             localNotificationDispatcher?.processEvents(decryptedUpdateEvents, liveEvents: true, prefetchResult: nil)
-            
-            confirmMessagesAsDelivered()
+            confirmDeliveredMessages()
             syncMOC.saveOrRollback()
             
             
@@ -83,28 +82,21 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
         return fetchRequest
     }
     
-    func confirmMessagesAsDelivered() -> [ZMClientMessage] {
-        
+    func confirmDeliveredMessages() {
         let deliveredMessages = messagesThatNeedDeliveryReceipts()
-        var confirmationMessages: [ZMClientMessage] = []
+        guard deliveredMessages.count > 0 else { return nil }
+        let confirmation = ZMGenericMessage.message(content: ZMConfirmation.confirm(messages: deliveredMessages.compactMap(\.nonce), type: .DELIVERED))
         
-        let confirmation = ZMConfirmation.confirm(messages: deliveredMessages.compactMap(\.nonce), type: .DELIVERED)
-        /*
-        if let confirmationMessage = append(message: confirmation, hidden: true) {
-            confirmationMessages.append(confirmationMessage)
-        }*/
-        
-        return confirmationMessages
     }
     
     internal func messagesThatNeedDeliveryReceipts() -> [ZMMessage] {
         
         let selfUser = ZMUser.selfUser(in: syncMOC)
         let fetchRequest = NSFetchRequest<ZMMessage>(entityName: ZMMessage.entityName())
-        fetchRequest.predicate = NSPredicate(format: //"(%K == %@ OR %K == %@) AND
-            "%K != %@",
-                                             //ZMMessageConversationKey, self,
-                                             //ZMMessageHiddenInConversationKey, self,
+        fetchRequest.predicate = NSPredicate(format: //"%K != %@ AND %K != %@ AND
+                                            "%K != %@",
+                                             //ZMMessageDeliveryStateKey, ZMDeliveryState.delivered.rawValue,
+                                             //ZMMessageDeliveryStateKey, ZMDeliveryState.read.rawValue,
                                              ZMMessageSenderKey, selfUser)
         fetchRequest.sortDescriptors = ZMMessage.defaultSortDescriptors()
         
