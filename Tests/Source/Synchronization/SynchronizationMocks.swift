@@ -253,8 +253,8 @@ public class MockSyncStatus : SyncStatus {
     var registeredUserClient : UserClient?
     @objc public var didCallStartSlowSync = false
     @objc public var didCallFinishSlowSync = false
-    @objc public var didCallStartSync = false // TODO jacob rename
-    @objc public var didCallFinishSync = false // TODO jacob rename
+    @objc public var didCallStartQuickSync = false
+    @objc public var didCallFinishQuickSync = false
     
     public func didStartSlowSync() {
         didCallStartSlowSync = true
@@ -265,11 +265,11 @@ public class MockSyncStatus : SyncStatus {
     }
 
     public func didStartQuickSync() {
-        didCallStartSync = true
+        didCallStartQuickSync = true
     }
     
     public func didFinishQuickSync() {
-        didCallFinishSync = true
+        didCallFinishQuickSync = true
     }
     
     public func didRegister(_ userClient: UserClient!) {
