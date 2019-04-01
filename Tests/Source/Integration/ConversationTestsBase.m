@@ -143,7 +143,6 @@
     XCTAssertNotNil(note);
     XCTAssertTrue(note.messagesChanged);
     XCTAssertFalse(note.participantsChanged);
-    XCTAssertFalse(note.nameChanged);
     XCTAssertTrue(note.lastModifiedDateChanged);
     if(!ignoreLastRead) {
         XCTAssertTrue(note.unreadCountChanged);

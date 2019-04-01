@@ -251,14 +251,24 @@ public class MockSyncStatus : SyncStatus {
 @objc public class MockSyncStateDelegate : NSObject, ZMSyncStateDelegate {
 
     var registeredUserClient : UserClient?
-    @objc public var didCallStartSync = false
-    @objc public var didCallFinishSync = false
+    @objc public var didCallStartSlowSync = false
+    @objc public var didCallFinishSlowSync = false
+    @objc public var didCallStartSync = false // TODO jacob rename
+    @objc public var didCallFinishSync = false // TODO jacob rename
+    
+    public func didStartSlowSync() {
+        didCallStartSlowSync = true
+    }
+    
+    public func didFinishSlowSync() {
+        didCallFinishSlowSync = true
+    }
 
-    public func didStartSync() {
+    public func didStartQuickSync() {
         didCallStartSync = true
     }
     
-    public func didFinishSync() {
+    public func didFinishQuickSync() {
         didCallFinishSync = true
     }
     

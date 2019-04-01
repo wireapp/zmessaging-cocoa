@@ -105,9 +105,13 @@
     NOT_USED(taskIdentifier);
 }
 
-- (void)didStartSync { }
+- (void)didStartSlowSync { }
 
-- (void)didFinishSync { }
+- (void)didFinishSlowSync { }
+
+- (void)didStartQuickSync { }
+
+- (void)didFinishQuickSync { }
 
 - (void)didRegisterUserClient:(UserClient *)userClient
 {
@@ -194,10 +198,12 @@
     
     self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
     self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:[[FakeCookieStorage alloc] init] requestCancellation:self application:self.application syncStateDelegate:self analytics:nil];
+    
     self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider
                                                cookieStorage:nil
                                                  flowManager:self.mockflowManager
                                 localNotificationsDispatcher:self.mockDispatcher
+                                     notificationsDispatcher:[[NotificationDispatcher alloc] initWithManagedObjectContext:self.contextDirectory.uiContext]
                                   applicationStatusDirectory:self.applicationStatusDirectory
                                                  application:self.application];
     

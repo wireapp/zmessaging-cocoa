@@ -464,8 +464,8 @@
 - (void)testThatWeSetUserSessionToSyncDoneWhenSyncIsDone
 {
     // when
-    [self.sut didStartSync];
-    [self.sut didFinishSync];
+    [self.sut didStartQuickSync];
+    [self.sut didFinishQuickSync];
     
     // then
     XCTAssertTrue([self waitForStatus:ZMNetworkStateOnline]);
@@ -477,22 +477,22 @@
     XCTAssertEqual(self.thirdPartyServices.uploadCount, 0u);
     
     // when
-    [self.sut didFinishSync];
+    [self.sut didFinishQuickSync];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqual(self.thirdPartyServices.uploadCount, 1u);
 }
 
-- (void)testThatItOnlyNotifiesThirdPartyServicesOne
+- (void)testThatItOnlyNotifiesThirdPartyServicesOnce
 {
     // given
     XCTAssertEqual(self.thirdPartyServices.uploadCount, 0u);
     
     // when
-    [self.sut didFinishSync];
-    [self.sut didStartSync];
-    [self.sut didFinishSync];
+    [self.sut didFinishQuickSync];
+    [self.sut didStartQuickSync];
+    [self.sut didFinishQuickSync];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -533,7 +533,7 @@
     XCTAssertEqual(self.thirdPartyServices.uploadCount, 0u);
     
     // when
-    [self.sut didFinishSync];
+    [self.sut didFinishQuickSync];
     [self.sut applicationDidEnterBackground:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -541,8 +541,8 @@
     XCTAssertEqual(self.thirdPartyServices.uploadCount, 1u);
 
     [self.sut applicationWillEnterForeground:nil];
-    [self.sut didStartSync];
-    [self.sut didFinishSync];
+    [self.sut didStartQuickSync];
+    [self.sut didFinishQuickSync];
     [self.sut applicationDidEnterBackground:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -556,7 +556,7 @@
 {
     // when
     [self.sut didGoOffline];
-    [self.sut didFinishSync];
+    [self.sut didFinishQuickSync];
     
     // then
     XCTAssertTrue([self waitForOfflineStatus]);
@@ -565,7 +565,7 @@
 - (void)testThatWeSetUserSessionToSynchronizingWhenSyncIsStarted
 {
     // when
-    [self.sut didStartSync];
+    [self.sut didStartQuickSync];
     
     // then
     XCTAssertTrue([self waitForStatus:ZMNetworkStateOnlineSynchronizing]);

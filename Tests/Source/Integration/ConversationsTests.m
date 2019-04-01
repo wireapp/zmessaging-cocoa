@@ -344,25 +344,24 @@
         
     // I am faulting conversation, will maintain the "message" relations as faulted
     ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
+    ZMConversation *conversation1 = [self conversationForMockConversation:self.selfToUser1Conversation];
+    NSUInteger previousIndex = [conversationList indexOfObject:conversation1];
     
     XCTAssertEqual(conversationList.count, 5u);
     
     ConversationListChangeObserver *observer = [[ConversationListChangeObserver alloc] initWithConversationList:conversationList];
 
     // when
-    {
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
-            ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"some message" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
-            [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
-        }];
-        WaitForAllGroupsToBeEmpty(0.5);
-        
-        // then
-        NSIndexSet *updatedIndexes2 = [NSIndexSet indexSetWithIndex:0];
-        XCTAssertEqual(observer.notifications.count, 1u);
-        ConversationListChangeInfo *note1 = observer.notifications.lastObject;
-        XCTAssertEqualObjects(note1.updatedIndexes, updatedIndexes2);
-    }
+    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
+        ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"some message" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
+        [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:message.data];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    XCTAssertEqual(observer.notifications.count, 1u);
+    ConversationListChangeInfo *note1 = observer.notifications.lastObject;
+    XCTAssertEqualObjects(note1.zm_movedIndexPairs.firstObject, [[ZMMovedIndex alloc] initFrom:previousIndex to:0]);
 }
 
 - (void)testThatSelfUserSeesConversationWhenItIsAddedToConversationByOtherUser
@@ -505,6 +504,7 @@
     // when
     ConversationListChangeObserver *observer = [[ConversationListChangeObserver alloc] initWithConversationList:conversationList];
     [observer clearNotifications];
+    NSUInteger previousIndex1 = [conversationList indexOfObject:conversation1];
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
         ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:messageText1 mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:nonce1];
@@ -513,17 +513,14 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    NSIndexSet *expectedIndexes2 = [NSIndexSet indexSetWithIndex:0];
-    
     XCTAssertEqual(conversationList[0], conversation1);
-    
     XCTAssertGreaterThanOrEqual(observer.notifications.count, 1u);
     ConversationListChangeInfo *note1 = observer.notifications.lastObject;
-    XCTAssertNotNil(note1);
-    XCTAssertEqualObjects(note1.updatedIndexes, expectedIndexes2);
+    XCTAssertEqualObjects(note1.zm_movedIndexPairs.firstObject, [[ZMMovedIndex alloc] initFrom:previousIndex1 to:0]);
     
     ZMMessage *receivedMessage1 = conversation1.recentMessages.lastObject;
     XCTAssertEqualObjects(receivedMessage1.textMessageData.messageText, messageText1);
+    NSUInteger previousIndex2 = [conversationList indexOfObject:conversation2];
     
     // send second message
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
@@ -533,17 +530,14 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    NSIndexSet *expectedIndexes3 = [NSIndexSet indexSetWithIndex:0];
-    
     XCTAssertEqual(conversationList[0], conversation2);
-    
     XCTAssertGreaterThanOrEqual(observer.notifications.count, 2u);
     ConversationListChangeInfo *note2 = [observer.notifications objectAtIndex:1];
-    XCTAssertNotNil(note2);
-    XCTAssertEqualObjects(note2.updatedIndexes, expectedIndexes3);
+    XCTAssertEqualObjects(note2.zm_movedIndexPairs.firstObject, [[ZMMovedIndex alloc] initFrom:previousIndex2 to:0]);
     
     ZMMessage *receivedMessage2 = conversation2.recentMessages.lastObject;
     XCTAssertEqualObjects(receivedMessage2.textMessageData.messageText, messageText2);
+    NSUInteger previousIndex3 = [conversationList indexOfObject:conversation1];
     
     // send first message again
     
@@ -554,14 +548,10 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    NSIndexSet *expectedIndexes4 = [NSIndexSet indexSetWithIndex:0];
-    
     XCTAssertEqual(conversationList[0], conversation1);
     XCTAssertGreaterThanOrEqual(observer.notifications.count, 3u);
-    
     ConversationListChangeInfo *note3 = observer.notifications.lastObject;
-    XCTAssertNotNil(note3);
-    XCTAssertEqualObjects(note3.updatedIndexes, expectedIndexes4);
+    XCTAssertEqualObjects(note3.zm_movedIndexPairs.firstObject, [[ZMMovedIndex alloc] initFrom:previousIndex3 to:0]);
     
     ZMMessage *receivedMessage3 = conversation1.recentMessages.lastObject;
     XCTAssertEqualObjects(receivedMessage3.textMessageData.messageText, messageText3);

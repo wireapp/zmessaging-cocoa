@@ -16,7 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@objc public enum SyncPhase : Int, CustomStringConvertible {
+@objc public enum SyncPhase : Int, CustomStringConvertible, CaseIterable {
     case fetchingLastUpdateEventID
     case fetchingTeams
     case fetchingConnections
@@ -31,22 +31,11 @@
     }
     
     var isSyncing : Bool {
-        switch self {
-        case .fetchingMissedEvents,
-             .fetchingLastUpdateEventID,
-             .fetchingConnections,
-             .fetchingTeams,
-             .fetchingUsers,
-             .fetchingConversations,
-             .fetchingSelfUser:
-            return true
-        case .done:
-            return false
-        }
+        return self != .done
     }
 
-    var nextPhase: SyncPhase? {
-        return SyncPhase(rawValue: rawValue + 1)
+    var nextPhase: SyncPhase {
+        return SyncPhase(rawValue: rawValue + 1) ?? .done
     }
     
     public var description: String {
@@ -83,12 +72,11 @@ extension Notification.Name {
 
 @objcMembers public class SyncStatus : NSObject {
 
-    fileprivate var previousPhase : SyncPhase = .done
     public internal (set) var currentSyncPhase : SyncPhase = .done {
         didSet {
             if currentSyncPhase != oldValue {
                 zmLog.debug("did change sync phase: \(currentSyncPhase)")
-                previousPhase = oldValue
+                notifySyncPhaseDidStart()
             }
         }
     }
@@ -116,10 +104,21 @@ extension Notification.Name {
         super.init()
         
         currentSyncPhase = hasPersistedLastEventID ? .fetchingMissedEvents : .fetchingLastUpdateEventID
-        self.syncStateDelegate.didStartSync()
+        notifySyncPhaseDidStart()
         
         self.forceSlowSyncToken = NotificationInContext.addObserver(name: .ForceSlowSync, context: managedObjectContext.notificationContext) { [weak self] (note) in
             self?.forceSlowSync()
+        }
+    }
+    
+    fileprivate func notifySyncPhaseDidStart() {
+        switch currentSyncPhase {
+        case .fetchingMissedEvents:
+            syncStateDelegate.didStartQuickSync()
+        case .fetchingLastUpdateEventID:
+            syncStateDelegate.didStartSlowSync()
+        default:
+            break
         }
     }
     
@@ -127,8 +126,8 @@ extension Notification.Name {
         // Refetch user settings.
         ZMUser.selfUser(in: managedObjectContext).needsPropertiesUpdate = true
         // Set the status.
-        currentSyncPhase = SyncPhase.fetchingLastUpdateEventID.nextPhase!
-        syncStateDelegate.didStartSync()
+        currentSyncPhase = SyncPhase.fetchingLastUpdateEventID.nextPhase
+        syncStateDelegate.didStartSlowSync()
     }
 
 }
@@ -141,13 +140,12 @@ extension SyncStatus {
         
         zmLog.debug("finished sync phase: \(phase)")
         
-        guard let nextPhase = currentSyncPhase.nextPhase else { return }
-        
-        if currentSyncPhase.isLastSlowSyncPhase {
+        if phase.isLastSlowSyncPhase {
             persistLastUpdateEventID()
+            syncStateDelegate.didFinishSlowSync()
         }
         
-        currentSyncPhase = nextPhase
+        currentSyncPhase = phase.nextPhase
         
         if currentSyncPhase == .done {
             if needsToRestartQuickSync && pushChannelIsOpen {
@@ -160,10 +158,8 @@ extension SyncStatus {
             }
             
             zmLog.debug("sync complete")
-            syncStateDelegate.didFinishSync()
-            managedObjectContext.performGroupedBlock {
-                ZMUserSession.notifyInitialSyncCompleted(context: self.managedObjectContext)
-            }
+            syncStateDelegate.didFinishQuickSync()
+            ZMUserSession.notifyInitialSyncCompleted(context: managedObjectContext)
         }
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
@@ -204,30 +200,24 @@ extension SyncStatus {
         
         if !currentSyncPhase.isSyncing {
             // As soon as the pushChannel closes we should notify the UI that we are syncing (if we are not already syncing)
-            self.syncStateDelegate.didStartSync()
+            self.syncStateDelegate.didStartQuickSync()
         }
     }
     
     public func pushChannelDidOpen() {
         pushChannelEstablishedDate = Date()
         
-        if !currentSyncPhase.isSyncing {
-            // As soon as the pushChannel opens we should notify the UI that we are syncing (if we are not already syncing)
-            self.syncStateDelegate.didStartSync()
-        }
-        
         if currentSyncPhase == .fetchingMissedEvents {
-            // If the pushChannel closed while we are fetching the notifications, we might be missing notifications that are sent between the server response and the channel reopening
-            // We therefore need to mark the quicksync to be restarted
+            // If the push channel closed while we are fetching the notifications, we might be missing notifications that
+            // were sent between the server response and the channel re-opening We therefore need to mark the quick sync to be re-started
             needsToRestartQuickSync = true
         }
         
-        startQuickSyncIfNeeded()
+        if !currentSyncPhase.isSyncing {
+            // When the push channel opens we need to start syncing (if we are not already syncing)
+            self.currentSyncPhase = .fetchingMissedEvents
+        }
     }
     
-    func startQuickSyncIfNeeded() {
-        guard self.currentSyncPhase == .done else { return }
-        self.currentSyncPhase = .fetchingMissedEvents
-    }
 }
 

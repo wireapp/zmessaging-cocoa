@@ -80,7 +80,6 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
 
     [self mergeChangesFromStoredSaveNotificationsIfNeeded];
     
-    [ZMConversationList refetchAllListsInUserSession:self];
     [self startEphemeralTimers];
     // In the case that an ephemeral was sent via the share extension, we need
     // to ensure that they have timers running or are deleted/obfuscated if

@@ -46,9 +46,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 @property (nonatomic) NSNotificationQueue *enqueueNotificationQueue;
 @property (nonatomic) ZMTransportSession *transportSession;
 @property (atomic) BOOL shouldStopEnqueueing;
-@property (nonatomic) BOOL ownsSyncStrategy;
 @property (nonatomic) BOOL tornDown;
-@property (nonatomic) id<ZMApplication> application;
 @property (nonatomic, weak) ApplicationStatusDirectory *applicationStatusDirectory;
 
 @end
@@ -59,33 +57,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 
 @implementation ZMOperationLoop
-
-- (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
-                           cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
-             localNotificationDispatcher:(LocalNotificationDispatcher *)dispatcher
-                             flowManager:(id<FlowManagerType>)flowManager
-                           storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
-              applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
-                             application:(id<ZMApplication>)application
-{
-
-    ZMSyncStrategy *syncStrategy = [[ZMSyncStrategy alloc] initWithStoreProvider:storeProvider
-                                                                   cookieStorage:cookieStorage
-                                                                     flowManager:flowManager
-                                                    localNotificationsDispatcher:dispatcher
-                                                      applicationStatusDirectory:applicationStatusDirectory
-                                                                     application:application];
-    
-    self = [self initWithTransportSession:transportSession
-                             syncStrategy:syncStrategy
-               applicationStatusDirectory:applicationStatusDirectory
-                                    uiMOC:storeProvider.contextDirectory.uiContext
-                                  syncMOC:storeProvider.contextDirectory.syncContext];
-    self.application = application;
-    self.ownsSyncStrategy = YES;
-    return self;
-}
-
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
                             syncStrategy:(ZMSyncStrategy *)syncStrategy
@@ -139,11 +110,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [ZMRequestAvailableNotification removeObserver:self];
     
-    ZMSyncStrategy *strategy = self.syncStrategy;
     self.syncStrategy = nil;
-    if(self.ownsSyncStrategy) {
-        [strategy tearDown];
-    }
     self.transportSession = nil;
     
     RequireString([NSOperationQueue mainQueue] == [NSOperationQueue currentQueue],

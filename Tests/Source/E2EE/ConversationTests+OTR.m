@@ -600,10 +600,7 @@
     ConversationChangeInfo *note = observer.notifications.firstObject;
     XCTAssertNotNil(note);
     XCTAssertTrue(note.messagesChanged);
-    XCTAssertFalse(note.participantsChanged);
-    XCTAssertFalse(note.nameChanged);
     XCTAssertTrue(note.lastModifiedDateChanged);
-    XCTAssertFalse(note.connectionStateChanged);
     
     ZMClientMessage *msg = (ZMClientMessage *)conversation.recentMessages[initialMessagesCount];
     XCTAssertEqualObjects(msg.genericMessage.text.content, expectedText);
@@ -652,10 +649,7 @@
     ConversationChangeInfo *note = observer.notifications.firstObject;
     XCTAssertNotNil(note);
     XCTAssertTrue(note.messagesChanged);
-    XCTAssertFalse(note.participantsChanged);
-    XCTAssertFalse(note.nameChanged);
     XCTAssertTrue(note.lastModifiedDateChanged);
-    XCTAssertFalse(note.connectionStateChanged);
 }
 
 - (void)testThatItSendsANotificationWhenRecievingAOtrMediumAssetMessageThroughThePushChannel

@@ -24,11 +24,13 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
     
     var sut: TeamSyncRequestStrategy!
     var mockSyncStatus: MockSyncStatus!
+    var mockSyncStateDelegate: MockSyncStateDelegate!
     var mockApplicationStatus: MockApplicationStatus!
     
     override func setUp() {
         super.setUp()
-        mockSyncStatus = MockSyncStatus(managedObjectContext: syncMOC, syncStateDelegate: MockSyncStateDelegate())
+        mockSyncStateDelegate = MockSyncStateDelegate()
+        mockSyncStatus = MockSyncStatus(managedObjectContext: syncMOC, syncStateDelegate: mockSyncStateDelegate)
         mockApplicationStatus = MockApplicationStatus()
         sut = TeamSyncRequestStrategy(withManagedObjectContext: syncMOC, applicationStatus: mockApplicationStatus, syncStatus: mockSyncStatus)
     }
@@ -37,6 +39,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         sut = nil
         mockSyncStatus = nil
         mockApplicationStatus = nil
+        mockSyncStateDelegate = nil
         super.tearDown()
     }
     

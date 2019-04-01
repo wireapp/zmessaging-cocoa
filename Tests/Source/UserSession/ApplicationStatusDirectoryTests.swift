@@ -76,11 +76,19 @@ extension ApplicationStatusDirectoryTests : ZMRequestCancellation {
 
 extension ApplicationStatusDirectoryTests : ZMSyncStateDelegate {
     
-    func didStartSync() {
+    func didStartSlowSync() {
         // no-op
     }
     
-    func didFinishSync() {
+    func didFinishSlowSync() {
+        // no-op
+    }
+    
+    func didStartQuickSync() {
+        // no-op
+    }
+    
+    func didFinishQuickSync() {
         // no-op
     }
     

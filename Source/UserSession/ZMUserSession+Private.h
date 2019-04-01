@@ -37,7 +37,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Status flags.
 
-@property (nonatomic) BOOL didStartInitialSync;
 @property (nonatomic) BOOL networkIsOnline;
 @property (nonatomic) BOOL isPerformingSync;
 @property (nonatomic) BOOL pushChannelIsOpen;
