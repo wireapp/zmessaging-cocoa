@@ -179,6 +179,7 @@ class SyncStatusTests : MessagingTest {
     func testThatItNotifiesTheStateDelegateWhenFinishingSync(){
         // given
         XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
+        XCTAssertFalse(mockSyncDelegate.didCallFinishSlowSync)
         XCTAssertFalse(mockSyncDelegate.didCallFinishQuickSync)
         
         // when
@@ -207,10 +208,20 @@ class SyncStatusTests : MessagingTest {
         sut.finishCurrentSyncPhase(phase: .fetchingMissedEvents)
         
         // then
+        XCTAssertTrue(mockSyncDelegate.didCallFinishSlowSync)
         XCTAssertTrue(mockSyncDelegate.didCallFinishQuickSync)
     }
     
-    func testThatItNotifiesTheStateDelegateWhenStartingSync(){
+    func testThatItNotifiesTheStateDelegateWhenStartingSlowSync(){
+        // given
+        sut = SyncStatus(managedObjectContext: uiMOC, syncStateDelegate: mockSyncDelegate)
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
+        
+        // then
+        XCTAssertTrue(mockSyncDelegate.didCallStartSlowSync)
+    }
+    
+    func testThatItNotifiesTheStateDelegateWhenStartingQuickSync(){
         // given
         uiMOC.zm_lastNotificationID = UUID.timeBasedUUID() as UUID
         sut = SyncStatus(managedObjectContext: uiMOC, syncStateDelegate: mockSyncDelegate)
