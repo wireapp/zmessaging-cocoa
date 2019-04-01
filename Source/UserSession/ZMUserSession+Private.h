@@ -51,6 +51,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) OperationStatus *operationStatus;
 @property (nonatomic, readonly) AccountStatus *accountStatus;
 @property (nonatomic, readonly) ApplicationStatusDirectory *applicationStatusDirectory;
+@property (nonatomic, readonly) NotificationDispatcher *notificationDispatcher;
 @property (nonatomic, readonly) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic, nullable) ManagedObjectContextChangeObserver *messageReplyObserver;
 @property (nonatomic, nullable) ManagedObjectContextChangeObserver *likeMesssageObserver;
