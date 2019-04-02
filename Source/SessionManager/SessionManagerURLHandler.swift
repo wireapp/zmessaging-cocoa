@@ -44,8 +44,35 @@ public enum URLAction: Equatable {
 
         switch self {
         case .openUserProfile(let id, _):
+
             if let user = ZMUser.init(remoteID: id, createIfNeeded: false, in: moc) {
-                self = .openUserProfile(id: id, user: user)
+
+                ///partner restriction - not allow to see other partner(w/o converation)'s profile, except the user invited(created) self user.
+
+                let showProfile: Bool
+                let selfUser = ZMUser.selfUser(in: moc)
+                if selfUser.teamRole == .partner {
+                    if selfUser.membership?.createdBy == user {
+                        showProfile = true
+                    } else {
+                        let activeConversations = selfUser.activeConversations
+                        let activeContacts = Set(activeConversations.flatMap({ $0.activeParticipants }))
+
+                        if activeContacts.contains(user) {
+                            showProfile = true
+                        } else {
+                            showProfile = false
+                        }
+                    }
+                } else {
+                    showProfile = true
+                }
+
+                if showProfile {
+                    self = .openUserProfile(id: id, user: user)
+                } else {
+                    self = .warnInvalidDeepLink(error: .invalidUserLink)
+                }
             } else {
                 self = .connectToUser(id: id)
             }
