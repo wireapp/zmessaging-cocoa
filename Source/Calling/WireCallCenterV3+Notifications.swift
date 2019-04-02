@@ -115,6 +115,19 @@ public struct WireCallCenterMissedCallNotification : SelfPostingNotification {
     let video: Bool
 }
 
+// MARK:- Received call observer
+
+public protocol WireCallCenterReceivedCallObserver : class {
+    func callCenterReceivedCall(result: CallReceivedResult)
+}
+
+public struct WireCallCenterReceivedCallNotification : SelfPostingNotification {
+    static let notificationName = Notification.Name("WireCallCenterReceivedCallNotification")
+    
+    weak var context : NSManagedObjectContext?
+    let result: CallReceivedResult
+}
+
 // MARK:- CallParticipantObserver
 
 public protocol WireCallCenterCallParticipantObserver : class {
@@ -176,6 +189,13 @@ extension WireCallCenterV3 {
     
     // MARK: - Observer
     
+    public class func addCallReceivedObserver(observer: WireCallCenterReceivedCallObserver, userSession: ZMUserSession) -> Any {
+        return NotificationInContext.addObserver(name: WireCallCenterReceivedCallNotification.notificationName, context: userSession.managedObjectContext.notificationContext, queue: .main) { [weak observer] note in
+            if let note = note.userInfo[WireCallCenterReceivedCallNotification.userInfoKey] as? WireCallCenterReceivedCallNotification  {
+                observer?.callCenterReceivedCall(result: note.result)
+            }
+        }
+    }
     
     /// Register observer of the call center call state. This will inform you when there's an incoming call etc.
     /// Returns a token which needs to be retained as long as the observer should be active.

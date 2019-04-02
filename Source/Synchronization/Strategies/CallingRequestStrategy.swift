@@ -150,9 +150,13 @@ extension CallingRequestStrategy : ZMEventConsumer {
                 
                 callEventStatus.scheduledCallEventForProcessing()
                 
-                callCenter?.processCallEvent(callEvent, completionHandler: { [weak self] in
+                callCenter?.processCallEvent(callEvent, completionHandler: { [weak self] (result) in
                     self?.zmLog.debug("processed calling message")
                     self?.callEventStatus.finishedProcessingCallEvent()
+                    
+                    if let context = self?.managedObjectContext {
+                        WireCallCenterReceivedCallNotification(context: context, result: result).post(in: context.notificationContext)
+                    }
                 })
             }
         }
