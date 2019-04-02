@@ -55,13 +55,8 @@ public enum URLAction: Equatable {
                     if selfUser.membership?.createdBy == user {
                         showProfile = true
                     } else {
-                        let activeConversations = selfUser.activeConversations
-                        let activeContacts = Set(activeConversations.flatMap({ $0.activeParticipants }))
-
-                        if activeContacts.contains(user) {
-                            showProfile = true
-                        } else {
-                            showProfile = false
+                        showProfile = selfUser.activeConversations.contains {
+                            $0.activeParticipants.contains(user)
                         }
                     }
                 } else {
