@@ -52,7 +52,10 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
             
             if let messages = fetchRequest.noncesToFetch.allObjects as? [UUID],
                 let conversations = fetchRequest.remoteIdentifiersToFetch.allObjects as? [UUID] {
-                ZMConversation.confirmDeliveredMessages(messages, in: conversations, with: syncMOC)
+                let messages = ZMConversation.confirmDeliveredMessages(messages, in: conversations, with: syncMOC)
+                for message in messages {
+                    self.applicationStatusDirectory?.deliveryConfirmation.needsToConfirmMessage(message.nonce!)
+                }
             }
             
             syncMOC.saveOrRollback()

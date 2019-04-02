@@ -99,8 +99,7 @@
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         NOT_USED(session);
         // save previous notification ID
-        NSUInteger count = self.mockTransportSession.updateEvents.count;
-        MockPushEvent *messageEvent = self.mockTransportSession.updateEvents[count-2];
+        MockPushEvent *messageEvent = self.mockTransportSession.updateEvents.lastObject;
         messageAddLastNotificationID = messageEvent.uuid;
         XCTAssertEqualObjects(messageEvent.payload.asDictionary[@"type"], @"conversation.otr-message-add");
         
