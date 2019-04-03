@@ -501,7 +501,7 @@ class WireCallCenterV3Tests: MessagingTest {
         let callEvent = CallEvent(data: data, currentTimestamp: Date(), serverTimestamp: Date(), conversationId: oneOnOneConversationID, userId: userId, clientId: clientId)
         
         // when
-        sut.processCallEvent(callEvent, completionHandler: {})
+        sut.processCallEvent(callEvent, completionHandler: {_ in })
         XCTAssertEqual((sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.count, 0)
         
         // and when
@@ -530,7 +530,7 @@ class WireCallCenterV3Tests: MessagingTest {
         let calledCompletionHandler = expectation(description: "processCallEvent completion handler called")
         
         // when
-        sut.processCallEvent(callEvent, completionHandler: {
+        sut.processCallEvent(callEvent, completionHandler: {_ in 
             calledCompletionHandler.fulfill()
         })
         
@@ -549,7 +549,7 @@ class WireCallCenterV3Tests: MessagingTest {
         let calledCompletionHandler = expectation(description: "processCallEvent completion handler called")
         
         // when
-        sut.processCallEvent(callEvent, completionHandler: {
+        sut.processCallEvent(callEvent, completionHandler: {_ in 
             calledCompletionHandler.fulfill()
         })
         XCTAssertEqual((sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.count, 0)

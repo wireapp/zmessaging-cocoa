@@ -73,8 +73,9 @@ public class MockAVSWrapper : AVSWrapperType {
         setVideoStateArguments = (conversationId, videoState)
     }
     
-    public func received(callEvent: CallEvent) {
+    public func received(callEvent: CallEvent) -> CallError? {
         receivedCallEvents.append(callEvent)
+        return nil
     }
     
     public func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {
