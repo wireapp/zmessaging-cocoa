@@ -73,13 +73,13 @@ private let zmLog = ZMSLog(tag: "calling")
     var callSnapshots : [UUID : CallSnapshot] = [:]
 
     /// Used to collect incoming events (e.g. from fetching the notification stream) until AVS is ready to process them.
-    var bufferedEvents : [(event: CallEvent, completionHandler: (CallReceivedResult) -> Void)]  = []
+    var bufferedEvents : [(event: CallEvent, completionHandler: (CallError?) -> Void)]  = []
     
     /// Set to true once AVS calls the ReadyHandler. Setting it to `true` forwards all previously buffered events to AVS.
     var isReady : Bool = false {
         didSet {
             if isReady {
-                bufferedEvents.forEach { (event: CallEvent, completionHandler: (CallReceivedResult) -> Void) in
+                bufferedEvents.forEach { (event: CallEvent, completionHandler: (CallError?) -> Void) in
                     let result = avsWrapper.received(callEvent: event)
                     completionHandler(result)
                 }
@@ -512,7 +512,7 @@ extension WireCallCenterV3 {
     /// Handles incoming OTR calling messages, and transmist them to AVS when it is ready to process events, or adds it to the `bufferedEvents`.
     /// - parameter callEvent: calling event to process.
     /// - parameter completionHandler: called after the call event has been processed (this will for example wait for AVS to signal that it's ready).
-    func processCallEvent(_ callEvent: CallEvent, completionHandler: @escaping (CallReceivedResult) -> Void) {
+    func processCallEvent(_ callEvent: CallEvent, completionHandler: @escaping (CallError?) -> Void) {
     
         if isReady {
             let result = avsWrapper.received(callEvent: callEvent)

@@ -20,46 +20,34 @@ import Foundation
 import avs
 
 /**
- * Reasons why a call can be received correctly.
+ * General error codes for calls
  */
 
-public enum CallReceivedResult : Int32 {
+public enum CallError : Int32 {
     
     /// Impossible to receive a call due to incompatible protocol (e.g. older versions)
     case unknownProtocol
-    /// Call is ok
-    case ok
-    /// Call was not received for an unknown reason. This is most likely a bug.
-    case unknown
-    
-    // MARK: - Briding
     
     /**
      * Creates the call error from the AVS flag.
      * - parameter wcall_error: The flag
-     * - returns: The decoded error, or `.unknown` if the flag couldn't be processed.
+     * - returns: The decoded error, or `nil` if the flag couldn't be processed.
      */
     
-    init(wcall_error: Int32) {
+    init?(wcall_error: Int32) {
         switch wcall_error {
-        case 0:
-            self = .ok
         case WCALL_ERROR_UNKNOWN_PROTOCOL:
             self = .unknownProtocol
         default:
-            self = .unknown
+            return nil
         }
     }
     
-    /// The raw flag for the call end.
+    /// The raw flag for the call error
     var wcall_error : Int32 {
         switch self {
         case .unknownProtocol:
             return WCALL_REASON_NORMAL
-        case .ok:
-            return 0
-        case .unknown:
-            return -1
         }
     }
 }

@@ -117,15 +117,15 @@ public struct WireCallCenterMissedCallNotification : SelfPostingNotification {
 
 // MARK:- Received call observer
 
-public protocol WireCallCenterReceivedCallObserver : class {
-    func callCenterReceivedCall(result: CallReceivedResult)
+public protocol WireCallCenterCallErrorObserver : class {
+    func callCenterCallError(_ error: CallError)
 }
 
-public struct WireCallCenterReceivedCallNotification : SelfPostingNotification {
-    static let notificationName = Notification.Name("WireCallCenterReceivedCallNotification")
+public struct WireCallCenterCallErrorNotification : SelfPostingNotification {
+    static let notificationName = Notification.Name("WireCallCenterCallErrorNotification")
     
     weak var context : NSManagedObjectContext?
-    let result: CallReceivedResult
+    let error: CallError
 }
 
 // MARK:- CallParticipantObserver
@@ -189,10 +189,10 @@ extension WireCallCenterV3 {
     
     // MARK: - Observer
     
-    public class func addCallReceivedObserver(observer: WireCallCenterReceivedCallObserver, userSession: ZMUserSession) -> Any {
-        return NotificationInContext.addObserver(name: WireCallCenterReceivedCallNotification.notificationName, context: userSession.managedObjectContext.notificationContext, queue: .main) { [weak observer] note in
-            if let note = note.userInfo[WireCallCenterReceivedCallNotification.userInfoKey] as? WireCallCenterReceivedCallNotification  {
-                observer?.callCenterReceivedCall(result: note.result)
+    public class func addCallErrorObserver(observer: WireCallCenterCallErrorObserver, userSession: ZMUserSession) -> Any {
+        return NotificationInContext.addObserver(name: WireCallCenterCallErrorNotification.notificationName, context: userSession.managedObjectContext.notificationContext, queue: .main) { [weak observer] note in
+            if let note = note.userInfo[WireCallCenterCallErrorNotification.userInfoKey] as? WireCallCenterCallErrorNotification  {
+                observer?.callCenterCallError(note.error)
             }
         }
     }
