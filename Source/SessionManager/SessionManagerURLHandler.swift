@@ -27,9 +27,9 @@ public enum URLAction: Equatable {
     case warnInvalidCompanyLogin(error: ConmpanyLoginRequestError)
 
     case openConversation(id: UUID, conversation: ZMConversation?)
-    case openUserProfile(id: UUID, user: ZMUser?)
+//    case openUserProfile(id: UUID, user: ZMUser?)///TODO: rm this and use below
 
-    // The user id from an unconnected user (The UI has to search for this user id)
+    // Search for the user ID and open the profile view (The UI has to search for this user id)
     case connectToUser(id: UUID)
     case warnInvalidDeepLink(error: DeepLinkRequestError)
 
@@ -43,11 +43,14 @@ public enum URLAction: Equatable {
         }
 
         switch self {
+            /*
         case .openUserProfile(let id, _):
 
             if let user = ZMUser.init(remoteID: id, createIfNeeded: false, in: moc) {
 
                 ///partner restriction - not allow to see other partner(w/o converation)'s profile, except the user invited(created) self user.
+
+                ///TODO : mv to search directory
 
                 let showProfile: Bool
                 let selfUser = ZMUser.selfUser(in: moc)
@@ -70,7 +73,7 @@ public enum URLAction: Equatable {
                 }
             } else {
                 self = .connectToUser(id: id)
-            }
+            }*/
         case .openConversation(let id, _):
             guard let conversation = ZMConversation(remoteID: id, createIfNeeded: false, in: moc) else {
                 self = .warnInvalidDeepLink(error: .invalidConversationLink)
@@ -93,7 +96,8 @@ public enum URLAction: Equatable {
     var requiresAuthentication: Bool {
         switch self {
         case .openConversation,
-             .openUserProfile,
+//             .openUserProfile,
+             .connectToUser,
              .connectBot:
              return true
         default: return false
@@ -103,7 +107,8 @@ public enum URLAction: Equatable {
     var opensDeepLink: Bool {
         switch self {
         case .openConversation,
-             .openUserProfile:
+             .connectToUser:
+//             .openUserProfile:
             return true
         default: return false
         }
@@ -129,7 +134,8 @@ extension URLAction {
         case URL.DeepLink.user:
             if let lastComponent = url.pathComponents.last,
                 let uuid = UUID(uuidString: lastComponent) {
-                self = .openUserProfile(id: uuid, user: nil)
+//                self = .openUserProfile(id: uuid, user: nil)
+                self = .connectToUser(id: uuid)
             } else {
                 self = .warnInvalidDeepLink(error: .invalidUserLink)
             }

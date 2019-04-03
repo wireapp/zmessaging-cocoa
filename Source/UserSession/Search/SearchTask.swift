@@ -95,6 +95,10 @@ public class SearchTask {
 }
 
 extension SearchTask {
+
+    func performLocalLookup() {
+         guard case .lookup(let userId) = task else { return }
+    }
     
     func performLocalSearch() {
         guard case .search(let request) = task else { return }
@@ -200,7 +204,7 @@ extension SearchTask {
         
         tasksRemaining += 1
         
-        context.performGroupedBlock {
+        context.performGroupedBlock { ///TODO: option?
             let request  = type(of: self).searchRequestForUser(withUUID: userId)
             
             request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in
