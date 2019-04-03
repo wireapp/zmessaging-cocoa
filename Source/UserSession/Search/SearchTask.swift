@@ -87,19 +87,54 @@ public class SearchTask {
     /// added via the `onResult()` method.
     public func start() {
         performLocalSearch()
+
         performRemoteSearch()
         performRemoteSearchForTeamUser()
         performRemoteSearchForServices()
+
         performUserLookup()
+        performLocalLookup()
     }
 }
 
 extension SearchTask {
 
-    func performLocalLookup() {
+    private func performLocalLookup() {
          guard case .lookup(let userId) = task else { return }
+
+        tasksRemaining += 1
+
+        context.performGroupedBlock {
+
+//            let request = type(of: self).searchRequestForUser(withUUID: userId)
+
+            let selfUser = ZMUser.selfUser(in: self.context)
+
+            let teamMembers: [Member]
+            if let members = selfUser.team?.members {
+                teamMembers = Array(members).filter({ $0.remoteIdentifier == userId})
+            } else {
+                teamMembers = []
+            }
+
+            let connectedUsers = self.connectedUsers(matchingQuery: "TRUEPREDICATE")
+            let result = SearchResult(contacts: connectedUsers,
+                                      teamMembers: teamMembers,
+                                      addressBook: [], directory: [], conversations: [], services: [])
+
+            self.session.managedObjectContext.performGroupedBlock { [weak self] in
+//                self.result = self.result.union(withLocalResult: result.copy(on: self.session.managedObjectContext))
+
+                if let updatedResult = self?.result.union(withLocalResult: result) { ///TODO: what kind of union??
+                    self?.result = updatedResult
+                }
+
+
+                self?.tasksRemaining -= 1
+            }
+        }
     }
-    
+
     func performLocalSearch() {
         guard case .search(let request) = task else { return }
         
@@ -204,7 +239,7 @@ extension SearchTask {
         
         tasksRemaining += 1
         
-        context.performGroupedBlock { ///TODO: option?
+        context.performGroupedBlock {
             let request  = type(of: self).searchRequestForUser(withUUID: userId)
             
             request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in

@@ -134,7 +134,6 @@ extension URLAction {
         case URL.DeepLink.user:
             if let lastComponent = url.pathComponents.last,
                 let uuid = UUID(uuidString: lastComponent) {
-//                self = .openUserProfile(id: uuid, user: nil)
                 self = .connectToUser(id: uuid)
             } else {
                 self = .warnInvalidDeepLink(error: .invalidUserLink)

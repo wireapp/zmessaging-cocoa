@@ -55,11 +55,35 @@ import Foundation
         let task = SearchTask(task: .lookup(userId: userId), context: searchContext, session: userSession)
         
         task.onResult { [weak self] (result, _) in
+            ///TODO: filter result here
             self?.observeSearchUsers(result)
         }
         
         return task
     }
+
+    /*
+    private func restrictPartnerResult(user: ZMUser) -> Bool {
+        let showProfile: Bool
+        let selfUser = ZMUser.selfUser(in: context)
+        if selfUser.teamRole == .partner {
+            if selfUser.membership?.createdBy == user {
+                showProfile = true
+            } else {
+                let activeConversations = selfUser.activeConversations
+                let activeContacts = Set(activeConversations.flatMap({ $0.activeParticipants }))
+
+                if activeContacts.contains(user) {
+                    showProfile = true
+                } else {
+                    showProfile = false
+                }
+            }
+        } else {
+            showProfile = true
+        }
+    }*/
+
     
     func observeSearchUsers(_ result : SearchResult) {
         let searchUserObserverCenter = userSession.managedObjectContext.searchUserObserverCenter
