@@ -73,15 +73,15 @@ private let zmLog = ZMSLog(tag: "calling")
     var callSnapshots : [UUID : CallSnapshot] = [:]
 
     /// Used to collect incoming events (e.g. from fetching the notification stream) until AVS is ready to process them.
-    var bufferedEvents : [(event: CallEvent, completionHandler: (CallError?) -> Void)]  = []
+    var bufferedEvents : [(event: CallEvent, completionHandler: () -> Void)]  = []
     
     /// Set to true once AVS calls the ReadyHandler. Setting it to `true` forwards all previously buffered events to AVS.
     var isReady : Bool = false {
         didSet {
             if isReady {
-                bufferedEvents.forEach { (event: CallEvent, completionHandler: (CallError?) -> Void) in
-                    let result = avsWrapper.received(callEvent: event)
-                    completionHandler(result)
+                bufferedEvents.forEach { (item: (event: CallEvent, completionHandler: () -> Void)) in
+                    let (event, completionHandler) = item
+                    handleCallEvent(event, completionHandler: completionHandler)
                 }
                 bufferedEvents = []
             }
@@ -512,14 +512,24 @@ extension WireCallCenterV3 {
     /// Handles incoming OTR calling messages, and transmist them to AVS when it is ready to process events, or adds it to the `bufferedEvents`.
     /// - parameter callEvent: calling event to process.
     /// - parameter completionHandler: called after the call event has been processed (this will for example wait for AVS to signal that it's ready).
-    func processCallEvent(_ callEvent: CallEvent, completionHandler: @escaping (CallError?) -> Void) {
+    func processCallEvent(_ callEvent: CallEvent, completionHandler: @escaping () -> Void) {
     
         if isReady {
-            let result = avsWrapper.received(callEvent: callEvent)
-            completionHandler(result)
+            handleCallEvent(callEvent, completionHandler: completionHandler)
         } else {
             bufferedEvents.append((callEvent, completionHandler))
         }
+    }
+    
+    fileprivate func handleCallEvent(_ callEvent: CallEvent, completionHandler: @escaping () -> Void) {
+        
+        let result = avsWrapper.received(callEvent: callEvent)
+        
+        if let context = uiMOC, let error = result {
+            WireCallCenterCallErrorNotification(context: context, error: error).post(in: context.notificationContext)
+        }
+        
+        completionHandler()
     }
 
     /**

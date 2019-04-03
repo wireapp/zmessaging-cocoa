@@ -501,7 +501,7 @@ class WireCallCenterV3Tests: MessagingTest {
         let callEvent = CallEvent(data: data, currentTimestamp: Date(), serverTimestamp: Date(), conversationId: oneOnOneConversationID, userId: userId, clientId: clientId)
         
         // when
-        sut.processCallEvent(callEvent, completionHandler: {_ in })
+        sut.processCallEvent(callEvent, completionHandler: { })
         XCTAssertEqual((sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.count, 0)
         
         // and when
@@ -530,7 +530,7 @@ class WireCallCenterV3Tests: MessagingTest {
         let calledCompletionHandler = expectation(description: "processCallEvent completion handler called")
         
         // when
-        sut.processCallEvent(callEvent, completionHandler: {_ in 
+        sut.processCallEvent(callEvent, completionHandler: { 
             calledCompletionHandler.fulfill()
         })
         
@@ -549,7 +549,7 @@ class WireCallCenterV3Tests: MessagingTest {
         let calledCompletionHandler = expectation(description: "processCallEvent completion handler called")
         
         // when
-        sut.processCallEvent(callEvent, completionHandler: {_ in 
+        sut.processCallEvent(callEvent, completionHandler: { 
             calledCompletionHandler.fulfill()
         })
         XCTAssertEqual((sut.avsWrapper as! MockAVSWrapper).receivedCallEvents.count, 0)
@@ -561,6 +561,54 @@ class WireCallCenterV3Tests: MessagingTest {
         // then
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
+    
+    /*
+     
+     // WORK IN PROGRESS
+     
+    func testThatTheReceivedCallHandlerPostsTheRightNotification() {
+        
+        mockAVSWrapper.callError = .unknownProtocol
+        
+        let userId = UUID()
+        let clientId = "foo"
+        let data = self.verySmallJPEGData()
+        let callEvent = CallEvent(data: data, currentTimestamp: Date(), serverTimestamp: Date(), conversationId: oneOnOneConversationID, userId: userId, clientId: clientId)
+        
+        // expect
+        let calledCompletionHandler = expectation(description: "processCallEvent completion handler called")
+        
+        
+        checkThatItPostsCallErrorNotification(expectedError: mockAVSWrapper.callError) {
+            
+            // when
+            sut.processCallEvent(callEvent, completionHandler: {
+                calledCompletionHandler.fulfill()
+            })
+            
+        }
+        
+        // then
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    
+    
+    func checkThatItPostsCallErrorNotification(expectedError: CallError?, actionBlock: () -> Void) {
+        // expect
+        expectation(forNotification: WireCallCenterCallErrorNotification.notificationName, object: nil) { wrappedNote in
+            guard let note = wrappedNote.userInfo?[WireCallCenterCallErrorNotification.userInfoKey] as? WireCallCenterCallErrorNotification else { return false }
+            XCTAssertEqual(note.error, expectedError)
+            return true
+        }
+        
+        // when
+        actionBlock()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
+    }
+    */
 
     func testThatActiveCallsOnlyIncludeExpectedCallStates() {
         // given
