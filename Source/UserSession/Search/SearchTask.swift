@@ -107,6 +107,7 @@ extension SearchTask {
         context.performGroupedBlock {
             let selfUser = ZMUser.selfUser(in: self.context)
 
+            ///search for the local user with matching user ID and active
             let teamMembers: [Member]
             if let members = selfUser.team?.members {
                 let activeMembers = self.filterNonActiveTeamMembers(members: Array(members))

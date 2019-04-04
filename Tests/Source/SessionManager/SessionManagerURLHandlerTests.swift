@@ -190,7 +190,7 @@ final class SessionManagerURLHandlerTests: MessagingTest {
         let action = URLAction(url: url)
 
         // then
-        XCTAssertEqual(action, URLAction.openUserProfile(id: uuid, user: nil))
+        XCTAssertEqual(action, URLAction.connectToUser(id: uuid))
     }
 
     func testThatItChangesTheActionToConnectToUserWhenTheSessionNotFindTheUserID() {
