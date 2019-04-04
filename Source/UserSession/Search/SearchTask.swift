@@ -107,14 +107,18 @@ extension SearchTask {
         context.performGroupedBlock {
             let selfUser = ZMUser.selfUser(in: self.context)
 
+            var options = SearchOptions()
+
+            if selfUser.teamRole == .partner {
+                options.insert(.excludeNonActiveTeamMembers)
+            } else {
+                options.insert(.excludeNonActivePartners)
+            }
+
             ///search for the local user with matching user ID and active
             let teamMembers: [Member]
-            if let members = selfUser.team?.members {
-                let activeMembers = self.filterNonActiveTeamMembers(members: Array(members))
+                let activeMembers = self.teamMembers(matchingQuery: "", team: selfUser.team, searchOptions: options)
                 teamMembers = activeMembers.filter({ $0.remoteIdentifier == userId})
-            } else {
-                teamMembers = []
-            }
 
             let connectedUsers = self.connectedUsers(matchingQuery: "").filter({ $0.remoteIdentifier == userId})
             let result = SearchResult(contacts: connectedUsers,
