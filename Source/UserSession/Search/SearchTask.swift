@@ -107,12 +107,10 @@ extension SearchTask {
         context.performGroupedBlock {
             let selfUser = ZMUser.selfUser(in: self.context)
 
-            ///TODO: exclude non active team members
-//            teamMembers(matchingQuery: "", team: selfUser.team, searchOptions: .excludeNonActiveTeamMembers)
-
             let teamMembers: [Member]
             if let members = selfUser.team?.members {
-                teamMembers = Array(members).filter({ $0.remoteIdentifier == userId})
+                let activeMembers = self.filterNonActiveTeamMembers(members: Array(members))
+                teamMembers = activeMembers.filter({ $0.remoteIdentifier == userId})
             } else {
                 teamMembers = []
             }
