@@ -109,11 +109,7 @@ extension SearchTask {
 
             var options = SearchOptions()
 
-            if selfUser.teamRole == .partner {
-                options.insert(.excludeNonActiveTeamMembers)
-            } else {
-                options.insert(.excludeNonActivePartners)
-            }
+            options.updateForSelfUserTeamRole(selfUser: selfUser)
 
             ///search for the local user with matching user ID and active
             let teamMembers: [Member]
