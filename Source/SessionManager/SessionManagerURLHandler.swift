@@ -27,7 +27,6 @@ public enum URLAction: Equatable {
     case warnInvalidCompanyLogin(error: ConmpanyLoginRequestError)
 
     case openConversation(id: UUID, conversation: ZMConversation?)
-//    case openUserProfile(id: UUID, user: ZMUser?)///TODO: rm this and use below
 
     // Search for the user ID and open the profile view (The UI has to search for this user id)
     case connectToUser(id: UUID)

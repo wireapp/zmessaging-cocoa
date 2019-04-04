@@ -55,34 +55,62 @@ import Foundation
         let task = SearchTask(task: .lookup(userId: userId), context: searchContext, session: userSession)
         
         task.onResult { [weak self] (result, _) in
-            ///TODO: filter result here
-            self?.observeSearchUsers(result)
+            let filteredMembers = result.teamMembers.filter({
+                if let user = $0.user {
+                    return self?.canSelfUserAccessProfile(user: user) ?? false
+                } else {
+                    return false
+                }
+            })
+
+            let filteredDirectory = result.directory.filter({
+                if let user = $0.user {
+                    return self?.canSelfUserAccessProfile(user: user) ?? false
+                } else {
+                    return false
+                }
+            })
+
+            let filteredResult = SearchResult(contacts: result.contacts,
+                                              teamMembers: filteredMembers,
+                                              addressBook: result.addressBook,
+                                              directory: filteredDirectory,
+                                              conversations: result.conversations,
+                                              services: result.services)
+
+            self?.observeSearchUsers(filteredResult)
         }
         
         return task
     }
 
-    /*
-    private func restrictPartnerResult(user: ZMUser) -> Bool {
+
+    /// partner restriction - not allow to see other partner(w/o converation)'s profile, except the user invited(created) self user.
+    ///
+    /// - Parameter user: the user that self user want to access the profile
+    /// - Returns: true if allow to access
+    private func canSelfUserAccessProfile(user: ZMUser) -> Bool {
+
+        guard let moc = userSession.managedObjectContext else {
+            return false
+        }
+
         let showProfile: Bool
-        let selfUser = ZMUser.selfUser(in: context)
+        let selfUser = ZMUser.selfUser(in: moc)
         if selfUser.teamRole == .partner {
             if selfUser.membership?.createdBy == user {
                 showProfile = true
             } else {
-                let activeConversations = selfUser.activeConversations
-                let activeContacts = Set(activeConversations.flatMap({ $0.activeParticipants }))
-
-                if activeContacts.contains(user) {
-                    showProfile = true
-                } else {
-                    showProfile = false
+                showProfile = selfUser.activeConversations.contains {
+                    $0.activeParticipants.contains(user)
                 }
             }
         } else {
             showProfile = true
         }
-    }*/
+
+        return showProfile
+    }
 
     
     func observeSearchUsers(_ result : SearchResult) {
