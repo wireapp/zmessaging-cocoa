@@ -43,37 +43,6 @@ public enum URLAction: Equatable {
         }
 
         switch self {
-            /*
-        case .openUserProfile(let id, _):
-
-            if let user = ZMUser.init(remoteID: id, createIfNeeded: false, in: moc) {
-
-                ///partner restriction - not allow to see other partner(w/o converation)'s profile, except the user invited(created) self user.
-
-                ///TODO : mv to search directory
-
-                let showProfile: Bool
-                let selfUser = ZMUser.selfUser(in: moc)
-                if selfUser.teamRole == .partner {
-                    if selfUser.membership?.createdBy == user {
-                        showProfile = true
-                    } else {
-                        showProfile = selfUser.activeConversations.contains {
-                            $0.activeParticipants.contains(user)
-                        }
-                    }
-                } else {
-                    showProfile = true
-                }
-
-                if showProfile {
-                    self = .openUserProfile(id: id, user: user)
-                } else {
-                    self = .warnInvalidDeepLink(error: .invalidUserLink)
-                }
-            } else {
-                self = .connectToUser(id: id)
-            }*/
         case .openConversation(let id, _):
             guard let conversation = ZMConversation(remoteID: id, createIfNeeded: false, in: moc) else {
                 self = .warnInvalidDeepLink(error: .invalidConversationLink)
@@ -96,7 +65,6 @@ public enum URLAction: Equatable {
     var requiresAuthentication: Bool {
         switch self {
         case .openConversation,
-//             .openUserProfile,
              .connectToUser,
              .connectBot:
              return true
@@ -108,7 +76,6 @@ public enum URLAction: Equatable {
         switch self {
         case .openConversation,
              .connectToUser:
-//             .openUserProfile:
             return true
         default: return false
         }

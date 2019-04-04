@@ -105,10 +105,10 @@ extension SearchTask {
         tasksRemaining += 1
 
         context.performGroupedBlock {
-
-//            let request = type(of: self).searchRequestForUser(withUUID: userId)
-
             let selfUser = ZMUser.selfUser(in: self.context)
+
+            ///TODO: exclude non active team members
+//            teamMembers(matchingQuery: "", team: selfUser.team, searchOptions: .excludeNonActiveTeamMembers)
 
             let teamMembers: [Member]
             if let members = selfUser.team?.members {
@@ -117,20 +117,15 @@ extension SearchTask {
                 teamMembers = []
             }
 
-            let connectedUsers = self.connectedUsers(matchingQuery: "TRUEPREDICATE")
+            let connectedUsers = self.connectedUsers(matchingQuery: "").filter({ $0.remoteIdentifier == userId})
             let result = SearchResult(contacts: connectedUsers,
                                       teamMembers: teamMembers,
                                       addressBook: [], directory: [], conversations: [], services: [])
 
-            self.session.managedObjectContext.performGroupedBlock { [weak self] in
-//                self.result = self.result.union(withLocalResult: result.copy(on: self.session.managedObjectContext))
+            self.session.managedObjectContext.performGroupedBlock {
+                self.result = self.result.union(withLocalResult: result.copy(on: self.session.managedObjectContext))
 
-                if let updatedResult = self?.result.union(withLocalResult: result) { ///TODO: what kind of union??
-                    self?.result = updatedResult
-                }
-
-
-                self?.tasksRemaining -= 1
+                self.tasksRemaining -= 1
             }
         }
     }
@@ -163,22 +158,28 @@ extension SearchTask {
             }
         }
     }
-    
+
+    private func filterNonActiveTeamMembers(members: [Member]) -> [Member] {
+        let activeConversations = ZMUser.selfUser(in: context).activeConversations
+        let activeContacts = Set(activeConversations.flatMap({ $0.activeParticipants }))
+        let selfUser = ZMUser.selfUser(in: context)
+
+        let result = members.filter({
+            if let user = $0.user {
+                return selfUser.membership?.createdBy == user || activeContacts.contains(user)
+            } else {
+                return false
+            }
+        })
+
+        return result
+    }
+
     func teamMembers(matchingQuery query : String, team: Team?, searchOptions: SearchOptions) -> [Member] {
         var result =  team?.members(matchingQuery: query) ?? []
         
         if searchOptions.contains(.excludeNonActiveTeamMembers) {
-            let activeConversations = ZMUser.selfUser(in: context).activeConversations
-            let activeContacts = Set(activeConversations.flatMap({ $0.activeParticipants }))
-            let selfUser = ZMUser.selfUser(in: context)
-            
-            result = result.filter({
-                if let user = $0.user {
-                    return selfUser.membership?.createdBy == user || activeContacts.contains(user)
-                } else {
-                    return false
-                }
-            })
+            result = filterNonActiveTeamMembers(members: result)
         }
         
         if searchOptions.contains(.excludeNonActivePartners) {
