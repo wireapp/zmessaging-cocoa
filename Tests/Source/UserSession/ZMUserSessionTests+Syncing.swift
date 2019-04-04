@@ -20,6 +20,23 @@ import XCTest
 
 class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
     
+    // MARK: Helpers
+    
+    class InitialSyncObserver : NSObject, ZMInitialSyncCompletionObserver {
+        
+        var didNotify : Bool = false
+        var initialSyncToken : Any?
+        
+        init(context: NSManagedObjectContext) {
+            super.init()
+            initialSyncToken = ZMUserSession.addInitialSyncCompletionObserver(self, context: context)
+        }
+        
+        func initialSyncCompleted() {
+            didNotify = true
+        }
+    }
+    
     
     // MARK: Slow Sync
     
@@ -66,6 +83,21 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
         
         // then
         XCTAssertTrue(sut.hasCompletedInitialSync)
+    }
+    
+    func testThatItNotifiesObserverWhenInitialIsSyncCompleted(){
+        // given
+        let observer = InitialSyncObserver(context: uiMOC)
+        sut.didStartSlowSync()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertFalse(observer.didNotify)
+        
+        // when
+        sut.didFinishSlowSync()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertTrue(observer.didNotify)
     }
     
     func testThatPerformingSyncIsStillOngoingAfterSlowSync() {
