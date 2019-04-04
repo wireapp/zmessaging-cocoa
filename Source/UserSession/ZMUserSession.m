@@ -196,6 +196,7 @@ ZM_EMPTY_ASSERTING_INIT()
             self.transportSession.pushChannel.clientID = self.selfUserClient.remoteIdentifier;
             self.transportSession.networkStateDelegate = self;
             self.mediaManager = mediaManager;
+            self.hasCompletedInitialSync = !self.applicationStatusDirectory.syncStatus.isSlowSyncing;
         }];
 
         _application = application;
@@ -536,6 +537,7 @@ ZM_EMPTY_ASSERTING_INIT()
         ZM_STRONG(self);
         self.hasCompletedInitialSync = YES;
         self.notificationDispatcher.isDisabled = NO;
+        [ZMUserSession notifyInitialSyncCompletedWithContext:self.managedObjectContext];
     }];
 }
 
