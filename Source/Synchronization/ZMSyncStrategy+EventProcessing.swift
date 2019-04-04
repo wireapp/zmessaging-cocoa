@@ -50,8 +50,8 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
             }
             localNotificationDispatcher?.processEvents(decryptedUpdateEvents, liveEvents: true, prefetchResult: nil)
             
-            if let messages = fetchRequest.noncesToFetch.allObjects as? [UUID],
-                let conversations = fetchRequest.remoteIdentifiersToFetch.allObjects as? [UUID] {
+            if let messages = fetchRequest.noncesToFetch as? Set<UUID>,
+                let conversations = fetchRequest.remoteIdentifiersToFetch as? Set<UUID> {
                 let messages = ZMConversation.confirmDeliveredMessages(messages, in: conversations, with: syncMOC)
                 for message in messages {
                     self.applicationStatusDirectory?.deliveryConfirmation.needsToConfirmMessage(message.nonce!)
