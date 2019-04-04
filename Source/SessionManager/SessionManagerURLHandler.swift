@@ -28,8 +28,8 @@ public enum URLAction: Equatable {
 
     case openConversation(id: UUID, conversation: ZMConversation?)
 
-    // Search for the user ID and open the profile view for connection request if not connected
-    case connectToUser(id: UUID)
+    // The UI search for the user ID and open the profile view for connection request if not connected
+    case openUserProfile(id: UUID)
     case warnInvalidDeepLink(error: DeepLinkRequestError)
 
 
@@ -64,7 +64,7 @@ public enum URLAction: Equatable {
     var requiresAuthentication: Bool {
         switch self {
         case .openConversation,
-             .connectToUser,
+             .openUserProfile,
              .connectBot:
              return true
         default: return false
@@ -74,7 +74,7 @@ public enum URLAction: Equatable {
     var opensDeepLink: Bool {
         switch self {
         case .openConversation,
-             .connectToUser:
+             .openUserProfile:
             return true
         default: return false
         }
@@ -100,7 +100,7 @@ extension URLAction {
         case URL.DeepLink.user:
             if let lastComponent = url.pathComponents.last,
                 let uuid = UUID(uuidString: lastComponent) {
-                self = .connectToUser(id: uuid)
+                self = .openUserProfile(id: uuid)
             } else {
                 self = .warnInvalidDeepLink(error: .invalidUserLink)
             }

@@ -112,9 +112,8 @@ extension SearchTask {
             options.updateForSelfUserTeamRole(selfUser: selfUser)
 
             ///search for the local user with matching user ID and active
-            let teamMembers: [Member]
-                let activeMembers = self.teamMembers(matchingQuery: "", team: selfUser.team, searchOptions: options)
-                teamMembers = activeMembers.filter({ $0.remoteIdentifier == userId})
+            let activeMembers = self.teamMembers(matchingQuery: "", team: selfUser.team, searchOptions: options)
+            let teamMembers = activeMembers.filter({ $0.remoteIdentifier == userId})
 
             let connectedUsers = self.connectedUsers(matchingQuery: "").filter({ $0.remoteIdentifier == userId})
             let result = SearchResult(contacts: connectedUsers,
@@ -163,15 +162,10 @@ extension SearchTask {
         let activeContacts = Set(activeConversations.flatMap({ $0.activeParticipants }))
         let selfUser = ZMUser.selfUser(in: context)
 
-        let result = members.filter({
-            if let user = $0.user {
-                return selfUser.membership?.createdBy == user || activeContacts.contains(user)
-            } else {
-                return false
-            }
+        return members.filter({
+            guard let user = $0.user else { return false }
+            return selfUser.membership?.createdBy == user || activeContacts.contains(user)
         })
-
-        return result
     }
 
     func teamMembers(matchingQuery query : String, team: Team?, searchOptions: SearchOptions) -> [Member] {
