@@ -47,11 +47,13 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 
 
 @interface ZMUserSession ()
+@property (nonatomic) ZMSyncStrategy *syncStrategy;
 @property (nonatomic) ZMOperationLoop *operationLoop;
 @property (nonatomic) ZMTransportRequest *runningLoginRequest;
 @property (nonatomic) ZMTransportSession *transportSession;
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
+@property (nonatomic) NotificationDispatcher *notificationDispatcher;
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) NSMutableArray* observersToken;
 @property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
@@ -140,7 +142,6 @@ ZM_EMPTY_ASSERTING_INIT()
         
         self.appVersion = appVersion;
         [ZMUserAgent setWireAppVersion:appVersion];
-        self.didStartInitialSync = NO;
         self.pushChannelIsOpen = NO;
 
         ZM_WEAK(self);
@@ -173,6 +174,8 @@ ZM_EMPTY_ASSERTING_INIT()
         
         self.managedObjectContext.zm_searchUserCache = [[NSCache alloc] init];
         
+        self.notificationDispatcher = [[NotificationDispatcher alloc] initWithManagedObjectContext:self.managedObjectContext];
+        
         [self.syncManagedObjectContext performBlockAndWait:^{
             self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncManagedObjectContext
                                                                                                    cookieStorage:session.cookieStorage
@@ -199,14 +202,20 @@ ZM_EMPTY_ASSERTING_INIT()
         self.topConversationsDirectory = [[TopConversationsDirectory alloc] initWithManagedObjectContext:self.managedObjectContext];
         
         [self.syncManagedObjectContext performBlockAndWait:^{
-    
+            
+            self.syncStrategy = [[ZMSyncStrategy alloc] initWithStoreProvider:storeProvider
+                                                                cookieStorage:session.cookieStorage
+                                                                  flowManager:flowManager
+                                                 localNotificationsDispatcher:self.localNotificationDispatcher
+                                                      notificationsDispatcher:self.notificationDispatcher
+                                                   applicationStatusDirectory:self.applicationStatusDirectory
+                                                                  application:application];
+            
             self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
-                                                                                      cookieStorage:session.cookieStorage
-                                                                        localNotificationDispatcher:self.localNotificationDispatcher
-                                                                                        flowManager:flowManager
-                                                                                      storeProvider:storeProvider
+                                                                                       syncStrategy:self.syncStrategy
                                                                          applicationStatusDirectory:self.applicationStatusDirectory
-                                                                                        application:application];
+                                                                                              uiMOC:self.managedObjectContext
+                                                                                            syncMOC:self.syncManagedObjectContext];
             
             __weak id weakSelf = self;
             session.accessTokenRenewalFailureHandler = ^(ZMTransportResponse *response) {
@@ -251,6 +260,8 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.application unregisterObserverForStateChange:self];
     self.mediaManager = nil;
     self.callStateObserver = nil;
+    [self.syncStrategy tearDown];
+    self.syncStrategy = nil;
     [self.operationLoop tearDown];
     self.operationLoop = nil;
     [self.transportSession tearDown];
@@ -507,26 +518,45 @@ ZM_EMPTY_ASSERTING_INIT()
     }];
 }
 
-- (void)didStartSync
+- (void)didStartSlowSync
 {
     ZM_WEAK(self);
     [self.managedObjectContext performGroupedBlock:^{
         ZM_STRONG(self);
         self.isPerformingSync = YES;
-        self.didStartInitialSync = YES;
+        self.notificationDispatcher.isDisabled = YES;
         [self changeNetworkStateAndNotify];
     }];
 }
 
-- (void)didFinishSync
+- (void)didFinishSlowSync
 {
-    [self.operationLoop.syncStrategy didFinishSync];
+    ZM_WEAK(self);
+    [self.managedObjectContext performGroupedBlock:^{
+        ZM_STRONG(self);
+        self.hasCompletedInitialSync = YES;
+        self.notificationDispatcher.isDisabled = NO;
+    }];
+}
+
+- (void)didStartQuickSync
+{
+    ZM_WEAK(self);
+    [self.managedObjectContext performGroupedBlock:^{
+        ZM_STRONG(self);
+        self.isPerformingSync = YES;
+        [self changeNetworkStateAndNotify];
+    }];
+}
+
+- (void)didFinishQuickSync
+{
+    [self.syncStrategy didFinishSync];
     
     ZM_WEAK(self);
     [self.managedObjectContext performGroupedBlock:^{
         ZM_STRONG(self);
         self.isPerformingSync = NO;
-        self.hasCompletedInitialSync = YES;
         [self changeNetworkStateAndNotify];
         [self notifyThirdPartyServices];
     }];

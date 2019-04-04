@@ -2091,7 +2091,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
         
         // then
-        XCTAssertEqualObjects(conversation.keysThatHaveLocalModifications, [NSSet setWithObject:ZMConversationArchivedChangedTimeStampKey]);
         XCTAssertTrue(conversation.isSelfAnActiveMember);
         XCTAssertTrue(conversation.needsToBeUpdatedFromBackend);
         ZMTransportRequest *request2 = [self.sut nextRequest];
