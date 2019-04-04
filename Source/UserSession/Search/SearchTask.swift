@@ -99,6 +99,8 @@ public class SearchTask {
 
 extension SearchTask {
 
+
+    /// look up a user ID from contacts and teamMmebers locally. 
     private func performLocalLookup() {
          guard case .lookup(let userId) = task else { return }
 
