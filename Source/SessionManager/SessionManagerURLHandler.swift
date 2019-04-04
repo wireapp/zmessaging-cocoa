@@ -28,7 +28,7 @@ public enum URLAction: Equatable {
 
     case openConversation(id: UUID, conversation: ZMConversation?)
 
-    // Search for the user ID and open the profile view (The UI has to search for this user id)
+    // Search for the user ID and open the profile view for connection request if not connected
     case connectToUser(id: UUID)
     case warnInvalidDeepLink(error: DeepLinkRequestError)
 
