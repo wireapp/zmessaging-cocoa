@@ -26,5 +26,10 @@ extension ConversationListChangeInfo {
         ) -> NSObjectProtocol {
         return self.add(observer: observer, for: list, managedObjectContext: userSession.managedObjectContext)
     }
+    
+    @objc(addConversationListReloadObserver:userSession:)
+    public static func add(observer: ZMConversationListReloadObserver, userSession: ZMUserSession) -> NSObjectProtocol {
+        return add(observer: observer, managedObjectContext: userSession.managedObjectContext)
+    }
 }
 

@@ -55,6 +55,7 @@
                                   cookieStorage:(ZMPersistentCookieStorage * _Nullable)cookieStorage
                                     flowManager:(id<FlowManagerType> _Nonnull)flowManager
                    localNotificationsDispatcher:(LocalNotificationDispatcher * _Nonnull)localNotificationsDispatcher
+                        notificationsDispatcher:(NotificationDispatcher * _Nonnull)notificationsDispatcher
                      applicationStatusDirectory:(ApplicationStatusDirectory * _Nonnull)applicationStatusDirectory
                                     application:(id<ZMApplication> _Nonnull)application;
 

@@ -28,6 +28,7 @@
 
 @class ZMPersistentCookieStorage;
 @class ApplicationStatusDirectory;
+@class ZMSyncStrategy;
 
 extern NSString * const ZMPushChannelIsOpenKey;
 
@@ -38,12 +39,10 @@ extern NSString * const ZMPushChannelIsOpenKey;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
-                           cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
-             localNotificationDispatcher:(LocalNotificationDispatcher *)dispatcher
-                             flowManager:(id<FlowManagerType>)flowManager
-                           storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
+                            syncStrategy:(ZMSyncStrategy *)syncStrategy
               applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
-                             application:(id<ZMApplication>)application;
+                                   uiMOC:(NSManagedObjectContext *)uiMOC
+                                 syncMOC:(NSManagedObjectContext *)syncMOC;
 
 - (void)tearDown;
 

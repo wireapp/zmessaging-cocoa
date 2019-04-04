@@ -349,14 +349,22 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
 
 extension ZMConversationTranscoderTests_Swift : ZMSyncStateDelegate {
     
-    func didStartSync() {
+    func didStartSlowSync() {
         // nop
     }
     
-    func didFinishSync() {
+    func didFinishSlowSync() {
         // nop
     }
     
+    func didStartQuickSync() {
+        // nop
+    }
+    
+    func didFinishQuickSync() {
+        // nop
+    }
+        
     func didRegister(_ userClient: UserClient!) {
         // nop
     }

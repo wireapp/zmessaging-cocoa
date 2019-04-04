@@ -35,14 +35,3 @@
 @property (nonatomic, readonly) PushNotificationStatus *pushNotificationStatus;
 @property (nonatomic, readonly) CallEventStatus *callEventStatus;
 @end
-
-
-@interface ZMOperationLoop (Testing)
-
-- (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
-                            syncStrategy:(ZMSyncStrategy *)syncStrategy
-              applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
-                                   uiMOC:(NSManagedObjectContext *)uiMOC
-                                 syncMOC:(NSManagedObjectContext *)syncMOC;
-
-@end

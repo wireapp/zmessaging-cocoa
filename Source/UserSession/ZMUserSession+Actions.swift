@@ -215,8 +215,7 @@ private let zmLog = ZMSLog(tag: "Push")
         
 public extension ZMUserSession {
     public func markAllConversationsAsRead() {
-        self.managedObjectContext.conversationListDirectory().conversationsIncludingArchived.forEach { conversation in
-            (conversation as! ZMConversation).markAsRead()
-        }
+        let allConversations = managedObjectContext.fetchOrAssert(request: NSFetchRequest<ZMConversation>(entityName: ZMConversation.entityName()))
+        allConversations.forEach({ $0.markAsRead() })
     }
 }

@@ -179,60 +179,71 @@ class SyncStatusTests : MessagingTest {
     func testThatItNotifiesTheStateDelegateWhenFinishingSync(){
         // given
         XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
-        XCTAssertFalse(mockSyncDelegate.didCallFinishSync)
+        XCTAssertFalse(mockSyncDelegate.didCallFinishSlowSync)
+        XCTAssertFalse(mockSyncDelegate.didCallFinishQuickSync)
         
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingLastUpdateEventID)
         // then
-        XCTAssertFalse(mockSyncDelegate.didCallFinishSync)
+        XCTAssertFalse(mockSyncDelegate.didCallFinishQuickSync)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingTeams)
         // then
-        XCTAssertFalse(mockSyncDelegate.didCallFinishSync)
+        XCTAssertFalse(mockSyncDelegate.didCallFinishQuickSync)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingConnections)
         // then
-        XCTAssertFalse(mockSyncDelegate.didCallFinishSync)
+        XCTAssertFalse(mockSyncDelegate.didCallFinishQuickSync)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingConversations)
         // then
-        XCTAssertFalse(mockSyncDelegate.didCallFinishSync)
+        XCTAssertFalse(mockSyncDelegate.didCallFinishQuickSync)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingUsers)
         // then
-        XCTAssertFalse(mockSyncDelegate.didCallFinishSync)
+        XCTAssertFalse(mockSyncDelegate.didCallFinishQuickSync)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingSelfUser)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingMissedEvents)
         
         // then
-        XCTAssertTrue(mockSyncDelegate.didCallFinishSync)
+        XCTAssertTrue(mockSyncDelegate.didCallFinishSlowSync)
+        XCTAssertTrue(mockSyncDelegate.didCallFinishQuickSync)
     }
     
-    func testThatItNotifiesTheStateDelegateWhenStartingSync(){
+    func testThatItNotifiesTheStateDelegateWhenStartingSlowSync(){
+        // given
+        sut = SyncStatus(managedObjectContext: uiMOC, syncStateDelegate: mockSyncDelegate)
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
+        
+        // then
+        XCTAssertTrue(mockSyncDelegate.didCallStartSlowSync)
+    }
+    
+    func testThatItNotifiesTheStateDelegateWhenStartingQuickSync(){
         // given
         uiMOC.zm_lastNotificationID = UUID.timeBasedUUID() as UUID
         sut = SyncStatus(managedObjectContext: uiMOC, syncStateDelegate: mockSyncDelegate)
         XCTAssertEqual(sut.currentSyncPhase, .fetchingMissedEvents)
 
         // then
-        XCTAssertTrue(mockSyncDelegate.didCallStartSync)
+        XCTAssertTrue(mockSyncDelegate.didCallStartQuickSync)
     }
     
     func testThatItDoesNotNotifyTheStateDelegateWhenAlreadySyncing(){
         // given
-        mockSyncDelegate.didCallStartSync = false
+        mockSyncDelegate.didCallStartQuickSync = false
         sut.finishCurrentSyncPhase(phase: .fetchingLastUpdateEventID)
         XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
         
-        XCTAssertFalse(mockSyncDelegate.didCallStartSync)
+        XCTAssertFalse(mockSyncDelegate.didCallStartQuickSync)
         
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingTeams)
         
         // then
-        XCTAssertFalse(mockSyncDelegate.didCallStartSync)
+        XCTAssertFalse(mockSyncDelegate.didCallStartQuickSync)
     }
     
 
@@ -242,13 +253,13 @@ class SyncStatusTests : MessagingTest {
         sut = SyncStatus(managedObjectContext: uiMOC, syncStateDelegate: mockSyncDelegate)
         sut.finishCurrentSyncPhase(phase: .fetchingMissedEvents)
         XCTAssertEqual(sut.currentSyncPhase, .done)
-        mockSyncDelegate.didCallStartSync = false
+        mockSyncDelegate.didCallStartQuickSync = false
 
         // when
         sut.pushChannelDidClose()
 
         // then
-        XCTAssertTrue(mockSyncDelegate.didCallStartSync)
+        XCTAssertTrue(mockSyncDelegate.didCallStartQuickSync)
 
     }
     

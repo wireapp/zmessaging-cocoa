@@ -1034,8 +1034,8 @@ extension SessionManagerTests {
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         XCTAssertEqual(conversations.count, 2)
         XCTAssertEqual(conversations.filter { $0.firstUnreadMessage != nil }.count, 2)
-        // when
         
+        // when
         let doneExpectation = self.expectation(description: "Conversations are marked as read")
 
         self.sessionManager?.markAllConversationsAsRead(completion: {
