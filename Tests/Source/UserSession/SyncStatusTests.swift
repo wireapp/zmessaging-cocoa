@@ -20,22 +20,6 @@
 import XCTest
 @testable import WireSyncEngine
 
-class InitialSyncObserver : NSObject, ZMInitialSyncCompletionObserver {
-    
-    var didNotify : Bool = false
-    var initialSyncToken : Any?
-    
-    init(context: NSManagedObjectContext) {
-        super.init()
-        initialSyncToken = ZMUserSession.addInitialSyncCompletionObserver(self, context: context)
-    }
-    
-    func initialSyncCompleted() {
-        didNotify = true
-    }
-}
-
-
 class SyncStatusTests : MessagingTest {
 
     var sut : SyncStatus!
@@ -263,22 +247,6 @@ class SyncStatusTests : MessagingTest {
 
     }
     
-    func testThatItNotifiesObserverThatSyncCompleted(){
-        // given
-        uiMOC.zm_lastNotificationID = UUID.timeBasedUUID() as UUID
-        sut = SyncStatus(managedObjectContext: uiMOC, syncStateDelegate: mockSyncDelegate)
-        
-        let observer = InitialSyncObserver(context: uiMOC)
-        XCTAssertFalse(observer.didNotify)
-
-        // when
-        sut.finishCurrentSyncPhase(phase: .fetchingMissedEvents)
-        XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertTrue(observer.didNotify)
-    }
-
 }
 
 

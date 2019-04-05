@@ -31,7 +31,7 @@ extension ZMUserSession : NotificationContext { } // Mark ZMUserSession as valid
 
 extension ZMUserSession {
     
-    @objc static func notifyInitialSyncCompleted(context: NSManagedObjectContext) {
+    @objc public static func notifyInitialSyncCompleted(context: NSManagedObjectContext) {
         NotificationInContext(name: initialSyncCompletionNotificationName, context: context.notificationContext).post()
     }
     

@@ -94,6 +94,10 @@ extension Notification.Name {
         return pushChannelEstablishedDate != nil
     }
     
+    public var isSlowSyncing : Bool {
+        return !currentSyncPhase.isOne(of: [.fetchingMissedEvents, .done])
+    }
+    
     public var isSyncing : Bool {
         return currentSyncPhase.isSyncing
     }
@@ -159,7 +163,6 @@ extension SyncStatus {
             
             zmLog.debug("sync complete")
             syncStateDelegate.didFinishQuickSync()
-            ZMUserSession.notifyInitialSyncCompleted(context: managedObjectContext)
         }
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
