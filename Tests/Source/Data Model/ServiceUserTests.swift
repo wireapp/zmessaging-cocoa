@@ -71,6 +71,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var handle: String? = "service"
     
+    var emailAddress: String? = "dummy@email.com"
+    
     var isSelfUser: Bool = false
     
     var smallProfileImageCacheKey: String? = ""

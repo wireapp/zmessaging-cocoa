@@ -83,7 +83,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
                             return (item as? ZMClientMessage)?.genericMessage!.confirmation.moreMessageIds != nil
                     }) as? ZMClientMessage else { return nil }
                     
-                    var nonces = Set(conversation.recentMessages.compactMap { $0.nonce?.transportString() })
+                    var nonces = Set(conversation.allMessages.compactMap { $0.nonce?.transportString() })
                     XCTAssertTrue(hiddenMessage.genericMessage!.hasConfirmation())
                     XCTAssertNotNil(nonces.remove(hiddenMessage.genericMessage!.confirmation.firstMessageId))
                     XCTAssertNotNil(hiddenMessage.genericMessage!.confirmation.moreMessageIds)
@@ -111,13 +111,12 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             
             
             // then
-            let messages = conversation?.recentMessages
-            XCTAssertEqual(messages?.count, 3) // system message & inserted message
+            XCTAssertEqual(conversation?.allMessages.count, 3) // system message & inserted message
             
             guard let request = mockTransportSession?.receivedRequests().last else {return XCTFail()}
             XCTAssertEqual((request as AnyObject).path, requestPath)
             
-            XCTAssertEqual(conversation?.lastModifiedDate, messages?.last?.serverTimestamp)
+            XCTAssertEqual(conversation?.lastModifiedDate, conversation?.lastMessage?.serverTimestamp)
         }
     }
     
