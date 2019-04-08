@@ -91,8 +91,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         handle(conversationAction: .like, category: .conversation, userInfo: userInfo)
 
         // then
-        let lastMessage = conversation.recentMessages.last
-        XCTAssertEqual(lastMessage?.reactions.count, 1)
+        XCTAssertEqual(conversation.lastMessage?.reactions.count, 1)
     }
 
     func testThatItCallsShowConversation_ForPushNotificationCategoryConversation() {
@@ -188,7 +187,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         handle(conversationAction: .reply, category: .conversation, userInfo: userInfo, userText: "Hello World")
 
         // then
-        XCTAssertEqual(conversation.recentMessages.count, 1);
+        XCTAssertEqual(conversation.allMessages.count, 1);
         XCTAssertNil(mockSessionManager.lastRequestToShowConversation)
     }
     
@@ -200,7 +199,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         let userInfo = userInfoWithConversation(hasMessage: true)
         let conversation = userInfo.conversation(in: self.uiMOC)!
         
-        guard let originalMessage = conversation.recentMessages[0] as? ZMClientMessage else { return XCTFail() }
+        guard let originalMessage = conversation.lastMessages().last as? ZMClientMessage else { return XCTFail() }
         ZMUser.selfUser(in: uiMOC).readReceiptsEnabled = true
         originalMessage.genericMessage?.setExpectsReadConfirmation(true)?.data().apply(originalMessage.add)
         
@@ -208,9 +207,10 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         self.handle(conversationAction: .reply, category: .conversation, userInfo: userInfo, userText: "Hello World")
         
         // then
-        guard let replyMessage = conversation.recentMessages[1] as? ZMClientMessage,
-            let confirmationMessage = conversation.recentMessages[2] as? ZMClientMessage else { return XCTFail() }
-        XCTAssertEqual(conversation.recentMessages.count, 3)
+        let lastMessages = conversation.lastMessages()
+        guard let replyMessage = lastMessages[1] as? ZMClientMessage,
+        let confirmationMessage = lastMessages[0] as? ZMClientMessage else { return XCTFail() }
+        XCTAssertEqual(conversation.allMessages.count, 3)
         XCTAssertTrue(originalMessage.isText)
         XCTAssertTrue(replyMessage.isText)
         XCTAssertFalse(confirmationMessage.isText)
@@ -225,7 +225,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         let userInfo = userInfoWithConversation(hasMessage: true)
         let conversation = userInfo.conversation(in: self.uiMOC)!
         
-        guard let originalMessage = conversation.recentMessages[0] as? ZMClientMessage else { return XCTFail() }
+        guard let originalMessage = conversation.lastMessages().last as? ZMClientMessage else { return XCTFail() }
         ZMUser.selfUser(in: uiMOC).readReceiptsEnabled = true
         originalMessage.genericMessage?.setExpectsReadConfirmation(true)?.data().apply(originalMessage.add)
         
@@ -233,8 +233,8 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         handle(conversationAction: .like, category: .conversation, userInfo: userInfo)
         
         // then
-        guard let confirmationMessage = conversation.recentMessages[1] as? ZMClientMessage else { return XCTFail() }
-        XCTAssertEqual(conversation.recentMessages.count, 2)
+        guard let confirmationMessage = conversation.lastMessage as? ZMClientMessage else { return XCTFail() }
+        XCTAssertEqual(conversation.allMessages.count, 2)
         XCTAssertFalse(confirmationMessage.isText)
         XCTAssertEqual(originalMessage.reactions.count, 1)
         XCTAssertTrue(confirmationMessage.genericMessage?.hasConfirmation() ?? false)

@@ -208,7 +208,7 @@
     
     // then
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
-    ZMSystemMessage *message = (ZMSystemMessage *)conversation.recentMessages.lastObject;
+    ZMSystemMessage *message = (ZMSystemMessage *)conversation.lastMessage;
     if(![message isKindOfClass:ZMSystemMessage.class]) {
         XCTFail(@"Expecting degraded message");
         return;

@@ -121,11 +121,6 @@
     
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
     
-    // Make sure this relationship is not a fault:
-    for (id obj in conversation.recentMessages) {
-        (void) obj;
-    }
-    
     // when
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     [observer clearNotifications];
@@ -173,11 +168,6 @@
     WaitForAllGroupsToBeEmpty(0.5);
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
     
-    // Make sure this relationship is not a fault:
-    for (id obj in conversation.recentMessages) {
-        (void) obj;
-    }
-    
     // when
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     [observer clearNotifications];
@@ -196,7 +186,7 @@
 {
     BOOL hasAllMessages = YES;
     for (NSUUID *nonce in nonces) {
-        BOOL hasMessageWithNonce = [conversation.recentMessages containsObjectMatchingWithBlock:^BOOL(ZMMessage *msg) {
+        BOOL hasMessageWithNonce = [conversation.allMessages.allObjects containsObjectMatchingWithBlock:^BOOL(ZMMessage *msg) {
             return [msg.nonce isEqual:nonce];
         }];
         hasAllMessages &= hasMessageWithNonce;
@@ -212,11 +202,6 @@
     XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:mockConversation];
-    
-    // Make sure this relationship is not a fault:
-    for (id obj in conversation.recentMessages) {
-        (void) obj;
-    }
     
     // when
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];

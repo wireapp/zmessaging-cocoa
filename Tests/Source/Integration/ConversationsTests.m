@@ -518,7 +518,7 @@
     ConversationListChangeInfo *note1 = observer.notifications.lastObject;
     XCTAssertEqualObjects(note1.zm_movedIndexPairs.firstObject, [[ZMMovedIndex alloc] initFrom:previousIndex1 to:0]);
     
-    ZMMessage *receivedMessage1 = conversation1.recentMessages.lastObject;
+    ZMMessage *receivedMessage1 = conversation1.lastMessage;
     XCTAssertEqualObjects(receivedMessage1.textMessageData.messageText, messageText1);
     NSUInteger previousIndex2 = [conversationList indexOfObject:conversation2];
     
@@ -535,7 +535,7 @@
     ConversationListChangeInfo *note2 = [observer.notifications objectAtIndex:1];
     XCTAssertEqualObjects(note2.zm_movedIndexPairs.firstObject, [[ZMMovedIndex alloc] initFrom:previousIndex2 to:0]);
     
-    ZMMessage *receivedMessage2 = conversation2.recentMessages.lastObject;
+    ZMMessage *receivedMessage2 = conversation2.lastMessage;
     XCTAssertEqualObjects(receivedMessage2.textMessageData.messageText, messageText2);
     NSUInteger previousIndex3 = [conversationList indexOfObject:conversation1];
     
@@ -553,7 +553,7 @@
     ConversationListChangeInfo *note3 = observer.notifications.lastObject;
     XCTAssertEqualObjects(note3.zm_movedIndexPairs.firstObject, [[ZMMovedIndex alloc] initFrom:previousIndex3 to:0]);
     
-    ZMMessage *receivedMessage3 = conversation1.recentMessages.lastObject;
+    ZMMessage *receivedMessage3 = conversation1.lastMessage;
     XCTAssertEqualObjects(receivedMessage3.textMessageData.messageText, messageText3);
 }
 
@@ -1286,7 +1286,7 @@
     
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
         // If the client is not registered yet we need to account for the added System Message
-        for (NSUInteger i = 0; i < messagesCount - conversation.recentMessages.count; i++) {
+        for (NSUInteger i = 0; i < messagesCount - conversation.allMessages.count; i++) {
             ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:[NSString stringWithFormat:@"foo %lu", (unsigned long)i] mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
             [mockConversation encryptAndInsertDataFromClient:fromClient toClient:toClient data:message.data];
         }
@@ -1297,7 +1297,7 @@
     [conversation markAsRead];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertEqual(conversation.recentMessages.count, messagesCount);
+    XCTAssertEqual(conversation.allMessages.count, messagesCount);
 }
 
 - (void)testThatItNotifiesTheObserverWhenTheHistoryIsClearedAndSyncsWithTheBackend
@@ -1322,7 +1322,7 @@
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
-        XCTAssertEqual(conversation.recentMessages.count, 0u);
+        XCTAssertEqual(conversation.allMessages.count, 0u);
         XCTAssertFalse([conversationDirectory.conversationsIncludingArchived containsObject:conversation]);
         
         ZMTransportRequest *firstRequest = self.mockTransportSession.receivedRequests.firstObject;
@@ -1353,8 +1353,8 @@
         conversation = [self conversationForMockConversation:self.groupConversation];
         WaitForAllGroupsToBeEmpty(0.5);
 
-        XCTAssertEqual(conversation.recentMessages.count, 2u);
-        ZMSystemMessage *message = (ZMSystemMessage *)conversation.recentMessages.lastObject;
+        XCTAssertEqual(conversation.allMessages.count, 2u);
+        ZMSystemMessage *message = (ZMSystemMessage *)conversation.lastMessage;
         XCTAssertEqual(message.systemMessageType, ZMSystemMessageTypeUsingNewDevice);
 
         XCTAssertTrue(conversation.isArchived);
@@ -1381,7 +1381,7 @@
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
-        XCTAssertEqual(conversation.recentMessages.count, 0u);
+        XCTAssertEqual(conversation.allMessages.count, 0u);
     }
     
     // when adding new messages
@@ -1394,7 +1394,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertEqual(conversation.recentMessages.count, 1u);
+    XCTAssertEqual(conversation.allMessages.count, 1u);
     
     [self recreateSessionManagerAndDeleteLocalData];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1418,7 +1418,7 @@
     [self loginAndFillConversationWithMessages:self.groupConversation messagesCount:messagesCount];
     
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    XCTAssertEqual(conversation.recentMessages.count, 5lu);
+    XCTAssertEqual(conversation.allMessages.count, 5lu);
     
     ZMConversationListDirectory *conversationDirectory = self.userSession.managedObjectContext.conversationListDirectory;
     NSManagedObjectID *conversationID = conversation.objectID;
@@ -1433,7 +1433,7 @@
         WaitForAllGroupsToBeEmpty(0.5);
         
         // then
-        XCTAssertEqual(conversation.recentMessages.count, 0u);
+        XCTAssertEqual(conversation.allMessages.count, 0u);
         XCTAssertFalse([conversationDirectory.conversationsIncludingArchived containsObject:conversation]);
     }
     
@@ -1449,11 +1449,11 @@
         conversation = [self conversationForMockConversation:self.groupConversation];
         WaitForAllGroupsToBeEmpty(0.5);
         
-        ZMSystemMessage *message = (ZMSystemMessage *)conversation.recentMessages.lastObject;
+        ZMSystemMessage *message = (ZMSystemMessage *)conversation.lastMessage;
         XCTAssertEqual(message.systemMessageType, ZMSystemMessageTypeUsingNewDevice);
         
-        XCTAssertEqual(conversation.recentMessages.count, 2u);
-        XCTAssertEqualObjects([conversation.recentMessages.lastObject objectID], [message objectID]);
+        XCTAssertEqual(conversation.allMessages.count, 2u);
+        XCTAssertEqualObjects([conversation.lastMessage objectID], [message objectID]);
         
         XCTAssertFalse([conversationDirectory.conversationsIncludingArchived.objectIDs containsObject:conversationID]);
         XCTAssertFalse([conversationDirectory.archivedConversations.objectIDs containsObject:conversationID]);
@@ -1569,7 +1569,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertEqual(conversation.recentMessages.count, 0u);
+    XCTAssertEqual(conversation.allMessages.count, 0u);
     
     // when
     
@@ -1582,7 +1582,7 @@
     
     // then
     conversation = [self conversationForMockConversation:self.groupConversation];
-    XCTAssertEqual(conversation.recentMessages.count, 1u);
+    XCTAssertEqual(conversation.allMessages.count, 1u);
     XCTAssertFalse(conversation.isArchived);
 }
 
@@ -1597,7 +1597,7 @@
         [conversation clearMessageHistory];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(conversation.recentMessages.count, 0u);
+    XCTAssertEqual(conversation.allMessages.count, 0u);
     // when
     
     [self.mockTransportSession performRemoteChanges:^(ZM_UNUSED id session) {
@@ -1609,7 +1609,7 @@
     // then
     conversation = [self conversationForMockConversation:self.groupConversation];
 
-    XCTAssertEqual(conversation.recentMessages.count, 1u);
+    XCTAssertEqual(conversation.allMessages.count, 1u);
     XCTAssertTrue(conversation.isArchived);
 }
 
@@ -1624,7 +1624,7 @@
         [conversation clearMessageHistory];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(conversation.recentMessages.count, 0u);
+    XCTAssertEqual(conversation.allMessages.count, 0u);
 
     // when
     
@@ -1635,7 +1635,7 @@
     
     // then
     conversation = [self conversationForMockConversation:self.groupConversation];
-    XCTAssertEqual(conversation.recentMessages.count, 0u);
+    XCTAssertEqual(conversation.allMessages.count, 0u);
     XCTAssertFalse(conversation.isArchived);
 }
 
@@ -1669,7 +1669,7 @@
     XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    XCTAssertEqual(conversation.recentMessages.count, 1u); // "You started using this device" message
+    XCTAssertEqual(conversation.allMessages.count, 1u); // "You started using this device" message
     
     __block ZMMessage *message1;
     __block ZMMessage *message2;
@@ -1688,9 +1688,9 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertEqual(conversation.recentMessages.count, 6u);
+    XCTAssertEqual(conversation.allMessages.count, 6u);
 
-    NSArray *remainingMessages = @[message2, message3];
+    NSArray *remainingMessages = @[message3, message2];
     NSDate *cleared = message1.serverTimestamp;
     
     // when
@@ -1699,8 +1699,8 @@
     
     // then
     XCTAssertEqual([conversation.clearedTimeStamp timeIntervalSince1970], [cleared timeIntervalSince1970]);
-    XCTAssertEqual(conversation.recentMessages.count, 2u);
-    AssertArraysContainsSameObjects(conversation.recentMessages, remainingMessages);
+    XCTAssertEqual(conversation.allMessages.count, 2u);
+    AssertArraysContainsSameObjects([conversation lastMessagesWithLimit:10], remainingMessages);
 }
 
 @end

@@ -93,7 +93,7 @@ extension ConversationTests_Ephemeral {
         XCTAssert(login())
         
         let conversation = self.conversation(for: selfToUser1Conversation!)!
-        let messageCount = conversation.recentMessages.count
+        let messageCount = conversation.allMessages.count
 
         // insert ephemeral message
         conversation.messageDestructionTimeout = .local(0.1)
@@ -104,7 +104,7 @@ extension ConversationTests_Ephemeral {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         spinMainQueue(withTimeout: 0.5)
         XCTAssertTrue(ephemeral.isObfuscated)
-        XCTAssertEqual(conversation.recentMessages.count, messageCount+1)
+        XCTAssertEqual(conversation.allMessages.count, messageCount+1)
 
         // when
         // other client deletes ephemeral message
@@ -121,7 +121,7 @@ extension ConversationTests_Ephemeral {
         XCTAssertNotEqual(ephemeral.visibleInConversation, conversation)
         XCTAssertEqual(ephemeral.hiddenInConversation, conversation)
         XCTAssertNil(ephemeral.sender)
-        XCTAssertEqual(conversation.recentMessages.count, messageCount)
+        XCTAssertEqual(conversation.allMessages.count, messageCount)
     }
     
     func remotelyInsertEphemeralMessage(conversation: MockConversation) {
@@ -143,17 +143,17 @@ extension ConversationTests_Ephemeral {
         XCTAssert(login())
         
         let conversation = self.conversation(for: selfToUser1Conversation!)!
-        let messageCount = conversation.recentMessages.count
+        let messageCount = conversation.allMessages.count
 
         // the other  user inserts an ephemeral message
         remotelyInsertEphemeralMessage(conversation: selfToUser1Conversation!)
-        guard let ephemeral = conversation.recentMessages.last as? ZMClientMessage,
+        guard let ephemeral = conversation.lastMessage as? ZMClientMessage,
               let genMessage = ephemeral.genericMessage, genMessage.hasEphemeral()
         else {
             return XCTFail()
         }
         XCTAssertEqual(genMessage.ephemeral.expireAfterMillis, 100)
-        XCTAssertEqual(conversation.recentMessages.count, messageCount+1)
+        XCTAssertEqual(conversation.allMessages.count, messageCount+1)
         mockTransportSession?.resetReceivedRequests()
         
         // when
@@ -167,7 +167,7 @@ extension ConversationTests_Ephemeral {
 
         // then
         XCTAssertEqual(mockTransportSession?.receivedRequests().count, 1)
-        XCTAssertEqual(conversation.recentMessages.count, messageCount)
+        XCTAssertEqual(conversation.allMessages.count, messageCount)
 
         // the ephemeral message is hidden
         XCTAssertNotEqual(ephemeral.visibleInConversation, conversation)

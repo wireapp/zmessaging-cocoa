@@ -36,7 +36,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             mockTransportSession?.responseGeneratorBlock = { request in
                 if (request.path == requestPath) {
                     guard let hiddenMessage = conversation?.hiddenMessages.first as? ZMClientMessage,
-                        let message = conversation?.recentMessages.last as? ZMClientMessage
+                        let message = conversation?.lastMessage as? ZMClientMessage
                         else {
                             XCTFail("Did not insert confirmation message.")
                             return nil
@@ -54,13 +54,12 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
             
             // then
-            let messages = conversation?.recentMessages
-            XCTAssertEqual(messages?.count, 2) // system message & inserted message
+            XCTAssertEqual(conversation?.allMessages.count, 2) // system message & inserted message
             
             guard let request = mockTransportSession?.receivedRequests().last else {return XCTFail()}
             XCTAssertEqual((request as AnyObject).path, requestPath)
             
-            XCTAssertEqual(conversation?.lastModifiedDate, messages?.last?.serverTimestamp)
+            XCTAssertEqual(conversation?.lastModifiedDate, conversation?.lastMessage?.serverTimestamp)
         }
     }
     
