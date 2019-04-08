@@ -64,6 +64,63 @@ class ConversationTests_Confirmation: ConversationTestsBase {
         }
     }
     
+    func testThatItSetsAMessageToDeliveredWhenReceivingNewMessagesInAOneOnOneConversation() {
+        if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
+            // given
+            
+            XCTAssert(login())
+            
+            let fromClient = user1?.clients.anyObject() as! MockUserClient
+            let toClient = selfUser?.clients.anyObject() as! MockUserClient
+            let conversation = self.conversation(for: selfToUser1Conversation!)
+            let requestPath = "/conversations/\(conversation!.remoteIdentifier!.transportString())/otr/messages?report_missing=\(user1!.identifier)"
+            
+            
+            // expect
+            mockTransportSession?.responseGeneratorBlock = { request in
+                if (request.path == requestPath) {
+
+                    guard let conversation = conversation, let hiddenMessage = conversation.hiddenMessages.first(where: { (item) -> Bool in
+                            return (item as? ZMClientMessage)?.genericMessage!.confirmation.moreMessageIds != nil
+                    }) as? ZMClientMessage else { return nil }
+                    
+                    var nonces = Set(conversation.recentMessages.compactMap { $0.nonce?.transportString() })
+                    XCTAssertTrue(hiddenMessage.genericMessage!.hasConfirmation())
+                    XCTAssertNotNil(nonces.remove(hiddenMessage.genericMessage!.confirmation.firstMessageId))
+                    XCTAssertNotNil(hiddenMessage.genericMessage!.confirmation.moreMessageIds)
+                    let moreMessageIds = Set(hiddenMessage.genericMessage!.confirmation.moreMessageIds! as! [String])
+                    XCTAssertTrue(moreMessageIds.isSubset(of: nonces))
+                    
+                }
+                return nil
+            }
+            
+            // when
+            performIgnoringZMLogError {
+             
+                self.mockTransportSession?.performRemoteChanges { session in
+                    session.simulatePushChannelClosed()
+                    let textMessage1 = ZMGenericMessage.message(content: ZMText.text(with: "Hello!"), nonce: UUID())
+                    self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: textMessage1.data())
+                    self.spinMainQueue(withTimeout: 0.2)
+                    let textMessage2 = ZMGenericMessage.message(content: ZMText.text(with: "It's me!"), nonce: UUID())
+                    self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: textMessage2.data())
+                    session.simulatePushChannelOpened()
+                }
+                XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+            }
+            
+            
+            // then
+            let messages = conversation?.recentMessages
+            XCTAssertEqual(messages?.count, 3) // system message & inserted message
+            
+            guard let request = mockTransportSession?.receivedRequests().last else {return XCTFail()}
+            XCTAssertEqual((request as AnyObject).path, requestPath)
+            
+            XCTAssertEqual(conversation?.lastModifiedDate, messages?.last?.serverTimestamp)
+        }
+    }
     
     func testThatItSetsAMessageToDeliveredWhenReceivingAConfirmationMessageInAOneOnOneConversation() {
         if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
