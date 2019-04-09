@@ -148,9 +148,13 @@ extension TeamInvitationRequestStrategyTests : ZMRequestCancellation, ZMSyncStat
     
     func cancelTask(with taskIdentifier: ZMTaskIdentifier) { }
     
-    func didStartSync() { }
+    func didStartSlowSync() { }
     
-    func didFinishSync() { }
+    func didFinishSlowSync() { }
+    
+    func didStartQuickSync() { }
+    
+    func didFinishQuickSync() { }
     
     func didRegister(_ userClient: UserClient!) { }
     

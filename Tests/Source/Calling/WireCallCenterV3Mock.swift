@@ -32,7 +32,7 @@ public class MockAVSWrapper : AVSWrapperType {
     public var answerCallShouldFail = false
     public var startCallShouldFail = false
     public var didUpdateCallConfig = false
-
+    public var callError: CallError?
     public var hasOngoingCall = false
     public var mockMembers : [AVSCallMember] = []
     
@@ -73,8 +73,9 @@ public class MockAVSWrapper : AVSWrapperType {
         setVideoStateArguments = (conversationId, videoState)
     }
     
-    public func received(callEvent: CallEvent) {
+    public func received(callEvent: CallEvent) -> CallError? {
         receivedCallEvents.append(callEvent)
+        return callError
     }
     
     public func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {

@@ -49,6 +49,15 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer {
                 self.eventProcessingTracker?.registerEventProcessed()
             }
             localNotificationDispatcher?.processEvents(decryptedUpdateEvents, liveEvents: true, prefetchResult: nil)
+            
+            if let messages = fetchRequest.noncesToFetch as? Set<UUID>,
+                let conversations = fetchRequest.remoteIdentifiersToFetch as? Set<UUID> {
+                let confirmationMessages = ZMConversation.confirmDeliveredMessages(messages, in: conversations, with: syncMOC)
+                for message in confirmationMessages {
+                    self.applicationStatusDirectory?.deliveryConfirmation.needsToConfirmMessage(message.nonce!)
+                }
+            }
+            
             syncMOC.saveOrRollback()
             
             Logging.eventProcessing.debug("Events processed in \(-date.timeIntervalSinceNow): \(self.eventProcessingTracker?.debugDescription ?? "")")

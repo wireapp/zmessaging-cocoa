@@ -33,7 +33,7 @@ public protocol AVSWrapperType {
     func endCall(conversationId: UUID)
     func rejectCall(conversationId: UUID)
     func close()
-    func received(callEvent: CallEvent)
+    func received(callEvent: CallEvent) -> CallError?
     func setVideoState(conversationId: UUID, videoState: VideoState)
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
     func members(in conversationId: UUID) -> [AVSCallMember]
@@ -135,13 +135,15 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     /// Notifies AVS that we received a remote event.
-    public func received(callEvent: CallEvent) {
+    public func received(callEvent: CallEvent) -> CallError? {
+        var result: CallError? = nil
         callEvent.data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
             let currentTime = UInt32(callEvent.currentTimestamp.timeIntervalSince1970)
             let serverTime = UInt32(callEvent.serverTimestamp.timeIntervalSince1970)
             zmLog.debug("wcall_recv_msg: currentTime = \(currentTime), serverTime = \(serverTime)")
-            wcall_recv_msg(handle, bytes, callEvent.data.count, currentTime, serverTime, callEvent.conversationId.transportString(), callEvent.userId.transportString(), callEvent.clientId)
+            result = CallError(wcall_error: wcall_recv_msg(handle, bytes, callEvent.data.count, currentTime, serverTime, callEvent.conversationId.transportString(), callEvent.userId.transportString(), callEvent.clientId))
         }
+        return result
     }
 
     /// Updates the calling config.

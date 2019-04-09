@@ -104,7 +104,7 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        if let message =  conversationUI.recentMessages.last as? ZMSystemMessage {
+        if let message =  conversationUI.lastMessage as? ZMSystemMessage {
             XCTAssertEqual(message.systemMessageType, .missedCall)
             XCTAssertFalse(message.relevantForConversationStatus)
             XCTAssertEqual(message.sender, senderUI)
@@ -122,7 +122,7 @@ class CallStateObserverTests : MessagingTest {
         
         self.syncMOC.performGroupedBlockAndWait {
             // then
-            if let message = self.conversationUI.recentMessages.last as? ZMSystemMessage {
+            if let message = self.conversationUI.lastMessage as? ZMSystemMessage {
                 XCTAssertEqual(message.systemMessageType, .missedCall)
                 XCTAssertTrue(message.relevantForConversationStatus)
                 XCTAssertEqual(message.sender, self.senderUI)
@@ -154,7 +154,7 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(conversationUI.recentMessages.count, 0)
+        XCTAssertEqual(conversationUI.allMessages.count, 0)
     }
     
     func testThatMissedCallMessageIsAppendedForMissedCalls() {
@@ -164,7 +164,7 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        if let message =  conversationUI.recentMessages.last as? ZMSystemMessage {
+        if let message =  conversationUI.lastMessage as? ZMSystemMessage {
             XCTAssertEqual(message.systemMessageType, .missedCall)
             XCTAssertTrue(message.relevantForConversationStatus)
             XCTAssertEqual(message.sender, senderUI)
@@ -293,7 +293,7 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(conversationUI.recentMessages.count, 1)
+        XCTAssertEqual(conversationUI.allMessages.count, 1)
         XCTAssertEqual(notificationCenter.scheduledRequests.count, 1)
     }
 

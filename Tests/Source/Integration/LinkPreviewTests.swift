@@ -71,7 +71,7 @@ class LinkPreviewTests: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        let message = conversation?.recentMessages.last as! ZMClientMessage
+        let message = conversation?.lastMessage as! ZMClientMessage
         assertMessageContainsLinkPreview(message, linkPreviewURL: .article)
     }
     
@@ -88,7 +88,7 @@ class LinkPreviewTests: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        let message = conversation?.recentMessages.last as! ZMClientMessage
+        let message = conversation?.lastMessage as! ZMClientMessage
         assertMessageContainsLinkPreview(message, linkPreviewURL: .article)
     }
     
@@ -104,7 +104,7 @@ class LinkPreviewTests: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        let message = conversation?.recentMessages.last as! ZMClientMessage
+        let message = conversation?.lastMessage as! ZMClientMessage
         assertMessageContainsLinkPreview(message, linkPreviewURL: .articleWithPicture)
     }
     
@@ -121,7 +121,7 @@ class LinkPreviewTests: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        let message = conversation?.recentMessages.last as! ZMClientMessage
+        let message = conversation?.lastMessage as! ZMClientMessage
         assertMessageContainsLinkPreview(message, linkPreviewURL: .tweet)
     }
     
@@ -137,7 +137,7 @@ class LinkPreviewTests: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        let message = conversation?.recentMessages.last as! ZMClientMessage
+        let message = conversation?.lastMessage as! ZMClientMessage
         assertMessageContainsLinkPreview(message, linkPreviewURL: .tweetWithPicture)
     }
     
@@ -173,7 +173,7 @@ class LinkPreviewTests: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        let message = conversation?.recentMessages.last as! ZMClientMessage
+        let message = conversation?.lastMessage as! ZMClientMessage
         assertMessageContainsLinkPreview(message, linkPreviewURL: .article)
     }
 

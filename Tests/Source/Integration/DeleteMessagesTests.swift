@@ -68,10 +68,9 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         // then
         guard let conversation = self.conversation(for: selfToUser1Conversation) else {return XCTFail()}
-        let messages = conversation.recentMessages
-        XCTAssertEqual(messages.count, 2) // system message & inserted message
+        XCTAssertEqual(conversation.allMessages.count, 2) // system message & inserted message
 
-        guard let message = messages.last as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
+        guard let message = conversation.lastMessage as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
         let genericMessage = ZMGenericMessage.message(content: ZMMessageDelete(messageID: message.nonce!))
         
         // when
@@ -83,9 +82,9 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         // then
         XCTAssertTrue(message.hasBeenDeleted)
-        XCTAssertEqual(conversation.recentMessages.count, 2) // 2x system message
-        XCTAssertNotEqual(conversation.recentMessages.first as? ZMClientMessage, message)
-        guard let systemMessage = conversation.recentMessages.last as? ZMSystemMessage else { return XCTFail() }
+        XCTAssertEqual(conversation.allMessages.count, 2) // 2x system message
+        XCTAssertNotEqual(conversation.lastMessages().last as? ZMClientMessage, message)
+        guard let systemMessage = conversation.lastMessage as? ZMSystemMessage else { return XCTFail() }
         XCTAssertEqual(systemMessage.systemMessageType, ZMSystemMessageType.messageDeletedForEveryone)
     }
     
@@ -107,9 +106,8 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         // then
         guard let conversation = self.conversation(for: self.groupConversation) else {return XCTFail()}
-        let messages = conversation.recentMessages
-        XCTAssertEqual(messages.count, 3) // 2x system message & inserted message
-        guard let message = messages.last, message.textMessageData?.messageText == "Hello" else { return XCTFail() }
+        XCTAssertEqual(conversation.allMessages.count, 3) // 2x system message & inserted message
+        guard let message = conversation.lastMessage, message.textMessageData?.messageText == "Hello" else { return XCTFail() }
         
         let genericMessage = ZMGenericMessage.message(content: ZMMessageDelete(messageID: message.nonce!))
         
@@ -122,8 +120,8 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         // then
         XCTAssertFalse(message.hasBeenDeleted)
-        XCTAssertEqual(conversation.recentMessages.count, 3) // 2x system message & inserted message
-        XCTAssertEqual(conversation.recentMessages.last, message)
+        XCTAssertEqual(conversation.allMessages.count, 3) // 2x system message & inserted message
+        XCTAssertEqual(conversation.lastMessage, message)
     }
 
     func testThatItRetriesToSendADeletedMessageIfItCouldNotBeSentBefore() {
@@ -185,10 +183,9 @@ class DeleteMessagesTests: ConversationTestsBase {
         guard let conversation = self.conversation(for: selfToUser1Conversation) else {return XCTFail()}
         
         // then
-        let messages = conversation.recentMessages
-        XCTAssertEqual(messages.count, 2) // system message & inserted message
+        XCTAssertEqual(conversation.allMessages.count, 2) // system message & inserted message
 
-        guard let message = messages.last as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
+        guard let message = conversation.lastMessage as? ZMClientMessage , message.textMessageData?.messageText == "Hello" else { return XCTFail() }
         let genericMessage = ZMGenericMessage.message(content: ZMMessageDelete(messageID: message.nonce!))
         
         // when
@@ -200,7 +197,7 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         // then
         XCTAssertTrue(message.hasBeenDeleted)
-        XCTAssertEqual(conversation.recentMessages.count, 2) // 2x system message
+        XCTAssertEqual(conversation.allMessages.count, 2) // 2x system message
     }
 
 }

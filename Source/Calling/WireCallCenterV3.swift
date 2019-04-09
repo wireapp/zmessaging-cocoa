@@ -79,9 +79,9 @@ private let zmLog = ZMSLog(tag: "calling")
     var isReady : Bool = false {
         didSet {
             if isReady {
-                bufferedEvents.forEach { (event: CallEvent, completionHandler: () -> Void) in
-                    avsWrapper.received(callEvent: event)
-                    completionHandler()
+                bufferedEvents.forEach { (item: (event: CallEvent, completionHandler: () -> Void)) in
+                    let (event, completionHandler) = item
+                    handleCallEvent(event, completionHandler: completionHandler)
                 }
                 bufferedEvents = []
             }
@@ -515,11 +515,21 @@ extension WireCallCenterV3 {
     func processCallEvent(_ callEvent: CallEvent, completionHandler: @escaping () -> Void) {
     
         if isReady {
-            avsWrapper.received(callEvent: callEvent)
-            completionHandler()
+            handleCallEvent(callEvent, completionHandler: completionHandler)
         } else {
             bufferedEvents.append((callEvent, completionHandler))
         }
+    }
+    
+    fileprivate func handleCallEvent(_ callEvent: CallEvent, completionHandler: @escaping () -> Void) {
+        
+        let result = avsWrapper.received(callEvent: callEvent)
+        
+        if let context = uiMOC, let error = result {
+            WireCallCenterCallErrorNotification(context: context, error: error).post(in: context.notificationContext)
+        }
+        
+        completionHandler()
     }
 
     /**

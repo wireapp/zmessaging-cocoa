@@ -82,14 +82,14 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    XCTAssertEqual(conversation.recentMessages.count, 2lu);
+    XCTAssertEqual(conversation.allMessages.count, 2lu);
     
-    if (! [conversation.recentMessages.lastObject isKindOfClass:ZMAssetClientMessage.class]) {
-        XCTFail(@"Unexpected message type, expected ZMAssetClientMessage : %@", [conversation.recentMessages.lastObject class]);
+    if (! [conversation.lastMessage isKindOfClass:ZMAssetClientMessage.class]) {
+        XCTFail(@"Unexpected message type, expected ZMAssetClientMessage : %@", [conversation.lastMessage class]);
         return nil;
     }
     
-    ZMAssetClientMessage *message = (ZMAssetClientMessage *)conversation.recentMessages.lastObject;
+    ZMAssetClientMessage *message = (ZMAssetClientMessage *)conversation.lastMessage;
     XCTAssertEqual(message.size, 256lu);
     XCTAssertEqualObjects(message.mimeType, mimeType);
     XCTAssertEqualObjects(message.nonce, nonce);
@@ -318,13 +318,13 @@
     
     // then
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    XCTAssertEqual(conversation.recentMessages.count, 2lu);
+    XCTAssertEqual(conversation.allMessages.count, 2lu);
     
-    if (! [conversation.recentMessages.lastObject isKindOfClass:ZMAssetClientMessage.class]) {
-        return XCTFail(@"Unexpected message type, expected ZMAssetClientMessage : %@", [conversation.recentMessages.lastObject class]);
+    if (! [conversation.lastMessage isKindOfClass:ZMAssetClientMessage.class]) {
+        return XCTFail(@"Unexpected message type, expected ZMAssetClientMessage : %@", [conversation.lastMessage class]);
     }
     
-    ZMAssetClientMessage *message = (ZMAssetClientMessage *)conversation.recentMessages.lastObject;
+    ZMAssetClientMessage *message = (ZMAssetClientMessage *)conversation.lastMessage;
     XCTAssertTrue(message.isEphemeral);
     
     XCTAssertEqual(message.size, 256lu);
@@ -399,7 +399,7 @@
     id insertBlock = ^(NSData *data, MockConversation *mockConversation, MockUserClient *from, MockUserClient *to) {
         [mockConversation insertOTRMessageFromClient:from toClient:to data:data];
         conversation = [self conversationForMockConversation:mockConversation];
-        observer = [[MessageChangeObserver alloc] initWithMessage:conversation.recentMessages.lastObject];
+        observer = [[MessageChangeObserver alloc] initWithMessage:conversation.lastMessage];
     };
 
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalWithMimeType:@"video/mp4"
@@ -469,7 +469,7 @@
     id insertBlock = ^(NSData *data, MockConversation *mockConversation, MockUserClient *from, MockUserClient *to) {
         [mockConversation insertOTRMessageFromClient:from toClient:to data:data];
         conversation = [self conversationForMockConversation:mockConversation];
-        observer = [[MessageChangeObserver alloc] initWithMessage:conversation.recentMessages.lastObject];
+        observer = [[MessageChangeObserver alloc] initWithMessage:conversation.lastMessage];
     };
 
     ZMAssetClientMessage *message = [self remotelyInsertAssetOriginalWithMimeType:@"video/mp4"
@@ -547,7 +547,7 @@
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
-    XCTAssertEqual(conversation.recentMessages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
     
     NSURL *fileURL = [self createTestFile:@"foo22cc"];
     
@@ -568,7 +568,7 @@
     XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     //    XCTAssertEqual(fileMessage.fileMessageData.transferState, AssetTransferStateUploaded);
     XCTAssertEqual(textMessage.deliveryState, ZMDeliveryStateSent);
-    XCTAssertEqual(conversation.recentMessages.count, 3lu);
+    XCTAssertEqual(conversation.allMessages.count, 3lu);
 }
 
 - (void)testThatItSendsAFileMessage_V3
@@ -578,9 +578,8 @@
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
-    XCTAssertEqual(conversation.recentMessages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
-    NSUInteger initialMessageCount = conversation.recentMessages.count;
 
     NSURL *fileURL = [self createTestFile:@"foofile"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
@@ -607,8 +606,7 @@
     XCTAssertEqualObjects(fullAssetUploadRequest.path, expectedAssetUploadPath);
     XCTAssertEqualObjects(fullAssetMessageRequest.path, expectedMessageAddPath);
 
-    XCTAssertEqual(conversation.recentMessages.count - initialMessageCount, 1lu);
-    ZMMessage *message = conversation.recentMessages.lastObject;
+    ZMMessage *message = conversation.lastMessage;
 
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
@@ -625,9 +623,8 @@
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
 
-    XCTAssertEqual(conversation.recentMessages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
-    NSUInteger initialMessageCount = conversation.recentMessages.count;
 
     NSURL *fileURL = [self createTestFile:@"foogile"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
@@ -657,8 +654,7 @@
     XCTAssertEqualObjects(thumbnailAssetUploadRequest.path, expectedAssetUploadPath);
     XCTAssertEqualObjects(fullAssetUploadRequest.path, expectedAssetUploadPath);
 
-    XCTAssertEqual(conversation.recentMessages.count - initialMessageCount, 1lu);
-    ZMMessage *message = conversation.recentMessages.lastObject;
+    ZMMessage *message = conversation.lastMessage;
 
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
@@ -677,7 +673,7 @@
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
-    XCTAssertEqual(conversation.recentMessages.count, 2lu);
+    XCTAssertEqual(conversation.allMessages.count, 2lu);
 
     NSURL *fileURL = [self createTestFile:@"fooz"];
 
@@ -719,7 +715,7 @@
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
-    XCTAssertEqual(conversation.recentMessages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
 
     NSURL *fileURL = [self createTestFile:@"foob"];
 
@@ -740,7 +736,7 @@
     XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     XCTAssertEqual(fileMessage.fileMessageData.transferState, AssetTransferStateUploaded);
     XCTAssertEqual(textMessage.deliveryState, ZMDeliveryStateSent);
-    XCTAssertEqual(conversation.recentMessages.count, 3lu);
+    XCTAssertEqual(conversation.allMessages.count, 3lu);
     
 }
 
@@ -750,7 +746,7 @@
     XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    XCTAssertEqual(conversation.recentMessages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
     XCTAssertNotNil(conversation);
 
     NSURL *fileURL = [self createTestFile:@"foo2432"];
@@ -789,9 +785,9 @@
     XCTAssertEqualObjects(messageAddRequest.path, expectedMessageAddPath);
     XCTAssertEqualObjects(missingPrekeysRequest.path, @"/users/prekeys");
     XCTAssertEqualObjects(secondMessageAddRequest.path, expectedMessageAddPath);
-    XCTAssertEqual(conversation.recentMessages.count, 2lu);
+    XCTAssertEqual(conversation.allMessages.count, 2lu);
 
-    ZMMessage *message = conversation.recentMessages.lastObject;
+    ZMMessage *message = conversation.lastMessage;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
 }
@@ -806,10 +802,9 @@
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
-    XCTAssertEqual(conversation.recentMessages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
 
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
-    NSUInteger initialMessageCount = conversation.recentMessages.count;
 
     NSURL *fileURL = self.testVideoFileURL;
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
@@ -846,9 +841,7 @@
     ZMTransportRequest *fullAssetGenericMessageRequest = requests[2];
     XCTAssertEqualObjects(fullAssetGenericMessageRequest.path, expectedMessageAddPath);
 
-    XCTAssertEqual(conversation.recentMessages.count - initialMessageCount, 1lu);
-
-    ZMMessage *message = conversation.recentMessages.lastObject;
+    ZMMessage *message = conversation.lastMessage;
 
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
@@ -871,10 +864,9 @@
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     conversation.localMessageDestructionTimeout = 10;
     XCTAssertNotNil(conversation);
-    XCTAssertEqual(conversation.recentMessages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
     
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
-    NSUInteger initialMessageCount = conversation.recentMessages.count;
     
     NSURL *fileURL = self.testVideoFileURL;
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
@@ -906,9 +898,7 @@
     XCTAssertEqualObjects(requests[1].path, expectedAssetUploadPath);   // /assets/v3       (Medium)
     XCTAssertEqualObjects(requests[2].path, expectedMessageAddPath);    // /otr/messages    (Including Uploaded)
     
-    XCTAssertEqual(conversation.recentMessages.count - initialMessageCount, 1lu);
-    
-    ZMMessage *message = conversation.recentMessages.lastObject;
+    ZMMessage *message = conversation.lastMessage;
     
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
@@ -929,7 +919,7 @@
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
-    XCTAssertEqual(conversation.recentMessages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
 
     NSURL *fileURL = self.testVideoFileURL;
 
@@ -980,7 +970,7 @@
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
-    XCTAssertEqual(conversation.recentMessages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
 
     NSURL *fileURL = self.testVideoFileURL;
     __block NSUInteger assetUploadCounter = 0;
@@ -1032,7 +1022,7 @@
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
-    XCTAssertEqual(conversation.recentMessages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
 
     NSURL *fileURL = self.testVideoFileURL;
     NSString *genericMessagePath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
@@ -1087,7 +1077,7 @@
 
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    XCTAssertEqual(conversation.recentMessages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
 
     NSURL *fileURL = self.testVideoFileURL;
     NSString *conversationIDString = conversation.remoteIdentifier.transportString;
@@ -1136,8 +1126,8 @@
     XCTAssertEqualObjects(missingPrekeysRequest.path, @"/users/prekeys");
     XCTAssertEqualObjects(secondAssetMessageRequest.path, expectedMessageAddPath);
     
-    XCTAssertEqual(conversation.recentMessages.count, 2lu);
-    ZMMessage *message = conversation.recentMessages.lastObject;
+    XCTAssertEqual(conversation.allMessages.count, 2lu);
+    ZMMessage *message = conversation.lastMessage;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
 }
@@ -1149,10 +1139,9 @@
 
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     XCTAssertNotNil(conversation);
-    XCTAssertEqual(conversation.recentMessages.count, 1lu);
+    XCTAssertEqual(conversation.allMessages.count, 1lu);
 
     [self prefetchRemoteClientByInsertingMessageInConversation:self.selfToUser1Conversation];
-    NSUInteger initialMessageCount = conversation.recentMessages.count;
 
     NSURL *fileURL = self.testVideoFileURL; // Video URL
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
@@ -1180,9 +1169,8 @@
 
     XCTAssertEqualObjects(uploadAssetRequest.path, expectedAssetAddPath);
     XCTAssertEqualObjects(uploadMessageRequest.path, expectedMessageAddPath);
-    XCTAssertEqual(conversation.recentMessages.count - initialMessageCount, 1lu);
 
-    ZMMessage *message = conversation.recentMessages.lastObject;
+    ZMMessage *message = conversation.lastMessage;
 
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);

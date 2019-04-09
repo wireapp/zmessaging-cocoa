@@ -489,10 +489,10 @@
     }];
 
     [self.syncMOC performGroupedBlockAndWait:^{
-        XCTAssertEqual(oneOnOneConversation.recentMessages.count, 0u);
-        XCTAssertEqual(groupConversation.recentMessages.count, 0u);
-        XCTAssertEqual(selfConversation.recentMessages.count, 0u);
-        XCTAssertEqual(connectionConversation.recentMessages.count, 0u);
+        XCTAssertEqual(oneOnOneConversation.allMessages.count, 0u);
+        XCTAssertEqual(groupConversation.allMessages.count, 0u);
+        XCTAssertEqual(selfConversation.allMessages.count, 0u);
+        XCTAssertEqual(connectionConversation.allMessages.count, 0u);
 
         // when
         self.sut = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
@@ -506,15 +506,15 @@
         XCTAssertEqualObjects(newVersion, @"44.4");
 
         // then
-        XCTAssertEqual(oneOnOneConversation.recentMessages.count, 0u);
+        XCTAssertEqual(oneOnOneConversation.allMessages.count, 0u);
 
-        XCTAssertEqual(groupConversation.recentMessages.count, 1u);
-        ZMSystemMessage *message = (ZMSystemMessage *)groupConversation.recentMessages.lastObject;
+        XCTAssertEqual(groupConversation.allMessages.count, 1u);
+        ZMSystemMessage *message = (ZMSystemMessage *)groupConversation.lastMessage;
         XCTAssertEqual(message.systemMessageType, ZMSystemMessageTypeNewConversation);
 
-        XCTAssertEqual(selfConversation.recentMessages.count, 0u);
+        XCTAssertEqual(selfConversation.allMessages.count, 0u);
 
-        XCTAssertEqual(connectionConversation.recentMessages.count, 0u);
+        XCTAssertEqual(connectionConversation.allMessages.count, 0u);
     }];
 }
 

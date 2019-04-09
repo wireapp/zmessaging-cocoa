@@ -71,7 +71,9 @@ extension SearchResult {
     
     public init?(userLookupPayload: [AnyHashable : Any], userSession: ZMUserSession) {
         guard let userLookupPayload = userLookupPayload as? [String : Any],
-              let searchUser = ZMSearchUser.searchUser(from: userLookupPayload, contextProvider: userSession) else {
+              let searchUser = ZMSearchUser.searchUser(from: userLookupPayload, contextProvider: userSession),
+              searchUser.user == nil ||
+              searchUser.user?.isTeamMember == false else {
             return nil
         }
         

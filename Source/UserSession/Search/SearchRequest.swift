@@ -45,6 +45,18 @@ public struct SearchOptions : OptionSet {
     
 }
 
+extension SearchOptions {
+    public mutating func updateForSelfUserTeamRole(selfUser: ZMUser) {
+        if selfUser.teamRole == .partner {
+            insert(.excludeNonActiveTeamMembers)
+            remove(.directory)
+        } else {
+            insert(.excludeNonActivePartners)
+        }
+    }
+}
+
+
 public struct SearchRequest {
     
     let maxQueryLength = 200

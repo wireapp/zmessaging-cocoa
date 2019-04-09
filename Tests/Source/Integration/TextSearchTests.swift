@@ -48,7 +48,7 @@ class TextSearchTests: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         guard let convo = conversation(for: selfToUser1Conversation) else { return XCTFail("Undable to get conversation") }
-        let lastMessage = convo.recentMessages.last
+        let lastMessage = convo.lastMessage
         XCTAssertEqual(lastMessage?.textMessageData?.messageText, "Hello there!")
 
         // Then
@@ -72,7 +72,7 @@ class TextSearchTests: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         guard let convo = conversation(for: selfToUser1Conversation) else { return XCTFail("Undable to get conversation") }
-        guard let lastMessage = convo.recentMessages.last else { return XCTFail("Undable to get message") }
+        guard let lastMessage = convo.lastMessage else { return XCTFail("Undable to get message") }
         XCTAssertEqual(lastMessage.textMessageData?.messageText, "Hello there!")
 
         // And when
@@ -82,7 +82,7 @@ class TextSearchTests: ConversationTestsBase {
         }
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        guard let editedMessage = convo.recentMessages.last else { return XCTFail("Undable to get message") }
+        guard let editedMessage = convo.lastMessage else { return XCTFail("Undable to get message") }
         XCTAssertEqual(editedMessage.textMessageData?.messageText, "This is an edit!!")
 
         // Then
@@ -107,7 +107,7 @@ class TextSearchTests: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         guard let convo = conversation(for: selfToUser1Conversation) else { return XCTFail("Undable to get conversation") }
-        let lastMessage = convo.recentMessages.last
+        let lastMessage = convo.lastMessage
         XCTAssertEqual(lastMessage?.textMessageData?.messageText, text)
 
         // Then
@@ -131,7 +131,7 @@ class TextSearchTests: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         guard let convo = conversation(for: selfToUser1Conversation) else { return XCTFail("Undable to get conversation") }
-        let lastMessage = convo.recentMessages.last
+        let lastMessage = convo.lastMessage
         XCTAssertEqual(lastMessage?.textMessageData?.messageText, "Hello there!")
 
         // Then

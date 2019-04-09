@@ -110,12 +110,13 @@ ZM_EMPTY_ASSERTING_INIT()
                         cookieStorage:(ZMPersistentCookieStorage *)cookieStorage
                           flowManager:(id<FlowManagerType>)flowManager
          localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
+              notificationsDispatcher:(NotificationDispatcher *)notificationsDispatcher
            applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
                           application:(id<ZMApplication>)application
 {
     self = [super init];
     if (self) {
-        self.notificationDispatcher = [[NotificationDispatcher alloc] initWithManagedObjectContext: storeProvider.contextDirectory.uiContext];
+        self.notificationDispatcher = notificationsDispatcher;
         self.application = application;
         self.localNotificationDispatcher = localNotificationsDispatcher;
         self.syncMOC = storeProvider.contextDirectory.syncContext;
