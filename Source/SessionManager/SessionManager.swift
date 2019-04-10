@@ -326,6 +326,7 @@ public protocol ForegroundNotificationResponder: class {
         })
         
         NotificationCenter.default.addObserver(self, selector: #selector(applicationWillEnterForeground(_:)), name: UIApplication.willEnterForegroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(applicationWillResignActive(_:)), name: UIApplication.willResignActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive(_:)), name: UIApplication.didBecomeActiveNotification, object: nil)
     }
 
@@ -899,6 +900,10 @@ extension SessionManager {
         
         // Delete expired url scheme verification tokens
         CompanyLoginVerificationToken.flushIfNeeded()
+    }
+    
+    @objc fileprivate func applicationWillResignActive(_ note: Notification) {
+        updateAllUnreadCounts()
     }
     
     @objc fileprivate func applicationDidBecomeActive(_ note: Notification) {
