@@ -454,7 +454,7 @@ extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMisse
         switch callState {
         case .incoming(video: let video, shouldRing: let shouldRing, degraded: _):
             if shouldRing {
-                if conversation.mutedMessageTypes == .none {
+                if conversation.mutedMessageTypesIncludingAvailability == .none {
                     reportIncomingCall(from: caller, in: conversation, video: video)
                 }
             } else {

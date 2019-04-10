@@ -84,7 +84,7 @@ fileprivate class EventNotificationBuilder: NotificationBuilder {
         if let sender = self.sender, sender.isSelfUser { return false }
         
         if let conversation = conversation {
-            if conversation.mutedMessageTypes != .none {
+            if conversation.mutedMessageTypesIncludingAvailability != .none {
                 return false
             }
             
