@@ -257,31 +257,3 @@ private class NewUserEventNotificationBuilder: EventNotificationBuilder {
     }
 }
 
-// MARK: - Muted for Availability
-
-private class AvailabilityNotificationBuilder: NotificationBuilder {
-    
-    init?(availability: Availability?) {
-        guard let availability = availability, (availability == .busy || availability == .away) else { return nil }
-    }
-    
-    var notificationType: LocalNotificationType {
-        return LocalNotificationType.mutedForAvailability
-    }
-    
-    func shouldCreateNotification() -> Bool {
-        return true
-    }
-    
-    func titleText() -> String? {
-        return nil
-    }
-    
-    func bodyText() -> String {
-        return notificationType.messageBodyText(senderName: nil)
-    }
-    
-    func userInfo() -> NotificationUserInfo? {
-        return nil
-    }
-}

@@ -44,8 +44,6 @@ private let ZMPushStringUnknownAdd          = "add.unknown"          // "[sender
 
 private let ZMPushStringFailedToSend        = "failed.message"       // "Unable to send a message"
 
-private let ZMPushStringMutedForAvailability = "muted.availability"       // "Unable to send a message"
-
 private let ZMPushStringMemberJoin          = "member.join"          // "[senderName] added you"
 private let ZMPushStringMemberLeave         = "member.leave"         // "[senderName] removed you"
 private let ZMPushStringMessageTimerUpdate  = "message-timer.update" // "[senderName] set the message timer to [duration]
@@ -136,8 +134,8 @@ extension LocalNotificationType {
             }
         case .failedMessage:
             return ZMPushStringFailedToSend
-        case .mutedForAvailability:
-            return ZMPushStringMutedForAvailability
+        case .availabilityBehaviourChangeAlert:
+            return ZMPushStringDefault
         }
     }
     
