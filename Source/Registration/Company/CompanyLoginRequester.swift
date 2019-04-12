@@ -23,6 +23,7 @@ extension URL {
         static let connect = "connect"
         static let login = "login"
         static let startSSO = "start-sso"
+        static let accessBackend = "access" // Used for connecting to custom backend
     }
     enum Path {
         static let success = "success"
@@ -32,6 +33,13 @@ extension URL {
 
 extension URLQueryItem {
     enum Key {
+        enum Connect {
+            static let service = "service"
+            static let provider = "provider"
+        }
+        enum AccessBackend {
+            static let host = "host"
+        }
         static let successRedirect = "success_redirect"
         static let errorRedirect = "error_redirect"
         static let cookie = "cookie"
