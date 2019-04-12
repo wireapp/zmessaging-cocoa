@@ -40,7 +40,7 @@ private class AvailabilityNotificationBuilder: NotificationBuilder {
     }
     
     var notificationType: LocalNotificationType {
-        return .availabilityBehaviourChangeAlert
+        return .availabilityBehaviourChangeAlert(availability)
     }
     
     func shouldCreateNotification() -> Bool {
@@ -48,11 +48,11 @@ private class AvailabilityNotificationBuilder: NotificationBuilder {
     }
     
     func titleText() -> String? {
-        return "🚨 Your notifications are disabled" // TODO jacob final copy
+        return notificationType.alertTitleText(team: ZMUser.selfUser(in: managedObjectContext).team)
     }
     
     func bodyText() -> String {
-        return "Your current status is set to away, which from now on disables notifications" // TODO jacob final copy
+        return notificationType.alertMessageBodyText()
     }
     
     func userInfo() -> NotificationUserInfo? {
