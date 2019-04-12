@@ -200,6 +200,10 @@
 "push.notification.failed.message.group" = "Unable to send a message";
 "push.notification.failed.message.group.noconversationname" = "Unable to send a message";
 
+// MUTED FOR AVAILABILITY
+
+"push.notification.muted.availability" = "You will not receive notifications while you're away or busy.";
+
 // REACTIONS
 "push.notification.reaction.group" = "%1$@ %2$@ your message";
 "push.notification.reaction.group.nousername.noconversationname" = "Someone %@ your message in a conversation";
