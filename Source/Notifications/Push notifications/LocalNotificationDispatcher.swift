@@ -114,11 +114,16 @@ extension LocalNotificationDispatcher: TearDownCapable {
 
 extension LocalNotificationDispatcher {
     
-    public func notifyAvailabilityBehaviourChanged() {
+    public func notifyAvailabilityBehaviourChangedIfNeeded() {
         let selfUser = ZMUser.selfUser(in: syncMOC)
+        var notify = selfUser.needsToNotifyAvailabilityBehaviourChange
+        
+        guard notify.contains(.notification) else { return }
+        
         let note = ZMLocalNotification(availability: selfUser.availability, managedObjectContext: syncMOC)
         note.apply(scheduleLocalNotification)
-        selfUser.needsToNotifyAvailabilityBehaviourChange = false
+        notify.remove(.notification)
+        selfUser.needsToNotifyAvailabilityBehaviourChange = notify
         syncMOC.enqueueDelayedSave()
     }
     
