@@ -44,7 +44,7 @@ private class AvailabilityNotificationBuilder: NotificationBuilder {
     }
     
     func shouldCreateNotification() -> Bool {
-        return availability.isOne(of: .away, .busy) && ZMUser.selfUser(in: managedObjectContext).isTeamMember
+        return availability.isOne(of: .away, .busy)
     }
     
     func titleText() -> String? {
