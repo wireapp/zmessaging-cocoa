@@ -78,6 +78,19 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         XCTAssertNil(note(for: state))
     }
     
+    func testIncomingAudioCall_WithAllMutedConversation() {
+        
+        // given
+        syncMOC.performGroupedBlockAndWait {
+            self.conversation.mutedMessageTypes = .all
+        }
+        
+        let state: CallState = .incoming(video: false, shouldRing: true, degraded: false)
+        
+        // then
+        XCTAssertNil(note(for: state))
+    }
+    
     func testIncomingAudioCall_ShouldRing_False() {
         
         // given
