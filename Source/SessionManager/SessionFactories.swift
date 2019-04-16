@@ -27,7 +27,7 @@ open class AuthenticatedSessionFactory {
     let flowManager : FlowManagerType
     var analytics: AnalyticsType?
     let application : ZMApplication
-    let environment: BackendEnvironmentProvider
+    var environment: BackendEnvironmentProvider
     let reachability: ReachabilityProvider & TearDownCapable
 
     public init(
@@ -73,7 +73,7 @@ open class AuthenticatedSessionFactory {
 
 open class UnauthenticatedSessionFactory {
 
-    let environment: BackendEnvironmentProvider
+    var environment: BackendEnvironmentProvider
     let reachability: ReachabilityProvider
 
     init(environment: BackendEnvironmentProvider, reachability: ReachabilityProvider) {
