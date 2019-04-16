@@ -34,7 +34,7 @@ public enum URLAction: Equatable {
     case warnInvalidDeepLink(error: DeepLinkRequestError)
     
     // Switch to a custom backend
-    case accessBackend(host: String)
+    case accessBackend(configurationURL: URL)
 
     /// Update self's associated value with given userSession
     ///
@@ -134,11 +134,11 @@ extension URLAction {
             self = .connectBot(serviceUser: ServiceUserData(provider: providerUUID, service: serviceUUID))
         
         case URL.Host.accessBackend:
-            guard let host = components.query(for: URLQueryItem.Key.AccessBackend.host) else {
+            guard let config = components.query(for: URLQueryItem.Key.AccessBackend.config), let url = URL(string: config) else {
                 self = .warnInvalidDeepLink(error: .malformedLink)
                 return
             }
-            self = .accessBackend(host: host)
+            self = .accessBackend(configurationURL: url)
 
         case URL.Host.login:
             let pathComponents = url.pathComponents

@@ -38,7 +38,7 @@ extension URLQueryItem {
             static let provider = "provider"
         }
         enum AccessBackend {
-            static let host = "host"
+            static let config = "config"
         }
         static let successRedirect = "success_redirect"
         static let errorRedirect = "error_redirect"
