@@ -401,7 +401,7 @@ static NSString * const ExcludeVersionsKey = @"exclude";
 
 - (void)fetchBlackList
 {
-    NSURL *backendURL = self.env.blackListURL;
+    NSURL *backendURL = [self.env.blackListURL URLByAppendingPathComponent:@"ios"];
     NSURLRequest *urlRequest = [[NSURLRequest alloc] initWithURL:backendURL];
     ZMLogInfo(@"Blacklist URL: %@", backendURL.absoluteString);
     
