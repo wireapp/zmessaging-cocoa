@@ -34,15 +34,20 @@ extension SessionManager {
         guard authenticatedAccounts.isEmpty else { onError(.loggedInAccounts); return nil }
         
         return {
+            let group = self.dispatchGroup
+            group?.enter()
             BackendEnvironment.fetchEnvironment(url: url) { result in
-                switch result {
-                case .success(let environment):
-                    self.environment = environment
-                    self.unauthenticatedSession = nil
-                    completed(environment)
-                case .failure:
-                    completed(nil)
-                    onError(.invalidBackend)
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let environment):
+                        self.environment = environment
+                        self.unauthenticatedSession = nil
+                        completed(environment)
+                    case .failure:
+                        completed(nil)
+                        onError(.invalidBackend)
+                    }
+                    group?.leave()
                 }
             }
         }
