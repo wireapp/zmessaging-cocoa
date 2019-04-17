@@ -139,7 +139,7 @@
     }
     
     id<BackendEnvironmentProvider> env = [[MockEnvironment alloc] init];
-    NSURL *url = env.blackListURL;
+    NSURL *url = [env.blackListURL URLByAppendingPathComponent:@"ios"];
     [self stubRequest:[NSURLRequest requestWithURL:url] withResponseData:data responseError:responseError HTTPStatusCode:statusCode];
 }
 
