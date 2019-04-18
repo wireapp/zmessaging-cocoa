@@ -25,30 +25,33 @@ extension SessionManager {
         case invalidBackend
     }
     
-    public typealias OnBackendSwitchError = (SwitchBackendError) -> ()
-    public typealias MakeSwitch = () -> ()
-    public typealias CompletedSwitch = (BackendEnvironment?) -> ()
+    public typealias CompletedSwitch = (Result<BackendEnvironment>) -> ()
     
-    public func switchBackend(configuration url: URL, onError: @escaping OnBackendSwitchError, completed: @escaping CompletedSwitch) -> MakeSwitch? {
+    public func canSwitchBackend() -> SwitchBackendError? {
         let authenticatedAccounts = accountManager.accounts.filter { environment.isAuthenticated($0) }
-        guard authenticatedAccounts.isEmpty else { onError(.loggedInAccounts); return nil }
-        
-        return {
-            let group = self.dispatchGroup
-            group?.enter()
-            BackendEnvironment.fetchEnvironment(url: url) { result in
-                DispatchQueue.main.async {
-                    switch result {
-                    case .success(let environment):
-                        self.environment = environment
-                        self.unauthenticatedSession = nil
-                        completed(environment)
-                    case .failure:
-                        completed(nil)
-                        onError(.invalidBackend)
-                    }
-                    group?.leave()
+        guard authenticatedAccounts.isEmpty else { return .loggedInAccounts }
+
+        return nil
+    }
+    
+    public func switchBackend(configuration url: URL, completed: @escaping CompletedSwitch) {
+        if let error = canSwitchBackend() {
+            completed(.failure(error))
+            return
+        }
+        let group = self.dispatchGroup
+        group?.enter()
+        BackendEnvironment.fetchEnvironment(url: url) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let environment):
+                    self.environment = environment
+                    self.unauthenticatedSession = nil
+                    completed(.success(environment))
+                case .failure:
+                    completed(.failure(SwitchBackendError.invalidBackend))
                 }
+                group?.leave()
             }
         }
     }
