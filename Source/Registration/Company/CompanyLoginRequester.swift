@@ -104,18 +104,15 @@ public class CompanyLoginRequester {
     /// The object that observes events and performs the required actions.
     public weak var delegate: CompanyLoginRequesterDelegate?
 
-    let backendHost: String
     private let defaults: UserDefaults
     private let session: URLSessionProtocol
 
     /// Creates a session requester that uses the specified parameters.
     public init(
-        backendHost: String,
         callbackScheme: String,
         defaults: UserDefaults = .shared(),
         session: URLSessionProtocol? = nil
         ) {
-        self.backendHost = backendHost
         self.callbackScheme = callbackScheme
         self.defaults = defaults
         self.session = session ?? URLSession(configuration: .ephemeral)
@@ -130,12 +127,13 @@ public class CompanyLoginRequester {
      * The requester provided by the `enqueueProvider` passed to `init` will
      * be used to perform the request.
      *
+     * - parameter backendHost: The backend to validate SSO code against.
      * - parameter token: The user login token.
      * - parameter completion: The completion closure called with the validation result.
      */
     
-    public func validate(token: UUID, completion: @escaping (ValidationError?) -> Void) {
-        guard let url = urlComponents(for: token).url else { fatalError("Invalid company login url.") }
+    public func validate(backendHost: String, token: UUID, completion: @escaping (ValidationError?) -> Void) {
+        guard let url = urlComponents(host: backendHost, token: token).url else { fatalError("Invalid company login url.") }
         var request = URLRequest(url: url)
         request.httpMethod = "HEAD"
         
@@ -160,9 +158,9 @@ public class CompanyLoginRequester {
      * - parameter token: The user login token, constructed from the request code.
      */
 
-    public func requestIdentity(for token: UUID) {
+    public func requestIdentity(host: String, token: UUID) {
         let validationToken = CompanyLoginVerificationToken()
-        var components = urlComponents(for: token)
+        var components = urlComponents(host: host, token: token)
         
         components.queryItems = [
             URLQueryItem(name: URLQueryItem.Key.successRedirect, value: makeSuccessCallbackString(using: validationToken)),
@@ -179,10 +177,10 @@ public class CompanyLoginRequester {
 
     // MARK: - Utilities
     
-    private func urlComponents(for token: UUID) -> URLComponents {
+    private func urlComponents(host: String, token: UUID) -> URLComponents {
         var components = URLComponents()
         components.scheme = "https"
-        components.host = backendHost
+        components.host = host
         components.path = "/sso/initiate-login/\(token.uuidString)"
         return components
     }
