@@ -127,13 +127,13 @@ public class CompanyLoginRequester {
      * The requester provided by the `enqueueProvider` passed to `init` will
      * be used to perform the request.
      *
-     * - parameter backendHost: The backend to validate SSO code against.
+     * - parameter host: The backend to validate SSO code against.
      * - parameter token: The user login token.
      * - parameter completion: The completion closure called with the validation result.
      */
     
-    public func validate(backendHost: String, token: UUID, completion: @escaping (ValidationError?) -> Void) {
-        guard let url = urlComponents(host: backendHost, token: token).url else { fatalError("Invalid company login url.") }
+    public func validate(host: String, token: UUID, completion: @escaping (ValidationError?) -> Void) {
+        guard let url = urlComponents(host: host, token: token).url else { fatalError("Invalid company login url.") }
         var request = URLRequest(url: url)
         request.httpMethod = "HEAD"
         

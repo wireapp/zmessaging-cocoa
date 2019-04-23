@@ -78,7 +78,7 @@ class CompanyLoginRequesterTests: XCTestCase {
         let callbackExpectation = expectation(description: "The completion closure is called")
         
         // When
-        sut.validate(backendHost: "localhost", token: .create()) { error in
+        sut.validate(host: "localhost", token: .create()) { error in
             XCTAssertNil(error)
             callbackExpectation.fulfill()
         }
@@ -103,7 +103,7 @@ class CompanyLoginRequesterTests: XCTestCase {
         let callbackExpectation = expectation(description: "The completion closure is called")
         
         // When
-        sut.validate(backendHost: "localhost", token: .create()) { error in
+        sut.validate(host: "localhost", token: .create()) { error in
             XCTAssertEqual(error, .invalidCode)
             callbackExpectation.fulfill()
         }
@@ -128,7 +128,7 @@ class CompanyLoginRequesterTests: XCTestCase {
         let callbackExpectation = expectation(description: "The completion closure is called")
         
         // When
-        sut.validate(backendHost: "localhost", token: .create()) { error in
+        sut.validate(host: "localhost", token: .create()) { error in
             XCTAssertEqual(error, .invalidStatus(500))
             callbackExpectation.fulfill()
         }
@@ -153,7 +153,7 @@ class CompanyLoginRequesterTests: XCTestCase {
         let callbackExpectation = expectation(description: "The completion closure is called")
         
         // When
-        sut.validate(backendHost: "localhost", token: .create()) { error in
+        sut.validate(host: "localhost", token: .create()) { error in
             XCTAssertEqual(error, .unknown)
             callbackExpectation.fulfill()
         }
@@ -175,7 +175,7 @@ class CompanyLoginRequesterTests: XCTestCase {
         let callbackExpectation = expectation(description: "The completion closure is called")
         
         // When
-        sut.validate(backendHost: "localhost", token: .create()) { error in
+        sut.validate(host: "localhost", token: .create()) { error in
             XCTAssertEqual(error, .unknown)
             callbackExpectation.fulfill()
         }
