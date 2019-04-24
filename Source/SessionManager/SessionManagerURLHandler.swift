@@ -20,6 +20,7 @@ import Foundation
 
 public enum URLAction: Equatable {
     case connectBot(serviceUser: ServiceUserData)
+    
     case companyLoginSuccess(userInfo: UserInfo)
     case companyLoginFailure(error: CompanyLoginError)
 
@@ -31,7 +32,9 @@ public enum URLAction: Equatable {
     // The UI search for the user ID and open the profile view for connection request if not connected
     case openUserProfile(id: UUID)
     case warnInvalidDeepLink(error: DeepLinkRequestError)
-
+    
+    // Switch to a custom backend
+    case accessBackend(configurationURL: URL)
 
     /// Update self's associated value with given userSession
     ///
@@ -121,14 +124,21 @@ extension URLAction {
             }
 
         case URL.Host.connect:
-            guard let service = components.query(for: "service"),
-                let provider = components.query(for: "provider"),
+            guard let service = components.query(for: URLQueryItem.Key.Connect.service),
+                let provider = components.query(for: URLQueryItem.Key.Connect.provider),
                 let serviceUUID = UUID(uuidString: service),
                 let providerUUID = UUID(uuidString: provider) else {
                     self = .warnInvalidDeepLink(error: .malformedLink)
                     return
             }
             self = .connectBot(serviceUser: ServiceUserData(provider: providerUUID, service: serviceUUID))
+        
+        case URL.Host.accessBackend:
+            guard let config = components.query(for: URLQueryItem.Key.AccessBackend.config), let url = URL(string: config) else {
+                self = .warnInvalidDeepLink(error: .malformedLink)
+                return
+            }
+            self = .accessBackend(configurationURL: url)
 
         case URL.Host.login:
             let pathComponents = url.pathComponents
@@ -262,7 +272,6 @@ public final class SessionManagerURLHandler: NSObject {
             }
 
         } else if action.requiresAuthentication {
-
             guard let userSession = userSessionSource?.activeUserSession else {
                 pendingAction = action
                 return true

@@ -25,7 +25,6 @@ class CompanyLoginRequesterTests: XCTestCase {
         // GIVEN
         let defaults = UserDefaults(suiteName: name)!
         let requester: CompanyLoginRequester = CompanyLoginRequester(
-            backendHost: "localhost",
             callbackScheme: "wire",
             defaults: defaults
         )
@@ -42,7 +41,7 @@ class CompanyLoginRequesterTests: XCTestCase {
         }
 
         requester.delegate = delegate
-        requester.requestIdentity(for: userID)
+        requester.requestIdentity(host: "localhost", token: userID)
         waitForExpectations(timeout: 1, handler: nil)
 
         guard let validationToken = CompanyLoginVerificationToken.current(in: defaults) else { return XCTFail("no token") }
@@ -71,7 +70,6 @@ class CompanyLoginRequesterTests: XCTestCase {
         }
 
         let sut = CompanyLoginRequester(
-            backendHost: "localhost",
             callbackScheme: "wire",
             defaults: UserDefaults(suiteName: name)!,
             session: session
@@ -80,7 +78,7 @@ class CompanyLoginRequesterTests: XCTestCase {
         let callbackExpectation = expectation(description: "The completion closure is called")
         
         // When
-        sut.validate(token: .create()) { error in
+        sut.validate(host: "localhost", token: .create()) { error in
             XCTAssertNil(error)
             callbackExpectation.fulfill()
         }
@@ -97,7 +95,6 @@ class CompanyLoginRequesterTests: XCTestCase {
         }
         
         let sut = CompanyLoginRequester(
-            backendHost: "localhost",
             callbackScheme: "wire",
             defaults: UserDefaults(suiteName: name)!,
             session: session
@@ -106,7 +103,7 @@ class CompanyLoginRequesterTests: XCTestCase {
         let callbackExpectation = expectation(description: "The completion closure is called")
         
         // When
-        sut.validate(token: .create()) { error in
+        sut.validate(host: "localhost", token: .create()) { error in
             XCTAssertEqual(error, .invalidCode)
             callbackExpectation.fulfill()
         }
@@ -123,7 +120,6 @@ class CompanyLoginRequesterTests: XCTestCase {
         }
         
         let sut = CompanyLoginRequester(
-            backendHost: "localhost",
             callbackScheme: "wire",
             defaults: UserDefaults(suiteName: name)!,
             session: session
@@ -132,7 +128,7 @@ class CompanyLoginRequesterTests: XCTestCase {
         let callbackExpectation = expectation(description: "The completion closure is called")
         
         // When
-        sut.validate(token: .create()) { error in
+        sut.validate(host: "localhost", token: .create()) { error in
             XCTAssertEqual(error, .invalidStatus(500))
             callbackExpectation.fulfill()
         }
@@ -149,7 +145,6 @@ class CompanyLoginRequesterTests: XCTestCase {
         }
         
         let sut = CompanyLoginRequester(
-            backendHost: "localhost",
             callbackScheme: "wire",
             defaults: UserDefaults(suiteName: name)!,
             session: session
@@ -158,7 +153,7 @@ class CompanyLoginRequesterTests: XCTestCase {
         let callbackExpectation = expectation(description: "The completion closure is called")
         
         // When
-        sut.validate(token: .create()) { error in
+        sut.validate(host: "localhost", token: .create()) { error in
             XCTAssertEqual(error, .unknown)
             callbackExpectation.fulfill()
         }
@@ -172,7 +167,6 @@ class CompanyLoginRequesterTests: XCTestCase {
         let session = MockSession { _ in (nil, nil, nil) }
 
         let sut = CompanyLoginRequester(
-            backendHost: "localhost",
             callbackScheme: "wire",
             defaults: UserDefaults(suiteName: name)!,
             session: session
@@ -181,7 +175,7 @@ class CompanyLoginRequesterTests: XCTestCase {
         let callbackExpectation = expectation(description: "The completion closure is called")
         
         // When
-        sut.validate(token: .create()) { error in
+        sut.validate(host: "localhost", token: .create()) { error in
             XCTAssertEqual(error, .unknown)
             callbackExpectation.fulfill()
         }

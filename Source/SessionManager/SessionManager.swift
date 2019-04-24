@@ -184,7 +184,20 @@ public protocol ForegroundNotificationResponder: class {
     public var urlHandler: SessionManagerURLHandler!
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
-    public fileprivate(set) var unauthenticatedSession: UnauthenticatedSession?
+    public internal(set) var unauthenticatedSession: UnauthenticatedSession? {
+        willSet {
+            self.unauthenticatedSession?.tearDown()
+        }
+        didSet {
+            if let session = self.unauthenticatedSession {
+                self.preLoginAuthenticationToken = session.addAuthenticationObserver(self)
+                NotificationInContext(name: sessionManagerCreatedUnauthenticatedSessionNotificationName, context: self, object: session).post()
+            } else {
+                self.preLoginAuthenticationToken = nil
+            }
+        }
+        
+    }
     public weak var showContentDelegate: ShowContentDelegate?
     public weak var foregroundNotificationResponder: ForegroundNotificationResponder?
     public weak var switchingDelegate: SessionManagerSwitchingDelegate?
@@ -206,7 +219,13 @@ public protocol ForegroundNotificationResponder: class {
     
     fileprivate let sessionLoadingQueue : DispatchQueue = DispatchQueue(label: "sessionLoadingQueue")
     
-    let environment: BackendEnvironmentProvider
+    var environment: BackendEnvironmentProvider {
+        didSet {
+            authenticatedSessionFactory.environment = environment
+            unauthenticatedSessionFactory.environment = environment
+        }
+    }
+    
     let sharedContainerURL: URL
     let dispatchGroup: ZMSDispatchGroup?
     fileprivate var accountTokens : [UUID : [Any]] = [:]
@@ -595,11 +614,8 @@ public protocol ForegroundNotificationResponder: class {
     @discardableResult
     fileprivate func createUnauthenticatedSession() -> UnauthenticatedSession {
         log.debug("Creating unauthenticated session")
-        self.unauthenticatedSession?.tearDown()
         let unauthenticatedSession = unauthenticatedSessionFactory.session(withDelegate: self)
         self.unauthenticatedSession = unauthenticatedSession
-        self.preLoginAuthenticationToken = unauthenticatedSession.addAuthenticationObserver(self)
-        NotificationInContext(name: sessionManagerCreatedUnauthenticatedSessionNotificationName, context: self, object: unauthenticatedSession).post()
         return unauthenticatedSession
     }
     

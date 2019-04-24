@@ -236,4 +236,28 @@ final class SessionManagerURLHandlerTests: MessagingTest {
         // then
         XCTAssertEqual(action, URLAction.warnInvalidDeepLink(error: .malformedLink))
     }
+    
+    func testThatItParsesValidBackendChangeURL() {
+        // given
+        let config = URL(string: "some.host/config.json")!
+        let url = URL(string: "wire://access/?config=\(config)")!
+        
+        // when
+        let action = URLAction(url: url)
+        
+        // then
+        XCTAssertEqual(action, URLAction.accessBackend(configurationURL: config))
+    }
+    
+    func testThatItDiscardsInvalidBackendChangeURL() {
+        // given
+        
+        let url = URL(string: "wire://access/?noconfig")!
+        
+        // when
+        let action = URLAction(url: url)
+        
+        // then
+        XCTAssertEqual(action, URLAction.warnInvalidDeepLink(error: .malformedLink))
+    }
 }

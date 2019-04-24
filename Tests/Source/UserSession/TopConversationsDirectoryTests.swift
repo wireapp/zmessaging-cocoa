@@ -138,6 +138,9 @@ class TopConversationsDirectoryTests : MessagingTest {
 
     func testThatItUpdatesTheConversationsWhenRefreshIsCalledSubsequently() {
         var changesMerger: ManagedObjectContextChangesMerger! = ManagedObjectContextChangesMerger(managedObjectContexts: Set([uiMOC, syncMOC]))
+        // To silence warning that changesMerger is not read anywhere
+        _ = changesMerger
+        
         // GIVEN
         let conv1 = createConversation(in: uiMOC, fillWithNew: 5, old: 15)
         let conv2 = createConversation(in: uiMOC, fillWithNew: 10, old: 5)
