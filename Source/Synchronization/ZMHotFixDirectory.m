@@ -175,6 +175,13 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory refetchTeamMembers:context];
                      }],
+                    
+                    /// We need to refetch the users after email field was introduced
+                    [ZMHotFixPatch
+                     patchWithVersion:@"249.0.3"
+                     patchCode:^(NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory refetchUsers:context];
+                     }],
                     ];
     });
     return patches;
