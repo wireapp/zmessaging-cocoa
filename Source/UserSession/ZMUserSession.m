@@ -245,6 +245,8 @@ ZM_EMPTY_ASSERTING_INIT()
             if (self.clientRegistrationStatus.currentPhase != ZMClientRegistrationPhaseRegistered) {
                 [self.clientRegistrationStatus prepareForClientRegistration];
             }
+            
+            [self.localNotificationDispatcher notifyAvailabilityBehaviourChangedIfNeeded];
         }];
         
         self.userExpirationObserver = [[UserExpirationObserver alloc] initWithManagedObjectContext:self.managedObjectContext];

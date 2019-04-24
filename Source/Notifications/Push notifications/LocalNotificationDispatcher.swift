@@ -110,6 +110,25 @@ extension LocalNotificationDispatcher: TearDownCapable {
     }
 }
 
+// MARK: - Availability behaviour change
+
+extension LocalNotificationDispatcher {
+    
+    public func notifyAvailabilityBehaviourChangedIfNeeded() {
+        let selfUser = ZMUser.selfUser(in: syncMOC)
+        var notify = selfUser.needsToNotifyAvailabilityBehaviourChange
+        
+        guard notify.contains(.notification) else { return }
+        
+        let note = ZMLocalNotification(availability: selfUser.availability, managedObjectContext: syncMOC)
+        note.apply(scheduleLocalNotification)
+        notify.remove(.notification)
+        selfUser.needsToNotifyAvailabilityBehaviourChange = notify
+        syncMOC.enqueueDelayedSave()
+    }
+    
+}
+
 // MARK: - Failed messages
 
 extension LocalNotificationDispatcher {
@@ -133,6 +152,7 @@ extension LocalNotificationDispatcher {
 }
 
 // MARK: - Canceling notifications
+
 extension LocalNotificationDispatcher {
 
     private var allNotificationSets: [ZMLocalNotificationSet] {

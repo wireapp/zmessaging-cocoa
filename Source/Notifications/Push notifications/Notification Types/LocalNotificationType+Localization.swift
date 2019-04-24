@@ -44,6 +44,8 @@ private let ZMPushStringUnknownAdd          = "add.unknown"          // "[sender
 
 private let ZMPushStringFailedToSend        = "failed.message"       // "Unable to send a message"
 
+private let ZMPushStringAlertAvailability   = "alert.availability"   // "Availability now affects notifications"
+
 private let ZMPushStringMemberJoin          = "member.join"          // "[senderName] added you"
 private let ZMPushStringMemberLeave         = "member.leave"         // "[senderName] removed you"
 private let ZMPushStringMessageTimerUpdate  = "message-timer.update" // "[senderName] set the message timer to [duration]
@@ -70,6 +72,7 @@ private let GroupKey = "group"
 private let SelfKey = "self"
 private let MentionKey = "mention"
 private let ReplyKey = "reply"
+private let TeamKey = "team"
 private let NoConversationNameKey = "noconversationname"
 private let NoUserNameKey = "nousername"
 
@@ -134,6 +137,8 @@ extension LocalNotificationType {
             }
         case .failedMessage:
             return ZMPushStringFailedToSend
+        case .availabilityBehaviourChangeAlert:
+            return ZMPushStringAlertAvailability
         }
     }
     
@@ -194,6 +199,24 @@ extension LocalNotificationType {
         }
         
         return nil
+    }
+    
+    public func alertTitleText(team: Team?) -> String? {
+        guard case .availabilityBehaviourChangeAlert(let availability) = self, availability.isOne(of: .away, .busy) else { return nil }
+        
+        let teamName = team?.name
+        let teamKey = teamName != nil ? TeamKey : nil
+        let availabilityKey = availability == .away ? "away" : "busy"
+        let localizationKey = [baseKey, availabilityKey, "title", teamKey].compactMap({ $0 }).joined(separator: ".")
+        return .localizedStringWithFormat(localizationKey.pushFormatString, arguments: [teamName].compactMap({ $0 }))
+    }
+    
+    public func alertMessageBodyText() -> String {
+        guard case .availabilityBehaviourChangeAlert(let availability) = self, availability.isOne(of: .away, .busy) else { return "" }
+        
+        let availabilityKey = availability == .away ? "away" : "busy"
+        let localizationKey = [baseKey, availabilityKey, "message"].compactMap({ $0 }).joined(separator: ".")
+        return .localizedStringWithFormat(localizationKey.pushFormatString)
     }
     
     public func messageBodyText(senderName: String?) -> String {

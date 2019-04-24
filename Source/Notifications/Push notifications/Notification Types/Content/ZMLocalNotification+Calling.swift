@@ -52,6 +52,8 @@ extension ZMLocalNotification {
         }
         
         func shouldCreateNotification() -> Bool {
+            guard conversation.mutedMessageTypesIncludingAvailability != .all else { return false }
+                        
             switch callState {
             case .terminating(reason: .anweredElsewhere), .terminating(reason: .normal), .terminating(reason: .rejectedElsewhere):
                 return false

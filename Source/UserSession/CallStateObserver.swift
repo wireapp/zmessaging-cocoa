@@ -121,7 +121,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             switch callState {
             case .incoming(video: _, shouldRing: let shouldRing, degraded: _):
-                uiConv.isIgnoringCall = uiConv.mutedMessageTypes != .none || !shouldRing
+                uiConv.isIgnoringCall = uiConv.mutedMessageTypesIncludingAvailability != .none || !shouldRing
                 uiConv.isCallDeviceActive = false
             case .terminating, .none, .mediaStopped:
                 uiConv.isCallDeviceActive = false

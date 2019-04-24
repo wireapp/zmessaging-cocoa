@@ -238,7 +238,7 @@
             NSString *clientsPath = [NSString stringWithFormat:@"/users/prekeys"];
             if ([request.path isEqualToString:clientsPath]) {
                 XCTAssertTrue(request.shouldUseVoipSession);
-                XCTAssertEqual(requestCount, 2u);
+                XCTAssertEqual(requestCount, 1u);
                 [missingClientsExpectation fulfill];
             }
             return nil;

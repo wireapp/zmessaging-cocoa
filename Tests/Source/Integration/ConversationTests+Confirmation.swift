@@ -109,12 +109,14 @@ class ConversationTests_Confirmation: ConversationTestsBase {
                 XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             }
             
-            
             // then
             XCTAssertEqual(conversation?.allMessages.count, 3) // system message & inserted message
             
             guard let request = mockTransportSession?.receivedRequests().last else {return XCTFail()}
             XCTAssertEqual((request as AnyObject).path, requestPath)
+            
+            // We should confirm all message deliveries with one message
+            XCTAssertEqual(mockTransportSession.receivedRequests().filter({ $0.method == ZMTransportRequestMethod.methodPOST && $0.path.contains("conversations/")}).count, 1)
             
             XCTAssertEqual(conversation?.lastModifiedDate, conversation?.lastMessage?.serverTimestamp)
         }
