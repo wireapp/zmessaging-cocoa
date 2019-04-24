@@ -28,8 +28,7 @@ extension SessionManager {
     public typealias CompletedSwitch = (Result<BackendEnvironment>) -> ()
     
     public func canSwitchBackend() -> SwitchBackendError? {
-        let authenticatedAccounts = accountManager.accounts.filter { environment.isAuthenticated($0) }
-        guard authenticatedAccounts.isEmpty else { return .loggedInAccounts }
+        guard accountManager.accounts.isEmpty else { return .loggedInAccounts }
 
         return nil
     }
