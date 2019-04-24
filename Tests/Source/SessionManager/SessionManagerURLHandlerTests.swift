@@ -258,6 +258,6 @@ final class SessionManagerURLHandlerTests: MessagingTest {
         let action = URLAction(url: url)
         
         // then
-        XCTAssertEqual(action, URLAction.warnInvalidDeepLink(error: .invalidBackend))
+        XCTAssertEqual(action, URLAction.warnInvalidDeepLink(error: .malformedLink))
     }
 }

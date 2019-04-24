@@ -135,7 +135,7 @@ extension URLAction {
         
         case URL.Host.accessBackend:
             guard let config = components.query(for: URLQueryItem.Key.AccessBackend.config), let url = URL(string: config) else {
-                self = .warnInvalidDeepLink(error: .invalidBackend)
+                self = .warnInvalidDeepLink(error: .malformedLink)
                 return
             }
             self = .accessBackend(configurationURL: url)
