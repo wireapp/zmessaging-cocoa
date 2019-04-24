@@ -58,7 +58,7 @@ class ZMHotFixTests_Integration: MessagingTest {
     }
     
     func testThatItRemovesPendingConfirmationsForDeletedMessages_54_0_1() {
-        var confirmation: ZMClientMessage! = nil
+        var confirmationMessage: ZMClientMessage! = nil
         syncMOC.performGroupedBlock {
             // GIVEN
             self.syncMOC.setPersistentStoreMetadata("0.1", key: "lastSavedVersion")
@@ -72,12 +72,13 @@ class ZMHotFixTests_Integration: MessagingTest {
             otherUser.remoteIdentifier = UUID()
             
             let incomingMessage = oneOnOneConversation.append(text: "Test") as! ZMClientMessage
-            confirmation = incomingMessage.confirmDelivery()
+            let confirmation = ZMConfirmation.confirm(messageId: incomingMessage.nonce!, type: .DELIVERED)
+            confirmationMessage = oneOnOneConversation.appendClientMessage(with: ZMGenericMessage.message(content: confirmation), expires: false, hidden: true)
             
             self.syncMOC.saveOrRollback()
             
-            XCTAssertNotNil(confirmation)
-            XCTAssertFalse(confirmation.isDeleted)
+            XCTAssertNotNil(confirmationMessage)
+            XCTAssertFalse(confirmationMessage.isDeleted)
             
             incomingMessage.visibleInConversation = nil
             incomingMessage.hiddenInConversation = oneOnOneConversation
@@ -94,7 +95,7 @@ class ZMHotFixTests_Integration: MessagingTest {
             self.syncMOC.saveOrRollback()
         }
         syncMOC.performGroupedBlock {
-            XCTAssertNil(confirmation.managedObjectContext)
+            XCTAssertNil(confirmationMessage.managedObjectContext)
         }
     }
 
