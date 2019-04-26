@@ -232,8 +232,10 @@ extension TypingStrategy : ZMEventConsumer {
             
             if let message = ZMGenericMessage(from: event),
                 message.hasText() || message.hasEdited() || (message.hasEphemeral() && message.ephemeral.hasText())  {
-                processMessageAddEvent(for: user, in: conversation)
+                typing.setIs(false, for: user, in: conversation)
             }
+        } else if event.type == .conversationMemberLeave {
+            typing.setIs(false, for: user, in: conversation)
         }
     }
     
@@ -244,11 +246,6 @@ extension TypingStrategy : ZMEventConsumer {
             typing.setIs(startedTyping, for: user, in: conversation)
         }
     }
-    
-    func processMessageAddEvent(for user: ZMUser, in conversation: ZMConversation) {
-        typing.setIs(false, for: user, in: conversation)
-    }
-    
 }
 
 
