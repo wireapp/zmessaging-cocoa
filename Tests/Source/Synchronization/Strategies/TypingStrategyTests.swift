@@ -125,6 +125,16 @@ class TypingStrategyTests : MessagingTest {
         return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
     }
     
+    func memberLeaveEvent() -> ZMUpdateEvent {
+        let payload = ["conversation": conversationA.remoteIdentifier!.transportString(),
+                       "data": ["user_ids": [userA.remoteIdentifier!.transportString()]],
+                       "from": userA.remoteIdentifier!.transportString(),
+                       "time": Date().transportString(),
+                       "type": "conversation.member-leave",
+                       ] as [String : Any]
+        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+    }
+    
     func isExpected(request: ZMTransportRequest?, for conversation: ZMConversation, isTyping: Bool) -> Bool {
         let expectedPath = "/conversations/\(conversation.remoteIdentifier!.transportString())/typing"
         let expectedPayload = ["status": isTyping ? "started" : "stopped"]
@@ -498,6 +508,21 @@ extension TypingStrategyTests {
             XCTAssert(waitForCustomExpectations(withTimeout:0.1))
         }
     }
+    
+    func testThatRemovingMemberClearsTypingState() {
+        // given
+        simulateTyping()
+        let event = memberLeaveEvent()
+        XCTAssertTrue(typing.isUserTyping(user: userA, in: conversationA)) //user is still typing
+
+        // when
+        sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+        
+        // then
+        XCTAssertFalse(typing.isUserTyping(user: userA, in: conversationA)) //user is not typing
+    }
+
+    
 }
 
 

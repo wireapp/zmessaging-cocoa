@@ -216,8 +216,13 @@ extension TypingStrategy : ZMEventConsumer {
     }
     
     func process(event: ZMUpdateEvent, conversationsByID: [UUID: ZMConversation]?)  {
-        guard event.type == .conversationTyping || event.type == .conversationOtrMessageAdd,
-              let userID = event.senderUUID(),
+        guard
+            event.type == .conversationTyping ||
+                event.type == .conversationOtrMessageAdd ||
+                event.type == .conversationMemberLeave
+            else { return }
+        
+        guard let userID = event.senderUUID(),
               let conversationID = event.conversationUUID(),
               let user = ZMUser(remoteID: userID, createIfNeeded: true, in: managedObjectContext),
               let conversation = conversationsByID?[conversationID] ?? ZMConversation(remoteID: conversationID, createIfNeeded: true, in: managedObjectContext)
@@ -235,7 +240,10 @@ extension TypingStrategy : ZMEventConsumer {
                 typing.setIs(false, for: user, in: conversation)
             }
         } else if event.type == .conversationMemberLeave {
-            typing.setIs(false, for: user, in: conversation)
+            let users = event.usersFromUserIDs(in: managedObjectContext, createIfNeeded: false).compactMap { $0 as? ZMUser }
+            users.forEach { user in
+                typing.setIs(false, for: user, in: conversation)
+            }
         }
     }
     
