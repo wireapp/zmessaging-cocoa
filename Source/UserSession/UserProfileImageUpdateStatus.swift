@@ -20,7 +20,7 @@
 import Foundation
 import WireDataModel
 
-internal enum UserProfileImageUpdateError: Error {
+public enum UserProfileImageUpdateError: Error {
     case preprocessingFailed
     case uploadFailed(Error)
 }
@@ -52,7 +52,7 @@ public final class UserProfileImageUpdateStatus: NSObject {
     
     fileprivate var log = ZMSLog(tag: "UserProfileImageUpdateStatus")
     
-    internal enum ImageState {
+    public enum ImageState {
         case ready
         case preprocessing
         case upload(image: Data)
@@ -81,7 +81,7 @@ public final class UserProfileImageUpdateStatus: NSObject {
         }
     }
     
-    internal enum ProfileUpdateState {
+    public enum ProfileUpdateState {
         case ready
         case preprocess(image: Data)
         case update(previewAssetId: String, completeAssetId: String)

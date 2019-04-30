@@ -60,11 +60,11 @@ import WireTesting
 
     // MARK: - BackgroundActivityManager
 
-    func beginBackgroundTask(withName name: String?, expirationHandler: (() -> Void)?) -> Int {
+    func beginBackgroundTask(withName name: String?, expirationHandler: (() -> Void)?) -> UIBackgroundTaskIdentifier {
         assert(numberOfTasks + 1 <= limit, "Creating a new task would exceed the limit.")
 
         if isExpiring {
-            return UIBackgroundTaskIdentifier.invalid.rawValue
+            return UIBackgroundTaskIdentifier(rawValue: UIBackgroundTaskIdentifier.invalid.rawValue)
         }
 
         let task = Task(name: name, expirationHandler: expirationHandler)
@@ -72,14 +72,14 @@ import WireTesting
 
         tasks[identifier] = task
         startTaskHandler?(name)
-        return identifier
+        return UIBackgroundTaskIdentifier(rawValue: identifier)
     }
 
-    func endBackgroundTask(_ task: Int) {
-        assert(task != UIBackgroundTaskIdentifier.invalid.rawValue, "The task is invalid.")
+    func endBackgroundTask(_ task: UIBackgroundTaskIdentifier) {
+        assert(task != UIBackgroundTaskIdentifier.invalid, "The task is invalid.")
 
-        let name = tasks[task]?.name
-        tasks[task] = nil
+        let name = tasks[task.rawValue]?.name
+        tasks[task.rawValue] = nil
         endTaskHandler?(name)
     }
 

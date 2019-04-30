@@ -66,7 +66,7 @@ class MockOperation: NSObject, ZMImageDownsampleOperationProtocol {
     }
 }
 
-typealias ProfileUpdateState = WireSyncEngine.UserProfileImageUpdateStatus.ProfileUpdateState
+public typealias ProfileUpdateState = WireSyncEngine.UserProfileImageUpdateStatus.ProfileUpdateState
 typealias ImageState = WireSyncEngine.UserProfileImageUpdateStatus.ImageState
 
 class MockChangeDelegate: WireSyncEngine.UserProfileImageUploadStateChangeDelegate {
@@ -129,7 +129,7 @@ extension StateTransition {
     }
 }
 
-typealias UserProfileImageUpdateStatus = WireSyncEngine.UserProfileImageUpdateStatus
+public typealias UserProfileImageUpdateStatus = WireSyncEngine.UserProfileImageUpdateStatus
 
 extension UserProfileImageUpdateStatus.ImageState: Equatable {
     public static func ==(lhs: UserProfileImageUpdateStatus.ImageState, rhs: UserProfileImageUpdateStatus.ImageState) -> Bool {
