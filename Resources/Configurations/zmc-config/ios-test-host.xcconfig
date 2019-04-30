@@ -17,4 +17,3 @@
 // 
 
 #include "ios.xcconfig"
-#include "swift.xcconfig"

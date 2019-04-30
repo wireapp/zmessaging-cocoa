@@ -21,7 +21,6 @@
 // It gets included by {target}-ios.xcconfig
 //
 
-#include "swift.xcconfig"
 
 
 // Architectures

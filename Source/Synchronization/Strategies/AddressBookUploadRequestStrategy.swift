@@ -173,7 +173,7 @@ extension AddressBookUploadRequestStrategy : ZMSingleRequestTranscoder {
         guard let entries = (try? self.managedObjectContext.fetch(fetch) as? [AddressBookEntry]) else {
             return
         }
-        entries?.forEach {
+        entries.forEach {
             self.managedObjectContext.delete($0)
         }
     }
