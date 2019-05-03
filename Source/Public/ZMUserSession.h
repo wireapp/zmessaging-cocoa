@@ -93,6 +93,16 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 /// Enqueue some changes on the managed object context (in the block) before saving, then invokes the completion handler
 - (void)enqueueChanges:(dispatch_block_t)block completionHandler:(dispatch_block_t)completionHandler ZM_NON_NULL(1);
 
+/// Enqueue some changes on the managed object context (in the block) and then performs a delayed save.
+///
+/// This method is prefered if you will make many changes in a loop.
+- (void)enqueueDelayedChanges:(dispatch_block_t)block ZM_NON_NULL(1);
+
+/// Enqueue some changes on the managed object context (in the block) before performing a delayed save, then invokes the completion handler after the save is performed.
+///
+/// This method is prefered if you will make many changes in a loop.
+- (void)enqueueDelayedChanges:(dispatch_block_t)block completionHandler:(dispatch_block_t)completionHandler ZM_NON_NULL(1);
+
 /// Initiates the deletion process for the current signed in user
 - (void)initiateUserDeletion;
 
