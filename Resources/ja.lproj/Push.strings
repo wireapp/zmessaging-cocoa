@@ -200,6 +200,16 @@
 "push.notification.failed.message.group" = "メッセージを送ることができません";
 "push.notification.failed.message.group.noconversationname" = "メッセージを送ることができません";
 
+// AVAILABILITY ALERT
+
+"push.notification.alert.availability.away.title.team" = "通知は %@ では無効になっています";
+"push.notification.alert.availability.away.title" = "通知がオフになっています";
+"push.notification.alert.availability.busy.title.team" = "%@ で通知が変更されました";
+"push.notification.alert.availability.busy.title" = "通知が変更されました";
+
+"push.notification.alert.availability.away.message" = "ステータスは通知に影響します。「不在」に設定されており、通知を受信しません。";
+"push.notification.alert.availability.busy.message" = "ステータスは通知に影響します。あなたは現在「取り込み中」に設定されており、誰かがあなたにメンションしたとき、またはあなたのメッセージのいずれかに返信したときにのみ通知を受け取ります。";
+
 // REACTIONS
 "push.notification.reaction.group" = "%1$@ があなたのメッセージを%2$@";
 "push.notification.reaction.group.nousername.noconversationname" = "あなたのメッセージが%@ されました";

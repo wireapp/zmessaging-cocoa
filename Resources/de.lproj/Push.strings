@@ -200,6 +200,16 @@
 "push.notification.failed.message.group" = "Kann keine Nachricht senden";
 "push.notification.failed.message.group.noconversationname" = "Kann keine Nachricht senden";
 
+// AVAILABILITY ALERT
+
+"push.notification.alert.availability.away.title.team" = "Benachrichtigungen in %@ sind deaktiviert";
+"push.notification.alert.availability.away.title" = "Benachrichtigungen sind deaktiviert";
+"push.notification.alert.availability.busy.title.team" = "Benachrichtigungen in %@ haben sich geändert";
+"push.notification.alert.availability.busy.title" = "Benachrichtigungen haben sich geändert";
+
+"push.notification.alert.availability.away.message" = "Status wirkt sich jetzt auf Benachrichtigungen aus. Beim aktuellen Status \"Abwesend\" werden keine empfangen.";
+"push.notification.alert.availability.busy.message" = "Status wirkt sich jetzt auf Benachrichtigungen aus. Beim aktuellen Status \"Beschäftigt\" werden nur Benachrichtigungen über Erwähnungen oder Antworten angezeigt.";
+
 // REACTIONS
 "push.notification.reaction.group" = "%1$@ %2$@ deine Nachricht";
 "push.notification.reaction.group.nousername.noconversationname" = "Jemand %@ deine Nachricht in einer Unterhaltung";

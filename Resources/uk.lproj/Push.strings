@@ -200,6 +200,16 @@
 "push.notification.failed.message.group" = "Неможливо надіслати повідомлення";
 "push.notification.failed.message.group.noconversationname" = "Неможливо надіслати повідомлення";
 
+// AVAILABILITY ALERT
+
+"push.notification.alert.availability.away.title.team" = "Сповіщення вимкнено в %@";
+"push.notification.alert.availability.away.title" = "Сповіщення вимкнено";
+"push.notification.alert.availability.busy.title.team" = "Налаштування сповіщень змінились в %@";
+"push.notification.alert.availability.busy.title" = "Налаштування сповіщень змінились";
+
+"push.notification.alert.availability.away.message" = "Тепер статус впливає на сповіщення. Ви зараз відсутні, і тому не будете отримувати ніяких сповіщень.";
+"push.notification.alert.availability.busy.message" = "Тепер статус впливає на сповіщення. Ви зараз зайняті, і тому будете отримувати сповіщення, коли хтось згадає вас або відповість на ваші повідомлення.";
+
 // REACTIONS
 "push.notification.reaction.group" = "%1$@ %2$@ ваше повідомлення";
 "push.notification.reaction.group.nousername.noconversationname" = "Комусь %@ повідомлення в розмові";

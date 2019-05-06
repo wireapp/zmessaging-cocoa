@@ -200,6 +200,16 @@
 "push.notification.failed.message.group" = "Sõnumi saatmine ebaõnnestus";
 "push.notification.failed.message.group.noconversationname" = "Sõnumi saatmine ebaõnnestus";
 
+// AVAILABILITY ALERT
+
+"push.notification.alert.availability.away.title.team" = "Notifications are disabled in %@";
+"push.notification.alert.availability.away.title" = "Notifications are disabled";
+"push.notification.alert.availability.busy.title.team" = "Notifications have changed in %@";
+"push.notification.alert.availability.busy.title" = "Notifications have changed";
+
+"push.notification.alert.availability.away.message" = "Status affects notifications now. You’re set to “Away” and won’t receive any notifications.";
+"push.notification.alert.availability.busy.message" = "Status affects notifications now. You’re set to “Busy” and will only receive notifications when someone mentions you or replies to one of your messages.";
+
 // REACTIONS
 "push.notification.reaction.group" = "%1$@ %2$@ sinu sõnumit";
 "push.notification.reaction.group.nousername.noconversationname" = "Keegi %@ sinu sõnumit vestluses";
