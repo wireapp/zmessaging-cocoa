@@ -195,6 +195,19 @@ class CallStateObserverTests : MessagingTest {
         XCTAssertEqual(notificationCenter.scheduledRequests.count, 1)
     }
     
+    func testThatIncomingCallsInMutedConversationAreForwardedToTheNotificationDispatcher_whenCallStyleIsCallkit() {
+        // given
+        mockCallNotificationStyle = .callKit
+        conversationUI.mutedMessageTypes = .regular
+        
+        // when
+        sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversationUI, caller: senderUI, timestamp: nil, previousCallState: nil)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(notificationCenter.scheduledRequests.count, 1)
+    }
+    
     func testIncomingCallsInUnfetchedConversationAreForwaredToTheNotificationDispatcher_whenCallStyleIsPushNotification() {
         // given
         mockCallNotificationStyle = .pushNotifications
