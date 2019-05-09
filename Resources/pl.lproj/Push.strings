@@ -200,6 +200,16 @@
 "push.notification.failed.message.group" = "Nie można wysłać wiadomości";
 "push.notification.failed.message.group.noconversationname" = "Nie można wysłać wiadomości";
 
+// AVAILABILITY ALERT
+
+"push.notification.alert.availability.away.title.team" = "Notifications are disabled in %@";
+"push.notification.alert.availability.away.title" = "Notifications are disabled";
+"push.notification.alert.availability.busy.title.team" = "Notifications have changed in %@";
+"push.notification.alert.availability.busy.title" = "Notifications have changed";
+
+"push.notification.alert.availability.away.message" = "Status affects notifications now. You’re set to “Away” and won’t receive any notifications.";
+"push.notification.alert.availability.busy.message" = "Status affects notifications now. You’re set to “Busy” and will only receive notifications when someone mentions you or replies to one of your messages.";
+
 // REACTIONS
 "push.notification.reaction.group" = "%1$@ %2$@ your message";
 "push.notification.reaction.group.nousername.noconversationname" = "Ktoś %@ twoją wiadomość w rozmowie";

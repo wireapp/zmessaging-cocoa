@@ -380,9 +380,35 @@ ZM_EMPTY_ASSERTING_INIT()
         block();
         [self saveOrRollbackChanges];
         
-        if(completionHandler != nil) {
+        if (completionHandler != nil) {
             completionHandler();
         }
+    }];
+}
+
+- (void)enqueueDelayedChanges:(dispatch_block_t)block
+{
+    [self enqueueChanges:block completionHandler:nil];
+}
+
+- (void)enqueueDelayedChanges:(dispatch_block_t)block completionHandler:(dispatch_block_t)completionHandler;
+{
+    ZM_WEAK(self);
+    [self.managedObjectContext performGroupedBlock:^{
+        ZM_STRONG(self);
+        block();
+        
+        ZMSDispatchGroup *group = [ZMSDispatchGroup groupWithLabel:@"enqueueDelayedChanges"];
+        
+        [self.managedObjectContext enqueueDelayedSaveWithGroup:group];
+        
+        [group notifyOnQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0) block:^{
+            [self.managedObjectContext performGroupedBlock:^{
+                if (completionHandler != nil) {
+                    completionHandler();
+                }
+            }];
+        }];
     }];
 }
 

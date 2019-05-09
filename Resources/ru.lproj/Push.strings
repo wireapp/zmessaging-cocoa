@@ -200,6 +200,16 @@
 "push.notification.failed.message.group" = "Невозможно отправить сообщение";
 "push.notification.failed.message.group.noconversationname" = "Невозможно отправить сообщение";
 
+// AVAILABILITY ALERT
+
+"push.notification.alert.availability.away.title.team" = "Уведомления отключены в %@";
+"push.notification.alert.availability.away.title" = "Уведомления отключены";
+"push.notification.alert.availability.busy.title.team" = "Уведомления были изменены в %@";
+"push.notification.alert.availability.busy.title" = "Уведомления были изменены";
+
+"push.notification.alert.availability.away.message" = "Статус теперь влияет на уведомления. Вы установили 'Отошел' и не будете получать уведомления.";
+"push.notification.alert.availability.busy.message" = "Статус теперь влияет на уведомления. Вы установили 'Занят' и будете получать уведомления только тогда, когда кто-то вас упомянет или ответит на одно из ваших сообщений.";
+
 // REACTIONS
 "push.notification.reaction.group" = "%1$@ %2$@ ваше сообщение";
 "push.notification.reaction.group.nousername.noconversationname" = "Кто-то %@ ваше сообщение в разговоре";
@@ -217,7 +227,7 @@
 "push.notification.action.message.reply" = "Ответить";
 "push.notification.action.message.reply.button.title" = "Отправить";
 "push.notification.action.message.reply.placeholder" = "Введите сообщение";
-"push.notification.action.conversation.mute" = "Микрофон";
+"push.notification.action.conversation.mute" = "Отключить уведомления";
 "push.notification.action.message.like" = "♥";
 
 "push.notification.action.call.accept" = "Принять";

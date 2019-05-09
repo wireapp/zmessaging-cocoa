@@ -374,6 +374,48 @@
     XCTAssertTrue(contextSaved);
 }
 
+- (void)testThatEnqueueDelayedChangesAreDoneAsynchronouslyOnTheMainQueueWithCompletionHandler
+{
+    // given
+    __block BOOL executed = NO;
+    __block BOOL blockExecuted = NO;
+    __block BOOL contextSaved = NO;
+    
+    // expect
+    [[NSNotificationCenter defaultCenter] addObserverForName:NSManagedObjectContextDidSaveNotification object:self.uiMOC queue:nil usingBlock:^(NSNotification *note) {
+        NOT_USED(note);
+        contextSaved = YES;
+    }];
+    
+    // when
+    [self.sut enqueueDelayedChanges:^{
+        XCTAssertEqual([NSOperationQueue currentQueue], [NSOperationQueue mainQueue]);
+        XCTAssertFalse(executed);
+        XCTAssertFalse(contextSaved);
+        executed = YES;
+        [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC]; // force a save
+    } completionHandler:^{
+        XCTAssertTrue(executed);
+        XCTAssertEqual([NSOperationQueue currentQueue], [NSOperationQueue mainQueue]);
+        XCTAssertFalse(blockExecuted);
+        XCTAssertTrue(contextSaved);
+        blockExecuted = YES;
+    }];
+    
+    // then
+    XCTAssertFalse(executed);
+    XCTAssertFalse(blockExecuted);
+    XCTAssertFalse(contextSaved);
+    
+    // and when
+    [self spinMainQueueWithTimeout:0.2]; // the delayed save will wait 0.1 seconds
+    
+    // then
+    XCTAssertTrue(executed);
+    XCTAssertTrue(blockExecuted);
+    XCTAssertTrue(contextSaved);
+}
+
 @end
 
 @implementation ZMUserSessionTests (NetworkState)
