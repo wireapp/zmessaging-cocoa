@@ -145,8 +145,9 @@ extension VoiceChannelV3 : CallActions {
         conversation.makeNotSecure()
     }
     
-    public func leaveAndKeepDegradedConversationSecurity(userSession: ZMUserSession) {
+    public func leaveAndDecreaseConversationSecurity(userSession: ZMUserSession) {
         guard let conversation = conversation else { return }
+        conversation.makeNotSecure()
         userSession.syncManagedObjectContext.performGroupedBlock {
             let conversationId = conversation.objectID
             if let syncConversation = (try? userSession.syncManagedObjectContext.existingObject(with: conversationId)) as? ZMConversation {
