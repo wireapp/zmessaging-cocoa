@@ -1217,7 +1217,7 @@
     XCTAssertTrue(notificationRecieved);
     XCTAssertNotNil(message1);
     XCTAssertEqual(message1.deliveryState, ZMDeliveryStateFailedToSend);
-    XCTAssertEqual(message1.conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
+    XCTAssertEqual(message1.conversation.securityLevel, ZMConversationSecurityLevelNotSecure);
     WaitForAllGroupsToBeEmpty(0.5);
     
     // GIVEN

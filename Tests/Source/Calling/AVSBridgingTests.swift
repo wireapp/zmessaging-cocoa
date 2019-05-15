@@ -20,7 +20,7 @@ import XCTest
 import avs
 @testable import WireSyncEngine
 
-class AVSBridingTests: MessagingTest {
+class AVSBridgingTests: MessagingTest {
 
     var rawString: UnsafePointer<CChar>!
     var rawUUID: UnsafePointer<CChar>!
@@ -152,13 +152,9 @@ class AVSBridingTests: MessagingTest {
     }
 
     private func makeCString(_ string: String) -> UnsafePointer<CChar> {
-        let count = string.utf8.count
-
-        return string.withCString {
-            let copyPtr = UnsafeMutablePointer<CChar>.allocate(capacity: count)
-            copyPtr.initialize(from: $0, count: count)
-            return UnsafePointer(copyPtr)
-        }
+        let ptr = UnsafeMutablePointer<CChar>.allocate(capacity: string.utf8.count)
+        strcpy(ptr, string)
+        return UnsafePointer(ptr)
     }
 
 }
