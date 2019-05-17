@@ -284,7 +284,7 @@
 		5E8BB89E2147E9DF00EEA64B /* AVSWrapper+Handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8BB89D2147E9DF00EEA64B /* AVSWrapper+Handlers.swift */; };
 		5E8BB8A02147F5BC00EEA64B /* CallSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8BB89F2147F5BC00EEA64B /* CallSnapshot.swift */; };
 		5E8BB8A22147F89000EEA64B /* CallCenterSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8BB8A12147F89000EEA64B /* CallCenterSupport.swift */; };
-		5E8BB8A52149130800EEA64B /* AVSBridingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8BB8A3214912D100EEA64B /* AVSBridingTests.swift */; };
+		5E8BB8A52149130800EEA64B /* AVSBridgingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8BB8A3214912D100EEA64B /* AVSBridgingTests.swift */; };
 		5E8EE1F720FDC6B900DB1F9B /* CompanyLoginRequestDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8EE1F620FDC6B900DB1F9B /* CompanyLoginRequestDetector.swift */; };
 		5E8EE1FA20FDC7D700DB1F9B /* Pasteboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8EE1F920FDC7D700DB1F9B /* Pasteboard.swift */; };
 		5E8EE1FC20FDCCE200DB1F9B /* CompanyLoginRequestDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8EE1FB20FDCCE200DB1F9B /* CompanyLoginRequestDetectorTests.swift */; };
@@ -864,7 +864,7 @@
 		5E8BB89D2147E9DF00EEA64B /* AVSWrapper+Handlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AVSWrapper+Handlers.swift"; sourceTree = "<group>"; };
 		5E8BB89F2147F5BC00EEA64B /* CallSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallSnapshot.swift; sourceTree = "<group>"; };
 		5E8BB8A12147F89000EEA64B /* CallCenterSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallCenterSupport.swift; sourceTree = "<group>"; };
-		5E8BB8A3214912D100EEA64B /* AVSBridingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVSBridingTests.swift; sourceTree = "<group>"; };
+		5E8BB8A3214912D100EEA64B /* AVSBridgingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVSBridgingTests.swift; sourceTree = "<group>"; };
 		5E8EE1F620FDC6B900DB1F9B /* CompanyLoginRequestDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginRequestDetector.swift; sourceTree = "<group>"; };
 		5E8EE1F920FDC7D700DB1F9B /* Pasteboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pasteboard.swift; sourceTree = "<group>"; };
 		5E8EE1FB20FDCCE200DB1F9B /* CompanyLoginRequestDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginRequestDetectorTests.swift; sourceTree = "<group>"; };
@@ -1411,7 +1411,7 @@
 				F95FFBCF1EB8A44D004031CB /* CallSystemMessageGeneratorTests.swift */,
 				F9F846331ED307F10087C1A4 /* CallParticipantsSnapshotTests.swift */,
 				87B30C5B1FA756220054DFB1 /* FlowManagerTests.swift */,
-				5E8BB8A3214912D100EEA64B /* AVSBridingTests.swift */,
+				5E8BB8A3214912D100EEA64B /* AVSBridgingTests.swift */,
 			);
 			path = Calling;
 			sourceTree = "<group>";
@@ -2666,7 +2666,7 @@
 				545643D61C62C1A800A2129C /* ConversationTestsBase.m in Sources */,
 				16904A84207E078C00C92806 /* ConversationTests+Participants.swift in Sources */,
 				3E26BED51A4037370071B4C9 /* IsTypingTests.m in Sources */,
-				5E8BB8A52149130800EEA64B /* AVSBridingTests.swift in Sources */,
+				5E8BB8A52149130800EEA64B /* AVSBridgingTests.swift in Sources */,
 				54E4DD0F1DE4A9C500FEF192 /* UserHandleTests.swift in Sources */,
 				F9DAC54F1C2035660001F11E /* ConversationStatusStrategyTests.swift in Sources */,
 				164C29A31ECF437E0026562A /* SearchRequestTests.swift in Sources */,
