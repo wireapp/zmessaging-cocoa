@@ -71,7 +71,7 @@ class UserClientRequestFactoryTests: MessagingTest {
         guard let transportRequest = request.transportRequest else { return XCTFail("Should return non nil request") }
         guard let payload = transportRequest.payload?.asDictionary() as? [String: NSObject] else { return XCTFail("Request should contain payload") }
         
-        guard let type = payload["type"] as? String, type == ZMUserClientTypePermanent else { return XCTFail("Client type should be 'permanent'") }
+        guard let type = payload["type"] as? String, type == DeviceType.permanent.rawValue else { return XCTFail("Client type should be 'permanent'") }
         guard let password = payload["password"] as? String, password == credentials.password else { return XCTFail("Payload should contain password") }
         
         guard let lastPreKey = self.spyKeyStore.lastGeneratedLastPrekey else {
@@ -112,7 +112,7 @@ class UserClientRequestFactoryTests: MessagingTest {
         XCTAssertEqual(request.path, "/clients", "Should create request with correct path")
         XCTAssertEqual(request.method, ZMTransportRequestMethod.methodPOST, "Should create POST request")
         guard let payload = request.payload?.asDictionary() as? [String: NSObject] else { return XCTFail("Request should contain payload") }
-        XCTAssertEqual(payload["type"] as? String, ZMUserClientTypePermanent, "Client type should be 'permanent'")
+        XCTAssertEqual(payload["type"] as? String, DeviceType.permanent.rawValue, "Client type should be 'permanent'")
         XCTAssertNil(payload["password"])
         
         let lastPreKey = try! self.spyKeyStore.lastPreKey()

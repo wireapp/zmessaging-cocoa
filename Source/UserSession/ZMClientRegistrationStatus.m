@@ -251,11 +251,11 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 
 - (void)insertNewClientForSelfUser:(ZMUser *)selfUser
 {
-    UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.managedObjectContext];
-    client.user = selfUser;
-    client.model = [[UIDevice currentDevice] zm_model];
-    client.deviceClass = [[UIDevice currentDevice] zm_classString];
-    client.label = [[UIDevice currentDevice] name];
+    [UserClient insertNewSelfClientInManagedObjectContext:self.managedObjectContext
+                                                 selfUser:selfUser
+                                                    model:[[UIDevice currentDevice] zm_model]
+                                                    label:[[UIDevice currentDevice] name]];
+    
     [self.managedObjectContext saveOrRollback];
 }
 

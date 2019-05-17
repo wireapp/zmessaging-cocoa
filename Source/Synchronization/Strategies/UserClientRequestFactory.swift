@@ -45,10 +45,10 @@ public final class UserClientRequestFactory {
         let lastPreKeyPayloadData = try payloadForLastPreKey(client)
         
         var payload: [String: Any] = [
-            "type": client.type,
+            "type": client.type.rawValue,
             "label": (client.label ?? ""),
             "model": (client.model ?? ""),
-            "class": (client.deviceClass ?? ""),
+            "class": (client.deviceClass?.rawValue ?? DeviceClass.phone.rawValue),
             "lastkey": lastPreKeyPayloadData,
             "prekeys": preKeysPayloadData,
             "sigkeys": signalingKeysPayloadData,
