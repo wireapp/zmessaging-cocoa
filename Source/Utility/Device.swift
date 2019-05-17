@@ -19,33 +19,8 @@
 
 import Foundation
 
-@objc public enum DeviceClass: UInt {
-    case phone
-    case tablet
-    case desktop
-}
-
-public enum DeviceClassString: String {
-    case Phone = "phone"
-    case Tablet = "tablet"
-    case Desktop = "desktop"
-    
-    init(deviceClass: DeviceClass) {
-        switch deviceClass {
-        case DeviceClass.phone:
-            self = .Phone
-            break
-        case DeviceClass.tablet:
-            self = .Tablet
-            break
-        case DeviceClass.desktop:
-            self = .Desktop
-            break
-        }
-    }
-}
-
 @objc extension UIDevice {
+    
     public func zm_model() -> String {
         var systemInfo = utsname()
         uname(&systemInfo)
@@ -99,19 +74,4 @@ public enum DeviceClassString: String {
         }
     }
     
-    public func zm_class() -> DeviceClass {
-        switch self.model {
-        case let model where model.hasPrefix("iPad"):
-            return .tablet
-        case let model where model.hasPrefix("iPhone"):
-            return .phone
-        default:
-            return .phone
-        }
-    }
-    
-    public func zm_classString() -> String {
-        let deviceClassString = DeviceClassString(deviceClass: self.zm_class())
-        return deviceClassString.rawValue
-    }
 }

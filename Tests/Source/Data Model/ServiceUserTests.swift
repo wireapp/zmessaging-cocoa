@@ -39,6 +39,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var isWirelessUser: Bool = false
     
+    var isUnderLegalHold: Bool = false
+    
     var expiresAfter: TimeInterval = 0
     
     var readReceiptsEnabled: Bool = true
