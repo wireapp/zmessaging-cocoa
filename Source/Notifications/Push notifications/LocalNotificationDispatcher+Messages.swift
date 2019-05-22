@@ -23,11 +23,12 @@ extension LocalNotificationDispatcher: PushMessageHandler {
 
     // Processes ZMOTRMessages and ZMSystemMessages
     @objc(processMessage:) public func process(_ message: ZMMessage) {
+        Logging.push.debug("Process message with nonce = \(message.nonce?.transportString() ?? "N/A")")
+        
         // we don't want to create duplicate notifications
-        guard
-            let nonce = message.nonce,
-            !messageNotifications.hasNotification(for: nonce)
-            else { return }
+        guard let nonce = message.nonce, !messageNotifications.hasNotification(for: nonce) else {
+            return Logging.push.debug("Ignore duplicate message with nonce = \(message.nonce?.transportString() ?? "N/A")")
+        }
         
         var note: ZMLocalNotification?
         
@@ -74,6 +75,8 @@ extension LocalNotificationDispatcher {
     }
     
     fileprivate func cancelNotificationForMessageID(_ messageID: UUID) {
+        Logging.push.debug("Canceling local notification with id = \(messageID.transportString())")
+        
         notificationCenter.removePendingNotificationRequests(withIdentifiers: [messageID.uuidString])
         notificationCenter.removeDeliveredNotifications(withIdentifiers: [messageID.uuidString])
         messageNotifications.removeAllNotifications(for: messageID)

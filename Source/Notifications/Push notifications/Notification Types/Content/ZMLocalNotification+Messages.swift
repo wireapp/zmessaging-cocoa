@@ -40,7 +40,11 @@ extension ZMLocalNotification {
             guard let sender = message.sender,
                   let conversation = message.conversation,
                   let managedObjectContext = message.managedObjectContext,
-                  let contentType = LocalNotificationContentType.typeForMessage(message) else { return nil }
+                  let contentType = LocalNotificationContentType.typeForMessage(message) else {
+                
+                    Logging.push.debug("Not creating local notification for message with nonce = \(message.nonce?.transportString() ?? "N/A") because context is unknown")
+                    return nil
+            }
             
             self.sender = sender
             self.conversation = conversation
@@ -58,7 +62,10 @@ extension ZMLocalNotification {
         }
         
         func shouldCreateNotification() -> Bool {
-            guard !message.isSilenced else { return false }
+            guard !message.isSilenced else {
+                Logging.push.debug("Not creating local notification for message with nonce = \(message.nonce?.transportString() ?? "N/A") because conversation is silenced")
+                return false
+            }
 
             if let timeStamp = message.serverTimestamp,
                let lastRead = conversation.lastReadServerTimeStamp,
