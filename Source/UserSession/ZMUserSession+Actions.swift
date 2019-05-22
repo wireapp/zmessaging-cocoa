@@ -18,8 +18,6 @@
 
 import Foundation
 
-private let zmLog = ZMSLog(tag: "Push")
-
 @objc extension ZMUserSession {
     
     // MARK: - Foreground Actions
@@ -124,7 +122,7 @@ private let zmLog = ZMSLog(tag: "Push")
             
                 let conversationOnSyncContext = userInfo.conversation(in: self.syncManagedObjectContext)
                 if result == .failed {
-                    zmLog.warn("failed to reply via push notification action")
+                    Logging.push.warn("failed to reply via push notification action")
                     self.localNotificationDispatcher.didFailToSendMessage(in: conversationOnSyncContext!)
                 } else {
                     self.syncManagedObjectContext.analytics?.tagActionOnPushNotification(conversation: conversationOnSyncContext, action: .text)
@@ -188,7 +186,7 @@ private let zmLog = ZMSLog(tag: "Push")
         
             self.likeMesssageObserver = nil
             if result == .failed {
-                zmLog.warn("failed to like message via push notification action")
+                Logging.push.warn("failed to like message via push notification action")
             }
             BackgroundActivityFactory.shared.endBackgroundActivity(activity)
             completionHandler()

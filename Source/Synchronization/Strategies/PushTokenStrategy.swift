@@ -22,7 +22,6 @@ import WireDataModel
 let VoIPIdentifierSuffix = "-voip"
 let TokenKey = "token"
 let PushTokenPath = "/push/tokens"
-private let zmLog = ZMSLog(tag: "Push")
 
 
 extension ZMSingleRequestSync : ZMRequestGenerator {}

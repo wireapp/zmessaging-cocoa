@@ -20,8 +20,6 @@ import Foundation
 import PushKit
 import UserNotifications
 
-private let log = ZMSLog(tag: "Push")
-
 protocol PushRegistry {
     
     var delegate: PKPushRegistryDelegate? { get set }
@@ -51,7 +49,7 @@ extension SessionManager: PKPushRegistryDelegate {
     public func pushRegistry(_ registry: PKPushRegistry, didUpdate pushCredentials: PKPushCredentials, for type: PKPushType) {
         guard type == .voIP else { return }
         
-        log.debug("PushKit token was updated: \(pushCredentials.token)")
+        Logging.push.debug("PushKit token was updated: \(pushCredentials.token)")
         
         // give new push token to all running sessions
         backgroundUserSessions.values.forEach({ userSession in
@@ -62,7 +60,7 @@ extension SessionManager: PKPushRegistryDelegate {
     public func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenFor type: PKPushType) {
         guard type == .voIP else { return }
         
-        log.debug("PushKit token was invalidated")
+        Logging.push.debug("PushKit token was invalidated")
         
         // delete push token from all running sessions
         backgroundUserSessions.values.forEach({ userSession in
@@ -78,7 +76,7 @@ extension SessionManager: PKPushRegistryDelegate {
         // We only care about voIP pushes, other types are not related to push notifications (watch complications and files)
         guard type == .voIP else { return completion() }
         
-        log.debug("Received push payload: \(payload.dictionaryPayload)")
+        Logging.push.debug("Received push payload: \(payload.dictionaryPayload)")
         // We were given some time to run, resume background task creation.
         BackgroundActivityFactory.shared.resume()
         notificationsTracker?.registerReceivedPush()
@@ -86,19 +84,19 @@ extension SessionManager: PKPushRegistryDelegate {
         guard let accountId = payload.dictionaryPayload.accountId(),
               let account = self.accountManager.account(with: accountId),
               let activity = BackgroundActivityFactory.shared.startBackgroundActivity(withName: "Process PushKit \(payload.stringIdentifier)", expirationHandler: { [weak self] in
-                log.debug("Processing push payload expired")
+                Logging.push.debug("Processing push payload expired")
                 self?.notificationsTracker?.registerProcessingExpired()
               }) else {
-                log.debug("Aborted processing of payload: \(payload.dictionaryPayload)")
+                Logging.push.debug("Aborted processing of payload: \(payload.dictionaryPayload)")
                 notificationsTracker?.registerProcessingAborted()
                 return completion()
         }
         
         withSession(for: account, perform: { userSession in
-            log.debug("Forwarding push payload to user session with account \(account.userIdentifier)")
+            Logging.push.debug("Forwarding push payload to user session with account \(account.userIdentifier)")
             
             userSession.receivedPushNotification(with: payload.dictionaryPayload, completion: { [weak self] in
-                log.debug("Processing push payload completed")
+                Logging.push.debug("Processing push payload completed")
                 self?.notificationsTracker?.registerNotificationProcessingCompleted()
                 BackgroundActivityFactory.shared.endBackgroundActivity(activity)
                 completion()
