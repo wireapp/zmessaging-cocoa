@@ -142,12 +142,12 @@ extension VoiceChannelV3 : CallActions {
     
     public func continueByDecreasingConversationSecurity(userSession: ZMUserSession) {
         guard let conversation = conversation else { return }
-        conversation.makeNotSecure()
+        conversation.acknowledgePrivacyWarning(withResendIntent: false)
     }
     
     public func leaveAndDecreaseConversationSecurity(userSession: ZMUserSession) {
         guard let conversation = conversation else { return }
-        conversation.makeNotSecure()
+        conversation.acknowledgePrivacyWarning(withResendIntent: false)
         userSession.syncManagedObjectContext.performGroupedBlock {
             let conversationId = conversation.objectID
             if let syncConversation = (try? userSession.syncManagedObjectContext.existingObject(with: conversationId)) as? ZMConversation {
