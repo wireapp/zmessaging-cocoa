@@ -1121,11 +1121,11 @@
     observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     observer.notificationCallback = ^(NSObject *note) {
         ConversationChangeInfo *changeInfo = (ConversationChangeInfo *)note;
-        if (changeInfo.securityLevelChanged && changeInfo.didNotSendMessagesBecauseOfConversationSecurityLevel) {
+        if (changeInfo.securityLevelChanged && changeInfo.causedByConversationPrivacyChange) {
             notificationRecieved = YES;
             [self.userSession performChanges:^{
                 if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
-                    [changeInfo.conversation resendMessagesThatCausedConversationSecurityDegradation];
+                    [changeInfo.conversation acknowledgePrivacyWarningWithResendIntent:YES];
                 }
             }];
         }
@@ -1159,7 +1159,7 @@
                                              handleSecurityLevelNotification:^(ConversationChangeInfo *changeInfo) {
                                                  notificationRecieved = YES;
                                                  if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
-                                                     XCTAssertTrue(changeInfo.didNotSendMessagesBecauseOfConversationSecurityLevel);
+                                                     XCTAssertTrue(changeInfo.causedByConversationPrivacyChange);
                                                  }
                                              }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1199,8 +1199,8 @@
         if ([changeInfo securityLevelChanged]) {
             notificationRecieved = YES;
             if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
-                XCTAssertTrue(changeInfo.didNotSendMessagesBecauseOfConversationSecurityLevel);
-                [changeInfo.conversation doNotResendMessagesThatCausedDegradation];
+                XCTAssertTrue(changeInfo.causedByConversationPrivacyChange);
+                [changeInfo.conversation acknowledgePrivacyWarningWithResendIntent:NO];
             }
         }
     };
@@ -1226,9 +1226,9 @@
         if ([changeInfo securityLevelChanged]) {
             notificationRecieved &= YES;
             if (changeInfo.conversation.securityLevel == ZMConversationSecurityLevelSecureWithIgnored) {
-                XCTAssertTrue(changeInfo.didNotSendMessagesBecauseOfConversationSecurityLevel);
+                XCTAssertTrue(changeInfo.causedByConversationPrivacyChange);
                 [self.userSession performChanges:^{
-                    [changeInfo.conversation resendMessagesThatCausedConversationSecurityDegradation];
+                    [changeInfo.conversation acknowledgePrivacyWarningWithResendIntent:YES];
                 }];
             }
         }
