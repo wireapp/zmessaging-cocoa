@@ -74,13 +74,15 @@ extension CallingRequestStrategy : ZMSingleRequestTranscoder {
     public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         
         zmLog.debug("Received response for \(self): \(response)")
-        var payloadAsString : String? = nil
-        if let payload = response.payload, let data = try? JSONSerialization.data(withJSONObject: payload, options: []) {
-            payloadAsString = String(data: data, encoding: .utf8)
+        if response.httpStatus == 200 {
+            var payloadAsString : String? = nil
+            if let payload = response.payload, let data = try? JSONSerialization.data(withJSONObject: payload, options: []) {
+                payloadAsString = String(data: data, encoding: .utf8)
+            }
+            zmLog.debug("Callback: \(String(describing: self.callConfigCompletion))")
+            self.callConfigCompletion?(payloadAsString, response.httpStatus)
+            self.callConfigCompletion = nil
         }
-        zmLog.debug("Callback: \(String(describing: self.callConfigCompletion))")
-        self.callConfigCompletion?(payloadAsString, response.httpStatus)
-        self.callConfigCompletion = nil
     }
 }
 

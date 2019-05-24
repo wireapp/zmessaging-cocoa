@@ -96,4 +96,34 @@ class CallingRequestStrategyTests : MessagingTest {
         // then
         XCTAssertTrue(request.shouldCompress)
     }
+    
+    func testThatItDoesNotForwardUnsuccessfulResponses() {
+        // given
+        let expectedCallConfig = "{\"config\":true}"
+        let receivedCallConfigExpectation = expectation(description: "Received CallConfig")
+        
+        sut.requestCallConfig { (callConfig, httpStatusCode) in
+            if callConfig == expectedCallConfig, httpStatusCode == 200 {
+                receivedCallConfigExpectation.fulfill()
+            } else {
+                XCTFail()
+            }
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        let request = sut.nextRequest()
+        XCTAssertEqual(request?.path, "/calls/config/v2")
+        
+        // when
+        let badPayload = [ "error" : "not found" ]
+        request?.complete(with: ZMTransportResponse(payload: badPayload as ZMTransportData, httpStatus: 412, transportSessionError: nil))
+        
+        // when
+        let payload = [ "config" : true ]
+        request?.complete(with: ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
+
+        // then
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+
+    }
 }
