@@ -1333,8 +1333,6 @@
     
     AssertArraysContainsSameObjects(lastMessage.users.allObjects, expectedUsers);
     XCTAssertEqual(lastMessage.systemMessageType, ZMSystemMessageTypeNewClient);
-
-
 }
 
 - (void)testThatInsertsSecurityLevelDecreasedMessageInTheEndOfConversationIfNotCausedByMessage
