@@ -184,9 +184,9 @@ extension CallingRequestStrategy : WireCallCenterTransport {
             let genericMessage = ZMGenericMessage.message(content: ZMCalling.calling(message: dataString))
             
             self.genericMessageStrategy.schedule(message: genericMessage, inConversation: conversation) { (response) in
-                
-                completionHandler(response.httpStatus)
-                
+                if response.httpStatus == 201 {
+                    completionHandler(response.httpStatus)
+                }
             }
         }
     }
