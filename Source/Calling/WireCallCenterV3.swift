@@ -259,9 +259,10 @@ extension WireCallCenterV3 {
     /// Returns conversations with active calls.
     public func activeCallConversations(in userSession: ZMUserSession) -> [ZMConversation] {
         let conversations = nonIdleCalls.compactMap { (key: UUID, value: CallState) -> ZMConversation? in
-            if value == CallState.established {
+            switch value {
+            case .establishedDataChannel, .established, .answered, .outgoing:
                 return ZMConversation(remoteID: key, createIfNeeded: false, in: userSession.managedObjectContext)
-            } else {
+            default:
                 return nil
             }
         }
