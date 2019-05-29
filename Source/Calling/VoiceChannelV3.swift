@@ -154,7 +154,7 @@ extension VoiceChannelV3 : CallActions {
                 userSession.callingStrategy.dropPendingCallMessages(for: syncConversation)
             }
         }
-        leave(userSession: userSession)
+        leave(userSession: userSession, completion: nil)
     }
     
     public func join(video: Bool, userSession: ZMUserSession) -> Bool {
@@ -166,11 +166,12 @@ extension VoiceChannelV3 : CallActions {
         }
     }
     
-    public func leave(userSession: ZMUserSession) {
+    public func leave(userSession: ZMUserSession, completion: (() -> ())?) {
         if userSession.callNotificationStyle == .callKit, #available(iOS 10.0, *) {
-            userSession.callKitDelegate?.requestEndCall(in: conversation!)
+            userSession.callKitDelegate?.requestEndCall(in: conversation!, completion: completion)
         } else {
-            return leave()
+            leave()
+            completion?()
         }
     }
     

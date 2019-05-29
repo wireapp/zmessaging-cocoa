@@ -83,7 +83,7 @@ import Foundation
         let conversation = userInfo.conversation(in: managedObjectContext)
         
         managedObjectContext.perform { 
-            conversation?.voiceChannel?.leave(userSession: self)
+            conversation?.voiceChannel?.leave(userSession: self, completion: nil)
             BackgroundActivityFactory.shared.endBackgroundActivity(activity)
             completionHandler()
         }

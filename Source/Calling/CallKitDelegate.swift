@@ -249,7 +249,7 @@ extension CallKitDelegate {
         }
     }
     
-    func requestEndCall(in conversation: ZMConversation) {
+    func requestEndCall(in conversation: ZMConversation, completion: (()->())? = nil) {
         guard let callUUID = callUUID(for: conversation) else { return }
         
         let action = CXEndCallAction(call: callUUID)
@@ -262,6 +262,7 @@ extension CallKitDelegate {
                 self?.log("Cannot end call: \(error)")
                 conversation.voiceChannel?.leave()
             }
+            completion?()
         }
     }
     
