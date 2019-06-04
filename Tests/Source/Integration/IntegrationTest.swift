@@ -491,7 +491,7 @@ extension IntegrationTest {
     func establishSession(with mockUser: MockUser) {
         mockTransportSession.performRemoteChanges({ session in
             if mockUser.clients.count == 0 {
-                session.registerClient(for: mockUser, label: "Wire for MS-DOS", type: "permanent")
+                session.registerClient(for: mockUser)
             }
             
             for client in mockUser.clients {

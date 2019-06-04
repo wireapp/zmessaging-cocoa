@@ -749,7 +749,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     // given
     __block NSString *idToDelete;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        MockUserClient *client = [session registerClientForUser:self.selfUser label:@"idToDelete" type:@"permanent"];
+        MockUserClient *client = [session registerClientForUser:self.selfUser];
         idToDelete = client.identifier;
     }];
     WaitForAllGroupsToBeEmpty(0.5);

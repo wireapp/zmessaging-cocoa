@@ -335,7 +335,7 @@
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
-        [session registerClientForUser:self.selfUser label:@"iPad 12" type:@"permanent"];
+        [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -908,7 +908,7 @@
     
     if (createAdditionalClient) {
         [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
-            [session registerClientForUser:self.user1 label:@"Wire for OSX" type:@"permanent"];
+            [session registerClientForUser:self.user1];
         }];
     }
     
@@ -1113,7 +1113,7 @@
     
     //when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session registerClientForUser:self.user1 label:@"remote client" type:@"permanent"];
+        [session registerClientForUser:self.user1];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1188,7 +1188,7 @@
     
     // add extra user, that will cause conversation degradation
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session) {
-        [session registerClientForUser:self.user1 label:@"remote client" type:@"permanent"];
+        [session registerClientForUser:self.user1];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1312,7 +1312,7 @@
     secureConversationBlock(groupLocalConversation);
     
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> session){
-        [session registerClientForUser:self.user1 label:@"remote client" type:@"permanent"];
+        [session registerClientForUser:self.user1];
     }];
     
     // when
@@ -1370,7 +1370,7 @@
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
     [self makeConversationSecured:conversation];
     [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
-        [session registerClientForUser:self.user1 label:@"iPod Touch" type:@"permanent"];
+        [session registerClientForUser:self.user1];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1399,7 +1399,7 @@
     // WHEN
     ZMGenericMessage *message = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Test" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused transportSession) {
-        MockUserClient *newClient = [transportSession registerClientForUser:self.user1 label:@"test-it" type:@"permanent"];
+        MockUserClient *newClient = [transportSession registerClientForUser:self.user1];
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:newClient toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     
@@ -1439,7 +1439,7 @@
     NSUInteger previousMessageCount = conversation.allMessages.count;
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused transportSession) {
-        newUser1Client = [transportSession registerClientForUser:self.user1 label:@"iphone-something" type:@"permanent"];
+        newUser1Client = [transportSession registerClientForUser:self.user1];
         [self.selfToUser1Conversation encryptAndInsertDataFromClient:newUser1Client toClient:self.selfUser.clients.anyObject data:message.data];
     }];
     
@@ -1650,7 +1650,7 @@
     XCTAssertTrue([self login]);
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session registerClientForUser:self.selfUser label:@"Second client" type:@"permanent"];
+        [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1706,7 +1706,7 @@
     XCTAssertTrue([self login]);
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session registerClientForUser:self.selfUser label:@"other selfuser clients" type:@"permanent"];
+        [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -1806,7 +1806,7 @@
     // (2) insert new client for user 1
     {
         [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-            additionalUserClient = [session registerClientForUser:self.user1 label:@"other user 1 clients" type:@"permanent"];
+            additionalUserClient = [session registerClientForUser:self.user1];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
         
@@ -1867,7 +1867,7 @@
     XCTAssertTrue([self login]);
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session registerClientForUser:self.selfUser label:@"self" type:@"permanent"];
+        [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1910,7 +1910,7 @@
     
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
         // this creates an extra client for self user
-        [session registerClientForUser:self.selfUser label:@"self" type:@"permanent"];
+        [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -1965,7 +1965,7 @@
     
     // add additional client for user1 remotely
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session registerClientForUser:self.user1 label:@"other user 1 clients" type:@"permanent"];
+        [session registerClientForUser:self.user1];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

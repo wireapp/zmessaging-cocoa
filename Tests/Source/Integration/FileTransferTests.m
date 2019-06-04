@@ -752,12 +752,9 @@
     NSURL *fileURL = [self createTestFile:@"foo2432"];
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversation.remoteIdentifier.transportString];
     NSString *expectedAssetAddPath = @"/assets/v3";
+    NSString *expectedFetchUserClientPath = [NSString stringWithFormat:@"/users/%@/clients/%@", self.user1.identifier, [(MockUserClient *)self.user1.clients.anyObject identifier]];
 
     // when
-    // register other users client
-    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
-        [session registerClientForUser:self.user1 label:@"Android!" type:@"permanent"];
-    }];
     __block ZMMessage *fileMessage;
 
     [self.mockTransportSession resetReceivedRequests];
@@ -770,7 +767,7 @@
     XCTAssertEqual(fileMessage.deliveryState, ZMDeliveryStateSent);
     NSArray <ZMTransportRequest *> *requests = [self filterOutRequestsForLastRead:self.mockTransportSession.receivedRequests];
 
-    XCTAssertEqual(requests.count, 4lu);
+    XCTAssertEqual(requests.count, 5lu);
 
     if (requests.count < 4) {
         return;
@@ -779,11 +776,13 @@
     ZMTransportRequest *assetAddRequest = requests[0];
     ZMTransportRequest *messageAddRequest = requests[1];
     ZMTransportRequest *missingPrekeysRequest = requests[2];
-    ZMTransportRequest *secondMessageAddRequest = requests[3];
+    ZMTransportRequest *fetchUserClientRequest = requests[3];
+    ZMTransportRequest *secondMessageAddRequest = requests[4];
 
     XCTAssertEqualObjects(assetAddRequest.path, expectedAssetAddPath);
     XCTAssertEqualObjects(messageAddRequest.path, expectedMessageAddPath);
     XCTAssertEqualObjects(missingPrekeysRequest.path, @"/users/prekeys");
+    XCTAssertEqualObjects(fetchUserClientRequest.path, expectedFetchUserClientPath);
     XCTAssertEqualObjects(secondMessageAddRequest.path, expectedMessageAddPath);
     XCTAssertEqual(conversation.allMessages.count, 2lu);
 
@@ -1082,16 +1081,10 @@
     NSURL *fileURL = self.testVideoFileURL;
     NSString *conversationIDString = conversation.remoteIdentifier.transportString;
     NSString *expectedMessageAddPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", conversationIDString];
-
     NSString *expectedAssetAddPath = @"/assets/v3";
+    NSString *expectedFetchUserClientPath = [NSString stringWithFormat:@"/users/%@/clients/%@", self.user1.identifier, [(MockUserClient *)self.user1.clients.anyObject identifier]];
 
     // when
-    // register other users client
-    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
-        [session registerClientForUser:self.user1 label:@"Android!" type:@"permanent"];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-
     __block ZMMessage *fileMessage;
 
     [self.mockTransportSession resetReceivedRequests];
@@ -1108,9 +1101,9 @@
 
     NSArray <ZMTransportRequest *> *requests = [self filterOutRequestsForLastRead:self.mockTransportSession.receivedRequests];
 
-    // Preview upload, Asset upload, generic message, Prekeys, generic message
-    XCTAssertEqual(requests.count, 5lu);
-    if (requests.count < 5) {
+    // Preview upload, Asset upload, generic message, Prekeys, fetch client, generic message
+    XCTAssertEqual(requests.count, 6lu);
+    if (requests.count < 6) {
         return;
     }
 
@@ -1118,12 +1111,14 @@
     ZMTransportRequest *fullAssetUploadRequest = requests[1];
     ZMTransportRequest *firstAssetMessageRequest = requests[2];
     ZMTransportRequest *missingPrekeysRequest = requests[3];
-    ZMTransportRequest *secondAssetMessageRequest = requests[4];
+    ZMTransportRequest *fetchUserClientRequest = requests[4];
+    ZMTransportRequest *secondAssetMessageRequest = requests[5];
     
     XCTAssertEqualObjects(thumbnailUploadRequest.path, expectedAssetAddPath);
     XCTAssertEqualObjects(fullAssetUploadRequest.path, expectedAssetAddPath);
     XCTAssertEqualObjects(firstAssetMessageRequest.path, expectedMessageAddPath);
     XCTAssertEqualObjects(missingPrekeysRequest.path, @"/users/prekeys");
+    XCTAssertEqualObjects(fetchUserClientRequest.path, expectedFetchUserClientPath);
     XCTAssertEqualObjects(secondAssetMessageRequest.path, expectedMessageAddPath);
     
     XCTAssertEqual(conversation.allMessages.count, 2lu);

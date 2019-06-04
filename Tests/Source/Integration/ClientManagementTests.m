@@ -94,13 +94,13 @@
 - (void)insertTwoSelfClientsOnMockTransporSession
 {
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        MockUserClient *client1 = [session registerClientForUser:self.selfUser label:@"foobar" type:@"permanent"];
+        MockUserClient *client1 = [session registerClientForUser:self.selfUser label:@"foobar" type:@"permanent" deviceClass:@"phone"];
         client1.time = [NSDate dateWithTimeIntervalSince1970:124535];
         client1.deviceClass = @"iPhone";
         client1.model = @"iTV";
         client1.locationLongitude = 23;
         client1.locationLatitude = -14.43;
-        MockUserClient *client2 = [session registerClientForUser:self.selfUser label:@"x456346" type:@"permanent"];
+        MockUserClient *client2 = [session registerClientForUser:self.selfUser label:@"x456346" type:@"permanent" deviceClass:@"phone"];
         client2.time = [NSDate dateWithTimeIntervalSince1970:2132444];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -172,7 +172,7 @@
     // when
     __block MockUserClient *mockClient;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        mockClient = [session registerClientForUser:self.selfUser label:@"Foo client" type:@"permanent"];
+        mockClient = [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -202,7 +202,7 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session registerClientForUser:self.selfUser label:@"Foo client" type:@"permanent"];
+        [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -233,7 +233,7 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session registerClientForUser:self.selfUser label:@"Foo client" type:@"permanent"];
+        [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -264,7 +264,7 @@
     UserClient *currentSelfClient = selfUser.selfClient;
     __block MockUserClient *mockClient;
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        mockClient = [session registerClientForUser:self.selfUser label:@"Second client" type:@"permanent"];
+        mockClient = [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     

@@ -36,6 +36,7 @@ class OTRTests : IntegrationTest {
         
         guard let conversation = self.conversation(for: self.selfToUser1Conversation) else {return XCTFail()}
         
+        let client1 = user1.clients.anyObject() as! MockUserClient
         let text = "Foo bar, but encrypted"
         self.mockTransportSession.resetReceivedRequests()
         
@@ -52,7 +53,8 @@ class OTRTests : IntegrationTest {
         let requests = mockTransportSession.receivedRequests()
         XCTAssertEqual(requests[0].path, expected)
         XCTAssertEqual(requests[1].path, "/users/prekeys")
-        XCTAssertEqual(requests[2].path, expected)
+        XCTAssertEqual(requests[2].path, "/users/\(user1.identifier)/clients/\(client1.identifier!)")
+        XCTAssertEqual(requests[3].path, expected)
     }
     
     func testThatItSendsEncryptedImageMessage() {
@@ -62,6 +64,7 @@ class OTRTests : IntegrationTest {
         guard let conversation = self.conversation(for: self.selfToUser1Conversation) else { return XCTFail() }
         self.mockTransportSession.resetReceivedRequests()
         let imageData = self.verySmallJPEGData()
+        let client1 = user1.clients.anyObject() as! MockUserClient
         
         // when
         var message: ZMConversationMessage? = nil
@@ -78,7 +81,8 @@ class OTRTests : IntegrationTest {
         XCTAssertEqual(requests[0].path, "/assets/v3")
         XCTAssertEqual(requests[1].path, messageSendingPath)
         XCTAssertEqual(requests[2].path, "/users/prekeys")
-        XCTAssertEqual(requests[3].path, messageSendingPath)
+        XCTAssertEqual(requests[3].path, "/users/\(user1.identifier)/clients/\(client1.identifier!)")
+        XCTAssertEqual(requests[4].path, messageSendingPath)
     }
     
     func testThatItSendsARequestToUpdateSignalingKeys() {

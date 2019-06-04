@@ -389,7 +389,8 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
         switch event.type {
         case .userClientAdd:
             if let client = UserClient.createOrUpdateSelfUserClient(clientInfo, context: moc) {
-                selfUser.selfClient()?.addNewClientToIgnored(client, causedBy: .none)
+                selfUser.selfClient()?.addNewClientToIgnored(client)
+                selfUser.selfClient()?.updateSecurityLevelAfterDiscovering(Set(arrayLiteral: client))
             }
         case .userClientRemove:
             let selfClientId = selfUser.selfClient()?.remoteIdentifier

@@ -212,7 +212,7 @@
             event = [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:textMessage.data];
             
             // register new client
-            [session registerClientForUser:self.user1 label:@"foobar" type:@"permanent"];
+            [session registerClientForUser:self.user1];
         }];
         WaitForAllGroupsToBeEmpty(0.2);
         
