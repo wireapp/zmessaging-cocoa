@@ -500,18 +500,18 @@ public protocol ForegroundNotificationResponder: class {
     
     public func delete(account: Account) {
         log.debug("Deleting account \(account.userIdentifier)...")
-        if accountManager.selectedAccount != account {
-            // Deleted an account associated with a background session
-            self.tearDownBackgroundSession(for: account.userIdentifier)
-            self.deleteAccountData(for: account)
-        } else if let secondAccount = accountManager.accounts.first(where: { $0.userIdentifier != account.userIdentifier }) {
-            // Deleted the active account but we can switch to another account
+        if let secondAccount = accountManager.accounts.first(where: { $0.userIdentifier != account.userIdentifier }) {
+            // Deleted an account but we can switch to another account
             select(secondAccount, tearDownCompletion: { [weak self] in
                 self?.tearDownBackgroundSession(for: account.userIdentifier)
                 self?.deleteAccountData(for: account)
             })
+        } else if accountManager.selectedAccount != account {
+            // Deleted an inactive account, there's no need notify the UI
+            tearDownBackgroundSession(for: account.userIdentifier)
+            deleteAccountData(for: account)
         } else {
-            // Deleted the active account and there's not other account we can switch to
+            // Deleted the last account so we need to return to the logged out area
             logoutCurrentSession(deleteCookie: true, deleteAccount:true, error: NSError(code: .addAccountRequested, userInfo: nil))
         }
     }
@@ -521,7 +521,7 @@ public protocol ForegroundNotificationResponder: class {
     }
     
     fileprivate func logoutCurrentSession(deleteCookie: Bool = true, deleteAccount: Bool = false, error : Error?) {
-        guard let currentSession = activeUserSession, let account = accountManager.selectedAccount else {
+        guard let account = accountManager.selectedAccount else {
             return
         }
     
@@ -529,10 +529,10 @@ public protocol ForegroundNotificationResponder: class {
         tearDownObservers(account: account.userIdentifier)
         notifyUserSessionDestroyed(account.userIdentifier)
         
-        self.createUnauthenticatedSession()
+        self.createUnauthenticatedSession(accountId: deleteAccount ? nil : account.userIdentifier)
         
         delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: { [weak self] in
-            currentSession.closeAndDeleteCookie(deleteCookie)
+            self?.activeUserSession?.closeAndDeleteCookie(deleteCookie)
             self?.activeUserSession = nil
             StorageStack.reset()
             
@@ -552,7 +552,7 @@ public protocol ForegroundNotificationResponder: class {
     internal func loadSession(for account: Account?, completion: @escaping (ZMUserSession?) -> Void) {
         guard let authenticatedAccount = account, environment.isAuthenticated(authenticatedAccount) else {
             completion(nil)
-            createUnauthenticatedSession()
+            createUnauthenticatedSession(accountId: account?.userIdentifier)
             delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: account?.loginCredentials?.dictionaryRepresentation))
             return
         }
@@ -612,9 +612,10 @@ public protocol ForegroundNotificationResponder: class {
     }
 
     @discardableResult
-    fileprivate func createUnauthenticatedSession() -> UnauthenticatedSession {
+    fileprivate func createUnauthenticatedSession(accountId: UUID? = nil) -> UnauthenticatedSession {
         log.debug("Creating unauthenticated session")
         let unauthenticatedSession = unauthenticatedSessionFactory.session(withDelegate: self)
+        unauthenticatedSession.accountId = accountId
         self.unauthenticatedSession = unauthenticatedSession
         return unauthenticatedSession
     }
@@ -866,7 +867,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
     
     public func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
         if unauthenticatedSession == nil {
-            createUnauthenticatedSession()
+            createUnauthenticatedSession(accountId: accountId)
         }
         
         delegate?.sessionManagerDidFailToLogin(account: accountManager.account(with: accountId), error: error)
@@ -894,7 +895,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
             
         default:
             if unauthenticatedSession == nil {
-                createUnauthenticatedSession()
+                createUnauthenticatedSession(accountId: accountId)
             }
             
             delegate?.sessionManagerDidFailToLogin(account: accountManager.account(with: accountId), error: error)
