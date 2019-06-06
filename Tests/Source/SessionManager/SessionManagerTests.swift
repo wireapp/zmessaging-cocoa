@@ -332,6 +332,54 @@ extension IntegrationTest {
     }
 }
 
+class SessionManagertests_AccountDeletion: IntegrationTest {
+    
+    override func setUp() {
+        super.setUp()
+        createSelfUserAndConversation()
+    }
+    
+    func testThatItDeletesTheAccountFolder_WhenDeletingAccountWithoutActiveUserSession() throws {
+        // given
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else {
+            XCTFail()
+            return
+        }
+        let account = self.createAccount()
+        
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        
+        try FileManager.default.createDirectory(at: accountFolder, withIntermediateDirectories: true, attributes: nil)
+        
+        // when
+        performIgnoringZMLogError {
+            self.sessionManager!.delete(account: account)
+        }
+        
+        // then
+        XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
+    }
+    
+    func testThatItDeletesTheAccountFolder_WhenDeletingActiveUserSessionAccount() throws {
+        // given
+        XCTAssert(login())
+        
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        
+        let account = sessionManager!.accountManager.selectedAccount!
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        
+        // when
+        performIgnoringZMLogError {
+            self.sessionManager!.delete(account: account)
+        }
+        
+        // then
+        XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
+    }
+    
+}
+
 class SessionManagerTests_Teams: IntegrationTest {
     
     override func setUp() {
@@ -447,27 +495,6 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
         XCTAssertNil(account.teamName)
         XCTAssertEqual(account.userName, selfUser.name)
-    }
-    
-    func testThatItDeletesTheAccountFolder() throws {
-        // given
-        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else {
-            XCTFail()
-            return
-        }
-        let account = self.createAccount()
-        
-        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
-        
-        try FileManager.default.createDirectory(at: accountFolder, withIntermediateDirectories: true, attributes: nil)
-        
-        // when
-        performIgnoringZMLogError {
-            self.sessionManager!.delete(account: account)
-        }
-        
-        // then
-        XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
     }
     
     func testThatItSendsAuthenticationErrorWhenAccountLimitIsReached() throws {
