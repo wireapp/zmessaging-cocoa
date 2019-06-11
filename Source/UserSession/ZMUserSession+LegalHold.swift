@@ -23,30 +23,26 @@ import WireTransport
 public enum LegalHoldInstallationError: Error {
     case userNotInTeam(ZMUser)
     case invalidUser(ZMUser)
-    case notSelfUser(ZMUser)
 }
 
 extension ZMUserSession {
 
     /**
      * Sends a request to accept a legal hold request for the specified user.
-     * - parameter user: The self user. If you pass a user that isn't the self user, this will fail.
      * - parameter completionHandler: The block that will be called with the result of the request.
      * - parameter error: The error that prevented the approval of legal hold.
      */
 
-    public func acceptLegalHold(for user: ZMUser, completionHandler: @escaping (_ error: Error?) -> Void) {
+    public func acceptLegalHold(completionHandler: @escaping (_ error: Error?) -> Void) {
         // 1) Create the Request
         guard let teamID = user.teamIdentifier else {
             return completionHandler(LegalHoldInstallationError.userNotInTeam(user))
         }
 
-        guard let userID = user.remoteIdentifier else {
-            return completionHandler(LegalHoldInstallationError.invalidUser(user))
-        }
+        let selfUser = ZMUser.selfUser(in: managedObjectContext)
 
-        guard user.isSelfUser else {
-            return completionHandler(LegalHoldInstallationError.notSelfUser(user))
+        guard let userID = selfUser.remoteIdentifier else {
+            return completionHandler(LegalHoldInstallationError.invalidUser(user))
         }
 
         let path = "/teams/\(teamID.transportString())/legalhold/\(userID.transportString())/approve"
