@@ -29,11 +29,12 @@ extension ZMUserSession {
 
     /**
      * Sends a request to accept a legal hold request for the specified user.
+     * - parameter password: The password of the user to send in the payload, if it's not a SSO user.
      * - parameter completionHandler: The block that will be called with the result of the request.
      * - parameter error: The error that prevented the approval of legal hold.
      */
 
-    public func acceptLegalHold(completionHandler: @escaping (_ error: Error?) -> Void) {
+    public func acceptLegalHold(password: String?, completionHandler: @escaping (_ error: Error?) -> Void) {
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
 
         // 1) Create the Request
@@ -45,8 +46,11 @@ extension ZMUserSession {
             return completionHandler(LegalHoldInstallationError.invalidUser(selfUser))
         }
 
+        var payload: [String: Any] = [:]
+        payload["password"] = password
+
         let path = "/teams/\(teamID.transportString())/legalhold/\(userID.transportString())/approve"
-        let request = ZMTransportRequest(path: path, method: .methodPUT, payload: nil)
+        let request = ZMTransportRequest(path: path, method: .methodPUT, payload: payload as NSDictionary)
 
         // 2) Handle the Response
         request.add(ZMCompletionHandler(on: managedObjectContext, block: { _ in
