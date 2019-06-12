@@ -754,6 +754,16 @@ extension UserClientRequestStrategyTests {
                 "type" : "user.client-remove"
             ] as ZMTransportData
     }
+
+    static func payloadForReceivingLegalHoldRequest(request: LegalHoldRequest) -> ZMTransportData {
+        return [
+            "type": "user.client-legal-hold-request",
+            "requester": request.requesterIdentifier.transportString(),
+            "target_user": request.targetUserIdentifier.transportString(),
+            "client_id": request.clientIdentifier.transportString(),
+            "last_prekey": request.lastPrekey.base64String()
+        ] as ZMTransportData
+    }
     
     func testThatItAddsAnIgnoredSelfUserClientWhenReceivingAPush() {
         
@@ -1036,6 +1046,48 @@ extension UserClientRequestStrategyTests {
             XCTAssertNil(thirdRequest)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+    }
+
+    // MARK: - Legal Hold Event
+
+    func testThatItProcessesValidLegalHoldEventPayloads() {
+        // GIVEN
+        var selfUser: ZMUser! = nil
+
+        syncMOC.performGroupedBlock {
+            selfUser = ZMUser.selfUser(in: self.syncMOC)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        let legalHoldRequest = LegalHoldRequest(
+            requesterIdentifier: UUID(),
+            targetUserIdentifier: selfUser.remoteIdentifier,
+            clientIdentifier: UUID(),
+            lastPrekey: Data(base64Encoded: "pQABAQoCoQBYIPEFMBhOtG0dl6gZrh3kgopEK4i62t9sqyqCBckq3IJgA6EAoQBYIC9gPmCdKyqwj9RiAaeSsUI7zPKDZS+CjoN+sfihk/5VBPY=")!
+        )
+
+        let payload: [String: Any] = [
+            "id": "93912B22-736C-4EFC-9922-E7ECAC5020F5",
+            "payload": [
+                UserClientRequestStrategyTests.payloadForReceivingLegalHoldRequest(request: legalHoldRequest)
+            ],
+            "transient" : false
+        ]
+
+        let events = ZMUpdateEvent.eventsArray(fromPushChannelData: payload as ZMTransportData)
+        guard let event = events!.first else {
+            XCTFail()
+            return
+        }
+
+        // when
+        syncMOC.performGroupedBlockAndWait {
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: .none)
+
+            // then
+            XCTAssertEqual(selfUser.legalHoldStatus, .pending(legalHoldRequest))
+        }
     }
 
 }
