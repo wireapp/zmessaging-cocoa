@@ -40,6 +40,8 @@ private let log = ZMSLog(tag: "UnauthenticatedSession")
 @objcMembers
 public class UnauthenticatedSession: NSObject {
     
+    /// **accountId** will be set if the unauthenticated session is associated with an existing account
+    public internal(set) var accountId: UUID?
     public let groupQueue: DispatchGroupQueue
     private(set) public var authenticationStatus: ZMAuthenticationStatus!
     public let registrationStatus: RegistrationStatus 
