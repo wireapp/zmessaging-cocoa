@@ -34,15 +34,15 @@ extension ZMUserSession {
      */
 
     public func acceptLegalHold(completionHandler: @escaping (_ error: Error?) -> Void) {
-        // 1) Create the Request
-        guard let teamID = user.teamIdentifier else {
-            return completionHandler(LegalHoldInstallationError.userNotInTeam(user))
-        }
-
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
 
+        // 1) Create the Request
+        guard let teamID = selfUser.teamIdentifier else {
+            return completionHandler(LegalHoldInstallationError.userNotInTeam(selfUser))
+        }
+
         guard let userID = selfUser.remoteIdentifier else {
-            return completionHandler(LegalHoldInstallationError.invalidUser(user))
+            return completionHandler(LegalHoldInstallationError.invalidUser(selfUser))
         }
 
         let path = "/teams/\(teamID.transportString())/legalhold/\(userID.transportString())/approve"
