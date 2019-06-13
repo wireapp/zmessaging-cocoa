@@ -760,8 +760,11 @@ extension UserClientRequestStrategyTests {
             "type": "user.client-legal-hold-request",
             "requester": request.requesterIdentifier.transportString(),
             "target_user": request.targetUserIdentifier.transportString(),
-            "client_id": request.clientIdentifier.transportString(),
-            "last_prekey": request.lastPrekey.base64String()
+            "client_id": request.clientIdentifier,
+            "last_prekey": [
+                "id": request.lastPrekey.id,
+                "key": request.lastPrekey.key.base64EncodedString() 
+            ]
         ] as ZMTransportData
     }
     
@@ -1063,8 +1066,11 @@ extension UserClientRequestStrategyTests {
         let legalHoldRequest = LegalHoldRequest(
             requesterIdentifier: UUID(),
             targetUserIdentifier: selfUser.remoteIdentifier,
-            clientIdentifier: UUID(),
-            lastPrekey: Data(base64Encoded: "pQABAQoCoQBYIPEFMBhOtG0dl6gZrh3kgopEK4i62t9sqyqCBckq3IJgA6EAoQBYIC9gPmCdKyqwj9RiAaeSsUI7zPKDZS+CjoN+sfihk/5VBPY=")!
+            clientIdentifier: "eca3c87cfe28be49",
+            lastPrekey: LegalHoldRequest.Prekey(
+                id: "65535",
+                key: Data(base64Encoded: "pQABAQoCoQBYIPEFMBhOtG0dl6gZrh3kgopEK4i62t9sqyqCBckq3IJgA6EAoQBYIC9gPmCdKyqwj9RiAaeSsUI7zPKDZS+CjoN+sfihk/5VBPY=")!
+            )
         )
 
         let payload: [String: Any] = [
