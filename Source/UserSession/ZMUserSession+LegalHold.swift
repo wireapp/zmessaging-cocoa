@@ -23,6 +23,7 @@ import WireTransport
 public enum LegalHoldInstallationError: Error {
     case userNotInTeam(ZMUser)
     case invalidUser(ZMUser)
+    case invalidResponse
 }
 
 extension ZMUserSession {
@@ -53,8 +54,11 @@ extension ZMUserSession {
         let request = ZMTransportRequest(path: path, method: .methodPUT, payload: payload as NSDictionary)
 
         // 2) Handle the Response
-        request.add(ZMCompletionHandler(on: managedObjectContext, block: { _ in
-            // TODO: Handle errors
+        request.add(ZMCompletionHandler(on: managedObjectContext, block: { response in
+            guard response.httpStatus == 200 else {
+                return completionHandler(LegalHoldInstallationError.invalidResponse)
+            }
+
             completionHandler(nil)
         }))
 
