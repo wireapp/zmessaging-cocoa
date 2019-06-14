@@ -172,7 +172,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
     }
     
     public func request(forInserting managedObject: ZMManagedObject, forKeys keys: Set<String>?) -> ZMUpstreamRequest? {
-        guard let client = managedObject as? UserClient else { fatal("Called requestForInsertingObject() on \(managedObject.privateDescription)") }
+        guard let client = managedObject as? UserClient else { fatal("Called requestForInsertingObject() on \(managedObject.safeForLoggingDescription)") }
         return try? requestsFactory.registerClientRequest(
                 client,
                 credentials: clientRegistrationStatus?.emailCredentials,
@@ -191,7 +191,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
                 if didRetryRegisteringSignalingKeys {
                     (managedObject as? UserClient)?.needsToUploadSignalingKeys = false
                     managedObjectContext?.saveOrRollback()
-                    fatal("UserClientTranscoder sigKey request failed with bad-request - \(upstreamRequest.transportRequest.privateDescription)")
+                    fatal("UserClientTranscoder sigKey request failed with bad-request - \(upstreamRequest.transportRequest.safeForLoggingDescription)")
                 }
                 didRetryRegisteringSignalingKeys = true
                 return true
@@ -238,7 +238,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
             clientRegistrationStatus?.didRegister(client)
         }
         else {
-            fatal("Called updateInsertedObject() on \(managedObject.privateDescription)")
+            fatal("Called updateInsertedObject() on \(managedObject.safeForLoggingDescription)")
         }
     }
     
