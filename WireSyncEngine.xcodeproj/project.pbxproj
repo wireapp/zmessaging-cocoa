@@ -426,7 +426,7 @@
 		F190E0DD1E8E7C9D003E81F8 /* SlowSyncTests+Swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = F190E0DB1E8E7BA1003E81F8 /* SlowSyncTests+Swift.swift */; };
 		F19E559E22B399AE005C792D /* UUID+SafeLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19E559D22B399AE005C792D /* UUID+SafeLogging.swift */; };
 		F19E55A022B3A2C5005C792D /* UNNotification+SafeLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19E559F22B3A2C5005C792D /* UNNotification+SafeLogging.swift */; };
-		F19E55A222B3A3FA005C792D /* UNNotificatioResponse+SafeLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19E55A122B3A3FA005C792D /* UNNotificatioResponse+SafeLogging.swift */; };
+		F19E55A222B3A3FA005C792D /* UNNotificationResponse+SafeLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19E55A122B3A3FA005C792D /* UNNotificationResponse+SafeLogging.swift */; };
 		F19E55A422B3A740005C792D /* PKPushPayload+SafeLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19E55A322B3A740005C792D /* PKPushPayload+SafeLogging.swift */; };
 		F19E55A622B3AAA8005C792D /* PKPushCredentials+SafeLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19E55A522B3AAA8005C792D /* PKPushCredentials+SafeLogging.swift */; };
 		F19F1D141EFBC18E00275E27 /* UnauthenticatedSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19F1D131EFBC18E00275E27 /* UnauthenticatedSession.swift */; };
@@ -1056,7 +1056,7 @@
 		F190E0DB1E8E7BA1003E81F8 /* SlowSyncTests+Swift.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SlowSyncTests+Swift.swift"; sourceTree = "<group>"; };
 		F19E559D22B399AE005C792D /* UUID+SafeLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UUID+SafeLogging.swift"; sourceTree = "<group>"; };
 		F19E559F22B3A2C5005C792D /* UNNotification+SafeLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UNNotification+SafeLogging.swift"; sourceTree = "<group>"; };
-		F19E55A122B3A3FA005C792D /* UNNotificatioResponse+SafeLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UNNotificatioResponse+SafeLogging.swift"; sourceTree = "<group>"; };
+		F19E55A122B3A3FA005C792D /* UNNotificationResponse+SafeLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UNNotificationResponse+SafeLogging.swift"; sourceTree = "<group>"; };
 		F19E55A322B3A740005C792D /* PKPushPayload+SafeLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PKPushPayload+SafeLogging.swift"; sourceTree = "<group>"; };
 		F19E55A522B3AAA8005C792D /* PKPushCredentials+SafeLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PKPushCredentials+SafeLogging.swift"; sourceTree = "<group>"; };
 		F19F1D131EFBC18E00275E27 /* UnauthenticatedSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UnauthenticatedSession.swift; sourceTree = "<group>"; };
@@ -2234,7 +2234,7 @@
 				5EC3A467210B763000B76C78 /* NotificationUserInfo.swift */,
 				F98EDCE71D82B924001E65CB /* ZMLocalNotificationSet.swift */,
 				F19E559F22B3A2C5005C792D /* UNNotification+SafeLogging.swift */,
-				F19E55A122B3A3FA005C792D /* UNNotificatioResponse+SafeLogging.swift */,
+				F19E55A122B3A3FA005C792D /* UNNotificationResponse+SafeLogging.swift */,
 				F19E55A322B3A740005C792D /* PKPushPayload+SafeLogging.swift */,
 				F19E55A522B3AAA8005C792D /* PKPushCredentials+SafeLogging.swift */,
 			);
@@ -2830,7 +2830,7 @@
 				F16C8BE82044129700677D31 /* ZMConversationTranscoder.swift in Sources */,
 				1626344920D7DB81000D4063 /* PushNotificationCategory.swift in Sources */,
 				F98EDCD71D82B913001E65CB /* LocalNotificationContentType.swift in Sources */,
-				F19E55A222B3A3FA005C792D /* UNNotificatioResponse+SafeLogging.swift in Sources */,
+				F19E55A222B3A3FA005C792D /* UNNotificationResponse+SafeLogging.swift in Sources */,
 				EFF940402240FF12004F3115 /* DeepLinkError.swift in Sources */,
 				F90EC5A31E7BF1AC00A6779E /* AVSWrapper.swift in Sources */,
 				5E8BB8992147CD3F00EEA64B /* AVSBridging.swift in Sources */,

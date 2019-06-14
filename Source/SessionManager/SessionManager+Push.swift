@@ -34,7 +34,7 @@ extension PKPushRegistry: PushRegistry {}
 extension PKPushPayload {
     fileprivate var stringIdentifier: String {
         if let data = dictionaryPayload["data"] as? [AnyHashable : Any], let innerData = data["data"] as? [AnyHashable : Any], let id = innerData["id"] {
-            return "Payload: data.id = \(id)"
+            return "\(id)"
         } else {
             return self.description
         } 
@@ -83,8 +83,8 @@ extension SessionManager: PKPushRegistryDelegate {
         
         guard let accountId = payload.dictionaryPayload.accountId(),
               let account = self.accountManager.account(with: accountId),
-              let activity = BackgroundActivityFactory.shared.startBackgroundActivity(withName: "Process PushKit \(payload.stringIdentifier)", expirationHandler: { [weak self] in
-                Logging.push.safePublic("Processing push payload expired")
+              let activity = BackgroundActivityFactory.shared.startBackgroundActivity(withName: "\(payload.stringIdentifier)", expirationHandler: { [weak self] in
+                Logging.push.safePublic("Processing push payload expired: \(payload)")
                 self?.notificationsTracker?.registerProcessingExpired()
               }) else {
                 Logging.push.safePublic("Aborted processing of payload: \(payload)")

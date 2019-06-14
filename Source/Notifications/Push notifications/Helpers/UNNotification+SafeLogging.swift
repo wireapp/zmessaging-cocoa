@@ -20,7 +20,6 @@ import Foundation
 
 extension UNNotification: SafeForLoggingStringConvertible {
     public var safeForLoggingDescription: String {
-        let dateString = DateFormatter.localizedString(from: date, dateStyle: .short, timeStyle: .short)
-        return "\(dateString)-\(request.identifier.readableHash)"
+        return "date:\(date) request_id:\(request.identifier.readableHash)"
     }
 }

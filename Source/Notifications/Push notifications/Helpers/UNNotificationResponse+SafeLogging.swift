@@ -20,6 +20,6 @@ import Foundation
 
 extension UNNotificationResponse: SafeForLoggingStringConvertible {
     public var safeForLoggingDescription: String {
-        return "\(actionIdentifier): \(notification.safeForLoggingDescription)"
+        return "action:\(actionIdentifier) notification: [\(notification.safeForLoggingDescription)]"
     }
 }

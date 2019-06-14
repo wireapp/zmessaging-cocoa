@@ -23,7 +23,7 @@ extension LocalNotificationDispatcher: PushMessageHandler {
 
     // Processes ZMOTRMessages and ZMSystemMessages
     @objc(processMessage:) public func process(_ message: ZMMessage) {
-        Logging.push.safePublic("Process message with nonce = \(message.nonce)")
+        Logging.push.safePublic("Process message with nonce=\(message.nonce)")
         
         // we don't want to create duplicate notifications
         guard let nonce = message.nonce, !messageNotifications.hasNotification(for: nonce) else {
