@@ -28,7 +28,7 @@ extension Dictionary {
     
     internal func accountId() -> UUID? {
         guard let userInfoData = self[PushChannelDataKey as! Key] as? [String: Any] else {
-            Logging.push.debug("No data dictionary in notification userInfo payload");
+            Logging.push.safePublic("No data dictionary in notification userInfo payload");
             return nil
         }
     
@@ -165,7 +165,7 @@ extension ZMUserSession {
             let notAuthenticated = !self.isAuthenticated()
             
             if notAuthenticated {
-                Logging.push.debug("Not displaying notification because app is not authenticated")
+                Logging.push.safePublic("Not displaying notification because app is not authenticated")
                 completion()
                 return
             }
@@ -199,7 +199,7 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
                                        willPresent notification: UNNotification,
                                        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
     {
-        Logging.push.debug("Notification center wants to present in-app notification: \(notification)")
+        Logging.push.safePublic("Notification center wants to present in-app notification: \(notification)")
         let categoryIdentifier = notification.request.content.categoryIdentifier
         
         handleInAppNotification(with: notification.userInfo,
@@ -212,7 +212,7 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
                                        didReceive response: UNNotificationResponse,
                                        withCompletionHandler completionHandler: @escaping () -> Void)
     {
-        Logging.push.debug("Did receive notification response: \(response)")
+        Logging.push.safePublic("Did receive notification response: \(response)")
         let userText = (response as? UNTextInputNotificationResponse)?.userText
         let note = response.notification
         
