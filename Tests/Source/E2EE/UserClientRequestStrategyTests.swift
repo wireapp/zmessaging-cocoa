@@ -1068,7 +1068,7 @@ extension UserClientRequestStrategyTests {
             targetUserIdentifier: selfUser.remoteIdentifier,
             clientIdentifier: "eca3c87cfe28be49",
             lastPrekey: LegalHoldRequest.Prekey(
-                id: "65535",
+                id: 65535,
                 key: Data(base64Encoded: "pQABAQoCoQBYIPEFMBhOtG0dl6gZrh3kgopEK4i62t9sqyqCBckq3IJgA6EAoQBYIC9gPmCdKyqwj9RiAaeSsUI7zPKDZS+CjoN+sfihk/5VBPY=")!
             )
         )
