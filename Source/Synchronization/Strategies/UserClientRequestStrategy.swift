@@ -389,12 +389,16 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
         guard let moc = self.managedObjectContext else { return }
         let selfUser = ZMUser.selfUser(in: moc)
 
-        guard let jsonPayload = try? JSONSerialization.data(withJSONObject: event.payload, options: []),
-            let request = LegalHoldRequest.decode(from: jsonPayload) else {
-                return zmLog.error("Invalid legal hold request payload")
-        }
+        let decoder = JSONDecoder()
+        decoder.dataDecodingStrategy = .base64
 
-        selfUser.userDidReceiveLegalHoldRequest(request)
+        do {
+            let jsonPayload = try JSONSerialization.data(withJSONObject: event.payload, options: [])
+            let request = try decoder.decode(LegalHoldRequest.self, from: jsonPayload)
+            selfUser.userDidReceiveLegalHoldRequest(request)
+        } catch {
+            zmLog.error("Invalid legal hold request payload: \(error)")
+        }
     }
 
     fileprivate func processClientListUpdateEvent(_ event: ZMUpdateEvent) {
