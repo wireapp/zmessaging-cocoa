@@ -137,7 +137,7 @@ class SessionManagerTests: IntegrationTest {
                               delegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
-                              blacklistDownloadInterval : 60) { sessionManager in
+                              blacklistDownloadInterval : -1) { sessionManager in
                                 
                                 let environment = MockEnvironment()
                                 let reachability = TestReachability()
@@ -199,7 +199,7 @@ class SessionManagerTests: IntegrationTest {
                               delegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
-                              blacklistDownloadInterval : 60) { sessionManager in
+                              blacklistDownloadInterval : -1) { sessionManager in
                                 
                                 let environment = MockEnvironment()
                                 let reachability = TestReachability()
@@ -261,7 +261,7 @@ class SessionManagerTests: IntegrationTest {
                               delegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
-                              blacklistDownloadInterval : 60) { sessionManager in
+                              blacklistDownloadInterval : -1) { sessionManager in
                                 
                                 let environment = MockEnvironment()
                                 let reachability = TestReachability()
@@ -583,7 +583,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                               delegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
-                              blacklistDownloadInterval : 60) { sessionManager in
+                              blacklistDownloadInterval : -1) { sessionManager in
                                 
                                 let environment = MockEnvironment()
                                 let reachability = TestReachability()
@@ -638,7 +638,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                        delegate: nil,
                        application: application,
                        environment: sessionManager!.environment,
-                       blacklistDownloadInterval : 60) { sessionManager in
+                       blacklistDownloadInterval : -1) { sessionManager in
                         
                         let environment = MockEnvironment()
                         let reachability = TestReachability()
