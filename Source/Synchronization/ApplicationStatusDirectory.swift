@@ -108,7 +108,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         case .done:
             return .done
         case .inProgress:
-            return syncStatus.isSyncing ? .done : .inProgress
+            return syncStatus.isSlowSyncing ? .done : .inProgress
         }
     }
     

@@ -375,17 +375,41 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
     }
             
     fileprivate func processUpdateEvent(_ event: ZMUpdateEvent) {
-        if event.type != .userClientAdd && event.type != .userClientRemove {
-            return
+        switch event.type {
+        case .userClientAdd, .userClientRemove:
+            processClientListUpdateEvent(event)
+        case .userClientLegalHoldRequest:
+            processLegalHoldRequestEvent(event)
+        default:
+            break
         }
+    }
+
+    fileprivate func processLegalHoldRequestEvent(_ event: ZMUpdateEvent) {
+        guard let moc = self.managedObjectContext else { return }
+        let selfUser = ZMUser.selfUser(in: moc)
+
+        let decoder = JSONDecoder()
+        decoder.dataDecodingStrategy = .base64
+
+        do {
+            let jsonPayload = try JSONSerialization.data(withJSONObject: event.payload, options: [])
+            let request = try decoder.decode(LegalHoldRequest.self, from: jsonPayload)
+            selfUser.userDidReceiveLegalHoldRequest(request)
+        } catch {
+            zmLog.error("Invalid legal hold request payload: \(error)")
+        }
+    }
+
+    fileprivate func processClientListUpdateEvent(_ event: ZMUpdateEvent) {
         guard let clientInfo = event.payload["client"] as? [String: AnyObject] else {
             zmLog.error("Client info has unexpected payload")
             return
         }
         guard let moc = self.managedObjectContext else { return }
-        
+
         let selfUser = ZMUser.selfUser(in: moc)
-        
+
         switch event.type {
         case .userClientAdd:
             if let client = UserClient.createOrUpdateSelfUserClient(clientInfo, context: moc) {
@@ -404,7 +428,6 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
                 clientRegistrationStatus?.didDetectCurrentClientDeletion()
                 clientUpdateStatus?.didDetectCurrentClientDeletion()
             }
-            
         default: break
         }
     }
