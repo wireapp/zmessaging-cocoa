@@ -275,7 +275,7 @@ extension IntegrationTest {
     var unauthenticatedSession : UnauthenticatedSession? {
         return sessionManager?.unauthenticatedSession
     }
-    
+
     @objc
     func createSelfUserAndConversation() {
         
@@ -298,7 +298,7 @@ extension IntegrationTest {
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
-    
+
     @objc
     func createExtraUsersAndConversations() {
         

@@ -19,38 +19,59 @@
 import Foundation
 import WireSyncEngine
 
-class ZMUserSessionLegalHoldTests: ZMUserSessionTestsBase {
+class ZMUserSessionLegalHoldTests: IntegrationTest {
+
+    override func setUp() {
+        super.setUp()
+        createSelfUserAndConversation()
+    }
 
     func testThatUserClientIsInsertedWhenUserReceivesLegalHoldRequest() {
         // GIVEN
-        let selfUser = ZMUser.selfUser(inUserSession: mockUserSession)
+        var team: MockTeam!
 
-        let legalHoldRequest = LegalHoldRequest(
-            requesterIdentifier: UUID(),
-            targetUserIdentifier: selfUser.remoteIdentifier,
-            clientIdentifier: "eca3c87cfe28be49",
-            lastPrekey: LegalHoldRequest.Prekey(
-                id: 65535,
-                key: Data(base64Encoded: "pQABAQoCoQBYIPEFMBhOtG0dl6gZrh3kgopEK4i62t9sqyqCBckq3IJgA6EAoQBYIC9gPmCdKyqwj9RiAaeSsUI7zPKDZS+CjoN+sfihk/5VBPY=")!
-            )
-        )
+        // 1) I come from up a legal-hold enabled team
+        mockTransportSession.performRemoteChanges { session in
+            team = session.insertTeam(withName: "Team", isBound: true, users: [self.selfUser])
+            team.hasLegalHoldService = true
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
-        sut.performChanges {
-            selfUser.userDidReceiveLegalHoldRequest(sut)
+        // 2) I log in
+        XCTAssert(login())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        let realSelfUser = user(for: selfUser)!
+        XCTAssertEqual(realSelfUser.legalHoldStatus, .disabled)
+
+        // 3) My team admin requests legal hold for me
+        mockTransportSession.performRemoteChanges { _ in
+            XCTAssertTrue(self.selfUser.requestLegalHold())
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
+        guard case let .pending(legalHoldRequest) = realSelfUser.legalHoldStatus else {
+            return XCTFail("No update event was fired for the incoming legal hold request.")
         }
 
-        // WHEN
-        let acceptExpectation = expectation(description: "The callback is called when the request finishes.")
+        // WHEN: I accept the legal hold request
+        let completionExpectation = expectation(description: "The request completes.")
 
-        mockTransportSession
-
-        sut.accept(legalHoldRequest: legalHoldRequest, password: "password") {
-            acceptExpectation.fulfill()
+        userSession?.accept(legalHoldRequest: legalHoldRequest, password: IntegrationTest.SelfUserPassword) { error in
+            XCTAssertNil(error)
+            completionExpectation.fulfill()
         }
 
         // THEN
-        waitForExpectations(timeout: 10, handler: acceptExpectation)
-        XCTAssertEqual(selfUser.legalHoldStatus, .enabled)
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 1))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        XCTAssertEqual(realSelfUser.legalHoldStatus, .enabled)
+    }
+
+    func testThatLegalHoldClientIsRemovedWhenLegalHoldRequestFails() {
+        XCTFail("WIP")
     }
 
 }

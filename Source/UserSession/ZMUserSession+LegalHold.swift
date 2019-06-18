@@ -46,6 +46,8 @@ extension ZMUserSession {
         }
 
         func complete(error: LegalHoldActivationError?) {
+            syncMoc.saveOrRollback()
+
             DispatchQueue.main.async {
                 completionHandler(error)
             }
@@ -54,13 +56,8 @@ extension ZMUserSession {
         syncMoc.performGroupedBlock {
             let selfUser = ZMUser.selfUser(in: syncMoc)
 
-            // 1) Create the potential LH client
-            guard let legalHoldClient: UserClient = selfUser.addLegalHoldClient(from: legalHoldRequest) else {
-                return complete(error: .invalidState)
-            }
-
-            // 2) Create the Request
-            guard let teamID = selfUser.teamIdentifier else {
+            // 1) Check the state
+            guard let teamID = selfUser.team?.remoteIdentifier else {
                 return complete(error: .userNotInTeam(selfUser))
             }
 
@@ -68,13 +65,21 @@ extension ZMUserSession {
                 return complete(error: .invalidUser(selfUser))
             }
 
+            // 2) Create the potential LH client
+            guard let legalHoldClient: UserClient = selfUser.addLegalHoldClient(from: legalHoldRequest) else {
+                return complete(error: .invalidState)
+            }
+
+            syncMoc.saveOrRollback()
+
+            // 3) Create the request
             var payload: [String: Any] = [:]
             payload["password"] = password
 
             let path = "/teams/\(teamID.transportString())/legalhold/\(userID.transportString())/approve"
             let request = ZMTransportRequest(path: path, method: .methodPUT, payload: payload as NSDictionary)
 
-            // 3) Handle the Response
+            // 4) Handle the Response
             request.add(ZMCompletionHandler(on: syncMoc, block: { response in
                 guard response.httpStatus == 200 else {
                     legalHoldClient.deleteClientAndEndSession()
@@ -82,10 +87,10 @@ extension ZMUserSession {
                 }
 
                 selfUser.userDidAcceptLegalHoldRequest(legalHoldRequest)
-                completionHandler(nil)
+                complete(error: nil)
             }))
 
-            // 4) Schedule the Request
+            // 5) Schedule the Request
             self.transportSession.enqueueOneTime(request)
         }
     }
