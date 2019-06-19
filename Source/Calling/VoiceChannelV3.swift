@@ -145,7 +145,7 @@ extension VoiceChannelV3 : CallActions {
         if userSession.callNotificationStyle == .callKit, #available(iOS 10.0, *) {
             userSession.callKitDelegate?.requestMuteCall(in: conversation!, muted: muted)
         } else {
-            userSession.mediaManager.isMicrophoneMuted = muted
+            self.muted = muted
         }
     }
     
