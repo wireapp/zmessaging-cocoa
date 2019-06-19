@@ -23,7 +23,7 @@ import avs
 typealias ConstantBitRateChangeHandler = @convention(c) (UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
 
 /// Equivalent of `wcall_video_state_change_h`.
-typealias VideoStateChangeHandler = @convention(c) (UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
+typealias VideoStateChangeHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
 
 /// Equivalent of `wcall_incoming_h`.
 typealias IncomingCallHandler = @convention(c) (UnsafePointer<Int8>?, UInt32, UnsafePointer<Int8>?, Int32, Int32, UnsafeMutableRawPointer?) -> Void

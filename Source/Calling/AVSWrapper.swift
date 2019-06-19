@@ -176,7 +176,7 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    private let videoStateChangeHandler: VideoStateChangeHandler = { userId, state, contextRef in
+    private let videoStateChangeHandler: VideoStateChangeHandler = { conversationId, userId, clientId, state, contextRef in
         AVSWrapper.withCallCenter(contextRef, userId, state) {
             $0.handleVideoStateChange(userId: $1, newState: $2)
         }
