@@ -424,6 +424,11 @@
 		F188BB8B2223F372002BF204 /* UserRichProfileIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F188BB852223F372002BF204 /* UserRichProfileIntegrationTests.swift */; };
 		F190E0AA1E8D517A003E81F8 /* UserProfileImageV3Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F190E0A81E8D516D003E81F8 /* UserProfileImageV3Tests.swift */; };
 		F190E0DD1E8E7C9D003E81F8 /* SlowSyncTests+Swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = F190E0DB1E8E7BA1003E81F8 /* SlowSyncTests+Swift.swift */; };
+		F19E559E22B399AE005C792D /* UUID+SafeLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19E559D22B399AE005C792D /* UUID+SafeLogging.swift */; };
+		F19E55A022B3A2C5005C792D /* UNNotification+SafeLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19E559F22B3A2C5005C792D /* UNNotification+SafeLogging.swift */; };
+		F19E55A222B3A3FA005C792D /* UNNotificationResponse+SafeLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19E55A122B3A3FA005C792D /* UNNotificationResponse+SafeLogging.swift */; };
+		F19E55A422B3A740005C792D /* PKPushPayload+SafeLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19E55A322B3A740005C792D /* PKPushPayload+SafeLogging.swift */; };
+		F19E55A622B3AAA8005C792D /* PKPushCredentials+SafeLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19E55A522B3AAA8005C792D /* PKPushCredentials+SafeLogging.swift */; };
 		F19F1D141EFBC18E00275E27 /* UnauthenticatedSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19F1D131EFBC18E00275E27 /* UnauthenticatedSession.swift */; };
 		F19F1D1D1EFBC2F000275E27 /* ZMAuthenticationStatus_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = F19F1D191EFBC2F000275E27 /* ZMAuthenticationStatus_Internal.h */; };
 		F19F1D1E1EFBC2F000275E27 /* ZMAuthenticationStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = F19F1D1A1EFBC2F000275E27 /* ZMAuthenticationStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1049,6 +1054,11 @@
 		F188BB852223F372002BF204 /* UserRichProfileIntegrationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserRichProfileIntegrationTests.swift; sourceTree = "<group>"; };
 		F190E0A81E8D516D003E81F8 /* UserProfileImageV3Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileImageV3Tests.swift; sourceTree = "<group>"; };
 		F190E0DB1E8E7BA1003E81F8 /* SlowSyncTests+Swift.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SlowSyncTests+Swift.swift"; sourceTree = "<group>"; };
+		F19E559D22B399AE005C792D /* UUID+SafeLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UUID+SafeLogging.swift"; sourceTree = "<group>"; };
+		F19E559F22B3A2C5005C792D /* UNNotification+SafeLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UNNotification+SafeLogging.swift"; sourceTree = "<group>"; };
+		F19E55A122B3A3FA005C792D /* UNNotificationResponse+SafeLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UNNotificationResponse+SafeLogging.swift"; sourceTree = "<group>"; };
+		F19E55A322B3A740005C792D /* PKPushPayload+SafeLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PKPushPayload+SafeLogging.swift"; sourceTree = "<group>"; };
+		F19E55A522B3AAA8005C792D /* PKPushCredentials+SafeLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PKPushCredentials+SafeLogging.swift"; sourceTree = "<group>"; };
 		F19F1D131EFBC18E00275E27 /* UnauthenticatedSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UnauthenticatedSession.swift; sourceTree = "<group>"; };
 		F19F1D191EFBC2F000275E27 /* ZMAuthenticationStatus_Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMAuthenticationStatus_Internal.h; sourceTree = "<group>"; };
 		F19F1D1A1EFBC2F000275E27 /* ZMAuthenticationStatus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZMAuthenticationStatus.h; sourceTree = "<group>"; };
@@ -2057,6 +2067,7 @@
 				8796343F1F7BEA4700FC79BA /* DispatchQueue+SerialAsync.swift */,
 				5E8EE1F920FDC7D700DB1F9B /* Pasteboard.swift */,
 				161D3AC82134013C0053D39A /* Logging.swift */,
+				F19E559D22B399AE005C792D /* UUID+SafeLogging.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -2222,6 +2233,10 @@
 				F98EDCDF1D82B924001E65CB /* NotificationSound.swift */,
 				5EC3A467210B763000B76C78 /* NotificationUserInfo.swift */,
 				F98EDCE71D82B924001E65CB /* ZMLocalNotificationSet.swift */,
+				F19E559F22B3A2C5005C792D /* UNNotification+SafeLogging.swift */,
+				F19E55A122B3A3FA005C792D /* UNNotificationResponse+SafeLogging.swift */,
+				F19E55A322B3A740005C792D /* PKPushPayload+SafeLogging.swift */,
+				F19E55A522B3AAA8005C792D /* PKPushCredentials+SafeLogging.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -2755,6 +2770,7 @@
 				163FB9992057E3F200E74F83 /* AuthenticationStatusProvider.swift in Sources */,
 				872A2EE61FFFBC2A00900B22 /* ServiceUser.swift in Sources */,
 				BF2A9D5D1D6B63DB00FA7DBC /* StoreUpdateEvent.swift in Sources */,
+				F19E55A622B3AAA8005C792D /* PKPushCredentials+SafeLogging.swift in Sources */,
 				09C77C531BA6C77000E2163F /* UserClientRequestStrategy.swift in Sources */,
 				F1B5D53D2181FDA300986911 /* NetworkQuality.swift in Sources */,
 				5EC2C593213827BF00C6CE35 /* WireCallCenterV3+Events.swift in Sources */,
@@ -2801,6 +2817,7 @@
 				544F8FF31DDCD34600D1AB04 /* UserProfileUpdateNotifications.swift in Sources */,
 				F19F1D1F1EFBC2F000275E27 /* ZMAuthenticationStatus.m in Sources */,
 				F1A94BD21F010287003083D9 /* UnauthenticatedSession+Login.swift in Sources */,
+				F19E559E22B399AE005C792D /* UUID+SafeLogging.swift in Sources */,
 				5E1FD7A5210B2694003D2C3D /* NotificationAction.swift in Sources */,
 				F1C1E70D21F74667007FBDA1 /* ZMUserSession+Timers.swift in Sources */,
 				54A170651B300696001B41A5 /* ProxiedRequestStrategy.swift in Sources */,
@@ -2813,6 +2830,7 @@
 				F16C8BE82044129700677D31 /* ZMConversationTranscoder.swift in Sources */,
 				1626344920D7DB81000D4063 /* PushNotificationCategory.swift in Sources */,
 				F98EDCD71D82B913001E65CB /* LocalNotificationContentType.swift in Sources */,
+				F19E55A222B3A3FA005C792D /* UNNotificationResponse+SafeLogging.swift in Sources */,
 				EFF940402240FF12004F3115 /* DeepLinkError.swift in Sources */,
 				F90EC5A31E7BF1AC00A6779E /* AVSWrapper.swift in Sources */,
 				5E8BB8992147CD3F00EEA64B /* AVSBridging.swift in Sources */,
@@ -2833,6 +2851,7 @@
 				5E8BB89C2147CE1600EEA64B /* AVSCallMember.swift in Sources */,
 				874F142D1C16FD9700C15118 /* Device.swift in Sources */,
 				CEF2DE7F1DB778F300451642 /* RequestLoopAnalyticsTracker.swift in Sources */,
+				F19E55A422B3A740005C792D /* PKPushPayload+SafeLogging.swift in Sources */,
 				549AEA3D1D6365C1003C0BEC /* ZMUserSession+AddressBook.swift in Sources */,
 				16C4BDA020A309CD00BCDB17 /* CallParticipantSnapshot.swift in Sources */,
 				1639A8272260CE5000868AB9 /* ZMLocalNotification+AvailabilityAlert.swift in Sources */,
@@ -2930,6 +2949,7 @@
 				5498161C1A432BC800A7CE2E /* ZMTypingUsersTimeout.m in Sources */,
 				5498165A1A432BC800A7CE2E /* ZMUpdateEventsBuffer.m in Sources */,
 				161D3AC92134013C0053D39A /* Logging.swift in Sources */,
+				F19E55A022B3A2C5005C792D /* UNNotification+SafeLogging.swift in Sources */,
 				F9B8308C1DEEDC2900FF6FE7 /* SyncStatus.swift in Sources */,
 				16F6BB381EDEA659009EA803 /* SearchResult+AddressBook.swift in Sources */,
 				5458AF841F7021B800E45977 /* PreLoginAuthenticationNotification.swift in Sources */,

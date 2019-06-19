@@ -62,7 +62,7 @@ public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMConte
 extension TeamDownloadRequestStrategy: ZMDownstreamTranscoder {
 
     public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
-        guard downstreamSync as? ZMDownstreamObjectSync == self.downstreamSync, let team = object as? Team else { fatal("Wrong sync or object for: \(object.privateDescription)") }
+        guard downstreamSync as? ZMDownstreamObjectSync == self.downstreamSync, let team = object as? Team else { fatal("Wrong sync or object for: \(object.safeForLoggingDescription)") }
         return team.remoteIdentifier.map { TeamDownloadRequestFactory.getRequest(for: $0) }
     }
 

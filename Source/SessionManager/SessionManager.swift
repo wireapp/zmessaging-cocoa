@@ -318,20 +318,22 @@ public protocol ForegroundNotificationResponder: class {
             environment: environment
         )
         
-        self.blacklistVerificator = ZMBlacklistVerificator(checkInterval: blacklistDownloadInterval,
-                                                           version: appVersion,
-                                                           environment: environment,
-                                                           working: nil,
-                                                           application: application,
-                                                           blacklistCallback:
-            { [weak self] (blacklisted) in
-                guard let `self` = self, !self.isAppVersionBlacklisted else { return }
-                
-                if blacklisted {
-                    self.isAppVersionBlacklisted = true
-                    self.delegate?.sessionManagerDidBlacklistCurrentVersion()
-                }
-        })
+        if blacklistDownloadInterval > 0 {
+            self.blacklistVerificator = ZMBlacklistVerificator(checkInterval: blacklistDownloadInterval,
+                                                               version: appVersion,
+                                                               environment: environment,
+                                                               working: nil,
+                                                               application: application,
+                                                               blacklistCallback:
+                { [weak self] (blacklisted) in
+                    guard let `self` = self, !self.isAppVersionBlacklisted else { return }
+                    
+                    if blacklisted {
+                        self.isAppVersionBlacklisted = true
+                        self.delegate?.sessionManagerDidBlacklistCurrentVersion()
+                    }
+            })
+        }
      
         self.memoryWarningObserver = NotificationCenter.default.addObserver(forName: UIApplication.didReceiveMemoryWarningNotification,
                                                                             object: nil,

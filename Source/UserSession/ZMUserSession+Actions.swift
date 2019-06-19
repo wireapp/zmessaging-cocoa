@@ -122,7 +122,7 @@ import Foundation
             
                 let conversationOnSyncContext = userInfo.conversation(in: self.syncManagedObjectContext)
                 if result == .failed {
-                    Logging.push.warn("failed to reply via push notification action")
+                    Logging.push.safePublic("failed to reply via push notification action")
                     self.localNotificationDispatcher.didFailToSendMessage(in: conversationOnSyncContext!)
                 } else {
                     self.syncManagedObjectContext.analytics?.tagActionOnPushNotification(conversation: conversationOnSyncContext, action: .text)
@@ -186,7 +186,7 @@ import Foundation
         
             self.likeMesssageObserver = nil
             if result == .failed {
-                Logging.push.warn("failed to like message via push notification action")
+                Logging.push.safePublic("failed to like message via push notification action")
             }
             BackgroundActivityFactory.shared.endBackgroundActivity(activity)
             completionHandler()

@@ -104,6 +104,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     var canBeConnected: Bool = false
     
     var isServiceUser: Bool = true
+
+    var usesCompanyLogin: Bool = false
     
     var isAccountDeleted: Bool = false
     

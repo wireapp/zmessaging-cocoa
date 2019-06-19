@@ -20,9 +20,11 @@ import Foundation
 import WireDataModel
 import WireTransport
 
-public enum LegalHoldInstallationError: Error {
+public enum LegalHoldActivationError: Error {
     case userNotInTeam(ZMUser)
     case invalidUser(ZMUser)
+    case invalidResponse
+    case invalidPassword
 }
 
 extension ZMUserSession {
@@ -34,16 +36,16 @@ extension ZMUserSession {
      * - parameter error: The error that prevented the approval of legal hold.
      */
 
-    public func acceptLegalHold(password: String?, completionHandler: @escaping (_ error: Error?) -> Void) {
+    public func acceptLegalHold(password: String?, completionHandler: @escaping (_ error: LegalHoldActivationError?) -> Void) {
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
 
         // 1) Create the Request
         guard let teamID = selfUser.teamIdentifier else {
-            return completionHandler(LegalHoldInstallationError.userNotInTeam(selfUser))
+            return completionHandler(LegalHoldActivationError.userNotInTeam(selfUser))
         }
 
         guard let userID = selfUser.remoteIdentifier else {
-            return completionHandler(LegalHoldInstallationError.invalidUser(selfUser))
+            return completionHandler(LegalHoldActivationError.invalidUser(selfUser))
         }
 
         var payload: [String: Any] = [:]
@@ -53,8 +55,11 @@ extension ZMUserSession {
         let request = ZMTransportRequest(path: path, method: .methodPUT, payload: payload as NSDictionary)
 
         // 2) Handle the Response
-        request.add(ZMCompletionHandler(on: managedObjectContext, block: { _ in
-            // TODO: Handle errors
+        request.add(ZMCompletionHandler(on: managedObjectContext, block: { response in
+            guard response.httpStatus == 200 else {
+                return completionHandler(LegalHoldActivationError.invalidResponse)
+            }
+
             completionHandler(nil)
         }))
 

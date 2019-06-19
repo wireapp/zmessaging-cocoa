@@ -60,7 +60,7 @@ import UserNotifications
     }
 
     func scheduleLocalNotification(_ note: ZMLocalNotification) {
-        Logging.push.debug("Scheduling local notification with id = \(note.id.transportString())")
+        Logging.push.safePublic("Scheduling local notification with id=\(note.id)")
         
         notificationCenter.add(note.request, withCompletionHandler: nil)
     }

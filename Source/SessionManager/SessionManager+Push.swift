@@ -34,7 +34,7 @@ extension PKPushRegistry: PushRegistry {}
 extension PKPushPayload {
     fileprivate var stringIdentifier: String {
         if let data = dictionaryPayload["data"] as? [AnyHashable : Any], let innerData = data["data"] as? [AnyHashable : Any], let id = innerData["id"] {
-            return "Payload: data.id = \(id)"
+            return "\(id)"
         } else {
             return self.description
         } 
@@ -49,7 +49,7 @@ extension SessionManager: PKPushRegistryDelegate {
     public func pushRegistry(_ registry: PKPushRegistry, didUpdate pushCredentials: PKPushCredentials, for type: PKPushType) {
         guard type == .voIP else { return }
         
-        Logging.push.debug("PushKit token was updated: \(pushCredentials.token)")
+        Logging.push.safePublic("PushKit token was updated: \(pushCredentials)")
         
         // give new push token to all running sessions
         backgroundUserSessions.values.forEach({ userSession in
@@ -60,7 +60,7 @@ extension SessionManager: PKPushRegistryDelegate {
     public func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenFor type: PKPushType) {
         guard type == .voIP else { return }
         
-        Logging.push.debug("PushKit token was invalidated")
+        Logging.push.safePublic("PushKit token was invalidated")
         
         // delete push token from all running sessions
         backgroundUserSessions.values.forEach({ userSession in
@@ -76,27 +76,27 @@ extension SessionManager: PKPushRegistryDelegate {
         // We only care about voIP pushes, other types are not related to push notifications (watch complications and files)
         guard type == .voIP else { return completion() }
         
-        Logging.push.debug("Received push payload: \(payload.dictionaryPayload)")
+        Logging.push.safePublic("Received push payload: \(payload)")
         // We were given some time to run, resume background task creation.
         BackgroundActivityFactory.shared.resume()
         notificationsTracker?.registerReceivedPush()
         
         guard let accountId = payload.dictionaryPayload.accountId(),
               let account = self.accountManager.account(with: accountId),
-              let activity = BackgroundActivityFactory.shared.startBackgroundActivity(withName: "Process PushKit \(payload.stringIdentifier)", expirationHandler: { [weak self] in
-                Logging.push.debug("Processing push payload expired")
+              let activity = BackgroundActivityFactory.shared.startBackgroundActivity(withName: "\(payload.stringIdentifier)", expirationHandler: { [weak self] in
+                Logging.push.safePublic("Processing push payload expired: \(payload)")
                 self?.notificationsTracker?.registerProcessingExpired()
               }) else {
-                Logging.push.debug("Aborted processing of payload: \(payload.dictionaryPayload)")
+                Logging.push.safePublic("Aborted processing of payload: \(payload)")
                 notificationsTracker?.registerProcessingAborted()
                 return completion()
         }
         
         withSession(for: account, perform: { userSession in
-            Logging.push.debug("Forwarding push payload to user session with account \(account.userIdentifier)")
+            Logging.push.safePublic("Forwarding push payload to user session with account \(account.userIdentifier)")
             
             userSession.receivedPushNotification(with: payload.dictionaryPayload, completion: { [weak self] in
-                Logging.push.debug("Processing push payload completed")
+                Logging.push.safePublic("Processing push payload completed")
                 self?.notificationsTracker?.registerNotificationProcessingCompleted()
                 BackgroundActivityFactory.shared.endBackgroundActivity(activity)
                 completion()
