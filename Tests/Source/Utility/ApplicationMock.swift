@@ -48,6 +48,10 @@ extension ApplicationMock : ZMApplication {
     public func setMinimumBackgroundFetchInterval(_ minimumBackgroundFetchInterval: TimeInterval) {
         self.minimumBackgroundFetchInverval = minimumBackgroundFetchInterval
     }
+    
+    public func executeWhenFileSystemIsAccessible(_ block: @escaping () -> Void) {
+        block()
+    }
 }
 
 // MARK: - Observers
