@@ -48,7 +48,7 @@ public protocol AVSWrapperType {
 public class AVSWrapper: AVSWrapperType {
 
     /// The wrapped `wcall` instance.
-    private let handle: UnsafeMutableRawPointer
+    private let handle: UInt32
 
     // MARK: - Initialization
 

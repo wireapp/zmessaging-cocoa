@@ -47,7 +47,7 @@ typealias CloseCallHandler = @convention(c) (Int32, UnsafePointer<Int8>?, UInt32
 typealias CallMetricsHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
 
 /// Equivalent of `wcall_config_req_h`.
-typealias CallConfigRefreshHandler = @convention(c) (UnsafeMutableRawPointer?, UnsafeMutableRawPointer?) -> Int32
+typealias CallConfigRefreshHandler = @convention(c) (UInt32, UnsafeMutableRawPointer?) -> Int32
 
 /// Equivalent of `wcall_ready_h`.
 typealias CallReadyHandler = @convention(c) (Int32, UnsafeMutableRawPointer?) -> Void
