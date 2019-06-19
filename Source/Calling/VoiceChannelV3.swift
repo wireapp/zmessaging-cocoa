@@ -128,6 +128,15 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         self.callCenter?.setVideoCaptureDevice(device, for: conversationId)
     }
     
+    public var muted: Bool {
+        get {
+            return callCenter?.muted ?? false
+        }
+        set {
+            callCenter?.muted = newValue
+        }
+    }
+    
 }
 
 extension VoiceChannelV3 : CallActions {

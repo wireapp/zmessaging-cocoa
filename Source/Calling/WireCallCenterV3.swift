@@ -68,6 +68,15 @@ private let zmLog = ZMSLog(tag: "calling")
      */
 
     var useConstantBitRateAudio: Bool = false
+    
+    var muted: Bool {
+        get {
+            return avsWrapper.muted
+        }
+        set {
+            avsWrapper.muted = newValue
+        }
+    }
 
     /// The snaphot of the call state for each non-idle conversation.
     var callSnapshots : [UUID : CallSnapshot] = [:]

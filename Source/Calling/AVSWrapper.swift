@@ -38,6 +38,7 @@ public protocol AVSWrapperType {
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
     func members(in conversationId: UUID) -> [AVSCallMember]
     func update(callConfig: String?, httpStatusCode: Int)
+    var muted: Bool { get set }
 }
 
 
@@ -96,6 +97,15 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     // MARK: - Convenience Methods
+    
+    public var muted: Bool {
+        get {
+            return wcall_get_mute(handle) != 0
+        }
+        set {
+            wcall_set_mute(handle, newValue ? 1 : 0)
+        }
+    }
 
     /// Requests AVS to initiate a call.
     public func startCall(conversationId: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool) -> Bool {
