@@ -261,7 +261,7 @@ public protocol ForegroundNotificationResponder: class {
         completion: @escaping (SessionManager) -> Void
         ) {
         
-        token = FileManager.default.executeWhenFileSystemIsAccessible {
+        token = application.executeWhenFileSystemIsAccessible {
             completion(SessionManager(
                 appVersion: appVersion,
                 mediaManager: mediaManager,

@@ -17,6 +17,7 @@
 //
 
 import Foundation
+import WireTransport
 import UIKit
 
 /// An abstraction of the application (UIApplication, NSApplication)
@@ -54,6 +55,10 @@ import UIKit
     
     /// Sets minimum interval for background fetch
     @objc func setMinimumBackgroundFetchInterval(_ minimumBackgroundFetchInterval: TimeInterval)
+    
+    /// Executes the given block when the file system is unlocked and returns a token.
+    /// This token needs to be retain in order for the block to be called.
+    @objc func executeWhenFileSystemIsAccessible(_ block: @escaping () -> Void) -> Any?
 }
 
 
@@ -85,5 +90,16 @@ extension UIApplication : ZMApplication {
         NotificationCenter.default.removeObserver(object, name: UIApplication.willEnterForegroundNotification, object: nil)
         NotificationCenter.default.removeObserver(object, name: UIApplication.didEnterBackgroundNotification, object: nil)
         NotificationCenter.default.removeObserver(object, name: UIApplication.willTerminateNotification, object: nil)
+    }
+    
+    @objc public func executeWhenFileSystemIsAccessible(_ block: @escaping () -> Void) -> Any? {
+        if isProtectedDataAvailable || ZMPersistentCookieStorage.hasAccessibleAuthenticationCookieData() {
+            block()
+            return nil
+        } else {
+            return NotificationCenter.default.addObserver(forName: UIApplication.protectedDataDidBecomeAvailableNotification,
+                                                          object: nil,
+                                                          queue: nil) { _ in block() }
+        }
     }
 }
