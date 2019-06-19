@@ -23,6 +23,8 @@ import XCTest
 
 final class DummyServiceUser: NSObject, ServiceUser {
     
+    var hasLegalHoldRequest: Bool = false
+    
     var needsRichProfileUpdate: Bool = false
     
     var availability: Availability = .none
