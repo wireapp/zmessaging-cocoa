@@ -48,13 +48,13 @@ public protocol AVSWrapperType {
 public class AVSWrapper: AVSWrapperType {
 
     /// The wrapped `wcall` instance.
-    private let handle: UnsafeMutableRawPointer
+    private let handle: UInt32
 
     // MARK: - Initialization
 
     /// Initializes avs.
     private static var initialize: () -> Void = {
-        let resultValue = wcall_init()
+        let resultValue = wcall_init(WCALL_ENV_DEFAULT)
         if resultValue != 0 {
             fatal("Failed to initialise AVS (error code: \(resultValue))")
         }
@@ -176,7 +176,7 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    private let videoStateChangeHandler: VideoStateChangeHandler = { userId, state, contextRef in
+    private let videoStateChangeHandler: VideoStateChangeHandler = { conversationId, userId, clientId, state, contextRef in
         AVSWrapper.withCallCenter(contextRef, userId, state) {
             $0.handleVideoStateChange(userId: $1, newState: $2)
         }
