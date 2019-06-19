@@ -54,7 +54,7 @@ public class AVSWrapper: AVSWrapperType {
 
     /// Initializes avs.
     private static var initialize: () -> Void = {
-        let resultValue = wcall_init()
+        let resultValue = wcall_init(WCALL_ENV_DEFAULT)
         if resultValue != 0 {
             fatal("Failed to initialise AVS (error code: \(resultValue))")
         }
