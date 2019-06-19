@@ -84,6 +84,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     var mediumProfileImageCacheKey: String? = ""
     
     var isConnected: Bool = false
+
+    var oneToOneConversation: ZMConversation? = nil
     
     var accentColorValue: ZMAccentColor = ZMAccentColor.brightOrange
     

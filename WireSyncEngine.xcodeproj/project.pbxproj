@@ -1576,7 +1576,6 @@
 				5447E4661AECDE6500411FCD /* ZMUserSessionTestsBase.m */,
 				1679D1CB1EF9730C007B0DF5 /* ZMUserSessionTestsBase+Calling.swift */,
 				54610D32192C9D7200FE7201 /* ZMUserSessionTests.m */,
-				5502C6E922B7D4DA000684B7 /* ZMUserSessionLegalHoldTests.swift */,
 				1626344620D79C22000D4063 /* ZMUserSessionTests+PushNotifications.swift */,
 				F92CA9641F153622007D8570 /* ZMUserSessionTests+FileRelocation.swift */,
 				F1AE5F6E21F73388009CDBBC /* ZMUserSessionTests+Timers.swift */,
@@ -1900,6 +1899,7 @@
 				F93F3A581ED5A67E003CD185 /* TeamTests.swift */,
 				EF797FE71FB5E8DB00F7FF21 /* RegistrationTests.swift */,
 				F188BB852223F372002BF204 /* UserRichProfileIntegrationTests.swift */,
+				5502C6E922B7D4DA000684B7 /* ZMUserSessionLegalHoldTests.swift */,
 			);
 			path = Integration;
 			sourceTree = "<group>";
