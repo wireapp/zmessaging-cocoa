@@ -20,10 +20,10 @@ import Foundation
 import WireDataModel
 import WireTransport
 
-public enum LegalHoldActivationError: Error {
+public enum LegalHoldActivationError: Error, Equatable {
     case userNotInTeam(ZMUser)
     case invalidUser(ZMUser)
-    case invalidResponse
+    case invalidResponse(Int, String?)
     case invalidPassword
     case couldNotEstablishSession
     case invalidState
@@ -83,7 +83,15 @@ extension ZMUserSession {
             request.add(ZMCompletionHandler(on: syncMoc, block: { response in
                 guard response.httpStatus == 200 else {
                     legalHoldClient.deleteClientAndEndSession()
-                    return complete(error: .invalidResponse)
+
+                    let errorLabel = response.payload?.asDictionary()?["label"] as? String
+
+                    switch errorLabel {
+                    case "missing-auth", "invalid-credentials":
+                        return complete(error: .invalidPassword)
+                    default:
+                        return complete(error: .invalidResponse(response.httpStatus, errorLabel))
+                    }
                 }
 
                 selfUser.userDidAcceptLegalHoldRequest(legalHoldRequest)
