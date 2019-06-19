@@ -56,9 +56,8 @@ import UIKit
     /// Sets minimum interval for background fetch
     @objc func setMinimumBackgroundFetchInterval(_ minimumBackgroundFetchInterval: TimeInterval)
     
-    /// Executes the given block when the file system is unlocked and returns a token.
-    /// This token needs to be retain in order for the block to be called.
-    @objc func executeWhenFileSystemIsAccessible(_ block: @escaping () -> Void) -> Any?
+    /// Executes the given block when the file system is unlocked
+    @objc func executeWhenFileSystemIsAccessible(_ block: @escaping () -> Void)
 }
 
 
@@ -92,14 +91,15 @@ extension UIApplication : ZMApplication {
         NotificationCenter.default.removeObserver(object, name: UIApplication.willTerminateNotification, object: nil)
     }
     
-    @objc public func executeWhenFileSystemIsAccessible(_ block: @escaping () -> Void) -> Any? {
+    @objc public func executeWhenFileSystemIsAccessible(_ block: @escaping () -> Void) {
         if isProtectedDataAvailable || ZMPersistentCookieStorage.hasAccessibleAuthenticationCookieData() {
             block()
-            return nil
         } else {
-            return NotificationCenter.default.addObserver(forName: UIApplication.protectedDataDidBecomeAvailableNotification,
-                                                          object: nil,
-                                                          queue: nil) { _ in block() }
+            var token: Any? = nil
+            token = NotificationCenter.default.addObserver(forName: UIApplication.protectedDataDidBecomeAvailableNotification, object: nil, queue: nil) { _ in
+                block()
+                NotificationCenter.default.removeObserver(token!)
+            }
         }
     }
 }

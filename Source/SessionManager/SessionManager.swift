@@ -231,9 +231,7 @@ public protocol ForegroundNotificationResponder: class {
     fileprivate var accountTokens : [UUID : [Any]] = [:]
     fileprivate var memoryWarningObserver: NSObjectProtocol?
     fileprivate var isSelectingAccount : Bool = false
-    
-    private static var token: Any?
-    
+        
     public var callKitDelegate : CallKitDelegate?
 
     public var isSelectedAccountAuthenticated: Bool {
@@ -261,7 +259,7 @@ public protocol ForegroundNotificationResponder: class {
         completion: @escaping (SessionManager) -> Void
         ) {
         
-        token = application.executeWhenFileSystemIsAccessible {
+        application.executeWhenFileSystemIsAccessible {
             completion(SessionManager(
                 appVersion: appVersion,
                 mediaManager: mediaManager,
@@ -271,8 +269,6 @@ public protocol ForegroundNotificationResponder: class {
                 environment: environment,
                 blacklistDownloadInterval: blacklistDownloadInterval
             ))
-            
-            token = nil
         }
     }
     
