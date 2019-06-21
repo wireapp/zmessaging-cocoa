@@ -752,6 +752,32 @@ extension WireCallCenterV3Tests {
     }
 }
 
+// Mark: - Muted state
+extension WireCallCenterV3Tests {
+    func testThatMutedStateHandlerUpdatesTheState() {
+        class MuteObserver: MuteStateObserver {
+            var muted: Bool? = nil
+            func callCenterDidChange(muted: Bool) { self.muted = muted }
+        }
+        
+        // given
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        let observer = MuteObserver()
+        sut.addMuteStateObserver(observer: observer, userSession: mockUserSession)
+        
+        // when
+        mockAVSWrapper.muted = true
+        sut.handleMuteChange(muted: true)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(true, observer.muted)
+    }
+}
+
 // MARK: - Ignoring Calls
 
 extension WireCallCenterV3Tests {

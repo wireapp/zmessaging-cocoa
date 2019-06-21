@@ -73,6 +73,18 @@ struct WireCallCenterCBRNotification : SelfPostingNotification {
     public let enabled: Bool
 }
 
+// MARK:- Mute state observer
+
+public protocol MuteStateObserver : class {
+    func callCenterDidChange(muted: Bool)
+}
+
+struct WireCallCenterMutedNotification : SelfPostingNotification {
+    static let notificationName = Notification.Name("WireCallCenterMutedNotification")
+    
+    public let muted: Bool
+}
+
 // MARK:- Call state observer
 
 public protocol WireCallCenterCallStateObserver : class {
@@ -356,4 +368,22 @@ extension WireCallCenterV3 {
             }
         }
     }
+    
+    /// Add observer of mute state. Returns a token which needs to be retained as long as the observer should be active.
+    /// Returns a token which needs to be retained as long as the observer should be active.
+    public class func addMuteStateObserver(observer: MuteStateObserver, userSession: ZMUserSession) -> Any {
+        return addMuteStateObserver(observer: observer, context: userSession.managedObjectContext)
+    }
+    
+    /// Add observer of mute state. Returns a token which needs to be retained as long as the observer should be active.
+    /// Returns a token which needs to be retained as long as the observer should be active.
+    internal class func addMuteStateObserver(observer: MuteStateObserver, context: NSManagedObjectContext) -> Any {
+        return NotificationInContext.addObserver(name: WireCallCenterMutedNotification.notificationName, context: context.notificationContext, object: nil, queue: .main) { [weak observer] note in
+            guard let note = note.userInfo[WireCallCenterMutedNotification.userInfoKey] as? WireCallCenterMutedNotification,
+                let observer = observer
+                else { return }
+            observer.callCenterDidChange(muted: note.muted)
+        }
+    }
+
 }

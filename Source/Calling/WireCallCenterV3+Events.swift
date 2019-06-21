@@ -214,4 +214,10 @@ extension WireCallCenterV3 {
             }
         }
     }
+    
+    func handleMuteChange(muted: Bool) {
+        handleEventInContext("mute-change") {
+            WireCallCenterMutedNotification(muted: muted).post(in: $0.notificationContext)
+        }
+    }
 }

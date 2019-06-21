@@ -94,6 +94,7 @@ public class AVSWrapper: AVSWrapperType {
         let timerIntervalInSeconds: Int32 = 5
         wcall_set_network_quality_handler(handle, networkQualityHandler, timerIntervalInSeconds, observer)
         wcall_set_media_stopped_handler(handle, mediaStoppedChangeHandler)
+        wcall_set_mute_handler(handle, muteChangeHandler, observer)
     }
 
     // MARK: - Convenience Methods
@@ -284,4 +285,9 @@ public class AVSWrapper: AVSWrapperType {
         })
     }
 
+    private let muteChangeHandler: MuteChangeHandler = { muted, contextRef in
+        AVSWrapper.withCallCenter(contextRef, muted) {
+            $0.handleMuteChange(muted: $1)
+        }
+    }
 }

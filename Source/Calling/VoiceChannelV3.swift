@@ -251,6 +251,10 @@ extension VoiceChannelV3 : CallObservers {
         return WireCallCenterV3.addCallStateObserver(observer: observer, context: userSession.managedObjectContext!)
     }
     
+    /// Add observer of the mute state. Returns a token which needs to be retained as long as the observer should be active.
+    public func addMuteStateObserver(_ observer: MuteStateObserver) -> Any {
+        return WireCallCenterV3.addMuteStateObserver(observer: observer, context: conversation!.managedObjectContext!)
+    }
 }
 
 public extension CallState {
