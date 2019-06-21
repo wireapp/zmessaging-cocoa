@@ -170,12 +170,6 @@ extension WireCallCenterV3 {
             self.isReady = true
         }
     }
-
-    /// Handles other users joining / leaving / connecting.
-    func handleGroupMemberChange(conversationId: UUID) {
-        handleEvent("group-member-change") {
-            let members = self.avsWrapper.members(in: conversationId)
-            self.callParticipantsChanged(conversationId: conversationId, participants: members)
     
     func handleParticipantChange(conversationId: UUID, data: String) {
         handleEvent("participant-change") {

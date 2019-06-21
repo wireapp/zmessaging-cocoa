@@ -89,7 +89,6 @@ public class AVSWrapper: AVSWrapperType {
                               observer)
 
         wcall_set_data_chan_estab_handler(handle, dataChannelEstablishedHandler)
-        wcall_set_group_changed_handler(handle, groupMemberHandler, observer)
         let timerIntervalInSeconds: Int32 = 5
         wcall_set_network_quality_handler(handle, networkQualityHandler, timerIntervalInSeconds, observer)
         wcall_set_media_stopped_handler(handle, mediaStoppedChangeHandler)
@@ -256,10 +255,6 @@ public class AVSWrapper: AVSWrapperType {
             $0.handleCallMessageRequest(token: token, conversationId: $1, senderUserId: $2, senderClientId: $3, data: transformedData)
         }
     }
-
-    private let groupMemberHandler: CallGroupChangedHandler = { conversationIdRef, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationIdRef) {
-            $0.handleGroupMemberChange(conversationId: $1)
     
     private let callParticipantHandler: CallParticipantChangedHandler = { conversationIdRef, json, contextRef in
         AVSWrapper.withCallCenter(contextRef, json, conversationIdRef) {
