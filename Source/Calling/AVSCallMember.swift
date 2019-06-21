@@ -19,6 +19,29 @@
 import Foundation
 import avs
 
+
+public struct AVSParticipantsChange: Codable {
+    public struct Member: Codable {
+        let userid: UUID
+        let clientid: String
+        let aestab: Int32
+        let vrrecv: Int32
+    }
+    let convid: UUID
+    let members: [Member]
+}
+
+extension AVSParticipantsChange {
+    public var callMembers: [AVSCallMember] {
+        return members.map {
+            AVSCallMember(userId: $0.userid,
+                          audioEstablished: ($0.aestab == 1),
+                          videoState: VideoState(rawValue: $0.vrrecv) ?? .stopped,
+                          networkQuality: .normal)
+        }
+    }
+}
+
 /**
  * An object that represents the member of an AVS call.
  */

@@ -58,6 +58,9 @@ typealias CallMessageSendHandler = @convention(c) (UnsafeMutableRawPointer?, Uns
 /// Equivalent of `wcall_group_changed_h`.
 typealias CallGroupChangedHandler = @convention(c) (UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
 
+/// Equivalent of `wcall_participant_changed_h`.
+typealias CallParticipantChangedHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?,  UnsafeMutableRawPointer?) -> Void
+
 /// Equivalent of `wcall_media_stopped_h`.
 typealias MediaStoppedChangeHandler = @convention(c) (UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
 
