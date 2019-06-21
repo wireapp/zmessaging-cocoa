@@ -766,7 +766,8 @@ extension WireCallCenterV3Tests {
         sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let observer = MuteObserver()
-        sut.addMuteStateObserver(observer: observer, userSession: mockUserSession)
+        
+        let token = WireCallCenterV3.addMuteStateObserver(observer: observer, userSession: mockUserSession)
         
         // when
         mockAVSWrapper.muted = true
@@ -774,7 +775,9 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(true, observer.muted)
+        withExtendedLifetime(token) {
+            XCTAssertEqual(true, observer.muted)
+        }
     }
 }
 
