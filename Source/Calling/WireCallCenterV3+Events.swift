@@ -191,7 +191,8 @@ extension WireCallCenterV3 {
             //}
             do {
                 let change = try JSONDecoder().decode(AVSParticipantsChange.self, from: data)
-                self.callParticipantsChanged(conversationId: change.convid, participants: change.callMembers)
+                let members = change.members.map(AVSCallMember.init)
+                self.callParticipantsChanged(conversationId: change.convid, participants: members)
             } catch {
                 zmLog.safePublic("Cannot decode participant change JSON")
             }

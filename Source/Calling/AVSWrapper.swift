@@ -36,7 +36,6 @@ public protocol AVSWrapperType {
     func received(callEvent: CallEvent) -> CallError?
     func setVideoState(conversationId: UUID, videoState: VideoState)
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
-    func members(in conversationId: UUID) -> [AVSCallMember]
     func update(callConfig: String?, httpStatusCode: Int)
 }
 
@@ -149,23 +148,6 @@ public class AVSWrapper: AVSWrapperType {
     /// Updates the calling config.
     public func update(callConfig: String?, httpStatusCode: Int) {
         wcall_config_update(handle, httpStatusCode == 200 ? 0 : EPROTO, callConfig ?? "")
-    }
-
-    /// Returns the list of members in the conversation.
-    public func members(in conversationId: UUID) -> [AVSCallMember] {
-        guard let membersRef = wcall_get_members(handle, conversationId.transportString()) else { return [] }
-        
-        let cMembers = membersRef.pointee
-        var callMembers = [AVSCallMember]()
-        for i in 0..<cMembers.membc {
-            guard let cMember = cMembers.membv?[Int(i)],
-                let member = AVSCallMember(wcallMember: cMember)
-                else { continue }
-            callMembers.append(member)
-        }
-        wcall_free_members(membersRef)
-        
-        return callMembers
     }
 
     // MARK: - C Callback Handlers
