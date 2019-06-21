@@ -351,7 +351,7 @@ class SearchTaskTests : MessagingTest {
         
         conversation.conversationType = .group
         conversation.remoteIdentifier = UUID()
-        conversation.internalAddParticipants(Set(arrayLiteral: userA))
+        conversation.internalAddParticipants([userA])
         conversation.isSelfAnActiveMember = true
         
         userA.name = "Member A"
@@ -427,7 +427,7 @@ class SearchTaskTests : MessagingTest {
         
         conversation.conversationType = .group
         conversation.remoteIdentifier = UUID()
-        conversation.internalAddParticipants(Set(arrayLiteral: userA, userB))
+        conversation.internalAddParticipants([userA, userB])
         conversation.isSelfAnActiveMember = true
         
         userA.name = "Member A"
@@ -658,7 +658,7 @@ class SearchTaskTests : MessagingTest {
         let user2 = createConnectedUser(withName: "Asuka")
         let user3 = createConnectedUser(withName: "Rëï")
         
-        conversation.internalAddParticipants(Set(arrayLiteral: user1, user2, user3))
+        conversation.internalAddParticipants([user1, user2, user3])
         
         uiMOC.saveOrRollback()
         
@@ -682,7 +682,7 @@ class SearchTaskTests : MessagingTest {
         let resultArrived = expectation(description: "received result")
         let conversation = createGroupConversation(withName: "Summertime")
         let user = createConnectedUser(withName: "Rëï")
-        conversation.internalAddParticipants(Set(arrayLiteral: user))
+        conversation.internalAddParticipants([user])
         
         uiMOC.saveOrRollback()
         
@@ -732,8 +732,8 @@ class SearchTaskTests : MessagingTest {
         let conversation3 = createGroupConversation(withName: "FooB")
         let conversation4 = createGroupConversation(withName: "Bar")
         
-        conversation2.internalAddParticipants(Set(arrayLiteral: user1))
-        conversation4.internalAddParticipants(Set(arrayLiteral: user1, user2))
+        conversation2.internalAddParticipants([user1])
+        conversation4.internalAddParticipants([user1, user2])
         
         uiMOC.saveOrRollback()
         

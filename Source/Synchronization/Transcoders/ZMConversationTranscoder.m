@@ -187,7 +187,7 @@ typedef NS_ENUM(NSUInteger, ZMConversationSource) {
     
     for (ZMConversation *inactiveConversation in inactiveConversations) {
         if (inactiveConversation.conversationType == ZMConversationTypeGroup) {
-            [inactiveConversation internalRemoveParticipants:[NSSet setWithObject:selfUser] sender:selfUser];
+            [inactiveConversation internalRemoveParticipants:@[selfUser] sender:selfUser];
         }
     }
 }
@@ -258,7 +258,7 @@ typedef NS_ENUM(NSUInteger, ZMConversationSource) {
     
     if (conversation.conversationType != ZMConversationTypeSelf && conversationCreated) {
         // we just got a new conversation, we display new conversation header
-        [conversation appendNewConversationSystemMessageAtTimestamp:serverTimeStamp];
+        [conversation appendNewConversationSystemMessageAtTimestamp:serverTimeStamp users:conversation.activeParticipants];
         
         if (source == ZMConversationSourceSlowSync) {
              // Slow synced conversations should be considered read from the start
@@ -510,7 +510,7 @@ typedef NS_ENUM(NSUInteger, ZMConversationSource) {
     }
     
     for (ZMUser *user in users) {
-        [conversation internalAddParticipants:[NSSet setWithObject:user]];
+        [conversation internalAddParticipants:@[user]];
     }
 }
 
@@ -527,7 +527,7 @@ typedef NS_ENUM(NSUInteger, ZMConversationSource) {
     }
 
     for (ZMUser *user in users) {
-        [conversation internalRemoveParticipants:[NSSet setWithObject:user] sender:sender];
+        [conversation internalRemoveParticipants:@[user] sender:sender];
     }
 }
 
@@ -781,7 +781,7 @@ typedef NS_ENUM(NSUInteger, ZMConversationSource) {
     // Self user has been removed from the group conversation but missed the conversation.member-leave event.
     if (response.HTTPStatus == 404 && conversation.conversationType == ZMConversationTypeGroup && conversation.isSelfAnActiveMember) {
         ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-        [conversation internalRemoveParticipants:[NSSet setWithObject:selfUser] sender:selfUser];
+        [conversation internalRemoveParticipants:@[selfUser] sender:selfUser];
     }
     
     if (response.isPermanentylUnavailableError) {

@@ -1957,7 +1957,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeGroup;
         conversation.remoteIdentifier = conversationID;
-        [conversation internalAddParticipants:[NSSet setWithObjects:removedUser, nonRemovedUser, nil]];
+        [conversation internalAddParticipants:@[removedUser, nonRemovedUser]];
         
         XCTAssertEqual(conversation.lastServerSyncedActiveParticipants.count, 2u);
     }];
@@ -2032,7 +2032,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeGroup;
         conversation.remoteIdentifier = conversationID;
-        [conversation internalAddParticipants:[NSSet setWithObjects:user1, user2, nil]];
+        [conversation internalAddParticipants:@[user1, user2]];
         
         XCTAssertEqual(conversation.lastServerSyncedActiveParticipants.count, 2u);
         
