@@ -22,6 +22,7 @@ import Foundation
 
 @objcMembers
 public class MockAVSWrapper : AVSWrapperType {
+    public var muted: Bool = false
     
     public var startCallArguments: (uuid: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool)?
     public var answerCallArguments: (uuid: UUID, callType: AVSCallType, useCBR: Bool)?

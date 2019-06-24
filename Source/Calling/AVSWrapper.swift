@@ -37,6 +37,7 @@ public protocol AVSWrapperType {
     func setVideoState(conversationId: UUID, videoState: VideoState)
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
     func update(callConfig: String?, httpStatusCode: Int)
+    var muted: Bool { get set }
 }
 
 
@@ -91,10 +92,20 @@ public class AVSWrapper: AVSWrapperType {
         let timerIntervalInSeconds: Int32 = 5
         wcall_set_network_quality_handler(handle, networkQualityHandler, timerIntervalInSeconds, observer)
         wcall_set_media_stopped_handler(handle, mediaStoppedChangeHandler)
+        wcall_set_mute_handler(handle, muteChangeHandler, observer)
         wcall_set_participant_changed_handler(handle, callParticipantHandler, observer)
     }
 
     // MARK: - Convenience Methods
+    
+    public var muted: Bool {
+        get {
+            return wcall_get_mute(handle) != 0
+        }
+        set {
+            wcall_set_mute(handle, newValue ? 1 : 0)
+        }
+    }
 
     /// Requests AVS to initiate a call.
     public func startCall(conversationId: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool) -> Bool {
@@ -256,4 +267,9 @@ public class AVSWrapper: AVSWrapperType {
         })
     }
 
+    private let muteChangeHandler: MuteChangeHandler = { muted, contextRef in
+        AVSWrapper.withCallCenter(contextRef, muted) {
+            $0.handleMuteChange(muted: $1)
+        }
+    }
 }

@@ -66,3 +66,6 @@ typealias MediaStoppedChangeHandler = @convention(c) (UnsafePointer<Int8>?, Unsa
 
 /// Equivalent of `wcall_network_quality_h`.
 typealias NetworkQualityChangeHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, Int32, Int32, Int32, Int32, UnsafeMutableRawPointer?) -> Void
+
+/// Equivalent of `wcall_set_mute_handler`.
+typealias MuteChangeHandler = @convention(c) (Int32, UnsafeMutableRawPointer?) -> Void
