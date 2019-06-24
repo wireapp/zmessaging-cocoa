@@ -37,10 +37,6 @@ public class MockAVSWrapper : AVSWrapperType {
     public var hasOngoingCall = false
     public var mockMembers : [AVSCallMember] = []
     
-    public func members(in conversationId: UUID) -> [AVSCallMember] {
-        return mockMembers
-    }
-
     var receivedCallEvents : [CallEvent] = []
     
     public required init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?) {

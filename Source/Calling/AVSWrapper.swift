@@ -36,7 +36,6 @@ public protocol AVSWrapperType {
     func received(callEvent: CallEvent) -> CallError?
     func setVideoState(conversationId: UUID, videoState: VideoState)
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
-    func members(in conversationId: UUID) -> [AVSCallMember]
     func update(callConfig: String?, httpStatusCode: Int)
     var muted: Bool { get set }
 }
@@ -90,11 +89,11 @@ public class AVSWrapper: AVSWrapperType {
                               observer)
 
         wcall_set_data_chan_estab_handler(handle, dataChannelEstablishedHandler)
-        wcall_set_group_changed_handler(handle, groupMemberHandler, observer)
         let timerIntervalInSeconds: Int32 = 5
         wcall_set_network_quality_handler(handle, networkQualityHandler, timerIntervalInSeconds, observer)
         wcall_set_media_stopped_handler(handle, mediaStoppedChangeHandler)
         wcall_set_mute_handler(handle, muteChangeHandler, observer)
+        wcall_set_participant_changed_handler(handle, callParticipantHandler, observer)
     }
 
     // MARK: - Convenience Methods
@@ -160,23 +159,6 @@ public class AVSWrapper: AVSWrapperType {
     /// Updates the calling config.
     public func update(callConfig: String?, httpStatusCode: Int) {
         wcall_config_update(handle, httpStatusCode == 200 ? 0 : EPROTO, callConfig ?? "")
-    }
-
-    /// Returns the list of members in the conversation.
-    public func members(in conversationId: UUID) -> [AVSCallMember] {
-        guard let membersRef = wcall_get_members(handle, conversationId.transportString()) else { return [] }
-        
-        let cMembers = membersRef.pointee
-        var callMembers = [AVSCallMember]()
-        for i in 0..<cMembers.membc {
-            guard let cMember = cMembers.membv?[Int(i)],
-                let member = AVSCallMember(wcallMember: cMember)
-                else { continue }
-            callMembers.append(member)
-        }
-        wcall_free_members(membersRef)
-        
-        return callMembers
     }
 
     // MARK: - C Callback Handlers
@@ -266,10 +248,10 @@ public class AVSWrapper: AVSWrapperType {
             $0.handleCallMessageRequest(token: token, conversationId: $1, senderUserId: $2, senderClientId: $3, data: transformedData)
         }
     }
-
-    private let groupMemberHandler: CallGroupChangedHandler = { conversationIdRef, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationIdRef) {
-            $0.handleGroupMemberChange(conversationId: $1)
+    
+    private let callParticipantHandler: CallParticipantChangedHandler = { conversationIdRef, json, contextRef in
+        AVSWrapper.withCallCenter(contextRef, json, conversationIdRef) {
+            $0.handleParticipantChange(conversationId: $2, data: $1)
         }
     }
 
