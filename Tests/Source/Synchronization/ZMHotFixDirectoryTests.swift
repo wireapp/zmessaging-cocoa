@@ -115,7 +115,7 @@ class ZMHotFixDirectoryTests: MessagingTest {
             let timestamp = Date()
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.appendNewConversationSystemMessage(at: timestamp)
+            conversation.appendNewConversationSystemMessage(at: timestamp, users: [])
             XCTAssertEqual(conversation.unreadMessages.count, 1)
             
             // when
@@ -133,7 +133,7 @@ class ZMHotFixDirectoryTests: MessagingTest {
             let timestamp = Date()
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.appendNewConversationSystemMessage(at: timestamp)
+            conversation.appendNewConversationSystemMessage(at: timestamp, users: [])
             conversation.lastReadServerTimeStamp = timestamp.addingTimeInterval(-1)
             XCTAssertEqual(conversation.unreadMessages.count, 1)
             
@@ -154,7 +154,7 @@ class ZMHotFixDirectoryTests: MessagingTest {
             let timestamp = Date()
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.conversationType = .group
-            conversation.appendNewConversationSystemMessage(at: timestamp)
+            conversation.appendNewConversationSystemMessage(at: timestamp, users: [])
             let message = conversation.append(text: "Hello") as? ZMClientMessage
             message?.sender = user
             conversation.lastReadServerTimeStamp = timestamp.addingTimeInterval(-1)

@@ -113,7 +113,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
         self.syncMOC.performAndWait {
             
             // GIVEN
-            self.conversation.internalAddParticipants(Set<ZMUser>([user]))
+            self.conversation.internalAddParticipants([user])
             
             let payload = [
                 "from": self.user.remoteIdentifier!.transportString(),
@@ -140,7 +140,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
         self.syncMOC.performAndWait {
             
             // GIVEN
-            self.conversation.internalAddParticipants(Set<ZMUser>([user]))
+            self.conversation.internalAddParticipants([user])
             
             let payload = [
                 "from": self.user.remoteIdentifier!.transportString(),

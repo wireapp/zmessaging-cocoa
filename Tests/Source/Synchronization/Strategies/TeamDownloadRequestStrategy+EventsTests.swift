@@ -508,7 +508,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             let teamConversation1 = ZMConversation.insertNewObject(in: self.syncMOC)
             teamConversation1.remoteIdentifier = teamConversationId
             teamConversation1.conversationType = .group
-            teamConversation1.internalAddParticipants(Set(arrayLiteral: user))
+            teamConversation1.internalAddParticipants([user])
             teamConversation1.team = team
             let conversation = ZMConversation.insertGroupConversation(into: self.syncMOC, withParticipants: [user, otherUser])
             conversation?.remoteIdentifier = conversationId
@@ -556,13 +556,13 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             let teamConversation1 = ZMConversation.insertNewObject(in: self.syncMOC)
             teamConversation1.remoteIdentifier = teamConversationId
             teamConversation1.conversationType = .group
-            teamConversation1.internalAddParticipants(Set(arrayLiteral: user))
+            teamConversation1.internalAddParticipants([user])
             teamConversation1.team = team
             
             let teamConversation2 = ZMConversation.insertNewObject(in: self.syncMOC)
             teamConversation2.remoteIdentifier = teamAnotherConversationId
             teamConversation2.conversationType = .group
-            teamConversation2.internalAddParticipants(Set(arrayLiteral: user))
+            teamConversation2.internalAddParticipants([user])
             teamConversation2.team = team
 
             
