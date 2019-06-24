@@ -378,26 +378,8 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
         switch event.type {
         case .userClientAdd, .userClientRemove:
             processClientListUpdateEvent(event)
-        case .userClientLegalHoldRequest:
-            processLegalHoldRequestEvent(event)
         default:
             break
-        }
-    }
-
-    fileprivate func processLegalHoldRequestEvent(_ event: ZMUpdateEvent) {
-        guard let moc = self.managedObjectContext else { return }
-        let selfUser = ZMUser.selfUser(in: moc)
-
-        let decoder = JSONDecoder()
-        decoder.dataDecodingStrategy = .base64
-
-        do {
-            let jsonPayload = try JSONSerialization.data(withJSONObject: event.payload, options: [])
-            let request = try decoder.decode(LegalHoldRequest.self, from: jsonPayload)
-            selfUser.userDidReceiveLegalHoldRequest(request)
-        } catch {
-            zmLog.error("Invalid legal hold request payload: \(error)")
         }
     }
 
