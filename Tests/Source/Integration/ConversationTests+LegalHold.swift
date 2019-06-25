@@ -211,6 +211,12 @@ class ConversationTests_LegalHold: ConversationTestsBase {
             session.registerClient(for: self.user1, label: "Legal Hold", type: "legalhold", deviceClass: "legalhold")
         }
 
+        userSession?.performChanges {
+            conversation!.append(text: "This is the best group!")
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(conversation?.legalHoldStatus, .pendingApproval)
+
         // when
         mockTransportSession.performRemoteChanges { (session) in
             let genericMessage = ZMGenericMessage.message(content: ZMText.text(with: "Hello")).setLegalHoldStatus(.DISABLED)
