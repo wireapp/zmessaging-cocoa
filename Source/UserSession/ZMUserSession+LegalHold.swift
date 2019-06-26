@@ -87,7 +87,7 @@ extension ZMUserSession {
                     let errorLabel = response.payload?.asDictionary()?["label"] as? String
 
                     switch errorLabel {
-                    case "missing-auth", "invalid-credentials":
+                    case "access-denied", "invalid-payload":
                         return complete(error: .invalidPassword)
                     default:
                         return complete(error: .invalidResponse(response.httpStatus, errorLabel))
