@@ -109,6 +109,8 @@ extension LegalHoldRequestStrategy: ZMEventConsumer {
         switch event.type {
         case .userClientLegalHoldRequest:
             processLegalHoldRequestEvent(event)
+        case .userLegalHoldDisabled:
+            deleteLegalHoldRequest()
         default:
             break
         }
