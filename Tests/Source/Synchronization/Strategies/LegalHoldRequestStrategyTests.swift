@@ -60,29 +60,46 @@ class LegalHoldRequestStrategyTests: MessagingTest {
     }
     
     static func payloadForReceivingLegalHoldRequestStatus(request: LegalHoldRequest) -> ZMTransportData {
-        return [
-            "id": request.target.transportString(),
+        var payload: [String: Any] = [
             "status": "pending",
-            "requester": request.requester.transportString(),
             "client": ["id": request.clientIdentifier],
             "last_prekey": [
                 "id": request.lastPrekey.id,
                 "key": request.lastPrekey.key.base64EncodedString()
             ]
-            ] as ZMTransportData
+        ]
+        
+        if let target = request.target {
+            payload["id"] = target.transportString()
+        }
+        
+        if let requester = request.requester {
+            payload["requester"] = requester.transportString()
+        }
+        
+        return payload as ZMTransportData
     }
     
     static func payloadForReceivingLegalHoldRequestEvent(request: LegalHoldRequest) -> ZMTransportData {
-        return [
-            "id": request.target.transportString(),
-            "requester": request.requester.transportString(),
+        var payload: [String: Any] = [
             "type": "user.legalhold-request",
             "client": ["id": request.clientIdentifier],
             "last_prekey": [
                 "id": request.lastPrekey.id,
                 "key": request.lastPrekey.key.base64EncodedString()
             ]
-            ] as ZMTransportData
+        ]
+        
+        
+        if let target = request.target {
+            payload["id"] = target.transportString()
+        }
+        
+        if let requester = request.requester {
+            payload["requester"] = requester.transportString()
+        }
+        
+        return payload as ZMTransportData
     }
     
     // MARK: - Slow Sync
