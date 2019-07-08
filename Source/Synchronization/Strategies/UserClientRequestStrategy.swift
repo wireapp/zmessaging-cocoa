@@ -250,7 +250,10 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
                 case "client-not-found":
                     errorCode = .clientToDeleteNotFound
                     break
-                case "invalid-credentials", "missing-auth":
+                case "invalid-credentials",
+                     "missing-auth",
+                     // in case the password not matching password format requirement
+                     "bad-request":
                     errorCode = .invalidCredentials
                     break
                 default:
