@@ -400,8 +400,7 @@
 #pragma mark - Conversation list
 @implementation ConversationTests (ConversationStatusAndOrder)
 
-// TODO jacob fix and re-enable
-- (void)disabled_testThatTheConversationListOrderIsUpdatedAsWeReceiveMessages
+- (void)testThatTheConversationListOrderIsUpdatedAsWeReceiveMessages
 {
     XCTAssertTrue([self login]);
 

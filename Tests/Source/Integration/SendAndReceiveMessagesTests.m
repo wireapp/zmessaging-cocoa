@@ -724,8 +724,7 @@
     XCTAssertFalse(systemMessage.needsUpdatingUsers);
 }
 
-// TODO jacob fix and re-enable
-- (void)disabled_testThatPreviousPotentialGapSystemMessageGetsDeletedAndNewOneUpdatesWithOldUsers
+- (void)testThatPreviousPotentialGapSystemMessageGetsDeletedAndNewOneUpdatesWithOldUsers
 {
     // given
     XCTAssert([self login]);
