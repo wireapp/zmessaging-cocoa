@@ -250,7 +250,7 @@ class LegalHoldRequestStrategyTests: MessagingTest {
         // WHEN
         syncMOC.performGroupedBlockAndWait {
             let payload: [String: Any] = [
-                "type": "user.legalhold-disabled"
+                "type": "user.legalhold-disable"
             ]
             let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: UUID())!
             self.sut.processEvents([event], liveEvents: true, prefetchResult: .none)
