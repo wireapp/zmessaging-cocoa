@@ -71,9 +71,13 @@ public final class TeamImageAssetUpdateStrategy: AbstractRequestStrategy {
 }
 
 extension TeamImageAssetUpdateStrategy : ZMDownstreamTranscoder {
-    public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
-        //TODO
-        return nil
+    public func request(forFetching object: ZMManagedObject!,
+                        downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
+        guard let team = object as? Team else { return nil }
+
+        guard let assetId = team.pictureAssetId else { return nil }
+        let path = "/assets/v3/\(assetId)"
+        return ZMTransportRequest.imageGet(fromPath: path)
     }
 
     public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {

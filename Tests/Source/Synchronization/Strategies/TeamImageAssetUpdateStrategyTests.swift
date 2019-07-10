@@ -69,6 +69,23 @@ final class TeamImageAssetUpdateStrategyTests : MessagingTest {
     }
 
     func testThatItCreatesRequestForCorrectAssetIdentifierForImage() {
+        // GIVEN
+        let pictureAssetId = "blah"
+        let team = Team(context: syncMOC)
+        team.pictureAssetId = pictureAssetId
+        syncMOC.saveOrRollback()
+
+        // WHEN
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: team.objectID) as? Team)?.requestImage()
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
+        let request = sut.downstreamRequestSync.nextRequest()
+        XCTAssertNotNil(request)
+        XCTAssertEqual(request?.path, "/assets/v3/\(pictureAssetId)")
+        XCTAssertEqual(request?.method, .methodGET)
     }
 
     func testThatItUpdatesCorrectUserImageDataForImage() {
