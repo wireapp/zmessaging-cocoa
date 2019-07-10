@@ -51,6 +51,21 @@ final class TeamImageAssetUpdateStrategyTests : MessagingTest {
     }
 
     func testThatItWhitelistsUserOnPreviewSyncForImageNotification() {
+        // GIVEN
+        let team = Team(context: syncMOC)
+        team.pictureAssetId = "blah"
+        let sync = sut.downstreamRequestSync!
+        XCTAssertFalse(sync.hasOutstandingItems)
+        syncMOC.saveOrRollback()
+
+        // WHEN
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: team.objectID) as? Team)?.requestImage()
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
+        XCTAssert(sync.hasOutstandingItems)
     }
 
     func testThatItCreatesRequestForCorrectAssetIdentifierForImage() {

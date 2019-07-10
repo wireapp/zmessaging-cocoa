@@ -17,11 +17,7 @@
 //
 
 import Foundation
-
-///TODO: mv to DM
-extension NSNotification.Name {
-    static let teamDidRequestAsset = Notification.Name("TeamDidRequestAsset")
-}
+import WireRequestStrategy
 
 //@objc
 public final class TeamImageAssetUpdateStrategy: AbstractRequestStrategy {
@@ -42,9 +38,9 @@ public final class TeamImageAssetUpdateStrategy: AbstractRequestStrategy {
         observer = NotificationInContext.addObserver(name: .teamDidRequestAsset, context: managedObjectContext.notificationContext, using: { [weak self] in self?.requestAssetForNotification(note: $0) })
     }
 
-    deinit {
-        observer = nil
-    }
+//    deinit {
+//        observer = nil
+//    }
 
     private func requestAssetForNotification(note: NotificationInContext) {
         moc.performGroupedBlock {
