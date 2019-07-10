@@ -24,6 +24,7 @@ final class TeamImageAssetUpdateStrategyTests : MessagingTest {
 
     var sut: TeamImageAssetUpdateStrategy!
     var mockApplicationStatus : MockApplicationStatus!
+    let pictureAssetId = "blah"
 
     override func setUp() {
         super.setUp()
@@ -33,16 +34,11 @@ final class TeamImageAssetUpdateStrategyTests : MessagingTest {
 
         sut = TeamImageAssetUpdateStrategy(withManagedObjectContext: syncMOC,
                                            applicationStatus: mockApplicationStatus)
-
-        ///TODO: cache for team image?
-//        self.syncMOC.zm_userImageCache = UserImageLocalCache()
-//        self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache
     }
 
     override func tearDown() {
         mockApplicationStatus = nil
         sut = nil
-//        self.syncMOC.zm_userImageCache = nil
         super.tearDown()
     }
 
@@ -50,10 +46,17 @@ final class TeamImageAssetUpdateStrategyTests : MessagingTest {
         XCTAssertNotNil(sut.downstreamRequestSync)
     }
 
+    private func createMockTeam() -> Team {
+        let team = Team(context: syncMOC)
+        team.pictureAssetId = pictureAssetId
+        team.remoteIdentifier = UUID()
+
+        return team
+    }
+
     func testThatItWhitelistsUserOnPreviewSyncForImageNotification() {
         // GIVEN
-        let team = Team(context: syncMOC)
-        team.pictureAssetId = "blah"
+        let team = createMockTeam()
         let sync = sut.downstreamRequestSync!
         XCTAssertFalse(sync.hasOutstandingItems)
         syncMOC.saveOrRollback()
@@ -70,9 +73,7 @@ final class TeamImageAssetUpdateStrategyTests : MessagingTest {
 
     func testThatItCreatesRequestForCorrectAssetIdentifierForImage() {
         // GIVEN
-        let pictureAssetId = "blah"
-        let team = Team(context: syncMOC)
-        team.pictureAssetId = pictureAssetId
+        let team = createMockTeam()
         syncMOC.saveOrRollback()
 
         // WHEN
@@ -89,6 +90,18 @@ final class TeamImageAssetUpdateStrategyTests : MessagingTest {
     }
 
     func testThatItUpdatesCorrectUserImageDataForImage() {
+        // GIVEN
+        let team = createMockTeam()
+
+        let imageData = "image".data(using: .utf8)!
+        let sync = sut.downstreamRequestSync!
+        let response = ZMTransportResponse(imageData: imageData, httpStatus: 200, transportSessionError: nil, headers: nil)
+
+        // WHEN
+        self.sut.update(team, with: response, downstreamSync: sync)
+
+        // THEN
+        XCTAssertEqual(team.imageData, imageData)
     }
 
     func testThatItDeletesPreviewProfileAssetIdentifierWhenReceivingAPermanentErrorForImage() {

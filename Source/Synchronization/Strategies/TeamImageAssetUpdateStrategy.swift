@@ -86,8 +86,9 @@ extension TeamImageAssetUpdateStrategy : ZMDownstreamTranscoder {
     }
 
     public func update(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
-        //TODO
+        guard let team = object as? Team else { return }
 
+        team.imageData = response.rawData
     }
 
 }
