@@ -18,28 +18,79 @@
 
 import Foundation
 
-@objc
+///TODO: mv to DM
+extension NSNotification.Name {
+    static let teamDidRequestAsset = Notification.Name("TeamDidRequestAsset")
+}
+
+//@objc
 public final class TeamImageAssetUpdateStrategy: AbstractRequestStrategy {
+    let moc: NSManagedObjectContext
+    var downstreamRequestSync: ZMDownstreamObjectSyncWithWhitelist!
+    fileprivate var observer: Any!
+
+    override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
+                  applicationStatus: ApplicationStatus) {
+        moc = managedObjectContext
+
+        super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
+
+        downstreamRequestSync = whitelistUserImageSync
+        downstreamRequestSync.whiteListObject(ZMUser.selfUser(in: managedObjectContext).team)
+
+        observer = NotificationInContext.addObserver(name: .teamDidRequestAsset, context: managedObjectContext.notificationContext, using: { [weak self] in self?.requestAssetForNotification(note: $0) })
+    }
+
+    private func requestAssetForNotification(note: NotificationInContext) {
+        moc.performGroupedBlock {
+            guard let objectID = note.object as? NSManagedObjectID,
+                let object = self.moc.object(with: objectID) as? ZMManagedObject
+                else { return }
+
+            switch note.name {
+            case .teamDidRequestAsset:
+                self.downstreamRequestSync.whiteListObject(object)
+            default:
+                break
+            }
+
+            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        }
+    }
+
+    fileprivate var whitelistUserImageSync: ZMDownstreamObjectSyncWithWhitelist {
+        let predicate: NSPredicate = NSPredicate() ///TODO:
+
+        return ZMDownstreamObjectSyncWithWhitelist(transcoder:self,
+                                                   entityName:Team.entityName(),
+                                                   predicateForObjectsToDownload:predicate,
+                                                   managedObjectContext:moc)
+    }
+
 }
 
 extension TeamImageAssetUpdateStrategy : ZMDownstreamTranscoder {
     public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
-        <#code#>
+        //TODO
+        return nil
     }
 
     public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
-        <#code#>
+        //TODO
+
     }
 
     public func update(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
-        <#code#>
+        //TODO
+
     }
 
 }
 
 extension TeamImageAssetUpdateStrategy: ZMContextChangeTrackerSource {
     public var contextChangeTrackers: [ZMContextChangeTracker] {
-        <#code#>
+        //TODO
+        return []
     }
 
 }

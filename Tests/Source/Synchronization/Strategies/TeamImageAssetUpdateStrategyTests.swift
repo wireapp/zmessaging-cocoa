@@ -17,34 +17,37 @@
 //
 
 import Foundation
+import XCTest
+@testable import WireSyncEngine
 
 final class TeamImageAssetUpdateStrategyTests : MessagingTest {
 
-    var sut: WireSyncEngine.TeamImageAssetUpdateStrategy!
+    var sut: TeamImageAssetUpdateStrategy!
+    var mockApplicationStatus : MockApplicationStatus!
 
     override func setUp() {
         super.setUp()
         self.mockApplicationStatus = MockApplicationStatus()
+
         self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
-        self.updateStatus = MockImageUpdateStatus()
 
-        sut = TeamImageAssetUpdateStrategy(managedObjectContext: syncMOC,
-                                           applicationStatus: mockApplicationStatus,
-                                           imageUploadStatus: updateStatus)
+        sut = TeamImageAssetUpdateStrategy(withManagedObjectContext: syncMOC,
+                                           applicationStatus: mockApplicationStatus)
 
-        self.syncMOC.zm_userImageCache = UserImageLocalCache()
-        self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache
+        ///TODO: cache for team image?
+//        self.syncMOC.zm_userImageCache = UserImageLocalCache()
+//        self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache
     }
 
     override func tearDown() {
-        self.mockApplicationStatus = nil
-        self.updateStatus = nil
-        self.sut = nil
-        self.syncMOC.zm_userImageCache = nil
+        mockApplicationStatus = nil
+        sut = nil
+//        self.syncMOC.zm_userImageCache = nil
         super.tearDown()
     }
 
     func testThatItCreatesDownstreamRequestSyncs() {
+        XCTAssertNotNil(sut.downstreamRequestSync)
     }
 
     func testThatItWhitelistsUserOnPreviewSyncForImageNotification() {
