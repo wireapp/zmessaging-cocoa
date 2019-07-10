@@ -100,8 +100,7 @@ extension TeamImageAssetUpdateStrategy : ZMDownstreamTranscoder {
 
 extension TeamImageAssetUpdateStrategy: ZMContextChangeTrackerSource {
     public var contextChangeTrackers: [ZMContextChangeTracker] {
-        //TODO
-        return []
+        return [downstreamRequestSync]
     }
 
 }
