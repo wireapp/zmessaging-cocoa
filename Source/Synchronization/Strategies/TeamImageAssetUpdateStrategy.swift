@@ -36,9 +36,14 @@ public final class TeamImageAssetUpdateStrategy: AbstractRequestStrategy {
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
 
         downstreamRequestSync = whitelistUserImageSync
-        downstreamRequestSync.whiteListObject(ZMUser.selfUser(in: managedObjectContext).team)
+        ///TODO: this line causes memory issue?
+//        downstreamRequestSync.whiteListObject(ZMUser.selfUser(in: managedObjectContext).team)
 
         observer = NotificationInContext.addObserver(name: .teamDidRequestAsset, context: managedObjectContext.notificationContext, using: { [weak self] in self?.requestAssetForNotification(note: $0) })
+    }
+
+    deinit {
+        observer = nil
     }
 
     private func requestAssetForNotification(note: NotificationInContext) {
