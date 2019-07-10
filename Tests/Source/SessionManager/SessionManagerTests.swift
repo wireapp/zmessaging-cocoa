@@ -137,7 +137,7 @@ class SessionManagerTests: IntegrationTest {
                               delegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
-                              blacklistDownloadInterval : -1) { sessionManager in
+                              configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
                                 
                                 let environment = MockEnvironment()
                                 let reachability = TestReachability()
@@ -199,7 +199,7 @@ class SessionManagerTests: IntegrationTest {
                               delegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
-                              blacklistDownloadInterval : -1) { sessionManager in
+                              configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
                                 
                                 let environment = MockEnvironment()
                                 let reachability = TestReachability()
@@ -261,7 +261,7 @@ class SessionManagerTests: IntegrationTest {
                               delegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
-                              blacklistDownloadInterval : -1) { sessionManager in
+                              configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
                                 
                                 let environment = MockEnvironment()
                                 let reachability = TestReachability()
@@ -375,6 +375,115 @@ class SessionManagertests_AccountDeletion: IntegrationTest {
         }
         
         // then
+        XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
+    }
+    
+}
+
+class SessionManagerTests_AuthenticationFailure: IntegrationTest {
+    
+    override func setUp() {
+        super.setUp()
+        createSelfUserAndConversation()
+    }
+    
+    func testThatItDeletesTheCookie_OnAuthentictionFailure() {
+        // given
+        XCTAssert(login())
+        XCTAssertTrue(sessionManager!.isSelectedAccountAuthenticated)
+        
+        // when
+        let account = sessionManager!.accountManager.selectedAccount!
+        sessionManager?.authenticationInvalidated(NSError(code: .accessTokenExpired, userInfo: nil), accountId: account.userIdentifier)
+        
+        // then
+        XCTAssertFalse(sessionManager!.isSelectedAccountAuthenticated)
+    }
+    
+    func testThatItTearsDownActiveUserSession_OnAuthentictionFailure() {
+        // given
+        XCTAssert(login())
+        XCTAssertNotNil(sessionManager?.activeUserSession)
+        
+        // when
+        let account = sessionManager!.accountManager.selectedAccount!
+        sessionManager?.authenticationInvalidated(NSError(code: .accessTokenExpired, userInfo: nil), accountId: account.userIdentifier)
+        
+        // then
+        XCTAssertNil(sessionManager?.activeUserSession)
+    }
+    
+    func testThatItTearsDownBackgroundUserSession_OnAuthentictionFailure() {
+        // given
+        let additionalAccount = Account(userName: "Additional Account", userIdentifier: UUID())
+        sessionManager!.environment.cookieStorage(for: additionalAccount).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.accountManager.addOrUpdate(additionalAccount)
+        
+        XCTAssert(login())
+        XCTAssertNotNil(sessionManager?.activeUserSession)
+        
+        // load additional account as a background session
+        sessionManager!.withSession(for: additionalAccount, perform: { _ in })
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertNotNil(sessionManager?.backgroundUserSessions[additionalAccount.userIdentifier])
+        
+        // when
+        sessionManager?.authenticationInvalidated(NSError(code: .accessTokenExpired, userInfo: nil), accountId: additionalAccount.userIdentifier)
+        
+        // then
+        XCTAssertNil(sessionManager?.backgroundUserSessions[additionalAccount.userIdentifier])
+    }
+    
+}
+
+class SessionManagerTests_AuthenticationFailure_With_DeleteAccountOnAuthentictionFailure: IntegrationTest {
+    
+    override func setUp() {
+        super.setUp()
+        createSelfUserAndConversation()
+    }
+    
+    override var sessionManagerConfiguration: SessionManagerConfiguration {
+        return SessionManagerConfiguration(deleteAccountOnAuthentictionFailure: true)
+    }
+    
+    func testThatItDeletesTheAccount_OnAuthentictionFailure() {
+        // given
+        XCTAssert(login())
+        let account = sessionManager!.accountManager.selectedAccount!
+        
+        // when
+        sessionManager?.authenticationInvalidated(NSError(code: .accessTokenExpired, userInfo: nil), accountId: account.userIdentifier)
+        
+        // then
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        
+        XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
+    }
+    
+    func testThatItDeletesTheAccount_OnAuthentictionFailureForBackgroundSession() {
+        // given
+        let additionalAccount = Account(userName: "Additional Account", userIdentifier: UUID())
+        sessionManager!.environment.cookieStorage(for: additionalAccount).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.accountManager.addOrUpdate(additionalAccount)
+        
+        XCTAssert(login())
+        
+        XCTAssertNotNil(sessionManager?.activeUserSession)
+        
+        // load additional account as a background session
+        sessionManager!.withSession(for: additionalAccount, perform: { _ in })
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertNotNil(sessionManager?.backgroundUserSessions[additionalAccount.userIdentifier])
+        
+        // when
+        sessionManager?.authenticationInvalidated(NSError(code: .accessTokenExpired, userInfo: nil), accountId: additionalAccount.userIdentifier)
+        
+        // then
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: additionalAccount.userIdentifier, applicationContainer: sharedContainer)
+        
         XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
     }
     
@@ -610,7 +719,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                               delegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
-                              blacklistDownloadInterval : -1) { sessionManager in
+                              configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
                                 
                                 let environment = MockEnvironment()
                                 let reachability = TestReachability()
@@ -665,7 +774,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                        delegate: nil,
                        application: application,
                        environment: sessionManager!.environment,
-                       blacklistDownloadInterval : -1) { sessionManager in
+                       configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
                         
                         let environment = MockEnvironment()
                         let reachability = TestReachability()
