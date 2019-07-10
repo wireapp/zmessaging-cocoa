@@ -68,6 +68,10 @@ public final class TeamImageAssetUpdateStrategy: AbstractRequestStrategy {
                                                    managedObjectContext:moc)
     }
 
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
+        return downstreamRequestSync?.nextRequest()
+    }
+
 }
 
 extension TeamImageAssetUpdateStrategy : ZMDownstreamTranscoder {
@@ -81,8 +85,9 @@ extension TeamImageAssetUpdateStrategy : ZMDownstreamTranscoder {
     }
 
     public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
-        //TODO
+        guard let team = object as? Team else { return }
 
+        team.pictureAssetId = nil
     }
 
     public func update(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {

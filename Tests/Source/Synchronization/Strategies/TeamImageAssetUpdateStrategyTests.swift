@@ -105,5 +105,27 @@ final class TeamImageAssetUpdateStrategyTests : MessagingTest {
     }
 
     func testThatItDeletesPreviewProfileAssetIdentifierWhenReceivingAPermanentErrorForImage() {
+        // Given
+        let team = createMockTeam()
+        syncMOC.saveOrRollback()
+
+        // When
+        uiMOC.performGroupedBlock {
+            (self.uiMOC.object(with: team.objectID) as? Team)?.requestImage()
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        guard let request = sut.nextRequestIfAllowed() else { return XCTFail("nil request generated") }
+        XCTAssertEqual(request.path, "/assets/v3/\(pictureAssetId)")
+        XCTAssertEqual(request.method, .methodGET)
+
+        // Given
+        let response = ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil)
+        request.complete(with: response)
+
+        // THEN
+        team.requestImage()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertNil(team.pictureAssetId)
+        XCTAssertNil(sut.nextRequestIfAllowed())
     }
 }
