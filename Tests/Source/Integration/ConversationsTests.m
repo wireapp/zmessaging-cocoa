@@ -1272,6 +1272,7 @@
 @end
 
 #pragma mark - Clearing history
+
 @implementation ConversationTests (ClearingHistory)
 
 - (void)loginAndFillConversationWithMessages:(MockConversation *)mockConversation messagesCount:(NSUInteger)messagesCount
@@ -1299,70 +1300,6 @@
     
     XCTAssertEqual(conversation.allMessages.count, messagesCount);
 }
-
-- (void)testThatItNotifiesTheObserverWhenTheHistoryIsClearedAndSyncsWithTheBackend
-{
-    //given
-    const NSUInteger messagesCount = 5;
-    [self loginAndFillConversationWithMessages:self.groupConversation messagesCount:messagesCount];
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    ZMConversationListDirectory *conversationDirectory = self.userSession.managedObjectContext.conversationListDirectory;
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    {
-        [self.mockTransportSession resetReceivedRequests];
-        
-        // when
-    
-        [self.userSession performChanges:^{
-            [conversation clearMessageHistory];
-        }];
-        WaitForAllGroupsToBeEmpty(0.5);
-        
-        // then
-        XCTAssertEqual(conversation.allMessages.count, 0u);
-        XCTAssertFalse([conversationDirectory.conversationsIncludingArchived containsObject:conversation]);
-        
-        ZMTransportRequest *firstRequest = self.mockTransportSession.receivedRequests.firstObject;
-        NSString *expectedPath = [NSString stringWithFormat:@"/conversations/%@/self", conversation.remoteIdentifier.transportString];
-        XCTAssertEqualObjects(firstRequest.payload.asDictionary[@"otr_archived_ref"], conversation.lastServerTimeStamp.transportString);
-        XCTAssertEqualObjects(firstRequest.payload.asDictionary[@"otr_archived"], @1);
-
-        XCTAssertEqualObjects(firstRequest.path, expectedPath);
-        XCTAssertEqual(firstRequest.method, ZMMethodPUT);
-        
-        ZMUser *selfUser = [self userForMockUser:self.selfUser];
-        ZMTransportRequest *lastRequest = self.mockTransportSession.receivedRequests.lastObject;
-        NSString *selfConversationPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", selfUser.remoteIdentifier.transportString];
-        XCTAssertNotNil(lastRequest.binaryData);
-        XCTAssertEqualObjects(lastRequest.path, selfConversationPath);
-        XCTAssertEqual(lastRequest.method, ZMMethodPOST);
-        
-    }
-    conversation = nil;
-    [self recreateSessionManagerAndDeleteLocalData];
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    {
-        // Wait for sync to be done
-        XCTAssertTrue([self login]);
-    
-        // then
-        conversation = [self conversationForMockConversation:self.groupConversation];
-        WaitForAllGroupsToBeEmpty(0.5);
-
-        XCTAssertEqual(conversation.allMessages.count, 2u);
-        ZMSystemMessage *message = (ZMSystemMessage *)conversation.lastMessage;
-        XCTAssertEqual(message.systemMessageType, ZMSystemMessageTypeUsingNewDevice);
-
-        XCTAssertTrue(conversation.isArchived);
-        XCTAssertFalse([conversationDirectory.conversationsIncludingArchived containsObject:conversation]);
-    }
-}
-
-// TODO: test for conversations that starts with connection request
 
 - (void)testThatItRemovesMessagesAfterReceivingAPushEventToClearHistory
 {
