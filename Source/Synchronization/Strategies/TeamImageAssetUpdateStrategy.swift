@@ -60,7 +60,7 @@ public final class TeamImageAssetUpdateStrategy: AbstractRequestStrategy {
     }
 
     fileprivate var whitelistUserImageSync: ZMDownstreamObjectSyncWithWhitelist {
-        let predicate: NSPredicate = NSPredicate() ///TODO:
+        let predicate: NSPredicate = Team.imageDownloadFilter
 
         return ZMDownstreamObjectSyncWithWhitelist(transcoder:self,
                                                    entityName:Team.entityName(),
