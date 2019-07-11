@@ -29,6 +29,7 @@ class SessionManagerTests: IntegrationTest {
     override func setUp() {
         super.setUp()
         delegate = SessionManagerTestDelegate()
+        createSelfUserAndConversation()
     }
     
     func createManager() -> SessionManager? {
@@ -182,57 +183,16 @@ class SessionManagerTests: IntegrationTest {
     func testThatItNotifiesDestroyedSessionObserverWhenCurrentSessionIsLoggedOut() {
         
         // GIVEN
-        let account = self.createAccount()
-        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
-        
-        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
-        
-        let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
-        
-        var realSessionManager: SessionManager! = nil
+        XCTAssertTrue(login())
+        let account = sessionManager!.accountManager.selectedAccount!
         let observer = SessionManagerObserverMock()
+        let token = sessionManager?.addSessionManagerDestroyedSessionObserver(observer)
         
-        var destroyToken: Any? = nil
-        SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: mediaManager,
-                              analytics: nil,
-                              delegate: nil,
-                              application: application,
-                              environment: sessionManager!.environment,
-                              configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
-                                
-                                let environment = MockEnvironment()
-                                let reachability = TestReachability()
-                                let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    application: application,
-                                    mediaManager: mediaManager,
-                                    flowManager: FlowManagerMock(),
-                                    transportSession: self.transportSession!,
-                                    environment: environment,
-                                    reachability: reachability
-                                )
-                                
-                                sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
-                                sessionManager.start(launchOptions: [:])
-                                
-                                // WHEN
-                                destroyToken = sessionManager.addSessionManagerDestroyedSessionObserver(observer)
-                                
-                                sessionManager.loadSession(for: account) { userSession in
-                                    realSessionManager = sessionManager
-                                    realSessionManager.accountManager.select(account)
-                                    XCTAssertNotNil(userSession)
-                                    sessionManagerExpectation.fulfill()
-                                }
+        // WHEN
+        withExtendedLifetime(token) {
+            sessionManager?.logoutCurrentSession()
         }
-        
-        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
-        XCTAssertNotNil(realSessionManager.activeUserSession)
-        XCTAssertNotNil(realSessionManager.accountManager.selectedAccount)
-        
-        withExtendedLifetime(destroyToken) {
-            realSessionManager.logoutCurrentSession()
-        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         
         // THEN
         XCTAssertEqual([account.userIdentifier], observer.destroyedUserSessions)
@@ -241,6 +201,10 @@ class SessionManagerTests: IntegrationTest {
     func testThatItNotifiesDestroyedSessionObserverWhenMemoryWarningReceived() {
         
         // GIVEN
+        // Mock transport doesn't support multiple accounts at the moment so we pretend to be offline
+        // in order to avoid the user session's getting stuck in a request loop.
+        mockTransportSession.doNotRespondToRequests = true
+        
         let account1 = self.createAccount()
         sessionManager!.environment.cookieStorage(for: account1).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
@@ -639,6 +603,14 @@ class SessionManagerTests_Teams: IntegrationTest {
 }
 
 class SessionManagerTests_MultiUserSession: IntegrationTest {
+    
+    override func setUp() {
+         super.setUp()
+        
+        // Mock transport doesn't support multiple accounts at the moment so we pretend to be offline
+        // in order to avoid the user session's getting stuck in a request loop.
+        mockTransportSession.doNotRespondToRequests = true
+    }
     
     func testThatItLoadsAndKeepsBackgroundUserSession() {
         // GIVEN
