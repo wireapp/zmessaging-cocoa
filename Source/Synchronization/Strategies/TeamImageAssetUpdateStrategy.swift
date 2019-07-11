@@ -26,7 +26,7 @@ public final class TeamImageAssetUpdateStrategy: AbstractRequestStrategy {
     fileprivate var downstreamRequestSync: ZMDownstreamObjectSyncWithWhitelist!
     fileprivate var observer: Any!
 
-    override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
+    public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
 
