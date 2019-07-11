@@ -559,6 +559,18 @@ public protocol ForegroundNotificationResponder: class {
         }
     }
     
+    fileprivate func logout(account: Account, error: Error? = nil) {
+        log.debug("Logging out account \(account.userIdentifier)...")
+        
+        if let session = backgroundUserSessions[account.userIdentifier] {
+            if session == activeUserSession {
+                logoutCurrentSession(deleteCookie: true, error: error)
+            } else {
+                tearDownBackgroundSession(for: account.userIdentifier)
+            }
+        }
+    }
+    
     public func logoutCurrentSession(deleteCookie: Bool = true) {
         logoutCurrentSession(deleteCookie: deleteCookie, error: nil)
     }
@@ -917,9 +929,8 @@ extension SessionManager: PostLoginAuthenticationObserver {
     }
     
     public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
-        guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)) else {
-            return
-        }
+        guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)),
+              let account = accountManager.account(with: accountId) else { return }
         
         log.debug("Authentication invalidated for \(accountId): \(error.code)")
         
@@ -927,16 +938,10 @@ extension SessionManager: PostLoginAuthenticationObserver {
         case .clientDeletedRemotely,
              .accessTokenExpired:
             
-            if let session = self.backgroundUserSessions[accountId] {
-                if session == activeUserSession {
-                    logoutCurrentSession(deleteCookie: true, deleteAccount: configuration.deleteAccountOnAuthenticationFailure, error: error)
-                } else {
-                    tearDownBackgroundSession(for: accountId)
-                    
-                    if configuration.deleteAccountOnAuthenticationFailure, let account = accountManager.account(with: accountId) {
-                        deleteAccountData(for: account)
-                    }
-                }
+            if configuration.deleteAccountOnAuthenticationFailure {
+                delete(account: account)
+            } else {
+                logout(account: account, error: error)
             }
             
         default:
