@@ -57,17 +57,17 @@ public protocol UserSessionSource: class {
 /// change the default behaviour.
 
 @objcMembers
-public class SessionManagerConfiguration: NSObject, NSCopying {
+public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     
     /// If set to true then the session manager will delete account data instead of just asking the user to re-authenticate when the cookie or client gets invalidated.
     ///
     /// The default value of this property is `false`.
-    var deleteAccountOnAuthenticationFailure: Bool
+    public var deleteAccountOnAuthenticationFailure: Bool
     
     /// The `blacklistDownloadInterval` configures at which rate we update the client blacklist
     ///
     /// The default value of this property is `6 hours`
-    var blacklistDownloadInterval: TimeInterval
+    public var blacklistDownloadInterval: TimeInterval
     
     public init(deleteAccountOnAuthentictionFailure: Bool = false,
                 blacklistDownloadInterval: TimeInterval = 6 * 60 * 60) {
@@ -84,6 +84,14 @@ public class SessionManagerConfiguration: NSObject, NSCopying {
     
     public static var defaultConfiguration: SessionManagerConfiguration {
         return SessionManagerConfiguration()
+    }
+    
+    public static func load(from URL: URL) -> SessionManagerConfiguration? {
+        guard let data = try? Data(contentsOf: URL) else { return nil }
+        
+        let decoder = JSONDecoder()
+        
+        return  try? decoder.decode(SessionManagerConfiguration.self, from: data)
     }
 }
 
