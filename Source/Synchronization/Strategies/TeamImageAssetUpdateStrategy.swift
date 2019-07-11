@@ -23,7 +23,7 @@ import WireRequestStrategy
 
 public final class TeamImageAssetUpdateStrategy: AbstractRequestStrategy {
     
-    var downstreamRequestSync: ZMDownstreamObjectSyncWithWhitelist!
+    fileprivate var downstreamRequestSync: ZMDownstreamObjectSyncWithWhitelist!
     fileprivate var observer: Any!
 
     override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {

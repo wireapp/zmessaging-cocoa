@@ -28,104 +28,82 @@ final class TeamImageAssetUpdateStrategyTests : MessagingTest {
 
     override func setUp() {
         super.setUp()
+        
         self.mockApplicationStatus = MockApplicationStatus()
-
         self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
-
-        sut = TeamImageAssetUpdateStrategy(withManagedObjectContext: syncMOC,
-                                           applicationStatus: mockApplicationStatus)
+        
+        sut = TeamImageAssetUpdateStrategy(withManagedObjectContext: uiMOC, applicationStatus: mockApplicationStatus)
     }
 
     override func tearDown() {
         mockApplicationStatus = nil
         sut = nil
+        
         super.tearDown()
     }
 
-    func testThatItCreatesDownstreamRequestSyncs() {
-        XCTAssertNotNil(sut.downstreamRequestSync)
-    }
-
-    private func createMockTeam() -> Team {
-        let team = Team(context: syncMOC)
+    private func createTeamWithImage() -> Team {
+        let team = Team(context: uiMOC)
         team.pictureAssetId = pictureAssetId
         team.remoteIdentifier = UUID()
+        uiMOC.saveOrRollback()
 
         return team
     }
-
-    func testThatItWhitelistsUserOnPreviewSyncForImageNotification() {
+    
+    func testThatItDoesNotCreateRequestForTeamImageAsset_BeforeRequestingImage() {
         // GIVEN
-        let team = createMockTeam()
-        let sync = sut.downstreamRequestSync!
-        XCTAssertFalse(sync.hasOutstandingItems)
-        syncMOC.saveOrRollback()
-
-        // WHEN
-        uiMOC.performGroupedBlock {
-            (self.uiMOC.object(with: team.objectID) as? Team)?.requestImage()
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
+        _ = createTeamWithImage()
+        
         // THEN
-        XCTAssert(sync.hasOutstandingItems)
+        let request = sut.nextRequest()
+        XCTAssertNil(request)
     }
 
-    func testThatItCreatesRequestForCorrectAssetIdentifierForImage() {
+    func testThatItCreatesRequestForTeamImageAsset_AfterRequestingImage() {
         // GIVEN
-        let team = createMockTeam()
-        syncMOC.saveOrRollback()
+        let team = createTeamWithImage()
 
         // WHEN
-        uiMOC.performGroupedBlock {
-            (self.uiMOC.object(with: team.objectID) as? Team)?.requestImage()
-        }
+        team.requestImage()
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // THEN
-        let request = sut.downstreamRequestSync.nextRequest()
+        let request = sut.nextRequest()
         XCTAssertNotNil(request)
         XCTAssertEqual(request?.path, "/assets/v3/\(pictureAssetId)")
         XCTAssertEqual(request?.method, .methodGET)
     }
 
-    func testThatItUpdatesCorrectUserImageDataForImage() {
+    func testThatItStoresTeamImageAsset_OnSuccessfulResponse() {
         // GIVEN
-        let team = createMockTeam()
-
+        let team = createTeamWithImage()
         let imageData = "image".data(using: .utf8)!
-        let sync = sut.downstreamRequestSync!
-        let response = ZMTransportResponse(imageData: imageData, httpStatus: 200, transportSessionError: nil, headers: nil)
-
+        
+        team.requestImage()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        guard let request = sut.nextRequest() else { return XCTFail("nil request generated") }
+        
         // WHEN
-        self.sut.update(team, with: response, downstreamSync: sync)
+        request.complete(with: ZMTransportResponse(imageData: imageData, httpStatus: 200, transportSessionError: nil, headers: nil))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // THEN
         XCTAssertEqual(team.imageData, imageData)
     }
 
-    func testThatItDeletesPreviewProfileAssetIdentifierWhenReceivingAPermanentErrorForImage() {
-        // Given
-        let team = createMockTeam()
-        syncMOC.saveOrRollback()
-
-        // When
-        uiMOC.performGroupedBlock {
-            (self.uiMOC.object(with: team.objectID) as? Team)?.requestImage()
-        }
-        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        guard let request = sut.nextRequestIfAllowed() else { return XCTFail("nil request generated") }
-        XCTAssertEqual(request.path, "/assets/v3/\(pictureAssetId)")
-        XCTAssertEqual(request.method, .methodGET)
-
-        // Given
-        let response = ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil)
-        request.complete(with: response)
-
-        // THEN
+    func testThatItDeletesTeamAssetIdentifier_OnPermanentError() {
+        // GIVEN
+        let team = createTeamWithImage()
         team.requestImage()
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        guard let request = sut.nextRequest() else { return XCTFail("nil request generated") }
+
+        // WHEN
+        request.complete(with: ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil))
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // THEN
         XCTAssertNil(team.pictureAssetId)
-        XCTAssertNil(sut.nextRequestIfAllowed())
     }
 }
