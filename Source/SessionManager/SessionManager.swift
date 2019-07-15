@@ -70,15 +70,31 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     /// The default value of this property is `6 hours`
     public var blacklistDownloadInterval: TimeInterval
     
+    /// The `blacklistAccountOnJailbreakDetection` configures if app should lock when the device is jailbroken
+    ///
+    /// The default value of this property is `false`
+    public var blacklistAccountOnJailbreakDetection: Bool
+    
+    /// If set to true then the session manager will delete account data on a jailbroken device.
+    ///
+    /// The default value of this property is `false`
+    public var deleteAccountOnJailbreakDetection: Bool
+    
     public init(deleteAccountOnAuthentictionFailure: Bool = false,
-                blacklistDownloadInterval: TimeInterval = 6 * 60 * 60) {
+                blacklistDownloadInterval: TimeInterval = 6 * 60 * 60,
+                blacklistAccountOnJailbreakDetection: Bool = false,
+                deleteAccountOnJailbreakDetection: Bool = false) {
         self.deleteAccountOnAuthenticationFailure = deleteAccountOnAuthentictionFailure
         self.blacklistDownloadInterval = blacklistDownloadInterval
+        self.blacklistAccountOnJailbreakDetection = blacklistAccountOnJailbreakDetection
+        self.deleteAccountOnJailbreakDetection = deleteAccountOnJailbreakDetection
     }
     
     public func copy(with zone: NSZone? = nil) -> Any {
         let copy = SessionManagerConfiguration(deleteAccountOnAuthentictionFailure: deleteAccountOnAuthenticationFailure,
-                                               blacklistDownloadInterval: blacklistDownloadInterval)
+                                               blacklistDownloadInterval: blacklistDownloadInterval,
+                                               blacklistAccountOnJailbreakDetection: blacklistAccountOnJailbreakDetection,
+                                               deleteAccountOnJailbreakDetection: deleteAccountOnJailbreakDetection)
         
         return copy
     }
@@ -376,7 +392,8 @@ public protocol ForegroundNotificationResponder: class {
             })
         }
         
-        if jailbreakDetector.isJailbroken() {
+        if configuration.blacklistAccountOnJailbreakDetection
+            && jailbreakDetector.isJailbroken() {
             self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
         }
      
