@@ -44,6 +44,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
     func sessionManagerWillMigrateAccount(_ account: Account)
     func sessionManagerWillMigrateLegacyAccount()
     func sessionManagerDidBlacklistCurrentVersion()
+    func sessionManagerDidBlacklistJailbrokenDevice()
 }
 
 @objc
@@ -270,6 +271,7 @@ public protocol ForegroundNotificationResponder: class {
     
     let sharedContainerURL: URL
     let dispatchGroup: ZMSDispatchGroup?
+    let jailbreakDetector = JailbreakDetector()
     fileprivate var accountTokens : [UUID : [Any]] = [:]
     fileprivate var memoryWarningObserver: NSObjectProtocol?
     fileprivate var isSelectingAccount : Bool = false
@@ -372,6 +374,10 @@ public protocol ForegroundNotificationResponder: class {
                         self.delegate?.sessionManagerDidBlacklistCurrentVersion()
                     }
             })
+        }
+        
+        if jailbreakDetector.isJailbroken() {
+            self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
         }
      
         self.memoryWarningObserver = NotificationCenter.default.addObserver(forName: UIApplication.didReceiveMemoryWarningNotification,
