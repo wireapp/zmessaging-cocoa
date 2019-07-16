@@ -432,11 +432,34 @@ class SessionManagerTests_Teams: IntegrationTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        let manager = AccountManager(sharedDirectory: sharedContainer)
-        guard let account = manager.accounts.first, manager.accounts.count == 1 else { XCTFail("Should have one account"); return }
+        guard let account = sessionManager?.accountManager.accounts.first, sessionManager?.accountManager.accounts.count == 1 else { XCTFail("Should have one account"); return }
         XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
         XCTAssertEqual(account.teamName, newTeamName)
+    }
+    
+    func testThatItUpdatesAccountAfterTeamImageDataChanges() {
+        // given
+        let assetData = "image".data(using: .utf8)!
+        var asset: MockAsset!
+        var team: MockTeam!
+        self.mockTransportSession.performRemoteChanges { session in
+            team = session.insertTeam(withName: "Wire", isBound: true, users: [self.selfUser])
+            asset = session.insertAsset(with: UUID(), assetToken: UUID(), assetData: assetData, contentType: "image/jpeg")
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssert(login())
+        
+        // when
+        self.mockTransportSession.performRemoteChanges { session in
+            team.pictureAssetId = asset.identifier
+        }
+        user(for: selfUser)?.team?.requestImage()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        guard let account = sessionManager?.accountManager.accounts.first, sessionManager?.accountManager.accounts.count == 1 else { XCTFail("Should have one account"); return }
+        XCTAssertEqual(account.userIdentifier.transportString(), self.selfUser.identifier)
+        XCTAssertEqual(account.teamImageData, assetData)
     }
     
     func testThatItUpdatesAccountWithUserDetailsAfterLogin() {

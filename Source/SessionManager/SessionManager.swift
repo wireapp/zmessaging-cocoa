@@ -758,6 +758,10 @@ extension SessionManager {
             if let userProfileImage = selfUser.imageSmallProfileData {
                 account.imageData = userProfileImage
             }
+            if let teamImageData = selfUser.team?.imageData  {
+                account.teamImageData = teamImageData
+            }
+
 
             account.loginCredentials = selfUser.loginCredentials
 
