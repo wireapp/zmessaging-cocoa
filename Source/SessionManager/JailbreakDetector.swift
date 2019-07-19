@@ -23,13 +23,9 @@ public protocol JailbreakDetectorProtocol {
     func isJailbroken() -> Bool
 }
 
-public final class JailbreakDetector: JailbreakDetectorProtocol {
+public final class JailbreakDetector: NSObject, JailbreakDetectorProtocol {
     
     private let fm = FileManager.default
-    
-    public init() {
-        
-    }
     
     @objc public func isJailbroken() -> Bool {
         #if targetEnvironment(simulator)
