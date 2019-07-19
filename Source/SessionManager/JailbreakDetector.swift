@@ -19,9 +19,17 @@
 import UIKit
 import Darwin
 
-public class JailbreakDetector: NSObject {
+public protocol JailbreakDetectorProtocol {
+    func isJailbroken() -> Bool
+}
+
+public final class JailbreakDetector: JailbreakDetectorProtocol {
     
     private let fm = FileManager.default
+    
+    public init() {
+        
+    }
     
     @objc public func isJailbroken() -> Bool {
         #if targetEnvironment(simulator)
@@ -127,4 +135,17 @@ public class JailbreakDetector: NSObject {
         return UIApplication.shared.canOpenURL(URL(string: "cydia://app")!)
     }
     
+}
+
+public final class MockJailbreakDetector: JailbreakDetectorProtocol {
+    
+    var jailbroken: Bool = false
+    
+    public init(jailbroken: Bool = false) {
+        self.jailbroken = jailbroken
+    }
+    
+    public func isJailbroken() -> Bool {
+        return jailbroken
+    }
 }

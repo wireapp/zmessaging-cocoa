@@ -267,6 +267,31 @@ class SessionManagerTests: IntegrationTest {
         // THEN
         XCTAssertEqual([account1.userIdentifier], observer.destroyedUserSessions)
     }
+    
+    func testThatJailbrokenDeviceCallsDelegateMethod() {
+        
+        //GIVEN
+        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
+        let sessionManagerExpectation = self.expectation(description: "Session manager has detected a jailbroken device")
+        let jailbreakDetector = MockJailbreakDetector(jailbroken: true)
+        let configuration = SessionManagerConfiguration(blacklistAccountOnJailbreakDetection: true)
+        
+        //WHEN
+        SessionManager.create(appVersion: "0.0.0",
+                              mediaManager: mediaManager,
+                              analytics: nil,
+                              delegate: self.delegate,
+                              application: application,
+                              environment: sessionManager!.environment,
+                              configuration: configuration,
+                              detector: jailbreakDetector) { sessionManager in
+                                //THEN
+                                XCTAssertTrue(self.delegate.jailbroken)
+                                sessionManagerExpectation.fulfill()
+        }
+    
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+    }
 
 }
 
@@ -1223,6 +1248,11 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     
     func sessionManagerDidBlacklistCurrentVersion() {
         // no op
+    }
+    
+    var jailbroken = false
+    func sessionManagerDidBlacklistJailbrokenDevice() {
+        jailbroken = true
     }
     
     var userSession : ZMUserSession?

@@ -287,7 +287,7 @@ public protocol ForegroundNotificationResponder: class {
     
     let sharedContainerURL: URL
     let dispatchGroup: ZMSDispatchGroup?
-    let jailbreakDetector = JailbreakDetector()
+    let jailbreakDetector: JailbreakDetectorProtocol?
     fileprivate var accountTokens : [UUID : [Any]] = [:]
     fileprivate var memoryWarningObserver: NSObjectProtocol?
     fileprivate var isSelectingAccount : Bool = false
@@ -316,6 +316,7 @@ public protocol ForegroundNotificationResponder: class {
         application: ZMApplication,
         environment: BackendEnvironmentProvider,
         configuration: SessionManagerConfiguration,
+        detector: JailbreakDetectorProtocol = JailbreakDetector(),
         completion: @escaping (SessionManager) -> Void
         ) {
         
@@ -327,7 +328,8 @@ public protocol ForegroundNotificationResponder: class {
                 delegate: delegate,
                 application: application,
                 environment: environment,
-                configuration: configuration
+                configuration: configuration,
+                detector: detector
             ))
         }
     }
@@ -343,7 +345,8 @@ public protocol ForegroundNotificationResponder: class {
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
         environment: BackendEnvironmentProvider,
-        configuration: SessionManagerConfiguration = SessionManagerConfiguration()
+        configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
+        detector: JailbreakDetectorProtocol = JailbreakDetector()
         ) {
         
         let group = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
@@ -372,7 +375,8 @@ public protocol ForegroundNotificationResponder: class {
             application: application,
             pushRegistry: PKPushRegistry(queue: nil),
             environment: environment,
-            configuration: configuration
+            configuration: configuration,
+            detector: detector
         )
         
         if configuration.blacklistDownloadInterval > 0 {
@@ -393,7 +397,7 @@ public protocol ForegroundNotificationResponder: class {
         }
         
         if configuration.blacklistAccountOnJailbreakDetection
-            && jailbreakDetector.isJailbroken() {
+            && jailbreakDetector?.isJailbroken() ?? false {
             self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
         }
      
@@ -424,7 +428,8 @@ public protocol ForegroundNotificationResponder: class {
         pushRegistry: PushRegistry,
         dispatchGroup: ZMSDispatchGroup? = nil,
         environment: BackendEnvironmentProvider,
-        configuration: SessionManagerConfiguration = SessionManagerConfiguration()
+        configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
+        detector: JailbreakDetectorProtocol = JailbreakDetector()
         ) {
 
         SessionManager.enableLogsByEnvironmentVariable()
@@ -434,6 +439,7 @@ public protocol ForegroundNotificationResponder: class {
         self.delegate = delegate
         self.dispatchGroup = dispatchGroup
         self.configuration = configuration.copy() as! SessionManagerConfiguration
+        self.jailbreakDetector = detector
 
         guard let sharedContainerURL = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else {
             preconditionFailure("Unable to get shared container URL")
