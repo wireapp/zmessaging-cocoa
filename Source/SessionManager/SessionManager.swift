@@ -950,7 +950,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
     }
     
     public func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
-        if unauthenticatedSession == nil {
+        if unauthenticatedSession == nil || unauthenticatedSession?.accountId != accountId {
             createUnauthenticatedSession(accountId: accountId)
         }
         
