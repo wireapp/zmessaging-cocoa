@@ -405,6 +405,7 @@
 		EEEA75FB1F8A6142006D1070 /* ZMLocalNotification+Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEEA75F61F8A6140006D1070 /* ZMLocalNotification+Events.swift */; };
 		EEEA75FC1F8A6142006D1070 /* ZMLocalNotification+Calling.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEEA75F71F8A6141006D1070 /* ZMLocalNotification+Calling.swift */; };
 		EEEA75FD1F8A6142006D1070 /* ZMLocalNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEEA75F81F8A6141006D1070 /* ZMLocalNotification.swift */; };
+		EF169DDF22E85BA100B74D4A /* ZMConversationSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF169DDE22E85BA100B74D4A /* ZMConversationSource.swift */; };
 		EFC8281C1FB343B600E27E21 /* RegistationCredentialVerificationStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFC8281B1FB343B600E27E21 /* RegistationCredentialVerificationStrategy.swift */; };
 		EFC8281E1FB34F9600E27E21 /* EmailVerificationStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFC8281D1FB34F9600E27E21 /* EmailVerificationStrategyTests.swift */; };
 		EFC828221FB356CE00E27E21 /* RegistrationStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFC828211FB356CE00E27E21 /* RegistrationStatusTests.swift */; };
@@ -1033,6 +1034,7 @@
 		EEEA75F61F8A6140006D1070 /* ZMLocalNotification+Events.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMLocalNotification+Events.swift"; sourceTree = "<group>"; };
 		EEEA75F71F8A6141006D1070 /* ZMLocalNotification+Calling.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMLocalNotification+Calling.swift"; sourceTree = "<group>"; };
 		EEEA75F81F8A6141006D1070 /* ZMLocalNotification.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZMLocalNotification.swift; sourceTree = "<group>"; };
+		EF169DDE22E85BA100B74D4A /* ZMConversationSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMConversationSource.swift; sourceTree = "<group>"; };
 		EF797FE71FB5E8DB00F7FF21 /* RegistrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationTests.swift; sourceTree = "<group>"; };
 		EFC8281B1FB343B600E27E21 /* RegistationCredentialVerificationStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistationCredentialVerificationStrategy.swift; sourceTree = "<group>"; };
 		EFC8281D1FB34F9600E27E21 /* EmailVerificationStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailVerificationStrategyTests.swift; sourceTree = "<group>"; };
@@ -1808,6 +1810,7 @@
 				54F8D6DE19AB535700146664 /* ZMConnectionTranscoder.m */,
 				54BDC60019C2FE4F00B22C03 /* ZMConnectionTranscoder+Internal.h */,
 				54294A1F19472D4E007BE3CE /* ZMConversationTranscoder.h */,
+				EF169DDE22E85BA100B74D4A /* ZMConversationSource.swift */,
 				54EBDDEA1966B2B000B23C36 /* ZMConversationTranscoder+Internal.h */,
 				54294A2019472D4E007BE3CE /* ZMConversationTranscoder.m */,
 				F16C8BE72044129700677D31 /* ZMConversationTranscoder.swift */,
@@ -2854,6 +2857,7 @@
 				16962EE420286D690069D88D /* LocalNotificationType+Configuration.swift in Sources */,
 				BF00441B1C737CE9007A6EA4 /* PushNotificationStatus.swift in Sources */,
 				09531F181AE960E300B8556A /* ZMLoginCodeRequestTranscoder.m in Sources */,
+				EF169DDF22E85BA100B74D4A /* ZMConversationSource.swift in Sources */,
 				F148F6671FB9AA7600BD6909 /* UnregisteredTeam.swift in Sources */,
 				09BCDB8F1BCE7F000020DCC7 /* ZMAPSMessageDecoder.m in Sources */,
 				546392721D79D5210094EC66 /* Application.swift in Sources */,
