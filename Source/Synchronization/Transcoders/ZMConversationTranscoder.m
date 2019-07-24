@@ -352,7 +352,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         ZMLogError(@"Missing conversation payload in ZMUpdateEventConversationCreate");
         return;
     }
-    NSDate *serverTimestamp = [event.payload dateForKey:@"time"];
+    NSDate *serverTimestamp = [event.payload dateFor:@"time"];
     [self createConversationFromTransportData:payloadData serverTimeStamp:serverTimestamp source:ZMConversationSourceUpdateEvent];
 }
 
