@@ -396,11 +396,6 @@ public protocol ForegroundNotificationResponder: class {
             })
         }
         
-        if configuration.blacklistAccountOnJailbreakDetection
-            && jailbreakDetector?.isJailbroken() ?? false {
-            self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
-        }
-     
         self.memoryWarningObserver = NotificationCenter.default.addObserver(forName: UIApplication.didReceiveMemoryWarningNotification,
                                                                             object: nil,
                                                                             queue: nil,
@@ -481,6 +476,8 @@ public protocol ForegroundNotificationResponder: class {
         }
         
         super.init()
+        
+        checkJailbreakIfNeeded()
         
         // register for voIP push notifications
         self.pushRegistry.delegate = self
@@ -825,6 +822,16 @@ public protocol ForegroundNotificationResponder: class {
     public var useConstantBitRateAudio : Bool = false {
         didSet {
             activeUserSession?.useConstantBitRateAudio = useConstantBitRateAudio
+        }
+    }
+    
+    public func checkJailbreakIfNeeded() {
+        if jailbreakDetector?.isJailbroken() ?? false {
+            if configuration.blacklistAccountOnJailbreakDetection {
+                self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
+            } else if configuration.deleteAccountOnJailbreakDetection, let account = accountManager.selectedAccount {
+                delete(account: account)
+            }
         }
     }
 }

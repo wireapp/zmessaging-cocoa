@@ -292,6 +292,56 @@ class SessionManagerTests: IntegrationTest {
     
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
+    
+    // WORK IN PROGRESS
+    
+    func testThatJailbrokenDeviceDeletesAccount() {
+        
+        //GIVEN
+        
+        guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else {
+            XCTFail(); return
+        }
+        
+        let jailbreakDetector = MockJailbreakDetector(jailbroken: true)
+        let configuration = SessionManagerConfiguration(deleteAccountOnJailbreakDetection: true)
+        
+        let environment = MockEnvironment()
+        let reachability = TestReachability()
+        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
+        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
+            application: application,
+            mediaManager: mediaManager,
+            flowManager: FlowManagerMock(),
+            transportSession: transportSession,
+            environment: environment,
+            reachability: reachability
+        )
+        
+        let sessionManager = SessionManager(
+            appVersion: "0.0.0",
+            authenticatedSessionFactory: authenticatedSessionFactory,
+            unauthenticatedSessionFactory: unauthenticatedSessionFactory,
+            reachability: reachability,
+            delegate: delegate,
+            application: application,
+            pushRegistry: pushRegistry,
+            dispatchGroup: dispatchGroup,
+            environment: environment,
+            configuration: configuration,
+            detector: jailbreakDetector
+        )
+        
+        let account = Account(userName: "bob", userIdentifier: UUID())
+        sessionManager.accountManager.addAndSelect(account)
+        XCTAssertNotNil(sessionManager.accountManager.selectedAccount)
+        
+        sessionManager.checkJailbreakIfNeeded()
+        //sessionManager.start(launchOptions: [:])
+        
+        XCTAssertNil(sessionManager.accountManager.selectedAccount)
+    }
+
 
 }
 
