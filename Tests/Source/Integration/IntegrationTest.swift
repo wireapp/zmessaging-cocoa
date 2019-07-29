@@ -632,6 +632,10 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
     
+    public func sessionManagerDidWipeDatabaseOnJailbreak() {
+        // no op
+    }
+    
     public func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
         self.userSession = nil
         userSessionCanBeTornDown()

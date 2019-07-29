@@ -45,6 +45,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
     func sessionManagerWillMigrateLegacyAccount()
     func sessionManagerDidBlacklistCurrentVersion()
     func sessionManagerDidBlacklistJailbrokenDevice()
+    func sessionManagerDidWipeDatabaseOnJailbreak()
 }
 
 @objc
@@ -830,7 +831,8 @@ public protocol ForegroundNotificationResponder: class {
             if configuration.blacklistAccountOnJailbreakDetection {
                 self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
             } else if configuration.deleteAccountOnJailbreakDetection, let account = accountManager.selectedAccount {
-                delete(account: account)
+                delete(account: account) //change to a function that wipes everything
+                self.delegate?.sessionManagerDidWipeDatabaseOnJailbreak()
             }
         }
     }

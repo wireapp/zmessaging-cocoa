@@ -298,48 +298,26 @@ class SessionManagerTests: IntegrationTest {
     func testThatJailbrokenDeviceDeletesAccount() {
         
         //GIVEN
-        
-        guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else {
-            XCTFail(); return
-        }
-        
+        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
+        let sessionManagerExpectation = self.expectation(description: "Session manager has detected a jailbroken device")
         let jailbreakDetector = MockJailbreakDetector(jailbroken: true)
         let configuration = SessionManagerConfiguration(deleteAccountOnJailbreakDetection: true)
         
-        let environment = MockEnvironment()
-        let reachability = TestReachability()
-        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
-        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-            application: application,
-            mediaManager: mediaManager,
-            flowManager: FlowManagerMock(),
-            transportSession: transportSession,
-            environment: environment,
-            reachability: reachability
-        )
+        //WHEN
+        SessionManager.create(appVersion: "0.0.0",
+                              mediaManager: mediaManager,
+                              analytics: nil,
+                              delegate: self.delegate,
+                              application: application,
+                              environment: sessionManager!.environment,
+                              configuration: configuration,
+                              detector: jailbreakDetector) { sessionManager in
+                                //THEN
+                                XCTAssertTrue(self.delegate.wiped)
+                                sessionManagerExpectation.fulfill()
+        }
         
-        let sessionManager = SessionManager(
-            appVersion: "0.0.0",
-            authenticatedSessionFactory: authenticatedSessionFactory,
-            unauthenticatedSessionFactory: unauthenticatedSessionFactory,
-            reachability: reachability,
-            delegate: delegate,
-            application: application,
-            pushRegistry: pushRegistry,
-            dispatchGroup: dispatchGroup,
-            environment: environment,
-            configuration: configuration,
-            detector: jailbreakDetector
-        )
-        
-        let account = Account(userName: "bob", userIdentifier: UUID())
-        sessionManager.accountManager.addAndSelect(account)
-        XCTAssertNotNil(sessionManager.accountManager.selectedAccount)
-        
-        sessionManager.checkJailbreakIfNeeded()
-        //sessionManager.start(launchOptions: [:])
-        
-        XCTAssertNil(sessionManager.accountManager.selectedAccount)
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
 
 
@@ -1301,8 +1279,14 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     }
     
     var jailbroken = false
+    var wiped = false
+    
     func sessionManagerDidBlacklistJailbrokenDevice() {
         jailbroken = true
+    }
+    
+    func sessionManagerDidWipeDatabaseOnJailbreak() {
+        wiped = true
     }
     
     var userSession : ZMUserSession?
