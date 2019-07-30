@@ -45,7 +45,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
     func sessionManagerWillMigrateLegacyAccount()
     func sessionManagerDidBlacklistCurrentVersion()
     func sessionManagerDidBlacklistJailbrokenDevice()
-    func sessionManagerDidWipeDatabaseOnJailbreak()
+    func sessionManagerDidWipeJailbrokenDevice()
 }
 
 @objc
@@ -478,7 +478,6 @@ public protocol ForegroundNotificationResponder: class {
         
         super.init()
         
-        checkJailbreakIfNeeded()
         
         // register for voIP push notifications
         self.pushRegistry.delegate = self
@@ -487,6 +486,8 @@ public protocol ForegroundNotificationResponder: class {
 
         postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
+        
+        guard !checkJailbreakIfNeeded() else { return }
     }
     
     public func start(launchOptions: LaunchOptions) {
@@ -825,16 +826,20 @@ public protocol ForegroundNotificationResponder: class {
             activeUserSession?.useConstantBitRateAudio = useConstantBitRateAudio
         }
     }
-    
-    public func checkJailbreakIfNeeded() {
-        if jailbreakDetector?.isJailbroken() ?? false {
+
+    public func checkJailbreakIfNeeded() -> Bool {
+        if jailbreakDetector?.isJailbroken() == true {
             if configuration.blacklistAccountOnJailbreakDetection {
                 self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
-            } else if configuration.deleteAccountOnJailbreakDetection, let account = accountManager.selectedAccount {
-                delete(account: account) //change to a function that wipes everything
-                self.delegate?.sessionManagerDidWipeDatabaseOnJailbreak()
+                return true
+            } else if configuration.deleteAccountOnJailbreakDetection {
+                logoutCurrentSession()
+                accountManager.accounts.forEach { delete(account: $0) }
+                self.delegate?.sessionManagerDidWipeJailbrokenDevice()
+                return true
             }
         }
+        return false
     }
 }
 

@@ -294,7 +294,6 @@ class SessionManagerTests: IntegrationTest {
     }
     
     // WORK IN PROGRESS
-    
     func testThatJailbrokenDeviceDeletesAccount() {
         
         //GIVEN
@@ -1308,7 +1307,7 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
         jailbroken = true
     }
     
-    func sessionManagerDidWipeDatabaseOnJailbreak() {
+    func sessionManagerDidWipeJailbrokenDevice() {
         wiped = true
     }
     

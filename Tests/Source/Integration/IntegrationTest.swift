@@ -632,7 +632,7 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
     
-    public func sessionManagerDidWipeDatabaseOnJailbreak() {
+    public func sessionManagerDidWipeJailbrokenDevice() {
         // no op
     }
     
