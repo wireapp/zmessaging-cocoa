@@ -66,6 +66,10 @@
     return [SessionManagerConfiguration defaultConfiguration];
 }
 
+- (MockJailbreakDetector *)jailbreakDetector {
+    return [[MockJailbreakDetector alloc] init];
+}
+
 - (BOOL)useInMemoryStore
 {
     return YES;

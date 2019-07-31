@@ -244,7 +244,8 @@ extension IntegrationTest {
             pushRegistry: pushRegistry,
             dispatchGroup: self.dispatchGroup,
             environment: mockEnvironment,
-            configuration: sessionManagerConfiguration
+            configuration: sessionManagerConfiguration,
+            detector: jailbreakDetector
         )
         
         sessionManager?.start(launchOptions: [:])

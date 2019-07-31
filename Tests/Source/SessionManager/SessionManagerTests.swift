@@ -293,7 +293,6 @@ class SessionManagerTests: IntegrationTest {
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
     
-    // WORK IN PROGRESS
     func testThatJailbrokenDeviceDeletesAccount() {
         
         //GIVEN
@@ -301,6 +300,9 @@ class SessionManagerTests: IntegrationTest {
         let sessionManagerExpectation = self.expectation(description: "Session manager has detected a jailbroken device")
         let jailbreakDetector = MockJailbreakDetector(jailbroken: true)
         let configuration = SessionManagerConfiguration(deleteAccountOnJailbreakDetection: true)
+        
+        XCTAssertEqual(self.sessionManager?.accountManager.accounts.count, 1)
+        
         
         //WHEN
         SessionManager.create(appVersion: "0.0.0",
@@ -313,6 +315,7 @@ class SessionManagerTests: IntegrationTest {
                               detector: jailbreakDetector) { sessionManager in
                                 //THEN
                                 XCTAssertTrue(self.delegate.wiped)
+                                XCTAssertEqual(sessionManager.accountManager.accounts.count, 0)
                                 sessionManagerExpectation.fulfill()
         }
         
