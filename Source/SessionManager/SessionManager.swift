@@ -63,38 +63,38 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     /// If set to true then the session manager will delete account data instead of just asking the user to re-authenticate when the cookie or client gets invalidated.
     ///
     /// The default value of this property is `false`.
-    public var deleteAccountOnAuthenticationFailure: Bool
+    public var wipeOnCookieInvalid: Bool
     
     /// The `blacklistDownloadInterval` configures at which rate we update the client blacklist
     ///
     /// The default value of this property is `6 hours`
     public var blacklistDownloadInterval: TimeInterval
     
-    /// The `blacklistAccountOnJailbreakDetection` configures if app should lock when the device is jailbroken
+    /// The `blockOnJailbreakOrRoot` configures if app should lock when the device is jailbroken
     ///
     /// The default value of this property is `false`
-    public var blacklistAccountOnJailbreakDetection: Bool
+    public var blockOnJailbreakOrRoot: Bool
     
     /// If set to true then the session manager will delete account data on a jailbroken device.
     ///
     /// The default value of this property is `false`
-    public var deleteAccountOnJailbreakDetection: Bool
+    public var wipeOnJailbreakOrRoot: Bool
     
-    public init(deleteAccountOnAuthentictionFailure: Bool = false,
+    public init(wipeOnCookieInvalid: Bool = false,
                 blacklistDownloadInterval: TimeInterval = 6 * 60 * 60,
-                blacklistAccountOnJailbreakDetection: Bool = false,
-                deleteAccountOnJailbreakDetection: Bool = false) {
-        self.deleteAccountOnAuthenticationFailure = deleteAccountOnAuthentictionFailure
+                blockOnJailbreakOrRoot: Bool = false,
+                wipeOnJailbreakOrRoot: Bool = false) {
+        self.wipeOnCookieInvalid = wipeOnCookieInvalid
         self.blacklistDownloadInterval = blacklistDownloadInterval
-        self.blacklistAccountOnJailbreakDetection = blacklistAccountOnJailbreakDetection
-        self.deleteAccountOnJailbreakDetection = deleteAccountOnJailbreakDetection
+        self.blockOnJailbreakOrRoot = blockOnJailbreakOrRoot
+        self.wipeOnJailbreakOrRoot = wipeOnJailbreakOrRoot
     }
     
     public func copy(with zone: NSZone? = nil) -> Any {
-        let copy = SessionManagerConfiguration(deleteAccountOnAuthentictionFailure: deleteAccountOnAuthenticationFailure,
+        let copy = SessionManagerConfiguration(wipeOnCookieInvalid: wipeOnCookieInvalid,
                                                blacklistDownloadInterval: blacklistDownloadInterval,
-                                               blacklistAccountOnJailbreakDetection: blacklistAccountOnJailbreakDetection,
-                                               deleteAccountOnJailbreakDetection: deleteAccountOnJailbreakDetection)
+                                               blockOnJailbreakOrRoot: blockOnJailbreakOrRoot,
+                                               wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot)
         
         return copy
     }
@@ -396,7 +396,7 @@ public protocol ForegroundNotificationResponder: class {
             })
         }
         
-        if configuration.blacklistAccountOnJailbreakDetection
+        if configuration.blockOnJailbreakOrRoot
             && jailbreakDetector?.isJailbroken() ?? false {
             self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
         }
@@ -971,7 +971,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
         case .clientDeletedRemotely,
              .accessTokenExpired:
             
-            if configuration.deleteAccountOnAuthenticationFailure {
+            if configuration.wipeOnCookieInvalid {
                 delete(account: account)
             } else {
                 logout(account: account, error: error)

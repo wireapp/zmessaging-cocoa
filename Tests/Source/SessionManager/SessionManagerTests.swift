@@ -274,7 +274,7 @@ class SessionManagerTests: IntegrationTest {
         guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
         let sessionManagerExpectation = self.expectation(description: "Session manager has detected a jailbroken device")
         let jailbreakDetector = MockJailbreakDetector(jailbroken: true)
-        let configuration = SessionManagerConfiguration(blacklistAccountOnJailbreakDetection: true)
+        let configuration = SessionManagerConfiguration(blockOnJailbreakOrRoot: true)
         
         //WHEN
         SessionManager.create(appVersion: "0.0.0",
@@ -433,7 +433,7 @@ class SessionManagerTests_AuthenticationFailure_With_DeleteAccountOnAuthentictio
     }
     
     override var sessionManagerConfiguration: SessionManagerConfiguration {
-        return SessionManagerConfiguration(deleteAccountOnAuthentictionFailure: true)
+        return SessionManagerConfiguration(wipeOnCookieInvalid: true)
     }
     
     func testThatItDeletesTheAccount_OnAuthentictionFailure() {
