@@ -55,7 +55,9 @@ class SessionManagerTests: IntegrationTest {
             application: application,
             pushRegistry: pushRegistry,
             dispatchGroup: dispatchGroup,
-            environment: environment
+            environment: environment,
+            configuration: sessionManagerConfiguration,
+            detector: jailbreakDetector
         )
         
         sessionManager.start(launchOptions: [:])
@@ -294,32 +296,20 @@ class SessionManagerTests: IntegrationTest {
     }
     
     func testThatJailbrokenDeviceDeletesAccount() {
-        
         //GIVEN
-        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
-        let sessionManagerExpectation = self.expectation(description: "Session manager has detected a jailbroken device")
-        let jailbreakDetector = MockJailbreakDetector(jailbroken: true)
-        let configuration = SessionManagerConfiguration(deleteAccountOnJailbreakDetection: true)
-        
-        XCTAssertEqual(self.sessionManager?.accountManager.accounts.count, 1)
-        
+        sut = createManager()
+        (sut?.jailbreakDetector as! MockJailbreakDetector).jailbroken = true
+        sut?.configuration.wipeOnJailbreakOrRoot = true
         
         //WHEN
-        SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: mediaManager,
-                              analytics: nil,
-                              delegate: self.delegate,
-                              application: application,
-                              environment: sessionManager!.environment,
-                              configuration: configuration,
-                              detector: jailbreakDetector) { sessionManager in
-                                //THEN
-                                XCTAssertTrue(self.delegate.wiped)
-                                XCTAssertEqual(sessionManager.accountManager.accounts.count, 0)
-                                sessionManagerExpectation.fulfill()
-        }
+        sut?.accountManager.addAndSelect(createAccount())
+        XCTAssertEqual(sut?.accountManager.accounts.count, 1)
         
-        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        //THEN
+        performIgnoringZMLogError {
+            XCTAssertTrue(self.sut!.checkJailbreakIfNeeded())
+            XCTAssertEqual(self.sut?.accountManager.accounts.count, 0)
+        }
     }
 
 

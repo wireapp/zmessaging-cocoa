@@ -23,7 +23,7 @@
 
 #import "IntegrationTest.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
-
+#import <WireSyncEngine/WireSyncEngine.h>
 
 @interface IntegrationTest ()
 
@@ -64,10 +64,6 @@
 
 - (SessionManagerConfiguration *)sessionManagerConfiguration {
     return [SessionManagerConfiguration defaultConfiguration];
-}
-
-- (MockJailbreakDetector *)jailbreakDetector {
-    return [[MockJailbreakDetector alloc] init];
 }
 
 - (BOOL)useInMemoryStore
