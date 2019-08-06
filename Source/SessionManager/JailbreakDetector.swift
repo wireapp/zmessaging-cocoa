@@ -35,7 +35,7 @@ public final class JailbreakDetector: NSObject, JailbreakDetectorProtocol {
             hasWriteablePaths ||
             hasSymlinks ||
             callsFork ||
-            canOpenCydia
+            canOpenJailbrokenStores
         #endif
     }
     
@@ -127,8 +127,18 @@ public final class JailbreakDetector: NSObject, JailbreakDetectorProtocol {
         return fork() != -1
     }
     
-    private var canOpenCydia: Bool {
-        return UIApplication.shared.canOpenURL(URL(string: "cydia://app")!)
+    private var canOpenJailbrokenStores: Bool {
+        
+        let jailbrokenStoresURLs: [String] = ["cydia://app",
+                                              "sileo://package",
+                                              "sileo://source"]
+        
+        for url in jailbrokenStoresURLs {
+            if UIApplication.shared.canOpenURL(URL(string: url)!) {
+                return true
+            }
+        }
+        return false
     }
     
 }
