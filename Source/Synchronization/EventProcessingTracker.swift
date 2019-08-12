@@ -117,7 +117,6 @@ import WireDataModel
         let description = isolationQueue.sync {
             "\(persistedAttributes(for: eventName))"
         }
-        dispatchEvent()
         
         return description
     }
