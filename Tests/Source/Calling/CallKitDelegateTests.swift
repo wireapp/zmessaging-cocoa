@@ -85,6 +85,11 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
         return false
     }
     
+    func checkJailbreakIfNeeded() -> Bool {
+        return false
+    }
+    
+    
 }
 
 class MockCallKitProvider: CXProvider {

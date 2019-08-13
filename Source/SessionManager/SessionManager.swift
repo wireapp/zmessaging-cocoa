@@ -155,6 +155,9 @@ public protocol SessionManagerType : class {
     /// Needs to be called before we try to register another device because API requires password
     func update(credentials: ZMCredentials) -> Bool
     
+    /// Checks if the device is jailbroken
+    func checkJailbreakIfNeeded() -> Bool
+    
 }
 
 @objc
@@ -585,7 +588,7 @@ public protocol ForegroundNotificationResponder: class {
         }
     }
     
-    public func tearDownSessionAndDelete(account: Account) {
+    fileprivate func tearDownSessionAndDelete(account: Account) {
         self.tearDownBackgroundSession(for: account.userIdentifier)
         self.deleteAccountData(for: account)
     }
@@ -830,17 +833,22 @@ public protocol ForegroundNotificationResponder: class {
         }
     }
 
-    @objc public func checkJailbreakIfNeeded() -> Bool {
+    public func checkJailbreakIfNeeded() -> Bool {
         if jailbreakDetector?.isJailbroken() == true {
             if configuration.blockOnJailbreakOrRoot {
                 self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
                 return true
             } else if configuration.wipeOnJailbreakOrRoot {
-                logoutCurrentSession()
-                accountManager.accounts.forEach {
-                    self.tearDownSessionAndDelete(account: $0)
-                }
+
+                let activeAccounts = accountManager.accounts
                 
+                if let selected = accountManager.selectedAccount {
+                    activeAccounts.filter { $0 != selected }.forEach {
+                        delete(account: $0)
+                    }
+                    
+                    delete(account: selected)
+                }
                 self.delegate?.sessionManagerDidWipeJailbrokenDevice()
                 return true
             }
