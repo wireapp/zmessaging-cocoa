@@ -1294,14 +1294,9 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     }
     
     var jailbroken = false
-    var wiped = false
     
     func sessionManagerDidBlacklistJailbrokenDevice() {
         jailbroken = true
-    }
-    
-    func sessionManagerDidWipeJailbrokenDevice() {
-        wiped = true
     }
     
     var userSession : ZMUserSession?

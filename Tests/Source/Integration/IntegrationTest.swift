@@ -636,11 +636,7 @@ extension IntegrationTest : SessionManagerDelegate {
     public func sessionManagerDidBlacklistJailbrokenDevice() {
         // no-op
     }
-    
-    public func sessionManagerDidWipeJailbrokenDevice() {
-        // no op
-    }
-    
+        
     public func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
         self.userSession = nil
         userSessionCanBeTornDown()
