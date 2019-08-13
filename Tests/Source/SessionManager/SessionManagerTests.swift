@@ -456,6 +456,22 @@ class SessionManagerTests_AuthenticationFailure_With_DeleteAccountOnAuthentictio
         return SessionManagerConfiguration(wipeOnCookieInvalid: true)
     }
     
+    func testThatItDeletesTheAccount_OnLaunchIfAccessTokenHasExpired() {
+        // given
+        XCTAssertTrue(login())
+        let account = sessionManager!.accountManager.selectedAccount!
+        
+        // when
+        deleteAuthenticationCookie()
+        recreateSessionManager()
+        
+        // then
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        
+        XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
+    }
+    
     func testThatItDeletesTheAccount_OnAuthentictionFailure() {
         // given
         XCTAssert(login())

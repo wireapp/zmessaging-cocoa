@@ -650,8 +650,14 @@ public protocol ForegroundNotificationResponder: class {
     internal func loadSession(for account: Account?, completion: @escaping (ZMUserSession?) -> Void) {
         guard let authenticatedAccount = account, environment.isAuthenticated(authenticatedAccount) else {
             completion(nil)
-            createUnauthenticatedSession(accountId: account?.userIdentifier)
-            delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: account?.loginCredentials?.dictionaryRepresentation))
+            
+            if let account = account, configuration.wipeOnCookieInvalid {
+                delete(account: account, reason: .sessionExpired)
+            } else {
+                createUnauthenticatedSession(accountId: account?.userIdentifier)
+                delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: account?.loginCredentials?.dictionaryRepresentation))
+            }
+            
             return
         }
         
