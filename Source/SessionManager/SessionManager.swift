@@ -45,7 +45,6 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
     func sessionManagerWillMigrateLegacyAccount()
     func sessionManagerDidBlacklistCurrentVersion()
     func sessionManagerDidBlacklistJailbrokenDevice()
-    func sessionManagerDidWipeJailbrokenDevice()
 }
 
 @objc
@@ -154,9 +153,6 @@ public protocol SessionManagerType : class {
 
     /// Needs to be called before we try to register another device because API requires password
     func update(credentials: ZMCredentials) -> Bool
-    
-    /// Checks if the device is jailbroken
-    func checkJailbreakIfNeeded() -> Bool
     
 }
 
@@ -490,7 +486,7 @@ public protocol ForegroundNotificationResponder: class {
         postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
         
-        guard !checkJailbreakIfNeeded() else { return }
+        checkJailbreakIfNeeded()
     }
     
     public func start(launchOptions: LaunchOptions) {
@@ -573,6 +569,19 @@ public protocol ForegroundNotificationResponder: class {
     }
     
     public func delete(account: Account) {
+        delete(account: account, reason: .userInitiated)
+    }
+    
+    fileprivate func deleteAllAccounts(reason: ZMAccountDeletedReason) {
+        let inactiveAccounts = accountManager.accounts.filter({ $0 != accountManager.selectedAccount })
+        inactiveAccounts.forEach({ delete(account: $0, reason: reason) })
+        
+        if let activeAccount = accountManager.selectedAccount {
+            delete(account: activeAccount, reason: reason)
+        }
+    }
+    
+    fileprivate func delete(account: Account, reason: ZMAccountDeletedReason) {
         log.debug("Deleting account \(account.userIdentifier)...")
         if let secondAccount = accountManager.accounts.first(where: { $0.userIdentifier != account.userIdentifier }) {
             // Deleted an account but we can switch to another account
@@ -584,7 +593,7 @@ public protocol ForegroundNotificationResponder: class {
             self.tearDownSessionAndDelete(account: account)
         } else {
             // Deleted the last account so we need to return to the logged out area
-            logoutCurrentSession(deleteCookie: true, deleteAccount:true, error: NSError(code: .addAccountRequested, userInfo: nil))
+            logoutCurrentSession(deleteCookie: true, deleteAccount:true, error: NSError(code: .accountDeleted, userInfo: [ZMAccountDeletedReasonKey: reason]))
         }
     }
     
@@ -833,27 +842,17 @@ public protocol ForegroundNotificationResponder: class {
         }
     }
 
-    public func checkJailbreakIfNeeded() -> Bool {
+    internal func checkJailbreakIfNeeded() {
+        guard configuration.blockOnJailbreakOrRoot || configuration.wipeOnJailbreakOrRoot else { return }
+        
         if jailbreakDetector?.isJailbroken() == true {
-            if configuration.blockOnJailbreakOrRoot {
-                self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
-                return true
-            } else if configuration.wipeOnJailbreakOrRoot {
-
-                let activeAccounts = accountManager.accounts
-                
-                if let selected = accountManager.selectedAccount {
-                    activeAccounts.filter { $0 != selected }.forEach {
-                        delete(account: $0)
-                    }
-                    
-                    delete(account: selected)
-                }
-                self.delegate?.sessionManagerDidWipeJailbrokenDevice()
-                return true
+            
+            if configuration.wipeOnJailbreakOrRoot {
+                deleteAllAccounts(reason: .jailbreakDetected)
             }
+            
+            self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
         }
-        return false
     }
 }
 
@@ -1000,7 +999,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
              .accessTokenExpired:
             
             if configuration.wipeOnCookieInvalid {
-                delete(account: account)
+                delete(account: account, reason: .sessionExpired)
             } else {
                 logout(account: account, error: error)
             }
@@ -1026,6 +1025,7 @@ extension SessionManager {
         BackgroundActivityFactory.shared.resume()
         
         updateAllUnreadCounts()
+        checkJailbreakIfNeeded()
         
         // Delete expired url scheme verification tokens
         CompanyLoginVerificationToken.flushIfNeeded()

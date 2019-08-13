@@ -20,6 +20,15 @@
 @import Foundation;
 
 
+typedef NS_ENUM(NSUInteger, ZMAccountDeletedReason) {
+    /// The user account was deleted by the user
+    ZMAccountDeletedReasonUserInitiated = 0,
+    /// The user account was deleted because a jailbreak was detected
+    ZMAccountDeletedReasonJailbreakDetected,
+    /// The user account was deleted because the session expired
+    ZMAccountDeletedReasonSessionExpired
+};
+
 typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     ZMUserSessionNoError = 0,
     /// ???
@@ -87,6 +96,7 @@ FOUNDATION_EXPORT NSString * const ZMPhoneCredentialKey;
 FOUNDATION_EXPORT NSString * const ZMEmailCredentialKey;
 FOUNDATION_EXPORT NSString * const ZMUserHasPasswordKey;
 FOUNDATION_EXPORT NSString * const ZMUserUsesCompanyLoginCredentialKey;
+FOUNDATION_EXPORT NSString * const ZMAccountDeletedReasonKey;
 
 @interface NSError (ZMUserSession)
 

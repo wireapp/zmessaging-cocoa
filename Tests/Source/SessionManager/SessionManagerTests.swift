@@ -307,9 +307,9 @@ class SessionManagerTests: IntegrationTest {
         
         //THEN
         performIgnoringZMLogError {
-            XCTAssertTrue(self.sut!.checkJailbreakIfNeeded())
-            XCTAssertEqual(self.sut?.accountManager.accounts.count, 0)
+            self.sut!.checkJailbreakIfNeeded()
         }
+        XCTAssertEqual(self.sut?.accountManager.accounts.count, 0)
     }
 
 

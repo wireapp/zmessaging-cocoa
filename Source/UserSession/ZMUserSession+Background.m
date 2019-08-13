@@ -89,8 +89,6 @@ performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult result))comp
     [self.syncManagedObjectContext performGroupedBlock:^{
         [ZMMessage deleteOldEphemeralMessages:self.syncManagedObjectContext];
     }];
-    
-    NOT_USED([self.sessionManager checkJailbreakIfNeeded]);
 }
 
 - (void)mergeChangesFromStoredSaveNotificationsIfNeeded
