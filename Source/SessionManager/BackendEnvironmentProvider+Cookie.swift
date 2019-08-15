@@ -25,8 +25,12 @@ extension BackendEnvironmentProvider {
     }
     
     public func isAuthenticated(_ account: Account) -> Bool {
-        guard let expirationDate = cookieStorage(for: account).authenticationCookieExpirationDate else { return false }
+        let cookieStorage = self.cookieStorage(for: account)
         
-        return expirationDate.timeIntervalSinceNow > 0
+        if let expirationDate = cookieStorage.authenticationCookieExpirationDate {
+            return expirationDate.timeIntervalSinceNow > 0
+        } else {
+            return cookieStorage.authenticationCookieData != nil
+        }
     }
 }
