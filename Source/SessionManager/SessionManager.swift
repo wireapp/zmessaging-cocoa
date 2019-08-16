@@ -801,8 +801,10 @@ public protocol ForegroundNotificationResponder: class {
     }
 
     deinit {
+        backgroundUserSessions.forEach { (_, session) in
+            session.tearDown()
+        }
         blacklistVerificator?.tearDown()
-        activeUserSession?.tearDown()
         unauthenticatedSession?.tearDown()
         reachability.tearDown()
     }
