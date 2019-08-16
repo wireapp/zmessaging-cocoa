@@ -498,12 +498,16 @@ class SessionManagerTests_AuthenticationFailure_With_DeleteAccountOnAuthentictio
         XCTAssertNotNil(sessionManager?.activeUserSession)
         
         // load additional account as a background session
-        sessionManager!.withSession(for: additionalAccount, perform: { _ in })
-        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        let sessionLoaded = expectation(description: "Background session loaded")
+        sessionManager?.withSession(for: additionalAccount, perform: {_ in
+            sessionLoaded.fulfill()
+        })
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         XCTAssertNotNil(sessionManager?.backgroundUserSessions[additionalAccount.userIdentifier])
         
         // when
         sessionManager?.authenticationInvalidated(NSError(code: .accessTokenExpired, userInfo: nil), accountId: additionalAccount.userIdentifier)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))  
         
         // then
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
