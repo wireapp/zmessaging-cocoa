@@ -221,3 +221,4 @@ extension UserImageAssetUpdateStrategy: ZMSingleRequestTranscoder {
         imageUploadStatus?.uploadingDone(imageSize: size, assetId: assetId)
     }
 }
+

@@ -32,7 +32,18 @@ final class EventProcessingTrackerTests: XCTestCase {
         sut = nil
         super.tearDown()
     }
-    
+
+    func testThatItIncrementCounters_savesPerformed_debugDescription() {
+        //given
+        XCTAssertEqual(sut.debugDescription, "Optional([:])")
+
+        //when
+        sut.registerSavePerformed()
+
+        //then
+        XCTAssertEqual(sut.debugDescription, "Optional([\"event_savesPerformed\": 1])")
+    }
+
     func testThatItIncrementCounters_savesPerformed() {
         //when
         sut.registerSavePerformed()

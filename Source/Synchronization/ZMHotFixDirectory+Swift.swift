@@ -76,7 +76,7 @@ import Foundation
                 return // Skip if conversation already has a .newConversation system message
             }
             
-            conversation.appendNewConversationSystemMessage(at: Date.distantPast)
+            conversation.appendNewConversationSystemMessage(at: Date.distantPast, users: conversation.activeParticipants)
         }
     }
     

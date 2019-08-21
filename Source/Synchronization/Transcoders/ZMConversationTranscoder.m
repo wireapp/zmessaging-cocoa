@@ -47,11 +47,6 @@ static NSString *const ConversationAccessRoleKey = @"access_role";
 static NSString *const ConversationTeamIdKey = @"teamid";
 static NSString *const ConversationTeamManagedKey = @"managed";
 
-typedef NS_ENUM(NSUInteger, ZMConversationSource) {
-    ZMConversationSourceUpdateEvent,
-    ZMConversationSourceSlowSync
-};
-
 @interface ZMConversationTranscoder () <ZMSimpleListRequestPaginatorSync>
 
 @property (nonatomic) ZMUpstreamModifiedObjectSync *modifiedSync;
@@ -187,7 +182,7 @@ typedef NS_ENUM(NSUInteger, ZMConversationSource) {
     
     for (ZMConversation *inactiveConversation in inactiveConversations) {
         if (inactiveConversation.conversationType == ZMConversationTypeGroup) {
-            [inactiveConversation internalRemoveParticipants:[NSSet setWithObject:selfUser] sender:selfUser];
+            [inactiveConversation internalRemoveParticipants:@[selfUser] sender:selfUser];
         }
     }
 }
@@ -241,31 +236,6 @@ typedef NS_ENUM(NSUInteger, ZMConversationSource) {
     } else {
         return [self createOneOnOneConversationFromTransportData:transportData type:type serverTimeStamp:serverTimeStamp];
     }
-}
-
-- (ZMConversation *)createGroupOrSelfConversationFromTransportData:(NSDictionary *)transportData
-                                                   serverTimeStamp:(NSDate *)serverTimeStamp
-                                                            source:(ZMConversationSource)source
-{
-    NSUUID * const convRemoteID = [transportData uuidForKey:@"id"];
-    if(convRemoteID == nil) {
-        ZMLogError(@"Missing ID in conversation payload");
-        return nil;
-    }
-    BOOL conversationCreated = NO;
-    ZMConversation *conversation = [ZMConversation conversationWithRemoteID:convRemoteID createIfNeeded:YES inContext:self.managedObjectContext created:&conversationCreated];
-    [conversation updateWithTransportData:transportData serverTimeStamp:serverTimeStamp];
-    
-    if (conversation.conversationType != ZMConversationTypeSelf && conversationCreated) {
-        // we just got a new conversation, we display new conversation header
-        [conversation appendNewConversationSystemMessageAtTimestamp:serverTimeStamp];
-        
-        if (source == ZMConversationSourceSlowSync) {
-             // Slow synced conversations should be considered read from the start
-            conversation.lastReadServerTimeStamp = conversation.lastModifiedDate;
-        }
-    }
-    return conversation;
 }
 
 - (ZMConversation *)createOneOnOneConversationFromTransportData:(NSDictionary *)transportData
@@ -382,7 +352,7 @@ typedef NS_ENUM(NSUInteger, ZMConversationSource) {
         ZMLogError(@"Missing conversation payload in ZMUpdateEventConversationCreate");
         return;
     }
-    NSDate *serverTimestamp = [event.payload dateForKey:@"time"];
+    NSDate *serverTimestamp = [event.payload dateFor:@"time"];
     [self createConversationFromTransportData:payloadData serverTimeStamp:serverTimestamp source:ZMConversationSourceUpdateEvent];
 }
 
@@ -510,7 +480,7 @@ typedef NS_ENUM(NSUInteger, ZMConversationSource) {
     }
     
     for (ZMUser *user in users) {
-        [conversation internalAddParticipants:[NSSet setWithObject:user]];
+        [conversation internalAddParticipants:@[user]];
     }
 }
 
@@ -527,7 +497,7 @@ typedef NS_ENUM(NSUInteger, ZMConversationSource) {
     }
 
     for (ZMUser *user in users) {
-        [conversation internalRemoveParticipants:[NSSet setWithObject:user] sender:sender];
+        [conversation internalRemoveParticipants:@[user] sender:sender];
     }
 }
 
@@ -781,7 +751,7 @@ typedef NS_ENUM(NSUInteger, ZMConversationSource) {
     // Self user has been removed from the group conversation but missed the conversation.member-leave event.
     if (response.HTTPStatus == 404 && conversation.conversationType == ZMConversationTypeGroup && conversation.isSelfAnActiveMember) {
         ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-        [conversation internalRemoveParticipants:[NSSet setWithObject:selfUser] sender:selfUser];
+        [conversation internalRemoveParticipants:@[selfUser] sender:selfUser];
     }
     
     if (response.isPermanentylUnavailableError) {

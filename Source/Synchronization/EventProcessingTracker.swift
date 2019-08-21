@@ -114,8 +114,10 @@ import WireDataModel
     }
     
     override public var debugDescription: String {
-        let description = "\(persistedAttributes(for: eventName))"
-        dispatchEvent()
+        let description = isolationQueue.sync {
+            "\(persistedAttributes(for: eventName))"
+        }
+        
         return description
     }
 }

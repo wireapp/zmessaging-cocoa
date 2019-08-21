@@ -18,7 +18,43 @@
 
 import Foundation
 
+private let log = ZMSLog(tag: "ConversationTranscoder")
+
 extension ZMConversationTranscoder {
+    @objc(createGroupOrSelfConversationFromTransportData:serverTimeStamp:source:)
+    public func createGroupOrSelfConversation(from transportData: NSDictionary,
+                                       serverTimeStamp: Date!,
+                                       source: ZMConversationSource) -> ZMConversation? {
+        guard let convRemoteID = transportData.uuid(forKey: "id") else {
+            log.error("Missing ID in conversation payload")
+            return nil
+        }
+
+        var conversationCreated: ObjCBool = false
+
+        guard let conversation = ZMConversation(remoteID: convRemoteID, createIfNeeded:
+            true, in: managedObjectContext, created: &conversationCreated) else { return nil }
+
+        conversation.update(withTransportData: transportData as? [AnyHashable : Any], serverTimeStamp: serverTimeStamp)
+
+        if conversation.conversationType != ZMConversationType.`self` && conversationCreated.boolValue == true {
+
+            if serverTimeStamp == nil {
+                log.error("serverTimeStamp is nil!")
+            }
+
+            // we just got a new conversation, we display new conversation header
+            conversation.appendNewConversationSystemMessage(at: serverTimeStamp,
+                users: conversation.activeParticipants)
+
+            if source == .slowSync {
+                // Slow synced conversations should be considered read from the start
+                conversation.lastReadServerTimeStamp = conversation.lastModifiedDate
+            }
+        }
+
+        return conversation
+    }
 
     @objc (processAccessModeUpdateEvent:inConversation:)
     public func processAccessModeUpdate(event: ZMUpdateEvent, in conversation: ZMConversation) {

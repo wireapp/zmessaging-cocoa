@@ -108,6 +108,10 @@ extension IntegrationTest {
     static let SelfUserEmail = "myself@user.example.com"
     static let SelfUserPassword = "fgf0934';$@#%"
     
+    var jailbreakDetector: JailbreakDetectorProtocol {
+        return MockJailbreakDetector()
+    }
+    
     @objc
     func _setUp() {
         sharedContainerDirectory = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory)
@@ -119,7 +123,7 @@ extension IntegrationTest {
         application = ApplicationMock()
         notificationCenter = UserNotificationCenterMock()
         mockTransportSession = MockTransportSession(dispatchGroup: self.dispatchGroup)
-        mockTransportSession.cookieStorage = ZMPersistentCookieStorage(forServerName: "ztest.example.com", userIdentifier: currentUserIdentifier)
+        mockTransportSession.cookieStorage = ZMPersistentCookieStorage(forServerName: mockEnvironment.backendURL.host!, userIdentifier: currentUserIdentifier)
         WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self
         mockTransportSession.cookieStorage.deleteKeychainItems()
                 
@@ -223,15 +227,14 @@ extension IntegrationTest {
     func createSessionManager() {
         guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else { return XCTFail() }
         StorageStack.shared.createStorageAsInMemory = useInMemoryStore
-        let environment = MockEnvironment()
         let reachability = TestReachability()
-        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
+        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: mockEnvironment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             application: application,
             mediaManager: mediaManager,
             flowManager: FlowManagerMock(),
             transportSession: transportSession,
-            environment: environment,
+            environment: mockEnvironment,
             reachability: reachability
         )
 
@@ -244,7 +247,9 @@ extension IntegrationTest {
             application: application,
             pushRegistry: pushRegistry,
             dispatchGroup: self.dispatchGroup,
-            environment: environment
+            environment: mockEnvironment,
+            configuration: sessionManagerConfiguration,
+            detector: jailbreakDetector
         )
         
         sessionManager?.start(launchOptions: [:])
@@ -275,7 +280,7 @@ extension IntegrationTest {
     var unauthenticatedSession : UnauthenticatedSession? {
         return sessionManager?.unauthenticatedSession
     }
-    
+
     @objc
     func createSelfUserAndConversation() {
         
@@ -298,7 +303,7 @@ extension IntegrationTest {
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
-    
+
     @objc
     func createExtraUsersAndConversations() {
         
@@ -628,6 +633,10 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
     
+    public func sessionManagerDidBlacklistJailbrokenDevice() {
+        // no-op
+    }
+        
     public func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
         self.userSession = nil
         userSessionCanBeTornDown()

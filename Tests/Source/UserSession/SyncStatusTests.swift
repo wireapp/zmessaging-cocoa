@@ -85,6 +85,10 @@ class SyncStatusTests : MessagingTest {
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingSelfUser)
         // then
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingLegalHoldStatus)
+        // when
+        sut.finishCurrentSyncPhase(phase: .fetchingLegalHoldStatus)
+        // then
         XCTAssertEqual(sut.currentSyncPhase, .fetchingMissedEvents)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingMissedEvents)
@@ -122,6 +126,10 @@ class SyncStatusTests : MessagingTest {
         XCTAssertEqual(sut.currentSyncPhase, .fetchingSelfUser)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingSelfUser)
+        // then
+        XCTAssertNil(uiMOC.zm_lastNotificationID)
+        // when
+        sut.finishCurrentSyncPhase(phase: .fetchingLegalHoldStatus)
         // then
         XCTAssertNotNil(uiMOC.zm_lastNotificationID)
 
@@ -188,6 +196,8 @@ class SyncStatusTests : MessagingTest {
         XCTAssertFalse(mockSyncDelegate.didCallFinishQuickSync)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingSelfUser)
+        // when
+        sut.finishCurrentSyncPhase(phase: .fetchingLegalHoldStatus)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingMissedEvents)
         
@@ -440,6 +450,9 @@ extension SyncStatusTests {
         // when
         XCTAssertEqual(sut.currentSyncPhase, .fetchingSelfUser)
         sut.finishCurrentSyncPhase(phase: .fetchingSelfUser)
+        // when
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingLegalHoldStatus)
+        sut.finishCurrentSyncPhase(phase: .fetchingLegalHoldStatus)
         
         // then
         XCTAssertEqual(uiMOC.zm_lastNotificationID, newID)

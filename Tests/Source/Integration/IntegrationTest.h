@@ -34,11 +34,15 @@
 @class SearchDirectory;
 @class PushRegistryMock;
 @class UserNotificationCenterMock;
+@class SessionManagerConfiguration;
+@class MockJailbreakDetector;
+@class MockEnvironment;
 
 @interface IntegrationTest : ZMTBaseTest
 
 @property (nonatomic, null_unspecified) NSUUID *currentUserIdentifier;
 @property (nonatomic, nullable) SessionManager *sessionManager;
+@property (nonatomic, null_unspecified) MockEnvironment *mockEnvironment;
 @property (nonatomic, null_unspecified) MockTransportSession *mockTransportSession;
 @property (nonatomic, readonly, nullable) ZMTransportSession *transportSession;
 @property (nonatomic, nullable) AVSMediaManager *mediaManager;
@@ -50,6 +54,8 @@
 @property (nonatomic, readonly) BOOL useRealKeychain;
 @property (nonatomic, nullable) SearchDirectory *sharedSearchDirectory;
 @property (nonatomic, nullable) UserNotificationCenterMock *notificationCenter;
+@property (nonatomic, readonly, nonnull) SessionManagerConfiguration *sessionManagerConfiguration;
+@property (nonatomic, nullable) MockJailbreakDetector *jailbreakDetector;
 
 @property (nonatomic, null_unspecified) MockUser *selfUser;
 @property (nonatomic, null_unspecified) MockConversation *selfConversation;

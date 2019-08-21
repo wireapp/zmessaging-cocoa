@@ -88,7 +88,7 @@
 {
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.conversationType = ZMConversationTypeGroup;
-    [conversation internalAddParticipants:[NSSet setWithObject:user]];
+    [conversation internalAddParticipants:@[user]];
     return conversation;
 }
 

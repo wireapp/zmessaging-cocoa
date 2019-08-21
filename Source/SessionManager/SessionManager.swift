@@ -44,6 +44,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
     func sessionManagerWillMigrateAccount(_ account: Account)
     func sessionManagerWillMigrateLegacyAccount()
     func sessionManagerDidBlacklistCurrentVersion()
+    func sessionManagerDidBlacklistJailbrokenDevice()
 }
 
 @objc
@@ -53,6 +54,63 @@ public protocol UserSessionSource: class {
     var isSelectedAccountAuthenticated: Bool { get }
 }
 
+/// SessionManagerConfiguration is configuration class which can be used when initializing a SessionManager configure
+/// change the default behaviour.
+
+@objcMembers
+public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
+    
+    /// If set to true then the session manager will delete account data instead of just asking the user to re-authenticate when the cookie or client gets invalidated.
+    ///
+    /// The default value of this property is `false`.
+    public var wipeOnCookieInvalid: Bool
+    
+    /// The `blacklistDownloadInterval` configures at which rate we update the client blacklist
+    ///
+    /// The default value of this property is `6 hours`
+    public var blacklistDownloadInterval: TimeInterval
+    
+    /// The `blockOnJailbreakOrRoot` configures if app should lock when the device is jailbroken
+    ///
+    /// The default value of this property is `false`
+    public var blockOnJailbreakOrRoot: Bool
+    
+    /// If set to true then the session manager will delete account data on a jailbroken device.
+    ///
+    /// The default value of this property is `false`
+    public var wipeOnJailbreakOrRoot: Bool
+    
+    public init(wipeOnCookieInvalid: Bool = false,
+                blacklistDownloadInterval: TimeInterval = 6 * 60 * 60,
+                blockOnJailbreakOrRoot: Bool = false,
+                wipeOnJailbreakOrRoot: Bool = false) {
+        self.wipeOnCookieInvalid = wipeOnCookieInvalid
+        self.blacklistDownloadInterval = blacklistDownloadInterval
+        self.blockOnJailbreakOrRoot = blockOnJailbreakOrRoot
+        self.wipeOnJailbreakOrRoot = wipeOnJailbreakOrRoot
+    }
+    
+    public func copy(with zone: NSZone? = nil) -> Any {
+        let copy = SessionManagerConfiguration(wipeOnCookieInvalid: wipeOnCookieInvalid,
+                                               blacklistDownloadInterval: blacklistDownloadInterval,
+                                               blockOnJailbreakOrRoot: blockOnJailbreakOrRoot,
+                                               wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot)
+        
+        return copy
+    }
+    
+    public static var defaultConfiguration: SessionManagerConfiguration {
+        return SessionManagerConfiguration()
+    }
+    
+    public static func load(from URL: URL) -> SessionManagerConfiguration? {
+        guard let data = try? Data(contentsOf: URL) else { return nil }
+        
+        let decoder = JSONDecoder()
+        
+        return  try? decoder.decode(SessionManagerConfiguration.self, from: data)
+    }
+}
 
 @objc
 public protocol SessionManagerType : class {
@@ -211,6 +269,7 @@ public protocol ForegroundNotificationResponder: class {
     let reachability: ReachabilityProvider & TearDownCapable
     var pushRegistry: PushRegistry
     let notificationsTracker: NotificationsTracker?
+    let configuration: SessionManagerConfiguration
     
     var notificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()
     
@@ -228,19 +287,18 @@ public protocol ForegroundNotificationResponder: class {
     
     let sharedContainerURL: URL
     let dispatchGroup: ZMSDispatchGroup?
+    let jailbreakDetector: JailbreakDetectorProtocol?
     fileprivate var accountTokens : [UUID : [Any]] = [:]
     fileprivate var memoryWarningObserver: NSObjectProtocol?
     fileprivate var isSelectingAccount : Bool = false
-    
-    private static var token: Any?
-    
+        
     public var callKitDelegate : CallKitDelegate?
 
     public var isSelectedAccountAuthenticated: Bool {
         guard let selectedAccount = accountManager.selectedAccount else {
             return false
         }
-
+        
         return environment.isAuthenticated(selectedAccount)
     }
 
@@ -257,11 +315,12 @@ public protocol ForegroundNotificationResponder: class {
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
         environment: BackendEnvironmentProvider,
-        blacklistDownloadInterval: TimeInterval,
+        configuration: SessionManagerConfiguration,
+        detector: JailbreakDetectorProtocol = JailbreakDetector(),
         completion: @escaping (SessionManager) -> Void
         ) {
         
-        token = FileManager.default.executeWhenFileSystemIsAccessible {
+        application.executeWhenFileSystemIsAccessible {
             completion(SessionManager(
                 appVersion: appVersion,
                 mediaManager: mediaManager,
@@ -269,10 +328,9 @@ public protocol ForegroundNotificationResponder: class {
                 delegate: delegate,
                 application: application,
                 environment: environment,
-                blacklistDownloadInterval: blacklistDownloadInterval
+                configuration: configuration,
+                detector: detector
             ))
-            
-            token = nil
         }
     }
     
@@ -287,7 +345,8 @@ public protocol ForegroundNotificationResponder: class {
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
         environment: BackendEnvironmentProvider,
-        blacklistDownloadInterval: TimeInterval
+        configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
+        detector: JailbreakDetectorProtocol = JailbreakDetector()
         ) {
         
         let group = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
@@ -315,11 +374,13 @@ public protocol ForegroundNotificationResponder: class {
             delegate: delegate,
             application: application,
             pushRegistry: PKPushRegistry(queue: nil),
-            environment: environment
+            environment: environment,
+            configuration: configuration,
+            detector: detector
         )
         
-        if blacklistDownloadInterval > 0 {
-            self.blacklistVerificator = ZMBlacklistVerificator(checkInterval: blacklistDownloadInterval,
+        if configuration.blacklistDownloadInterval > 0 {
+            self.blacklistVerificator = ZMBlacklistVerificator(checkInterval: configuration.blacklistDownloadInterval,
                                                                version: appVersion,
                                                                environment: environment,
                                                                working: nil,
@@ -334,7 +395,7 @@ public protocol ForegroundNotificationResponder: class {
                     }
             })
         }
-     
+        
         self.memoryWarningObserver = NotificationCenter.default.addObserver(forName: UIApplication.didReceiveMemoryWarningNotification,
                                                                             object: nil,
                                                                             queue: nil,
@@ -361,7 +422,9 @@ public protocol ForegroundNotificationResponder: class {
         application: ZMApplication,
         pushRegistry: PushRegistry,
         dispatchGroup: ZMSDispatchGroup? = nil,
-        environment: BackendEnvironmentProvider
+        environment: BackendEnvironmentProvider,
+        configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
+        detector: JailbreakDetectorProtocol = JailbreakDetector()
         ) {
 
         SessionManager.enableLogsByEnvironmentVariable()
@@ -370,6 +433,8 @@ public protocol ForegroundNotificationResponder: class {
         self.application = application
         self.delegate = delegate
         self.dispatchGroup = dispatchGroup
+        self.configuration = configuration.copy() as! SessionManagerConfiguration
+        self.jailbreakDetector = detector
 
         guard let sharedContainerURL = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else {
             preconditionFailure("Unable to get shared container URL")
@@ -412,6 +477,7 @@ public protocol ForegroundNotificationResponder: class {
         
         super.init()
         
+        
         // register for voIP push notifications
         self.pushRegistry.delegate = self
         self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
@@ -419,6 +485,8 @@ public protocol ForegroundNotificationResponder: class {
 
         postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
+        
+        checkJailbreakIfNeeded()
     }
     
     public func start(launchOptions: LaunchOptions) {
@@ -501,20 +569,48 @@ public protocol ForegroundNotificationResponder: class {
     }
     
     public func delete(account: Account) {
+        delete(account: account, reason: .userInitiated)
+    }
+    
+    fileprivate func deleteAllAccounts(reason: ZMAccountDeletedReason) {
+        let inactiveAccounts = accountManager.accounts.filter({ $0 != accountManager.selectedAccount })
+        inactiveAccounts.forEach({ delete(account: $0, reason: reason) })
+        
+        if let activeAccount = accountManager.selectedAccount {
+            delete(account: activeAccount, reason: reason)
+        }
+    }
+    
+    fileprivate func delete(account: Account, reason: ZMAccountDeletedReason) {
         log.debug("Deleting account \(account.userIdentifier)...")
         if let secondAccount = accountManager.accounts.first(where: { $0.userIdentifier != account.userIdentifier }) {
             // Deleted an account but we can switch to another account
             select(secondAccount, tearDownCompletion: { [weak self] in
-                self?.tearDownBackgroundSession(for: account.userIdentifier)
-                self?.deleteAccountData(for: account)
+                self?.tearDownSessionAndDelete(account: account)
             })
         } else if accountManager.selectedAccount != account {
             // Deleted an inactive account, there's no need notify the UI
-            tearDownBackgroundSession(for: account.userIdentifier)
-            deleteAccountData(for: account)
+            self.tearDownSessionAndDelete(account: account)
         } else {
             // Deleted the last account so we need to return to the logged out area
-            logoutCurrentSession(deleteCookie: true, deleteAccount:true, error: NSError(code: .addAccountRequested, userInfo: nil))
+            logoutCurrentSession(deleteCookie: true, deleteAccount:true, error: NSError(code: .accountDeleted, userInfo: [ZMAccountDeletedReasonKey: reason]))
+        }
+    }
+    
+    fileprivate func tearDownSessionAndDelete(account: Account) {
+        self.tearDownBackgroundSession(for: account.userIdentifier)
+        self.deleteAccountData(for: account)
+    }
+    
+    fileprivate func logout(account: Account, error: Error? = nil) {
+        log.debug("Logging out account \(account.userIdentifier)...")
+        
+        if let session = backgroundUserSessions[account.userIdentifier] {
+            if session == activeUserSession {
+                logoutCurrentSession(deleteCookie: true, error: error)
+            } else {
+                tearDownBackgroundSession(for: account.userIdentifier)
+            }
         }
     }
     
@@ -554,15 +650,21 @@ public protocol ForegroundNotificationResponder: class {
     internal func loadSession(for account: Account?, completion: @escaping (ZMUserSession?) -> Void) {
         guard let authenticatedAccount = account, environment.isAuthenticated(authenticatedAccount) else {
             completion(nil)
-            createUnauthenticatedSession(accountId: account?.userIdentifier)
-            delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: account?.loginCredentials?.dictionaryRepresentation))
+            
+            if let account = account, configuration.wipeOnCookieInvalid {
+                delete(account: account, reason: .sessionExpired)
+            } else {
+                createUnauthenticatedSession(accountId: account?.userIdentifier)
+                delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: account?.loginCredentials?.dictionaryRepresentation))
+            }
+            
             return
         }
         
         activateSession(for: authenticatedAccount, completion: completion)
     }
  
-    public func deleteAccountData(for account: Account) {
+    fileprivate func deleteAccountData(for account: Account) {
         log.debug("Deleting the data for \(account.userName) -- \(account.userIdentifier)")
         
         environment.cookieStorage(for: account).deleteKeychainItems()
@@ -699,8 +801,10 @@ public protocol ForegroundNotificationResponder: class {
     }
 
     deinit {
+        backgroundUserSessions.forEach { (_, session) in
+            session.tearDown()
+        }
         blacklistVerificator?.tearDown()
-        activeUserSession?.tearDown()
         unauthenticatedSession?.tearDown()
         reachability.tearDown()
     }
@@ -745,6 +849,19 @@ public protocol ForegroundNotificationResponder: class {
             activeUserSession?.useConstantBitRateAudio = useConstantBitRateAudio
         }
     }
+
+    internal func checkJailbreakIfNeeded() {
+        guard configuration.blockOnJailbreakOrRoot || configuration.wipeOnJailbreakOrRoot else { return }
+        
+        if jailbreakDetector?.isJailbroken() == true {
+            
+            if configuration.wipeOnJailbreakOrRoot {
+                deleteAllAccounts(reason: .jailbreakDetected)
+            }
+            
+            self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
+        }
+    }
 }
 
 // MARK: - TeamObserver
@@ -762,6 +879,10 @@ extension SessionManager {
             if let userProfileImage = selfUser.imageSmallProfileData {
                 account.imageData = userProfileImage
             }
+            if let teamImageData = selfUser.team?.imageData  {
+                account.teamImageData = teamImageData
+            }
+
 
             account.loginCredentials = selfUser.loginCredentials
 
@@ -868,7 +989,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
     }
     
     public func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
-        if unauthenticatedSession == nil {
+        if unauthenticatedSession == nil || unauthenticatedSession?.accountId != accountId {
             createUnauthenticatedSession(accountId: accountId)
         }
         
@@ -876,9 +997,8 @@ extension SessionManager: PostLoginAuthenticationObserver {
     }
     
     public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
-        guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)) else {
-            return
-        }
+        guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)),
+              let account = accountManager.account(with: accountId) else { return }
         
         log.debug("Authentication invalidated for \(accountId): \(error.code)")
         
@@ -886,13 +1006,10 @@ extension SessionManager: PostLoginAuthenticationObserver {
         case .clientDeletedRemotely,
              .accessTokenExpired:
             
-            if let session = self.backgroundUserSessions[accountId] {
-                if session == activeUserSession {
-                    logoutCurrentSession(deleteCookie: true, error: error)
-                }
-                else {
-                    self.tearDownBackgroundSession(for: accountId)
-                }
+            if configuration.wipeOnCookieInvalid {
+                delete(account: account, reason: .sessionExpired)
+            } else {
+                logout(account: account, error: error)
             }
             
         default:
@@ -916,6 +1033,7 @@ extension SessionManager {
         BackgroundActivityFactory.shared.resume()
         
         updateAllUnreadCounts()
+        checkJailbreakIfNeeded()
         
         // Delete expired url scheme verification tokens
         CompanyLoginVerificationToken.flushIfNeeded()

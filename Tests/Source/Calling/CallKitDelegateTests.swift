@@ -85,6 +85,11 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
         return false
     }
     
+    func checkJailbreakIfNeeded() -> Bool {
+        return false
+    }
+    
+    
 }
 
 class MockCallKitProvider: CXProvider {
@@ -247,7 +252,7 @@ class CallKitDelegateTest: MessagingTest {
         conversation.isSelfAnActiveMember = true
         
         if type == .group {
-            conversation.internalAddParticipants(Set(arrayLiteral: self.otherUser(moc: moc)))
+            conversation.internalAddParticipants([self.otherUser(moc: moc)])
         }
         
         return conversation

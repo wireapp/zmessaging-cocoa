@@ -23,7 +23,7 @@
 
 #import "IntegrationTest.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
-
+#import <WireSyncEngine/WireSyncEngine.h>
 
 @interface IntegrationTest ()
 
@@ -40,6 +40,7 @@
     [BackgroundActivityFactory.sharedFactory resume];
 
     self.mockMediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
+    self.mockEnvironment = [[MockEnvironment alloc] init];
  
     self.currentUserIdentifier = [NSUUID createUUID];
     [self _setUp];
@@ -52,11 +53,17 @@
     [self.mockMediaManager stopMocking];
     self.mockMediaManager = nil;
     self.currentUserIdentifier = nil;
+    self.mockEnvironment = nil;
     
     WaitForAllGroupsToBeEmpty(0.5);
     [NSFileManager.defaultManager removeItemAtURL:[MockUserClient mockEncryptionSessionDirectory] error:nil];
     
     [super tearDown];
+}
+
+
+- (SessionManagerConfiguration *)sessionManagerConfiguration {
+    return [SessionManagerConfiguration defaultConfiguration];
 }
 
 - (BOOL)useInMemoryStore

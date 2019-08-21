@@ -23,6 +23,8 @@ import XCTest
 
 final class DummyServiceUser: NSObject, ServiceUser {
     
+    var hasLegalHoldRequest: Bool = false
+    
     var needsRichProfileUpdate: Bool = false
     
     var availability: Availability = .none
@@ -84,6 +86,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     var mediumProfileImageCacheKey: String? = ""
     
     var isConnected: Bool = false
+
+    var oneToOneConversation: ZMConversation? = nil
     
     var accentColorValue: ZMAccentColor = ZMAccentColor.brightOrange
     
