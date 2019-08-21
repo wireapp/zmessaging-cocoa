@@ -90,7 +90,7 @@ public class CallKitDelegate : NSObject {
         configuration.supportedHandleTypes = [.generic]
         configuration.ringtoneSound = NotificationSound.call.name
         
-        if let image = UIImage(named: "logo") {
+        if let image = UIImage(named: "wire-logo-letter") {
             configuration.iconTemplateImageData = image.pngData()
         }
         
