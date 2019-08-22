@@ -171,7 +171,6 @@
     [self.requestAvailableNotification stopMocking];
     self.requestAvailableNotification = nil;
     
-    [self.mediaManager stopMocking];
     self.mediaManager = nil;
     
     self.flowManagerMock = nil;
