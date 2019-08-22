@@ -849,7 +849,7 @@ extension WireCallCenterV3Tests {
     }
 
     func callBackMemberHandler(conversationId: UUID, userId: UUID, audioEstablished: Bool) {
-        let member = AVSParticipantsChange.Member(userid: userId, clientid: "123", aestab: audioEstablished ? 1 : 0, vrrecv: 0)
+        let member = AVSParticipantsChange.Member(userid: userId, clientid: "123", aestab: audioEstablished ? 1 : 0, vrecv: 0)
         let change = AVSParticipantsChange(convid: conversationId, members: [member])
         
         let encoded = try! JSONEncoder().encode(change)
