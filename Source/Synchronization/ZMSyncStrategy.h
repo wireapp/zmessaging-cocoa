@@ -36,7 +36,6 @@
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
 @class ApplicationStatusDirectory;
-@class AVSMediaManager;
 @class CallingRequestStrategy;
 @class EventDecoder;
 

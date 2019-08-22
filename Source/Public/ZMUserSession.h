@@ -32,10 +32,10 @@
 @class ZMProxyRequest;
 @class CallKitDelegate;
 @class CallingRequestStrategy;
-@class AVSMediaManager;
 @class WireCallCenterV3;
 @class SessionManager;
 
+@protocol MediaManagerType;
 @protocol UserProfile;
 @protocol AnalyticsType;
 @protocol ZMNetworkAvailabilityObserver;
@@ -67,7 +67,7 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
  @param appVersion: The application version (build number)
  @param storeProvider: An object conforming to the @c LocalStoreProviderProtocol that provides information about local store locations etc.
 */
-- (instancetype)initWithMediaManager:(AVSMediaManager *)mediaManager
+- (instancetype)initWithMediaManager:(id<MediaManagerType>)mediaManager
                          flowManager:(id<FlowManagerType>)flowManager
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession

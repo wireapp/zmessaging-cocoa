@@ -25,13 +25,6 @@
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 #import <WireSyncEngine/WireSyncEngine.h>
 
-@interface IntegrationTest ()
-
-@property (nonatomic, nullable) id mockMediaManager;
-
-@end
-
-
 @implementation IntegrationTest
 
 - (void)setUp {
@@ -39,7 +32,7 @@
     BackgroundActivityFactory.sharedFactory.activityManager = UIApplication.sharedApplication;
     [BackgroundActivityFactory.sharedFactory resume];
 
-    self.mockMediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
+    self.mockMediaManager = [[MockMediaManager alloc] init];
     self.mockEnvironment = [[MockEnvironment alloc] init];
  
     self.currentUserIdentifier = [NSUUID createUUID];
@@ -50,7 +43,6 @@
     [self _tearDown];
     BackgroundActivityFactory.sharedFactory.activityManager = nil;
     
-    [self.mockMediaManager stopMocking];
     self.mockMediaManager = nil;
     self.currentUserIdentifier = nil;
     self.mockEnvironment = nil;
@@ -79,11 +71,6 @@
 - (ZMTransportSession *)transportSession
 {
     return (ZMTransportSession *)self.mockTransportSession;
-}
-
-- (AVSMediaManager *)mediaManager
-{
-    return self.mockMediaManager;
 }
 
 @end

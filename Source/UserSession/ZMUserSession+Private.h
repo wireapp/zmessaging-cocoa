@@ -27,7 +27,8 @@
 @class AccountStatus;
 @class ApplicationStatusDirectory;
 @class UserExpirationObserver;
-@class AVSMediaManager;
+
+@protocol MediaManagerType;
 
 #import "ZMUserSession.h"
 
@@ -56,7 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) ManagedObjectContextChangeObserver *messageReplyObserver;
 @property (nonatomic, nullable) ManagedObjectContextChangeObserver *likeMesssageObserver;
 @property (nonatomic, nonnull)  UserExpirationObserver *userExpirationObserver;
-@property (nonatomic, readonly) AVSMediaManager *mediaManager;
+@property (nonatomic, readonly) id<MediaManagerType> mediaManager;
 
 - (void)tearDown;
 

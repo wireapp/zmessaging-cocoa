@@ -34,10 +34,9 @@
 @class ZMPushRegistrant;
 @class UserProfileUpdateStatus;
 @class ClientUpdateStatus;
-@class AVSFlowManager;
 @class CallKitDelegate;
-@class AVSMediaManager;
 
+@protocol MediaManagerType; 
 @protocol FlowManagerType;
 
 
@@ -78,7 +77,7 @@
 + (NSString *)databaseIdentifier;
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
-                            mediaManager:(AVSMediaManager *)mediaManager
+                            mediaManager:(id<MediaManagerType>)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                                analytics:(id<AnalyticsType>)analytics
                            operationLoop:(ZMOperationLoop *)operationLoop

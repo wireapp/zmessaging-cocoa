@@ -23,7 +23,7 @@ import avs
 open class AuthenticatedSessionFactory {
 
     let appVersion: String
-    let mediaManager: AVSMediaManager
+    let mediaManager: MediaManagerType
     let flowManager : FlowManagerType
     var analytics: AnalyticsType?
     let application : ZMApplication
@@ -33,7 +33,7 @@ open class AuthenticatedSessionFactory {
     public init(
         appVersion: String,
         application: ZMApplication,
-        mediaManager: AVSMediaManager,
+        mediaManager: MediaManagerType,
         flowManager: FlowManagerType,
         environment: BackendEnvironmentProvider,
         reachability: ReachabilityProvider & TearDownCapable,

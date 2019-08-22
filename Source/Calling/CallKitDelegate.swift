@@ -39,13 +39,13 @@ public class CallKitDelegate : NSObject {
     fileprivate let provider : CXProvider
     fileprivate let callController : CXCallController
     fileprivate unowned let sessionManager : SessionManagerType
-    fileprivate weak var mediaManager: AVSMediaManager?
+    fileprivate weak var mediaManager: MediaManagerType?
     fileprivate var callStateObserverToken : Any?
     fileprivate var missedCallObserverToken : Any?
     fileprivate var connectedCallConversation : ZMConversation?
     fileprivate var calls : [UUID : CallKitCall]
     
-    public convenience init(sessionManager: SessionManagerType, mediaManager: AVSMediaManager?) {
+    public convenience init(sessionManager: SessionManagerType, mediaManager: MediaManagerType?) {
         self.init(provider: CXProvider(configuration: CallKitDelegate.providerConfiguration),
                   callController: CXCallController(queue: DispatchQueue.main),
                   sessionManager: sessionManager,
@@ -55,7 +55,7 @@ public class CallKitDelegate : NSObject {
     public init(provider : CXProvider,
          callController: CXCallController,
          sessionManager: SessionManagerType,
-         mediaManager: AVSMediaManager?) {
+         mediaManager: MediaManagerType?) {
         
         self.provider = provider
         self.callController = callController

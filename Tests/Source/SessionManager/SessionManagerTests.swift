@@ -33,13 +33,13 @@ class SessionManagerTests: IntegrationTest {
     }
     
     func createManager() -> SessionManager? {
-        guard let mediaManager = mediaManager, let application = application, let transportSession = transportSession else { return nil }
+        guard let application = application, let transportSession = transportSession else { return nil }
         let environment = MockEnvironment()
         let reachability = TestReachability()
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             application: application,
-            mediaManager: mediaManager,
+            mediaManager: mockMediaManager,
             flowManager: FlowManagerMock(),
             transportSession: transportSession,
             environment: environment,
@@ -126,7 +126,7 @@ class SessionManagerTests: IntegrationTest {
         let account = self.createAccount()
         sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
-        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
+        guard let application = application else { return XCTFail() }
         
         let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
 
@@ -135,7 +135,7 @@ class SessionManagerTests: IntegrationTest {
         var createToken: Any? = nil
         var destroyToken: Any? = nil
         SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: mediaManager,
+                              mediaManager: MockMediaManager(),
                               analytics: nil,
                               delegate: nil,
                               application: application,
@@ -146,7 +146,7 @@ class SessionManagerTests: IntegrationTest {
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
                                     application: application,
-                                    mediaManager: mediaManager,
+                                    mediaManager: MockMediaManager(),
                                     flowManager: FlowManagerMock(),
                                     transportSession: self.transportSession!,
                                     environment: environment,
@@ -213,7 +213,7 @@ class SessionManagerTests: IntegrationTest {
         let account2 = self.createAccount(with: UUID.create())
         sessionManager!.environment.cookieStorage(for: account2).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
-        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
+        guard let application = application else { return XCTFail() }
         
         let sessionManagerExpectation = self.expectation(description: "Session manager and sessions are loaded")
         
@@ -222,7 +222,7 @@ class SessionManagerTests: IntegrationTest {
         
         var destroyToken: Any? = nil
         SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: mediaManager,
+                              mediaManager: MockMediaManager(),
                               analytics: nil,
                               delegate: nil,
                               application: application,
@@ -233,7 +233,7 @@ class SessionManagerTests: IntegrationTest {
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
                                     application: application,
-                                    mediaManager: mediaManager,
+                                    mediaManager: MockMediaManager(),
                                     flowManager: FlowManagerMock(),
                                     transportSession: self.transportSession!,
                                     environment: environment,
@@ -273,14 +273,14 @@ class SessionManagerTests: IntegrationTest {
     func testThatJailbrokenDeviceCallsDelegateMethod() {
         
         //GIVEN
-        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
+        guard let application = application else { return XCTFail() }
         let sessionManagerExpectation = self.expectation(description: "Session manager has detected a jailbroken device")
         let jailbreakDetector = MockJailbreakDetector(jailbroken: true)
         let configuration = SessionManagerConfiguration(blockOnJailbreakOrRoot: true)
         
         //WHEN
         SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: mediaManager,
+                              mediaManager: mockMediaManager,
                               analytics: nil,
                               delegate: self.delegate,
                               application: application,
@@ -767,14 +767,14 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         let account = self.createAccount()
         sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
-        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
+        guard let application = application else { return XCTFail() }
         
         let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
         
         // WHEN
         var realSessionManager: SessionManager! = nil
         SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: mediaManager,
+                              mediaManager: MockMediaManager(),
                               analytics: nil,
                               delegate: nil,
                               application: application,
@@ -785,7 +785,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                                 let reachability = TestReachability()
                                 let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
                                     application: application,
-                                    mediaManager: mediaManager,
+                                    mediaManager: MockMediaManager(),
                                     flowManager: FlowManagerMock(),
                                     transportSession: self.transportSession!,
                                     environment: environment,
@@ -822,14 +822,14 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
         let account = self.createAccount()
         sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         
-        guard let mediaManager = mediaManager, let application = application else { return XCTFail() }
+        guard let application = application else { return XCTFail() }
         
         let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
 
         // WHEN
         var realSessionManager: SessionManager! = nil
         SessionManager.create(appVersion: "0.0.0",
-                       mediaManager: mediaManager,
+                       mediaManager: MockMediaManager(),
                        analytics: nil,
                        delegate: nil,
                        application: application,
@@ -840,7 +840,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                         let reachability = TestReachability()
                         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
                             application: application,
-                            mediaManager: mediaManager,
+                            mediaManager: MockMediaManager(),
                             flowManager: FlowManagerMock(),
                             transportSession: self.transportSession!,
                             environment: environment,

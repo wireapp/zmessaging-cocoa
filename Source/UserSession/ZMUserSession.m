@@ -69,7 +69,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 /// map from NSUUID to ZMCommonContactsSearchCachedEntry
 @property (nonatomic) NSCache *commonContactsCache;
 
-@property (nonatomic) AVSMediaManager* mediaManager;
+@property (nonatomic) id<MediaManagerType> mediaManager;
 @property (nonatomic) id<FlowManagerType> flowManager;
 @end
 
@@ -88,7 +88,7 @@ ZM_EMPTY_ASSERTING_INIT()
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
-- (instancetype)initWithMediaManager:(AVSMediaManager *)mediaManager
+- (instancetype)initWithMediaManager:(id<MediaManagerType>)mediaManager
                         flowManager:(id<FlowManagerType>)flowManager
                            analytics:(id<AnalyticsType>)analytics
                     transportSession:(ZMTransportSession *)transportSession
@@ -127,7 +127,7 @@ ZM_EMPTY_ASSERTING_INIT()
 }
 
 - (instancetype)initWithTransportSession:(ZMTransportSession *)session
-                            mediaManager:(AVSMediaManager *)mediaManager
+                            mediaManager:(id<MediaManagerType>)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                                analytics:(id<AnalyticsType>)analytics
                            operationLoop:(ZMOperationLoop *)operationLoop

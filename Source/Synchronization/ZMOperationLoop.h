@@ -19,7 +19,6 @@
 
 @class ZMTransportSession;
 @class LocalNotificationDispatcher;
-@class AVSMediaManager;
 
 @protocol ZMSyncStateDelegate;
 @protocol ZMApplication;
