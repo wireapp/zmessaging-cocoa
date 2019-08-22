@@ -25,7 +25,7 @@ public struct AVSParticipantsChange: Codable {
         let userid: UUID
         let clientid: String
         let aestab: Int32
-        let vrrecv: Int32
+        let vrecv: Int32
     }
     let convid: UUID
     let members: [Member]
@@ -35,7 +35,7 @@ extension AVSCallMember {
     init(member: AVSParticipantsChange.Member) {
         remoteId = member.userid
         audioEstablished = (member.aestab == 1)
-        videoState = VideoState(rawValue: member.vrrecv) ?? .stopped
+        videoState = VideoState(rawValue: member.vrecv) ?? .stopped
         networkQuality = .normal
     }
 }
