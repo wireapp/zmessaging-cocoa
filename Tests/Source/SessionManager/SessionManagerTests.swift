@@ -33,15 +33,15 @@ class SessionManagerTests: IntegrationTest {
     }
     
     func createManager() -> SessionManager? {
-        guard let application = application, let transportSession = transportSession else { return nil }
+        guard let application = application else { return nil }
         let environment = MockEnvironment()
         let reachability = TestReachability()
-        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: environment, reachability: reachability)
+        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: mockTransportSession, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             application: application,
             mediaManager: mockMediaManager,
             flowManager: FlowManagerMock(),
-            transportSession: transportSession,
+            transportSession: mockTransportSession,
             environment: environment,
             reachability: reachability
         )
@@ -148,7 +148,7 @@ class SessionManagerTests: IntegrationTest {
                                     application: application,
                                     mediaManager: MockMediaManager(),
                                     flowManager: FlowManagerMock(),
-                                    transportSession: self.transportSession!,
+                                    transportSession: self.mockTransportSession,
                                     environment: environment,
                                     reachability: reachability
                                 )
@@ -235,7 +235,7 @@ class SessionManagerTests: IntegrationTest {
                                     application: application,
                                     mediaManager: MockMediaManager(),
                                     flowManager: FlowManagerMock(),
-                                    transportSession: self.transportSession!,
+                                    transportSession: self.mockTransportSession,
                                     environment: environment,
                                     reachability: reachability
                                 )
@@ -787,7 +787,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                                     application: application,
                                     mediaManager: MockMediaManager(),
                                     flowManager: FlowManagerMock(),
-                                    transportSession: self.transportSession!,
+                                    transportSession: self.mockTransportSession,
                                     environment: environment,
                                     reachability: reachability
                                 )
@@ -842,7 +842,7 @@ class SessionManagerTests_MultiUserSession: IntegrationTest {
                             application: application,
                             mediaManager: MockMediaManager(),
                             flowManager: FlowManagerMock(),
-                            transportSession: self.transportSession!,
+                            transportSession: self.mockTransportSession,
                             environment: environment,
                             reachability: reachability
                         )

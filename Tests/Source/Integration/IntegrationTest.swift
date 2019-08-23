@@ -58,9 +58,9 @@ class AuthenticationObserver : NSObject, PreLoginAuthenticationObserver, PostLog
 
 final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
-    let transportSession: ZMTransportSession
+    let transportSession: TransportSessionType
 
-    init(application: ZMApplication, mediaManager: MediaManagerType, flowManager: FlowManagerType, transportSession: ZMTransportSession, environment: BackendEnvironmentProvider, reachability: ReachabilityProvider & TearDownCapable) {
+    init(application: ZMApplication, mediaManager: MediaManagerType, flowManager: FlowManagerType, transportSession: TransportSessionType, environment: BackendEnvironmentProvider, reachability: ReachabilityProvider & TearDownCapable) {
         self.transportSession = transportSession
         super.init(
             appVersion: "0.0.0",
@@ -225,10 +225,10 @@ extension IntegrationTest {
     
     @objc
     func createSessionManager() {
-        guard let application = application, let transportSession = transportSession else { return XCTFail() }
+        guard let application = application, let transportSession = mockTransportSession else { return XCTFail() }
         StorageStack.shared.createStorageAsInMemory = useInMemoryStore
         let reachability = TestReachability()
-        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession as! UnauthenticatedTransportSessionProtocol, environment: mockEnvironment, reachability: reachability)
+        let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession, environment: mockEnvironment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             application: application,
             mediaManager: mockMediaManager,
