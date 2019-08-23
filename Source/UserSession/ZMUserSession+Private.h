@@ -29,6 +29,7 @@
 @class UserExpirationObserver;
 
 @protocol MediaManagerType;
+@protocol TransportSessionType;
 
 #import "ZMUserSession.h"
 
@@ -47,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ZMUserSession (Private)
 
-@property (nonatomic, readonly) ZMTransportSession *transportSession;
+@property (nonatomic, readonly) id<TransportSessionType> transportSession;
 @property (nonatomic, readonly) NSManagedObjectContext *searchManagedObjectContext;
 @property (nonatomic, readonly) OperationStatus *operationStatus;
 @property (nonatomic, readonly) AccountStatus *accountStatus;

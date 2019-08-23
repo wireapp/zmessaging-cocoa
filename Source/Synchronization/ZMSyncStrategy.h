@@ -27,7 +27,6 @@
 @class ZMTransportRequest;
 @class ZMPushChannelConnection;
 @class ZMAuthenticationStatus;
-@class ZMTransportSession;
 @class LocalNotificationDispatcher;
 @class UserProfileUpdateStatus;
 @class ProxiedRequestsStatus;

@@ -25,7 +25,6 @@
 #import <WireSyncEngine/ZMNetworkState.h>
 #import <WireTransport/ZMTransportRequest.h>
 
-@class ZMTransportSession;
 @class ZMMessage;
 @class ZMConversation;
 @class UserClient;
@@ -35,6 +34,7 @@
 @class WireCallCenterV3;
 @class SessionManager;
 
+@protocol TransportSessionType;
 @protocol MediaManagerType;
 @protocol UserProfile;
 @protocol AnalyticsType;
@@ -70,7 +70,7 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 - (instancetype)initWithMediaManager:(id<MediaManagerType>)mediaManager
                          flowManager:(id<FlowManagerType>)flowManager
                            analytics:(id<AnalyticsType>)analytics
-                    transportSession:(ZMTransportSession *)transportSession
+                    transportSession:(id<TransportSessionType>)transportSession
                          application:(id<ZMApplication>)application
                           appVersion:(NSString *)appVersion
                        storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;

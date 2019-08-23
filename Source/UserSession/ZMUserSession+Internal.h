@@ -76,7 +76,7 @@
 
 + (NSString *)databaseIdentifier;
 
-- (instancetype)initWithTransportSession:(ZMTransportSession *)session
+- (instancetype)initWithTransportSession:(id<TransportSessionType>)tranportSession
                             mediaManager:(id<MediaManagerType>)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                                analytics:(id<AnalyticsType>)analytics
