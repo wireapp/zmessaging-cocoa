@@ -22,6 +22,7 @@ import Foundation
 
 @objcMembers
 public class MockAVSWrapper : AVSWrapperType {
+    public var muted: Bool = false
     
     public var startCallArguments: (uuid: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool)?
     public var answerCallArguments: (uuid: UUID, callType: AVSCallType, useCBR: Bool)?
@@ -36,10 +37,6 @@ public class MockAVSWrapper : AVSWrapperType {
     public var hasOngoingCall = false
     public var mockMembers : [AVSCallMember] = []
     
-    public func members(in conversationId: UUID) -> [AVSCallMember] {
-        return mockMembers
-    }
-
     var receivedCallEvents : [CallEvent] = []
     
     public required init(userId: UUID, clientId: String, observer: UnsafeMutableRawPointer?) {

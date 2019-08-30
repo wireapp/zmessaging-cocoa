@@ -310,7 +310,7 @@ public protocol ForegroundNotificationResponder: class {
     ///
     public static func create(
         appVersion: String,
-        mediaManager: AVSMediaManager,
+        mediaManager: MediaManagerType,
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,
@@ -340,7 +340,7 @@ public protocol ForegroundNotificationResponder: class {
     
     private convenience init(
         appVersion: String,
-        mediaManager: AVSMediaManager,
+        mediaManager: MediaManagerType,
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
         application: ZMApplication,

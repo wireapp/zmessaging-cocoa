@@ -27,7 +27,6 @@
 @class ZMTransportRequest;
 @class ZMPushChannelConnection;
 @class ZMAuthenticationStatus;
-@class ZMTransportSession;
 @class LocalNotificationDispatcher;
 @class UserProfileUpdateStatus;
 @class ProxiedRequestsStatus;
@@ -36,7 +35,6 @@
 @class BackgroundAPNSPingBackStatus;
 @class ZMAccountStatus;
 @class ApplicationStatusDirectory;
-@class AVSMediaManager;
 @class CallingRequestStrategy;
 @class EventDecoder;
 

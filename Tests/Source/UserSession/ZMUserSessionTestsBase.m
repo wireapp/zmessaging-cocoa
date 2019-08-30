@@ -87,7 +87,7 @@
     [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
     
     self.mockSessionManager = [[MockSessionManager alloc] init];
-    self.mediaManager = [OCMockObject niceMockForClass:AVSMediaManager.class];
+    self.mediaManager = [[MockMediaManager alloc] init];
     self.flowManagerMock = [[FlowManagerMock alloc] init];
     self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
     
@@ -171,7 +171,6 @@
     [self.requestAvailableNotification stopMocking];
     self.requestAvailableNotification = nil;
     
-    [self.mediaManager stopMocking];
     self.mediaManager = nil;
     
     self.flowManagerMock = nil;

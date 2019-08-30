@@ -36,8 +36,8 @@ public protocol AVSWrapperType {
     func received(callEvent: CallEvent) -> CallError?
     func setVideoState(conversationId: UUID, videoState: VideoState)
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
-    func members(in conversationId: UUID) -> [AVSCallMember]
     func update(callConfig: String?, httpStatusCode: Int)
+    var muted: Bool { get set }
 }
 
 
@@ -48,13 +48,13 @@ public protocol AVSWrapperType {
 public class AVSWrapper: AVSWrapperType {
 
     /// The wrapped `wcall` instance.
-    private let handle: UnsafeMutableRawPointer
+    private let handle: UInt32
 
     // MARK: - Initialization
 
     /// Initializes avs.
     private static var initialize: () -> Void = {
-        let resultValue = wcall_init()
+        let resultValue = wcall_init(WCALL_ENV_DEFAULT)
         if resultValue != 0 {
             fatal("Failed to initialise AVS (error code: \(resultValue))")
         }
@@ -89,13 +89,23 @@ public class AVSWrapper: AVSWrapperType {
                               observer)
 
         wcall_set_data_chan_estab_handler(handle, dataChannelEstablishedHandler)
-        wcall_set_group_changed_handler(handle, groupMemberHandler, observer)
         let timerIntervalInSeconds: Int32 = 5
         wcall_set_network_quality_handler(handle, networkQualityHandler, timerIntervalInSeconds, observer)
         wcall_set_media_stopped_handler(handle, mediaStoppedChangeHandler)
+        wcall_set_mute_handler(handle, muteChangeHandler, observer)
+        wcall_set_participant_changed_handler(handle, callParticipantHandler, observer)
     }
 
     // MARK: - Convenience Methods
+    
+    public var muted: Bool {
+        get {
+            return wcall_get_mute(handle) != 0
+        }
+        set {
+            wcall_set_mute(handle, newValue ? 1 : 0)
+        }
+    }
 
     /// Requests AVS to initiate a call.
     public func startCall(conversationId: UUID, callType: AVSCallType, conversationType: AVSConversationType, useCBR: Bool) -> Bool {
@@ -151,23 +161,6 @@ public class AVSWrapper: AVSWrapperType {
         wcall_config_update(handle, httpStatusCode == 200 ? 0 : EPROTO, callConfig ?? "")
     }
 
-    /// Returns the list of members in the conversation.
-    public func members(in conversationId: UUID) -> [AVSCallMember] {
-        guard let membersRef = wcall_get_members(handle, conversationId.transportString()) else { return [] }
-        
-        let cMembers = membersRef.pointee
-        var callMembers = [AVSCallMember]()
-        for i in 0..<cMembers.membc {
-            guard let cMember = cMembers.membv?[Int(i)],
-                let member = AVSCallMember(wcallMember: cMember)
-                else { continue }
-            callMembers.append(member)
-        }
-        wcall_free_members(membersRef)
-        
-        return callMembers
-    }
-
     // MARK: - C Callback Handlers
 
     private let constantBitRateChangeHandler: ConstantBitRateChangeHandler = { _, enabledFlag, contextRef in
@@ -176,7 +169,7 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    private let videoStateChangeHandler: VideoStateChangeHandler = { userId, state, contextRef in
+    private let videoStateChangeHandler: VideoStateChangeHandler = { conversationId, userId, clientId, state, contextRef in
         AVSWrapper.withCallCenter(contextRef, userId, state) {
             $0.handleVideoStateChange(userId: $1, newState: $2)
         }
@@ -255,10 +248,10 @@ public class AVSWrapper: AVSWrapperType {
             $0.handleCallMessageRequest(token: token, conversationId: $1, senderUserId: $2, senderClientId: $3, data: transformedData)
         }
     }
-
-    private let groupMemberHandler: CallGroupChangedHandler = { conversationIdRef, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationIdRef) {
-            $0.handleGroupMemberChange(conversationId: $1)
+    
+    private let callParticipantHandler: CallParticipantChangedHandler = { conversationIdRef, json, contextRef in
+        AVSWrapper.withCallCenter(contextRef, json, conversationIdRef) {
+            $0.handleParticipantChange(conversationId: $2, data: $1)
         }
     }
 
@@ -274,4 +267,9 @@ public class AVSWrapper: AVSWrapperType {
         })
     }
 
+    private let muteChangeHandler: MuteChangeHandler = { muted, contextRef in
+        AVSWrapper.withCallCenter(contextRef, muted) {
+            $0.handleMuteChange(muted: $1)
+        }
+    }
 }

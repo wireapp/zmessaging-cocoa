@@ -39,13 +39,13 @@ public class CallKitDelegate : NSObject {
     fileprivate let provider : CXProvider
     fileprivate let callController : CXCallController
     fileprivate unowned let sessionManager : SessionManagerType
-    fileprivate weak var mediaManager: AVSMediaManager?
+    fileprivate weak var mediaManager: MediaManagerType?
     fileprivate var callStateObserverToken : Any?
     fileprivate var missedCallObserverToken : Any?
     fileprivate var connectedCallConversation : ZMConversation?
     fileprivate var calls : [UUID : CallKitCall]
     
-    public convenience init(sessionManager: SessionManagerType, mediaManager: AVSMediaManager?) {
+    public convenience init(sessionManager: SessionManagerType, mediaManager: MediaManagerType?) {
         self.init(provider: CXProvider(configuration: CallKitDelegate.providerConfiguration),
                   callController: CXCallController(queue: DispatchQueue.main),
                   sessionManager: sessionManager,
@@ -55,7 +55,7 @@ public class CallKitDelegate : NSObject {
     public init(provider : CXProvider,
          callController: CXCallController,
          sessionManager: SessionManagerType,
-         mediaManager: AVSMediaManager?) {
+         mediaManager: MediaManagerType?) {
         
         self.provider = provider
         self.callController = callController
@@ -90,7 +90,7 @@ public class CallKitDelegate : NSObject {
         configuration.supportedHandleTypes = [.generic]
         configuration.ringtoneSound = NotificationSound.call.name
         
-        if let image = UIImage(named: "logo") {
+        if let image = UIImage(named: "wire-logo-letter") {
             configuration.iconTemplateImageData = image.pngData()
         }
         
@@ -427,13 +427,25 @@ extension CallKitDelegate : CXProviderDelegate {
     
     public func provider(_ provider: CXProvider, perform action: CXSetHeldCallAction) {
         log("perform CXSetHeldCallAction: \(action)")
-        mediaManager?.isMicrophoneMuted = action.isOnHold
+        guard let call = calls[action.callUUID] else {
+            log("fail CXSetHeldCallAction because call did not exist")
+            action.fail()
+            return
+        }
+        
+        call.conversation.voiceChannel?.muted = action.isOnHold
         action.fulfill()
     }
     
     public func provider(_ provider: CXProvider, perform action: CXSetMutedCallAction) {
         log("perform CXSetMutedCallAction: \(action)")
-        mediaManager?.isMicrophoneMuted = action.isMuted
+        guard let call = calls[action.callUUID] else {
+            log("fail CXSetMutedCallAction because call did not exist")
+            action.fail()
+            return
+        }
+        
+        call.conversation.voiceChannel?.muted = action.isMuted
         action.fulfill()
     }
     

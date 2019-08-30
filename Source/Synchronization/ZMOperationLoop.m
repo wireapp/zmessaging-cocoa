@@ -44,7 +44,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 }
 
 @property (nonatomic) NSNotificationQueue *enqueueNotificationQueue;
-@property (nonatomic) ZMTransportSession *transportSession;
+@property (nonatomic) id<TransportSessionType> transportSession;
 @property (atomic) BOOL shouldStopEnqueueing;
 @property (nonatomic) BOOL tornDown;
 @property (nonatomic, weak) ApplicationStatusDirectory *applicationStatusDirectory;
@@ -58,7 +58,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 
 @implementation ZMOperationLoop
 
-- (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
+- (instancetype)initWithTransportSession:(id<TransportSessionType>)transportSession
                             syncStrategy:(ZMSyncStrategy *)syncStrategy
               applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
                                    uiMOC:(NSManagedObjectContext *)uiMOC

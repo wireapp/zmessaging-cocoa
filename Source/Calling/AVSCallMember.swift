@@ -19,6 +19,27 @@
 import Foundation
 import avs
 
+
+public struct AVSParticipantsChange: Codable {
+    public struct Member: Codable {
+        let userid: UUID
+        let clientid: String
+        let aestab: Int32
+        let vrecv: Int32
+    }
+    let convid: UUID
+    let members: [Member]
+}
+
+extension AVSCallMember {
+    init(member: AVSParticipantsChange.Member) {
+        remoteId = member.userid
+        audioEstablished = (member.aestab == 1)
+        videoState = VideoState(rawValue: member.vrecv) ?? .stopped
+        networkQuality = .normal
+    }
+}
+
 /**
  * An object that represents the member of an AVS call.
  */
@@ -38,20 +59,6 @@ public struct AVSCallMember: Hashable {
     public let networkQuality: NetworkQuality
 
     // MARK: - Initialization
-
-    /**
-     * Creates the call member from its raw C counterpart.
-     * - parameter wcallMember: The struct object representing the call member in AVS.
-     * - returns: The call member, if the raw struct contains a valid remote ID.
-     */
-
-    public init?(wcallMember: wcall_member) {
-        guard let remoteId = UUID(cString: wcallMember.userid) else { return nil }
-        self.remoteId = remoteId
-        audioEstablished = (wcallMember.audio_estab != 0)
-        videoState = VideoState(rawValue: wcallMember.video_recv) ?? .stopped
-        networkQuality = .normal
-    }
 
     /**
      * Creates the call member from its values.

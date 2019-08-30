@@ -50,7 +50,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) ZMSyncStrategy *syncStrategy;
 @property (nonatomic) ZMOperationLoop *operationLoop;
 @property (nonatomic) ZMTransportRequest *runningLoginRequest;
-@property (nonatomic) ZMTransportSession *transportSession;
+@property (nonatomic) id<TransportSessionType> transportSession;
 @property (atomic) ZMNetworkState networkState;
 @property (nonatomic) ZMBlacklistVerificator *blackList;
 @property (nonatomic) NotificationDispatcher *notificationDispatcher;
@@ -69,7 +69,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 /// map from NSUUID to ZMCommonContactsSearchCachedEntry
 @property (nonatomic) NSCache *commonContactsCache;
 
-@property (nonatomic) AVSMediaManager* mediaManager;
+@property (nonatomic) id<MediaManagerType> mediaManager;
 @property (nonatomic) id<FlowManagerType> flowManager;
 @end
 
@@ -88,10 +88,10 @@ ZM_EMPTY_ASSERTING_INIT()
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
-- (instancetype)initWithMediaManager:(AVSMediaManager *)mediaManager
-                        flowManager:(id<FlowManagerType>)flowManager
+- (instancetype)initWithMediaManager:(id<MediaManagerType>)mediaManager
+                         flowManager:(id<FlowManagerType>)flowManager
                            analytics:(id<AnalyticsType>)analytics
-                    transportSession:(ZMTransportSession *)transportSession
+                    transportSession:(id<TransportSessionType>)transportSession
                          application:(id<ZMApplication>)application
                           appVersion:(NSString *)appVersion
                        storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
@@ -103,7 +103,7 @@ ZM_EMPTY_ASSERTING_INIT()
     RequestLoopAnalyticsTracker *tracker = [[RequestLoopAnalyticsTracker alloc] initWithAnalytics:analytics];
     
     if ([transportSession respondsToSelector:@selector(setRequestLoopDetectionCallback:)]) {
-        transportSession.requestLoopDetectionCallback = ^(NSString *path) {
+        ((ZMTransportSession *)transportSession).requestLoopDetectionCallback = ^(NSString *path) {
             // The tracker will return NO in case the path should be ignored.
             if (! [tracker tagWithPath:path]) {
                 return;
@@ -126,8 +126,8 @@ ZM_EMPTY_ASSERTING_INIT()
     return self;
 }
 
-- (instancetype)initWithTransportSession:(ZMTransportSession *)session
-                            mediaManager:(AVSMediaManager *)mediaManager
+- (instancetype)initWithTransportSession:(id<TransportSessionType>)transportSession
+                            mediaManager:(id<MediaManagerType>)mediaManager
                              flowManager:(id<FlowManagerType>)flowManager
                                analytics:(id<AnalyticsType>)analytics
                            operationLoop:(ZMOperationLoop *)operationLoop
@@ -178,8 +178,8 @@ ZM_EMPTY_ASSERTING_INIT()
         
         [self.syncManagedObjectContext performBlockAndWait:^{
             self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncManagedObjectContext
-                                                                                                   cookieStorage:session.cookieStorage
-                                                                                             requestCancellation:session
+                                                                                                   cookieStorage:transportSession.cookieStorage
+                                                                                             requestCancellation:transportSession
                                                                                                      application:application
                                                                                                syncStateDelegate:self
                                                                                                        analytics:analytics];
@@ -192,9 +192,9 @@ ZM_EMPTY_ASSERTING_INIT()
             self.callStateObserver = [[ZMCallStateObserver alloc] initWithLocalNotificationDispatcher:self.localNotificationDispatcher
                                                                                           userSession:self];
             
-            self.transportSession = session;
+            self.transportSession = transportSession;
             self.transportSession.pushChannel.clientID = self.selfUserClient.remoteIdentifier;
-            self.transportSession.networkStateDelegate = self;
+            [self.transportSession setNetworkStateDelegate:self];
             self.mediaManager = mediaManager;
             self.hasCompletedInitialSync = !self.applicationStatusDirectory.syncStatus.isSlowSyncing;
         }];
@@ -205,28 +205,24 @@ ZM_EMPTY_ASSERTING_INIT()
         [self.syncManagedObjectContext performBlockAndWait:^{
             
             self.syncStrategy = [[ZMSyncStrategy alloc] initWithStoreProvider:storeProvider
-                                                                cookieStorage:session.cookieStorage
+                                                                cookieStorage:transportSession.cookieStorage
                                                                   flowManager:flowManager
                                                  localNotificationsDispatcher:self.localNotificationDispatcher
                                                       notificationsDispatcher:self.notificationDispatcher
                                                    applicationStatusDirectory:self.applicationStatusDirectory
                                                                   application:application];
             
-            self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:session
+            self.operationLoop = operationLoop ?: [[ZMOperationLoop alloc] initWithTransportSession:transportSession
                                                                                        syncStrategy:self.syncStrategy
                                                                          applicationStatusDirectory:self.applicationStatusDirectory
                                                                                               uiMOC:self.managedObjectContext
                                                                                             syncMOC:self.syncManagedObjectContext];
             
             __weak id weakSelf = self;
-            session.accessTokenRenewalFailureHandler = ^(ZMTransportResponse *response) {
+            [transportSession setAccessTokenRenewalFailureHandler:^(ZMTransportResponse * _Nonnull response) {
                 ZMUserSession *strongSelf = weakSelf;
                 [strongSelf transportSessionAccessTokenDidFail:response];
-            };
-            session.accessTokenRenewalSuccessHandler = ^(NSString *token, NSString *type) {
-                ZMUserSession *strongSelf = weakSelf;
-                [strongSelf transportSessionAccessTokenDidSucceedWithToken:token ofType:type];
-            };
+            }];
         }];
         
         self.commonContactsCache = [[NSCache alloc] init];
@@ -440,22 +436,9 @@ ZM_EMPTY_ASSERTING_INIT()
     ZMLogWithLevelAndTag(ZMLogLevelDebug, ZMTAG_NETWORK, @"Access token fail in %@: %@", self.class, NSStringFromSelector(_cmd));
     NOT_USED(response);
     
-    [self.syncManagedObjectContext performGroupedBlock:^{
-        self.syncManagedObjectContext.accessToken = nil;
-    }];
-
     [self.managedObjectContext performGroupedBlock:^{
         ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
         [PostLoginAuthenticationNotification notifyAuthenticationInvalidatedWithError:[NSError userSessionErrorWithErrorCode:ZMUserSessionAccessTokenExpired userInfo:selfUser.loginCredentials.dictionaryRepresentation] context:self.managedObjectContext];
-    }];
-}
-
-- (void)transportSessionAccessTokenDidSucceedWithToken:(NSString *)token ofType:(NSString *)type;
-{
-    ZMLogWithLevelAndTag(ZMLogLevelDebug, ZMTAG_NETWORK, @"Access token succeeded in %@: %@", self.class, NSStringFromSelector(_cmd));
-    
-    [self.syncManagedObjectContext performGroupedBlock:^{
-        self.syncManagedObjectContext.accessToken = [[ZMAccessToken alloc] initWithToken:token type:type expiresInSeconds:0];
     }];
 }
 

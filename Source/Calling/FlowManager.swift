@@ -29,10 +29,10 @@ public protocol FlowManagerType {
 public class FlowManager : NSObject, FlowManagerType {
     public static let AVSFlowManagerCreatedNotification = Notification.Name("AVSFlowManagerCreatedNotification")
     
-    fileprivate var mediaManager : AVSMediaManager?
+    fileprivate var mediaManager : MediaManagerType?
     fileprivate var avsFlowManager : AVSFlowManager?
 
-    init(mediaManager: AVSMediaManager) {
+    init(mediaManager: MediaManagerType) {
         super.init()
 
         self.mediaManager = mediaManager

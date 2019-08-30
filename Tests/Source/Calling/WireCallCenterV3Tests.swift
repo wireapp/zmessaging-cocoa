@@ -752,6 +752,35 @@ extension WireCallCenterV3Tests {
     }
 }
 
+// Mark: - Muted state
+extension WireCallCenterV3Tests {
+    func testThatMutedStateHandlerUpdatesTheState() {
+        class MuteObserver: MuteStateObserver {
+            var muted: Bool? = nil
+            func callCenterDidChange(muted: Bool) { self.muted = muted }
+        }
+        
+        // given
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        let observer = MuteObserver()
+        
+        let token = WireCallCenterV3.addMuteStateObserver(observer: observer, userSession: mockUserSession)
+        
+        // when
+        mockAVSWrapper.muted = true
+        sut.handleMuteChange(muted: true)
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        withExtendedLifetime(token) {
+            XCTAssertEqual(true, observer.muted)
+        }
+    }
+}
+
 // MARK: - Ignoring Calls
 
 extension WireCallCenterV3Tests {
@@ -820,8 +849,13 @@ extension WireCallCenterV3Tests {
     }
 
     func callBackMemberHandler(conversationId: UUID, userId: UUID, audioEstablished: Bool) {
-        mockAVSWrapper.mockMembers = [AVSCallMember(userId: userId, audioEstablished: audioEstablished)]
-        sut.handleGroupMemberChange(conversationId: conversationId)
+        let member = AVSParticipantsChange.Member(userid: userId, clientid: "123", aestab: audioEstablished ? 1 : 0, vrecv: 0)
+        let change = AVSParticipantsChange(convid: conversationId, members: [member])
+        
+        let encoded = try! JSONEncoder().encode(change)
+        let string = String(data: encoded, encoding: .utf8)!
+        
+        sut.handleParticipantChange(conversationId: conversationId, data: string)
     }
 
     func testThatItUpdatesTheParticipantsWhenGroupHandlerIsCalled() {

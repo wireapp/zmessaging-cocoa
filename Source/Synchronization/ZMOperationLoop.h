@@ -17,14 +17,11 @@
 //
 @import Foundation;
 
-@class ZMTransportSession;
-@class LocalNotificationDispatcher;
-@class AVSMediaManager;
-
 @protocol ZMSyncStateDelegate;
 @protocol ZMApplication;
 @protocol LocalStoreProviderProtocol;
 @protocol FlowManagerType;
+@protocol TransportSessionType;
 
 @class ZMPersistentCookieStorage;
 @class ApplicationStatusDirectory;
@@ -35,10 +32,10 @@ extern NSString * const ZMPushChannelIsOpenKey;
 @interface ZMOperationLoop : NSObject <TearDownCapable>
 
 @property (nonatomic, readonly) id<ZMApplication> application;
-@property (nonatomic, readonly) ZMTransportSession *transportSession;
+@property (nonatomic, readonly) id<TransportSessionType> transportSession;
 
 - (instancetype)init NS_UNAVAILABLE;
-- (instancetype)initWithTransportSession:(ZMTransportSession *)transportSession
+- (instancetype)initWithTransportSession:(id<TransportSessionType>)transportSession
                             syncStrategy:(ZMSyncStrategy *)syncStrategy
               applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
                                    uiMOC:(NSManagedObjectContext *)uiMOC

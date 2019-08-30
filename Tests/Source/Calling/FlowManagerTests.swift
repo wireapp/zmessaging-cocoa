@@ -31,7 +31,7 @@ class FlowManagerTests : MessagingTest {
         }
 
         // WHEN
-        _ = FlowManager(mediaManager: AVSMediaManager.default())
+        _ = FlowManager(mediaManager: MockMediaManager())
 
         // THEN
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
