@@ -73,6 +73,10 @@ final class DummyServiceUser: NSObject, ServiceUser {
         return false
     }
     
+    func canDeleteConversation(_ conversation: ZMConversation) -> Bool {
+        return false
+    }
+    
     func canRemoveService(from conversation: ZMConversation) -> Bool {
         return false
     }

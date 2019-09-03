@@ -38,7 +38,7 @@ extension ZMConversation {
     /// Only team conversations can be deleted.
     public func delete(in userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
         
-        guard conversationType == .group,
+        guard ZMUser.selfUser(inUserSession: userSession).canDeleteConversation(self),
               let conversationId = remoteIdentifier,
               let request = ConversationDeletionRequestFactory.requestForDeletingTeamConversation(self)
         else {
