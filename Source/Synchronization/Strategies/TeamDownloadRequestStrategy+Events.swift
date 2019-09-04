@@ -54,8 +54,7 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
         case .teamMemberJoin: processAddedMember(with: event)
         case .teamMemberLeave: processRemovedMember(with: event)
         case .teamMemberUpdate: processUpdatedMember(with: event)
-        // Note: "conversation-delete" is not handled yet, 
-        // cf. disabled_testThatItDeletesALocalTeamConversationInWhichSelfIsAGuest in TeamDownloadRequestStrategy_EventsTests
+        case .teamConversationDelete: processDeletedTeamConversation(with: event)
         default: break
         }
     }
@@ -112,6 +111,14 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
         guard let userId = (data[TeamEventPayloadKey.user.rawValue] as? String).flatMap(UUID.init) else { return }
         guard let member = Member.fetch(withRemoteIdentifier: userId, in: managedObjectContext) else { return }
         member.needsToBeUpdatedFromBackend = true
+    }
+    
+    private func processDeletedTeamConversation(with event: ZMUpdateEvent) {
+        guard let data = event.dataPayload else { return }
+        guard let conversationId = (data[TeamEventPayloadKey.conversation.rawValue] as? String).flatMap(UUID.init) else {return }
+        guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: managedObjectContext) else { return }
+        
+        managedObjectContext.delete(conversation)
     }
 
     private func deleteTeamAndConversations(_ team: Team) {
