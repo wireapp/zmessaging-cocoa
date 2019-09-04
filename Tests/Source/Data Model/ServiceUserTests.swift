@@ -153,6 +153,39 @@ final class DummyServiceUser: NSObject, ServiceUser {
         self.providerIdentifier = providerIdentifier
         super.init()
     }
+    
+    var canCreateService: Bool = false
+    
+    var canManageTeam: Bool = false
+    
+    func canAddService(to conversation: ZMConversation) -> Bool {
+        return false
+    }
+    
+    func canRemoveService(from conversation: ZMConversation) -> Bool {
+        return false
+    }
+    
+    func canModifyReadReceiptSettings(in conversation: ZMConversation) -> Bool {
+        return false
+    }
+    
+    func canModifyEphemeralSettings(in conversation: ZMConversation) -> Bool {
+        return false
+    }
+    
+    func canModifyNotificationSettings(in conversation: ZMConversation) -> Bool {
+        return false
+    }
+    
+    func canModifyAccessControlSettings(in conversation: ZMConversation) -> Bool {
+        return false
+    }
+    
+    func canModifyTitle(in conversation: ZMConversation) -> Bool {
+        return false
+    }
+    
 }
 
 final class ServiceUserTests : IntegrationTest {
