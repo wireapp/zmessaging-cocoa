@@ -387,6 +387,7 @@ extension IntegrationTest {
             self.teamUser2 = user2
 
             let team = session.insertTeam(withName: "A Team", isBound: true, users: [user1, user2])
+            self.team = team
 
             let bot = session.insertUser(withName: "Botty the Bot")
             bot.accentID = 3
@@ -402,9 +403,9 @@ extension IntegrationTest {
 
             let teamConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [self.teamUser1, self.teamUser2])
             teamConversation.team = team
-            teamConversation.creator = user2
+            teamConversation.creator = self.selfUser
             teamConversation.changeName(by:self.selfUser, name:"Team Group conversation")
-            self.groupConversationWithWholeTeam = groupConversation
+            self.groupConversationWithWholeTeam = teamConversation
         })
     }
     
