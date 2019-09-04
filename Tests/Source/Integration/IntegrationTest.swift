@@ -403,9 +403,9 @@ extension IntegrationTest {
 
             let teamConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [self.teamUser1, self.teamUser2])
             teamConversation.team = team
-            teamConversation.creator = user2
+            teamConversation.creator = self.selfUser
             teamConversation.changeName(by:self.selfUser, name:"Team Group conversation")
-            self.groupConversationWithWholeTeam = groupConversation
+            self.groupConversationWithWholeTeam = teamConversation
         })
     }
     

@@ -32,6 +32,8 @@ class ConversationTests_Deletion: ConversationTestsBase {
         teamConversation.delete(in: userSession!, completion: { (result) in
             if case .success = result {
                 conversationIsDeleted.fulfill()
+            } else {
+                XCTFail()
             }
         })
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
@@ -61,6 +63,8 @@ class ConversationTests_Deletion: ConversationTestsBase {
         teamConversation.delete(in: userSession!, completion: { (result) in
             if case .failure = result {
                 conversationDeletionFailed.fulfill()
+            } else {
+                XCTFail()
             }
         })
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
