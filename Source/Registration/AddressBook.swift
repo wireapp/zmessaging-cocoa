@@ -234,7 +234,7 @@ extension String {
         
         var number : Any? = self as Any?
         do {
-            _ = try ZMPhoneNumberValidator.validateValue(&number)
+            try ZMPhoneNumberValidator.validateValue(&number)
             return number as? String
         } catch {
             return nil
@@ -245,7 +245,7 @@ extension String {
     var validatedEmail : String? {
         var email : Any? = self as Any?
         do {
-            _ = try ZMEmailAddressValidator.validateValue(&email)
+            try ZMEmailAddressValidator.validateValue(&email)
             return email as? String
         } catch {
             return nil
