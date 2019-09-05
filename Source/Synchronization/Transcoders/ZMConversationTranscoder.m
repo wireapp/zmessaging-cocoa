@@ -168,21 +168,20 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (void)finishSyncIfCompleted
 {
     if (!self.listPaginator.hasMoreToFetch && self.remoteIDSync.isDone && self.isSyncing) {
-        [self updateSelfUserActiveConversations:self.lastSyncedActiveConversations];
+        [self updateInactiveConversations:self.lastSyncedActiveConversations];
         [self.lastSyncedActiveConversations removeAllObjects];
         [self.syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     }
 }
 
-- (void)updateSelfUserActiveConversations:(NSOrderedSet<ZMConversation *> *)activeConversations
+- (void)updateInactiveConversations:(NSOrderedSet<ZMConversation *> *)activeConversations
 {
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
     NSMutableOrderedSet *inactiveConversations = [NSMutableOrderedSet orderedSetWithArray:[self.managedObjectContext executeFetchRequestOrAssert:[ZMConversation sortedFetchRequest]]];
     [inactiveConversations minusOrderedSet:activeConversations];
     
     for (ZMConversation *inactiveConversation in inactiveConversations) {
         if (inactiveConversation.conversationType == ZMConversationTypeGroup) {
-            [inactiveConversation internalRemoveParticipants:@[selfUser] sender:selfUser];
+            inactiveConversation.needsToBeUpdatedFromBackend = YES;
         }
     }
 }
@@ -309,6 +308,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         case ZMUpdateEventTypeConversationRename:
         case ZMUpdateEventTypeConversationMemberUpdate:
         case ZMUpdateEventTypeConversationCreate:
+        case ZMUpdateEventTypeConversationDelete:
         case ZMUpdateEventTypeConversationConnectRequest:
         case ZMUpdateEventTypeConversationAccessModeUpdate:
         case ZMUpdateEventTypeConversationMessageTimerUpdate:
@@ -356,14 +356,35 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     [self createConversationFromTransportData:payloadData serverTimeStamp:serverTimestamp source:ZMConversationSourceUpdateEvent];
 }
 
+- (void)deleteConversationFromEvent:(ZMUpdateEvent *)event
+{
+    NSUUID *conversationId = [event.payload optionalUuidForKey:@"conversation"];
+    
+    if (conversationId == nil) {
+        ZMLogError(@"Missing conversation payload in ZMupdateEventConversatinDelete");
+        return;
+    }
+    
+    ZMConversation *conversation = [ZMConversation conversationWithRemoteID:conversationId createIfNeeded:NO inContext:self.managedObjectContext];
+    
+    if (conversation != nil) {
+        [self.managedObjectContext deleteObject:conversation];
+    }
+}
+
 - (void)processEvents:(NSArray<ZMUpdateEvent *> *)events
            liveEvents:(BOOL)liveEvents
        prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult;
 {
-    for(ZMUpdateEvent *event in events) {
+    for (ZMUpdateEvent *event in events) {
         
         if (event.type == ZMUpdateEventTypeConversationCreate) {
             [self createConversationFromEvent:event];
+            continue;
+        }
+        
+        if (event.type == ZMUpdateEventTypeConversationDelete) {
+            [self deleteConversationFromEvent:event];
             continue;
         }
         
@@ -749,9 +770,14 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 - (void)deleteObject:(ZMConversation *)conversation withResponse:(ZMTransportResponse *)response downstreamSync:(id<ZMObjectSync>)downstreamSync;
 {
     // Self user has been removed from the group conversation but missed the conversation.member-leave event.
-    if (response.HTTPStatus == 404 && conversation.conversationType == ZMConversationTypeGroup && conversation.isSelfAnActiveMember) {
+    if (response.HTTPStatus == 403 && conversation.conversationType == ZMConversationTypeGroup && conversation.isSelfAnActiveMember) {
         ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
         [conversation internalRemoveParticipants:@[selfUser] sender:selfUser];
+    }
+    
+    // Conversation has been permanently deleted
+    if (response.HTTPStatus == 404 && conversation.conversationType == ZMConversationTypeGroup) {
+        [self.managedObjectContext deleteObject:conversation];
     }
     
     if (response.isPermanentylUnavailableError) {

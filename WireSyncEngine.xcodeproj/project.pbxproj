@@ -67,6 +67,7 @@
 		16519D38231D3B1700C9D76D /* Conversation+Deletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16519D37231D3B1700C9D76D /* Conversation+Deletion.swift */; };
 		16519D5C231EA13A00C9D76D /* ConversationTests+Deletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16519D5B231EA13A00C9D76D /* ConversationTests+Deletion.swift */; };
 		16519D6D231EAAF300C9D76D /* Conversation+DeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16519D6C231EAAF300C9D76D /* Conversation+DeletionTests.swift */; };
+		16519D7D2320087200C9D76D /* SlowSyncTests+ExistingData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16519D7C2320087100C9D76D /* SlowSyncTests+ExistingData.swift */; };
 		1658C2371F503CF800889F22 /* FlowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1658C2361F503CF800889F22 /* FlowManager.swift */; };
 		1658C23A1F5404F000889F22 /* FlowManagerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1658C2381F5404ED00889F22 /* FlowManagerMock.swift */; };
 		1659114F1DEF1F6E007FA847 /* LocalNotificationDispatcher+Calling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1659114E1DEF1F6E007FA847 /* LocalNotificationDispatcher+Calling.swift */; };
@@ -641,6 +642,7 @@
 		16519D37231D3B1700C9D76D /* Conversation+Deletion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Conversation+Deletion.swift"; sourceTree = "<group>"; };
 		16519D5B231EA13A00C9D76D /* ConversationTests+Deletion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+Deletion.swift"; sourceTree = "<group>"; };
 		16519D6C231EAAF300C9D76D /* Conversation+DeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Conversation+DeletionTests.swift"; sourceTree = "<group>"; };
+		16519D7C2320087100C9D76D /* SlowSyncTests+ExistingData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SlowSyncTests+ExistingData.swift"; sourceTree = "<group>"; };
 		1658C2361F503CF800889F22 /* FlowManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlowManager.swift; sourceTree = "<group>"; };
 		1658C2381F5404ED00889F22 /* FlowManagerMock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlowManagerMock.swift; sourceTree = "<group>"; };
 		1659114E1DEF1F6E007FA847 /* LocalNotificationDispatcher+Calling.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "LocalNotificationDispatcher+Calling.swift"; sourceTree = "<group>"; };
@@ -1892,6 +1894,7 @@
 				3E288A6A19C859210031CFCE /* NotificationObservers.m */,
 				54FC8A0F192CD55000D3C016 /* LoginFlowTests.m */,
 				85D85D997334755E841D13EA /* SlowSyncTests.m */,
+				16519D7C2320087100C9D76D /* SlowSyncTests+ExistingData.swift */,
 				BF1F52CB1ECDD778002FB553 /* SlowSyncTests+Teams.swift */,
 				F190E0DB1E8E7BA1003E81F8 /* SlowSyncTests+Swift.swift */,
 				545643D41C62C1A800A2129C /* ConversationTestsBase.h */,
@@ -2779,6 +2782,7 @@
 				EE01E0391F90FEC1001AA33C /* ZMLocalNotificationTests_ExpiredMessage.swift in Sources */,
 				54C11BAD19D1EB7500576A96 /* ZMLoginTranscoderTests.m in Sources */,
 				16AD86B81F7292EB00E4C797 /* TypingChange.swift in Sources */,
+				16519D7D2320087200C9D76D /* SlowSyncTests+ExistingData.swift in Sources */,
 				5E8EE1FE20FDCD1300DB1F9B /* MockPasteboard.swift in Sources */,
 				16D3FCDF1E365ABC0052A535 /* CallStateObserverTests.swift in Sources */,
 				85D85EEDD5DD19FB747ED4A5 /* MockModelObjectContextFactory.m in Sources */,
