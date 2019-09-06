@@ -201,8 +201,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
     [self resetLoginAndRegistrationStatus];
-    [ZMPhoneNumberValidator validateValue:&phone error:nil];
-    self.registrationPhoneNumberThatNeedsAValidationCode = phone;
+    self.registrationPhoneNumberThatNeedsAValidationCode = [ZMPhoneNumberValidator validatePhoneNumber: phone];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 
@@ -210,8 +209,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
     [self resetLoginAndRegistrationStatus];
-    [ZMPhoneNumberValidator validateValue:&phone error:nil];
-    self.loginPhoneNumberThatNeedsAValidationCode = phone;
+    self.loginPhoneNumberThatNeedsAValidationCode = [ZMPhoneNumberValidator validatePhoneNumber: phone];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 

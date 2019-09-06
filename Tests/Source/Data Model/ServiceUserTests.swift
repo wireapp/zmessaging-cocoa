@@ -189,6 +189,7 @@ final class DummyServiceUser: NSObject, ServiceUser {
         self.providerIdentifier = providerIdentifier
         super.init()
     }
+    
 }
 
 final class ServiceUserTests : IntegrationTest {
