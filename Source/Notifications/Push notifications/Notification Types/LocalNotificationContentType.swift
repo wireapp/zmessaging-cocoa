@@ -19,7 +19,7 @@
 import Foundation
 
 public enum LocalNotificationEventType {
-    case connectionRequestAccepted, connectionRequestPending, newConnection, conversationCreated
+    case connectionRequestAccepted, connectionRequestPending, newConnection, conversationCreated, conversationDeleted
 }
 
 public enum LocalNotificationContentType : Equatable {

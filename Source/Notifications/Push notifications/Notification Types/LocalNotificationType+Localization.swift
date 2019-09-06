@@ -64,7 +64,8 @@ private let ZMPushStringCallMissed          = "call.missed"          // "called"
 private let ZMPushStringConnectionRequest   = "connection.request"   // "[senderName] wants to connect"
 private let ZMPushStringConnectionAccepted  = "connection.accepted"  // "You and [senderName] are now connected"
 
-private let ZMPushStringConversationCreate  = "conversation.create"  // "[senderName] created a group conversation with you"
+private let ZMPushStringConversationCreate  = "conversation.create"  // "[senderName] created a group"
+private let ZMPushStringConversationDelete  = "conversation.delete"  // "[senderName] deleted the group"
 private let ZMPushStringNewConnection       = "new_user"             // "[senderName] just joined Wire"
 
 private let OneOnOneKey = "oneonone"
@@ -128,6 +129,8 @@ extension LocalNotificationType {
             switch eventType {
             case .conversationCreated:
                 return ZMPushStringConversationCreate
+            case .conversationDeleted:
+                return ZMPushStringConversationDelete
             case .connectionRequestPending:
                 return ZMPushStringConnectionRequest
             case .connectionRequestAccepted:

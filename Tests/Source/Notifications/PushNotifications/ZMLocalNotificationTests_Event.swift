@@ -135,6 +135,32 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         XCTAssertNil(note)
     }
     
+    // MARK: - Group conversation deleted
+    
+    func testThatItCreatesConversationDeletedNotification() {
+        
+        // "push.notification.conversation.delete" = "%1$@ deleted the group"
+        
+        // when
+        let note = noteWithPayload(nil, from: sender, in: groupConversation, type: EventConversationDelete)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.body, "Super User deleted the group")
+    }
+    
+    func testThatItCreatesConversationDeletedNotification_NoUsername() {
+        
+        // "push.notification.conversation.delete.nousername" = "Someone deleted the group"
+        
+        // when
+        let note = noteWithPayload(nil, fromUserID: nil, in: groupConversation, type: EventConversationDelete)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.body, "Someone deleted the group")
+    }
+    
     // MARK: - User Connections
     
     func testThatItCreatesNewConnectionNotification() {
@@ -175,9 +201,9 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         let pending = "pending"
         
         let cases = [
-            "You and Super User are now connected": [sender, accepted],
+            "You and Super User are now connected": [sender!, accepted],
             "You and Special User are now connected": [accepted],
-            "Super User wants to connect": [sender, pending],
+            "Super User wants to connect": [sender!, pending],
             "Special User wants to connect": [pending]
         ]
         

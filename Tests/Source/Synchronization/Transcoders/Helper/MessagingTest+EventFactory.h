@@ -32,6 +32,7 @@ extern NSString * const EventConversationMemberJoin;
 extern NSString * const EventConversationMemberLeave;
 extern NSString * const EventConversationRename;
 extern NSString * const EventConversationCreate;
+extern NSString * const EventConversationDelete;
 extern NSString * const EventUserConnection;
 extern NSString * const EventConversationConnectionRequest;
 extern NSString * const EventNewConnection;

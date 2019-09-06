@@ -26,21 +26,19 @@ extension ZMLocalNotification {
         
         switch event.type {
         case .conversationOtrMessageAdd:
-            builder = ReactionEventNotificationBuilder(
-                event: event, conversation: conversation, managedObjectContext: moc)
+            builder = ReactionEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
             
         case .conversationCreate:
-            builder = ConversationCreateEventNotificationBuilder(
-                event: event, conversation: conversation, managedObjectContext: moc)
+            builder = ConversationCreateEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
+            
+        case .conversationDelete, .teamConversationDelete:
+            builder = ConversationDeleteEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
             
         case .userConnection:
-            
-            builder = UserConnectionEventNotificationBuilder(
-                event: event, conversation: conversation, managedObjectContext: moc)
+            builder = UserConnectionEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
             
         case .userContactJoin:
-            builder = NewUserEventNotificationBuilder(
-                event: event, conversation: conversation, managedObjectContext: moc)
+            builder = NewUserEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
             
         default:
             return nil
@@ -189,6 +187,20 @@ private class ConversationCreateEventNotificationBuilder: EventNotificationBuild
     
     override var notificationType: LocalNotificationType {
         return LocalNotificationType.event(.conversationCreated)
+    }
+    
+    override func shouldCreateNotification() -> Bool {
+        return super.shouldCreateNotification() && conversation?.conversationType == .group
+    }
+    
+}
+
+// MARK: - Conversation Delete Event
+
+private class ConversationDeleteEventNotificationBuilder: EventNotificationBuilder {
+    
+    override var notificationType: LocalNotificationType {
+        return LocalNotificationType.event(.conversationDeleted)
     }
     
     override func shouldCreateNotification() -> Bool {
