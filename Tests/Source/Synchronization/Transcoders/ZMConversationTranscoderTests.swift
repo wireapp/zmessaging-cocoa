@@ -660,6 +660,32 @@ extension ZMConversationTranscoderTests_Swift {
             XCTAssertEqual(firstMessage, secondMessage) //Check that no other messages are appended in the conversation
         }
     }
+    
+    // MARK: Conversation deletion
+    
+    func testThatItHandlesConversationDeletedUpdateEvent() {
+        
+        syncMOC.performAndWait {
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            selfUser.remoteIdentifier = UUID.create()
+            
+            // GIVEN
+            let payload: [String: Any] = [
+                "from": selfUser.remoteIdentifier!.transportString(),
+                "conversation": self.conversation!.remoteIdentifier!.transportString(),
+                "time": NSDate(timeIntervalSinceNow: 100).transportString(),
+                "data": NSNull(),
+                "type": "conversation.delete"
+            ]
+            
+            // WHEN
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+            self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN
+            XCTAssertTrue(self.conversation.isDeleted)
+        }
+    }
 }
 
 

@@ -35,6 +35,7 @@ NSString * const EventConversationMemberJoin = @"conversation.member-join";
 NSString * const EventConversationMemberLeave = @"conversation.member-leave";
 NSString * const EventConversationRename = @"conversation.rename";
 NSString * const EventConversationCreate = @"conversation.create";
+NSString * const EventConversationDelete = @"conversation.delete";
 NSString * const EventUserConnection = @"user.connection";
 NSString * const EventConversationConnectionRequest = @"conversation.connect-request";
 NSString * const EventNewConnection = @"user.contact-join";

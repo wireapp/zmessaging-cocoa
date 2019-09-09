@@ -149,22 +149,6 @@
 
 }
 
-- (void)testThatItCanRequestPhoneVerificationCodeForLoginAfterRequestingTheCode
-{
-    // given
-    NSString *phone = @"+49(123)45678900";
-    NSString *normalizedPhone = [phone copy];
-    [ZMPhoneNumberValidator validateValue:&normalizedPhone error:nil];
-    
-    // when
-    [self.sut prepareForRequestingPhoneVerificationCodeForLogin:phone];
-    
-    // then
-    XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseRequestPhoneVerificationCodeForLogin);
-    XCTAssertEqualObjects(self.sut.loginPhoneNumberThatNeedsAValidationCode, normalizedPhone);
-    XCTAssertNotEqualObjects(normalizedPhone, phone, @"Should not have changed original phone");
-}
-
 @end
 
 

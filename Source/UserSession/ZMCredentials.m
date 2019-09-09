@@ -37,8 +37,7 @@
 + (nonnull ZMPhoneCredentials *)credentialsWithPhoneNumber:(nonnull NSString *)phoneNumber verificationCode:(nonnull NSString *)verificationCode
 {
     ZMPhoneCredentials *credentials = [[ZMPhoneCredentials alloc] init];
-    [ZMPhoneNumberValidator validateValue:&phoneNumber error:nil];
-    credentials.phoneNumber = phoneNumber;
+    credentials.phoneNumber = [ZMPhoneNumberValidator validatePhoneNumber: phoneNumber];
     credentials.phoneNumberVerificationCode = verificationCode;
     return credentials;
 }

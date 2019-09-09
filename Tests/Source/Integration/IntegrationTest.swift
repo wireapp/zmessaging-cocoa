@@ -387,6 +387,7 @@ extension IntegrationTest {
             self.teamUser2 = user2
 
             let team = session.insertTeam(withName: "A Team", isBound: true, users: [user1, user2])
+            self.team = team
 
             let bot = session.insertUser(withName: "Botty the Bot")
             bot.accentID = 3
@@ -402,9 +403,9 @@ extension IntegrationTest {
 
             let teamConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [self.teamUser1, self.teamUser2])
             teamConversation.team = team
-            teamConversation.creator = user2
+            teamConversation.creator = self.selfUser
             teamConversation.changeName(by:self.selfUser, name:"Team Group conversation")
-            self.groupConversationWithWholeTeam = groupConversation
+            self.groupConversationWithWholeTeam = teamConversation
         })
     }
     
@@ -560,22 +561,17 @@ extension IntegrationTest {
     @objc(performRemoteChangesExludedFromNotificationStream:)
     func performRemoteChangesExludedFromNotificationStream(_ changes: @escaping (_ session: MockTransportSessionObjectCreation) -> Void) {
         mockTransportSession.performRemoteChanges { session in
-            session.simulatePushChannelClosed()
             changes(session)
-        }
-        
-        mockTransportSession.responseGeneratorBlock = { (request) in
-            guard request.path.contains("/notifications") else { return nil }
-
-            self.mockTransportSession.responseGeneratorBlock = nil
-            return ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil)
-        }
-        
-        mockTransportSession.performRemoteChanges { session in
-            session.clearNotifications()
-            session.simulatePushChannelOpened()
+            self.mockTransportSession.saveAndCreatePushChannelEvents()
         }
     }
+    
+    func performSlowSync() {
+        userSession?.applicationStatusDirectory.syncStatus.forceSlowSync()
+        RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+    
 }
 
 extension IntegrationTest {

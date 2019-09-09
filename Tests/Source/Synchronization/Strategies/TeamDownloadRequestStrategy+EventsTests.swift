@@ -675,13 +675,13 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         }
     }
 
-    // MARK: - Conversation-Delete (Guest)
+    // MARK: - Team Conversation-Delete 
 
-    func disabled_testThatItDeletesALocalTeamConversationInWhichSelfIsAGuest() {
+    func testThatItDeletesTeamConversation() {
         // given
         let conversationId = UUID.create()
         let payload: [String: Any] = [
-            "type": "conversation-delete",
+            "type": "team.conversation-delete",
             "time": Date().transportString(),
             "data": ["conv": conversationId.transportString()]
         ]
@@ -695,8 +695,9 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
 
         // when
         processEvent(fromPayload: payload)
-
-        XCTFail("Implement and test behaviour when self is a guest in a team conversation which gets deleted.")
+        
+        // then
+        XCTAssertNil(ZMConversation(remoteID: conversationId, createIfNeeded: false, in: uiMOC))
     }
 
     // MARK: - Helper

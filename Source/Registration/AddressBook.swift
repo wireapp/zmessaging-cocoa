@@ -232,7 +232,7 @@ extension String {
                 .joined(separator: "")) // remove all non-digit
         }
         
-        var number : AnyObject? = self as AnyObject?
+        var number : Any? = self as Any?
         do {
             try ZMPhoneNumberValidator.validateValue(&number)
             return number as? String
@@ -243,7 +243,7 @@ extension String {
     
     /// Returns a normalized email or nil
     var validatedEmail : String? {
-        var email : AnyObject? = self as AnyObject?
+        var email : Any? = self as Any?
         do {
             try ZMEmailAddressValidator.validateValue(&email)
             return email as? String
