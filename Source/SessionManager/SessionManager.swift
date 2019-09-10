@@ -777,10 +777,12 @@ public protocol ForegroundNotificationResponder: class {
         
         log.debug("Deleting messages older than the retention limit = \(messageRetentionInternal)")
         
-        do {
-            try ZMMessage.deleteMessagesOlderThan(Date(timeIntervalSinceNow: -messageRetentionInternal), context: provider.contextDirectory.syncContext)
-        } catch {
-            log.error("Failed to delete messages older than the retention limit")
+        provider.contextDirectory.syncContext.performGroupedBlock {
+            do {
+                try ZMMessage.deleteMessagesOlderThan(Date(timeIntervalSinceNow: -messageRetentionInternal), context: provider.contextDirectory.syncContext)
+            } catch {
+                log.error("Failed to delete messages older than the retention limit")
+            }
         }
     }
 
