@@ -762,7 +762,6 @@ public protocol ForegroundNotificationResponder: class {
                     dispatchGroup: self.dispatchGroup,
                     migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateAccount(account) },
                     completion: { provider in
-                        self.deleteMessagesOlderThanRetentionLimit(provider: provider)
                         let userSession = self.startBackgroundSession(for: account, with: provider)
                         completion(userSession)
                         onWorkDone()
@@ -792,6 +791,7 @@ public protocol ForegroundNotificationResponder: class {
         }
         
         self.configure(session: newSession, for: account)
+        self.deleteMessagesOlderThanRetentionLimit(provider: provider)
 
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
         notifyNewUserSessionCreated(newSession)
