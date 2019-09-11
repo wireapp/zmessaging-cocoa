@@ -35,7 +35,7 @@
 
 // Ephemeral
 "push.notification.ephemeral.title" = "Someone";
-"push.notification.ephemeral" = "Sent a message";
+"push.notification.ephemeral" = "Vam je poslal(-a) sporočilo";
 "push.notification.ephemeral.mention" = "Mentioned you";
 "push.notification.ephemeral.reply" = "Replied to you";
 
@@ -185,6 +185,10 @@
 // CONVERSATION CREATE
 "push.notification.conversation.create" = "%1$@ created a group";
 "push.notification.conversation.create.nousername" = "Someone created a group";
+
+// CONVERSATION DELETE
+"push.notification.conversation.delete" = "%1$@ deleted the group";
+"push.notification.conversation.delete.nousername" = "Someone deleted the group";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ si želi povezati";

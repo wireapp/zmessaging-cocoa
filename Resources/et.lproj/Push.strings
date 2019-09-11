@@ -186,6 +186,10 @@
 "push.notification.conversation.create" = "%1$@ lõi grupi";
 "push.notification.conversation.create.nousername" = "Keegi lõi grupi";
 
+// CONVERSATION DELETE
+"push.notification.conversation.delete" = "%1$@ deleted the group";
+"push.notification.conversation.delete.nousername" = "Someone deleted the group";
+
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ soovib sind kontaktiks lisada";
 "push.notification.connection.request.nousername" = "Keegi soovib sinuga ühenduda";

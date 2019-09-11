@@ -186,6 +186,10 @@
 "push.notification.conversation.create" = "%1$@ criou um grupo";
 "push.notification.conversation.create.nousername" = "Alguém criou um grupo";
 
+// CONVERSATION DELETE
+"push.notification.conversation.delete" = "%1$@ excluiu o grupo";
+"push.notification.conversation.delete.nousername" = "Alguém excluiu o grupo";
+
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ quer se conectar";
 "push.notification.connection.request.nousername" = "Alguém quer se conectar";

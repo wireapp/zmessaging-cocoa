@@ -35,8 +35,8 @@
 
 // Ephemeral
 "push.notification.ephemeral.title" = "Someone";
-"push.notification.ephemeral" = "Sent a message";
-"push.notification.ephemeral.mention" = "Mentioned you";
+"push.notification.ephemeral" = "أرسل لك رسالة";
+"push.notification.ephemeral.mention" = "أشار إليك";
 "push.notification.ephemeral.reply" = "Replied to you";
 
 // 2 Components: Sender, Message
@@ -185,6 +185,10 @@
 // CONVERSATION CREATE
 "push.notification.conversation.create" = "أنشأ %1$@ مجموعة";
 "push.notification.conversation.create.nousername" = "أنشأ أحدهم مجموعة";
+
+// CONVERSATION DELETE
+"push.notification.conversation.delete" = "%1$@ deleted the group";
+"push.notification.conversation.delete.nousername" = "Someone deleted the group";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "يريد %@ التواصل معك";

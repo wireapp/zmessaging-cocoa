@@ -186,6 +186,10 @@
 "push.notification.conversation.create" = "%1$@建立了一個群組";
 "push.notification.conversation.create.nousername" = "某人建立了一個群組";
 
+// CONVERSATION DELETE
+"push.notification.conversation.delete" = "%1$@ deleted the group";
+"push.notification.conversation.delete.nousername" = "Someone deleted the group";
+
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@想連絡您";
 "push.notification.connection.request.nousername" = "某人想要加您為連絡人";

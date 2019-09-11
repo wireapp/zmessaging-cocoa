@@ -62,7 +62,7 @@
         <key>NSStringFormatValueTypeKey</key>
         <string>@</string>
         <key>one</key>
-        <string>Nuovo messaggio</string>
+        <string>New message</string>
         <key>other</key>
         <string>%1$@ messaggi</string>
       </dict>

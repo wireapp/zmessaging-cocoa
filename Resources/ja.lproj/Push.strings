@@ -186,6 +186,10 @@
 "push.notification.conversation.create" = "%1$@ がグループを作成しました";
 "push.notification.conversation.create.nousername" = "誰かがグループを作成しました";
 
+// CONVERSATION DELETE
+"push.notification.conversation.delete" = "%1$@ がグループを削除しました";
+"push.notification.conversation.delete.nousername" = "誰かがグループを削除しました";
+
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@がつながりをリクエストしています";
 "push.notification.connection.request.nousername" = "つながりをリクエストされています";

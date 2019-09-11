@@ -186,6 +186,10 @@
 "push.notification.conversation.create" = "%1$@ sukūrė grupę";
 "push.notification.conversation.create.nousername" = "Kažkas sukūrė grupę";
 
+// CONVERSATION DELETE
+"push.notification.conversation.delete" = "%1$@ deleted the group";
+"push.notification.conversation.delete.nousername" = "Someone deleted the group";
+
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ nori užmegzti kontaktą";
 "push.notification.connection.request.nousername" = "Kažkas nori užmegzti kontaktą";
@@ -202,13 +206,13 @@
 
 // AVAILABILITY ALERT
 
-"push.notification.alert.availability.away.title.team" = "Notifications are disabled in %@";
-"push.notification.alert.availability.away.title" = "Notifications are disabled";
-"push.notification.alert.availability.busy.title.team" = "Notifications have changed in %@";
-"push.notification.alert.availability.busy.title" = "Notifications have changed";
+"push.notification.alert.availability.away.title.team" = "Pranešimai pokalbjye %@ išjungti";
+"push.notification.alert.availability.away.title" = "Pranešimai išjungti";
+"push.notification.alert.availability.busy.title.team" = "Pranešimai pokalbyje %@ buvo pakeisti";
+"push.notification.alert.availability.busy.title" = "Pranešimai pakeisti";
 
-"push.notification.alert.availability.away.message" = "Status affects notifications now. You’re set to “Away” and won’t receive any notifications.";
-"push.notification.alert.availability.busy.message" = "Status affects notifications now. You’re set to “Busy” and will only receive notifications when someone mentions you or replies to one of your messages.";
+"push.notification.alert.availability.away.message" = "Būsena pakeičia pranešimų rodymą. Pasirinkite „Pasišalinęs“ ir negausite pranešimų.";
+"push.notification.alert.availability.busy.message" = "Būsena pakeičia pranešimų rodymą. Pakeitėte į „Užsiėmęs“ ir gausite pranešimus jei kas nors jus paminės ar kas nors atsakys į jūsų žinutę.";
 
 // REACTIONS
 "push.notification.reaction.group" = "%1$@ %2$@ ant jūsų žinutės";

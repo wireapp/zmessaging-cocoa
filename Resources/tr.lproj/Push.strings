@@ -34,10 +34,10 @@
 "push.notification.title" = "%2$@'de %1$@";
 
 // Ephemeral
-"push.notification.ephemeral.title" = "Someone";
-"push.notification.ephemeral" = "Sent a message";
-"push.notification.ephemeral.mention" = "Mentioned you";
-"push.notification.ephemeral.reply" = "Replied to you";
+"push.notification.ephemeral.title" = "Birisi";
+"push.notification.ephemeral" = "Size bir mesaj gönderdi";
+"push.notification.ephemeral.mention" = "Sizden bahsetti";
+"push.notification.ephemeral.reply" = "Size yanıt verdi";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -61,26 +61,26 @@
 // Message with mention
 // 2 Components: Sender, Message
 
-"push.notification.add.message.group.mention" = "Mention from %1$@: %2$@";
-"push.notification.add.message.group.nousername.mention" = "New mention: %1$@";
-"push.notification.add.message.group.nousername.noconversationname.mention" = "New mention: %1$@";
-"push.notification.add.message.group.noconversationname.mention" = "%1$@ mentioned you in a conversation: %2$@";
+"push.notification.add.message.group.mention" = "%1$@'den bahseden: %2$@";
+"push.notification.add.message.group.nousername.mention" = "Yeni bahseden: %1$@";
+"push.notification.add.message.group.nousername.noconversationname.mention" = "Yeni bahseden: %1$@";
+"push.notification.add.message.group.noconversationname.mention" = "%1$@ bir sohbette sizden bahsetti: %2$@";
 
 // 1 Component: Message
-"push.notification.add.message.oneonone.mention" = "Mention: %1$@";
-"push.notification.add.message.oneonone.nousername.mention" = "New mention: %1$@";
+"push.notification.add.message.oneonone.mention" = "Bahseden: %1$@";
+"push.notification.add.message.oneonone.nousername.mention" = "Yeni bahseden: %1$@";
 
 // Message with quote
 // 2 Components: Sender, Message
 
-"push.notification.add.message.group.reply" = "Reply from %1$@: %2$@";
-"push.notification.add.message.group.nousername.reply" = "New reply: %1$@";
-"push.notification.add.message.group.nousername.noconversationname.reply" = "New reply: %1$@";
-"push.notification.add.message.group.noconversationname.reply" = "%1$@ replied to you in a conversation: %2$@";
+"push.notification.add.message.group.reply" = "%1$@ kullanıcısının yanıtı: %2$@";
+"push.notification.add.message.group.nousername.reply" = "Yeni yanıt: %1$@";
+"push.notification.add.message.group.nousername.noconversationname.reply" = "Yeni yanıt: %1$@";
+"push.notification.add.message.group.noconversationname.reply" = "%1$@ bir sohbette size yanıt verdi: %2$@";
 
 // 1 Component: Message
-"push.notification.add.message.oneonone.reply" = "Reply: %1$@";
-"push.notification.add.message.oneonone.nousername.reply" = "New reply: %1$@";
+"push.notification.add.message.oneonone.reply" = "Yanıtla: %1$@";
+"push.notification.add.message.oneonone.nousername.reply" = "Yeni yanıt: %1$@";
 
 // IMAGE
 "push.notification.add.image.group" = "%1$@ bir fotoğraf paylaştı";
@@ -139,24 +139,24 @@
 "push.notification.member.leave.self.nousername" = "Çıkarıldınız";
 
 // EPHEMERAL MESSAGE TIMER UPDATE
-"push.notification.message-timer.update" = "%@ set the message timer to %@";
-"push.notification.message-timer.update.nousername" = "Someone set the message timer to %@";
-"push.notification.message-timer.update.noconversationname" = "%@ set the message timer to %@ in a conversation";
-"push.notification.message-timer.update.nousername.noconversationname" = "Someone set the message timer to %@ in a conversation";
+"push.notification.message-timer.update" = "%@, mesaj zamanlayıcısını %@ olarak ayarladı";
+"push.notification.message-timer.update.nousername" = "Birisi ileti zamanlayıcısını %@ olarak ayarladı";
+"push.notification.message-timer.update.noconversationname" = "%@, bir sohbetteki mesaj zamanlayıcısını %@ olarak ayarlayın";
+"push.notification.message-timer.update.nousername.noconversationname" = "Birisi bir görüşmede ileti zamanlayıcısını %@ olarak ayarladı";
 
-"push.notification.message-timer.off" = "%@ turned off the message timer";
-"push.notification.message-timer.off.nousername" = "Someone turned off the message timer";
-"push.notification.message-timer.off.noconversationname" = "%@ turned off the message timer in a conversation";
-"push.notification.message-timer.off.nousername.noconversationname" = "Someone turned off the message timer in a conversation";
+"push.notification.message-timer.off" = "%@ mesaj zamanlayıcısını kapattı";
+"push.notification.message-timer.off.nousername" = "Birisi mesaj zamanlayıcısını kapattı";
+"push.notification.message-timer.off.noconversationname" = "%@ bir sohbetteki mesaj zamanlayıcısını kapattı";
+"push.notification.message-timer.off.nousername.noconversationname" = "Birisi bir sohbette mesaj zamanlayıcısını kapattı";
 
 // VIDEO CALLS
-"push.notification.call.started.video.oneonone" = "is calling with video";
-"push.notification.call.started.video.oneonone.nousername" = "Someone is calling with video";
+"push.notification.call.started.video.oneonone" = "videolu arıyor";
+"push.notification.call.started.video.oneonone.nousername" = "Birisi videolu arıyor";
 
-"push.notification.call.started.video.group" = "%1$@ is calling with video";
-"push.notification.call.started.video.group.nousername" = "Someone is calling with video";
-"push.notification.call.started.video.group.noconversationname" = "%1$@ is calling with video in a conversation";
-"push.notification.call.started.video.group.nousername.noconversationname" = "Someone is calling with video in a conversation";
+"push.notification.call.started.video.group" = "%1$@ videolu arıyor";
+"push.notification.call.started.video.group.nousername" = "Birisi videolu arıyor";
+"push.notification.call.started.video.group.noconversationname" = "%1$@ bir sohbette videolu arıyor";
+"push.notification.call.started.video.group.nousername.noconversationname" = "Birisi bir sohbette videolu arıyor";
 
 // VOICE CALLS
 "push.notification.call.started.oneonone" = "arıyor";
@@ -186,6 +186,10 @@
 "push.notification.conversation.create" = "%1$@ grup bir grup kurdu";
 "push.notification.conversation.create.nousername" = "Birisi bir grup kurdu";
 
+// CONVERSATION DELETE
+"push.notification.conversation.delete" = "%1$@ deleted the group";
+"push.notification.conversation.delete.nousername" = "Someone deleted the group";
+
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ bağlanmak istiyor";
 "push.notification.connection.request.nousername" = "Birisi bağlanmak istiyor";
@@ -202,13 +206,13 @@
 
 // AVAILABILITY ALERT
 
-"push.notification.alert.availability.away.title.team" = "Notifications are disabled in %@";
-"push.notification.alert.availability.away.title" = "Notifications are disabled";
-"push.notification.alert.availability.busy.title.team" = "Notifications have changed in %@";
-"push.notification.alert.availability.busy.title" = "Notifications have changed";
+"push.notification.alert.availability.away.title.team" = "%@ için bildirimler devre dışı bırakıldı";
+"push.notification.alert.availability.away.title" = "Bildirimleri devre dışı bırakıldı";
+"push.notification.alert.availability.busy.title.team" = "%@ için bildirimler değişti";
+"push.notification.alert.availability.busy.title" = "Bildirimler değişti";
 
-"push.notification.alert.availability.away.message" = "Status affects notifications now. You’re set to “Away” and won’t receive any notifications.";
-"push.notification.alert.availability.busy.message" = "Status affects notifications now. You’re set to “Busy” and will only receive notifications when someone mentions you or replies to one of your messages.";
+"push.notification.alert.availability.away.message" = "Bu Durum şimdi bildirimleri etkiler. “Dışarıda” olarak ayarlandınız ve hiçbir bildirim almayacaksınız.";
+"push.notification.alert.availability.busy.message" = "Bu Durum şimdi bildirimleri etkiler. \"Meşgul\" olarak ayarladınız ve yalnızca biri sizden bahsettiğinde veya mesajlarınızdan birini yanıtladığında bildirim alacaksınız.";
 
 // REACTIONS
 "push.notification.reaction.group" = "Mesajınızı %1$@, %2$@";
@@ -226,7 +230,7 @@
 "push.notification.action.message.open" = "Aç";
 "push.notification.action.message.reply" = "Cevapla";
 "push.notification.action.message.reply.button.title" = "Gönder";
-"push.notification.action.message.reply.placeholder" = "Type a Message";
+"push.notification.action.message.reply.placeholder" = "Bir mesaj yazın";
 "push.notification.action.conversation.mute" = "Sustur";
 "push.notification.action.message.like" = "♥";
 
