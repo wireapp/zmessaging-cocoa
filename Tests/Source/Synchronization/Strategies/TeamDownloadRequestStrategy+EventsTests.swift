@@ -675,31 +675,6 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         }
     }
 
-    // MARK: - Team Conversation-Delete 
-
-    func testThatItDeletesTeamConversation() {
-        // given
-        let conversationId = UUID.create()
-        let payload: [String: Any] = [
-            "type": "team.conversation-delete",
-            "time": Date().transportString(),
-            "data": ["conv": conversationId.transportString()]
-        ]
-
-        syncMOC.performGroupedBlockAndWait {
-            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
-            conversation.remoteIdentifier = conversationId
-            conversation.conversationType = .group
-            XCTAssertNotNil(ZMConversation.fetch(withRemoteIdentifier: conversationId, in: self.syncMOC))
-        }
-
-        // when
-        processEvent(fromPayload: payload)
-        
-        // then
-        XCTAssertNil(ZMConversation(remoteID: conversationId, createIfNeeded: false, in: uiMOC))
-    }
-
     // MARK: - Helper
 
     private func processEvent(fromPayload eventPayload: [String: Any], file: StaticString = #file, line: UInt = #line) {

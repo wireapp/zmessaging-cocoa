@@ -31,7 +31,7 @@ extension ZMLocalNotification {
         case .conversationCreate:
             builder = ConversationCreateEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
             
-        case .conversationDelete, .teamConversationDelete:
+        case .conversationDelete:
             builder = ConversationDeleteEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
             
         case .userConnection:
