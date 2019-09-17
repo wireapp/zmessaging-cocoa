@@ -48,11 +48,15 @@ extension NSManagedObjectContext: GenericAsyncQueue {
     /// Invoked when a client is successfully registered
     @objc optional func clientRegistrationDidSucceed(accountId : UUID)
     
-    /// Invoken when there was an error registering the client
+    /// Invoked when there was an error registering the client
     @objc optional func clientRegistrationDidFail(_ error: NSError, accountId : UUID)
     
     /// Account was successfully deleted
     @objc optional func accountDeleted(accountId : UUID)
+    
+    /// Invoked when the user successfully logged out
+    @objc optional func userDidLogout(accountId: UUID)
+    
 }
 
 /// Authentication events that could happen after login
@@ -69,6 +73,9 @@ enum PostLoginAuthenticationEvent {
     
     /// Account was successfully deleted on the backend
     case accountDeleted
+    
+    /// User did logout
+    case userDidLogout
 }
 
 @objcMembers public class PostLoginAuthenticationNotification : NSObject {
@@ -117,6 +124,8 @@ enum PostLoginAuthenticationEvent {
                         observer.clientRegistrationDidSucceed?(accountId: accountId)
                     case .accountDeleted:
                         observer.accountDeleted?(accountId: accountId)
+                    case .userDidLogout:
+                        observer.userDidLogout?(accountId: accountId)
                     }
                 }
             }
@@ -148,5 +157,10 @@ enum PostLoginAuthenticationEvent {
     @objc(notifyAccountDeletedInContext:)
     static func notifyAccountDeleted(context: NSManagedObjectContext) {
         self.notify(event: .accountDeleted, context: context)
+    }
+    
+    @objc(notifyUserDidLogoutInContext:)
+    static func notifyUserDidLogout(context: NSManagedObjectContext) {
+        self.notify(event: .userDidLogout, context: context)
     }
 }

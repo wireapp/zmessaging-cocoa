@@ -980,11 +980,19 @@ extension SessionManager: PostLoginAuthenticationObserver {
         log.debug("Client registration was successful")
     }
     
+    public func userDidLogout(accountId: UUID) {
+        log.debug("\(accountId): User logged out")
+        
+        if let account = accountManager.account(with: accountId) {
+            delete(account: account, reason: .userInitiated)
+        }
+    }
+    
     public func accountDeleted(accountId: UUID) {
         log.debug("\(accountId): Account was deleted")
         
         if let account = accountManager.account(with: accountId) {
-            delete(account: account)
+            delete(account: account, reason: .sessionExpired)
         }
     }
     
