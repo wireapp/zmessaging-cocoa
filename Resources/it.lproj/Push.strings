@@ -35,7 +35,7 @@
 
 // Ephemeral
 "push.notification.ephemeral.title" = "Qualcuno";
-"push.notification.ephemeral" = "Ha inviato un messaggio";
+"push.notification.ephemeral" = "Ti ha inviato un messaggio";
 "push.notification.ephemeral.mention" = "Ti ha menzionato";
 "push.notification.ephemeral.reply" = "Ti ha risposto";
 
@@ -185,6 +185,10 @@
 // CONVERSATION CREATE
 "push.notification.conversation.create" = "%1$@ ha creato un gruppo";
 "push.notification.conversation.create.nousername" = "Qualcuno ha creato un gruppo";
+
+// CONVERSATION DELETE
+"push.notification.conversation.delete" = "%1$@ deleted the group";
+"push.notification.conversation.delete.nousername" = "Someone deleted the group";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ vuole connettersi";

@@ -186,6 +186,10 @@
 "push.notification.conversation.create" = "%1$@ heeft een groep aangemaakt";
 "push.notification.conversation.create.nousername" = "Iemand heeft een groep aangemaakt";
 
+// CONVERSATION DELETE
+"push.notification.conversation.delete" = "%1$@ deleted the group";
+"push.notification.conversation.delete.nousername" = "Someone deleted the group";
+
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ wil met jou verbinden";
 "push.notification.connection.request.nousername" = "Iemand wil met je verbinden";

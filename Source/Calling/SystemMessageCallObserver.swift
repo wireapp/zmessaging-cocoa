@@ -53,10 +53,10 @@ final class CallSystemMessageGenerator: NSObject {
             systemMessage =  conversation.appendPerformedCallMessage(with: duration, caller: caller)
         }
         else {
-            if let startDate = startDateByConversation[conversation] {
-                log.info("Appending performed call message: \(startDate), \(caller.displayName), \"\(conversation.displayName)\"")
+            if caller.isSelfUser {
+                log.info("Appending performed call message: \(caller.displayName), \"\(conversation.displayName)\"")
                 systemMessage =  conversation.appendPerformedCallMessage(with: 0, caller: caller)
-            } else if reason == .canceled || reason == .timeout || reason == .normal {
+            } else if reason.isOne(of: .canceled, .timeout, .normal) {
                 log.info("Appending missed call message: \(caller.displayName), \"\(conversation.displayName)\"")
                 
                 var isRelevant = true

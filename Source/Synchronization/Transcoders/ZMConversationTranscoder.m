@@ -358,7 +358,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
 - (void)deleteConversationFromEvent:(ZMUpdateEvent *)event
 {
-    NSUUID *conversationId = [event.payload optionalUuidForKey:@"conversation"];
+    NSUUID *conversationId = event.conversationUUID;
     
     if (conversationId == nil) {
         ZMLogError(@"Missing conversation payload in ZMupdateEventConversatinDelete");

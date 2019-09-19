@@ -26,7 +26,7 @@
     <key>push.notification.add.message.many.group.noconversationname</key>
     <dict>
       <key>NSStringLocalizedFormatKey</key>
-      <string>%1$#@new_messages@ в разговоре</string>
+      <string>%1$#@new_messages@ в беседе</string>
       <key>new_messages</key>
       <dict>
         <key>NSStringFormatSpecTypeKey</key>
@@ -66,7 +66,7 @@
     <key>push.notification.add.message.many.oneonone.nousername</key>
     <dict>
       <key>NSStringLocalizedFormatKey</key>
-      <string>%1$#@new_messages@ в разговоре</string>
+      <string>%1$#@new_messages@ в беседе</string>
       <key>new_messages</key>
       <dict>
         <key>NSStringFormatSpecTypeKey</key>
@@ -106,7 +106,7 @@
     <key>push.notification.call.missed.many.noconversationname</key>
     <dict>
       <key>NSStringLocalizedFormatKey</key>
-      <string>У вас %1$#@new_calls@ в разговоре</string>
+      <string>У вас %1$#@new_calls@ в беседе</string>
       <key>new_calls</key>
       <dict>
         <key>NSStringFormatSpecTypeKey</key>
@@ -146,7 +146,7 @@
     <key>push.notification.knock.group.noconversationname</key>
     <dict>
       <key>NSStringLocalizedFormatKey</key>
-      <string>%1$@ отправил пинг%2$#@new_knocks@в разговоре</string>
+      <string>%1$@ отправил пинг%2$#@new_knocks@в беседе</string>
       <key>new_knocks</key>
       <dict>
         <key>NSStringFormatSpecTypeKey</key>
@@ -186,7 +186,7 @@
     <key>push.notification.knock.group.nousername.noconversationname</key>
     <dict>
       <key>NSStringLocalizedFormatKey</key>
-      <string>%1$#@new_knocks@ в разговоре</string>
+      <string>%1$#@new_knocks@ в беседе</string>
       <key>new_knocks</key>
       <dict>
         <key>NSStringFormatSpecTypeKey</key>
