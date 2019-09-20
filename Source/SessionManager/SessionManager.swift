@@ -80,21 +80,30 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     /// The default value of this property is `false`
     public var wipeOnJailbreakOrRoot: Bool
     
+    /// `The messageRetentionInterval` if specified will limit how long messages are retained. Messages older than
+    /// the the `messageRetentionInterval` will be deleted.
+    ///
+    /// The default value of this property is `nil`, i.e. messages are kept forever.
+    public var messageRetentionInterval: TimeInterval?
+    
     public init(wipeOnCookieInvalid: Bool = false,
                 blacklistDownloadInterval: TimeInterval = 6 * 60 * 60,
                 blockOnJailbreakOrRoot: Bool = false,
-                wipeOnJailbreakOrRoot: Bool = false) {
+                wipeOnJailbreakOrRoot: Bool = false,
+                messageRetentionInterval: TimeInterval? = nil) {
         self.wipeOnCookieInvalid = wipeOnCookieInvalid
         self.blacklistDownloadInterval = blacklistDownloadInterval
         self.blockOnJailbreakOrRoot = blockOnJailbreakOrRoot
         self.wipeOnJailbreakOrRoot = wipeOnJailbreakOrRoot
+        self.messageRetentionInterval = messageRetentionInterval
     }
     
     public func copy(with zone: NSZone? = nil) -> Any {
         let copy = SessionManagerConfiguration(wipeOnCookieInvalid: wipeOnCookieInvalid,
                                                blacklistDownloadInterval: blacklistDownloadInterval,
                                                blockOnJailbreakOrRoot: blockOnJailbreakOrRoot,
-                                               wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot)
+                                               wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot,
+                                               messageRetentionInterval: messageRetentionInterval)
         
         return copy
     }
@@ -762,6 +771,20 @@ public protocol ForegroundNotificationResponder: class {
             }
         })
     }
+    
+    private func deleteMessagesOlderThanRetentionLimit(provider: LocalStoreProviderProtocol) {
+        guard let messageRetentionInternal = configuration.messageRetentionInterval else { return }
+        
+        log.debug("Deleting messages older than the retention limit = \(messageRetentionInternal)")
+        
+        provider.contextDirectory.syncContext.performGroupedBlock {
+            do {
+                try ZMMessage.deleteMessagesOlderThan(Date(timeIntervalSinceNow: -messageRetentionInternal), context: provider.contextDirectory.syncContext)
+            } catch {
+                log.error("Failed to delete messages older than the retention limit")
+            }
+        }
+    }
 
     // Creates the user session for @c account given, calls @c completion when done.
     private func startBackgroundSession(for account: Account, with provider: LocalStoreProviderProtocol) -> ZMUserSession {
@@ -770,6 +793,7 @@ public protocol ForegroundNotificationResponder: class {
         }
         
         self.configure(session: newSession, for: account)
+        self.deleteMessagesOlderThanRetentionLimit(provider: provider)
 
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
         notifyNewUserSessionCreated(newSession)
@@ -980,11 +1004,19 @@ extension SessionManager: PostLoginAuthenticationObserver {
         log.debug("Client registration was successful")
     }
     
+    public func userDidLogout(accountId: UUID) {
+        log.debug("\(accountId): User logged out")
+        
+        if let account = accountManager.account(with: accountId) {
+            delete(account: account, reason: .userInitiated)
+        }
+    }
+    
     public func accountDeleted(accountId: UUID) {
         log.debug("\(accountId): Account was deleted")
         
         if let account = accountManager.account(with: accountId) {
-            delete(account: account)
+            delete(account: account, reason: .sessionExpired)
         }
     }
     

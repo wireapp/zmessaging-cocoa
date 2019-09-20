@@ -64,6 +64,7 @@
 
 @property (nonatomic) MockSessionManager *mockSessionManager;
 @property (nonatomic) id transportSession;
+@property (nonatomic) ZMTransportRequest *lastEnqueuedRequest;
 @property (nonatomic) ZMPersistentCookieStorage *cookieStorage;
 @property (nonatomic) NSData *validCookie;
 @property (nonatomic, copy) ZMCompletionHandlerBlock authFailHandler;

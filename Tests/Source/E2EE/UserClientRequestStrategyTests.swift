@@ -71,6 +71,10 @@ class PostLoginAuthenticationObserverToken : NSObject, PostLoginAuthenticationOb
         handler(.accountDeleted, accountId)
     }
     
+    func userDidLogout(accountId: UUID) {
+        handler(.userDidLogout, accountId)
+    }
+    
 }
 
 @objc
@@ -79,6 +83,7 @@ public enum PostLoginAuthenticationEventObjC : Int {
     case clientRegistrationDidSucceed
     case clientRegistrationDidFail
     case accountDeleted
+    case userDidLogout
 }
 
 public typealias PostLoginAuthenticationObjCHandler = (_ event : PostLoginAuthenticationEventObjC, _ accountId: UUID, _ error: NSError?) -> Void
@@ -112,6 +117,8 @@ public class PostLoginAuthenticationObserverObjCToken : NSObject {
                 handler(.authenticationInvalidated, accountId, error)
             case .accountDeleted:
                 handler(.accountDeleted, accountId, nil)
+            case .userDidLogout:
+                handler(.userDidLogout, accountId, nil)
             }
         })
     }

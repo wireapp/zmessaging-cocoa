@@ -89,6 +89,8 @@
 		166A8BF91E02C7D500F5EEEA /* ZMHotFix+PendingChanges.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166A8BF81E02C7D500F5EEEA /* ZMHotFix+PendingChanges.swift */; };
 		166D18A4230EBFFA001288CD /* MediaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166D18A3230EBFFA001288CD /* MediaManager.swift */; };
 		166D18A6230EC418001288CD /* MockMediaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166D18A5230EC418001288CD /* MockMediaManager.swift */; };
+		166D191D231569DD001288CD /* SessionManagerTests+MessageRetention.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166D191C231569DD001288CD /* SessionManagerTests+MessageRetention.swift */; };
+		166D191F23157EBF001288CD /* IntegrationTest+Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166D191E23157EBE001288CD /* IntegrationTest+Messages.swift */; };
 		1671F9FF1E2FAF50009F3150 /* ZMLocalNotificationForTests_CallState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1671F9FE1E2FAF50009F3150 /* ZMLocalNotificationForTests_CallState.swift */; };
 		1675532C21B16D1E009C9FEA /* ConversationTests+ReceiptMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1675532B21B16D1E009C9FEA /* ConversationTests+ReceiptMode.swift */; };
 		1679D1CD1EF97387007B0DF5 /* ZMUserSessionTestsBase+Calling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1679D1CB1EF9730C007B0DF5 /* ZMUserSessionTestsBase+Calling.swift */; };
@@ -127,6 +129,8 @@
 		16DCAD6F1B147706008C1DD9 /* NSURL+LaunchOptionsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 16DCAD6D1B1476FE008C1DD9 /* NSURL+LaunchOptionsTests.m */; };
 		16DCB91C213449620002E910 /* ZMOperationLoop+PushChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DCB91B213449620002E910 /* ZMOperationLoop+PushChannel.swift */; };
 		16E0FBE3233296A9000E3235 /* ZMUserSession+ConversationDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E0FBE2233296A9000E3235 /* ZMUserSession+ConversationDirectory.swift */; };
+		16E0FB87232F8933000E3235 /* ZMUserSession+Authentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E0FB86232F8933000E3235 /* ZMUserSession+Authentication.swift */; };
+		16E0FBB623311A19000E3235 /* ZMUserSessionTests+Authentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E0FBB4233119FE000E3235 /* ZMUserSessionTests+Authentication.swift */; };
 		16F5F16C1E4092C00062F0AE /* NSManagedObjectContext+CTCallCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F5F16B1E4092C00062F0AE /* NSManagedObjectContext+CTCallCenter.swift */; };
 		16F6BB0C1ED5824B009EA803 /* ZMUserSession+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 16F6BB0B1ED58242009EA803 /* ZMUserSession+Private.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		16F6BB381EDEA659009EA803 /* SearchResult+AddressBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F6BB371EDEA659009EA803 /* SearchResult+AddressBook.swift */; };
@@ -667,6 +671,8 @@
 		166A8BF81E02C7D500F5EEEA /* ZMHotFix+PendingChanges.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMHotFix+PendingChanges.swift"; sourceTree = "<group>"; };
 		166D18A3230EBFFA001288CD /* MediaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaManager.swift; sourceTree = "<group>"; };
 		166D18A5230EC418001288CD /* MockMediaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockMediaManager.swift; sourceTree = "<group>"; };
+		166D191C231569DD001288CD /* SessionManagerTests+MessageRetention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionManagerTests+MessageRetention.swift"; sourceTree = "<group>"; };
+		166D191E23157EBE001288CD /* IntegrationTest+Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IntegrationTest+Messages.swift"; sourceTree = "<group>"; };
 		1671F9FE1E2FAF50009F3150 /* ZMLocalNotificationForTests_CallState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZMLocalNotificationForTests_CallState.swift; sourceTree = "<group>"; };
 		1675532B21B16D1E009C9FEA /* ConversationTests+ReceiptMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+ReceiptMode.swift"; sourceTree = "<group>"; };
 		1679D1CB1EF9730C007B0DF5 /* ZMUserSessionTestsBase+Calling.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMUserSessionTestsBase+Calling.swift"; sourceTree = "<group>"; };
@@ -701,6 +707,8 @@
 		16DCAD6D1B1476FE008C1DD9 /* NSURL+LaunchOptionsTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+LaunchOptionsTests.m"; sourceTree = "<group>"; };
 		16DCB91B213449620002E910 /* ZMOperationLoop+PushChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMOperationLoop+PushChannel.swift"; sourceTree = "<group>"; };
 		16E0FBE2233296A9000E3235 /* ZMUserSession+ConversationDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+ConversationDirectory.swift"; sourceTree = "<group>"; };
+		16E0FB86232F8933000E3235 /* ZMUserSession+Authentication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+Authentication.swift"; sourceTree = "<group>"; };
+		16E0FBB4233119FE000E3235 /* ZMUserSessionTests+Authentication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSessionTests+Authentication.swift"; sourceTree = "<group>"; };
 		16F5F16B1E4092C00062F0AE /* NSManagedObjectContext+CTCallCenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSManagedObjectContext+CTCallCenter.swift"; sourceTree = "<group>"; };
 		16F6BB0B1ED58242009EA803 /* ZMUserSession+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ZMUserSession+Private.h"; sourceTree = "<group>"; };
 		16F6BB371EDEA659009EA803 /* SearchResult+AddressBook.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SearchResult+AddressBook.swift"; sourceTree = "<group>"; };
@@ -1612,6 +1620,7 @@
 				F92CA9641F153622007D8570 /* ZMUserSessionTests+FileRelocation.swift */,
 				F1AE5F6E21F73388009CDBBC /* ZMUserSessionTests+Timers.swift */,
 				168474252252579A004DE9EC /* ZMUserSessionTests+Syncing.swift */,
+				16E0FBB4233119FE000E3235 /* ZMUserSessionTests+Authentication.swift */,
 				0920C4D81B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift */,
 				541228431AEE422C00D9ED1C /* ZMAuthenticationStatusTests.m */,
 				7CE017142317D07E00144905 /* ZMAuthenticationStatusTests.swift */,
@@ -1743,6 +1752,7 @@
 				164EAF9B1F4455FA00B628C4 /* ZMUserSession+Actions.swift */,
 				3E4F728219EC0D76002FE184 /* ZMUserSession+Background.m */,
 				54D175251ADE9EC9001AA338 /* ZMUserSession+Authentication.m */,
+				16E0FB86232F8933000E3235 /* ZMUserSession+Authentication.swift */,
 				09B730891B301F0200A5CCC9 /* ZMUserSession+Proxy.m */,
 				54034F371BB1A6D900F4ED62 /* ZMUserSession+Logs.swift */,
 				8751DA051F66BFA6000D308B /* ZMUserSession+Push.swift */,
@@ -1895,6 +1905,7 @@
 				16FF47461F0CD58A0044C491 /* IntegrationTest.m */,
 				16FF47431F0BF5C70044C491 /* IntegrationTest.swift */,
 				54ADA7611E3B3CBE00B90C7D /* IntegrationTest+Encryption.swift */,
+				166D191E23157EBE001288CD /* IntegrationTest+Messages.swift */,
 				163BB8111EE1A65A00DF9384 /* IntegrationTest+Search.swift */,
 				3E288A6919C859210031CFCE /* NotificationObservers.h */,
 				3E288A6A19C859210031CFCE /* NotificationObservers.m */,
@@ -2201,6 +2212,7 @@
 			isa = PBXGroup;
 			children = (
 				F159F4131F1E3134001B7D80 /* SessionManagerTests.swift */,
+				166D191C231569DD001288CD /* SessionManagerTests+MessageRetention.swift */,
 				D59F3A11206929AF0023474F /* SessionManagerTests+Backup.swift */,
 				162A81D5202B5BC600F6200C /* SessionManagerAVSTests.swift */,
 				87DF28C61F680495007E1702 /* PushDispatcherTests.swift */,
@@ -2603,6 +2615,7 @@
 				87D003FF1BB5810D00472E06 /* APSSignalingKeyStoreTests.swift in Sources */,
 				542DFEE61DDCA452000F5B95 /* UserProfileUpdateStatusTests.swift in Sources */,
 				F95FFBD11EB8A478004031CB /* CallSystemMessageGeneratorTests.swift in Sources */,
+				16E0FBB623311A19000E3235 /* ZMUserSessionTests+Authentication.swift in Sources */,
 				D55272EC2062733F00F542BE /* AssetDeletionRequestStrategyTests.swift in Sources */,
 				5502C6EC22B7D4E2000684B7 /* ZMUserSessionLegalHoldTests.swift in Sources */,
 				545434AB19AB6ADA003892D9 /* ZMMissingUpdateEventsTranscoderTests.m in Sources */,
@@ -2639,6 +2652,7 @@
 				54AB428E1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift in Sources */,
 				16A5FE21215B584200AEEBBD /* MockLinkPreviewDetector.swift in Sources */,
 				F96C8E821D7ECECF004B6D87 /* ZMLocalNotificationTests_Message.swift in Sources */,
+				166D191D231569DD001288CD /* SessionManagerTests+MessageRetention.swift in Sources */,
 				EEA2773D211DE4C9004AF00F /* UserNotificationCenterMock.swift in Sources */,
 				F9E462DA1D7043C60036CFA7 /* ConversationTests+Confirmation.swift in Sources */,
 				549552541D645683004F21F6 /* AddressBookTests.swift in Sources */,
@@ -2799,6 +2813,7 @@
 				1639A8542264C52600868AB9 /* ZMLocalNotificationTests_Alerts.swift in Sources */,
 				545FC3341A5B003A005EEA26 /* ObjectTranscoderTests.m in Sources */,
 				1632C4B31F0FD270007BE89D /* LoginFlowTests.m in Sources */,
+				166D191F23157EBF001288CD /* IntegrationTest+Messages.swift in Sources */,
 				5E9D32712109C54B0032FB06 /* CompanyLoginActionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2960,6 +2975,7 @@
 				F1C51FE91FB4A9C7009C2269 /* RegistrationStrategy.swift in Sources */,
 				549816301A432BC800A7CE2E /* ZMSelfStrategy.m in Sources */,
 				5E8EE1F720FDC6B900DB1F9B /* CompanyLoginRequestDetector.swift in Sources */,
+				16E0FB87232F8933000E3235 /* ZMUserSession+Authentication.swift in Sources */,
 				F19F1D381EFBF61800275E27 /* SessionManager.swift in Sources */,
 				D522571E2062552800562561 /* AssetDeletionRequestStrategy.swift in Sources */,
 				1658C2371F503CF800889F22 /* FlowManager.swift in Sources */,
