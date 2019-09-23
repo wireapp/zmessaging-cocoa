@@ -825,7 +825,7 @@ public protocol ForegroundNotificationResponder: class {
         let currentUptime = ProcessInfo.processInfo.systemBootTime
         if configuration.authenticateAfterReboot && currentUptime > SessionManager.previousSystemBootTime {
             let error = NSError(code: .needsAuthenticationAfterReboot, userInfo: nil)
-            self.delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: nil)
+            self.logoutCurrentSession(deleteCookie: false, error: error)
         }
         
         SessionManager.previousSystemBootTime = currentUptime
