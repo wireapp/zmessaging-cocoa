@@ -86,7 +86,9 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     /// The email used in the registration is blacklisted
     ZMUserSessionBlacklistedEmail,
     /// Unauthorized e-mail address
-    ZMUserSessionUnauthorizedEmail
+    ZMUserSessionUnauthorizedEmail,
+    /// User has rebooted the device
+    ZMUserSessionNeedsAuthenticationAfterReboot
 };
 
 FOUNDATION_EXPORT NSString * const ZMClientsKey;

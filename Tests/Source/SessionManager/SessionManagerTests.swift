@@ -311,7 +311,35 @@ class SessionManagerTests: IntegrationTest {
         }
         XCTAssertEqual(self.sut?.accountManager.accounts.count, 0)
     }
-
+    
+    func testAuthenticationAfterReboot() {
+        //GIVEN
+        sut = createManager()
+        sut?.configuration.authenticateAfterReboot = true
+        SessionManagerConfiguration.previousSystemBootTime = 99999999.0
+        
+        let logoutExpectation = expectation(description: "The company login flow starts when the user adds .")
+        
+        delegate.onLogout = { error in
+            XCTAssertEqual(error?.userSessionErrorCode, .needsAuthenticationAfterReboot)
+            logoutExpectation.fulfill()
+        }
+        
+        
+        //WHEN
+        sut?.accountManager.addAndSelect(createAccount())
+        XCTAssertEqual(sut?.accountManager.accounts.count, 1)
+        
+        //THEN
+        performIgnoringZMLogError {
+            self.sut!.checkDeviceUptimeIfNeeded()
+        }
+        
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 2))
+        
+        // CLEANUP
+        self.sut!.tearDownAllBackgroundSessions()
+    }
 
 }
 
