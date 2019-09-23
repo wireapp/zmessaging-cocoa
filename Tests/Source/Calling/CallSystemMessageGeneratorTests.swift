@@ -60,7 +60,7 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
-    func testThatItAppendsPerformedCallSystemMessage_OutgoingCall_V3(){
+    func testThatItAppendsPerformedCallSystemMessage_AnsweredOutgoingCall(){
         // given
         let messageCount = conversation.allMessages.count
         
@@ -82,7 +82,7 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         }
     }
     
-    func testThatItAppendsPerformedCallSystemMessage_IncomingCall_V3(){
+    func testThatItAppendsPerformedCallSystemMessage_AnsweredIncomingCall(){
         // given
         let messageCount = conversation.allMessages.count
         
@@ -104,7 +104,27 @@ class CallSystemMessageGeneratorTests : MessagingTest {
         }
     }
     
-    func testThatItAppendsMissedCallSystemMessage_UnansweredIncomingCall_V3(){
+    func testThatItAppendsPerformedCallSystemMessage_UnansweredIncomingCallFromSelfuser(){
+        // given
+        let messageCount = conversation.allMessages.count
+        
+        // when
+        let msg1 = sut.appendSystemMessageIfNeeded(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversation, caller: selfUser, timestamp: nil, previousCallState: nil)
+        let msg2 = sut.appendSystemMessageIfNeeded(callState: .terminating(reason: .canceled), conversation: conversation, caller: selfUser, timestamp: nil, previousCallState: nil)
+        
+        // then
+        XCTAssertEqual(conversation.allMessages.count, messageCount+1)
+        XCTAssertNil(msg1)
+        if let message = conversation.lastMessage as? ZMSystemMessage {
+            XCTAssertEqual(message, msg2)
+            XCTAssertEqual(message.systemMessageType, .performedCall)
+            XCTAssertTrue(message.users.contains(selfUser))
+        } else {
+            XCTFail("No system message inserted")
+        }
+    }
+    
+    func testThatItAppendsMissedCallSystemMessage_UnansweredIncomingCall(){
         // given
         let messageCount = conversation.allMessages.count
         

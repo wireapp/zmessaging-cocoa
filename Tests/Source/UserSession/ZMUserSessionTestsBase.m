@@ -85,6 +85,11 @@
         return YES;
     }]];
     [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
+    [[self.transportSession stub] enqueueOneTimeRequest:[OCMArg checkWithBlock:^BOOL(ZMTransportRequest *obj) {
+        self.lastEnqueuedRequest = obj;
+        return YES;
+    }]];
+    
     
     self.mockSessionManager = [[MockSessionManager alloc] init];
     self.mediaManager = [[MockMediaManager alloc] init];
