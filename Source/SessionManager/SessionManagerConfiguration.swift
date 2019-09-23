@@ -44,6 +44,12 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     /// The default value of this property is `false`
     public var wipeOnJailbreakOrRoot: Bool
     
+    /// `The messageRetentionInterval` if specified will limit how long messages are retained. Messages older than
+    /// the the `messageRetentionInterval` will be deleted.
+    ///
+    /// The default value of this property is `nil`, i.e. messages are kept forever.
+    public var messageRetentionInterval: TimeInterval?
+    
     /// If set to true then the session manager will ask to re-authenticate after device reboot.
     ///
     /// The default value of this property is `false`
@@ -53,11 +59,13 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                 blacklistDownloadInterval: TimeInterval = 6 * 60 * 60,
                 blockOnJailbreakOrRoot: Bool = false,
                 wipeOnJailbreakOrRoot: Bool = false,
+                messageRetentionInterval: TimeInterval? = nil,
                 authenticateAfterReboot: Bool = false) {
         self.wipeOnCookieInvalid = wipeOnCookieInvalid
         self.blacklistDownloadInterval = blacklistDownloadInterval
         self.blockOnJailbreakOrRoot = blockOnJailbreakOrRoot
         self.wipeOnJailbreakOrRoot = wipeOnJailbreakOrRoot
+        self.messageRetentionInterval = messageRetentionInterval
         self.authenticateAfterReboot = authenticateAfterReboot
     }
     
@@ -66,6 +74,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                                                blacklistDownloadInterval: blacklistDownloadInterval,
                                                blockOnJailbreakOrRoot: blockOnJailbreakOrRoot,
                                                wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot,
+                                               messageRetentionInterval: messageRetentionInterval,
                                                authenticateAfterReboot: authenticateAfterReboot)
         
         return copy
