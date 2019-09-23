@@ -92,25 +92,3 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         return  try? decoder.decode(SessionManagerConfiguration.self, from: data)
     }
 }
-
-public extension SessionManagerConfiguration {
-    
-    private static let previousSystemBootTimeContainer = "PreviousSystemBootTime"
-    
-    static var previousSystemBootTime: Double? {
-        get {
-            guard let data = ZMKeychain.data(forAccount: previousSystemBootTimeContainer),
-                let string = String(data: data, encoding: .utf8) else {
-                    return nil
-            }
-            
-            return Double(string)
-        }
-        set {
-            guard let newValue = newValue,
-                let data = "\(newValue)".data(using: .utf8) else { return }
-            
-            ZMKeychain.setData(data, forAccount: previousSystemBootTimeContainer)
-        }
-    }
-}
