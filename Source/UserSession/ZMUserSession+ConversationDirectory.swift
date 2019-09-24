@@ -20,7 +20,7 @@ import Foundation
 
 extension ZMUserSession {
     
-    var conversationDirectory: ConversationDirectoryType {
+    public var conversationDirectory: ConversationDirectoryType {
         return managedObjectContext.conversationListDirectory()
     }
     
