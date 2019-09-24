@@ -822,13 +822,14 @@ public protocol ForegroundNotificationResponder: class {
     }
     
     internal func checkDeviceUptimeIfNeeded() {
-        let currentUptime = ProcessInfo.processInfo.systemBootTime
-        if configuration.authenticateAfterReboot && currentUptime > SessionManager.previousSystemBootTime {
+        let systemBootTime = ProcessInfo.processInfo.systemBootTime
+        if configuration.authenticateAfterReboot && systemBootTime > SessionManager.previousSystemBootTime {
+            log.debug("Logout caused by device reboot at \(systemBootTime)")
             let error = NSError(code: .needsAuthenticationAfterReboot, userInfo: nil)
             self.logoutCurrentSession(deleteCookie: false, error: error)
         }
         
-        SessionManager.previousSystemBootTime = currentUptime
+        SessionManager.previousSystemBootTime = systemBootTime
     }
 }
 
