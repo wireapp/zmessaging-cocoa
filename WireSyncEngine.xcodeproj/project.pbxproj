@@ -318,6 +318,9 @@
 		7C419ED821F8D81D00B95770 /* EventProcessingTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C419ED621F8D7EB00B95770 /* EventProcessingTrackerTests.swift */; };
 		7C5482DA225380160055F1AB /* CallReceivedResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C5482D9225380160055F1AB /* CallReceivedResult.swift */; };
 		7C5B94F622DC6BC500A6F8BB /* JailbreakDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C5B94F522DC6BC500A6F8BB /* JailbreakDetector.swift */; };
+		7CD279842338B74600E638CD /* SessionManagerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CD279832338B74600E638CD /* SessionManagerConfiguration.swift */; };
+		7CD279862338E31D00E638CD /* SessionManager+Authentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CD279852338E31D00E638CD /* SessionManager+Authentication.swift */; };
+		7CD279882338E52000E638CD /* ProcessInfo+SystemBootTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CD279872338E52000E638CD /* ProcessInfo+SystemBootTime.swift */; };
 		7CE017152317D07E00144905 /* ZMAuthenticationStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CE017142317D07E00144905 /* ZMAuthenticationStatusTests.swift */; };
 		7CE017172317D72A00144905 /* ZMCredentialsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CE017162317D72A00144905 /* ZMCredentialsTests.swift */; };
 		85D8522CF8DE246DDD5BD12C /* MockEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D85AAE7FA09852AB9B0D6A /* MockEntity.m */; };
@@ -924,6 +927,9 @@
 		7C419ED621F8D7EB00B95770 /* EventProcessingTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventProcessingTrackerTests.swift; sourceTree = "<group>"; };
 		7C5482D9225380160055F1AB /* CallReceivedResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallReceivedResult.swift; sourceTree = "<group>"; };
 		7C5B94F522DC6BC500A6F8BB /* JailbreakDetector.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JailbreakDetector.swift; sourceTree = "<group>"; };
+		7CD279832338B74600E638CD /* SessionManagerConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManagerConfiguration.swift; sourceTree = "<group>"; };
+		7CD279852338E31D00E638CD /* SessionManager+Authentication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionManager+Authentication.swift"; sourceTree = "<group>"; };
+		7CD279872338E52000E638CD /* ProcessInfo+SystemBootTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProcessInfo+SystemBootTime.swift"; sourceTree = "<group>"; };
 		7CE017142317D07E00144905 /* ZMAuthenticationStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMAuthenticationStatusTests.swift; sourceTree = "<group>"; };
 		7CE017162317D72A00144905 /* ZMCredentialsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMCredentialsTests.swift; sourceTree = "<group>"; };
 		85D8502FFC4412F91D0CC1A4 /* ZMOperationLoop.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMOperationLoop.m; sourceTree = "<group>"; };
@@ -2253,6 +2259,9 @@
 				F16558D0225F3F2A00EA2F2A /* SessionManager+SwitchBackend.swift */,
 				BF2ADA011F41A450000980E8 /* BackendEnvironmentProvider+Cookie.swift */,
 				8737D553209217BD00E5A4AF /* SessionManagerURLHandler.swift */,
+				7CD279832338B74600E638CD /* SessionManagerConfiguration.swift */,
+				7CD279852338E31D00E638CD /* SessionManager+Authentication.swift */,
+				7CD279872338E52000E638CD /* ProcessInfo+SystemBootTime.swift */,
 			);
 			path = SessionManager;
 			sourceTree = "<group>";
@@ -2891,8 +2900,10 @@
 				F19E559E22B399AE005C792D /* UUID+SafeLogging.swift in Sources */,
 				5E1FD7A5210B2694003D2C3D /* NotificationAction.swift in Sources */,
 				F1C1E70D21F74667007FBDA1 /* ZMUserSession+Timers.swift in Sources */,
+				7CD279842338B74600E638CD /* SessionManagerConfiguration.swift in Sources */,
 				54A170651B300696001B41A5 /* ProxiedRequestStrategy.swift in Sources */,
 				160C31441E8049320012E4BC /* ApplicationStatusDirectory.swift in Sources */,
+				7CD279862338E31D00E638CD /* SessionManager+Authentication.swift in Sources */,
 				16FF474C1F0D54B20044C491 /* SessionManager+Logs.swift in Sources */,
 				F19F1D281EFBC34E00275E27 /* ZMUserSessionRegistrationNotification.m in Sources */,
 				5EC2C5912137F80E00C6CE35 /* CallState.swift in Sources */,
@@ -2979,6 +2990,7 @@
 				F19F1D381EFBF61800275E27 /* SessionManager.swift in Sources */,
 				D522571E2062552800562561 /* AssetDeletionRequestStrategy.swift in Sources */,
 				1658C2371F503CF800889F22 /* FlowManager.swift in Sources */,
+				7CD279882338E52000E638CD /* ProcessInfo+SystemBootTime.swift in Sources */,
 				549710081F6FF5C100026EDD /* NotificationInContext+UserSession.swift in Sources */,
 				54D933211AE1653000C0B91C /* ZMCredentials.m in Sources */,
 				549816251A432BC800A7CE2E /* ZMSimpleListRequestPaginator.m in Sources */,

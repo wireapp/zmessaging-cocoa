@@ -311,8 +311,55 @@ class SessionManagerTests: IntegrationTest {
         }
         XCTAssertEqual(self.sut?.accountManager.accounts.count, 0)
     }
+    
+    func testAuthenticationAfterReboot() {
+        
+        //GIVEN
+        sut = createManager()
+        sut?.configuration.authenticateAfterReboot = true
 
-
+        //WHEN
+        sut?.accountManager.addAndSelect(createAccount())
+        XCTAssertEqual(sut?.accountManager.accounts.count, 1)
+        SessionManager.previousSystemBootTime = Date(timeIntervalSince1970: 0)
+        
+        //THEN
+        let logoutExpectation = expectation(description: "Authentication after reboot")
+        
+        delegate.onLogout = { error in
+            XCTAssertNil(self.sut?.activeUserSession)
+            XCTAssertEqual(error?.userSessionErrorCode, .needsAuthenticationAfterReboot)
+            logoutExpectation.fulfill()
+        }
+        
+        performIgnoringZMLogError {
+            self.sut!.checkDeviceUptimeIfNeeded()
+        }
+        
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 2))
+    }
+    
+    
+    func testAuthenticationAfterReboot_DoesntLogoutIfNotRebooted() {
+        
+        //GIVEN
+        sut = createManager()
+        sut?.configuration.authenticateAfterReboot = true
+        
+        //WHEN
+        sut?.accountManager.addAndSelect(createAccount())
+        XCTAssertEqual(sut?.accountManager.accounts.count, 1)
+        SessionManager.previousSystemBootTime = Date()
+        
+        //THEN
+        
+        performIgnoringZMLogError {
+            self.sut!.checkDeviceUptimeIfNeeded()
+        }
+        
+        XCTAssertEqual(sut?.accountManager.accounts.count, 1)
+    }
+    
 }
 
 extension IntegrationTest {
