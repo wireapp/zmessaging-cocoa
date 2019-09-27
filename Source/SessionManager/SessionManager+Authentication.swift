@@ -18,7 +18,7 @@
 
 public extension SessionManager {
     
-    private static let previousSystemBootTimeContainer = "PreviousSystemBootTime"
+    static let previousSystemBootTimeContainer = "PreviousSystemBootTime"
     
     static var previousSystemBootTime: Date? {
         get {
