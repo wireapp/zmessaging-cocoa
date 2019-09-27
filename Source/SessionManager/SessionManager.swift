@@ -822,7 +822,7 @@ public protocol ForegroundNotificationResponder: class {
     }
     
     internal func checkDeviceUptimeIfNeeded() {
-        guard configuration.authenticateAfterReboot, isUserSessionActive else { return }
+        guard configuration.authenticateAfterReboot else { return }
         
         let systemBootTime = ProcessInfo.processInfo.systemBootTime
         
