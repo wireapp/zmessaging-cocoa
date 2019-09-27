@@ -37,6 +37,23 @@ class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
         XCTAssertEqual(payload?["password"] as? String, credentials.password)
     }
     
+    func testThatItEnqueuesRequestToDeleteTheSelfClientWithoutPassword() {
+        // given
+        let selfClient = createSelfClient()
+        let credentials = ZMEmailCredentials(email: "john.doe@domain.com", password: "")
+        
+        // when
+        sut.logout(credentials: credentials, {_ in })
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        let request = lastEnqueuedRequest!
+        let payload = request.payload as? [String: Any]
+        XCTAssertEqual(request.method, ZMTransportRequestMethod.methodDELETE)
+        XCTAssertEqual(request.path, "/clients/\(selfClient.remoteIdentifier!)")
+        XCTAssertEqual(payload?.keys.count, 0)
+    }
+    
     func testThatItPostsNotification_WhenLogoutRequestSucceeds() {
         // given
         let recorder = PostLoginAuthenticationNotificationRecorder(managedObjectContext: uiMOC)

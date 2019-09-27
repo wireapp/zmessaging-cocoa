@@ -23,7 +23,14 @@ extension ZMUserSession {
     public func logout(credentials: ZMEmailCredentials, _ completion: @escaping (VoidResult) -> Void) {
         guard let selfClientIdentifier = ZMUser.selfUser(inUserSession: self).selfClient()?.remoteIdentifier else { return }
         
-        let request = ZMTransportRequest(path: "/clients/\(selfClientIdentifier)", method: .methodDELETE, payload: ["password": credentials.password] as ZMTransportData)
+        let payload: [String: Any]
+        if let password = credentials.password, !password.isEmpty {
+            payload = ["password": password]
+        } else {
+            payload = [:]
+        }
+        
+        let request = ZMTransportRequest(path: "/clients/\(selfClientIdentifier)", method: .methodDELETE, payload: payload as ZMTransportData)
         
         request.add(ZMCompletionHandler(on: managedObjectContext, block: {[weak self] (response) in
             guard let strongSelf = self else { return }
