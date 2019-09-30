@@ -164,23 +164,9 @@ extension ZMConversation {
     }
     
     public var canManageAccess: Bool {
-        // Check conversation
-        guard self.conversationType == .group,
-            let moc = self.managedObjectContext,
-            let _ = self.teamRemoteIdentifier,
-            let _ = self.remoteIdentifier?.transportString() else {
-                return false
-        }
-        
-        // Check user
+        guard let moc = self.managedObjectContext else { return false }
         let selfUser = ZMUser.selfUser(in: moc)
-        guard selfUser.isTeamMember,
-             !selfUser.isGuest(in: self),
-             selfUser.team == self.team else {
-            return false
-        }
-        
-        return true
+        return selfUser.canModifyAccessControlSettings(in: self)
     }
 }
 
