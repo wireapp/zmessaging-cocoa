@@ -345,19 +345,41 @@ class SessionManagerTests: IntegrationTest {
         //GIVEN
         sut = createManager()
         sut?.configuration.authenticateAfterReboot = true
-        
-        //WHEN
         sut?.accountManager.addAndSelect(createAccount())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(sut?.accountManager.accounts.count, 1)
-        SessionManager.previousSystemBootTime = Date()
+        SessionManager.previousSystemBootTime = ProcessInfo.processInfo.systemBootTime
         
-        //THEN
+        // EXPECT
+        delegate.onLogout = { _ in
+            XCTFail("We should not have been logged out")
+        }
         
+        // WHEN
         performIgnoringZMLogError {
             self.sut!.checkDeviceUptimeIfNeeded()
         }
+    }
+    
+    func testAuthenticationAfterReboot_DoesntLogoutIfNoPreviousBootTimeExists() {
         
+        //GIVEN
+        sut = createManager()
+        sut?.configuration.authenticateAfterReboot = true
+        sut?.accountManager.addAndSelect(createAccount())
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(sut?.accountManager.accounts.count, 1)
+        ZMKeychain.deleteAllKeychainItems(withAccountName: SessionManager.previousSystemBootTimeContainer)
+        
+        // EXPECT
+        delegate.onLogout = { _ in
+            XCTFail("We should not have been logged out")
+        }
+        
+        // WHEN
+        performIgnoringZMLogError {
+            self.sut!.checkDeviceUptimeIfNeeded()
+        }
     }
     
 }

@@ -23,6 +23,7 @@
 
 @class OperationStatus;
 @class ManagedObjectContextChangeObserver;
+@class NotificationDispatcher;
 @class LocalNotificationDispatcher;
 @class AccountStatus;
 @class ApplicationStatusDirectory;
