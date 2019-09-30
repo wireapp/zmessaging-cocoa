@@ -333,7 +333,7 @@ class SessionManagerTests: IntegrationTest {
         }
         
         performIgnoringZMLogError {
-            self.sut!.checkDeviceUptimeIfNeeded()
+            self.sut!.logoutAfterRebootIfNeeded()
         }
         
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 2))
@@ -357,7 +357,7 @@ class SessionManagerTests: IntegrationTest {
         
         // WHEN
         performIgnoringZMLogError {
-            self.sut!.checkDeviceUptimeIfNeeded()
+            self.sut!.logoutAfterRebootIfNeeded()
         }
     }
     
@@ -378,7 +378,7 @@ class SessionManagerTests: IntegrationTest {
         
         // WHEN
         performIgnoringZMLogError {
-            self.sut!.checkDeviceUptimeIfNeeded()
+            self.sut!.logoutAfterRebootIfNeeded()
         }
     }
     

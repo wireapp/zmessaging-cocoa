@@ -429,7 +429,6 @@ public protocol ForegroundNotificationResponder: class {
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
         
         checkJailbreakIfNeeded()
-        checkDeviceUptimeIfNeeded()
     }
     
     public func start(launchOptions: LaunchOptions) {
@@ -466,6 +465,8 @@ public protocol ForegroundNotificationResponder: class {
                 return
             }
         }
+        
+        guard !logoutAfterRebootIfNeeded() else { return }
         
         loadSession(for: account) { [weak self] session in
             guard let `self` = self, let session = session else { return }
@@ -573,6 +574,11 @@ public protocol ForegroundNotificationResponder: class {
         self.createUnauthenticatedSession(accountId: deleteAccount ? nil : account.userIdentifier)
         
         delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: { [weak self] in
+            
+            if deleteCookie {
+                self?.environment.cookieStorage(for: account).deleteKeychainItems()
+            }
+            
             self?.activeUserSession?.closeAndDeleteCookie(deleteCookie)
             self?.activeUserSession = nil
             StorageStack.reset()
@@ -728,6 +734,7 @@ public protocol ForegroundNotificationResponder: class {
         
         self.configure(session: newSession, for: account)
         self.deleteMessagesOlderThanRetentionLimit(provider: provider)
+        self.updateSystemBootTimeIfNeeded()
 
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
         notifyNewUserSessionCreated(newSession)
@@ -821,18 +828,27 @@ public protocol ForegroundNotificationResponder: class {
         }
     }
     
-    internal func checkDeviceUptimeIfNeeded() {
-        guard configuration.authenticateAfterReboot else { return }
+    @discardableResult
+    internal func logoutAfterRebootIfNeeded() -> Bool {
+        guard configuration.authenticateAfterReboot else { return false }
         
         let systemBootTime = ProcessInfo.processInfo.systemBootTime
+        var didLogoutCurrentSession = false
         
         if let previousSystemBootTime = SessionManager.previousSystemBootTime, abs(systemBootTime.timeIntervalSince(previousSystemBootTime)) > 1.0  {
             log.debug("Logout caused by device reboot at \(systemBootTime)")
             let error = NSError(code: .needsAuthenticationAfterReboot, userInfo: accountManager.selectedAccount?.loginCredentials?.dictionaryRepresentation)
             self.logoutCurrentSession(deleteCookie: true, error: error)
+            didLogoutCurrentSession = true
         }
         
-        SessionManager.previousSystemBootTime = systemBootTime
+        return didLogoutCurrentSession
+    }
+    
+    internal func updateSystemBootTimeIfNeeded() {
+        guard configuration.authenticateAfterReboot else { return }
+        
+        SessionManager.previousSystemBootTime = ProcessInfo.processInfo.systemBootTime
     }
 }
 
@@ -1014,8 +1030,6 @@ extension SessionManager {
         
         updateAllUnreadCounts()
         checkJailbreakIfNeeded()
-        checkDeviceUptimeIfNeeded()
-        
         
         // Delete expired url scheme verification tokens
         CompanyLoginVerificationToken.flushIfNeeded()
