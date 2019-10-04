@@ -169,6 +169,7 @@
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@", user1Identifier, user2Identifier]],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@", user3Identifier]],
              [ZMTransportRequest requestGetFromPath:@"/teams?size=50"],
+             [ZMTransportRequest requestGetFromPath:@"/properties/labels"]
              ];
 
 }

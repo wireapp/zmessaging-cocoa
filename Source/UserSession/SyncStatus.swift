@@ -24,11 +24,12 @@
     case fetchingUsers
     case fetchingSelfUser
     case fetchingLegalHoldStatus
+    case fetchingLabels
     case fetchingMissedEvents
     case done
     
     var isLastSlowSyncPhase : Bool {
-        return self == .fetchingLegalHoldStatus
+        return self == .fetchingLabels
     }
     
     var isSyncing : Bool {
@@ -55,6 +56,8 @@
             return "fetchingSelfUser"
         case .fetchingLegalHoldStatus:
             return "fetchingLegalHoldStatus"
+        case .fetchingLabels:
+            return "fetchingLabels"
         case .fetchingMissedEvents:
             return "fetchingMissedEvents"
         case .done:
