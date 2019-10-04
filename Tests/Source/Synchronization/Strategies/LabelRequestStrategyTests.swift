@@ -161,13 +161,14 @@ class LabelRequestStrategyTests: MessagingTest {
     // MARK: - Label Processing
     
     func testThatItIgnoresIdentifier_WhenUpdatingFavoritelabel() {
-        var favoriteIdentifier: UUID!
+        let favoriteIdentifier = UUID()
         let responseIdentifier = UUID()
         
         syncMOC.performGroupedBlockAndWait {
             // GIVEN
-            let label = Label.fetchOrCreateFavoriteLabel(in: self.syncMOC)
-            favoriteIdentifier = label.remoteIdentifier
+            let label = Label.insertNewObject(in: self.syncMOC)
+            label.kind = .favorite
+            label.remoteIdentifier = favoriteIdentifier
             self.syncMOC.saveOrRollback()
             
             // WHEN
@@ -177,7 +178,7 @@ class LabelRequestStrategyTests: MessagingTest {
         
         // THEN
         syncMOC.performGroupedBlockAndWait {
-            let label = Label.fetchOrCreateFavoriteLabel(in: self.syncMOC)
+            let label = Label.fetchFavoriteLabel(in: self.syncMOC)
             XCTAssertEqual(label.remoteIdentifier, favoriteIdentifier)
             XCTAssertEqual(label.conversations, [self.conversation1])
         }

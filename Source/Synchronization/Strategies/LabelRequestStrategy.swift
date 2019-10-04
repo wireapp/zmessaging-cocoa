@@ -81,7 +81,7 @@ public class LabelRequestStrategy: AbstractRequestStrategy {
             
             let label: Label?
             if labelUpdate.type == Label.Kind.favorite.rawValue {
-                label = Label.fetchOrCreateFavoriteLabel(in: managedObjectContext)
+                label = Label.fetchFavoriteLabel(in: managedObjectContext)
             } else {
                 label = Label.fetchOrCreate(remoteIdentifier: labelUpdate.id, create: true, in: managedObjectContext, created: &created)
             }
