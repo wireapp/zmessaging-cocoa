@@ -171,7 +171,7 @@ class LabelRequestStrategyTests: MessagingTest {
             self.syncMOC.saveOrRollback()
             
             // WHEN
-            self.sut.updateLabels(with: self.favoriteResponse(identifier: responseIdentifier, favorites: [self.conversation1.remoteIdentifier!]))
+            self.sut.update(with: self.favoriteResponse(identifier: responseIdentifier, favorites: [self.conversation1.remoteIdentifier!]))
         }
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -195,7 +195,7 @@ class LabelRequestStrategyTests: MessagingTest {
             self.syncMOC.saveOrRollback()
             
             // WHEN
-            self.sut.updateLabels(with: self.folderResponse(identifier: folderIdentifier, name: updatedName, conversations: [self.conversation1.remoteIdentifier!]))
+            self.sut.update(with: self.folderResponse(identifier: folderIdentifier, name: updatedName, conversations: [self.conversation1.remoteIdentifier!]))
         }
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -220,7 +220,7 @@ class LabelRequestStrategyTests: MessagingTest {
             self.syncMOC.saveOrRollback()
             
             // WHEN
-            self.sut.updateLabels(with: self.folderResponse(identifier: folderIdentifier, name: "Folder A", conversations: [self.conversation2.remoteIdentifier!]))
+            self.sut.update(with: self.folderResponse(identifier: folderIdentifier, name: "Folder A", conversations: [self.conversation2.remoteIdentifier!]))
         }
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -250,7 +250,7 @@ class LabelRequestStrategyTests: MessagingTest {
             self.syncMOC.saveOrRollback()
             
             // WHEN
-            self.sut.deleteLabels(with: self.folderResponse(identifier: label1.remoteIdentifier!, name: "Folder A", conversations: [self.conversation1.remoteIdentifier!]))
+            self.sut.update(with: self.folderResponse(identifier: label1.remoteIdentifier!, name: "Folder A", conversations: [self.conversation1.remoteIdentifier!]))
         }
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         

@@ -61,17 +61,21 @@ public class LabelRequestStrategy: AbstractRequestStrategy {
         return slowSync.nextRequest()
     }
     
-    func updateLabels(from transportData: Data) {
+    func update(with transportData: Data) {
         guard let labelResponse = try? jsonDecoder.decode(LabelResponse.self, from: transportData) else {
             Logging.eventProcessing.error("Can't apply label update due to malformed JSON")
             return
         }
         
-        updateLabels(with: labelResponse)
-        deleteLabels(with: labelResponse)
+        update(with: labelResponse)
     }
     
-    func updateLabels(with response: LabelResponse) {
+    func update(with response: LabelResponse) {
+        updateLabels(with: response)
+        deleteLabels(with: response)
+    }
+    
+    fileprivate func updateLabels(with response: LabelResponse) {
         for labelUpdate in response.labels {
             var created = false
             
@@ -88,14 +92,14 @@ public class LabelRequestStrategy: AbstractRequestStrategy {
         }
     }
     
-    func deleteLabels(with response: LabelResponse) {
+    fileprivate func deleteLabels(with response: LabelResponse) {
         let uuids = response.labels.map(\.id)
         let predicate = NSPredicate(format: "type == \(Label.Kind.folder.rawValue) AND NOT remoteIdentifier IN %@", uuids)
         let fetchRequest = NSFetchRequest<Label>(entityName: Label.entityName())
         fetchRequest.predicate = predicate
         
         let deletedLabels = managedObjectContext.fetchOrAssert(request: fetchRequest)
-        deletedLabels.forEach { managedObjectContext.delete($0) }
+        deletedLabels.forEach { managedObjectContext.delete($0) } // TODO jacob consider doing a batch delete
     }
     
 }
@@ -111,7 +115,7 @@ extension LabelRequestStrategy: ZMEventConsumer {
                 continue
             }
             
-            updateLabels(from: data)
+            update(with: data)
         }
     }
 
@@ -129,7 +133,7 @@ extension LabelRequestStrategy: ZMSingleRequestTranscoder {
         }
         
         if response.result == .success, let rawData = response.rawData {
-            updateLabels(from: rawData)
+            update(with: rawData)
         }
         
         syncStatus.finishCurrentSyncPhase(phase: .fetchingLabels)
