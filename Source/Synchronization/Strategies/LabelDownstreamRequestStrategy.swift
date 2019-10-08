@@ -100,8 +100,8 @@ public class LabelDownstreamRequestStrategy: AbstractRequestStrategy {
     }
     
     fileprivate func deleteLabels(with response: LabelPayload) {
-        let uuids = response.labels.map(\.id)
-        let predicate = NSPredicate(format: "type == \(Label.Kind.folder.rawValue) AND NOT remoteIdentifier IN %@", uuids)
+        let uuids: [NSData] = response.labels.map({ $0.id.uuidData as NSData })
+        let predicate = NSPredicate(format: "type == \(Label.Kind.folder.rawValue) AND NOT remoteIdentifier_data IN %@", uuids as CVarArg)
         let fetchRequest = NSFetchRequest<Label>(entityName: Label.entityName())
         fetchRequest.predicate = predicate
         
