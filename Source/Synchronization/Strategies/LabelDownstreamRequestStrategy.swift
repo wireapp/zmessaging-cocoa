@@ -19,7 +19,7 @@
 import Foundation
 
 @objc
-public class LabelRequestStrategy: AbstractRequestStrategy {
+public class LabelDownstreamRequestStrategy: AbstractRequestStrategy {
     
     struct LabelUpdate: Codable, Equatable {
         let id: UUID
@@ -111,7 +111,7 @@ public class LabelRequestStrategy: AbstractRequestStrategy {
     
 }
 
-extension LabelRequestStrategy: ZMEventConsumer {
+extension LabelDownstreamRequestStrategy: ZMEventConsumer {
     
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
         for event in events {
@@ -128,7 +128,7 @@ extension LabelRequestStrategy: ZMEventConsumer {
 
 }
 
-extension LabelRequestStrategy: ZMSingleRequestTranscoder {
+extension LabelDownstreamRequestStrategy: ZMSingleRequestTranscoder {
     
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         return ZMTransportRequest(getFromPath: "/properties/labels")

@@ -21,7 +21,7 @@ import Foundation
 
 class LabelRequestStrategyTests: MessagingTest {
     
-    var sut: LabelRequestStrategy!
+    var sut: LabelDownstreamRequestStrategy!
     var mockSyncStatus: MockSyncStatus!
     var mockSyncStateDelegate: MockSyncStateDelegate!
     var mockApplicationStatus: MockApplicationStatus!
@@ -35,7 +35,7 @@ class LabelRequestStrategyTests: MessagingTest {
         mockSyncStatus = MockSyncStatus(managedObjectContext: syncMOC, syncStateDelegate: mockSyncStateDelegate)
         mockApplicationStatus = MockApplicationStatus()
         mockApplicationStatus.mockSynchronizationState = .synchronizing
-        sut = LabelRequestStrategy(withManagedObjectContext: syncMOC, applicationStatus: mockApplicationStatus, syncStatus: mockSyncStatus)
+        sut = LabelDownstreamRequestStrategy(withManagedObjectContext: syncMOC, applicationStatus: mockApplicationStatus, syncStatus: mockSyncStatus)
         
         syncMOC.performGroupedBlockAndWait {
             self.conversation1 = ZMConversation.insertNewObject(in: self.syncMOC)
@@ -56,19 +56,19 @@ class LabelRequestStrategyTests: MessagingTest {
         super.tearDown()
     }
     
-    func favoriteResponse(identifier: UUID = UUID(), favorites: [UUID]) -> LabelRequestStrategy.LabelResponse {
-        let update = LabelRequestStrategy.LabelUpdate(id: identifier, type: Label.Kind.favorite.rawValue, name: "", conversations: favorites)
-        let response = LabelRequestStrategy.LabelResponse(labels: [update])
+    func favoriteResponse(identifier: UUID = UUID(), favorites: [UUID]) -> LabelDownstreamRequestStrategy.LabelResponse {
+        let update = LabelDownstreamRequestStrategy.LabelUpdate(id: identifier, type: Label.Kind.favorite.rawValue, name: "", conversations: favorites)
+        let response = LabelDownstreamRequestStrategy.LabelResponse(labels: [update])
         return response
     }
     
-    func folderResponse(identifier: UUID = UUID(), name: String, conversations: [UUID]) -> LabelRequestStrategy.LabelResponse {
-        let update = LabelRequestStrategy.LabelUpdate(id: identifier, type: Label.Kind.folder.rawValue, name: name, conversations: conversations)
-        let response = LabelRequestStrategy.LabelResponse(labels: [update])
+    func folderResponse(identifier: UUID = UUID(), name: String, conversations: [UUID]) -> LabelDownstreamRequestStrategy.LabelResponse {
+        let update = LabelDownstreamRequestStrategy.LabelUpdate(id: identifier, type: Label.Kind.folder.rawValue, name: name, conversations: conversations)
+        let response = LabelDownstreamRequestStrategy.LabelResponse(labels: [update])
         return response
     }
     
-    func updateEvent(with labels: LabelRequestStrategy.LabelResponse) -> ZMUpdateEvent {
+    func updateEvent(with labels: LabelDownstreamRequestStrategy.LabelResponse) -> ZMUpdateEvent {
         let encoder = JSONEncoder()
         let data = try! encoder.encode(labels)
         let dict = try! JSONSerialization.jsonObject(with: data, options: [])
