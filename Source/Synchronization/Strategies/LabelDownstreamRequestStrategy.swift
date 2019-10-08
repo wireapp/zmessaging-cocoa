@@ -18,32 +18,32 @@
 
 import Foundation
 
+struct LabelUpdate: Codable, Equatable {
+    let id: UUID
+    let type: Int16
+    let name: String?
+    let conversations: [UUID]
+    
+    init(id: UUID, type: Int16, name: String?, conversations: [UUID]) {
+        self.id = id
+        self.type = type
+        self.name = name
+        self.conversations = conversations
+    }
+    
+    init?(_ label: Label) {
+        guard let remoteIdentifier = label.remoteIdentifier else { return nil }
+        
+        self = .init(id: remoteIdentifier, type: label.kind.rawValue, name: label.name, conversations: label.conversations.compactMap(\.remoteIdentifier))
+    }
+}
+
+struct LabelPayload: Codable, Equatable {
+    var labels: [LabelUpdate]
+}
+
 @objc
 public class LabelDownstreamRequestStrategy: AbstractRequestStrategy {
-    
-    struct LabelUpdate: Codable, Equatable {
-        let id: UUID
-        let type: Int16
-        let name: String?
-        let conversations: [UUID]
-        
-        init(id: UUID, type: Int16, name: String?, conversations: [UUID]) {
-            self.id = id
-            self.type = type
-            self.name = name
-            self.conversations = conversations
-        }
-        
-        init?(_ label: Label) {
-            guard let remoteIdentifier = label.remoteIdentifier else { return nil }
-            
-            self = .init(id: remoteIdentifier, type: label.kind.rawValue, name: label.name, conversations: label.conversations.compactMap(\.remoteIdentifier))
-        }
-    }
-    
-    struct LabelPayload: Codable, Equatable {
-        var labels: [LabelUpdate]
-    }
     
     fileprivate let syncStatus: SyncStatus
     fileprivate var slowSync: ZMSingleRequestSync!

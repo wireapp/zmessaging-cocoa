@@ -55,8 +55,8 @@ class LabelUpstreamRequestStrategyTests: MessagingTest {
     }
     
     func testThatItGeneratesRequestForUpdatingLabels() throws {
-        let labelUpdate = LabelDownstreamRequestStrategy.LabelUpdate(id: Label.fetchFavoriteLabel(in: uiMOC).remoteIdentifier!, type: 1, name: nil, conversations: [conversation1.remoteIdentifier!])
-        let expectedPayload = LabelDownstreamRequestStrategy.LabelPayload(labels: [labelUpdate])
+        let labelUpdate = WireSyncEngine.LabelUpdate(id: Label.fetchFavoriteLabel(in: uiMOC).remoteIdentifier!, type: 1, name: nil, conversations: [conversation1.remoteIdentifier!])
+        let expectedPayload = WireSyncEngine.LabelPayload(labels: [labelUpdate])
 
         syncMOC.performGroupedBlockAndWait {
             // given
@@ -70,15 +70,15 @@ class LabelUpstreamRequestStrategyTests: MessagingTest {
             
             // then
             let payload = try! JSONSerialization.data(withJSONObject: request.payload as Any, options: [])
-            let decodedPayload = try! JSONDecoder().decode(LabelDownstreamRequestStrategy.LabelPayload.self, from: payload)
+            let decodedPayload = try! JSONDecoder().decode(WireSyncEngine.LabelPayload.self, from: payload)
             XCTAssertEqual(request.path, "/properties/labels")
             XCTAssertEqual(decodedPayload, expectedPayload)
         }
     }
     
     func testThatItDoesntUploadLabelsMarkedForDeletion() {
-        let labelUpdate = LabelDownstreamRequestStrategy.LabelUpdate(id: Label.fetchFavoriteLabel(in: uiMOC).remoteIdentifier!, type: 1, name: nil, conversations: [])
-        let expectedPayload = LabelDownstreamRequestStrategy.LabelPayload(labels: [labelUpdate])
+        let labelUpdate = WireSyncEngine.LabelUpdate(id: Label.fetchFavoriteLabel(in: uiMOC).remoteIdentifier!, type: 1, name: nil, conversations: [])
+        let expectedPayload = WireSyncEngine.LabelPayload(labels: [labelUpdate])
         
         syncMOC.performGroupedBlockAndWait {
             // given
@@ -94,7 +94,7 @@ class LabelUpstreamRequestStrategyTests: MessagingTest {
             
             // then
             let payload = try! JSONSerialization.data(withJSONObject: request.payload as Any, options: [])
-            let decodedPayload = try! JSONDecoder().decode(LabelDownstreamRequestStrategy.LabelPayload.self, from: payload)
+            let decodedPayload = try! JSONDecoder().decode(WireSyncEngine.LabelPayload.self, from: payload)
             XCTAssertEqual(request.path, "/properties/labels")
             XCTAssertEqual(decodedPayload, expectedPayload)
         }

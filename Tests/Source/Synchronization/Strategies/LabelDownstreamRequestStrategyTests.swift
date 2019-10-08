@@ -56,19 +56,19 @@ class LabelRequestStrategyTests: MessagingTest {
         super.tearDown()
     }
     
-    func favoriteResponse(identifier: UUID = UUID(), favorites: [UUID]) -> LabelDownstreamRequestStrategy.LabelPayload {
-        let update = LabelDownstreamRequestStrategy.LabelUpdate(id: identifier, type: Label.Kind.favorite.rawValue, name: "", conversations: favorites)
-        let response = LabelDownstreamRequestStrategy.LabelPayload(labels: [update])
+    func favoriteResponse(identifier: UUID = UUID(), favorites: [UUID]) -> WireSyncEngine.LabelPayload {
+        let update = WireSyncEngine.LabelUpdate(id: identifier, type: Label.Kind.favorite.rawValue, name: "", conversations: favorites)
+        let response = WireSyncEngine.LabelPayload(labels: [update])
         return response
     }
     
-    func folderResponse(identifier: UUID = UUID(), name: String, conversations: [UUID]) -> LabelDownstreamRequestStrategy.LabelPayload {
-        let update = LabelDownstreamRequestStrategy.LabelUpdate(id: identifier, type: Label.Kind.folder.rawValue, name: name, conversations: conversations)
-        let response = LabelDownstreamRequestStrategy.LabelPayload(labels: [update])
+    func folderResponse(identifier: UUID = UUID(), name: String, conversations: [UUID]) -> WireSyncEngine.LabelPayload {
+        let update = WireSyncEngine.LabelUpdate(id: identifier, type: Label.Kind.folder.rawValue, name: name, conversations: conversations)
+        let response = WireSyncEngine.LabelPayload(labels: [update])
         return response
     }
     
-    func updateEvent(with labels: LabelDownstreamRequestStrategy.LabelPayload) -> ZMUpdateEvent {
+    func updateEvent(with labels: WireSyncEngine.LabelPayload) -> ZMUpdateEvent {
         let encoder = JSONEncoder()
         let data = try! encoder.encode(labels)
         let dict = try! JSONSerialization.jsonObject(with: data, options: [])
