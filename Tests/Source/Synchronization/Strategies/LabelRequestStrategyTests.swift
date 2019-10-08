@@ -184,6 +184,31 @@ class LabelRequestStrategyTests: MessagingTest {
         }
     }
     
+    func testThatItResetsLocallyModifiedKeys_WhenUpdatingLabel() {
+        let folderIdentifier = UUID()
+        
+        syncMOC.performGroupedBlockAndWait {
+            // GIVEN
+            var created = false
+            let label = Label.fetchOrCreate(remoteIdentifier: folderIdentifier, create: true, in: self.syncMOC, created: &created)
+            label?.name = "Folder A"
+            label?.conversations = Set([self.conversation1])
+            label?.modifiedKeys = Set(["conversations"])
+            self.syncMOC.saveOrRollback()
+            
+            // WHEN
+            self.sut.update(with: self.folderResponse(identifier: folderIdentifier, name: "Folder A", conversations: [self.conversation2.remoteIdentifier!]))
+        }
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        syncMOC.performGroupedBlockAndWait {
+            var created = false
+            let label = Label.fetchOrCreate(remoteIdentifier: folderIdentifier, create: false, in: self.syncMOC, created: &created)!
+            XCTAssertNil(label.modifiedKeys)
+        }
+    }
+    
     func testThatItItUpdatesFolderName() {
         let folderIdentifier = UUID()
         let updatedName = "Folder B"

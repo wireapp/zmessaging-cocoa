@@ -21,7 +21,7 @@ import Foundation
 @objc
 public class LabelRequestStrategy: AbstractRequestStrategy {
     
-    struct LabelUpdate: Codable {
+    struct LabelUpdate: Codable, Equatable {
         let id: UUID
         let type: Int16
         let name: String?
@@ -33,9 +33,15 @@ public class LabelRequestStrategy: AbstractRequestStrategy {
             self.name = name
             self.conversations = conversations
         }
+        
+        init?(_ label: Label) {
+            guard let remoteIdentifier = label.remoteIdentifier else { return nil }
+            
+            self = .init(id: remoteIdentifier, type: label.kind.rawValue, name: label.name, conversations: label.conversations.compactMap(\.remoteIdentifier))
+        }
     }
     
-    struct LabelResponse: Codable {
+    struct LabelResponse: Codable, Equatable {
         var labels: [LabelUpdate]
     }
     
@@ -89,6 +95,7 @@ public class LabelRequestStrategy: AbstractRequestStrategy {
             label?.kind = Label.Kind(rawValue: labelUpdate.type) ?? .folder
             label?.name = labelUpdate.name
             label?.conversations = ZMConversation.fetchObjects(withRemoteIdentifiers: Set(labelUpdate.conversations), in: managedObjectContext) as? Set<ZMConversation> ?? Set()
+            label?.modifiedKeys = nil
         }
     }
     
