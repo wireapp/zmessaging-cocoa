@@ -118,6 +118,7 @@ public class ZMConversationAccessModeTests : MessagingTest {
         let member = Member.insertNewObject(in: self.uiMOC)
         member.user = user
         member.team = team
+        member.permissions = .member
         return member
     }
     
