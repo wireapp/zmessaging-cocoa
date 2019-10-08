@@ -41,7 +41,7 @@ public class LabelDownstreamRequestStrategy: AbstractRequestStrategy {
         }
     }
     
-    struct LabelResponse: Codable, Equatable {
+    struct LabelPayload: Codable, Equatable {
         var labels: [LabelUpdate]
     }
     
@@ -68,7 +68,7 @@ public class LabelDownstreamRequestStrategy: AbstractRequestStrategy {
     }
     
     func update(with transportData: Data) {
-        guard let labelResponse = try? jsonDecoder.decode(LabelResponse.self, from: transportData) else {
+        guard let labelResponse = try? jsonDecoder.decode(LabelPayload.self, from: transportData) else {
             Logging.eventProcessing.error("Can't apply label update due to malformed JSON")
             return
         }
@@ -76,12 +76,12 @@ public class LabelDownstreamRequestStrategy: AbstractRequestStrategy {
         update(with: labelResponse)
     }
     
-    func update(with response: LabelResponse) {
+    func update(with response: LabelPayload) {
         updateLabels(with: response)
         deleteLabels(with: response)
     }
     
-    fileprivate func updateLabels(with response: LabelResponse) {
+    fileprivate func updateLabels(with response: LabelPayload) {
         for labelUpdate in response.labels {
             var created = false
             
@@ -99,7 +99,7 @@ public class LabelDownstreamRequestStrategy: AbstractRequestStrategy {
         }
     }
     
-    fileprivate func deleteLabels(with response: LabelResponse) {
+    fileprivate func deleteLabels(with response: LabelPayload) {
         let uuids = response.labels.map(\.id)
         let predicate = NSPredicate(format: "type == \(Label.Kind.folder.rawValue) AND NOT remoteIdentifier IN %@", uuids)
         let fetchRequest = NSFetchRequest<Label>(entityName: Label.entityName())

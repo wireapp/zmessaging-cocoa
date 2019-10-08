@@ -71,7 +71,7 @@ extension LabelUpstreamRequestStrategy: ZMSingleRequestTranscoder {
         let labelsToUpload = labels.filter({ !$0.markedForDeletion })
         let updatedKeys = labels.map({ return ($0, $0.modifiedKeys) })
         
-        let payload = LabelDownstreamRequestStrategy.LabelResponse(labels: labelsToUpload.compactMap({ LabelDownstreamRequestStrategy.LabelUpdate($0) }))
+        let payload = LabelDownstreamRequestStrategy.LabelPayload(labels: labelsToUpload.compactMap({ LabelDownstreamRequestStrategy.LabelUpdate($0) }))
         let data = try! jsonEncoder.encode(payload)
         let jsonObject = try! JSONSerialization.jsonObject(with: data, options: [])
         let request = ZMTransportRequest(path: "/properties/labels", method: .methodPUT, payload: jsonObject as? ZMTransportData)
