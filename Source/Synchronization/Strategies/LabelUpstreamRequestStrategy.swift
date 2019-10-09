@@ -44,7 +44,11 @@ extension LabelUpstreamRequestStrategy: ZMContextChangeTracker, ZMContextChangeT
     }
     
     public func fetchRequestForTrackedObjects() -> NSFetchRequest<NSFetchRequestResult>? {
-        return Label.sortedFetchRequest(with: Label.predicateForObjectsThatNeedToBeUpdatedUpstream()!)
+        guard let predicateForObjectsThatNeedToBeUpdatedUpstream = Label.predicateForObjectsThatNeedToBeUpdatedUpstream() else {
+            fatal("predicateForObjectsThatNeedToBeUpdatedUpstream not defined for Label entity")
+        }
+        
+        return Label.sortedFetchRequest(with: predicateForObjectsThatNeedToBeUpdatedUpstream)
     }
     
     public func addTrackedObjects(_ objects: Set<NSManagedObject>) {
@@ -71,11 +75,16 @@ extension LabelUpstreamRequestStrategy: ZMSingleRequestTranscoder {
         let labelsToUpload = labels.filter({ !$0.markedForDeletion })
         let updatedKeys = labels.map({ return ($0, $0.modifiedKeys) })
         
-        let payload = LabelPayload(labels: labelsToUpload.compactMap({ LabelUpdate($0) }))
-        let data = try! jsonEncoder.encode(payload)
-        let jsonObject = try! JSONSerialization.jsonObject(with: data, options: [])
-        let request = ZMTransportRequest(path: "/properties/labels", method: .methodPUT, payload: jsonObject as? ZMTransportData)
+        let labelPayload = LabelPayload(labels: labelsToUpload.compactMap({ LabelUpdate($0) }))
+        let transportPayload: Any
+        do {
+            let data = try jsonEncoder.encode(labelPayload)
+            transportPayload = try JSONSerialization.jsonObject(with: data, options: [])
+        } catch let error {
+            fatal("Couldn't encode label update: \(error)")
+        }
         
+        let request = ZMTransportRequest(path: "/properties/labels", method: .methodPUT, payload: transportPayload as? ZMTransportData)
         request.add(ZMCompletionHandler(on: managedObjectContext, block: { [weak self] (response) in
             self?.didReceive(response, updatedKeys: updatedKeys)
         }))
