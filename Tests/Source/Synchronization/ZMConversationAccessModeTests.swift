@@ -118,6 +118,7 @@ public class ZMConversationAccessModeTests : MessagingTest {
         let member = Member.insertNewObject(in: self.uiMOC)
         member.user = user
         member.team = team
+        member.permissions = .member
         return member
     }
     
@@ -166,66 +167,6 @@ public class ZMConversationAccessModeTests : MessagingTest {
         
         return selfUser
     }
-    
-    struct TestCase {
-        let conversationOptions: ConversationOptions
-        let userOptions: SelfUserOptions
-        let expectedResult: Bool
-    }
-    
-    let cases: [TestCase] = [TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
-                                                                               team: .teamA,
-                                                                               isGroup: true),
-                                      userOptions: SelfUserOptions(team: .teamA),
-                                      expectedResult: true),
-                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: false,
-                                                                               team: .teamA,
-                                                                               isGroup: true),
-                                      userOptions: SelfUserOptions(team: .teamA),
-                                      expectedResult: false),
-                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
-                                                                               team: .teamB,
-                                                                               isGroup: true),
-                                      userOptions: SelfUserOptions(team: .teamA),
-                                      expectedResult: false),
-                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
-                                                                               team: .teamA,
-                                                                               isGroup: true),
-                                      userOptions: SelfUserOptions(team: .teamB),
-                                      expectedResult: false),
-                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
-                                                                               team: .none,
-                                                                               isGroup: true),
-                                      userOptions: SelfUserOptions(team: .teamA),
-                                      expectedResult: false),
-                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
-                                                                               team: .teamA,
-                                                                               isGroup: true),
-                                      userOptions: SelfUserOptions(team: .none),
-                                      expectedResult: false),
-                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
-                                                                               team: .teamA,
-                                                                               isGroup: false),
-                                      userOptions: SelfUserOptions(team: .teamA),
-                                      expectedResult: false),
-                             TestCase(conversationOptions: ConversationOptions(hasRemoteId: true,
-                                                                               team: .teamA,
-                                                                               isGroup: true),
-                                      userOptions: SelfUserOptions(team: .none),
-                                      expectedResult: false),
-                             ]
-    
-    func testCanManageAccess() {
-        cases.forEach { testCase in
-            // given
-            let _ = self.selfUser(options: testCase.userOptions)
-            let conversation = self.conversation(options: testCase.conversationOptions)
-            // when
-            let result = conversation.canManageAccess
-            // then
-            XCTAssertEqual(result, testCase.expectedResult)
-        }
-        
-    }
+
 }
 
