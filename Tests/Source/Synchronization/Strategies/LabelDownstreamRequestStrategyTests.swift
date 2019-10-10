@@ -95,6 +95,18 @@ class LabelDownstreamRequestStrategyTests: MessagingTest {
             XCTAssertEqual(request.path, "/properties/labels")
         }
     }
+    func testThatItRequestsLabels_WhenRefetchingIsNecessary() {
+        syncMOC.performGroupedBlockAndWait {
+            // GIVEN
+            ZMUser.selfUser(in: self.syncMOC).needsToRefetchLabels = true
+            
+            // WHEN
+            guard let request = self.sut.nextRequest() else { return XCTFail() }
+            
+            // THEN
+            XCTAssertEqual(request.path, "/properties/labels")
+        }
+    }
     
     func testThatItFinishSlowSyncPhase_WhenLabelsExist() {
         syncMOC.performGroupedBlockAndWait {

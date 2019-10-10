@@ -207,4 +207,8 @@ import Foundation
         conversations?.forEach { $0.needsToBeUpdatedFromBackend = true }
         context.enqueueDelayedSave()
     }
+    
+    public static func refetchLabels(_ context: NSManagedObjectContext) {
+        ZMUser.selfUser(in: context).needsToRefetchLabels = true
+    }
 }

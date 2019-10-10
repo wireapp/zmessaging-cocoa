@@ -60,7 +60,7 @@ public class LabelDownstreamRequestStrategy: AbstractRequestStrategy {
     
     
     override public func nextRequestIfAllowed() -> ZMTransportRequest? {
-        guard syncStatus.currentSyncPhase == .fetchingLabels else { return nil }
+        guard syncStatus.currentSyncPhase == .fetchingLabels || ZMUser.selfUser(in: managedObjectContext).needsToRefetchLabels else { return nil }
         
         slowSync.readyForNextRequestIfNotBusy()
         
@@ -143,7 +143,9 @@ extension LabelDownstreamRequestStrategy: ZMSingleRequestTranscoder {
             update(with: rawData)
         }
         
-        syncStatus.finishCurrentSyncPhase(phase: .fetchingLabels)
+        if syncStatus.currentSyncPhase == .fetchingLabels {
+            syncStatus.finishCurrentSyncPhase(phase: .fetchingLabels)
+        }
     }
     
 }

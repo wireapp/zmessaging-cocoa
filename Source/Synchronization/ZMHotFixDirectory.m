@@ -182,6 +182,13 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory refetchUsers:context];
                      }],
+                    
+                    /// We need to refetch the labels after favorites & folders were introduced
+                    [ZMHotFixPatch
+                     patchWithVersion:@"280.0.1"
+                     patchCode:^(NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory refetchLabels:context];
+                     }],
                     ];
     });
     return patches;

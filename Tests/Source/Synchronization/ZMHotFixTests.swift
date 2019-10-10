@@ -150,5 +150,28 @@ class ZMHotFixTests_Integration: MessagingTest {
             XCTAssertTrue(selfUser.team!.needsToRedownloadMembers)
         }
     }
+    
+    func testThatItMarksLabelsToBeRefetched_280_0_0() {
+        syncMOC.performGroupedBlock {
+            // GIVEN
+            self.syncMOC.setPersistentStoreMetadata("238.0.0", key: "lastSavedVersion")
+            self.syncMOC.setPersistentStoreMetadata(NSNumber(booleanLiteral: true), key: "HasHistory")
+            
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            selfUser.needsToRefetchLabels = false
+            
+            // WHEN
+            let sut = ZMHotFix(syncMOC: self.syncMOC)
+            self.performIgnoringZMLogError {
+                sut!.applyPatches(forCurrentVersion: "280.0.1")
+            }
+        }
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        syncMOC.performGroupedBlock {
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            XCTAssertTrue(selfUser.needsToRefetchLabels)
+        }
+    }
 
 }
