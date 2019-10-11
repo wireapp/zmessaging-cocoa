@@ -107,6 +107,7 @@ public class LabelDownstreamRequestStrategy: AbstractRequestStrategy {
         
         let deletedLabels = managedObjectContext.fetchOrAssert(request: fetchRequest)
         deletedLabels.forEach { managedObjectContext.delete($0) } // TODO jacob consider doing a batch delete
+        managedObjectContext.saveOrRollback()
     }
     
 }
