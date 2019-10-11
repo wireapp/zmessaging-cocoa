@@ -294,7 +294,7 @@ class LabelDownstreamRequestStrategyTests: MessagingTest {
         
         // THEN
         syncMOC.performGroupedBlockAndWait {
-            XCTAssertTrue(label2.isDeleted)
+            XCTAssertTrue(label2.isZombieObject)
         }
     }
     
