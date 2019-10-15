@@ -26,8 +26,15 @@ private let zmLog = ZMSLog(tag: "calling")
  */
 
 public struct CallParticipant: Equatable {
+    
     public let user: ZMUser
     public let state: CallParticipantState
+    
+    public init(user: ZMUser, state: CallParticipantState) {
+        self.user = user
+        self.state = state
+    }
+    
 }
 
 
