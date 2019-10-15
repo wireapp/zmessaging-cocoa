@@ -42,6 +42,7 @@ class WireCallCenterV3Tests: MessagingTest {
     var flowManager : FlowManagerMock!
     var mockAVSWrapper : MockAVSWrapper!
     var sut : WireCallCenterV3!
+    var otherUser: ZMUser!
     let otherUserID : UUID = UUID()
     var selfUserID : UUID!
     var oneOnOneConversation: ZMConversation!
@@ -57,6 +58,10 @@ class WireCallCenterV3Tests: MessagingTest {
         let selfUser = ZMUser.selfUser(in: uiMOC)
         selfUser.remoteIdentifier = UUID.create()
         selfUserID = selfUser.remoteIdentifier!
+        
+        let otherUser = ZMUser.insertNewObject(in: uiMOC)
+        otherUser.remoteIdentifier = otherUserID
+        self.otherUser = otherUser
         
         let oneOnOneConversation = ZMConversation.insertNewObject(in: self.uiMOC)
         oneOnOneConversation.remoteIdentifier = UUID.create()
@@ -82,6 +87,7 @@ class WireCallCenterV3Tests: MessagingTest {
         flowManager = nil
         clientID = nil
         selfUserID = nil
+        otherUser = nil
         oneOnOneConversation = nil
         oneOnOneConversationID = nil
         groupConversation = nil
@@ -429,7 +435,7 @@ class WireCallCenterV3Tests: MessagingTest {
             // then
             XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.oneToOne)
             XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.normal)
-            XCTAssertEqual(sut.callParticipants(conversationId: oneOnOneConversationID), [oneOnOneConversation.connectedUser!.remoteIdentifier])
+            XCTAssertEqual(sut.callParticipants(conversationId: oneOnOneConversationID), [CallParticipant(user: oneOnOneConversation.connectedUser!, state: .connecting)])
         }
     }
     
@@ -845,7 +851,7 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        XCTAssertEqual(sut.callParticipants(conversationId: oneOnOneConversationID), [otherUserID])
+        XCTAssertEqual(sut.callParticipants(conversationId: oneOnOneConversationID), [CallParticipant(user: otherUser, state: .connecting)])
     }
 
     func callBackMemberHandler(conversationId: UUID, userId: UUID, audioEstablished: Bool) {
@@ -875,7 +881,7 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        XCTAssertEqual(sut.callParticipants(conversationId: groupConversationID), [otherUserID])
+        XCTAssertEqual(sut.callParticipants(conversationId: groupConversationID), [CallParticipant(user: otherUser, state: .connecting)])
     }
 
     func testThatItUpdatesTheStateForParticipant() {
@@ -884,16 +890,14 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        let connectingState = sut.state(forUser: otherUserID, in: groupConversationID)
-        XCTAssertEqual(connectingState, CallParticipantState.connecting)
+        XCTAssertEqual(sut.callParticipants(conversationId: groupConversationID), [CallParticipant(user: otherUser, state: .connecting)])
 
         // when
         callBackMemberHandler(conversationId: groupConversationID, userId: otherUserID, audioEstablished: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        let connectedState = sut.state(forUser: otherUserID, in: groupConversationID)
-        XCTAssertEqual(connectedState, CallParticipantState.connected(videoState: .stopped))
+        XCTAssertEqual(sut.callParticipants(conversationId: groupConversationID), [CallParticipant(user: otherUser, state: .connected(videoState: .stopped, clientId: "123"))])
     }
 }
 

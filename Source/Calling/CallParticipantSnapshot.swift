@@ -45,7 +45,7 @@ class CallParticipantsSnapshot {
         // For now, we will keep the one with "the highest state", meaning if one entry has `audioEstablished == false` and the other one `audioEstablished == true`, we keep the one with `audioEstablished == true`
         let callMembers = members.reduce([AVSCallMember]()){ (filtered, member) in
             var newFiltered = filtered
-            if let idx = newFiltered.index(of: member) {
+            if let idx = newFiltered.firstIndex(of: member) {
                 if !newFiltered[idx].audioEstablished && member.audioEstablished {
                     newFiltered[idx] = member
                 }
@@ -66,19 +66,19 @@ class CallParticipantsSnapshot {
     func callParticpantVideoStateChanged(userId: UUID, videoState: VideoState) {
         guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
         
-        update(updatedMember: AVSCallMember(userId: userId, audioEstablished: callMember.audioEstablished, videoState: videoState))
+        update(updatedMember: AVSCallMember(userId: userId, clientId: callMember.clientId, audioEstablished: callMember.audioEstablished, videoState: videoState))
     }
     
     func callParticpantAudioEstablished(userId: UUID) {
         guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
         
-        update(updatedMember: AVSCallMember(userId: userId, audioEstablished: true, videoState: callMember.videoState))
+        update(updatedMember: AVSCallMember(userId: userId, clientId: callMember.clientId, audioEstablished: true, videoState: callMember.videoState))
     }
 
     func callParticpantNetworkQualityChanged(userId: UUID, networkQuality: NetworkQuality) {
         guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
 
-        update(updatedMember: AVSCallMember(userId: userId, audioEstablished: callMember.audioEstablished, videoState: callMember.videoState, networkQuality: networkQuality))
+        update(updatedMember: AVSCallMember(userId: userId, clientId: callMember.clientId, audioEstablished: callMember.audioEstablished, videoState: callMember.videoState, networkQuality: networkQuality))
     }
     
     func update(updatedMember: AVSCallMember) {

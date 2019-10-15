@@ -42,35 +42,15 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
     
     weak public var conversation: ZMConversation?
     
-    /// Voice channel participants. May be a subset of conversation participants.
-    public var participants: NSOrderedSet {
-        guard let callCenter = self.callCenter,
-              let conversationId = conversation?.remoteIdentifier,
-              let context = conversation?.managedObjectContext
-        else { return NSOrderedSet() }
+    public var participants: [CallParticipant] {
+        guard let callCenter = callCenter, let conversationId = conversation?.remoteIdentifier else { return [] }
         
-        let userIds = callCenter.callParticipants(conversationId: conversationId)
-        let users = userIds.compactMap { ZMUser(remoteID: $0, createIfNeeded: false, in:context) }
-        return NSOrderedSet(array: users)
+        return callCenter.callParticipants(conversationId: conversationId)
     }
     
     public required init(conversation: ZMConversation) {
         self.conversation = conversation
         super.init()
-    }
-
-    public func state(forParticipant participant: ZMUser) -> CallParticipantState {
-        guard let conv = self.conversation,
-            let convID = conv.remoteIdentifier,
-            let userID = participant.remoteIdentifier,
-            let callCenter = self.callCenter
-        else { return .unconnected }
-        
-        if participant.isSelfUser {
-            return callCenter.callState(conversationId: convID).callParticipantState
-        } else {
-            return callCenter.state(forUser: userID, in: convID)
-        }
     }
     
     public var state: CallState {
@@ -256,19 +236,3 @@ extension VoiceChannelV3 : CallObservers {
         return WireCallCenterV3.addMuteStateObserver(observer: observer, context: conversation!.managedObjectContext!)
     }
 }
-
-public extension CallState {
-        
-    var callParticipantState : CallParticipantState {
-        switch self {
-        case .unknown, .terminating, .incoming, .none, .establishedDataChannel, .mediaStopped:
-            return .unconnected
-        case .established:
-            return .connected(videoState: .stopped)
-        case .outgoing, .answered:
-            return .connecting
-        }
-    }
-    
-}
-

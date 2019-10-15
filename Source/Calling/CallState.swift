@@ -22,6 +22,16 @@ import avs
 private let zmLog = ZMSLog(tag: "calling")
 
 /**
+ * A participant in in  call.
+ */
+
+public struct CallParticipant: Equatable {
+    public let user: ZMUser
+    public let state: CallParticipantState
+}
+
+
+/**
  * The state of a participant in a call.
  */
 
@@ -31,7 +41,7 @@ public enum CallParticipantState: Equatable {
     /// Participant is in the process of connecting to the call
     case connecting
     /// Participant is connected to call and audio is flowing
-    case connected(videoState: VideoState)
+    case connected(videoState: VideoState, clientId: String?)
 }
 
 /**

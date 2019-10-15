@@ -297,10 +297,16 @@ extension WireCallCenterV3 {
 // MARK: - Call Participants
 
 extension WireCallCenterV3 {
-
+    
     /// Returns the callParticipants currently in the conversation
-    func callParticipants(conversationId: UUID) -> [UUID] {
-        return callSnapshots[conversationId]?.callParticipants.members.map { $0.remoteId } ?? []
+    func callParticipants(conversationId: UUID) -> [CallParticipant] {
+        guard let context = uiMOC,
+              let callParticipants = callSnapshots[conversationId]?.callParticipants
+        else { return [] }
+        
+        return callParticipants.members.map {
+            CallParticipant(user: ZMUser(remoteID: $0.remoteId, createIfNeeded: false, in: context)!, state: $0.callParticipantState)
+        }
     }
 
     /// Returns the remote identifier of the user that initiated the call.
@@ -323,12 +329,7 @@ extension WireCallCenterV3 {
     func callParticipantAudioEstablished(conversationId: UUID, userId: UUID) {
         callSnapshots[conversationId]?.callParticipants.callParticpantAudioEstablished(userId: userId)
     }
-
-    /// Returns the state for a call participant.
-    public func state(forUser userId: UUID, in conversationId: UUID) -> CallParticipantState {
-        return callSnapshots[conversationId]?.callParticipants.callParticipantState(forUser: userId) ?? .unconnected
-    }
-
+    
 }
 
 // MARK: - Actions

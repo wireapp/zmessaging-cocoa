@@ -34,6 +34,7 @@ public struct AVSParticipantsChange: Codable {
 extension AVSCallMember {
     init(member: AVSParticipantsChange.Member) {
         remoteId = member.userid
+        clientId = member.clientid
         audioEstablished = (member.aestab == 1)
         videoState = VideoState(rawValue: member.vrecv) ?? .stopped
         networkQuality = .normal
@@ -48,6 +49,9 @@ public struct AVSCallMember: Hashable {
 
     /// The remote identifier of the user.
     public let remoteId: UUID
+    
+    /// The client identifier of the user, this is only available after the call member has connected
+    public let clientId: String?
 
     /// Whether an audio connection was established.
     public let audioEstablished: Bool
@@ -63,12 +67,15 @@ public struct AVSCallMember: Hashable {
     /**
      * Creates the call member from its values.
      * - parameter userId: The remote identifier of the user.
+     * - parameter clientId: The client identifier of the user. Default to `nil`
      * - parameter audioEstablished: Whether an audio connection was established. Defaults to `false`.
      * - parameter videoState: The state of video connection. Defaults to `stopped`.
+     * - parameter networkQuality: The quality of the network connection. Defaults to `.normal`.
      */
 
-    public init(userId : UUID, audioEstablished: Bool = false, videoState: VideoState = .stopped, networkQuality: NetworkQuality = .normal) {
+    public init(userId : UUID, clientId: String? = nil, audioEstablished: Bool = false, videoState: VideoState = .stopped, networkQuality: NetworkQuality = .normal) {
         self.remoteId = userId
+        self.clientId = clientId
         self.audioEstablished = audioEstablished
         self.videoState = videoState
         self.networkQuality = networkQuality
@@ -79,18 +86,19 @@ public struct AVSCallMember: Hashable {
     /// The state of the participant.
     var callParticipantState: CallParticipantState {
         if audioEstablished {
-            return .connected(videoState: videoState)
+            return .connected(videoState: videoState, clientId: clientId)
         } else {
             return .connecting
         }
     }
 
     // MARK: - Hashable
-
-    public var hashValue: Int {
-        return remoteId.hashValue
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(remoteId)
+        hasher.combine(clientId)
     }
-
+    
     public static func == (lhs: AVSCallMember, rhs: AVSCallMember) -> Bool {
         return lhs.remoteId == rhs.remoteId
     }
