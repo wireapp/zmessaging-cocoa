@@ -52,6 +52,10 @@ extension ZMConversation {
     /// @param completion called when the operation is ended. Called with .success and the link fetched. If the link
     ///        was not generated yet, it is called with .success(nil).
     public func fetchWirelessLink(in userSession: ZMUserSession, _ completion: @escaping (Result<String?>) -> Void) {
+        guard canManageAccess else {
+            return completion(.failure(WirelessLinkError.invalidOperation))
+        }
+        
         let request = WirelessRequestFactory.fetchLinkRequest(for: self)
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
             if response.httpStatus == 200,
@@ -94,6 +98,10 @@ extension ZMConversation {
     }
     
     func createWirelessLink(in userSession: ZMUserSession, _ completion: @escaping (Result<String>) -> Void) {
+        guard canManageAccess else {
+            return completion(.failure(WirelessLinkError.invalidOperation))
+        }
+        
         let request = WirelessRequestFactory.createLinkRequest(for: self)
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
             if response.httpStatus == 201,
@@ -127,6 +135,10 @@ extension ZMConversation {
     
     /// Deletes the existing wireless link.
     public func deleteWirelessLink(in userSession: ZMUserSession, _ completion: @escaping (VoidResult) -> Void) {
+        guard canManageAccess else {
+            return completion(.failure(WirelessLinkError.invalidOperation))
+        }
+        
         let request = WirelessRequestFactory.deleteLinkRequest(for: self)
         
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
@@ -144,6 +156,10 @@ extension ZMConversation {
     
     /// Changes the conversation access mode to allow guests.
     public func setAllowGuests(_ allowGuests: Bool, in userSession: ZMUserSession, _ completion: @escaping (VoidResult) -> Void) {
+        guard canManageAccess else {
+            return completion(.failure(WirelessLinkError.invalidOperation))
+        }
+        
         let request = WirelessRequestFactory.set(allowGuests: allowGuests, for: self)
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
             if let payload = response.payload,
@@ -172,9 +188,6 @@ extension ZMConversation {
 
 internal struct WirelessRequestFactory {
     static func fetchLinkRequest(for conversation: ZMConversation) -> ZMTransportRequest {
-        guard conversation.canManageAccess else {
-            fatal("conversation cannot be managed")
-        }
         guard let identifier = conversation.remoteIdentifier?.transportString() else {
             fatal("conversation is not yet inserted on the backend")
         }
@@ -182,9 +195,6 @@ internal struct WirelessRequestFactory {
     }
     
     static func createLinkRequest(for conversation: ZMConversation) -> ZMTransportRequest {
-        guard conversation.canManageAccess else {
-            fatal("conversation cannot be managed")
-        }
         guard let identifier = conversation.remoteIdentifier?.transportString() else {
             fatal("conversation is not yet inserted on the backend")
         }
@@ -192,9 +202,6 @@ internal struct WirelessRequestFactory {
     }
     
     static func deleteLinkRequest(for conversation: ZMConversation) -> ZMTransportRequest {
-        guard conversation.canManageAccess else {
-            fatal("conversation cannot be managed")
-        }
         guard let identifier = conversation.remoteIdentifier?.transportString() else {
             fatal("conversation is not yet inserted on the backend")
         }
@@ -202,9 +209,6 @@ internal struct WirelessRequestFactory {
     }
     
     static func set(allowGuests: Bool, for conversation: ZMConversation) -> ZMTransportRequest {
-        guard conversation.canManageAccess else {
-            fatal("conversation cannot be managed")
-        }
         guard let identifier = conversation.remoteIdentifier?.transportString() else {
             fatal("conversation is not yet inserted on the backend")
         }
