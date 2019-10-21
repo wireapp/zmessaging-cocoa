@@ -36,7 +36,7 @@
 // Ephemeral
 "push.notification.ephemeral.title" = "Someone";
 "push.notification.ephemeral" = "发送消息";
-"push.notification.ephemeral.mention" = "Mentioned you";
+"push.notification.ephemeral.mention" = "你被提及";
 "push.notification.ephemeral.reply" = "Replied to you";
 
 // 2 Components: Sender, Message

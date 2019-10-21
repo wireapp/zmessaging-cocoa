@@ -188,7 +188,7 @@
 
 // CONVERSATION DELETE
 "push.notification.conversation.delete" = "%1$@ deleted the group";
-"push.notification.conversation.delete.nousername" = "Someone deleted the group";
+"push.notification.conversation.delete.nousername" = "某人刪除了群組";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@想連絡您";
@@ -206,10 +206,10 @@
 
 // AVAILABILITY ALERT
 
-"push.notification.alert.availability.away.title.team" = "Notifications are disabled in %@";
-"push.notification.alert.availability.away.title" = "Notifications are disabled";
+"push.notification.alert.availability.away.title.team" = "通知已在%@停用";
+"push.notification.alert.availability.away.title" = "已停用通知";
 "push.notification.alert.availability.busy.title.team" = "Notifications have changed in %@";
-"push.notification.alert.availability.busy.title" = "Notifications have changed";
+"push.notification.alert.availability.busy.title" = "通知已更改";
 
 "push.notification.alert.availability.away.message" = "Status affects notifications now. You’re set to “Away” and won’t receive any notifications.";
 "push.notification.alert.availability.busy.message" = "Status affects notifications now. You’re set to “Busy” and will only receive notifications when someone mentions you or replies to one of your messages.";

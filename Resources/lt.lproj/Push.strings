@@ -187,8 +187,8 @@
 "push.notification.conversation.create.nousername" = "Kažkas sukūrė grupę";
 
 // CONVERSATION DELETE
-"push.notification.conversation.delete" = "%1$@ deleted the group";
-"push.notification.conversation.delete.nousername" = "Someone deleted the group";
+"push.notification.conversation.delete" = "%1$@ ištrynė grupę";
+"push.notification.conversation.delete.nousername" = "Kažkas ištrynė grupę";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ nori užmegzti kontaktą";

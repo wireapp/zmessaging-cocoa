@@ -187,8 +187,8 @@
 "push.notification.conversation.create.nousername" = "Quelqu'un a créé un groupe";
 
 // CONVERSATION DELETE
-"push.notification.conversation.delete" = "%1$@ deleted the group";
-"push.notification.conversation.delete.nousername" = "Someone deleted the group";
+"push.notification.conversation.delete" = "%1$@ a supprimé le groupe";
+"push.notification.conversation.delete.nousername" = "Quelqu'un a supprimé ce groupe";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ souhaite se connecter";
