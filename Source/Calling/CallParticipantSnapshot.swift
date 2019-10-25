@@ -63,7 +63,7 @@ class CallParticipantsSnapshot {
         notifyChange()
     }
     
-    func callParticpantVideoStateChanged(userId: UUID, videoState: VideoState) {
+    func callParticpantVideoStateChanged(userId: UUID, clientId: UUID, videoState: VideoState) {
         guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
         
         update(updatedMember: AVSCallMember(userId: userId, clientId: callMember.clientId, audioEstablished: callMember.audioEstablished, videoState: videoState))
