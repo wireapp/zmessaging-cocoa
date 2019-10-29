@@ -19,9 +19,9 @@
 import Foundation
 
 extension ZMUserSession {
-    
-    public var conversationDirectory: ConversationDirectoryType {
-        return managedObjectContext.conversationListDirectory()
+
+    public var conversationDirectory: ConversationDirectoryType? {
+        return managedObjectContext?.conversationListDirectory()
     }
     
 }
