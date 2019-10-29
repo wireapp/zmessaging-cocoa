@@ -48,7 +48,10 @@ extension ZMSingleRequestSync : ZMRequestGenerator {}
     }
 
     private func modifiedPredicate() -> NSPredicate {
-        let basePredicate = UserClient.predicateForObjectsThatNeedToBeUpdatedUpstream()
+        guard let basePredicate = UserClient.predicateForObjectsThatNeedToBeUpdatedUpstream() else {
+            fatal("basePredicate is nil!")
+        }
+
         let nonNilPushToken = NSPredicate(format: "%K != nil", Keys.UserClientPushTokenKey)
 
         return NSCompoundPredicate(andPredicateWithSubpredicates: [basePredicate, nonNilPushToken])
