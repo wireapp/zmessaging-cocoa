@@ -262,8 +262,9 @@ extension UserProfileImageUpdateStatus: ZMAssetsPreprocessorDelegate {
     public func completedDownsampleOperation(_ operation: ZMImageDownsampleOperationProtocol, imageOwner: ZMImageOwner) {
         syncMOC.performGroupedBlock {
             ProfileImageSize.allSizes.forEach {
-                if operation.format == $0.imageFormat {
-                    self.setState(state: .upload(image: operation.downsampleImageData), for: $0)
+                if operation.format == $0.imageFormat,
+                   let downsampleImageData = operation.downsampleImageData {
+                    self.setState(state: .upload(image: downsampleImageData), for: $0)
                 }
             }
         }
