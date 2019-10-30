@@ -62,11 +62,18 @@ class CallParticipantsSnapshot {
         members = type(of:self).removeDuplicateMembers(participants)
         notifyChange()
     }
-    
-    func callParticpantVideoStateChanged(userId: UUID, videoState: VideoState) {
-        guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
-        
-        update(updatedMember: AVSCallMember(userId: userId, clientId: callMember.clientId, audioEstablished: callMember.audioEstablished, videoState: videoState))
+
+    // TODO: We should be finding the call member solely by userId and clientId. However the clientId isn't set for
+    // 1:1 calls... yet. To work around this we return the first found user in case the cliendId is nil.
+    // AVS 5.4 will solve this as we will get the clientId on the established call handler. We need only to
+    // update the call member once we know their client id.
+    func callParticpantVideoStateChanged(userId: UUID, clientId: String, videoState: VideoState) {
+        let participantsByUser = members.array.filter { $0.remoteId == userId }
+        let participant = participantsByUser.first { $0.clientId == clientId } ?? participantsByUser.first
+
+        guard let callMember = participant else { return }
+
+        update(updatedMember: AVSCallMember(userId: userId, clientId: clientId, audioEstablished: callMember.audioEstablished, videoState: videoState))
     }
     
     func callParticpantAudioEstablished(userId: UUID) {

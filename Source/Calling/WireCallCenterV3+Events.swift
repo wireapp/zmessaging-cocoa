@@ -200,10 +200,10 @@ extension WireCallCenterV3 {
     }
 
     /// Handles video state changes.
-    func handleVideoStateChange(userId: UUID, newState: VideoState) {
+    func handleVideoStateChange(userId: UUID, clientId: String,  newState: VideoState) {
         handleEvent("video-state-change") {
             self.nonIdleCalls.forEach {
-                self.callParticipantVideoStateChanged(conversationId: $0.key, userId: userId, videoState: newState)
+                self.callParticipantVideoStateChanged(conversationId: $0.key, userId: userId, clientId: clientId, videoState: newState)
             }
         }
     }

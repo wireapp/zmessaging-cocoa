@@ -1499,7 +1499,9 @@
 				540029B61918CA8500578793 /* Frameworks */,
 				540029B51918CA8500578793 /* Products */,
 			);
+			indentWidth = 4;
 			sourceTree = "<group>";
+			tabWidth = 4;
 		};
 		540029B51918CA8500578793 /* Products */ = {
 			isa = PBXGroup;
