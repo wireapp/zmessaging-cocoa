@@ -100,7 +100,7 @@ public struct AVSCallMember: Hashable {
     }
     
     public static func == (lhs: AVSCallMember, rhs: AVSCallMember) -> Bool {
-        return lhs.remoteId == rhs.remoteId
+        return lhs.hashValue == rhs.hashValue
     }
 
 }
