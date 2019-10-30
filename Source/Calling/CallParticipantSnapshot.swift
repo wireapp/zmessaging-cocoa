@@ -90,11 +90,7 @@ class CallParticipantsSnapshot {
     
     func update(updatedMember: AVSCallMember) {
         members = OrderedSetState(array: members.array.map({ member in
-            if member.remoteId == updatedMember.remoteId {
-                return updatedMember
-            } else {
-                return member
-            }
+            member == updatedMember ? updatedMember : member
         }))
         notifyChange()
     }
