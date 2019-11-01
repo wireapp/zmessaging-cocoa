@@ -54,7 +54,7 @@ class CallParticipantsSnapshot {
     }
 
     // TODO: We should be finding the call member solely by userId and clientId. However the clientId isn't set for
-    // 1:1 calls... yet. To work around this we return the first found user in case the cliendId is nil.
+    // 1:1 calls... yet. To work around this we return the first found user in case the clientId is nil.
     // AVS 5.4 will solve this as we will get the clientId on the established call handler. We need only to
     // update the call member once we know their client id.
     func callParticpantVideoStateChanged(userId: UUID, clientId: String, videoState: VideoState) {
@@ -65,13 +65,15 @@ class CallParticipantsSnapshot {
 
         update(updatedMember: AVSCallMember(userId: userId, clientId: clientId, audioEstablished: callMember.audioEstablished, videoState: videoState))
     }
-    
+
+    // TODO: AVS 5.4 will provide clientId, use it to find the correct call member.
     func callParticpantAudioEstablished(userId: UUID) {
         guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
-        
+
         update(updatedMember: AVSCallMember(userId: userId, clientId: callMember.clientId, audioEstablished: true, videoState: callMember.videoState))
     }
 
+    // TODO: AVS 5.4 will provide clientId, use it to find the correct call member.
     func callParticpantNetworkQualityChanged(userId: UUID, networkQuality: NetworkQuality) {
         guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
 
@@ -84,14 +86,16 @@ class CallParticipantsSnapshot {
         }))
         notifyChange()
     }
-    
+
+    // TODO: This needs to change
     func notifyChange() {
         if let context = callCenter.uiMOC {
             WireCallCenterCallParticipantNotification(conversationId: conversationId, participants: members.map({ ($0.remoteId, $0.callParticipantState) })).post(in: context.notificationContext)
         }
         
     }
-    
+
+    // TODO: AVS 5.4 will provide clientId, use it to find the correct call member.
     public func callParticipantState(forUser userId: UUID) -> CallParticipantState {
         guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return .unconnected }
         
