@@ -150,7 +150,7 @@ public protocol WireCallCenterCallParticipantObserver : class {
      - parameter conversation: where the call is ongoing
      - parameter particpants: updated list of call participants
      */
-    func callParticipantsDidChange(conversation: ZMConversation, participants: [(UUID, CallParticipantState)])
+    func callParticipantsDidChange(conversation: ZMConversation, participants: [CallParticipant])
 }
 
 public struct WireCallCenterCallParticipantNotification : SelfPostingNotification {
@@ -158,9 +158,9 @@ public struct WireCallCenterCallParticipantNotification : SelfPostingNotificatio
     static let notificationName = Notification.Name("VoiceChannelParticipantNotification")
     
     let conversationId : UUID
-    let participants: [(UUID, CallParticipantState)]
+    let participants: [CallParticipant]
     
-    init(conversationId: UUID, participants: [(UUID, CallParticipantState)]) {
+    init(conversationId: UUID, participants: [CallParticipant]) {
         self.conversationId = conversationId
         self.participants = participants
     }

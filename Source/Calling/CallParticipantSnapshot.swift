@@ -87,12 +87,12 @@ class CallParticipantsSnapshot {
         notifyChange()
     }
 
-    // TODO: This needs to change
+
     func notifyChange() {
-        if let context = callCenter.uiMOC {
-            WireCallCenterCallParticipantNotification(conversationId: conversationId, participants: members.map({ ($0.remoteId, $0.callParticipantState) })).post(in: context.notificationContext)
-        }
+        guard let context = callCenter.uiMOC else { return }
         
+        let participants = members.map { CallParticipant(member: $0, context: context) }.compactMap(\.self)
+        WireCallCenterCallParticipantNotification(conversationId: conversationId, participants: participants).post(in: context.notificationContext)
     }
 
     // TODO: AVS 5.4 will provide clientId, use it to find the correct call member.
