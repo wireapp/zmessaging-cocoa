@@ -99,4 +99,7 @@ public struct AVSCallMember: Hashable {
         hasher.combine(clientId)
     }
     
+    public static func == (lhs: AVSCallMember, rhs: AVSCallMember) -> Bool {
+        return lhs.hashValue == rhs.hashValue
+    }
 }
