@@ -173,4 +173,22 @@ class CallParticipantsSnapshotTests : MessagingTest {
         let expectation = [callMember1, updatedCallMember2]
         XCTAssertEqual(sut.members.array, expectation)
     }
+
+    func testThatItUpdatesTheCallMemberWithAClientId() {
+        // given
+        let userId = UUID()
+        let clientId = "clientId"
+
+        let callMember = AVSCallMember(userId: userId, clientId: nil, videoState: .stopped)
+
+        let sut = WireSyncEngine.CallParticipantsSnapshot(conversationId: UUID(),
+                                                          members: [callMember],
+                                                          callCenter: mockWireCallCenterV3)
+        // when
+        sut.callParticpantVideoStateChanged(userId: userId, clientId: clientId, videoState: .started)
+
+        // then
+        let expectation = [AVSCallMember(userId: userId, clientId: clientId, videoState: .started)]
+        XCTAssertEqual(sut.members.array, expectation)
+    }
 }
