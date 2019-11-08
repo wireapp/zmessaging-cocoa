@@ -54,10 +54,7 @@ class CallParticipantsSnapshot {
     }
 
     func callParticpantVideoStateChanged(userId: UUID, clientId: String, videoState: VideoState) {
-        let participantsByUser = members.array.filter { $0.remoteId == userId }
-        let participant = participantsByUser.first { $0.clientId == clientId } ?? participantsByUser.first
-
-        guard let callMember = participant else { return }
+        guard let callMember = findMember(userId: userId, clientId: clientId) else { return }
 
         update(updatedMember: AVSCallMember(userId: userId, clientId: clientId, audioEstablished: callMember.audioEstablished, videoState: videoState))
     }
@@ -75,12 +72,12 @@ class CallParticipantsSnapshot {
     }
     
     func update(updatedMember: AVSCallMember) {
-        members = OrderedSetState(array: members.array.map({ member in
-            member == updatedMember ? updatedMember : member
-        }))
-        notifyChange()
-    }
+        guard let targetMember = findMember(userId: updatedMember.remoteId, clientId: updatedMember.clientId) else { return }
 
+        members = OrderedSetState(array: members.array.map({ member in
+            member == targetMember ? updatedMember : member
+        }))
+    }
 
     func notifyChange() {
         guard let context = callCenter.uiMOC else { return }
@@ -93,5 +90,13 @@ class CallParticipantsSnapshot {
         guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return .unconnected }
         
         return callMember.callParticipantState
+    }
+
+    /// Tries to find the call member with the matching userId and clientId, otherwise the first member
+    /// with the matching userId.
+    ///
+    private func findMember(userId: UUID, clientId: String?) -> AVSCallMember? {
+        let participantsByUser = members.array.filter { $0.remoteId == userId }
+        return participantsByUser.first { $0.clientId == clientId } ?? participantsByUser.first
     }
 }
