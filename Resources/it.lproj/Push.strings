@@ -188,7 +188,7 @@
 
 // CONVERSATION DELETE
 "push.notification.conversation.delete" = "%1$@ deleted the group";
-"push.notification.conversation.delete.nousername" = "Someone deleted the group";
+"push.notification.conversation.delete.nousername" = "Qualcuno ha eliminato il gruppo";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ vuole connettersi";
@@ -207,7 +207,7 @@
 // AVAILABILITY ALERT
 
 "push.notification.alert.availability.away.title.team" = "Notifications are disabled in %@";
-"push.notification.alert.availability.away.title" = "Notifications are disabled";
+"push.notification.alert.availability.away.title" = "Le notifiche sono disabilitate";
 "push.notification.alert.availability.busy.title.team" = "Notifications have changed in %@";
 "push.notification.alert.availability.busy.title" = "Notifications have changed";
 
