@@ -133,7 +133,7 @@ extension CallKitDelegate {
         
         guard contacts.count == 1,
               let contact = contacts.first,
-              let customIdentifier = contact.customIdentifier,
+              let customIdentifier = contact.personHandle?.value,
               let (accountId, conversationId) = callIdentifiers(from: customIdentifier),
               let account = sessionManager.accountManager.account(with: accountId)
         else {
