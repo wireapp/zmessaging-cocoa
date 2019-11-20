@@ -60,6 +60,9 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 /// The client app should create this object upon launch and keep a reference to it
 @interface ZMUserSession : NSObject <ZMManagedObjectContextProvider>
 
+@property (nonatomic, readonly) NSManagedObjectContext * managedObjectContext;
+@property (nonatomic, readonly) NSManagedObjectContext * syncManagedObjectContext;
+
 /**
  Intended initializer to be used by the UI
  @param mediaManager: The media manager delegate
