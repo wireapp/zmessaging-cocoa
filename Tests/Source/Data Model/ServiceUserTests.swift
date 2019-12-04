@@ -29,6 +29,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var availability: Availability = .none
     
+    var shouldHideAvailability: Bool = false
+    
     var teamName: String? = nil
     
     var isBlocked: Bool = false
