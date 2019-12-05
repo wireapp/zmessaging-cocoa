@@ -759,7 +759,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     conversation.remoteIdentifier = [NSUUID createUUID];
     
     
-    [conversation.mutableLastServerSyncedActiveParticipants addObjectsFromArray:@[selfUser, user1, user2]];
+    [conversation addWithUsers:@[selfUser, user1, user2] isFromLocal:NO];
 
     *conversationPointer = conversation;
     *user1Pointer = user1;
@@ -1971,7 +1971,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     // then
     [self.syncMOC performGroupedBlockAndWait:^{
         XCTAssertEqual(conversation.lastServerSyncedActiveParticipants.count, 1u);
-        XCTAssertEqualObjects(conversation.lastServerSyncedActiveParticipants.firstObject, nonRemovedUser);
+        XCTAssertEqualObjects(conversation.lastServerSyncedActiveParticipants.anyObject, nonRemovedUser);
         
     }];
 }
