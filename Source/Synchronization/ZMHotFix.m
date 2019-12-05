@@ -91,7 +91,7 @@ NSString * const ZMSkipHotfix = @"ZMSkipHotfix";
     
     ZMLogDebug(@"Applying HotFix with last saved version %@, current version %@.", lastSavedVersion.versionString, currentVersion.versionString);
     [self.syncMOC performGroupedBlock:^{
-        [self applyFixesSinceVersion:lastSavedVersion];
+        [self applyFixesSinceVersion:lastSavedVersion];///TODO: exception here
         [self saveNewVersion:currentVersionString];
         [self.syncMOC saveOrRollback];
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
