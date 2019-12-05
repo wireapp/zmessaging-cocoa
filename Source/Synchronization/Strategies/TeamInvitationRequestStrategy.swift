@@ -80,6 +80,8 @@ public final class TeamInvitationRequestStrategy : AbstractRequestStrategy {
             teamInvitationStatus?.handle(result: InviteResult(response: response, email:email), email: email)
         case .temporaryError, .tryAgainLater, .expired:
             teamInvitationStatus?.retry(email)
+        @unknown default:
+            fatal("unknown case")
         }
     }
     

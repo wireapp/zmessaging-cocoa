@@ -29,7 +29,7 @@ class ConversationTests_Guests : TeamTests {
         var result: MockConversation!
         mockTransportSession.performRemoteChanges { session in
 
-            let teamConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [self.user1])
+            let teamConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [self.user1!])
             teamConversation.team = team
             teamConversation.creator = self.selfUser
             teamConversation.changeName(by:self.selfUser, name:"Team Group conversation")

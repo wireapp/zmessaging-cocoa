@@ -106,27 +106,33 @@ private enum PreLoginAuthenticationEvent {
 // Obj-c friendly methods
 public extension ZMAuthenticationStatus {
     
-    @objc public func notifyAuthenticationDidFail(_ error: NSError) {
+    @objc
+    func notifyAuthenticationDidFail(_ error: NSError) {
         PreLoginAuthenticationNotification.notify(of: .authenticationDidFail(error: error), context: self)
     }
 
-    @objc public func notifyAuthenticationReadyToImportBackup(existingAccount: Bool) {
+    @objc
+    func notifyAuthenticationReadyToImportBackup(existingAccount: Bool) {
         PreLoginAuthenticationNotification.notify(of: .authenticationReadyToImportBackup(existingAccount: existingAccount), context: self)
     }
     
-    @objc public func notifyAuthenticationDidSucceed() {
+    @objc
+    func notifyAuthenticationDidSucceed() {
         PreLoginAuthenticationNotification.notify(of: .authenticationDidSucceed, context: self)
     }
     
-    @objc public func notifyLoginCodeRequestDidFail(_ error: NSError) {
+    @objc
+    func notifyLoginCodeRequestDidFail(_ error: NSError) {
         PreLoginAuthenticationNotification.notify(of: .loginCodeRequestDidFail(error), context: self)
     }
     
-    @objc public func notifyLoginCodeRequestDidSucceed() {
+    @objc
+    func notifyLoginCodeRequestDidSucceed() {
         PreLoginAuthenticationNotification.notify(of: .loginCodeRequestDidSucceed, context: self)
     }
 
-    @objc public func notifyCompanyLoginCodeDidBecomeAvailable(_ code: UUID) {
+    @objc
+    func notifyCompanyLoginCodeDidBecomeAvailable(_ code: UUID) {
         PreLoginAuthenticationNotification.notify(of: .companyLoginCodeDidBecomeAvailable(code), context: self)
     }
 }

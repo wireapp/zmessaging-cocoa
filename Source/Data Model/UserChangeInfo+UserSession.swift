@@ -33,7 +33,7 @@ public extension UserChangeInfo {
     /// Adds an observer for the user if one specified or to all ZMUsers is none is specified
     /// You must hold on to the token and use it to unregister
     @objc(addUserObserver:forUser:userSession:)
-    public static func add(userObserver observer: ZMUserObserver, for user: ZMUser?, userSession: ZMUserSession) -> NSObjectProtocol {
+    static func add(userObserver observer: ZMUserObserver, for user: ZMUser?, userSession: ZMUserSession) -> NSObjectProtocol {
         return self.add(userObserver: observer, for: user, managedObjectContext: userSession.managedObjectContext)
     }
     

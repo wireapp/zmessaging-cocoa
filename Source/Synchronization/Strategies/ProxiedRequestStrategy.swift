@@ -30,6 +30,8 @@ extension ProxiedRequestType {
             return "/soundcloud"
         case .youTube:
             return "/youtube"
+        @unknown default:
+            fatal("unknown ProxiedRequestType")
         }
     }
 }

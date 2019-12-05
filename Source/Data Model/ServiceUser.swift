@@ -132,7 +132,7 @@ public extension ServiceUserData {
 }
 
 public extension ServiceUser {
-    public func fetchProvider(in userSession: ZMUserSession, completion: @escaping (ServiceProvider?)->()) {
+    func fetchProvider(in userSession: ZMUserSession, completion: @escaping (ServiceProvider?)->()) {
         guard let serviceUserData = self.serviceUserData else {
             fatal("Not a service user")
         }
@@ -155,7 +155,7 @@ public extension ServiceUser {
         userSession.transportSession.enqueueOneTime(request)
     }
     
-    public func fetchDetails(in userSession: ZMUserSession, completion: @escaping (ServiceDetails?)->()) {
+    func fetchDetails(in userSession: ZMUserSession, completion: @escaping (ServiceDetails?)->()) {
         guard let serviceUserData = self.serviceUserData else {
             fatal("Not a service user")
         }
@@ -215,7 +215,7 @@ extension AddBotError {
 
 public extension ZMConversation {
     
-    public func add(serviceUser: ServiceUser, in userSession: ZMUserSession, completion: ((AddBotError?)->())?) {
+    func add(serviceUser: ServiceUser, in userSession: ZMUserSession, completion: ((AddBotError?)->())?) {
         guard let serviceUserData = serviceUser.serviceUserData else {
             fatal("Not a service user")
         }
@@ -223,7 +223,7 @@ public extension ZMConversation {
         add(serviceUser: serviceUserData, in: userSession, completion: completion)
     }
     
-    public func add(serviceUser serviceUserData: ServiceUserData, in userSession: ZMUserSession, completion: ((AddBotError?)->())?) {
+    func add(serviceUser serviceUserData: ServiceUserData, in userSession: ZMUserSession, completion: ((AddBotError?)->())?) {
         guard userSession.transportSession.reachability.mayBeReachable else {
             completion?(AddBotError.offline)
             return
@@ -255,14 +255,14 @@ public extension ZMConversation {
 }
 
 public extension ZMUserSession {
-    public func startConversation(with serviceUser: ServiceUser, completion: ((AddBotResult)->())?) {
+    func startConversation(with serviceUser: ServiceUser, completion: ((AddBotResult)->())?) {
         guard let serviceUserData = serviceUser.serviceUserData else {
             fatal("Not a service user")
         }
         startConversation(with: serviceUserData, completion: completion)
     }
     
-    public func startConversation(with serviceUserData: ServiceUserData, completion: ((AddBotResult)->())?) {
+    func startConversation(with serviceUserData: ServiceUserData, completion: ((AddBotResult)->())?) {
         guard self.transportSession.reachability.mayBeReachable else {
             completion?(AddBotResult.failure(error: .offline))
             return
