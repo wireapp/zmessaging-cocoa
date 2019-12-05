@@ -505,6 +505,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
             // then
             XCTAssertNotNil(note)
             XCTAssertEqual(note!.title, "Super User in \(team.name!)")
+            ///TODO: "Optional("Other User1 in Wire Amazing Team")") is not equal to ("Optional("Super User in Wire Amazing Team")")
         }
     }
     
