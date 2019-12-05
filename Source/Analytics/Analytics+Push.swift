@@ -33,7 +33,8 @@ extension AnalyticsType {
 
 public extension ZMConversation {
     
-    @objc public var ephemeralTrackingAttributes: [String: Any] {
+    @objc
+    var ephemeralTrackingAttributes: [String: Any] {
         let ephemeral = messageDestructionTimeout != nil
         var attributes: [String: Any] = ["is_ephemeral": ephemeral]
         guard ephemeral else { return attributes }
@@ -42,7 +43,8 @@ public extension ZMConversation {
     }
     
     /// Whether the conversation includes at least 1 service user.
-    @objc public var includesServiceUser: Bool {
+    @objc
+    var includesServiceUser: Bool {
         guard let participants = lastServerSyncedActiveParticipants.array as? [UserType] else { return false }
         return participants.any { $0.isServiceUser }
     }
