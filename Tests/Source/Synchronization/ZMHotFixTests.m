@@ -212,12 +212,7 @@
 }
 
 
-@end
-
-
-
-
-@implementation ZMHotFixTests (CurrentFixes)
+#pragma mark - CurrentFixes
 
 - (void)testThatItSendsOutResetPushTokenNotificationVersion_40_4
 {
