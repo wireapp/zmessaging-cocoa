@@ -442,7 +442,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     }
 
     func d_testThatItAddsATitleIfTheUserIsPartOfATeam() {
-        self.syncMOC.performGroupedBlockAndWait {
+        syncMOC.performGroupedBlockAndWait {
             
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
