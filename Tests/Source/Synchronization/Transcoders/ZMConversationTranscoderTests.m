@@ -153,8 +153,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
     }
     
-    BOOL sameActiveUsers = activeParticipants.count == conversation.lastServerSyncedActiveParticipants.count;
-    for(ZMUser *user in conversation.lastServerSyncedActiveParticipants) {
+    BOOL sameActiveUsers = activeParticipants.count == conversation.localParticipants.count;
+    for(ZMUser *user in conversation.localParticipants) {
         sameActiveUsers = sameActiveUsers && [activeParticipants containsObject:user.remoteIdentifier];
     }
     
@@ -1959,7 +1959,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.remoteIdentifier = conversationID;
         [conversation internalAddParticipants:@[removedUser, nonRemovedUser]];
         
-        XCTAssertEqual(conversation.lastServerSyncedActiveParticipants.count, 2u);
+        XCTAssertEqual(conversation.localParticipants.count, 2u);
     }];
     
     NSDictionary *payload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[userID] eventType:@"conversation.member-leave"];
@@ -1970,8 +1970,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     
     // then
     [self.syncMOC performGroupedBlockAndWait:^{
-        XCTAssertEqual(conversation.lastServerSyncedActiveParticipants.count, 1u);
-        XCTAssertEqualObjects(conversation.lastServerSyncedActiveParticipants.anyObject, nonRemovedUser);
+        XCTAssertEqual(conversation.localParticipants.count, 1u);
+        XCTAssertEqualObjects(conversation.localParticipants.anyObject, nonRemovedUser);
         
     }];
 }
@@ -2034,7 +2034,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.remoteIdentifier = conversationID;
         [conversation internalAddParticipants:@[user1, user2]];
         
-        XCTAssertEqual(conversation.lastServerSyncedActiveParticipants.count, 2u);
+        XCTAssertEqual(conversation.localParticipants.count, 2u);
         
         NSDictionary *payload = [self responsePayloadForUserEventInConversationID:conversationID userIDs:@[userID] eventType:@"conversation.member-join"];
         
@@ -2042,7 +2042,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         [self.sut processEvents:@[[ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil]] liveEvents:YES prefetchResult:nil];
         
         // then
-        XCTAssertEqual(conversation.lastServerSyncedActiveParticipants.count, 3u);
+        XCTAssertEqual(conversation.localParticipants.count, 3u);
     }];
 }
 

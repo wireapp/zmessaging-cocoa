@@ -122,7 +122,7 @@ class SlowSyncTestsTeams: IntegrationTest {
             guard let conversation = team.conversations.first else { return XCTFail("Conversation missing") }
             XCTAssertEqual(conversation.conversationType, .group)
 
-            XCTAssertTrue(conversation.lastServerSyncedActiveParticipants.contains(user(for: user3)!))
+            XCTAssert(conversation.localParticipants.contains(user(for: user3)!))
             XCTAssertTrue(user(for: user3)!.isGuest(in: conversation))
             XCTAssertTrue(user(for: user5)!.isTeamMember)
             XCTAssertTrue(realSelfUser.isTeamMember)

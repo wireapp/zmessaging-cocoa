@@ -588,7 +588,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     ZMTransportRequest *request = nil;
     ZMConversation *insertedConversation = (ZMConversation *) managedObject;
     
-    NSArray *participantUUIDs = [[insertedConversation.lastServerSyncedActiveParticipants allObjects] mapWithBlock:^id(ZMUser *user) {
+    NSArray *participantUUIDs = [[insertedConversation.localParticipants allObjects] mapWithBlock:^id(ZMUser *user) {
         return [user.remoteIdentifier transportString];
     }];
     

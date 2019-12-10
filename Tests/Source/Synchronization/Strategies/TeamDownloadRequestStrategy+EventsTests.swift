@@ -533,8 +533,8 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             XCTAssertNil(user.membership)
             guard let teamConversation = ZMConversation.fetch(withRemoteIdentifier: teamConversationId, in: self.syncMOC) else { return XCTFail("No Team Conversation") }
             guard let conversation = ZMConversation.fetch(withRemoteIdentifier: conversationId, in: self.syncMOC) else { return XCTFail("No Conversation") }
-            XCTAssertFalse(teamConversation.lastServerSyncedActiveParticipants.contains(user))
-            XCTAssertFalse(conversation.lastServerSyncedActiveParticipants.contains(user))
+            XCTAssertFalse(teamConversation.localParticipants.contains(user))
+            XCTAssertFalse(conversation.localParticipants.contains(user))
         }
     }
     

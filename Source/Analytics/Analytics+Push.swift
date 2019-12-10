@@ -43,9 +43,10 @@ public extension ZMConversation {
     }
     
     /// Whether the conversation includes at least 1 service user.
+    ///TODO: move this to DM
     @objc
     var includesServiceUser: Bool {
-        return lastServerSyncedActiveParticipants.any { $0.isServiceUser }
+        return localParticipants.any { $0.isServiceUser }
     }
 }
 
