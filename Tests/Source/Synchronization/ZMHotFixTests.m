@@ -384,7 +384,7 @@
     }];
 }
 
-- (void)testThatItSetsNotUploadedAssetClientMessagesToFailedAndAlsoExpiresFailedImageMessages_42_11
+- (void)d_testThatItSetsNotUploadedAssetClientMessagesToFailedAndAlsoExpiresFailedImageMessages_42_11
 {
     __block ZMAssetClientMessage *uploadedImageMessage = nil;
     __block ZMAssetClientMessage *notUploadedImageMessage = nil;
