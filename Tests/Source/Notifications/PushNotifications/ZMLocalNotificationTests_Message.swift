@@ -441,7 +441,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         XCTAssertEqual(bodyForUnknownNote(invalidConversation, sender: sender), "Super User sent a message")
     }
 
-    func testThatItAddsATitleIfTheUserIsPartOfATeam() {
+    func d_testThatItAddsATitleIfTheUserIsPartOfATeam() {
         self.syncMOC.performGroupedBlockAndWait {
             
             // given
