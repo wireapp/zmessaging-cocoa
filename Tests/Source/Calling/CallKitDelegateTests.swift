@@ -249,7 +249,7 @@ class CallKitDelegateTest: MessagingTest {
         let conversation = ZMConversation(context: moc)
         conversation.remoteIdentifier = UUID()
         conversation.conversationType = type
-        conversation.isSelfAnActiveMember = true
+        conversation.add(user: ZMUser.selfUser(in: uiMOC), isFromLocal: true)
         
         if type == .group {
             conversation.internalAddParticipants([self.otherUser(moc: moc)])

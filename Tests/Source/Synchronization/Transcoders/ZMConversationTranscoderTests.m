@@ -1531,7 +1531,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 
 - (void)testThatItOnlyResetsTheKeysItNeedsToReset
 {
-    NSSet *keys = [NSSet setWithObjects:ZMConversationIsSelfAnActiveMemberKey, ZMConversationUserDefinedNameKey, nil];
+    NSSet *keys = [NSSet setWithObjects:ZMConversationUserDefinedNameKey, nil];
     __block ZMConversation *conversation = nil;
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
@@ -1541,8 +1541,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2]];
         
         conversation.userDefinedName = nil;
-        conversation.isSelfAnActiveMember = NO;
-        
+        [conversation minusWithUser:[ZMUser selfUserInContext:self.syncMOC] isFromLocal:NO];
+
         XCTAssertTrue([self.syncMOC saveOrRollback]);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1556,7 +1556,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         BOOL shouldCreate = [self.sut shouldCreateRequestToSyncObject:conversation forKeys:keys withSync:mockUpstream];
         XCTAssertFalse([conversation.keysThatHaveLocalModifications containsObject:ZMConversationUserDefinedNameKey]);
-        XCTAssertTrue([conversation.keysThatHaveLocalModifications containsObject:ZMConversationIsSelfAnActiveMemberKey]);
+//        XCTAssertTrue([conversation.keysThatHaveLocalModifications containsObject:ZMConversationIsSelfAnActiveMemberKey]);
         XCTAssertTrue(shouldCreate);
     }];
 }
@@ -2066,7 +2066,10 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         ZMConversation *conversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2, user3]];
         conversation.remoteIdentifier = conversationID;
-        conversation.isSelfAnActiveMember = NO;
+        [conversation minusWithUser:[ZMUser selfUserInContext:self.syncMOC] isFromLocal:NO];
+        
+        
+
         
         [conversation resetLocallyModifiedKeys:conversation.keysThatHaveLocalModifications];
         XCTAssert([self.syncMOC save:nil]);
@@ -3177,7 +3180,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.conversationType = ZMConversationTypeGroup;
         conversation.remoteIdentifier = [NSUUID createUUID];
         conversation.needsToBeUpdatedFromBackend = YES;
-        conversation.isSelfAnActiveMember = YES;
+        [conversation addWithUser:[ZMUser selfUserInContext:self.syncMOC] isFromLocal:NO];
         [self.syncMOC saveOrRollback];
         
         for (id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
@@ -3197,7 +3200,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertFalse(conversation.isFault);
         XCTAssertFalse(conversation.needsToBeUpdatedFromBackend);
         XCTAssertFalse(conversation.isSelfAnActiveMember);
-        XCTAssertFalse([conversation hasLocalModificationsForKey:ZMConversationIsSelfAnActiveMemberKey]);
+        XCTAssertFalse([conversation hasLocalModificationsForKey:ZMConversationParticipantRolesKey]);
     }];
 }
 
@@ -3213,7 +3216,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.conversationType = ZMConversationTypeGroup;
         conversation.remoteIdentifier = [NSUUID createUUID];
         conversation.needsToBeUpdatedFromBackend = YES;
-        conversation.isSelfAnActiveMember = YES;
+        [conversation addWithUser:[ZMUser selfUserInContext:self.syncMOC] isFromLocal:NO];
         [self.syncMOC saveOrRollback];
         
         for (id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
