@@ -63,7 +63,7 @@ final class RoleDownstreamRequestStrategyTests: MessagingTest {
             guard let request = self.sut.nextRequest() else { return XCTFail() }
             
             // THEN
-            XCTAssertEqual(request.path, "TODO")///TODO:
+            XCTAssertEqual(request.path, RoleDownstreamRequestStrategy.requestPath)///TODO:
         }
     }
 

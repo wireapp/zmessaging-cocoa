@@ -176,9 +176,10 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                      @"others" : @[
                              @{
                                  @"id": otherUserID.transportString
+                                 ///TODO:conversation_role
                                  },
                              ],
-                     @"self" : @{
+                     @"self" : @{///TODO: conversation_role
                              @"otr_archived" : @(isArchived),
                              @"otr_archived_ref" : (isArchived ? @"2014-06-30T09:09:14.738Z" : [NSNull null]),
                              @"id": selfID.transportString

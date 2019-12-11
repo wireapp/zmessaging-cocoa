@@ -97,8 +97,10 @@ public final class RoleDownstreamRequestStrategy: AbstractRequestStrategy {
 
 extension RoleDownstreamRequestStrategy: ZMSingleRequestTranscoder {
     
+    static let requestPath = "conversation_role"  ///TODO: how about team role?
+    
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
-        return ZMTransportRequest(getFromPath: "TODO")
+        return ZMTransportRequest(getFromPath: RoleDownstreamRequestStrategy.requestPath)
     }
     
     public func didReceive(_ response: ZMTransportResponse,
