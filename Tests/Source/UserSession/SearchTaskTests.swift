@@ -352,7 +352,7 @@ class SearchTaskTests : MessagingTest {
         conversation.conversationType = .group
         conversation.remoteIdentifier = UUID()
         conversation.internalAddParticipants([userA])
-        conversation.isSelfAnActiveMember = true
+        conversation.add(user: ZMUser.selfUser(in: uiMOC), isFromLocal: true)
         
         userA.name = "Member A"
         userB.name = "Member B"
@@ -428,7 +428,7 @@ class SearchTaskTests : MessagingTest {
         conversation.conversationType = .group
         conversation.remoteIdentifier = UUID()
         conversation.internalAddParticipants([userA, userB])
-        conversation.isSelfAnActiveMember = true
+        conversation.add(user: ZMUser.selfUser(in: uiMOC), isFromLocal: true)
         
         userA.name = "Member A"
         userB.name = "Member B"
