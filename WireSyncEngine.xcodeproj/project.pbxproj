@@ -371,6 +371,7 @@
 		87D4625D1C3D526D00433469 /* DeleteAccountRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D4625C1C3D526D00433469 /* DeleteAccountRequestStrategyTests.swift */; };
 		A907771A192E33A500141F13 /* SlowSyncTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D85D997334755E841D13EA /* SlowSyncTests.m */; };
 		A9660E9123A0FF8200ACAAF7 /* RoleDownstreamRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9660E9023A0FF8200ACAAF7 /* RoleDownstreamRequestStrategy.swift */; };
+		A9660E9323A1051F00ACAAF7 /* RoleDownstreamRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9660E9223A1051F00ACAAF7 /* RoleDownstreamRequestStrategyTests.swift */; };
 		A9692F8A1986476900849241 /* NSString_NormalizationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A9692F881986476900849241 /* NSString_NormalizationTests.m */; };
 		AF6415A41C9C17FF00A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt in Resources */ = {isa = PBXBuildFile; fileRef = AF6415A01C9C151700A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt */; };
 		AF6415A51C9C180200A535F5 /* ExternalMessageTextFixture.txt in Resources */ = {isa = PBXBuildFile; fileRef = AF6415A11C9C151700A535F5 /* ExternalMessageTextFixture.txt */; };
@@ -990,6 +991,7 @@
 		87D4625C1C3D526D00433469 /* DeleteAccountRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeleteAccountRequestStrategyTests.swift; sourceTree = "<group>"; };
 		87DF28C61F680495007E1702 /* PushDispatcherTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PushDispatcherTests.swift; sourceTree = "<group>"; };
 		A9660E9023A0FF8200ACAAF7 /* RoleDownstreamRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoleDownstreamRequestStrategy.swift; sourceTree = "<group>"; };
+		A9660E9223A1051F00ACAAF7 /* RoleDownstreamRequestStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoleDownstreamRequestStrategyTests.swift; sourceTree = "<group>"; };
 		A9692F881986476900849241 /* NSString_NormalizationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSString_NormalizationTests.m; sourceTree = "<group>"; };
 		AF6415A01C9C151700A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = EncryptedBase64EncondedExternalMessageTestFixture.txt; sourceTree = "<group>"; };
 		AF6415A11C9C151700A535F5 /* ExternalMessageTextFixture.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ExternalMessageTextFixture.txt; sourceTree = "<group>"; };
@@ -1745,6 +1747,7 @@
 				168CF42C2007BCA0009FCB89 /* TeamInvitationRequestStrategyTests.swift */,
 				1672A652234784B500380537 /* LabelDownstreamRequestStrategyTests.swift */,
 				16D0A118234B999600A83F87 /* LabelUpstreamRequestStrategyTests.swift */,
+				A9660E9223A1051F00ACAAF7 /* RoleDownstreamRequestStrategyTests.swift */,
 			);
 			path = Strategies;
 			sourceTree = "<group>";
@@ -2760,6 +2763,7 @@
 				5430FF151CE4A359004ECFFE /* FileTransferTests.m in Sources */,
 				545434AE19AB6ADA003892D9 /* ZMUserTranscoderTests.m in Sources */,
 				BF2A9D581D6B5BDB00FA7DBC /* StoreUpdateEventTests.swift in Sources */,
+				A9660E9323A1051F00ACAAF7 /* RoleDownstreamRequestStrategyTests.swift in Sources */,
 				0920C4DA1B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift in Sources */,
 				169BC10F22BD17FF0003159B /* LegalHoldRequestStrategyTests.swift in Sources */,
 				87AEA67D1EFBF46600C94BF3 /* DiskDatabaseTest.swift in Sources */,

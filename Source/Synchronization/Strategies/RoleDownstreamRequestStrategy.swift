@@ -69,6 +69,14 @@ public final class RoleDownstreamRequestStrategy: AbstractRequestStrategy {
         self.slowSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
     }
     
+    override public func nextRequestIfAllowed() -> ZMTransportRequest? {
+        guard syncStatus.currentSyncPhase == .fetchingRoles else { return nil }
+        
+        slowSync.readyForNextRequestIfNotBusy()
+        
+        return slowSync.nextRequest()
+    }
+
     func update(with transportData: Data) {
         guard let response = try? jsonDecoder.decode(RolePayload.self, from: transportData) else {
             Logging.eventProcessing.error("Can't apply role update due to malformed JSON")
