@@ -81,7 +81,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     
     // MARK: Tests
     
-    func d_testThatItShowsDefaultAlertBodyWhenHidePreviewSettingIsTrue() {
+    func testThatItShowsDefaultAlertBodyWhenHidePreviewSettingIsTrue() {
         // given
         let note1 = textNotification(oneOnOneConversation, sender: sender)
         XCTAssertEqual(note1?.content.title, "Super User") ///TODO:
@@ -441,7 +441,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         XCTAssertEqual(bodyForUnknownNote(invalidConversation, sender: sender), "Super User sent a message")
     }
 
-    func d_testThatItAddsATitleIfTheUserIsPartOfATeam() {
+    func testThatItAddsATitleIfTheUserIsPartOfATeam() {
         syncMOC.performGroupedBlockAndWait {
             
             // given
@@ -461,7 +461,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         }
     }
 
-    func d_testThatItDoesNotAddATitleIfTheUserIsNotPartOfATeam() {
+    func testThatItDoesNotAddATitleIfTheUserIsNotPartOfATeam() {
         
         // when
         let note = self.textNotification(oneOnOneConversation, sender: sender)

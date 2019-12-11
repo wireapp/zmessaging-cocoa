@@ -349,7 +349,7 @@
     XCTAssertTrue([observer.notifications.firstObject clientsChanged]);
 }
 
-- (void)d_testThatItDeliversTwoOTRAssetMessages ///TODO: fail
+- (void)testThatItDeliversTwoOTRAssetMessages
 {
     // given
     XCTAssertTrue([self login]);

@@ -384,7 +384,7 @@
     }];
 }
 
-- (void)d_testThatItSetsNotUploadedAssetClientMessagesToFailedAndAlsoExpiresFailedImageMessages_42_11
+- (void)testThatItSetsNotUploadedAssetClientMessagesToFailedAndAlsoExpiresFailedImageMessages_42_11
 {
     __block ZMAssetClientMessage *uploadedImageMessage = nil;
     __block ZMAssetClientMessage *notUploadedImageMessage = nil;
@@ -457,7 +457,7 @@
     }];
 }
 
-- (void)d_testThatItAddANewConversationSystemMessageForAllOneOnOneAndGroupConversation_HasHistory_44_4;
+- (void)testThatItAddANewConversationSystemMessageForAllOneOnOneAndGroupConversation_HasHistory_44_4;
 {
     __block ZMConversation *oneOnOneConversation = nil;
     __block ZMConversation *groupConversation = nil;
