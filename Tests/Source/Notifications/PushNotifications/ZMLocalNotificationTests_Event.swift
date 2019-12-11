@@ -19,7 +19,7 @@
 import XCTest
 @testable import WireSyncEngine
 
-class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
+final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     
     // MARK: Helpers
     
@@ -488,7 +488,7 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     
     // MARK: - Notification title
 
-    func d_testThatItAddsATitleIfTheUserIsPartOfATeam() {
+    func testThatItAddsATitleIfTheUserIsPartOfATeam() {
         self.syncMOC.performGroupedBlockAndWait {
             
             // given
@@ -505,17 +505,16 @@ class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
             // then
             XCTAssertNotNil(note)
             XCTAssertEqual(note!.title, "Super User in \(team.name!)")
-            ///TODO: "Optional("Other User1 in Wire Amazing Team")") is not equal to ("Optional("Super User in Wire Amazing Team")")
         }
     }
     
-    func d_testThatItDoesNotAddATitleIfTheUserIsNotPartOfATeam() {
+    func testThatItDoesNotAddATitleIfTheUserIsNotPartOfATeam() {
         
         // when
         let note = self.note(oneOnOneConversation, aSender: sender)
         
         // then
         XCTAssertNotNil(note)
-        XCTAssertEqual(note!.title, "Super User") ///TODO: "other user"
+        XCTAssertEqual(note!.title, "Super User")
     }
 }
