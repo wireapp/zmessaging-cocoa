@@ -24,19 +24,20 @@ extension ZMConversationTranscoder {
     
     @objc(processMemberUpdateEvent:forConversation:previousLastServerTimeStamp:)
     public func processMemberUpdateEvent(_ event: ZMUpdateEvent, for conversation: ZMConversation?, previousLastServerTimeStamp previousLastServerTimestamp: Date?) {
-        guard let dataPayload = event.payload["data"] as? [String : Any?] else { return }
+        guard let dataPayload = (event.payload as? NSDictionary)?.dictionary(forKey: "data") else { return }
         
         conversation?.updateSelfStatus(dictionary: dataPayload, timeStamp: event.timeStamp(), previousLastServerTimeStamp: previousLastServerTimestamp)
     }
 
     @objc(createConversationFromEvent:)
     public func createConversation(from event: ZMUpdateEvent) {
-        guard let payloadData = event.payload["data"] as? [AnyHashable : Any] else {
+        guard let payloadData = (event.payload as? NSDictionary)?.dictionary(forKey: "data") else {
             log.error("Missing conversation payload in ZMUpdateEventConversationCreate")
             return
         }
 
-        let serverTimestamp = event.payload["time"] as? Date
+        guard let serverTimestamp = (event.payload as? NSDictionary)?.date(for: "time") else { return }
+        
         createConversation(from: payloadData,
                            serverTimeStamp: serverTimestamp,
                            source: .updateEvent)
@@ -44,11 +45,11 @@ extension ZMConversationTranscoder {
 
     @objc(createConversationFromTransportData:serverTimeStamp:source:)
     @discardableResult
-    public func createConversation(from transportData: [AnyHashable : Any], serverTimeStamp: Date?, source: ZMConversationSource) -> ZMConversation? {
+    public func createConversation(from transportData: [AnyHashable : Any], serverTimeStamp: Date, source: ZMConversationSource) -> ZMConversation? {
         // If the conversation is not a group conversation, we need to make sure that we check if there's any existing conversation without a remote identifier for that user.
         // If it is a group conversation, we don't need to.
         
-        guard let typeNumber: Int = transportData["type"] as? Int else {
+        guard let typeNumber: Int = (transportData as? NSDictionary)?.number(forKey: "type") as? Int else {
             return nil
         }
         
@@ -63,7 +64,7 @@ extension ZMConversationTranscoder {
 
     @objc(createGroupOrSelfConversationFromTransportData:serverTimeStamp:source:)
     public func createGroupOrSelfConversation(from transportData: NSDictionary,
-                                       serverTimeStamp: Date!,
+                                       serverTimeStamp: Date,
                                        source: ZMConversationSource) -> ZMConversation? {
         guard let convRemoteID = transportData.uuid(forKey: "id") else {
             log.error("Missing ID in conversation payload")
