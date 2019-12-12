@@ -162,7 +162,7 @@
 
     ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
     
-    ZMUser *userToConnectTo = [conversation.sortedlocalParticipants firstObjectMatchingWithBlock:^BOOL(ZMUser* user) {
+    ZMUser *userToConnectTo = [conversation.sortedActiveParticipants firstObjectMatchingWithBlock:^BOOL(ZMUser* user) {
         return [user.name isEqual:userName];
     }];
     XCTAssertNotNil(userToConnectTo);

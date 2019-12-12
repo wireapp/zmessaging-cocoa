@@ -774,12 +774,12 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 {
     
     for (ZMUser *expectedUser in expectedParticipants) {
-        FHAssertTrue(failureRecorder, [conversation.activeParticipants containsObject:expectedUser]);
+        FHAssertTrue(failureRecorder, [conversation.localParticipants containsObject:expectedUser]);
     }
     for (ZMUser *unexpectedUser in unexpectedParticipants) {
-        FHAssertTrue(failureRecorder, ![conversation.activeParticipants containsObject:unexpectedUser]);
+        FHAssertTrue(failureRecorder, ![conversation.localParticipants containsObject:unexpectedUser]);
     }
-    XCTAssertEqual(conversation.activeParticipants.count, expectedParticipants.count);
+    XCTAssertEqual(conversation.localParticipants.count, expectedParticipants.count);
 }
 
 
@@ -797,10 +797,10 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
              @"members" : @{
                      @"self" : @{
                              @"id" : @"3bc5750a-b965-40f8-aff2-831e9b5ac2e9",
-                             ZMConversationInfoOTRArchivedReferenceKey : [NSNull null],
-                             ZMConversationInfoOTRArchivedValueKey : [NSNull null],
-                             ZMConversationInfoOTRMutedReferenceKey : [NSNull null],
-                             ZMConversationInfoOTRMutedValueKey : [NSNull null],
+                             @"otr_archived_ref" : [NSNull null],
+                             @"otr_archived" : [NSNull null],
+                             @"otr_muted_ref" : [NSNull null],
+                             @"otr_muted" : [NSNull null],
                              },
                      @"others" : @[]
                      },
@@ -2281,11 +2281,11 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         NSString *expectedPath = [NSString pathWithComponents:@[ @"/", @"conversations", conversation.remoteIdentifier.transportString, @"self" ]];
         XCTAssertEqualObjects(request.path, expectedPath);
         XCTAssertEqualObjects(request.payload, (@{
-                                                  ZMConversationInfoOTRArchivedReferenceKey: [conversation.lastServerTimeStamp transportString],
-                                                  ZMConversationInfoOTRArchivedValueKey: @YES,
-                                                  ZMConversationInfoOTRMutedStatusValueKey: @(3),
-                                                  ZMConversationInfoOTRMutedReferenceKey: [conversation.lastServerTimeStamp transportString],
-                                                  ZMConversationInfoOTRMutedValueKey: @YES,
+                                                  @"otr_archived_ref": [conversation.lastServerTimeStamp transportString],
+                                                  @"otr_archived": @YES,
+                                                  @"otr_muted_status": @(3),
+                                                  @"otr_muted_ref": [conversation.lastServerTimeStamp transportString],
+                                                  @"otr_muted": @YES,
                                                   }));
 
         XCTAssertFalse([syncConv.keysThatHaveLocalModifications containsObject:modifiedKey1]);
