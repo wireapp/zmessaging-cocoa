@@ -35,7 +35,7 @@ extension ZMConversationTranscoder {
         guard let conversation = ZMConversation(remoteID: convRemoteID, createIfNeeded:
             true, in: managedObjectContext, created: &conversationCreated) else { return nil }
 
-        conversation.update(withTransportData: transportData as? [AnyHashable : Any], serverTimeStamp: serverTimeStamp)
+        conversation.update(transportData: transportData, serverTimeStamp: serverTimeStamp)
 
         if conversation.conversationType != ZMConversationType.`self` && conversationCreated.boolValue == true {
 
