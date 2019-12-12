@@ -36,7 +36,10 @@ extension ZMConversationTranscoder {
             return
         }
 
-        guard let serverTimestamp = (event.payload as? NSDictionary)?.date(for: "time") else { return }
+        guard let serverTimestamp = (event.payload as? NSDictionary)?.date(for: "time") else {
+            log.error("serverTimeStamp is nil!")
+            return
+        }
         
         createConversation(from: payloadData,
                            serverTimeStamp: serverTimestamp,
@@ -84,10 +87,6 @@ extension ZMConversationTranscoder {
         conversation.update(transportData: transportData, serverTimeStamp: serverTimeStamp)
 
         if conversation.conversationType != ZMConversationType.`self` && conversationCreated.boolValue == true {
-
-            if serverTimeStamp == nil {
-                log.error("serverTimeStamp is nil!")
-            }
 
             // we just got a new conversation, we display new conversation header
             conversation.appendNewConversationSystemMessage(at: serverTimeStamp,
