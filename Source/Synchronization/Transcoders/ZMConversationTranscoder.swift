@@ -21,12 +21,57 @@ import Foundation
 private let log = ZMSLog(tag: "ConversationTranscoder")
 
 extension ZMConversationTranscoder {
+    
+    @objc(processMemberUpdateEvent:forConversation:previousLastServerTimeStamp:)
+    public func processMemberUpdateEvent(_ event: ZMUpdateEvent, for conversation: ZMConversation?, previousLastServerTimeStamp previousLastServerTimestamp: Date?) {
+        guard let dataPayload = event.payload["data"] as? [String : Any?] else { return }
+        
+        conversation?.updateSelfStatus(dictionary: dataPayload, timeStamp: event.timeStamp(), previousLastServerTimeStamp: previousLastServerTimestamp)
+    }
+
+    @objc(createConversationFromEvent:)
+    public func createConversation(from event: ZMUpdateEvent) {
+        guard let payloadData = event.payload["data"] as? [AnyHashable : Any] else {
+            log.error("Missing conversation payload in ZMUpdateEventConversationCreate")
+            return
+        }
+
+        let serverTimestamp = event.payload["time"] as? Date
+        createConversation(from: payloadData,
+                           serverTimeStamp: serverTimestamp,
+                           source: .updateEvent)
+    }
+
+    @objc(createConversationFromTransportData:serverTimeStamp:source:)
+    @discardableResult
+    public func createConversation(from transportData: [AnyHashable : Any], serverTimeStamp: Date?, source: ZMConversationSource) -> ZMConversation? {
+        // If the conversation is not a group conversation, we need to make sure that we check if there's any existing conversation without a remote identifier for that user.
+        // If it is a group conversation, we don't need to.
+        
+        guard let typeNumber: Int = transportData["type"] as? Int else {
+            return nil
+        }
+        
+        let type = BackendConversationType.clientConversationType(rawValue: typeNumber)
+        
+        if type == .group || type == .`self` {
+            return createGroupOrSelfConversation(from: transportData as NSDictionary, serverTimeStamp: serverTimeStamp, source: source)
+        } else {
+            return createOneOnOneConversation(fromTransportData: transportData, type: type, serverTimeStamp: serverTimeStamp)
+        }
+    }
+
     @objc(createGroupOrSelfConversationFromTransportData:serverTimeStamp:source:)
     public func createGroupOrSelfConversation(from transportData: NSDictionary,
                                        serverTimeStamp: Date!,
                                        source: ZMConversationSource) -> ZMConversation? {
         guard let convRemoteID = transportData.uuid(forKey: "id") else {
             log.error("Missing ID in conversation payload")
+            return nil
+        }
+        
+        guard let transportData = transportData as? [String : Any] else {
+            log.error("transportData can not be casted to [String : Any]")
             return nil
         }
 
@@ -142,9 +187,9 @@ extension ZMConversation {
                 silencedChangedTimestamp = Date()
             }
             
-            payload[ZMConversationInfoOTRMutedValueKey] = mutedMessageTypes != .none
-            payload[ZMConversationInfoOTRMutedStatusValueKey] = mutedMessageTypes.rawValue
-            payload[ZMConversationInfoOTRMutedReferenceKey] = silencedChangedTimestamp?.transportString()
+            payload[ZMConversation.PayloadKeys.OTRMutedValueKey] = mutedMessageTypes != .none
+            payload[ZMConversation.PayloadKeys.OTRMutedStatusValueKey] = mutedMessageTypes.rawValue
+            payload[ZMConversation.PayloadKeys.OTRMutedReferenceKey] = silencedChangedTimestamp?.transportString()
             
             updatedKeys.insert(ZMConversationSilencedChangedTimeStampKey)
         }
@@ -154,8 +199,8 @@ extension ZMConversation {
                 archivedChangedTimestamp = Date()
             }
             
-            payload[ZMConversationInfoOTRArchivedValueKey] = isArchived
-            payload[ZMConversationInfoOTRArchivedReferenceKey] = archivedChangedTimestamp?.transportString()
+            payload[ZMConversation.PayloadKeys.OTRArchivedValueKey] = isArchived
+            payload[ZMConversation.PayloadKeys.OTRArchivedReferenceKey] = archivedChangedTimestamp?.transportString()
             
             updatedKeys.insert(ZMConversationArchivedChangedTimeStampKey)
         }

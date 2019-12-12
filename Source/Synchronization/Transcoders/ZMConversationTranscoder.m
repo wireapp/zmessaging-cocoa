@@ -220,23 +220,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     }
 }
 
-- (ZMConversation *)createConversationFromTransportData:(NSDictionary *)transportData
-                                        serverTimeStamp:(NSDate *)serverTimeStamp
-                                                 source:(ZMConversationSource)source
-{
-    // If the conversation is not a group conversation, we need to make sure that we check if there's any existing conversation without a remote identifier for that user.
-    // If it is a group conversation, we don't need to.
-    
-    NSNumber *typeNumber = [transportData numberForKey:@"type"];
-    VerifyReturnNil(typeNumber != nil);
-    ZMConversationType const type = [ZMConversation conversationTypeFromTransportData:typeNumber];
-    if (type == ZMConversationTypeGroup || type == ZMConversationTypeSelf) {
-        return [self createGroupOrSelfConversationFromTransportData:transportData serverTimeStamp:serverTimeStamp source:source];
-    } else {
-        return [self createOneOnOneConversationFromTransportData:transportData type:type serverTimeStamp:serverTimeStamp];
-    }
-}
-
 - (ZMConversation *)createOneOnOneConversationFromTransportData:(NSDictionary *)transportData
                                                            type:(ZMConversationType const)type
                                                 serverTimeStamp:(NSDate *)serverTimeStamp;
@@ -344,16 +327,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 {
     NSUUID * const conversationID = event.conversationUUID;
     return [conversationID isSelfConversationRemoteIdentifierInContext:self.managedObjectContext];
-}
-
-- (void)createConversationFromEvent:(ZMUpdateEvent *)event {
-    NSDictionary *payloadData = [event.payload dictionaryForKey:@"data"];
-    if(payloadData == nil) {
-        ZMLogError(@"Missing conversation payload in ZMUpdateEventConversationCreate");
-        return;
-    }
-    NSDate *serverTimestamp = [event.payload dateFor:@"time"];
-    [self createConversationFromTransportData:payloadData serverTimeStamp:serverTimestamp source:ZMConversationSourceUpdateEvent];
 }
 
 - (void)deleteConversationFromEvent:(ZMUpdateEvent *)event
@@ -519,17 +492,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
     for (ZMUser *user in users) {
         [conversation internalRemoveParticipants:@[user] sender:sender];
-    }
-}
-
-- (void)processMemberUpdateEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation previousLastServerTimeStamp:(NSDate *)previousLastServerTimestamp
-{
-    NSDictionary *dataPayload = [event.payload.asDictionary dictionaryForKey:@"data"];
- 
-    if(dataPayload) {
-        [conversation updateSelfStatusFromDictionary:dataPayload
-                                           timeStamp:event.timeStamp
-                         previousLastServerTimeStamp:previousLastServerTimestamp];
     }
 }
 
