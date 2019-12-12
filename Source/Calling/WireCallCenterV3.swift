@@ -349,7 +349,7 @@ extension WireCallCenterV3 {
         endAllCalls(exluding: conversationId)
         
         let callType: AVSCallType
-        if conversation.activeParticipants.count > videoParticipantsLimit {
+        if conversation.localParticipants.count > videoParticipantsLimit {
             callType = .audioOnly
         } else {
             callType = video ? .video : .normal
@@ -391,7 +391,7 @@ extension WireCallCenterV3 {
         
         let conversationType: AVSConversationType = conversation.conversationType == .group ? .group : .oneToOne
         let callType: AVSCallType
-        if conversation.activeParticipants.count > videoParticipantsLimit {
+        if conversation.localParticipants.count > videoParticipantsLimit {
             callType = .audioOnly
         } else {
             callType = video ? .video : .normal

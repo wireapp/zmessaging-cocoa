@@ -90,7 +90,7 @@ extension ZMConversationTranscoder {
 
             // we just got a new conversation, we display new conversation header
             conversation.appendNewConversationSystemMessage(at: serverTimeStamp,
-                users: conversation.activeParticipants)
+                users: conversation.localParticipants)
 
             if source == .slowSync {
                 // Slow synced conversations should be considered read from the start

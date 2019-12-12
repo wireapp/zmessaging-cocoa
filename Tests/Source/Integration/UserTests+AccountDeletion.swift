@@ -55,7 +55,7 @@ class UserTests_AccountDeletion: IntegrationTest {
         // then
         let user1 = self.user(for: self.user1)!
         let groupConversation = self.conversation(for: self.groupConversation)!
-        XCTAssertFalse(groupConversation.activeParticipants.contains(user1))
+        XCTAssertFalse(groupConversation.localParticipants.contains(user1))
     }
     
 }

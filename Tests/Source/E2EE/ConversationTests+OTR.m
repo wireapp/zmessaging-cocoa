@@ -814,7 +814,7 @@
 
 - (void)makeConversationSecured:(ZMConversation *)conversation
 {
-    NSArray *participants = [[conversation activeParticipants] allObjects];
+    NSArray *participants = [[conversation localParticipants] allObjects];
     NSArray *allClients = [participants flattenWithBlock:^id(ZMUser *user) {
         return [user clients].allObjects;
     }];
@@ -834,7 +834,7 @@
 - (void)makeConversationSecuredWithIgnored:(ZMConversation *)conversation
 {
     ZMUser *selfUser = [self userForMockUser:self.selfUser];
-    NSArray *participants = [[conversation activeParticipants] allObjects];
+    NSArray *participants = [[conversation localParticipants] allObjects];
     NSArray *allClients = [participants flattenWithBlock:^id(ZMUser *user) {
         return [user clients].allObjects;
     }];

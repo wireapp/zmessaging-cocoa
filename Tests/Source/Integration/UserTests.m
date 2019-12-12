@@ -141,7 +141,7 @@
     
     ZMUser *realUser = [self userForMockUser:extraUser];
     XCTAssertEqualObjects(realUser.name, @"Max Tester");
-    XCTAssertTrue([conversation.activeParticipants containsObject:realUser]);
+    XCTAssertTrue([conversation.localParticipants containsObject:realUser]);
     
     
     NSArray *userNotes = userObserver.notifications;

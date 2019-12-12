@@ -241,7 +241,7 @@
     
     // then
     ZMUser *user4 = [self userForMockUser:self.user4];
-    XCTAssertTrue([groupConversation.activeParticipants containsObject:user4]);
+    XCTAssertTrue([groupConversation.localParticipants containsObject:user4]);
     XCTAssertEqual(groupConversation.keysThatHaveLocalModifications.count, 0u);
 }
 
@@ -253,7 +253,7 @@
     ZMUser *user3 = [self userForMockUser:self.user3];
     ZMConversation *groupConversation = [self conversationForMockConversation:self.groupConversation];
     XCTAssertNotNil(groupConversation);
-    XCTAssertTrue([groupConversation.activeParticipants containsObject:user3]);
+    XCTAssertTrue([groupConversation.localParticipants containsObject:user3]);
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -262,7 +262,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertFalse([groupConversation.activeParticipants containsObject:user3]);
+    XCTAssertFalse([groupConversation.localParticipants containsObject:user3]);
     XCTAssertEqual(groupConversation.keysThatHaveLocalModifications.count, 0u);
 }
 
@@ -276,7 +276,7 @@
     ZMUser *bot = [self userForMockUser:self.serviceUser];
     ZMConversation *groupConversation = [self conversationForMockConversation:self.groupConversationWithServiceUser];
     XCTAssertNotNil(groupConversation);
-    XCTAssertTrue([groupConversation.activeParticipants containsObject:bot]);
+    XCTAssertTrue([groupConversation.localParticipants containsObject:bot]);
     
     // when
     [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
@@ -285,11 +285,11 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertFalse([groupConversation.activeParticipants containsObject:bot]);
+    XCTAssertFalse([groupConversation.localParticipants containsObject:bot]);
     XCTAssertEqual(groupConversation.keysThatHaveLocalModifications.count, 0u);
 }
 
-- (void)testThatActiveParticipantsInOneOnOneConversationsAreAllParticipants
+- (void)testThatlocalParticipantsInOneOnOneConversationsAreAllParticipants
 {
     XCTAssertTrue([self login]);
     
@@ -298,10 +298,10 @@
     
     [self.userSession saveOrRollbackChanges];
     
-    XCTAssertEqual(conversation.activeParticipants.count, 2u);
+    XCTAssertEqual(conversation.localParticipants.count, 2u);
 }
 
-- (void)testThatActiveParticipantsInOneOnOneConversationWithABlockedUserAreAllParticipants
+- (void)testThatlocalParticipantsInOneOnOneConversationWithABlockedUserAreAllParticipants
 {
     // given
     
@@ -312,7 +312,7 @@
     
     [self.userSession saveOrRollbackChanges];
     
-    XCTAssertEqual(conversation.activeParticipants.count, 2u);
+    XCTAssertEqual(conversation.localParticipants.count, 2u);
     
     // when
     ZMUser *user1 = [self userForMockUser:self.user1];
@@ -323,7 +323,7 @@
     }];
     
     XCTAssertTrue(user1.isBlocked);
-    XCTAssertEqual(conversation.activeParticipants.count, 2u);
+    XCTAssertEqual(conversation.localParticipants.count, 2u);
 }
 
 - (NSArray *)movedIndexPairsForChangeSet:(ConversationListChangeInfo *)note
@@ -391,7 +391,7 @@
     ZMUser *user = [self userForMockUser:self.selfUser];
 
     XCTAssertEqualObjects(conversationList.firstObject, newConv);
-    XCTAssertTrue([newConv.activeParticipants containsObject:user]);
+    XCTAssertTrue([newConv.localParticipants containsObject:user]);
 }
 
 
