@@ -90,7 +90,7 @@ class SlowSyncTestsTeams: IntegrationTest {
             otherMember = session.insertMember(with: self.user5, in: team) // User 5 is unconnected
             otherMember.permissions = .admin
 
-            let conversation = session.insertGroupConversation(withSelfUser: self.selfUser, otherUsers: [self.user5, self.user3])
+            let conversation = session.insertGroupConversation(withSelfUser: self.selfUser, otherUsers: [self.user5!, self.user3!])
             conversation.team = team
         }
 

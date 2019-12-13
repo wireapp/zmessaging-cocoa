@@ -57,7 +57,7 @@ extension UnauthenticatedSession {
     @discardableResult public func requestPhoneVerificationCodeForLogin(phoneNumber: String) -> Bool {
         do {
             var phoneNumber: String? = phoneNumber
-            try ZMUser.validate(phoneNumber: &phoneNumber)
+            _ = try ZMUser.validate(phoneNumber: &phoneNumber)
         } catch {
             return false
         }

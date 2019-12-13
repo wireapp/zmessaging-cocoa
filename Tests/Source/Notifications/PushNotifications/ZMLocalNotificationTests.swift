@@ -91,7 +91,9 @@ class ZMLocalNotificationTests: MessagingTest {
             conversation.lastServerTimeStamp = Date()
             conversation.lastReadServerTimeStamp = conversation.lastServerTimeStamp
             if !isEmpty {
-                conversation.add(users: [self.sender, self.otherUser1], isFromLocal: false)
+                conversation.addParticipantsAndUpdateConversationState(
+                    users: [self.sender, self.otherUser1],
+                    role: nil)
             }
             self.syncMOC.saveOrRollback()
         }

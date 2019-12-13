@@ -466,10 +466,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         ZMUser *user2 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user2.remoteIdentifier = [NSUUID createUUID];
-        
-        [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC
-                                                       withParticipants:@[user1, user2]];
-        
+        (void)[ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2]];
         // when
         ZMTransportRequest *request;
         do {
@@ -759,7 +756,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     conversation.remoteIdentifier = [NSUUID createUUID];
     
     
-    [conversation addWithUsers:@[selfUser, user1, user2] isFromLocal:NO];
+    [conversation
+     addParticipantsAndUpdateConversationStateWithUsers:[NSSet setWithArray:@[selfUser, user1, user2]] role: nil];
 
     *conversationPointer = conversation;
     *user1Pointer = user1;
@@ -1440,7 +1438,14 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         Member *member = [Member getOrCreateMemberForUser:[ZMUser selfUserInContext:self.syncMOC] inTeam:team context:self.syncMOC];
         [member setTeamRole:TeamRoleMember];
         NOT_USED(member);
-        ZMConversation *insertedConversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:users inTeam:team];
+        ZMConversation *insertedConversation =
+            [ZMConversation insertGroupConversationWithMoc:self.syncMOC
+                                              participants:users
+                                                      name:nil
+                                                      team:team
+                                               allowGuests:YES
+                                              readReceipts:NO
+                                          participantsRole:nil];
         if (modifier) {
             modifier(insertedConversation);
         }
@@ -1541,7 +1546,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2]];
         
         conversation.userDefinedName = nil;
-        [conversation minusWithUser:[ZMUser selfUserInContext:self.syncMOC] isFromLocal:NO];
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        [conversation removeParticipantAndUpdateConversationStateWithUser:selfUser initiatingUser: selfUser];
 
         XCTAssertTrue([self.syncMOC saveOrRollback]);
     }];
@@ -1774,7 +1780,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         user2 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user2.remoteIdentifier = [NSUUID createUUID];
         
-        [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2]];
+        (void)[ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2]];
         XCTAssertTrue([self.syncMOC saveOrRollback]);
     }];
     
@@ -1957,7 +1963,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeGroup;
         conversation.remoteIdentifier = conversationID;
-        [conversation internalAddParticipants:@[removedUser, nonRemovedUser]];
+        [conversation addParticipantsAndUpdateConversationStateWithUsers:[NSSet setWithArray:@[removedUser, nonRemovedUser]] role:nil];
         
         XCTAssertEqual(conversation.localParticipants.count, 2u);
     }];
@@ -2032,7 +2038,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeGroup;
         conversation.remoteIdentifier = conversationID;
-        [conversation internalAddParticipants:@[user1, user2]];
+        [conversation addParticipantsAndUpdateConversationStateWithUsers:[NSSet setWithArray:@[user1, user2]] role:nil];
         
         XCTAssertEqual(conversation.localParticipants.count, 2u);
         
@@ -2066,10 +2072,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         ZMConversation *conversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2, user3]];
         conversation.remoteIdentifier = conversationID;
-        [conversation minusWithUser:[ZMUser selfUserInContext:self.syncMOC] isFromLocal:NO];
-        
-        
-
+        [conversation removeParticipantAndUpdateConversationStateWithUser:selfUser initiatingUser:selfUser];
         
         [conversation resetLocallyModifiedKeys:conversation.keysThatHaveLocalModifications];
         XCTAssert([self.syncMOC save:nil]);
@@ -3180,7 +3183,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.conversationType = ZMConversationTypeGroup;
         conversation.remoteIdentifier = [NSUUID createUUID];
         conversation.needsToBeUpdatedFromBackend = YES;
-        [conversation addWithUser:[ZMUser selfUserInContext:self.syncMOC] isFromLocal:NO];
+        [conversation addParticipantAndUpdateConversationStateWithUser:selfUser role: nil];
         [self.syncMOC saveOrRollback];
         
         for (id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
@@ -3216,7 +3219,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.conversationType = ZMConversationTypeGroup;
         conversation.remoteIdentifier = [NSUUID createUUID];
         conversation.needsToBeUpdatedFromBackend = YES;
-        [conversation addWithUser:[ZMUser selfUserInContext:self.syncMOC] isFromLocal:NO];
+        [conversation addParticipantAndUpdateConversationStateWithUser:[ZMUser selfUserInContext:self.syncMOC] role: nil];
         [self.syncMOC saveOrRollback];
         
         for (id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {

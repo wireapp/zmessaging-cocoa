@@ -66,9 +66,9 @@ class LocalNotificationDispatcherTests: MessagingTest {
             [self.conversation1!, self.conversation2!].forEach {
                 $0.conversationType = .group
                 $0.remoteIdentifier = UUID.create()
-                $0.internalAddParticipants([self.user1])
+                $0.addParticipantAndUpdateConversationState(user: self.user1, role: nil)
             }
-            self.conversation2.internalAddParticipants([self.user2])
+            self.conversation2.addParticipantAndUpdateConversationState(user: self.user2, role: nil)
             
             self.selfUser.remoteIdentifier = UUID.create()
         }

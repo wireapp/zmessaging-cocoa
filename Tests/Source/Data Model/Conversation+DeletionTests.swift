@@ -41,7 +41,7 @@ class Conversation_DeletionTests: MessagingTest {
     
     func testItThatReturnsFailure_WhenAttempingToDeleteNonTeamConveration() {
         // GIVEN
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [])!
         conversation.remoteIdentifier = UUID()
         conversation.conversationType = .group
         let invalidOperationfailure = expectation(description: "Invalid Operation")
@@ -61,7 +61,7 @@ class Conversation_DeletionTests: MessagingTest {
     
     func testItThatReturnsFailure_WhenAttempingToDeleteLocalConveration() {
         // GIVEN
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [])!
         conversation.conversationType = .group
         conversation.teamRemoteIdentifier = UUID()
         let invalidOperationfailure = expectation(description: "Invalid Operation")
@@ -83,7 +83,7 @@ class Conversation_DeletionTests: MessagingTest {
     
     func testThatItGeneratesRequest_ForDeletingTeamConveration() {
         // GIVEN
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [])!
         conversation.remoteIdentifier = UUID()
         conversation.conversationType = .group
         conversation.teamRemoteIdentifier = UUID()

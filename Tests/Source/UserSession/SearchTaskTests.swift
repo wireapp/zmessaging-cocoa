@@ -351,8 +351,7 @@ class SearchTaskTests : MessagingTest {
         
         conversation.conversationType = .group
         conversation.remoteIdentifier = UUID()
-        conversation.internalAddParticipants([userA])
-        conversation.add(user: ZMUser.selfUser(in: uiMOC), isFromLocal: true)
+        conversation.addParticipantsAndUpdateConversationState(users: Set([userA, ZMUser.selfUser(in:uiMOC)]), role: nil)
         
         userA.name = "Member A"
         userB.name = "Member B"
@@ -427,8 +426,7 @@ class SearchTaskTests : MessagingTest {
         
         conversation.conversationType = .group
         conversation.remoteIdentifier = UUID()
-        conversation.internalAddParticipants([userA, userB])
-        conversation.add(user: ZMUser.selfUser(in: uiMOC), isFromLocal: true)
+        conversation.addParticipantsAndUpdateConversationState(users: Set([userA, userB, ZMUser.selfUser(in: self.uiMOC)]), role: nil)
         
         userA.name = "Member A"
         userB.name = "Member B"
@@ -658,7 +656,7 @@ class SearchTaskTests : MessagingTest {
         let user2 = createConnectedUser(withName: "Asuka")
         let user3 = createConnectedUser(withName: "Rëï")
         
-        conversation.internalAddParticipants([user1, user2, user3])
+        conversation.addParticipantsAndUpdateConversationState(users: [user1, user2, user3], role: nil)
         
         uiMOC.saveOrRollback()
         
@@ -682,7 +680,7 @@ class SearchTaskTests : MessagingTest {
         let resultArrived = expectation(description: "received result")
         let conversation = createGroupConversation(withName: "Summertime")
         let user = createConnectedUser(withName: "Rëï")
-        conversation.internalAddParticipants([user])
+        conversation.addParticipantAndUpdateConversationState(user: user, role: nil)
         
         uiMOC.saveOrRollback()
         
@@ -732,8 +730,8 @@ class SearchTaskTests : MessagingTest {
         let conversation3 = createGroupConversation(withName: "FooB")
         let conversation4 = createGroupConversation(withName: "Bar")
         
-        conversation2.internalAddParticipants([user1])
-        conversation4.internalAddParticipants([user1, user2])
+        conversation2.addParticipantAndUpdateConversationState(user: user1, role: nil)
+        conversation4.addParticipantsAndUpdateConversationState(users: [user1, user2], role: nil)
         
         uiMOC.saveOrRollback()
         

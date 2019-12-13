@@ -77,7 +77,9 @@
         // Create a conversation
         __block ZMConversation *conversation;
         [self.userSession performChanges:^{
-            conversation = [ZMConversation insertGroupConversationIntoUserSession:self.userSession withParticipants:@[user1, user2] inTeam:nil];
+            conversation = [ZMConversation
+                            insertGroupConversationIntoManagedObjectContext :self.userSession.managedObjectContext
+                            withParticipants:@[user1, user2]];
             conversation.userDefinedName = conversationName;
         }];
         

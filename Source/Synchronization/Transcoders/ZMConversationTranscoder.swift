@@ -22,21 +22,28 @@ private let log = ZMSLog(tag: "ConversationTranscoder")
 
 extension ZMConversationTranscoder {
     
+    @objc(appendSystemMessageForUpdateEvent:inConversation:)
+    public func appendSystemMessage(for event: ZMUpdateEvent, conversation: ZMConversation) {
+        if let systemMessage = ZMSystemMessage.createOrUpdate(from: event, in: self.managedObjectContext) {
+            self.localNotificationDispatcher.process(systemMessage)
+        }
+    }
+    
     @objc(processMemberUpdateEvent:forConversation:previousLastServerTimeStamp:)
     public func processMemberUpdateEvent(_ event: ZMUpdateEvent, for conversation: ZMConversation?, previousLastServerTimeStamp previousLastServerTimestamp: Date?) {
-        guard let dataPayload = (event.payload as? NSDictionary)?.dictionary(forKey: "data") else { return }
+        guard let dataPayload = (event.payload as NSDictionary).dictionary(forKey: "data") else { return }
         
         conversation?.updateSelfStatus(dictionary: dataPayload, timeStamp: event.timeStamp(), previousLastServerTimeStamp: previousLastServerTimestamp)
     }
 
     @objc(createConversationFromEvent:)
     public func createConversation(from event: ZMUpdateEvent) {
-        guard let payloadData = (event.payload as? NSDictionary)?.dictionary(forKey: "data") else {
+        guard let payloadData = (event.payload as NSDictionary).dictionary(forKey: "data") else {
             log.error("Missing conversation payload in ZMUpdateEventConversationCreate")
             return
         }
 
-        guard let serverTimestamp = (event.payload as? NSDictionary)?.date(for: "time") else {
+        guard let serverTimestamp = (event.payload as NSDictionary).date(for: "time") else {
             log.error("serverTimeStamp is nil!")
             return
         }
@@ -52,7 +59,7 @@ extension ZMConversationTranscoder {
         // If the conversation is not a group conversation, we need to make sure that we check if there's any existing conversation without a remote identifier for that user.
         // If it is a group conversation, we don't need to.
         
-        guard let typeNumber: Int = (transportData as? NSDictionary)?.number(forKey: "type") as? Int else {
+        guard let typeNumber: Int = (transportData as NSDictionary).number(forKey: "type") as? Int else {
             return nil
         }
         
@@ -100,6 +107,24 @@ extension ZMConversationTranscoder {
 
         return conversation
     }
+    
+    @objc (processMemberJoinEvent:forConversation:)
+    public func processMemberJoinEvent(_ event: ZMUpdateEvent, conversation: ZMConversation) {
+        guard let payload = event.payload["users"] as? [[String: Any]] else { return }
+        let usersAndRoles = ConversationParsing.parseUsersPayloadToUserAndRole(
+            payload: payload, userIdKey: "target", conversation: conversation)
+            
+        let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
+        let users = Set(usersAndRoles.map { $0.0 })
+        
+        let newUsers = !users.subtracting(conversation.localParticipants).isEmpty
+        if users.contains(selfUser) || newUsers {
+            self.appendSystemMessage(for: event, conversation: conversation)
+        }
+        
+        conversation.addParticipantsAndUpdateConversationState(usersAndRoles: usersAndRoles)
+    }
+    
 
     @objc (processAccessModeUpdateEvent:inConversation:)
     public func processAccessModeUpdate(event: ZMUpdateEvent, in conversation: ZMConversation) {

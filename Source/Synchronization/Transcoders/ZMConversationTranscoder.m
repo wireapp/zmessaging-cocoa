@@ -463,21 +463,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     conversation.userDefinedName = newName;
 }
 
-- (void)processMemberJoinEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation
-{
-    NSSet *users = [event usersFromUserIDsInManagedObjectContext:self.managedObjectContext createIfNeeded:YES];
-    
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-    
-    if (![users isSubsetOfSet:conversation.localParticipants] || (selfUser && [users intersectsSet:[NSSet setWithObject:selfUser]])) {
-        [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
-    }
-    
-    for (ZMUser *user in users) {
-        [conversation internalAddParticipants:@[user]];
-    }
-}
-
 - (void)processMemberLeaveEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation
 {
     NSUUID *senderUUID = event.senderUUID;
@@ -489,24 +474,13 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     if ([users intersectsSet:conversation.localParticipants]) {
         [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
     }
-
-    for (ZMUser *user in users) {
-        [conversation internalRemoveParticipants:@[user] sender:sender];
-    }
-}
-
-- (void)appendSystemMessageForUpdateEvent:(ZMUpdateEvent *)event inConversation:(ZMConversation * ZM_UNUSED)conversation
-{
-    ZMSystemMessage *systemMessage = [ZMSystemMessage createOrUpdateMessageFromUpdateEvent:event inManagedObjectContext:self.managedObjectContext];
     
-    if (systemMessage != nil) {
-        [self.localNotificationDispatcher processMessage:systemMessage];
-    }
+    [conversation removeParticipantsAndUpdateConversationStateWithUsers:users initiatingUser:sender];
 }
+
+
 
 @end
-
-
 
 @implementation ZMConversationTranscoder (UpstreamTranscoder)
 
@@ -734,7 +708,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     // Self user has been removed from the group conversation but missed the conversation.member-leave event.
     if (response.HTTPStatus == 403 && conversation.conversationType == ZMConversationTypeGroup && conversation.isSelfAnActiveMember) {
         ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-        [conversation internalRemoveParticipants:@[selfUser] sender:selfUser];
+        [conversation removeParticipantAndUpdateConversationStateWithUser:selfUser initiatingUser:selfUser];
     }
     
     // Conversation has been permanently deleted

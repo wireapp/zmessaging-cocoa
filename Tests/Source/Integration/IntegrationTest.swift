@@ -401,7 +401,7 @@ extension IntegrationTest {
             groupConversation.changeName(by:self.selfUser, name:"Group conversation with bot")
             self.groupConversationWithServiceUser = groupConversation
 
-            let teamConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [self.teamUser1, self.teamUser2])
+            let teamConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [self.teamUser1!, self.teamUser2!])
             teamConversation.team = team
             teamConversation.creator = self.selfUser
             teamConversation.changeName(by:self.selfUser, name:"Team Group conversation")

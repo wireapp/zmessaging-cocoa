@@ -26,4 +26,5 @@ extern NSUInteger ZMConversationTranscoderListPageSize;
 
 
 @interface ZMConversationTranscoder (Internal)
+
 @end

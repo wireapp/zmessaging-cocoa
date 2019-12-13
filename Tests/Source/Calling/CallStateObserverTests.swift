@@ -52,8 +52,8 @@ class CallStateObserverTests : MessagingTest {
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.conversationType = .oneOnOne
             conversation.remoteIdentifier = UUID()
-            conversation.internalAddParticipants([sender])
-            conversation.internalAddParticipants([receiver])
+            conversation.addParticipantAndUpdateConversationState(user: sender, role: nil)
+            conversation.addParticipantAndUpdateConversationState(user: receiver, role: nil)
             conversation.userDefinedName = "Main"
             
             self.conversation = conversation
@@ -427,8 +427,8 @@ class CallStateObserverTests : MessagingTest {
             otherConvo = ZMConversation.insertNewObject(in: self.syncMOC)
             otherConvo?.conversationType = .oneOnOne
             otherConvo?.remoteIdentifier = UUID()
-            otherConvo?.internalAddParticipants([self.sender])
-            otherConvo?.internalAddParticipants([self.receiver])
+            otherConvo?.addParticipantAndUpdateConversationState(user: self.sender, role: nil)
+            otherConvo?.addParticipantAndUpdateConversationState(user: self.receiver, role: nil)
             otherConvo?.userDefinedName = "Other"
             otherConvo?.lastServerTimeStamp = Date()
             otherConvo?.lastModifiedDate = startDate.addingTimeInterval(500)

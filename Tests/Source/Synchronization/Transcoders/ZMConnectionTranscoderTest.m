@@ -1325,7 +1325,7 @@
         ZMUser *user2 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user2.remoteIdentifier = [NSUUID createUUID];
         
-        [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC
+        (void)[ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC
                                                        withParticipants:@[user1, user2]];
         
         // when

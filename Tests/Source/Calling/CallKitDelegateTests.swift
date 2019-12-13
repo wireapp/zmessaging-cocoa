@@ -249,10 +249,10 @@ class CallKitDelegateTest: MessagingTest {
         let conversation = ZMConversation(context: moc)
         conversation.remoteIdentifier = UUID()
         conversation.conversationType = type
-        conversation.add(user: ZMUser.selfUser(in: uiMOC), isFromLocal: true)
+        conversation.addParticipantAndUpdateConversationState(user: ZMUser.selfUser(in: uiMOC), role: nil)
         
         if type == .group {
-            conversation.internalAddParticipants([self.otherUser(moc: moc)])
+            conversation.addParticipantAndUpdateConversationState(user: self.otherUser(moc: moc), role: nil)
         }
         
         return conversation
@@ -583,7 +583,9 @@ class CallKitDelegateTest: MessagingTest {
         let state: CallState = .incoming(video: true, shouldRing: true, degraded: false)
         mockWireCallCenterV3.setMockCallState(state, conversationId: conversation.remoteIdentifier!, callerId: otherUser.remoteIdentifier!, isVideo: true)
         self.sut.callCenterDidChange(callState: state, conversation: conversation, caller: otherUser, timestamp: Date(), previousCallState: nil)
-        let callUUID = sut.callUUID(for: conversation)!
+        guard let callUUID = sut.callUUID(for: conversation) else {
+            return XCTFail()
+        }
         
         // when
         self.sut.requestEndCall(in: conversation)

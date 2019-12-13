@@ -363,7 +363,7 @@ class WireCallCenterV3Tests: MessagingTest {
         for _ in 0..<4 {
             let user: ZMUser = ZMUser.insertNewObject(in: uiMOC)
             user.remoteIdentifier = UUID()
-            groupConversation.add(user: user, isFromLocal: true)
+            groupConversation.addParticipantAndUpdateConversationState(user: user, role: nil)
         }
 
         sut.handleIncomingCall(conversationId: groupConversationID, messageTime: Date(), userId: otherUserID, isVideoCall: false, shouldRing: true)
@@ -467,7 +467,7 @@ class WireCallCenterV3Tests: MessagingTest {
         for _ in 0..<4 {
             let user: ZMUser = ZMUser.insertNewObject(in: uiMOC)
             user.remoteIdentifier = UUID()
-            groupConversation.add(user: user, isFromLocal: true)
+            groupConversation.addParticipantAndUpdateConversationState(user: user, role: nil)
         }
         
         checkThatItPostsNotification(expectedCallState: .outgoing(degraded: false), expectedCallerId: selfUserID, expectedConversationId: groupConversationID) {

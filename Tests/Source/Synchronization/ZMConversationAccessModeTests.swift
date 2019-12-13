@@ -123,7 +123,7 @@ public class ZMConversationAccessModeTests : MessagingTest {
     }
     
     func conversation(options: ConversationOptions) -> ZMConversation {
-        let conversation = ZMConversation.insertGroupConversation(into: self.uiMOC, withParticipants: [], name: "Test Conversation", in: nil)!
+        let conversation = ZMConversation.insertGroupConversation(moc: self.uiMOC, participants: [], name: "Test Conversation")!
         if options.hasRemoteId {
             conversation.remoteIdentifier = UUID()
         }
