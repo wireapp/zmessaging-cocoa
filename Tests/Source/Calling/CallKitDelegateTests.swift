@@ -614,7 +614,7 @@ class CallKitDelegateTest: MessagingTest {
         
         // then
         XCTAssertEqual(self.callKitController.timesRequestTransactionCalled, 1)
-        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXEndCallAction)///TODO: crash - callKitController.requestedTransactions is nil
+        XCTAssertTrue(self.callKitController.requestedTransactions.first!.actions.first! is CXEndCallAction)
         
         let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXEndCallAction
         XCTAssertEqual(action.callUUID, callUUID)

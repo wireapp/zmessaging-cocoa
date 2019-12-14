@@ -459,6 +459,8 @@
 
 - (void)testThatItAddANewConversationSystemMessageForAllOneOnOneAndGroupConversation_HasHistory_44_4;
 {
+    XCTFail();
+    return;
     __block ZMConversation *oneOnOneConversation = nil;
     __block ZMConversation *groupConversation = nil;
     __block ZMConversation *selfConversation = nil;

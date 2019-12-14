@@ -221,12 +221,7 @@
     XCTAssertEqualObjects(conversation.userDefinedName, newConversationName);
 }
 
-@end
-
-
 #pragma mark - Participants
-@implementation ConversationTests (Participants)
-
 - (void)testThatParticipantsAreAddedToAConversationWhenTheyAreAddedRemotely
 {
     // given
@@ -703,12 +698,8 @@
     XCTAssertEqual(insertionsCount, 1);
 }
 
-@end
-
 
 #pragma mark - Archiving and silencing
-@implementation ConversationTests (ArchivingAndSilencing)
-
 - (void)testThatArchivingAConversationIsSynchronizedToTheBackend
 {
     {
@@ -826,7 +817,6 @@
         ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
         XCTAssertTrue(conversation.isFullyMuted);
     }
-    
 }
 - (void)testThatSilencingAConversationIsSynchronizedToTheBackend
 {
@@ -1156,12 +1146,7 @@
     XCTAssertFalse(conversation.isArchived);
 }
 
-@end
-
-
 #pragma mark - Last read
-@implementation ConversationTests (LastRead)
-
 - (void)testThatEstimatedUnreadCountIsIncreasedAfterRecevingATextMessage
 {
     // login
@@ -1228,10 +1213,7 @@
     XCTAssertEqual(conv.estimatedUnreadCount, 0u);
 }
 
-@end
-
 #pragma mark - Conversation list pagination
-@implementation ConversationTests (Pagination)
 
 - (void)testThatItPaginatesConversationIDsRequests
 {
@@ -1271,11 +1253,7 @@
     ZMConversationTranscoderListPageSize = self.previousZMConversationTranscoderListPageSize;
 }
 
-@end
-
 #pragma mark - Clearing history
-
-@implementation ConversationTests (ClearingHistory)
 
 - (void)loginAndFillConversationWithMessages:(MockConversation *)mockConversation messagesCount:(NSUInteger)messagesCount
 {
@@ -1642,10 +1620,7 @@
     AssertArraysContainsSameObjects([conversation lastMessagesWithLimit:10], remainingMessages);
 }
 
-@end
-
-@implementation ConversationTests (Reactions)
-
+#pragma mark - Reactions
 - (void)testThatAppendingAReactionWithSendAMessageWithReaction;
 {
     // given
