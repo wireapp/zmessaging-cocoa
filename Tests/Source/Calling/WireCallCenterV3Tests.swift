@@ -72,6 +72,7 @@ class WireCallCenterV3Tests: MessagingTest {
         let groupConversation = ZMConversation.insertNewObject(in: self.uiMOC)
         groupConversation.remoteIdentifier = UUID.create()
         groupConversation.conversationType = .group
+        groupConversation.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
         groupConversationID = groupConversation.remoteIdentifier!
         self.groupConversation = groupConversation
         

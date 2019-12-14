@@ -56,8 +56,11 @@ class SearchTaskTests : MessagingTest {
     
     func createGroupConversation(withName name: String) -> ZMConversation {
         let conversation = ZMConversation.insertNewObject(in: uiMOC)
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.name = "Me"
         conversation.userDefinedName = name
         conversation.conversationType = .group
+        conversation.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
         
         uiMOC.saveOrRollback()
         
