@@ -1528,14 +1528,14 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     NSSet *keys = [NSSet setWithObjects:ZMConversationUserDefinedNameKey, nil];
     __block ZMConversation *conversation = nil;
     [self.syncMOC performGroupedBlockAndWait:^{
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
         ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user1.remoteIdentifier = [NSUUID createUUID];
         ZMUser *user2 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user2.remoteIdentifier = [NSUUID createUUID];
-        conversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2]];
+        conversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2, selfUser]];
         
         conversation.userDefinedName = nil;
-        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
         [conversation removeParticipantAndUpdateConversationStateWithUser:selfUser initiatingUser: selfUser];
 
         XCTAssertTrue([self.syncMOC saveOrRollback]);
@@ -1551,7 +1551,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         BOOL shouldCreate = [self.sut shouldCreateRequestToSyncObject:conversation forKeys:keys withSync:mockUpstream];
         XCTAssertFalse([conversation.keysThatHaveLocalModifications containsObject:ZMConversationUserDefinedNameKey]);
-//        XCTAssertTrue([conversation.keysThatHaveLocalModifications containsObject:ZMConversationIsSelfAnActiveMemberKey]);
         XCTAssertTrue(shouldCreate);
     }];
 }
@@ -1983,6 +1982,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         otherUser.remoteIdentifier = otherUserID;
         
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        [conversation addParticipantAndUpdateConversationStateWithUser:[ZMUser selfUserInContext:self.syncMOC] role:nil];
         conversation.conversationType = ZMConversationTypeGroup;
         conversation.remoteIdentifier = conversationID;
         conversation.lastModifiedDate = lastModifiedDate;

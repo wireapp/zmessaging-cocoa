@@ -110,10 +110,33 @@ extension ZMConversationTranscoder {
     
     @objc (processMemberJoinEvent:forConversation:)
     public func processMemberJoinEvent(_ event: ZMUpdateEvent, conversation: ZMConversation) {
-        guard let payload = event.payload["users"] as? [[String: Any]] else { return }
+        guard let dataPayload = event.payload["data"] as? [String: Any] else { return }
+        
+        let usersAndRoleAPI = dataPayload.keys.contains("users")
+        
+        if usersAndRoleAPI {
+            // new API: "user" object with role
+            self.processMemberJoinEvent_APIWithRoles(conversation: conversation, event: event)
+        } else {
+            // old API: "user_ids"
+            self.processMemberJoinEvent_APIWithUserIDs(conversation: conversation, event: event)
+        }
+        
+    }
+    
+    private func processMemberJoinEvent_APIWithRoles(
+        conversation: ZMConversation,
+        event: ZMUpdateEvent)
+    {
+        guard let dataPayload = event.payload["data"] as? [String: Any],
+            let usersAndRolesPayload = dataPayload["users"] as? [[String: Any]] else {
+            return
+        }
         let usersAndRoles = ConversationParsing.parseUsersPayloadToUserAndRole(
-            payload: payload, userIdKey: "target", conversation: conversation)
-            
+            payload: usersAndRolesPayload,
+            userIdKey: "id",
+            conversation: conversation)
+        
         let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
         let users = Set(usersAndRoles.map { $0.0 })
         
@@ -123,6 +146,18 @@ extension ZMConversationTranscoder {
         }
         
         conversation.addParticipantsAndUpdateConversationState(usersAndRoles: usersAndRoles)
+    }
+    
+    private func processMemberJoinEvent_APIWithUserIDs(
+        conversation: ZMConversation,
+        event: ZMUpdateEvent)
+    {
+        let users = event.usersFromUserIDs(in: self.managedObjectContext, createIfNeeded: true) as! Set<ZMUser>
+        let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
+        if !users.isSubset(of: conversation.localParticipantsExcludingSelf) || users.contains(selfUser) {
+            self.appendSystemMessage(for: event, conversation: conversation)
+        }
+        conversation.addParticipantsAndUpdateConversationState(users: users, role: nil)
     }
     
 
