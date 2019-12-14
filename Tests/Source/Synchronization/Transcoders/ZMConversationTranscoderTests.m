@@ -136,6 +136,9 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (BOOL)isConversation:(ZMConversation *)conversation matchingPayload:(NSDictionary *)payload serverTimeStamp:(NSDate *)serverTimeStamp
 {
     const BOOL sameRemoteIdentifier = [NSObject isEqualOrBothNil:conversation.remoteIdentifier toObject:[payload uuidForKey:@"id"]];
+    if (!sameRemoteIdentifier) {
+        return NO;
+    }
     const BOOL sameModifiedDate = nil == serverTimeStamp || [conversation.lastModifiedDate.transportString isEqualToString:serverTimeStamp.transportString];
     const BOOL sameCreator = [NSObject isEqualOrBothNil:conversation.creator.remoteIdentifier toObject:[payload uuidForKey:@"creator"]];
     const BOOL sameName = [NSObject isEqualOrBothNil:conversation.userDefinedName toObject:[payload optionalStringForKey:@"name"]];
@@ -153,13 +156,12 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         }
     }
     
-    BOOL sameActiveUsers = activeParticipants.count == conversation.localParticipants.count;
-    for(ZMUser *user in conversation.localParticipants) {
+    BOOL sameActiveUsers = activeParticipants.count == conversation.localParticipantsExcludingSelf.count;
+    for(ZMUser *user in conversation.localParticipantsExcludingSelf) {
         sameActiveUsers = sameActiveUsers && [activeParticipants containsObject:user.remoteIdentifier];
     }
     
-    return (sameRemoteIdentifier
-            && sameModifiedDate
+    return (sameModifiedDate
             && sameCreator
             && sameName
             && sameType
@@ -780,21 +782,17 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertEqual(conversation.localParticipants.count, expectedParticipants.count);
 }
 
-
-@end
-
-
-@implementation ZMConversationTranscoderTests (SingleRequestSync)
-
+#pragma mark - Single request sync
 
 - (NSDictionary *)createConversationDataWithRemoteIDString:(NSString *)remoteIDString
+                                          selfUserID:(NSUUID *)selfUserID
 {
     return @{
              @"name" : [NSNull null],
              @"creator" : @"3bc5750a-b965-40f8-aff2-831e9b5ac2e9",
              @"members" : @{
                      @"self" : @{
-                             @"id" : @"3bc5750a-b965-40f8-aff2-831e9b5ac2e9",
+                             @"id" : selfUserID.transportString,
                              @"otr_archived_ref" : [NSNull null],
                              @"otr_archived" : [NSNull null],
                              @"otr_muted_ref" : [NSNull null],
@@ -885,7 +883,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 
 - (NSArray *)createRawConversationsForIds:(NSArray *)conversationIDs {
     return [conversationIDs mapWithBlock:^id(id obj) {
-        return [self createConversationDataWithRemoteIDString:obj];
+        return [self createConversationDataWithRemoteIDString:obj selfUserID:[self selfUserID]];
     }];
 }
 
@@ -1090,10 +1088,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }];
 }
 
-
-
-
-
 - (void)testThatPageSizeIsSetToDefault
 {
     // then
@@ -1161,8 +1155,6 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
     }];
 }
-
-
 
 
 - (void)testThatItDoesNotGenerateConversationsDuringSlowSync
@@ -1282,10 +1274,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertTrue(conversation2.needsToBeUpdatedFromBackend);
 }
 
-@end
-
-
-@implementation ZMConversationTranscoderTests (InsertNewConversation)
+#pragma mark -  InsertNewConversation)
 
 - (void)testThatItGeneratesARequestToGenerateAConversation
 {
@@ -1935,12 +1924,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertEqual(messages.count, 1u);
 }
 
-@end
-
-
-
-
-@implementation ZMConversationTranscoderTests (Participants)
+#pragma mark -  Participants
 
 - (void)testThatItRemovesUsersFromAConversationAfterAPushEvent
 {
@@ -2148,11 +2132,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
-@end
-
-
-
-@implementation ZMConversationTranscoderTests (SilencedAndArchived)
+#pragma mark - SilencedAndArchived
 
 - (void)testThatItSendsARequestWhenConversationIsSilenced
 {
@@ -2410,20 +2390,12 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                                                                            }];
 }
 
-
-
 - (void)testThatItDoesNotUpdateIsArchivedIfItIsNotInThePayload
 {
     [self checkThatItProcessesUpdateEventForIsArchivedBefore:YES isArchivedAfter:YES data:@{}];
 }
 
-
-@end
-
-
-
-
-@implementation ZMConversationTranscoderTests (UpdateEvents)
+#pragma mark - UpdateEvents
 
 - (void)testThatItProcessesConversationCreateEvents
 {
@@ -2449,9 +2421,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               @"time" : serverTime.transportString
                               };
     
-    ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeConversationCreate)] type];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
+    ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:[NSUUID createUUID]];
     
     [self.syncMOC performGroupedBlockAndWait:^{
         
@@ -2504,10 +2474,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               @"type" : @"conversation.create",
                               @"data" : innerPayload
                               };
-    
-    ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeConversationCreate)] type];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
+    ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:[NSUUID createUUID]];
     
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
@@ -2545,9 +2512,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               @"time": @"2014-07-02T14:52:45.211Z"
                               };
     
-    ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeConversationCreate)] type];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
+    ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:[NSUUID createUUID]];
     
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
@@ -2585,12 +2550,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                               @"conversation" : conversation.remoteIdentifier.transportString,
                               @"data": @{@"name": newName}
                               };
-    ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeConversationRename)] type];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:time] timeStamp];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:user3.remoteIdentifier] senderUUID];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:conversation.remoteIdentifier] conversationUUID];
+    
+    ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:[NSUUID createUUID]];
 
     // when
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -2610,14 +2571,10 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     NSUUID *remoteID = [NSUUID createUUID];
     NSDictionary *payload = @{
                               @"id" : [remoteID transportString],
-                              @"type" : @"fooz",
+                              @"type" : @"user.update",
                               @"connection" : @{}
                               };
-    ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUnknown)] type];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:nil] conversationUUID];
-
+    ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:[NSUUID createUUID]];
     [self.syncMOC performGroupedBlockAndWait:^{
         
         // when
@@ -3008,10 +2965,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }];
 }
 
-@end
-
-
-@implementation ZMConversationTranscoderTests (EventsInConnectionConversations)
+#pragma mark -  EventsInConnectionConversations
 
 - (void)testThatWhenProcessingConversationUpdateEventsItDoesNotRefetchThatConversationIfItWasAnAcceptedConnection
 {

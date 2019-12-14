@@ -254,6 +254,7 @@ class CallKitDelegateTest: MessagingTest {
         if type == .group {
             conversation.addParticipantAndUpdateConversationState(user: self.otherUser(moc: moc), role: nil)
         }
+        conversation.needsToBeUpdatedFromBackend = false
         
         return conversation
     }

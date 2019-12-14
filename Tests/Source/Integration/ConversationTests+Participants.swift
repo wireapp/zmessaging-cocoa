@@ -38,7 +38,9 @@ class ConversationTests_Participants: ConversationTestsBase {
         // then - Participants changes and messages changes (System message for the added user)
         
         XCTAssertEqual(observer?.notifications.count, 1)
-        let note1 = observer?.notifications.firstObject as! ConversationChangeInfo
+        guard let note1 = observer?.notifications.firstObject as? ConversationChangeInfo else {
+            return XCTFail()
+        }
         XCTAssertEqual(note1.conversation, conversation)
         XCTAssertTrue(note1.participantsChanged)
         XCTAssertTrue(note1.messagesChanged)

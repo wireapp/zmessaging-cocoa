@@ -30,11 +30,16 @@ enum UserClientRequestError: Error {
 
 public final class UserClientRequestFactory {
     
+    // This is needed to save ~3 seconds for every unit test run
+    // as generating 100 keys is an expensive operation
+    static var _test_overrideNumberOfKeys: UInt16? = nil
+    
     unowned var keyStore : UserClientKeysStore
     public let keyCount : UInt16
     
-    public init(keysCount: UInt16 = 100, keysStore: UserClientKeysStore) {
-        self.keyCount = keysCount
+    public init(keysCount: UInt16 = 100,
+                keysStore: UserClientKeysStore) {
+        self.keyCount = (UserClientRequestFactory._test_overrideNumberOfKeys ?? keysCount)
         self.keyStore = keysStore
     }
     
