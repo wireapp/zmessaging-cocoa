@@ -79,7 +79,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
         super.tearDown()
     }
     
-    func testThatItCreatesAndNotifiesSystemMessagesFromAMemberJoin() {
+    func testThatItCreatesAndNotifiesSystemMessagesFromAMemberJoin_userIDsAPI() {
         
         self.syncMOC.performAndWait {
             
@@ -90,6 +90,41 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
                 "time": NSDate().transportString(),
                 "data": [
                     "user_ids": [self.user.remoteIdentifier!.transportString()]
+                ],
+                "type": "conversation.member-join"
+                ] as [String: Any]
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+            
+            // WHEN
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN
+            guard let message = self.conversation.lastMessage as? ZMSystemMessage else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(message.systemMessageType, .participantsAdded)
+            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
+        }
+    }
+    
+    func testThatItCreatesAndNotifiesSystemMessagesFromAMemberJoin_usersAndRolesAPI() {
+        
+        self.syncMOC.performAndWait {
+            
+            // GIVEN
+            let payload = [
+                "from": self.user.remoteIdentifier!.transportString(),
+                "conversation": self.conversation.remoteIdentifier!.transportString(),
+                "time": NSDate().transportString(),
+                "data": [
+                    "user_ids": [self.user.remoteIdentifier!.transportString()],
+                    "users": [
+                        [
+                            "id": self.user.remoteIdentifier.transportString(),
+                            "conversation_role": "fluffy"
+                        ]
+                    ]
                 ],
                 "type": "conversation.member-join"
                 ] as [String: Any]
