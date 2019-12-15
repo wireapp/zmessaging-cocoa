@@ -22,13 +22,12 @@ import XCTest
 class ZMLocalNotificationTests_Alerts: ZMLocalNotificationTests {
     
     func addSelfUserToTeam() {
-        self.syncMOC.performGroupedBlockAndWait {
-            let team = Team.insertNewObject(in: self.syncMOC)
-            team.name = "Team-A"
-            let user = ZMUser.selfUser(in: self.syncMOC)
-            _ = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
-            self.syncMOC.saveOrRollback()
-            XCTAssertNotNil(user.team)
+        
+        let team = Team.insertNewObject(in: self.uiMOC)
+        team.name = "Team-A"
+        let user = ZMUser.selfUser(in: self.uiMOC)
+        self.performPretendingUiMocIsSyncMoc {
+            _ = Member.getOrCreateMember(for: user, in: team, context: self.uiMOC)
         }
     }
 
