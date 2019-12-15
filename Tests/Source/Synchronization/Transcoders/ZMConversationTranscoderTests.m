@@ -1525,7 +1525,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 
 - (void)testThatItOnlyResetsTheKeysItNeedsToReset
 {
-    NSSet *keys = [NSSet setWithObjects:ZMConversationUserDefinedNameKey, nil];
+    NSSet *keys = [NSSet setWithObjects:ZMConversationUserDefinedNameKey, ZMConversationArchivedChangedTimeStampKey, nil];
     __block ZMConversation *conversation = nil;
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
@@ -1534,10 +1534,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         ZMUser *user2 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user2.remoteIdentifier = [NSUUID createUUID];
         conversation = [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC withParticipants:@[user1, user2, selfUser]];
-        
         conversation.userDefinedName = nil;
-        [conversation removeParticipantAndUpdateConversationStateWithUser:selfUser initiatingUser: selfUser];
-
+        conversation.isArchived = YES;
         XCTAssertTrue([self.syncMOC saveOrRollback]);
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1548,9 +1546,11 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         // when
         [conversation setLocallyModifiedKeys:keys];
         XCTAssertTrue([conversation.keysThatHaveLocalModifications isEqualToSet:keys]);
-        
         BOOL shouldCreate = [self.sut shouldCreateRequestToSyncObject:conversation forKeys:keys withSync:mockUpstream];
+        
+        // then
         XCTAssertFalse([conversation.keysThatHaveLocalModifications containsObject:ZMConversationUserDefinedNameKey]);
+        XCTAssertTrue([conversation.keysThatHaveLocalModifications containsObject:ZMConversationArchivedChangedTimeStampKey]);
         XCTAssertTrue(shouldCreate);
     }];
 }
