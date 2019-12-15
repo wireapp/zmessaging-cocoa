@@ -504,7 +504,7 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
             
             // then
             XCTAssertNotNil(note)
-            XCTAssertEqual(note!.title, "Super User in \(team.name)")
+            XCTAssertEqual(note!.title, "Super User in \(team.name!)")
         }
     }
     
