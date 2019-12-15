@@ -182,7 +182,11 @@ import Foundation
     
     /// Marks all group conversations to be refetched.
     public static func refetchGroupConversations(_ context: NSManagedObjectContext) {
-        let predicate = NSPredicate(format: "conversationType == %d AND localParticipants CONTAINS %@", ZMConversationType.group.rawValue, ZMUser.selfUser(in: context))
+        let predicate = NSPredicate(format: "%K == %d AND ANY %K.user == %@",
+                                    ZMConversationConversationTypeKey,
+                                    ZMConversationType.group.rawValue,
+                                    ZMConversationParticipantRolesKey,
+                                    ZMUser.selfUser(in: context))
         refetchConversations(matching: predicate, in: context)
     }
     
