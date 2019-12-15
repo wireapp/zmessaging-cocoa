@@ -2006,7 +2006,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     }];
 }
 
-- (void)testThatItAddsUsersToAConversationAfterAPushEvent
+- (void)testThatItAddsUsersToAConversationAfterAPushEvent_userIDsAPI
 {
     // given
     __block ZMConversation *conversation;
@@ -2033,6 +2033,47 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         
         // then
         XCTAssertEqual(conversation.localParticipants.count, 3u);
+    }];
+}
+
+- (void)testThatItAddsUsersToAConversationAfterAPushEvent_userRolesAPI
+{
+    // given
+    [self.syncMOC performGroupedBlockAndWait:^{
+        NSUUID* conversationID = [NSUUID createUUID];
+        NSUUID* userID = [NSUUID createUUID];
+        ZMConversation *conversation = conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.conversationType = ZMConversationTypeGroup;
+        conversation.remoteIdentifier = conversationID;
+        [conversation addParticipantAndUpdateConversationStateWithUser:[ZMUser selfUserInContext:self.syncMOC] role:nil];
+        
+        XCTAssertEqual(conversation.localParticipants.count, 1u);
+        
+        NSDictionary *payload =
+        @{@"conversation": conversationID.transportString,
+          @"data": @{
+                  @"user_ids": @[userID.transportString],
+                  @"users": @[@{
+                                  @"conversation_role" : @"role22",
+                                  @"id" : userID.transportString
+                                  }
+                              ],
+                  },
+                  @"from": self.selfUserID.transportString,
+                  @"time": [NSDate date].transportString,
+                  @"type": @"conversation.member-join"
+          };
+        
+        // when
+        ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil];
+        [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
+        
+        // then
+        XCTAssertEqual(conversation.localParticipantsExcludingSelf.count, 1u);
+        ZMUser *addedUser = conversation.localParticipantsExcludingSelf.anyObject;
+        XCTAssertNotNil(addedUser);
+        ParticipantRole *participantRole = addedUser.participantRoles.anyObject;
+        XCTAssertEqualObjects(participantRole.role.name, @"role22");
     }];
 }
 
