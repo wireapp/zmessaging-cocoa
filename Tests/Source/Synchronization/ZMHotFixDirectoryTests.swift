@@ -95,6 +95,7 @@ class ZMHotFixDirectoryTests: MessagingTest {
             let c4 = ZMConversation.insertNewObject(in: self.syncMOC)
             c4.conversationType = .group
             c4.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
+            c4.needsToBeUpdatedFromBackend = false
             XCTAssertFalse(c4.needsToBeUpdatedFromBackend)
             
             // when
