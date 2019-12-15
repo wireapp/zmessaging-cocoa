@@ -176,7 +176,9 @@ import Foundation
     /// wireless guests feature
     public static func refetchTeamGroupConversations(_ context: NSManagedObjectContext) {
         // Batch update changes the underlying data in the persistent store and should be much more
-        let predicate = NSPredicate(format: "team != nil AND conversationType == %d", ZMConversationType.group.rawValue)
+        let predicate = NSPredicate(format: "team != nil AND %K == %d",
+                                    ZMConversationConversationTypeKey,
+                                    ZMConversationType.group.rawValue)
         refetchConversations(matching: predicate, in: context)
     }
     
