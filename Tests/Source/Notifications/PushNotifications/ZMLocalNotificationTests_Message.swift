@@ -60,7 +60,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     }
     
     func unknownNotification(_ conversation: ZMConversation, sender: ZMUser) -> ZMLocalNotification? {
-        let message = ZMClientMessage(nonce: UUID(), managedObjectContext: syncMOC)
+        let message = ZMClientMessage(nonce: UUID(), managedObjectContext: uiMOC)
         message.sender = sender;
         message.visibleInConversation = conversation
         message.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(20)
@@ -82,9 +82,11 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     // MARK: Tests
     
     func testThatItShowsDefaultAlertBodyWhenHidePreviewSettingIsTrue() {
+        
         // given
+        sender.name = "Super User"
         let note1 = textNotification(oneOnOneConversation, sender: sender)
-        XCTAssertEqual(note1?.content.title, "Super User") ///TODO:
+        XCTAssertEqual(note1?.content.title, "Super User")
         XCTAssertEqual(note1?.content.body, "Hello Hello!")
         
         // when
@@ -442,33 +444,34 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     }
 
     func testThatItAddsATitleIfTheUserIsPartOfATeam() {
-        syncMOC.performGroupedBlockAndWait {
-            
-            // given
-            let team = Team.insertNewObject(in: self.syncMOC)
-            team.name = "Wire Amazing Team"
-            let user = ZMUser.selfUser(in: self.syncMOC)
-            _ = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
-            self.syncMOC.saveOrRollback()
-            XCTAssertNotNil(user.team)
-
-            // when
-            let note = self.textNotification(self.oneOnOneConversation, sender: self.sender)
-            
-            // then
-            XCTAssertNotNil(note)
-            XCTAssertEqual(note!.title, "Super User in \(team.name!)")
+        
+        // given
+        let team = Team.insertNewObject(in: self.uiMOC)
+        team.name = "Wire Amazing Team"
+        team.remoteIdentifier = UUID.create()
+        let user = ZMUser.selfUser(in: self.uiMOC)
+        self.performPretendingUiMocIsSyncMoc {
+            _ = Member.getOrCreateMember(for: user, in: team, context: self.uiMOC)
         }
+        user.teamIdentifier = team.remoteIdentifier
+        self.uiMOC.saveOrRollback()
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // when
+        let note = self.textNotification(self.oneOnOneConversation, sender: self.sender)
+        
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.title, "Super User in \(team.name!)")
     }
 
     func testThatItDoesNotAddATitleIfTheUserIsNotPartOfATeam() {
-        
         // when
-        let note = self.textNotification(oneOnOneConversation, sender: sender)
+        let note = self.textNotification(self.oneOnOneConversation, sender: self.sender)
 
         // then
         XCTAssertNotNil(note)
-        XCTAssertEqual(note!.title, "Super User") ///TODO: sorting?
+        XCTAssertEqual(note!.title, "Super User")
     }
 }
 
@@ -693,16 +696,14 @@ extension ZMLocalNotificationTests_Message {
     }
     
     func testThatItGeneratesTheNotificationWithoutMuteInTheTeam() {
-        self.syncMOC.performGroupedAndWait { _ in
-            // GIVEN
-            let team = Team.insertNewObject(in: self.syncMOC)
-            team.name = "Wire Amazing Team"
-            let user = ZMUser.selfUser(in: self.syncMOC)
-            _ = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
-            self.syncMOC.saveOrRollback()
+        // GIVEN
+        let team = Team.insertNewObject(in: self.uiMOC)
+        team.name = "Wire Amazing Team"
+        let user = ZMUser.selfUser(in: self.uiMOC)
+        self.performPretendingUiMocIsSyncMoc {
+            _ = Member.getOrCreateMember(for: user, in: team, context: self.uiMOC)
         }
-        
-        XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        self.uiMOC.saveOrRollback()
         
         // WHEN
         let note = textNotification(self.oneOnOneConversation, sender: sender, text: "Hello", isEphemeral: false)!

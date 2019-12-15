@@ -2400,13 +2400,14 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 - (void)testThatItProcessesConversationCreateEvents
 {
     // given
+    NSUUID *selfUserID = [ZMUser selfUserInContext:self.uiMOC].remoteIdentifier;
     NSUUID *remoteID = [NSUUID createUUID];
     NSDictionary *innerPayload = @{
                                    @"name" : @"foobarz",
                                    @"creator" : @"3bc5750a-b965-40f8-aff2-831e9b5ac2e9",
                                    @"members" : @{
                                            @"self" : @{
-                                                   @"id" : @"3bc5750a-b965-40f8-aff2-831e9b5ac2e9",
+                                                   @"id" : selfUserID.transportString,
                                                    },
                                            @"others" : @[]
                                            },
