@@ -18,8 +18,8 @@
 
 @testable import WireSyncEngine
 
-final class RoleDownstreamRequestStrategyTests: MessagingTest {
-    var sut: RoleDownstreamRequestStrategy!
+final class ConversationRoleDownstreamRequestStrategyTests: MessagingTest {
+    var sut: ConversationRoleDownstreamRequestStrategy!
     var mockSyncStatus: MockSyncStatus!
     var mockSyncStateDelegate: MockSyncStateDelegate!
     var mockApplicationStatus: MockApplicationStatus!
@@ -30,7 +30,7 @@ final class RoleDownstreamRequestStrategyTests: MessagingTest {
         mockSyncStatus = MockSyncStatus(managedObjectContext: syncMOC, syncStateDelegate: mockSyncStateDelegate)
         mockApplicationStatus = MockApplicationStatus()
         mockApplicationStatus.mockSynchronizationState = .synchronizing
-        sut = RoleDownstreamRequestStrategy(with: syncMOC, applicationStatus: mockApplicationStatus, syncStatus: mockSyncStatus)
+        sut = ConversationRoleDownstreamRequestStrategy(with: syncMOC, applicationStatus: mockApplicationStatus, syncStatus: mockSyncStatus)
         
         syncMOC.performGroupedBlockAndWait {
             ///TODO:
@@ -63,7 +63,7 @@ final class RoleDownstreamRequestStrategyTests: MessagingTest {
             guard let request = self.sut.nextRequest() else { return XCTFail() }
             
             // THEN
-            XCTAssertEqual(request.path, RoleDownstreamRequestStrategy.requestPath)///TODO:
+            XCTAssertEqual(request.path, ConversationRoleDownstreamRequestStrategy.requestPath)///TODO:
         }
     }
 
