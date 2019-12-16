@@ -123,10 +123,10 @@ extension ZMConversationTranscoder {
         
         if usersAndRoleAPI {
             // new API: "user" object with role
-            self.processMemberJoinEvent_APIWithRoles(conversation: conversation, event: event)
+            processMemberJoinEvent_APIWithRoles(conversation: conversation, event: event)
         } else {
             // old API: "user_ids"
-            self.processMemberJoinEvent_APIWithUserIDs(conversation: conversation, event: event)
+            processMemberJoinEvent_APIWithUserIDs(conversation: conversation, event: event)
         }
         
     }
