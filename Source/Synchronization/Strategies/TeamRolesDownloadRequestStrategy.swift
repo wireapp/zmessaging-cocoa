@@ -43,7 +43,7 @@ fileprivate extension Team {
 }
 
 @objc
-public final class TeamRolesDownloadRequestStrategy: AbstractRequestStrategy, ZMContextChangeTrackerSource, ZMRequestGeneratorSource {
+public final class TeamRolesDownloadRequestStrategy: AbstractRequestStrategy, ZMContextChangeTrackerSource, ZMRequestGeneratorSource, ZMRequestGenerator {
     
     private (set) var downstreamSync: ZMDownstreamObjectSync!
     fileprivate unowned var syncStatus: SyncStatus
@@ -51,7 +51,6 @@ public final class TeamRolesDownloadRequestStrategy: AbstractRequestStrategy, ZM
     public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus, syncStatus: SyncStatus) {
         self.syncStatus = syncStatus
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
-        configuration = [.allowsRequestsDuringEventProcessing]
         downstreamSync = ZMDownstreamObjectSync(
             transcoder: self,
             entityName: Team.entityName(),
@@ -61,7 +60,7 @@ public final class TeamRolesDownloadRequestStrategy: AbstractRequestStrategy, ZM
         )
     }
     
-    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
+    public override func nextRequest() -> ZMTransportRequest? {
         let request = downstreamSync.nextRequest()
         if request == nil {
             completeSyncPhaseIfNoTeam()
@@ -74,7 +73,7 @@ public final class TeamRolesDownloadRequestStrategy: AbstractRequestStrategy, ZM
     }
     
     public var requestGenerators: [ZMRequestGenerator] {
-        return [downstreamSync]
+        return [self]
     }
     
     fileprivate let expectedSyncPhase = SyncPhase.fetchingTeamRoles

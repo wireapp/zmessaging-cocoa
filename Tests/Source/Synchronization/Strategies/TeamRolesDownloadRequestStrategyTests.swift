@@ -133,7 +133,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
     func testThatItUpdatesTheTeamWithTheResponse() {
         var team: Team!
         
-        syncMOC.performGroupedBlock {
+        syncMOC.performGroupedBlockAndWait {
             // given
             team = Team.insertNewObject(in: self.syncMOC)
             self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
@@ -172,7 +172,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
         
         self.mockSyncStatus.mockPhase = .fetchingTeamRoles
         
-        syncMOC.performGroupedBlock {
+        syncMOC.performGroupedBlockAndWait {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
             self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
@@ -192,10 +192,47 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
         XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase)
     }
     
+    func testThatItDoesNotUpdatesSyncStepOutsideOfSync() {
+        
+        syncMOC.performGroupedBlockAndWait {
+            // given
+            let team = Team.insertNewObject(in: self.syncMOC)
+            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            team.remoteIdentifier = .create()
+            team.needsToDownloadRoles = true
+            self.boostrapChangeTrackers(with: team)
+            guard let request = self.sut.nextRequest() else { return XCTFail("No request generated") }
+            
+            // when
+            let response = ZMTransportResponse(payload: self.sampleResponse as ZMTransportData, httpStatus: 200, transportSessionError: nil)
+            request.complete(with: response)
+        }
+        
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // then
+        XCTAssertFalse(self.mockSyncStatus.didCallFinishCurrentSyncPhase)
+    }
+    
+    func testThatItFinishedSyncStepIfNoTeam() {
+        
+        syncMOC.performGroupedBlockAndWait {
+            // given
+            self.mockSyncStatus.mockPhase = .fetchingTeamRoles
+            
+            // when
+            let request = self.sut.nextRequest()
+            
+            // then
+            XCTAssertNil(request)
+            XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase)
+        }
+    }
+    
     func testThatItCreatesNoNewRequestAfterReceivingAResponse() {
         var team: Team!
         
-        syncMOC.performGroupedBlock {
+        syncMOC.performGroupedBlockAndWait {
             // given
             team = Team.insertNewObject(in: self.syncMOC)
             team.remoteIdentifier = .create()
@@ -215,7 +252,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             // then
             self.boostrapChangeTrackers(with: team)
-            XCTAssertNil(self.sut.nextRequestIfAllowed())
+            XCTAssertNil(self.sut.nextRequest())
         }
     }
     
@@ -224,7 +261,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
     func testThatItDoesNotRemoveATeamWhenReceiving403() {
         let teamId = UUID.create()
         
-        syncMOC.performGroupedBlock {
+        syncMOC.performGroupedBlockAndWait {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
             self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
