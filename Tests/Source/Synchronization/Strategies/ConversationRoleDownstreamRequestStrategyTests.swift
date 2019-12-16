@@ -41,22 +41,6 @@ final class ConversationRoleDownstreamRequestStrategyTests: MessagingTest {
         super.tearDown()
     }
 
-    // MARK: - Slow Sync
-    
-    /*
-    func testThatItRequestsRoles_DuringSlowSync() {
-        syncMOC.performGroupedBlockAndWait {
-            // GIVEN
-            self.mockSyncStatus.mockPhase = .fetchingRoles
-            
-            // WHEN
-            guard let request = self.sut.nextRequest() else { return XCTFail() }
-            
-            // THEN
-            XCTAssertEqual(request.path, ConversationRoleDownstreamRequestStrategy.requestPath)///TODO:
-        }
-    }*/
-
     func testThatPredicateIsCorrect(){
         // given
         let convo1: ZMConversation = ZMConversation.insertNewObject(in: self.syncMOC)
@@ -114,6 +98,8 @@ final class ConversationRoleDownstreamRequestStrategyTests: MessagingTest {
             XCTAssertEqual(objs, [convo1])
         }
     }
+    
+    ///TODO: more tests for error cases.
 
     // MARK: - Helper
     ///TODO: move to utility
@@ -124,15 +110,3 @@ final class ConversationRoleDownstreamRequestStrategyTests: MessagingTest {
         
     }
 }
-
-//extension XCTestCase {
-//    // MARK: - Helper
-//
-//    private func boostrapChangeTrackers(with objects: ZMManagedObject...) {
-//        sut.contextChangeTrackers.forEach {
-//            $0.objectsDidChange(Set(objects))
-//        }
-//
-//    }
-//
-//}

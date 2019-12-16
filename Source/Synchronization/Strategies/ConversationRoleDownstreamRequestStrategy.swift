@@ -83,7 +83,7 @@ public final class ConversationRoleDownstreamRequestStrategy: AbstractRequestStr
 
 
 extension ConversationRoleDownstreamRequestStrategy: ZMDownstreamTranscoder {
-    static let requestPath = "/conversations"  ///TODO: how about team role?
+    static let requestPath = "/conversations"
 
     public static func getRolesRequest(in conversationIdentifier: UUID) -> ZMTransportRequest {
         let path = requestPath + "/" + conversationIdentifier.transportString() + "/roles"
