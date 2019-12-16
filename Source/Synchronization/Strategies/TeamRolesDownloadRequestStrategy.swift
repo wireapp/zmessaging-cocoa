@@ -62,7 +62,11 @@ public final class TeamRolesDownloadRequestStrategy: AbstractRequestStrategy, ZM
     }
     
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
-        return downstreamSync.nextRequest()
+        let request = downstreamSync.nextRequest()
+        if request == nil {
+            completeSyncPhaseIfNoTeam()
+        }
+        return request
     }
     
     public var contextChangeTrackers: [ZMContextChangeTracker] {
@@ -73,6 +77,17 @@ public final class TeamRolesDownloadRequestStrategy: AbstractRequestStrategy, ZM
         return [downstreamSync]
     }
     
+    fileprivate let expectedSyncPhase = SyncPhase.fetchingTeamRoles
+    
+    fileprivate var isSyncing: Bool {
+        return syncStatus.currentSyncPhase == self.expectedSyncPhase
+    }
+    
+    private func completeSyncPhaseIfNoTeam() {
+        if self.syncStatus.currentSyncPhase == self.expectedSyncPhase && !self.downstreamSync.hasOutstandingItems {
+            self.syncStatus.finishCurrentSyncPhase(phase: self.expectedSyncPhase)
+        }
+    }
 }
 
 
@@ -91,6 +106,10 @@ extension TeamRolesDownloadRequestStrategy: ZMDownstreamTranscoder {
         
         team.needsToDownloadRoles = false
         team.updateRoles(with: payload)
+        
+        if self.isSyncing {
+            self.syncStatus.finishCurrentSyncPhase(phase: self.expectedSyncPhase)
+        }
     }
     
     public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {

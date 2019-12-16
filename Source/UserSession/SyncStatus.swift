@@ -19,6 +19,7 @@
 @objc public enum SyncPhase : Int, CustomStringConvertible, CaseIterable {
     case fetchingLastUpdateEventID
     case fetchingTeams
+    case fetchingTeamRoles
     case fetchingConnections
     case fetchingConversations
     case fetchingUsers
@@ -50,6 +51,8 @@
             return "fetchingConversations"
         case .fetchingTeams:
             return "fetchingTeams"
+        case .fetchingTeamRoles:
+            return "fetchingTeamRoles"
         case .fetchingUsers:
             return "fetchingUsers"
         case .fetchingSelfUser:

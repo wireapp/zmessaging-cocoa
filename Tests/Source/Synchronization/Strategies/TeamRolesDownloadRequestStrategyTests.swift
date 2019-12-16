@@ -112,7 +112,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
         }
     }
     
-    func testThatItCreatesAReuqestForATeamThatNeedsToBeUpdatedFromTheBackend() {
+    func testThatItCreatesARequestForATeamThatNeedsToBeUpdatedFromTheBackend() {
         syncMOC.performGroupedBlockAndWait {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
@@ -144,8 +144,6 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
             
             // when
             let response = ZMTransportResponse(payload: self.sampleResponse as ZMTransportData, httpStatus: 200, transportSessionError: nil)
-            
-            // when
             request.complete(with: response)
         }
         
@@ -168,6 +166,30 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
             )
             XCTAssertFalse(team.needsToDownloadRoles)
         }
+    }
+    
+    func testThatItUpdatesSyncStepDuringSync() {
+        
+        self.mockSyncStatus.mockPhase = .fetchingTeamRoles
+        
+        syncMOC.performGroupedBlock {
+            // given
+            let team = Team.insertNewObject(in: self.syncMOC)
+            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            team.remoteIdentifier = .create()
+            team.needsToDownloadRoles = true
+            self.boostrapChangeTrackers(with: team)
+            guard let request = self.sut.nextRequest() else { return XCTFail("No request generated") }
+            
+            // when
+            let response = ZMTransportResponse(payload: self.sampleResponse as ZMTransportData, httpStatus: 200, transportSessionError: nil)
+            request.complete(with: response)
+        }
+        
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // then
+        XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase)
     }
     
     func testThatItCreatesNoNewRequestAfterReceivingAResponse() {
