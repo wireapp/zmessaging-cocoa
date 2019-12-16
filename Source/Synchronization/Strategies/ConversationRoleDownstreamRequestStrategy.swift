@@ -59,10 +59,7 @@ public final class ConversationRoleDownstreamRequestStrategy: AbstractRequestStr
             transcoder: self,
             entityName: ZMConversation.entityName(),
             predicateForObjectsToDownload: ZMConversation.predicateForObjectsNeedingToDownloadRoles,
-            filter: NSPredicate.init(block: {
-                print($0, $1)
-                return true
-            }),
+            filter: nil,
             managedObjectContext: managedObjectContext
         )
 
@@ -97,9 +94,7 @@ extension ConversationRoleDownstreamRequestStrategy: ZMDownstreamTranscoder {
     }
     
     public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
-        guard downstreamSync as? ZMDownstreamObjectSync == self.downstreamSync, let conversation = object as? ZMConversation else { return }
-        
-        managedObjectContext.delete(conversation)
+        // do not delete conversation
     }
     
     public func update(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
