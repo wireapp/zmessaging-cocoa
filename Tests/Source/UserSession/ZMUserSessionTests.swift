@@ -33,7 +33,7 @@ extension ZMUserSession {
     }
     
     @discardableResult func insertConversationWithUnreadMessage() -> ZMConversation {
-        let conversation = ZMConversation.insertGroupConversation(intoUserSession: self, withParticipants: [], name: nil, in: nil)
+        let conversation = ZMConversation.insertGroupConversation(session: self, participants: [])!
         conversation.remoteIdentifier = UUID()
         
         self.insertUnreadDotGeneratingMessageMessage(in: conversation)

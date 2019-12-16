@@ -38,7 +38,9 @@ class ConversationTests_Participants: ConversationTestsBase {
         // then - Participants changes and messages changes (System message for the added user)
         
         XCTAssertEqual(observer?.notifications.count, 1)
-        let note1 = observer?.notifications.firstObject as! ConversationChangeInfo
+        guard let note1 = observer?.notifications.firstObject as? ConversationChangeInfo else {
+            return XCTFail()
+        }
         XCTAssertEqual(note1.conversation, conversation)
         XCTAssertTrue(note1.participantsChanged)
         XCTAssertTrue(note1.messagesChanged)
@@ -65,21 +67,21 @@ class ConversationTests_Participants: ConversationTestsBase {
         let conversation = self.conversation(for: emptyGroupConversation)!
         let connectedUser = user(for: self.user2)!
         
-        XCTAssertFalse(conversation.activeParticipants.contains(connectedUser))
+        XCTAssertFalse(conversation.localParticipants.contains(connectedUser))
         
         // when
         conversation.addParticipants(Set(arrayLiteral: connectedUser), userSession: userSession!, completion: { (_) in })
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertTrue(conversation.activeParticipants.contains(connectedUser))
+        XCTAssertTrue(conversation.localParticipants.contains(connectedUser))
         
         // Tear down & recreate contexts
         recreateSessionManagerAndDeleteLocalData()
         XCTAssertTrue(login())
         
         // then
-        XCTAssertTrue(self.conversation(for: emptyGroupConversation)!.activeParticipants.contains(user(for: self.user2)!))
+        XCTAssertTrue(self.conversation(for: emptyGroupConversation)!.localParticipants.contains(user(for: self.user2)!))
     }
     
     func testThatRemovingParticipantsFromAConversationIsSynchronizedWithBackend() {
@@ -89,21 +91,21 @@ class ConversationTests_Participants: ConversationTestsBase {
         let conversation = self.conversation(for: groupConversation)!
         let connectedUser = user(for: self.user2)!
         
-        XCTAssertTrue(conversation.activeParticipants.contains(connectedUser))
+        XCTAssertTrue(conversation.localParticipants.contains(connectedUser))
         
         // when
         conversation.removeParticipant(connectedUser, userSession: userSession!, completion: { (_) in })
         XCTAssertTrue( waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertFalse(conversation.activeParticipants.contains(connectedUser))
+        XCTAssertFalse(conversation.localParticipants.contains(connectedUser))
         
         // Tear down & recreate contexts
         recreateSessionManagerAndDeleteLocalData()
         XCTAssertTrue(login())
         
         // then
-        XCTAssertFalse(self.conversation(for: groupConversation)!.activeParticipants.contains(user(for: self.user2)!))
+        XCTAssertFalse(self.conversation(for: groupConversation)!.localParticipants.contains(user(for: self.user2)!))
     }
     
 }

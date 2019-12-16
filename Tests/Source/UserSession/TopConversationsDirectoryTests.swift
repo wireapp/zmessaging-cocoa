@@ -67,7 +67,7 @@ class TopConversationsDirectoryTests : MessagingTest {
         let user1 = ZMUser.insertNewObject(in: uiMOC), user2 = ZMUser.insertNewObject(in: uiMOC)
         user1.remoteIdentifier = .create()
         user2.remoteIdentifier = .create()
-        let groupConv = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [user1, user2])
+        let groupConv = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [user1, user2])
         groupConv?.remoteIdentifier = .create()
 
         // WHEN

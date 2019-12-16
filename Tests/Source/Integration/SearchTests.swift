@@ -80,7 +80,7 @@ class SearchTests : IntegrationTest {
         
         // then
         XCTAssertTrue(newUser.isConnected)
-        XCTAssertTrue(oneToOneConversation.activeParticipants.contains(newUser))
+        XCTAssertTrue(oneToOneConversation.localParticipants.contains(newUser))
     }
     
     func testThatTheSelfUserCanAcceptAConnectionRequest() {

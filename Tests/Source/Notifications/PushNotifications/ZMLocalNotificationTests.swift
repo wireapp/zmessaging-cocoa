@@ -34,23 +34,50 @@ class ZMLocalNotificationTests: MessagingTest {
     
     override func setUp() {
         super.setUp()
+        selfUser = ZMUser.selfUser(in: self.uiMOC)
+        selfUser.remoteIdentifier = UUID.create()
         sender = insertUser(with: UUID.create(), name: "Super User")
         otherUser1 = insertUser(with: UUID.create(), name: "Other User1")
         otherUser2 = insertUser(with: UUID.create(), name: "Other User2")
         userWithNoName = insertUser(with: UUID.create(), name: nil)
-        oneOnOneConversation = insertConversation(with: UUID.create(), name: "Super Conversation", type: .oneOnOne, mutedMessages: .none)
-        groupConversation = insertConversation(with: UUID.create(), name: "Super Conversation", type: .group, mutedMessages: .none)
+        oneOnOneConversation = insertConversation(
+            with: UUID.create(),
+            name: "Super Conversation",
+            type: .oneOnOne,
+            mutedMessages: .none,
+            otherParticipants: [selfUser, sender])
+        groupConversation = insertConversation(
+            with: UUID.create(),
+            name: "Super Conversation",
+            type: .group,
+            mutedMessages: .none,
+            otherParticipants: [sender, otherUser1]
+        )
         
         // an empty conversation will have no meaninful display name
-        groupConversationWithoutName = insertConversation(with: UUID.create(), name: nil, type: .group, mutedMessages: .none, isEmpty: true)
-        groupConversationWithoutUserDefinedName = insertConversation(with: UUID.create(), name: nil, type: .group, mutedMessages: .none)
-        invalidConversation = insertConversation(with: UUID.create(), name: nil, type: .invalid, mutedMessages: .none)
-
-        syncMOC.performGroupedBlockAndWait {
-            self.selfUser = ZMUser.selfUser(in: self.syncMOC)
-            self.selfUser.remoteIdentifier = UUID.create()
-            self.syncMOC.saveOrRollback()
-        }
+        groupConversationWithoutName = insertConversation(
+            with: UUID.create(),
+            name: nil,
+            type: .group,
+            mutedMessages: .none,
+            otherParticipants: []
+        )
+        groupConversationWithoutUserDefinedName = insertConversation(
+            with: UUID.create(),
+            name: nil,
+            type: .group,
+            mutedMessages: .none,
+            otherParticipants: [sender, otherUser1]
+        )
+        invalidConversation = insertConversation(
+            with: UUID.create(),
+            name: nil,
+            type: .invalid,
+            mutedMessages: .none,
+            otherParticipants: []
+        )
+        uiMOC.saveOrRollback()
+        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
     }
     
     override func tearDown() {
@@ -64,6 +91,7 @@ class ZMLocalNotificationTests: MessagingTest {
         groupConversationWithoutUserDefinedName = nil
         invalidConversation = nil
         selfUser.remoteIdentifier = nil
+        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
         super.tearDown()
     }
     
@@ -71,39 +99,43 @@ class ZMLocalNotificationTests: MessagingTest {
     
     func insertUser(with remoteID: UUID, name: String?) -> ZMUser {
         var user: ZMUser!
-        syncMOC.performGroupedBlockAndWait {
-            user = ZMUser.insertNewObject(in: self.syncMOC)
+        self.performPretendingUiMocIsSyncMoc {
+            user = ZMUser.insertNewObject(in: self.uiMOC)
             user.name = name
             user.remoteIdentifier = remoteID
-            self.syncMOC.saveOrRollback()
+            self.uiMOC.saveOrRollback()
         }
         return user
     }
     
-    func insertConversation(with remoteID: UUID, name: String?, type: ZMConversationType, mutedMessages: MutedMessageTypes, isEmpty: Bool = false) -> ZMConversation {
+    func insertConversation(
+        with remoteID: UUID,
+        name: String?,
+        type: ZMConversationType,
+        mutedMessages: MutedMessageTypes,
+        otherParticipants: [ZMUser]) -> ZMConversation
+    {
         var conversation: ZMConversation!
-        syncMOC.performGroupedBlockAndWait {
-            conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            conversation = ZMConversation.insertNewObject(in: self.uiMOC)
             conversation.remoteIdentifier = remoteID
             conversation.userDefinedName = name
             conversation.conversationType = type
             conversation.mutedMessageTypes = mutedMessages
             conversation.lastServerTimeStamp = Date()
             conversation.lastReadServerTimeStamp = conversation.lastServerTimeStamp
-            if !isEmpty {
-                conversation.add(users: [self.sender, self.otherUser1], isFromLocal: false)
-            }
-            self.syncMOC.saveOrRollback()
-        }
+            conversation?.addParticipantsAndUpdateConversationState(
+                users: Set(otherParticipants + [selfUser]),
+                role: nil)
+            self.uiMOC.saveOrRollback()
         return conversation
     }
     
     func noteWithPayload(_ data: NSDictionary?, fromUserID: UUID?, in conversation: ZMConversation, type: String) -> ZMLocalNotification? {
         var note: ZMLocalNotification?
-        syncMOC.performGroupedBlockAndWait {
+        uiMOC.performGroupedBlockAndWait {
             let payload = self.payloadForEvent(in: conversation, type: type, data: data, from: fromUserID)
             if let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
-                note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
+                note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: self.uiMOC)
             }
         }
         return note

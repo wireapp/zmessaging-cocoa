@@ -335,9 +335,8 @@
                                   @"type" : @"user.connection",
                                   @"connection" : samplePayload
                                   };
-        ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUserConnection)] type];
-        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
+        
+        ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:[NSUUID createUUID]];
         
         // when
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
@@ -365,9 +364,7 @@
                               @"connection" : @"baz"
                               };
     
-    ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUserConnection)] type];
-    (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
+    ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:[NSUUID createUUID]];
     
     // when
     [self performIgnoringZMLogError:^{
@@ -381,12 +378,11 @@
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
         NSDictionary *payload = @{
-                                  @"type" : @"fooz",
+                                  @"type" : @"user.update",
                                   @"connection" : samplePayload
                                   };
-        ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUnknown)] type];
-        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
+        
+        ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:[NSUUID createUUID]];
         
         // when
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
@@ -418,9 +414,8 @@
                                   @"type" : @"user.connection",
                                   @"connection" : samplePayload
                                   };
-        ZMUpdateEvent *event = [OCMockObject mockForClass:[ZMUpdateEvent class]];
-        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturnValue:OCMOCK_VALUE(ZMUpdateEventTypeUserConnection)] type];
-        (void)[(ZMUpdateEvent *)[[(id)event stub] andReturn:payload] payload];
+        
+        ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:[NSUUID createUUID]];
         
         // when
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
@@ -1325,7 +1320,7 @@
         ZMUser *user2 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user2.remoteIdentifier = [NSUUID createUUID];
         
-        [ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC
+        (void)[ZMConversation insertGroupConversationIntoManagedObjectContext:self.syncMOC
                                                        withParticipants:@[user1, user2]];
         
         // when

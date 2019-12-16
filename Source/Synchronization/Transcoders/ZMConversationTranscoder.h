@@ -37,6 +37,10 @@ extern NSString * const ConversationsPath;
                  localNotificationDispatcher:(id<PushMessageHandler>)localNotificationDispatcher
                                   syncStatus:(SyncStatus *)syncStatus;
 
+- (ZMConversation *)createOneOnOneConversationFromTransportData:(NSDictionary *)transportData
+                                                           type:(ZMConversationType const)type
+                                                serverTimeStamp:(NSDate *)serverTimeStamp;
+
 @property (nonatomic) NSUInteger conversationPageSize;
 @property (nonatomic, weak, readonly) id<PushMessageHandler> localNotificationDispatcher;
 

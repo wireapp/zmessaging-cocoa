@@ -168,9 +168,9 @@ extension SessionManager {
 
 fileprivate extension BackupMetadata {
     
-    fileprivate static let nameAppName = "Wire"
-    fileprivate static let nameFileName = "Backup"
-    fileprivate static let fileExtension = "ios_wbu"
+    static let nameAppName = "Wire"
+    static let nameFileName = "Backup"
+    static let fileExtension = "ios_wbu"
 
     private static let formatter: DateFormatter = {
        let formatter = DateFormatter()

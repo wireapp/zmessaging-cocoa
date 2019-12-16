@@ -161,7 +161,7 @@ extension SearchTask {
 
     private func filterNonActiveTeamMembers(members: [Member]) -> [Member] {
         let activeConversations = ZMUser.selfUser(in: context).activeConversations
-        let activeContacts = Set(activeConversations.flatMap({ $0.activeParticipants }))
+        let activeContacts = Set(activeConversations.flatMap({ $0.localParticipants }))
         let selfUser = ZMUser.selfUser(in: context)
 
         return members.filter({
@@ -181,7 +181,7 @@ extension SearchTask {
             let query = query.strippingLeadingAtSign()
             let selfUser = ZMUser.selfUser(in: context)
             let activeConversations = ZMUser.selfUser(in: context).activeConversations
-            let activeContacts = Set(activeConversations.flatMap({ $0.activeParticipants }))
+            let activeContacts = Set(activeConversations.flatMap({ $0.localParticipants }))
             
             result = result.filter({
                 if let user = $0.user {

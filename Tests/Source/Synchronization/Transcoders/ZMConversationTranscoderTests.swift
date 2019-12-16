@@ -113,7 +113,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
         self.syncMOC.performAndWait {
             
             // GIVEN
-            self.conversation.internalAddParticipants([user])
+            self.conversation.addParticipantAndUpdateConversationState(user: user, role: nil)
             
             let payload = [
                 "from": self.user.remoteIdentifier!.transportString(),
@@ -140,7 +140,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
         self.syncMOC.performAndWait {
             
             // GIVEN
-            self.conversation.internalAddParticipants([user])
+            self.conversation.addParticipantAndUpdateConversationState(user: user, role: nil)
             
             let payload = [
                 "from": self.user.remoteIdentifier!.transportString(),
@@ -317,7 +317,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
                 return team
             }()
             
-            let conversation = ZMConversation.insertGroupConversation(into: moc, withParticipants: [], name: self.name, in: team, allowGuests: allowGuests)
+            let conversation = ZMConversation.insertGroupConversation(moc: moc, participants: [], name: self.name, team: team, allowGuests: allowGuests)
             guard let inserted = conversation else { return XCTFail("no conversation", file: file, line: line) }
             XCTAssert(moc.saveOrRollback())
             

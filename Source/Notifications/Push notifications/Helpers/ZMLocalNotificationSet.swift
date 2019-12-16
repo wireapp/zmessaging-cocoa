@@ -127,7 +127,7 @@ import WireTransport
 // Event Notifications
 public extension ZMLocalNotificationSet {
 
-    public func cancelNotificationForIncomingCall(_ conversation: ZMConversation) {
+    func cancelNotificationForIncomingCall(_ conversation: ZMConversation) {
         let toRemove = notifications.filter {
             $0.conversationID == conversation.remoteIdentifier && $0.isCallingNotification
         }

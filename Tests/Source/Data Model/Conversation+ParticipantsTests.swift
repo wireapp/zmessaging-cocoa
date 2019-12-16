@@ -58,7 +58,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let user = ZMUser.insertNewObject(in: uiMOC)
         user.remoteIdentifier = UUID()
         
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [])!
         conversation.remoteIdentifier = UUID()
         conversation.conversationType = .group
         
@@ -96,7 +96,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let selfUser = ZMUser.selfUser(in: uiMOC)
         selfUser.remoteIdentifier = UUID()
         
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [])!
         conversation.remoteIdentifier = UUID()
         conversation.conversationType = .group
         
@@ -123,7 +123,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         user.remoteIdentifier = UUID()
         
         for conversationType in [ZMConversationType.connection, ZMConversationType.oneOnOne, ZMConversationType.`self`, ZMConversationType.invalid] {
-            let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [])!
+            let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [])!
             conversation.remoteIdentifier = UUID()
             conversation.conversationType = conversationType
             
@@ -150,7 +150,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let user = ZMUser.insertNewObject(in: uiMOC)
         user.remoteIdentifier = UUID()
         
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [])!
         conversation.remoteIdentifier = UUID()
         conversation.conversationType = .group
         
@@ -184,7 +184,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let user = ZMUser.insertNewObject(in: uiMOC)
         user.remoteIdentifier = UUID()
         
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [user])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [user])!
         conversation.remoteIdentifier = UUID()
         conversation.conversationType = .group
         
@@ -239,7 +239,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let user = ZMUser.insertNewObject(in: uiMOC)
         user.remoteIdentifier = UUID()
         
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [user])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [user])!
         conversation.remoteIdentifier = UUID()
         conversation.conversationType = .group
         
@@ -273,7 +273,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         user.remoteIdentifier = UUID()
         
         for conversationType in [ZMConversationType.connection, ZMConversationType.oneOnOne, ZMConversationType.`self`, ZMConversationType.invalid] {
-            let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [])!
+            let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [])!
             conversation.remoteIdentifier = UUID()
             conversation.conversationType = conversationType
             
@@ -300,7 +300,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let user = ZMUser.insertNewObject(in: uiMOC)
         user.remoteIdentifier = UUID()
         
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [user])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [user])!
         conversation.remoteIdentifier = UUID()
         conversation.conversationType = .group
         
@@ -335,7 +335,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let user = ZMUser.insertNewObject(in: uiMOC)
         user.remoteIdentifier = UUID()
         
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [user])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [user])!
         conversation.remoteIdentifier = UUID()
         conversation.conversationType = .group
         
@@ -370,7 +370,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let user = ZMUser.insertNewObject(in: uiMOC)
         user.remoteIdentifier = UUID()
 
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [user])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [user])!
         conversation.remoteIdentifier = UUID()
         conversation.conversationType = .group
 
@@ -412,7 +412,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         selfUser.remoteIdentifier = UUID()
         
         let conversationId = UUID()
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [user])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [user])!
         conversation.remoteIdentifier = conversationId
         conversation.conversationType = .group;
 
@@ -466,7 +466,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         selfUser.remoteIdentifier = UUID()
         
         let conversationId = UUID()
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [user])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [user])!
         conversation.remoteIdentifier = conversationId
         conversation.conversationType = .group;
         
@@ -521,7 +521,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         service.providerIdentifier = "123"
         service.serviceIdentifier = "123"
         
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [service])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [service])!
         conversation.remoteIdentifier = UUID()
         
         // when
@@ -538,7 +538,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let user = ZMUser.insertNewObject(in: uiMOC)
         user.remoteIdentifier = UUID()
         
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [user])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [user])!
         conversation.remoteIdentifier = UUID()
         
         // when
@@ -558,7 +558,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let user2 = ZMUser.insertNewObject(in: uiMOC)
         user2.remoteIdentifier = UUID()
         
-        let conversation = ZMConversation.insertGroupConversation(into: uiMOC, withParticipants: [])!
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [])!
         conversation.remoteIdentifier = UUID()
         
         // when

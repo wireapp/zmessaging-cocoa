@@ -48,7 +48,7 @@ import Foundation
     }
     
     public func check(usersIn conversation: ZMConversation) {
-        check(users: conversation.activeParticipants)
+        check(users: conversation.localParticipants)
     }
     
     public func timerDidFire(_ timer: ZMTimer) {

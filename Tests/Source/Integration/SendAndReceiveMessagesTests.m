@@ -564,7 +564,7 @@
     
     ZMUser *user4 = [self userForMockUser:self.user4];
     XCTAssertEqualObjects([(ZMSystemMessage *)lastMessages[0] users],  [NSSet setWithArray:@[user4]]);
-    XCTAssertTrue([groupConversation.activeParticipants containsObject:user4]);
+    XCTAssertTrue([groupConversation.localParticipants containsObject:user4]);
 }
 
 - (void)enforceSlowSyncWithNotificationPayload:(NSDictionary *)notificationPayload
@@ -714,7 +714,7 @@
     ZMUser *removedUser = [self userForMockUser:self.user1];
     
     // then
-    XCTAssertEqual(conversation.activeParticipants.count, 3lu);
+    XCTAssertEqual(conversation.localParticipants.count, 3lu);
     XCTAssertEqual(systemMessage.users.count, 3lu);
     XCTAssertEqual(systemMessage.addedUsers.count, 1lu);
     XCTAssertEqual(systemMessage.removedUsers.count, 1u);
@@ -769,7 +769,7 @@
     ZMUser *removedUser = [self userForMockUser:self.user3];
     
     // then
-    XCTAssertEqual(conversation.activeParticipants.count, 5lu);
+    XCTAssertEqual(conversation.localParticipants.count, 5lu);
     XCTAssertEqualObjects(secondSystemMessage.users, initialUsers);
     XCTAssertEqual(secondSystemMessage.addedUsers.count, 2lu);
     XCTAssertEqual(secondSystemMessage.removedUsers.count, 1lu);
