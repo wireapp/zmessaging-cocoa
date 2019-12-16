@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2017 Wire Swiss GmbH
+// Copyright (C) 2019 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -81,11 +81,11 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
         // given
         let team1 = Team.insertNewObject(in: self.syncMOC)
         team1.remoteIdentifier = .create()
-        team1.needsToRedownloadMembers = true
+        team1.needsToDownloadRoles = true
         
         let team2 = Team.insertNewObject(in: self.syncMOC)
         team2.remoteIdentifier = .create()
-        team2.needsToRedownloadMembers = false
+        team2.needsToDownloadRoles = false
         
         // then
         XCTAssertTrue(sut.downstreamSync.predicateForObjectsToDownload.evaluate(with:team1))
@@ -104,7 +104,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
             self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
             
             // when
-            team.needsToRedownloadMembers = false
+            team.needsToDownloadRoles = false
             self.boostrapChangeTrackers(with: team)
             
             // then
@@ -120,7 +120,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
             self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
             
             // when
-            team.needsToRedownloadMembers = true
+            team.needsToDownloadRoles = true
             self.boostrapChangeTrackers(with: team)
             
             // then
@@ -132,14 +132,13 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
     
     func testThatItUpdatesTheTeamWithTheResponse() {
         var team: Team!
-        let creatorId = UUID.create()
         
         syncMOC.performGroupedBlock {
             // given
             team = Team.insertNewObject(in: self.syncMOC)
             self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
             team.remoteIdentifier = .create()
-            team.needsToBeUpdatedFromBackend = true
+            team.needsToDownloadRoles = true
             self.boostrapChangeTrackers(with: team)
             guard let request = self.sut.nextRequest() else { return XCTFail("No request generated") }
             
@@ -167,6 +166,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
                 Set(memberRole.actions.compactMap { $0.name}),
                 Set(["leave_conversation"])
             )
+            XCTAssertFalse(team.needsToDownloadRoles)
         }
     }
     
@@ -177,7 +177,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
             // given
             team = Team.insertNewObject(in: self.syncMOC)
             team.remoteIdentifier = .create()
-            team.needsToBeUpdatedFromBackend = true
+            team.needsToDownloadRoles = true
             self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
             self.boostrapChangeTrackers(with: team)
             
@@ -207,7 +207,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
             let team = Team.insertNewObject(in: self.syncMOC)
             self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
             team.remoteIdentifier = teamId
-            team.needsToBeUpdatedFromBackend = true
+            team.needsToDownloadRoles = true
             self.boostrapChangeTrackers(with: team)
             guard let request = self.sut.nextRequest() else { return XCTFail("No request generated") }
             

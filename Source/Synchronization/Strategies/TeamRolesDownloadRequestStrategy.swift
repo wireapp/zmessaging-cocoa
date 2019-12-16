@@ -21,8 +21,24 @@
 fileprivate extension Team {
     
     static var predicateForTeamRolesNeedingToBeUpdated: NSPredicate = {
-        NSPredicate(format: "%K == YES AND %K != NULL", #keyPath(Team.needsToRedownloadMembers), Team.remoteIdentifierDataKey()!)
+        NSPredicate(format: "%K == YES AND %K != NULL", #keyPath(Team.needsToDownloadRoles), Team.remoteIdentifierDataKey()!)
     }()
+    
+    func updateRoles(with payload: [String: Any]) {
+        guard let rolesPayload = payload["conversation_roles"] as? [[String: Any]] else { return }
+        let existingRoles = self.roles
+        
+        // Update or insert new roles
+        let newRoles = rolesPayload.compactMap {
+            Role.createOrUpdate(with: $0, teamOrConversation: .team(self), context: managedObjectContext!)
+        }
+        
+        // Delete removed roles
+        let rolesToDelete = existingRoles.subtracting(newRoles)
+        rolesToDelete.forEach {
+            managedObjectContext?.delete($0)
+        }
+    }
     
 }
 
@@ -73,8 +89,8 @@ extension TeamRolesDownloadRequestStrategy: ZMDownstreamTranscoder {
             let payload = response.payload?.asDictionary() as? [String: Any] else { return }
         
         
-        team.needsToRedownloadMembers = true
-        team.update(with: payload)
+        team.needsToDownloadRoles = false
+        team.updateRoles(with: payload)
     }
     
     public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
