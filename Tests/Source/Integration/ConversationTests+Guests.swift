@@ -33,6 +33,8 @@ class ConversationTests_Guests : TeamTests {
             teamConversation.team = team
             teamConversation.creator = self.selfUser
             teamConversation.changeName(by:self.selfUser, name:"Team Group conversation")
+            
+            self.selfUser.role = "wire_admin"
             result = teamConversation
         }
         
