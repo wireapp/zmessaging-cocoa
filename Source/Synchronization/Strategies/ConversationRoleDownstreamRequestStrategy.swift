@@ -26,19 +26,15 @@ fileprivate extension ZMConversation {
     
     func updateRoles(with response: ZMTransportResponse) {
         guard let rolesPayload = response.payload?.asDictionary()?["conversation_roles"] as? [[String: Any]] else { return }
-        let existingParticipantRoles = participantRoles
+        let existingRoles = nonTeamRoles
 
         // Update or insert new roles
         let newRoles = rolesPayload.compactMap {
             Role.createOrUpdate(with: $0, teamOrConversation: .conversation(self), context: managedObjectContext!)
         }
         
-        let newParticipantRoles: [ParticipantRole] = newRoles.compactMap({ role in
-            role.participantRoles.first(where: {$0.conversation == self})
-        })
-        
         // Delete removed roles
-        let rolesToDelete = existingParticipantRoles.subtracting(newParticipantRoles)
+        let rolesToDelete = existingRoles.subtracting(newRoles)
         rolesToDelete.forEach {
             managedObjectContext?.delete($0)
         }
@@ -46,20 +42,16 @@ fileprivate extension ZMConversation {
 
 }
 
-///TODO: need to comform ZMContextChangeTrackerSource, ZMRequestGeneratorSource?
 @objc
-public final class ConversationRoleDownstreamRequestStrategy: AbstractRequestStrategy {
-    fileprivate let syncStatus: SyncStatus
+public final class ConversationRoleDownstreamRequestStrategy: AbstractRequestStrategy, ZMContextChangeTrackerSource, ZMRequestGeneratorSource {
     fileprivate let jsonDecoder = JSONDecoder()
     private (set) var downstreamSync: ZMDownstreamObjectSync!
 
     @objc
-    public init(with managedObjectContext: NSManagedObjectContext,
-                applicationStatus: ApplicationStatus,
-                syncStatus: SyncStatus) {
-        self.syncStatus = syncStatus
+    public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         
-        super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
+        super.init(withManagedObjectContext: managedObjectContext,
+                   applicationStatus: applicationStatus)
         
         configuration = [.allowsRequestsDuringEventProcessing]
         
@@ -67,7 +59,10 @@ public final class ConversationRoleDownstreamRequestStrategy: AbstractRequestStr
             transcoder: self,
             entityName: ZMConversation.entityName(),
             predicateForObjectsToDownload: ZMConversation.predicateForObjectsNeedingToDownloadRoles,
-            filter: nil,
+            filter: NSPredicate.init(block: {
+                print($0, $1)
+                return true
+            }),
             managedObjectContext: managedObjectContext
         )
 

@@ -90,8 +90,15 @@ extension ZMConversationTranscoder {
 
         guard let conversation = ZMConversation(remoteID: convRemoteID, createIfNeeded:
             true, in: managedObjectContext, created: &conversationCreated) else { return nil }
+        
 
         conversation.update(transportData: transportData, serverTimeStamp: serverTimeStamp)
+
+        if conversationCreated.boolValue,
+           conversation.conversationType == .group,
+           conversation.teamRemoteIdentifier == nil {
+            conversation.needsToDownloadRoles = true
+        }
 
         if conversation.conversationType != ZMConversationType.`self` && conversationCreated.boolValue == true {
 

@@ -30,16 +30,7 @@ final class ConversationRoleDownstreamRequestStrategyTests: MessagingTest {
         mockSyncStatus = MockSyncStatus(managedObjectContext: syncMOC, syncStateDelegate: mockSyncStateDelegate)
         mockApplicationStatus = MockApplicationStatus()
         mockApplicationStatus.mockSynchronizationState = .synchronizing
-        sut = ConversationRoleDownstreamRequestStrategy(with: syncMOC, applicationStatus: mockApplicationStatus, syncStatus: mockSyncStatus)
-        
-        syncMOC.performGroupedBlockAndWait {
-            ///TODO:
-//            self.conversation1 = ZMConversation.insertNewObject(in: self.syncMOC)
-//            self.conversation1.remoteIdentifier = UUID()
-//
-//            self.conversation2 = ZMConversation.insertNewObject(in: self.syncMOC)
-//            self.conversation2.remoteIdentifier = UUID()
-        }
+        sut = ConversationRoleDownstreamRequestStrategy(withManagedObjectContext: syncMOC, applicationStatus: mockApplicationStatus)
     }
     
     override func tearDown() {
@@ -47,13 +38,12 @@ final class ConversationRoleDownstreamRequestStrategyTests: MessagingTest {
         mockSyncStatus = nil
         mockApplicationStatus = nil
         mockSyncStateDelegate = nil
-//        conversation1 = nil
-//        conversation2 = nil
         super.tearDown()
     }
 
     // MARK: - Slow Sync
     
+    /*
     func testThatItRequestsRoles_DuringSlowSync() {
         syncMOC.performGroupedBlockAndWait {
             // GIVEN
@@ -65,6 +55,84 @@ final class ConversationRoleDownstreamRequestStrategyTests: MessagingTest {
             // THEN
             XCTAssertEqual(request.path, ConversationRoleDownstreamRequestStrategy.requestPath)///TODO:
         }
+    }*/
+
+    func testThatPredicateIsCorrect(){
+        // given
+        let convo1: ZMConversation = ZMConversation.insertNewObject(in: self.syncMOC)
+        convo1.conversationType = .group
+        convo1.remoteIdentifier = .create()
+        convo1.needsToDownloadRoles = true
+
+        let convo2: ZMConversation = ZMConversation.insertNewObject(in: self.syncMOC)
+        convo2.conversationType = .group
+        convo2.remoteIdentifier = .create()
+        convo2.needsToDownloadRoles = false
+        
+        // then
+        XCTAssert(sut.downstreamSync.predicateForObjectsToDownload.evaluate(with:convo1))
+        XCTAssertFalse(sut.downstreamSync.predicateForObjectsToDownload.evaluate(with:convo2))
     }
 
+    func testThatItCreatesAReuqestForATeamThatNeedsToBeRedownloadItsMembersFromTheBackend() {
+        syncMOC.performGroupedBlockAndWait {
+            // given
+            let convo1: ZMConversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            convo1.conversationType = .group
+            convo1.remoteIdentifier = .create()
+            convo1.addParticipantAndUpdateConversationState(user: ZMUser.selfUser(in: self.syncMOC), role: nil)
+
+            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            
+            // when
+            convo1.needsToDownloadRoles = true
+            self.boostrapChangeTrackers(with: convo1)
+            
+            // then
+            guard let request = self.sut.nextRequest() else { return XCTFail("No request generated") }
+            XCTAssertEqual(request.method, .methodGET)
+            XCTAssertEqual(request.path, "/conversations/\(convo1.remoteIdentifier!.transportString())/roles")
+        }
+    }
+
+    func testThatItFetch() {
+        syncMOC.performGroupedBlockAndWait {
+            // given
+            let convo1: ZMConversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            convo1.conversationType = .group
+            convo1.remoteIdentifier = .create()
+            convo1.addParticipantAndUpdateConversationState(user: ZMUser.selfUser(in: self.syncMOC), role: nil)
+            
+            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            
+            // when
+            convo1.needsToDownloadRoles = true
+            let objs:[ZMConversation] = self.sut.contextChangeTrackers.compactMap({$0.fetchRequestForTrackedObjects()}).flatMap({self.syncMOC.executeFetchRequestOrAssert($0) as! [ZMConversation] })
+                
+
+            // then            
+            XCTAssertEqual(objs, [convo1])
+        }
+    }
+
+    // MARK: - Helper
+    ///TODO: move to utility
+    private func boostrapChangeTrackers(with objects: ZMManagedObject...) {
+        sut.contextChangeTrackers.forEach {
+            $0.objectsDidChange(Set(objects))
+        }
+        
+    }
 }
+
+//extension XCTestCase {
+//    // MARK: - Helper
+//
+//    private func boostrapChangeTrackers(with objects: ZMManagedObject...) {
+//        sut.contextChangeTrackers.forEach {
+//            $0.objectsDidChange(Set(objects))
+//        }
+//
+//    }
+//
+//}

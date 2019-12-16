@@ -318,6 +318,10 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     if (conversation == nil) {
         conversation = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:YES inContext:self.managedObjectContext];
         // if we did not have this conversation before, refetch it
+        if (conversation.conversationType == ZMConversationTypeGroup && conversation.teamRemoteIdentifier == nil) {
+            conversation.needsToDownloadRoles = YES;
+        }
+
         conversation.needsToBeUpdatedFromBackend = YES;
     }
     return conversation;
