@@ -74,7 +74,7 @@ class MemberDownloadRequestStrategyTests: MessagingTest {
         }
     }
 
-    func testThatItCreatesAReuqestForATeamThatNeedsToBeRedownloadItsMembersFromTheBackend() {
+    func testThatItCreatesARequestForATeamThatNeedsToBeRedownloadItsMembersFromTheBackend() {
         syncMOC.performGroupedBlockAndWait {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
