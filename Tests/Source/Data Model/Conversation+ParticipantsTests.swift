@@ -567,9 +567,15 @@ class Conversation_ParticipantsTests: MessagingTest {
         // then
         XCTAssertEqual(request.method, .methodPOST)
         XCTAssertEqual(request.path, "/conversations/\(conversation.remoteIdentifier!.transportString())/members")
-        
-        let usersIdsInPayload = request.payload?.asDictionary()?["users"] as! [String]
+
+        let payload = request.payload?.asDictionary()
+        XCTAssertNotNil(payload)
+
+        let usersIdsInPayload = payload!["users"] as! [String]
         XCTAssertEqual(Set(usersIdsInPayload), Set(arrayLiteral: user1.remoteIdentifier!.transportString(), user2.remoteIdentifier!.transportString()))
+
+        let conversationRole = payload!["conversation_role"] as! String
+        XCTAssertEqual(conversationRole, "wire_member")
     }
     
 }
