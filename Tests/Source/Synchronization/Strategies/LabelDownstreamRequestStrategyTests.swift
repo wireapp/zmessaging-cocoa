@@ -95,6 +95,7 @@ class LabelDownstreamRequestStrategyTests: MessagingTest {
             XCTAssertEqual(request.path, "/properties/labels")
         }
     }
+
     func testThatItRequestsLabels_WhenRefetchingIsNecessary() {
         syncMOC.performGroupedBlockAndWait {
             // GIVEN

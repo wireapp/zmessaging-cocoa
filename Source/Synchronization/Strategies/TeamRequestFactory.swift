@@ -27,6 +27,10 @@ final public class TeamDownloadRequestFactory {
         let ids = identifiers.map { $0.transportString() }.joined(separator: ",")
         return ZMTransportRequest(getFromPath: teamPath + "/" + ids)
     }
+    
+    public static func requestToDownloadRoles(for identifier: UUID) -> ZMTransportRequest {
+        return ZMTransportRequest(getFromPath: teamPath + "/" + identifier.transportString() + "/conversations/roles")
+    }
 
     public static var getTeamsRequest: ZMTransportRequest {
         return ZMTransportRequest(getFromPath: teamPath)

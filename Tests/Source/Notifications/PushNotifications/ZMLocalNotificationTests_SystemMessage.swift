@@ -24,7 +24,7 @@ class ZMLocalNotificationTests_SystemMessage : ZMLocalNotificationTests {
     // MARK: - Helpers
     
     func noteForParticipantAdded(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> ZMLocalNotification? {
-        let systemMessage = ZMSystemMessage(nonce: UUID(), managedObjectContext: syncMOC)
+        let systemMessage = ZMSystemMessage(nonce: UUID(), managedObjectContext: uiMOC)
         systemMessage.systemMessageType = .participantsAdded
         systemMessage.users = otherUsers
         systemMessage.sender = aSender
@@ -34,7 +34,7 @@ class ZMLocalNotificationTests_SystemMessage : ZMLocalNotificationTests {
     }
     
     func noteForParticipantsRemoved(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> ZMLocalNotification? {
-        let systemMessage = ZMSystemMessage(nonce: UUID(), managedObjectContext: syncMOC)
+        let systemMessage = ZMSystemMessage(nonce: UUID(), managedObjectContext: uiMOC)
         systemMessage.systemMessageType = .participantsRemoved
         systemMessage.users = otherUsers
         systemMessage.sender = aSender
@@ -47,7 +47,7 @@ class ZMLocalNotificationTests_SystemMessage : ZMLocalNotificationTests {
     func testThatItDoesNotCreateANotificationForConversationRename() {
         
         // given
-        let systemMessage = ZMSystemMessage(nonce: UUID(), managedObjectContext: syncMOC)
+        let systemMessage = ZMSystemMessage(nonce: UUID(), managedObjectContext: uiMOC)
         systemMessage.systemMessageType = .conversationNameChanged
         systemMessage.text = "New Name"
         systemMessage.sender = sender
@@ -87,7 +87,7 @@ class ZMLocalNotificationTests_SystemMessage : ZMLocalNotificationTests {
     func testThatItDoesNotCreateANotificationWhenTheUserLeaves(){
         
         // given
-        let systemMessage = ZMSystemMessage(nonce: UUID(), managedObjectContext: syncMOC)
+        let systemMessage = ZMSystemMessage(nonce: UUID(), managedObjectContext: uiMOC)
         systemMessage.systemMessageType = .participantsRemoved
         systemMessage.users = [otherUser1]
         systemMessage.sender = otherUser1

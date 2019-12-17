@@ -90,8 +90,15 @@ extension ZMConversationTranscoder {
 
         guard let conversation = ZMConversation(remoteID: convRemoteID, createIfNeeded:
             true, in: managedObjectContext, created: &conversationCreated) else { return nil }
+        
 
         conversation.update(transportData: transportData, serverTimeStamp: serverTimeStamp)
+
+        if conversationCreated.boolValue,
+           conversation.conversationType == .group,
+           conversation.teamRemoteIdentifier == nil {
+            conversation.needsToDownloadRoles = true
+        }
 
         if conversation.conversationType != ZMConversationType.`self` && conversationCreated.boolValue == true {
 
@@ -116,10 +123,10 @@ extension ZMConversationTranscoder {
         
         if usersAndRoleAPI {
             // new API: "user" object with role
-            self.processMemberJoinEvent_APIWithRoles(conversation: conversation, event: event)
+            processMemberJoinEvent_APIWithRoles(conversation: conversation, event: event)
         } else {
             // old API: "user_ids"
-            self.processMemberJoinEvent_APIWithUserIDs(conversation: conversation, event: event)
+            processMemberJoinEvent_APIWithUserIDs(conversation: conversation, event: event)
         }
         
     }

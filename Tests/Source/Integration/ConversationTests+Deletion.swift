@@ -22,8 +22,8 @@ class ConversationTests_Deletion: ConversationTestsBase {
 
     func testThatDeletingAConversationAlsoDeletesItLocally_OnSuccessfulResponse() {
         // GIVEN
-        XCTAssertTrue(login())
         createTeamAndConversations()
+        XCTAssertTrue(login())
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // WHEN
@@ -45,8 +45,8 @@ class ConversationTests_Deletion: ConversationTestsBase {
     
     func testThatDeletingAConversationIsNotDeletingItLocally_OnFailureResponse() {
         // GIVEN
-        XCTAssertTrue(login())
         createTeamAndConversations()
+        XCTAssertTrue(login())
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         mockTransportSession.responseGeneratorBlock = {[weak self] request in

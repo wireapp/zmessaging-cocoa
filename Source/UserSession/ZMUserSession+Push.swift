@@ -281,7 +281,7 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
     
 }
 
-fileprivate extension UNNotificationContent {
+extension UNNotificationContent {
     override open var description: String {
         return "<\(type(of:self)); threadIdentifier: \(self.threadIdentifier); content: redacted>"
     }
