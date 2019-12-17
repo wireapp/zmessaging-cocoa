@@ -2291,10 +2291,12 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.remoteIdentifier = conversationID;
         conversation.isFullyMuted = isSilencedBefore;
-
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        NSMutableDictionary *dataWithSelf = [data mutableCopy];
+        dataWithSelf[@"id"] = selfUser.remoteIdentifier.transportString;
         NSDictionary *payload = @{
                                   @"conversation" : conversation.remoteIdentifier.transportString,
-                                  @"data" : data,
+                                  @"data" : dataWithSelf,
                                   @"from" : @"08316f5e-3c0a-4847-a235-2b4d93f291a4",
                                   @"time" : @"2014-08-07T13:19:42.394Z",
                                   @"type" : @"conversation.member-update",
@@ -2332,13 +2334,16 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     NSUUID* conversationID = [NSUUID createUUID];
     
     [self.syncMOC performGroupedBlockAndWait:^{
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        NSMutableDictionary *dataWithSelf = [data mutableCopy];
+        dataWithSelf[@"id"] = selfUser.remoteIdentifier.transportString;
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.remoteIdentifier = conversationID;
         conversation.isArchived = isArchivedBefore;
         
         NSDictionary *payload = @{
                                   @"conversation" : conversation.remoteIdentifier.transportString,
-                                  @"data" : data,
+                                  @"data" : dataWithSelf,
                                   @"from" : @"08316f5e-3c0a-4847-a235-2b4d93f291a4",
                                   @"time" : @"2014-08-07T13:19:42.394Z",
                                   @"type" : @"conversation.member-update",

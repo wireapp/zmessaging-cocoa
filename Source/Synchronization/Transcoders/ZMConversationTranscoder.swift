@@ -30,10 +30,20 @@ extension ZMConversationTranscoder {
     }
     
     @objc(processMemberUpdateEvent:forConversation:previousLastServerTimeStamp:)
-    public func processMemberUpdateEvent(_ event: ZMUpdateEvent, for conversation: ZMConversation?, previousLastServerTimeStamp previousLastServerTimestamp: Date?) {
-        guard let dataPayload = (event.payload as NSDictionary).dictionary(forKey: "data") else { return }
+    public func processMemberUpdateEvent(
+        _ event: ZMUpdateEvent,
+        for conversation: ZMConversation?,
+        previousLastServerTimeStamp previousLastServerTimestamp: Date?) {
+        guard let dataPayload = (event.payload as NSDictionary).dictionary(forKey: "data"),
+            let conversation = conversation,
+            let id = (dataPayload["id"] as? String).flatMap({ UUID.init(uuidString: $0)})
+            else { return }
         
-        conversation?.updateSelfStatus(dictionary: dataPayload, timeStamp: event.timeStamp(), previousLastServerTimeStamp: previousLastServerTimestamp)
+        if id == ZMUser.selfUser(in: self.managedObjectContext).remoteIdentifier {
+            conversation.updateSelfStatus(dictionary: dataPayload, timeStamp: event.timeStamp(), previousLastServerTimeStamp: previousLastServerTimestamp)
+        } else {
+            conversation.updateRoleFromEventPayload(dataPayload, userId: id)
+        }
     }
 
     @objc(createConversationFromEvent:)
@@ -279,5 +289,19 @@ extension ZMConversation {
         let path = NSString.path(withComponents: [ConversationsPath, remoteIdentifier.transportString(), "self"])
         let request = ZMTransportRequest(path: path, method: .methodPUT, payload: payload as NSDictionary)
         return ZMUpstreamRequest(keys: updatedKeys, transportRequest: request)
+    }
+    
+    fileprivate func updateRoleFromEventPayload(_ payload: [String: Any], userId: UUID) {
+        guard let roleName = payload["conversation_role"] as? String else { return }
+        
+        let user = ZMUser(remoteID: userId, createIfNeeded: true, in: self.managedObjectContext!)!
+        let teamOrConvo: TeamOrConversation = self.team != nil ?
+            TeamOrConversation.team(self.team!) : TeamOrConversation.conversation(self)
+        let role = self.getRoles().first(where: {$0.name == roleName }) ??
+            Role.create(
+                managedObjectContext: self.managedObjectContext!,
+                name: roleName,
+                teamOrConversation: teamOrConvo)
+        self.addParticipantAndUpdateConversationState(user: user, role: role)
     }
 }

@@ -722,6 +722,90 @@ extension ZMConversationTranscoderTests_Swift {
             XCTAssertTrue(self.conversation.isDeleted)
         }
     }
+    
+    // MARK: Participants update
+    
+    func testThatItAddsAUserReceivedWithAMemberUpdate() {
+        
+        syncMOC.performAndWait {
+            
+            let userId = UUID.create()
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            selfUser.remoteIdentifier = UUID.create()
+            
+            // GIVEN
+            let payload: [String: Any] = [
+                "from": selfUser.remoteIdentifier!.transportString(),
+                "conversation": self.conversation!.remoteIdentifier!.transportString(),
+                "time": NSDate(timeIntervalSinceNow: 100).transportString(),
+                "data": [
+                    "id": userId.transportString(),
+                    "conversation_role": "new"
+                ],
+                "type": "conversation.member-update"
+            ]
+            
+            // WHEN
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+            self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN
+            guard let participant = self.conversation.participantRoles
+                .first(where: {$0.user.remoteIdentifier == userId}) else {
+                    return XCTFail("No user in convo")
+            }
+            XCTAssertEqual(participant.role?.name, "new")
+        }
+    }
+    
+    func testThatItChangesRoleAfterMemberUpdate() {
+        
+        syncMOC.performAndWait {
+            
+            let userId = UUID.create()
+            
+            let user = ZMUser.insertNewObject(in: self.syncMOC)
+            user.remoteIdentifier = userId
+            
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            selfUser.remoteIdentifier = UUID.create()
+            
+            let oldRole = Role.insertNewObject(in: self.syncMOC)
+            oldRole.name = "old"
+            oldRole.conversation = self.conversation
+            
+            self.conversation.addParticipantAndUpdateConversationState(user: user, role: oldRole)
+            
+            let newRole = Role.insertNewObject(in: self.syncMOC)
+            newRole.name = "new"
+            newRole.conversation = self.conversation
+            self.syncMOC.saveOrRollback()
+            
+            // GIVEN
+            let payload: [String: Any] = [
+                "from": selfUser.remoteIdentifier!.transportString(),
+                "conversation": self.conversation!.remoteIdentifier!.transportString(),
+                "time": NSDate(timeIntervalSinceNow: 100).transportString(),
+                "data": [
+                    "id": userId.transportString(),
+                    "conversation_role": "new"
+                ],
+                "type": "conversation.member-update"
+            ]
+            
+            // WHEN
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+            self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN
+            guard let participant = self.conversation.participantRoles
+                .first(where: {$0.user.remoteIdentifier == userId}) else {
+                    return XCTFail("No user in convo")
+            }
+            XCTAssertEqual(participant.role, newRole)
+        }
+    }
+    
 }
 
 
