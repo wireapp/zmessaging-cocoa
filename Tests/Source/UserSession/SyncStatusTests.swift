@@ -104,7 +104,7 @@ final class SyncStatusTests : MessagingTest {
         XCTAssertEqual(sut.currentSyncPhase, .done)
     }
     
-    func testThatItSavesTheLastNotificationIDOnlyAfterFinishingUserPhase(){
+    func testThatItSavesTheLastNotificationIDOnlyAfterFinishingUserPhase() {
         // given
         XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
         sut.updateLastUpdateEventID(eventID: UUID.timeBasedUUID() as UUID)
@@ -116,6 +116,10 @@ final class SyncStatusTests : MessagingTest {
         XCTAssertNil(uiMOC.zm_lastNotificationID)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingTeams)
+        // then
+        XCTAssertNil(uiMOC.zm_lastNotificationID)
+        // when
+        sut.finishCurrentSyncPhase(phase: .fetchingTeamRoles)
         // then
         XCTAssertNil(uiMOC.zm_lastNotificationID)
         // when
@@ -185,7 +189,7 @@ final class SyncStatusTests : MessagingTest {
         XCTAssertNotNil(uiMOC.zm_lastNotificationID)
     }
     
-    func testThatItNotifiesTheStateDelegateWhenFinishingSync(){
+    func testThatItNotifiesTheStateDelegateWhenFinishingSync() {
         // given
         XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
         XCTAssertFalse(mockSyncDelegate.didCallFinishSlowSync)
@@ -197,6 +201,10 @@ final class SyncStatusTests : MessagingTest {
         XCTAssertFalse(mockSyncDelegate.didCallFinishQuickSync)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingTeams)
+        // then
+        XCTAssertFalse(mockSyncDelegate.didCallFinishQuickSync)
+        // when
+        sut.finishCurrentSyncPhase(phase: .fetchingTeamRoles)
         // then
         XCTAssertFalse(mockSyncDelegate.didCallFinishQuickSync)
         // when
@@ -433,7 +441,7 @@ extension SyncStatusTests {
         XCTAssertNil(uiMOC.zm_lastNotificationID)
     }
     
-    func testThatItSavesLastNotificationIDOnlyAfterSlowSyncFinishedSuccessfullyAfterFailedQuickSync(){
+    func testThatItSavesLastNotificationIDOnlyAfterSlowSyncFinishedSuccessfullyAfterFailedQuickSync() {
         // given
         let oldID = UUID.timeBasedUUID() as UUID
         let newID = UUID.timeBasedUUID() as UUID
@@ -453,6 +461,10 @@ extension SyncStatusTests {
         sut.finishCurrentSyncPhase(phase: .fetchingLastUpdateEventID)
         // then
         sut.finishCurrentSyncPhase(phase: .fetchingTeams)
+        // then
+        XCTAssertNotEqual(uiMOC.zm_lastNotificationID, newID)
+        // when
+        sut.finishCurrentSyncPhase(phase: .fetchingTeamRoles)
         // then
         XCTAssertNotEqual(uiMOC.zm_lastNotificationID, newID)
         // when
