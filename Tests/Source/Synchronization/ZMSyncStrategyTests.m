@@ -627,7 +627,7 @@
     }
     
     // when
-    (void)[self.sut nextRequest];
+    (void)[self.sut nextRequest];///TODO: crash here
 }
 
 - (void)testThatManagedObjectChangesArePassedToAllSyncObjectsCaches
