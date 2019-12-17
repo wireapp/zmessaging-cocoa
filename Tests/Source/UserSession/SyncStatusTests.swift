@@ -20,7 +20,7 @@
 import XCTest
 @testable import WireSyncEngine
 
-class SyncStatusTests : MessagingTest {
+final class SyncStatusTests : MessagingTest {
 
     var sut : SyncStatus!
     var mockSyncDelegate : MockSyncStateDelegate!
@@ -59,7 +59,7 @@ class SyncStatusTests : MessagingTest {
         XCTAssertEqual(sut.currentSyncPhase, .fetchingMissedEvents)
     }
     
-    func testThatItGoesThroughTheStatesInSpecificOrder(){
+    func testThatItGoesThroughTheStatesInSpecificOrder() {
         // given
         XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
         // when
@@ -68,6 +68,10 @@ class SyncStatusTests : MessagingTest {
         XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingTeams)
+        // then
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeamRoles)
+        // when
+        sut.finishCurrentSyncPhase(phase: .fetchingTeamRoles)
         // then
         XCTAssertEqual(sut.currentSyncPhase, .fetchingConnections)
         // when
@@ -144,7 +148,7 @@ class SyncStatusTests : MessagingTest {
 
     }
     
-    func testThatItDoesNotSetTheLastNotificationIDIfItHasNone(){
+    func testThatItDoesNotSetTheLastNotificationIDIfItHasNone() {
         XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
         uiMOC.zm_lastNotificationID = UUID.timeBasedUUID() as UUID
         XCTAssertNotNil(uiMOC.zm_lastNotificationID)
@@ -157,6 +161,10 @@ class SyncStatusTests : MessagingTest {
         XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingTeams)
+        // then
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeamRoles)
+        // when
+        sut.finishCurrentSyncPhase(phase: .fetchingTeamRoles)
         // then
         XCTAssertEqual(sut.currentSyncPhase, .fetchingConnections)
         // when
