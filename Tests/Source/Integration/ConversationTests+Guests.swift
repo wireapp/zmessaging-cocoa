@@ -24,28 +24,12 @@ class ConversationTests_Guests : TeamTests {
         super.setUp()
         createTeamAndConversations()
     }
-
-    func createConversation(in team: MockTeam) -> MockConversation {
-        var result: MockConversation!
-        mockTransportSession.performRemoteChanges { session in
-
-            let teamConversation = session.insertGroupConversation(withSelfUser:self.selfUser, otherUsers: [self.user1!])
-            teamConversation.team = team
-            teamConversation.creator = self.selfUser
-            teamConversation.changeName(by:self.selfUser, name:"Team Group conversation")
-            result = teamConversation
-        }
-        
-        return result
-    }
     
     func testThatItSendsRequestToChangeAccessMode() {
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
-        let mockConversation = self.createConversation(in: mockTeam)
         XCTAssert(login())
         
-        let conversation = self.conversation(for: mockConversation)!
+        let conversation = self.conversation(for: self.groupConversationWithWholeTeam)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         XCTAssertFalse(conversation.accessMode!.contains(.allowGuests))
@@ -71,15 +55,13 @@ class ConversationTests_Guests : TeamTests {
 
     func testThatItSendsRequestToCreateTheLink() {
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
-        let mockConversation = self.createConversation(in: mockTeam)
         mockTransportSession.performRemoteChanges { session in
-            mockConversation.accessMode = ["code", "invite"]
-            mockConversation.accessRole = "non_activated"
+            self.groupConversationWithWholeTeam.accessMode = ["code", "invite"]
+            self.groupConversationWithWholeTeam.accessRole = "non_activated"
         }
         XCTAssert(login())
         
-        let conversation = self.conversation(for: mockConversation)!
+        let conversation = self.conversation(for: self.groupConversationWithWholeTeam)!
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         XCTAssertEqual(conversation.accessMode, [.code, .invite])
@@ -90,7 +72,7 @@ class ConversationTests_Guests : TeamTests {
         conversation.updateAccessAndCreateWirelessLink(in: self.userSession!) { result in
             switch result {
             case .success(let link):
-                XCTAssertEqual(link, mockConversation.link)
+                XCTAssertEqual(link, self.groupConversationWithWholeTeam.link)
                 break
             case .failure:
                 XCTFail()
@@ -107,15 +89,13 @@ class ConversationTests_Guests : TeamTests {
     
     func testThatItSendsRequestToSetModeIfLegacyWhenFetchingTheLink() {
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
-        let mockConversation = self.createConversation(in: mockTeam)
         mockTransportSession.performRemoteChanges { session in
-            mockConversation.accessMode = ["invite"]
-            mockConversation.accessRole = "activated"
+            self.groupConversationWithWholeTeam.accessMode = ["invite"]
+            self.groupConversationWithWholeTeam.accessRole = "activated"
         }
         XCTAssert(login())
         
-        let conversation = self.conversation(for: mockConversation)!
+        let conversation = self.conversation(for: self.groupConversationWithWholeTeam)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         XCTAssertEqual(conversation.accessMode, [.invite])
@@ -126,7 +106,7 @@ class ConversationTests_Guests : TeamTests {
         conversation.updateAccessAndCreateWirelessLink(in: self.userSession!) { result in
             switch result {
             case .success(let link):
-                XCTAssertEqual(link, mockConversation.link)
+                XCTAssertEqual(link, self.groupConversationWithWholeTeam.link)
                 break
             case .failure:
                 XCTFail()
@@ -145,15 +125,13 @@ class ConversationTests_Guests : TeamTests {
     
     func testThatItSendsRequestToFetchTheLink_NoLink() {
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
-        let mockConversation = self.createConversation(in: mockTeam)
         mockTransportSession.performRemoteChanges { session in
-            mockConversation.accessMode = ["code", "invite"]
-            mockConversation.accessRole = "non_activated"
+            self.groupConversationWithWholeTeam.accessMode = ["code", "invite"]
+            self.groupConversationWithWholeTeam.accessRole = "non_activated"
         }
         XCTAssert(login())
         
-        let conversation = self.conversation(for: mockConversation)!
+        let conversation = self.conversation(for: self.groupConversationWithWholeTeam)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         XCTAssertEqual(conversation.accessMode, [.code, .invite])
@@ -181,19 +159,16 @@ class ConversationTests_Guests : TeamTests {
     
     func testThatItSendsRequestToFetchTheLink_LinkExists() {
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
-        let mockConversation = self.createConversation(in: mockTeam)
-        
         let existingLink = "https://wire-website.com/some-magic-link"
         
         mockTransportSession.performRemoteChanges { session in
-            mockConversation.accessMode = ["code", "invite"]
-            mockConversation.accessRole = "non_activated"
-            mockConversation.link = existingLink
+            self.groupConversationWithWholeTeam.accessMode = ["code", "invite"]
+            self.groupConversationWithWholeTeam.accessRole = "non_activated"
+            self.groupConversationWithWholeTeam.link = existingLink
         }
         XCTAssert(login())
         
-        let conversation = self.conversation(for: mockConversation)!
+        let conversation = self.conversation(for: self.groupConversationWithWholeTeam)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         XCTAssertEqual(conversation.accessMode, [.code, .invite])
@@ -221,19 +196,16 @@ class ConversationTests_Guests : TeamTests {
     
     func testThatItSendsRequestToDeleteTheLink() {
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
-        let mockConversation = self.createConversation(in: mockTeam)
-        
         let existingLink = "https://wire-website.com/some-magic-link"
         
         mockTransportSession.performRemoteChanges { session in
-            mockConversation.accessMode = ["code", "invite"]
-            mockConversation.accessRole = "non_activated"
-            mockConversation.link = existingLink
+            self.groupConversationWithWholeTeam.accessMode = ["code", "invite"]
+            self.groupConversationWithWholeTeam.accessRole = "non_activated"
+            self.groupConversationWithWholeTeam.link = existingLink
         }
         XCTAssert(login())
         
-        let conversation = self.conversation(for: mockConversation)!
+        let conversation = self.conversation(for: self.groupConversationWithWholeTeam)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         XCTAssertEqual(conversation.accessMode, [.code, .invite])
@@ -260,17 +232,14 @@ class ConversationTests_Guests : TeamTests {
     
     func testThatItSendsRequestToDeleteTheLink_LinkDoesNotExist() {
         // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser, self.user1])
-        let mockConversation = self.createConversation(in: mockTeam)
-        
         mockTransportSession.performRemoteChanges { session in
-            mockConversation.accessMode = ["code", "invite"]
-            mockConversation.accessRole = "non_activated"
-            mockConversation.link = nil
+            self.groupConversationWithWholeTeam.accessMode = ["code", "invite"]
+            self.groupConversationWithWholeTeam.accessRole = "non_activated"
+            self.groupConversationWithWholeTeam.link = nil
         }
         XCTAssert(login())
         
-        let conversation = self.conversation(for: mockConversation)!
+        let conversation = self.conversation(for: self.groupConversationWithWholeTeam)!
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         XCTAssertEqual(conversation.accessMode, [.code, .invite])
