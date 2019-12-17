@@ -59,47 +59,26 @@ final class SyncStatusTests : MessagingTest {
         XCTAssertEqual(sut.currentSyncPhase, .fetchingMissedEvents)
     }
     
+    private var syncPhases: [SyncPhase] {
+        return [.fetchingLastUpdateEventID,
+                .fetchingTeams,
+                .fetchingTeamRoles,
+                .fetchingConnections,
+                .fetchingConversations,
+                .fetchingUsers,
+                .fetchingSelfUser,
+                .fetchingLegalHoldStatus,
+                .fetchingLabels,
+                .fetchingMissedEvents]
+    }
+    
     func testThatItGoesThroughTheStatesInSpecificOrder() {
-        // given
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingLastUpdateEventID)
-        // when
-        sut.finishCurrentSyncPhase(phase: .fetchingLastUpdateEventID)
-        // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeams)
-        // when
-        sut.finishCurrentSyncPhase(phase: .fetchingTeams)
-        // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingTeamRoles)
-        // when
-        sut.finishCurrentSyncPhase(phase: .fetchingTeamRoles)
-        // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingConnections)
-        // when
-        sut.finishCurrentSyncPhase(phase: .fetchingConnections)
-        // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingConversations)
-        // when
-        sut.finishCurrentSyncPhase(phase: .fetchingConversations)
-        // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingUsers)
-        // when
-        sut.finishCurrentSyncPhase(phase: .fetchingUsers)
-        // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingSelfUser)
-        // when
-        sut.finishCurrentSyncPhase(phase: .fetchingSelfUser)
-        // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingLegalHoldStatus)
-        // when
-        sut.finishCurrentSyncPhase(phase: .fetchingLegalHoldStatus)
-        // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingLabels)
-        // when
-        sut.finishCurrentSyncPhase(phase: .fetchingLabels)
-        // then
-        XCTAssertEqual(sut.currentSyncPhase, .fetchingMissedEvents)
-        // when
-        sut.finishCurrentSyncPhase(phase: .fetchingMissedEvents)
+        syncPhases.forEach() { syncPhase in
+            // given / then
+            XCTAssertEqual(sut.currentSyncPhase, syncPhase)
+            // when
+            sut.finishCurrentSyncPhase(phase: syncPhase)
+        }
         // then
         XCTAssertEqual(sut.currentSyncPhase, .done)
     }
