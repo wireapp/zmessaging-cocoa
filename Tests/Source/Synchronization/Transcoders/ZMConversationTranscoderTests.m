@@ -2338,6 +2338,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         NSMutableDictionary *dataWithSelf = [data mutableCopy];
         dataWithSelf[@"id"] = selfUser.remoteIdentifier.transportString;
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        [conversation addParticipantAndUpdateConversationStateWithUser:selfUser role:nil];
         conversation.remoteIdentifier = conversationID;
         conversation.isArchived = isArchivedBefore;
         
