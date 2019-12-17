@@ -20,21 +20,31 @@ import Foundation
 
 extension ZMConversation {
 
-    public func updateRole(of participant: ZMUser, to newRole: Role, session: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
+    private typealias Factory = ConversationRoleRequestFactory
 
-        guard let request = ConversationRoleRequestFactory.requestForUpdatingParticipantRole(participant, role: newRole, in: self, completion: completion) else { return }
-        session.transportSession.enqueueOneTime(request)
+    public func updateRole(of participant: ZMUser,
+                           to newRole: Role,
+                           session: ZMUserSession,
+                           completion: @escaping (VoidResult) -> Void) {
+
+        let maybeRequest = Factory.requestForUpdatingParticipantRole(newRole,
+                                                                     for: participant,
+                                                                     in: self,
+                                                                     completion: completion)
+        if let request = maybeRequest {
+            session.transportSession.enqueueOneTime(request)
+        }
     }
 }
 
 struct ConversationRoleRequestFactory {
 
-    enum ConversationRoleError: Int, Error {
+    enum RequestError: Int, Error {
         case unknown = 0
     }
 
-    static func requestForUpdatingParticipantRole(_ participant: ZMUser,
-                                                  role: Role,
+    static func requestForUpdatingParticipantRole(_ role: Role,
+                                                  for participant: ZMUser,
                                                   in conversation: ZMConversation,
                                                   completion: ((VoidResult) -> Void)? = nil) -> ZMTransportRequest? {
         guard
@@ -42,24 +52,25 @@ struct ConversationRoleRequestFactory {
             let userId = participant.remoteIdentifier,
             let conversationId = conversation.remoteIdentifier
         else {
-            completion?(.failure(ConversationRoleError.unknown))
+            completion?(.failure(RequestError.unknown))
             return nil
         }
 
         let path = "/conversations/\(conversationId.transportString())/members/\(userId.transportString())"
         let payload = ["conversation_role": roleName]
 
-        let request = ZMTransportRequest(path: path, method: .methodPUT, payload: payload as ZMTransportData)
-
-        request.add(ZMCompletionHandler(on: conversation.managedObjectContext!) { response in
+        let requestCompletionHandler = ZMCompletionHandler(on: conversation.managedObjectContext!) { response in
             switch response.httpStatus {
             case 200..<300:
                 conversation.addParticipantAndUpdateConversationState(user: participant, role: role)
                 completion?(.success)
             default:
-                completion?(.failure(ConversationRoleError.unknown))
+                completion?(.failure(RequestError.unknown))
             }
-        })
+        }
+
+        let request = ZMTransportRequest(path: path, method: .methodPUT, payload: payload as ZMTransportData)
+        request.add(requestCompletionHandler)
 
         return request
     }

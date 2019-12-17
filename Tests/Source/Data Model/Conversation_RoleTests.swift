@@ -21,9 +21,9 @@ import XCTest
 
 class Conversation_RoleTests: MessagingTest {
 
-    typealias RoleError = WireSyncEngine.ConversationRoleRequestFactory.ConversationRoleError
+    typealias Factory = WireSyncEngine.ConversationRoleRequestFactory
 
-    // MARK: - Transport Request
+    // MARK: - Input Assertions
 
     func testThatRequestIsCorrectForValidInputs() {
         // Given
@@ -37,8 +37,8 @@ class Conversation_RoleTests: MessagingTest {
         role.name = "wire_admin"
 
         // When
-        guard let request = generateRequest(for: user, role: role, in: conversation) else {
-            return XCTFail()
+        guard let request = Factory.requestForUpdatingParticipantRole(role, for: user, in: conversation) else {
+            return XCTFail("Could not create request")
         }
 
         // Then
@@ -46,8 +46,6 @@ class Conversation_RoleTests: MessagingTest {
         XCTAssertEqual(request.method, .methodPUT)
         XCTAssertEqual(request.payload?.asDictionary() as? [String: String], ["conversation_role": "wire_admin"])
     }
-
-    // user and conversation have no remote identifiers -> nil request returned and completion failure
 
     func testThatRequestFailsWhenRoleNameIsMissing() {
         // Given
@@ -63,9 +61,9 @@ class Conversation_RoleTests: MessagingTest {
         let expectation = self.expectation(description: "completed")
 
         // When
-        let request = generateRequest(for: user, role: role, in: conversation) { result in
+        let request = Factory.requestForUpdatingParticipantRole(role, for: user, in: conversation) { result in
             switch result {
-            case .success: XCTFail()
+            case .success: XCTFail("The request did not fail")
             default: break
             }
 
@@ -91,9 +89,9 @@ class Conversation_RoleTests: MessagingTest {
         let expectation = self.expectation(description: "completed")
 
         // When
-        let request = generateRequest(for: user, role: role, in: conversation) { result in
+        let request = Factory.requestForUpdatingParticipantRole(role, for: user, in: conversation) { result in
             switch result {
-            case .success: XCTFail()
+            case .success: XCTFail("The request did not fail")
             default: break
             }
 
@@ -119,9 +117,9 @@ class Conversation_RoleTests: MessagingTest {
         let expectation = self.expectation(description: "completed")
 
         // When
-        let request = generateRequest(for: user, role: role, in: conversation) { result in
+        let request = Factory.requestForUpdatingParticipantRole(role, for: user, in: conversation) { result in
             switch result {
-            case .success: XCTFail()
+            case .success: XCTFail("The request did not fail")
             default: break
             }
 
@@ -133,7 +131,8 @@ class Conversation_RoleTests: MessagingTest {
         XCTAssertNil(request)
     }
 
-    // complete request - role changes
+    // MARK: - Request Completion Handling
+
     func testThatTheCompletedRequestUpdatesTheDatabase() {
         // Given
         let user = ZMUser.insertNewObject(in: uiMOC)
@@ -149,9 +148,9 @@ class Conversation_RoleTests: MessagingTest {
         let expectation = self.expectation(description: "completed")
 
         // When
-        let maybeRequest = generateRequest(for: user, role: role, in: conversation) { result in
+        let maybeRequest = Factory.requestForUpdatingParticipantRole(role, for: user, in: conversation) { result in
             switch result {
-            case .failure(_): XCTFail()
+            case .failure(_): XCTFail("The request did not succeed")
             default: break
             }
 
@@ -159,7 +158,7 @@ class Conversation_RoleTests: MessagingTest {
         }
 
         guard let request = maybeRequest else {
-            return XCTFail()
+            return XCTFail("Could not create request")
         }
 
         request.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
@@ -170,8 +169,6 @@ class Conversation_RoleTests: MessagingTest {
         XCTAssertEqual(user.participantRoles.first { $0.conversation == conversation }?.role, role)
     }
 
-
-    // complete request with failure - role doesn't change
     func testThatTheFailedRequestDoesNotUpdateTheDatabase() {
         // Given
         let user = ZMUser.insertNewObject(in: uiMOC)
@@ -186,9 +183,9 @@ class Conversation_RoleTests: MessagingTest {
         let expectation = self.expectation(description: "completed")
 
         // When
-        let maybeRequest = generateRequest(for: user, role: role, in: conversation) { result in
+        let maybeRequest = Factory.requestForUpdatingParticipantRole(role, for: user, in: conversation) { result in
             switch result {
-            case .success: XCTFail()
+            case .success: XCTFail("The request did not fail")
             default: break
             }
 
@@ -196,7 +193,7 @@ class Conversation_RoleTests: MessagingTest {
         }
 
         guard let request = maybeRequest else {
-            return XCTFail()
+            return XCTFail("Could not create request")
         }
 
         request.complete(with: ZMTransportResponse(payload: nil, httpStatus: 400, transportSessionError: nil))
@@ -207,16 +204,4 @@ class Conversation_RoleTests: MessagingTest {
         XCTAssertTrue(user.participantRoles.isEmpty)
     }
 
-    // MARK: - Helpers
-
-    private func generateRequest(for user: ZMUser,
-                                 role: Role,
-                                 in conversation: ZMConversation,
-                                 completion: ((VoidResult) -> Void)? = nil) -> ZMTransportRequest? {
-
-        return WireSyncEngine.ConversationRoleRequestFactory.requestForUpdatingParticipantRole(user,
-                                                                                               role: role,
-                                                                                               in: conversation,
-                                                                                               completion: completion)
-    }
 }
