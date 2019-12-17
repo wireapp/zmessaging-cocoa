@@ -575,7 +575,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         XCTAssertEqual(Set(usersIdsInPayload), Set(arrayLiteral: user1.remoteIdentifier!.transportString(), user2.remoteIdentifier!.transportString()))
 
         let conversationRole = payload!["conversation_role"] as! String
-        XCTAssertEqual(conversationRole, "wire_member")
+        XCTAssertEqual(conversationRole, ZMConversation.defaultMemberRoleName)
     }
     
 }

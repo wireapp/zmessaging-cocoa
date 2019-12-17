@@ -1314,7 +1314,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
                                                      [user3.remoteIdentifier transportString]
                                                      ]];
         XCTAssertEqualObjects([NSSet setWithArray:request.payload.asDictionary[@"users"]], expectedUsers);
-        XCTAssertEqualObjects(request.payload.asDictionary[@"conversation_role"], @"wire_member");
+        XCTAssertEqualObjects(request.payload.asDictionary[@"conversation_role"], ZMConversation.defaultMemberRoleName);
     }];
 }
 

@@ -530,7 +530,7 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
     NSMutableDictionary *payload = [@{ @"users" : participantUUIDs } mutableCopy];
 
-    payload[@"conversation_role"] = @"wire_member";
+    payload[@"conversation_role"] = ZMConversation.defaultMemberRoleName;
 
     if (insertedConversation.userDefinedName != nil) {
         payload[@"name"] = insertedConversation.userDefinedName;
