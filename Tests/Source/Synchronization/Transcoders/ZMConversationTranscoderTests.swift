@@ -46,6 +46,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
     var localNotificationDispatcher: MockPushMessageHandler!
     var conversation: ZMConversation!
     var user: ZMUser!
+    var user2: ZMUser!
     var mockSyncStatus : MockSyncStatus!
     
     override func setUp() {
@@ -105,6 +106,41 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
             }
             XCTAssertEqual(message.systemMessageType, .participantsAdded)
             XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
+        }
+    }
+    
+    func testThatItAddsUsersWithRolesToAConversationAfterAPushEvent() {
+        
+        self.syncMOC.performAndWait {
+            // GIVEN
+            self.user2 = ZMUser.insertNewObject(in: self.syncMOC)
+            self.user2.remoteIdentifier = UUID.create()
+            let payload = [
+                "from": self.user.remoteIdentifier!.transportString(),
+                "conversation": self.conversation.remoteIdentifier!.transportString(),
+                "time": NSDate().transportString(),
+                "data": [
+                    "user_ids": [self.user2.remoteIdentifier!.transportString()],
+                    "users": [[
+                        "id": self.user2.remoteIdentifier!.transportString(),
+                        "conversation_role": "wire_admin"
+                        ]]
+                ],
+                "type": "conversation.member-join"
+                ] as [String: Any]
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+            
+            // WHEN
+            conversation.addParticipantsAndUpdateConversationState(users: [user], role: nil)
+            XCTAssertEqual(conversation.localParticipants.count, 1)
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // THEN
+            XCTAssertEqual(conversation.localParticipants.count, 2)
+            let admins = conversation.participantRoles.filter({ (participantRole) -> Bool in
+                participantRole.role?.name == "wire_admin"
+            })
+            XCTAssertEqual(admins.count, 1)
         }
     }
     
