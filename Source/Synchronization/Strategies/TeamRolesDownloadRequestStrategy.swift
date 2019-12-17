@@ -82,7 +82,7 @@ public final class TeamRolesDownloadRequestStrategy: AbstractRequestStrategy, ZM
         return syncStatus.currentSyncPhase == self.expectedSyncPhase
     }
     
-    private func completeSyncPhaseIfNoTeam() {///TODO: crash here, OCMockObject(WireSyncEngine.SyncStatus) has no currentSyncPhase?
+    private func completeSyncPhaseIfNoTeam() {
         if self.syncStatus.currentSyncPhase == self.expectedSyncPhase && !self.downstreamSync.hasOutstandingItems {
             self.syncStatus.finishCurrentSyncPhase(phase: self.expectedSyncPhase)
         }
