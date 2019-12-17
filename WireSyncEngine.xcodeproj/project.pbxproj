@@ -370,10 +370,10 @@
 		87D2555921D6275800D03789 /* BuildTypeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D2555821D6275800D03789 /* BuildTypeTests.swift */; };
 		87D4625D1C3D526D00433469 /* DeleteAccountRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D4625C1C3D526D00433469 /* DeleteAccountRequestStrategyTests.swift */; };
 		A907771A192E33A500141F13 /* SlowSyncTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 85D85D997334755E841D13EA /* SlowSyncTests.m */; };
-		A938BDC823A7964200D4C208 /* ConversationRoleDownstreamRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A938BDC723A7964100D4C208 /* ConversationRoleDownstreamRequestStrategy.swift */; };
-		A938BDCA23A7966700D4C208 /* ConversationRoleDownstreamRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A938BDC923A7966700D4C208 /* ConversationRoleDownstreamRequestStrategyTests.swift */; };
 		A913C02223A7EDFB0048CE74 /* TeamRolesDownloadRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A913C02123A7EDFA0048CE74 /* TeamRolesDownloadRequestStrategy.swift */; };
 		A913C02423A7F1C00048CE74 /* TeamRolesDownloadRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A913C02323A7F1C00048CE74 /* TeamRolesDownloadRequestStrategyTests.swift */; };
+		A938BDC823A7964200D4C208 /* ConversationRoleDownstreamRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A938BDC723A7964100D4C208 /* ConversationRoleDownstreamRequestStrategy.swift */; };
+		A938BDCA23A7966700D4C208 /* ConversationRoleDownstreamRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A938BDC923A7966700D4C208 /* ConversationRoleDownstreamRequestStrategyTests.swift */; };
 		A96190CA23A6DDCE00B8665F /* WireDataModel.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96190C923A6DDCE00B8665F /* WireDataModel.framework */; };
 		A9692F8A1986476900849241 /* NSString_NormalizationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A9692F881986476900849241 /* NSString_NormalizationTests.m */; };
 		AF6415A41C9C17FF00A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt in Resources */ = {isa = PBXBuildFile; fileRef = AF6415A01C9C151700A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt */; };
@@ -429,6 +429,8 @@
 		EEEA75FB1F8A6142006D1070 /* ZMLocalNotification+Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEEA75F61F8A6140006D1070 /* ZMLocalNotification+Events.swift */; };
 		EEEA75FC1F8A6142006D1070 /* ZMLocalNotification+Calling.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEEA75F71F8A6141006D1070 /* ZMLocalNotification+Calling.swift */; };
 		EEEA75FD1F8A6142006D1070 /* ZMLocalNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEEA75F81F8A6141006D1070 /* ZMLocalNotification.swift */; };
+		EEF4010123A8DFC6007B1A97 /* Conversation+Role.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF4010023A8DFC6007B1A97 /* Conversation+Role.swift */; };
+		EEF4010323A8E1EF007B1A97 /* Conversation_RoleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF4010223A8E1EF007B1A97 /* Conversation_RoleTests.swift */; };
 		EF169DDF22E85BA100B74D4A /* ZMConversationSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF169DDE22E85BA100B74D4A /* ZMConversationSource.swift */; };
 		EF2CB12722D5E58B00350B0A /* TeamImageAssetUpdateStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2CB12622D5E58B00350B0A /* TeamImageAssetUpdateStrategy.swift */; };
 		EF2CB12A22D5E5BF00350B0A /* TeamImageAssetUpdateStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2CB12822D5E5BB00350B0A /* TeamImageAssetUpdateStrategyTests.swift */; };
@@ -992,10 +994,10 @@
 		87D2555821D6275800D03789 /* BuildTypeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildTypeTests.swift; sourceTree = "<group>"; };
 		87D4625C1C3D526D00433469 /* DeleteAccountRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeleteAccountRequestStrategyTests.swift; sourceTree = "<group>"; };
 		87DF28C61F680495007E1702 /* PushDispatcherTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PushDispatcherTests.swift; sourceTree = "<group>"; };
-		A938BDC723A7964100D4C208 /* ConversationRoleDownstreamRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConversationRoleDownstreamRequestStrategy.swift; sourceTree = "<group>"; };
-		A938BDC923A7966700D4C208 /* ConversationRoleDownstreamRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConversationRoleDownstreamRequestStrategyTests.swift; sourceTree = "<group>"; };
 		A913C02123A7EDFA0048CE74 /* TeamRolesDownloadRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamRolesDownloadRequestStrategy.swift; sourceTree = "<group>"; };
 		A913C02323A7F1C00048CE74 /* TeamRolesDownloadRequestStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamRolesDownloadRequestStrategyTests.swift; sourceTree = "<group>"; };
+		A938BDC723A7964100D4C208 /* ConversationRoleDownstreamRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConversationRoleDownstreamRequestStrategy.swift; sourceTree = "<group>"; };
+		A938BDC923A7966700D4C208 /* ConversationRoleDownstreamRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConversationRoleDownstreamRequestStrategyTests.swift; sourceTree = "<group>"; };
 		A96190C923A6DDCE00B8665F /* WireDataModel.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WireDataModel.framework; path = Carthage/Build/iOS/WireDataModel.framework; sourceTree = "<group>"; };
 		A9692F881986476900849241 /* NSString_NormalizationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSString_NormalizationTests.m; sourceTree = "<group>"; };
 		AF6415A01C9C151700A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = EncryptedBase64EncondedExternalMessageTestFixture.txt; sourceTree = "<group>"; };
@@ -1083,6 +1085,8 @@
 		EEEA75F61F8A6140006D1070 /* ZMLocalNotification+Events.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMLocalNotification+Events.swift"; sourceTree = "<group>"; };
 		EEEA75F71F8A6141006D1070 /* ZMLocalNotification+Calling.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMLocalNotification+Calling.swift"; sourceTree = "<group>"; };
 		EEEA75F81F8A6141006D1070 /* ZMLocalNotification.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZMLocalNotification.swift; sourceTree = "<group>"; };
+		EEF4010023A8DFC6007B1A97 /* Conversation+Role.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Conversation+Role.swift"; sourceTree = "<group>"; };
+		EEF4010223A8E1EF007B1A97 /* Conversation_RoleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Conversation_RoleTests.swift; path = "Tests/Source/Data Model/Conversation_RoleTests.swift"; sourceTree = SOURCE_ROOT; };
 		EF169DDE22E85BA100B74D4A /* ZMConversationSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMConversationSource.swift; sourceTree = "<group>"; };
 		EF2CB12622D5E58B00350B0A /* TeamImageAssetUpdateStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamImageAssetUpdateStrategy.swift; sourceTree = "<group>"; };
 		EF2CB12822D5E5BB00350B0A /* TeamImageAssetUpdateStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamImageAssetUpdateStrategyTests.swift; sourceTree = "<group>"; };
@@ -1440,6 +1444,7 @@
 				16030DC821B01B7500F8032E /* Conversation+ReadReceiptMode.swift */,
 				16168136207790F600BCF33A /* Conversation+Participants.swift */,
 				16519D37231D3B1700C9D76D /* Conversation+Deletion.swift */,
+				EEF4010023A8DFC6007B1A97 /* Conversation+Role.swift */,
 				878ACB4720AEFB980016E68A /* ZMUser+Consent.swift */,
 			);
 			path = "Data Model";
@@ -1637,6 +1642,7 @@
 		5474C7EB1921303400185A3A /* UserSession */ = {
 			isa = PBXGroup;
 			children = (
+				EEF4010223A8E1EF007B1A97 /* Conversation_RoleTests.swift */,
 				549127E819E7FDAB005871F5 /* Search */,
 				5447E4651AECDC5000411FCD /* ZMUserSessionTestsBase.h */,
 				5447E4661AECDE6500411FCD /* ZMUserSessionTestsBase.m */,
@@ -2687,6 +2693,7 @@
 				3E26BEE91A408F590071B4C9 /* ZMTypingUsersTests.m in Sources */,
 				879634421F7BEC5100FC79BA /* DispatchQueueSerialAsyncTests.swift in Sources */,
 				54AB428E1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift in Sources */,
+				EEF4010323A8E1EF007B1A97 /* Conversation_RoleTests.swift in Sources */,
 				16A5FE21215B584200AEEBBD /* MockLinkPreviewDetector.swift in Sources */,
 				F96C8E821D7ECECF004B6D87 /* ZMLocalNotificationTests_Message.swift in Sources */,
 				166D191D231569DD001288CD /* SessionManagerTests+MessageRetention.swift in Sources */,
@@ -3010,6 +3017,7 @@
 				BF2A9D511D6B536E00FA7DBC /* EventDecoder.swift in Sources */,
 				16030DC921B01B7500F8032E /* Conversation+ReadReceiptMode.swift in Sources */,
 				F19F4F4F1E6575F700F4D8FF /* UserProfileImageOwner.swift in Sources */,
+				EEF4010123A8DFC6007B1A97 /* Conversation+Role.swift in Sources */,
 				8754B84C1F73C38900EC02AD /* MessageChangeInfo+UserSession.swift in Sources */,
 				162DEE111F87B9800034C8F9 /* ZMUserSession+Calling.swift in Sources */,
 				BF3C1B1720DBE254001CE126 /* Conversation+MessageDestructionTimeout.swift in Sources */,
