@@ -24,11 +24,11 @@ class FakeSearchDirectory : NSObject {}
 
 extension SearchUserImageStrategyTests: ZMManagedObjectContextProvider {
     
-    var managedObjectContext: NSManagedObjectContext! {
+    var managedObjectContext: NSManagedObjectContext? {
         return uiMOC
     }
     
-    var syncManagedObjectContext: NSManagedObjectContext! {
+    var syncManagedObjectContext: NSManagedObjectContext? {
         return syncMOC
     }
     

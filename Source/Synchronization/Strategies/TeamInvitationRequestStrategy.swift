@@ -81,7 +81,7 @@ public final class TeamInvitationRequestStrategy : AbstractRequestStrategy {
         case .temporaryError, .tryAgainLater, .expired:
             teamInvitationStatus?.retry(email)
         @unknown default:
-            fatalError()
+            fatal("unknown case")
         }
     }
     

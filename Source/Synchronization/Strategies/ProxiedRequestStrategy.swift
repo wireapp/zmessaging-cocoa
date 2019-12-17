@@ -31,7 +31,7 @@ extension ProxiedRequestType {
         case .youTube:
             return "/youtube"
         @unknown default:
-            fatalError()
+            fatal("unknown ProxiedRequestType")
         }
     }
 }
