@@ -35,14 +35,14 @@ extension ZMConversationTranscoder {
         for conversation: ZMConversation?,
         previousLastServerTimeStamp previousLastServerTimestamp: Date?) {
         guard let dataPayload = (event.payload as NSDictionary).dictionary(forKey: "data"),
-            let conversation = conversation,
-            let id = (dataPayload["id"] as? String).flatMap({ UUID.init(uuidString: $0)})
+            let conversation = conversation
             else { return }
         
-        if id == ZMUser.selfUser(in: self.managedObjectContext).remoteIdentifier {
+        let id = (dataPayload["target"] as? String).flatMap({ UUID.init(uuidString: $0)})
+        if id == nil || id == ZMUser.selfUser(in: self.managedObjectContext).remoteIdentifier {
             conversation.updateSelfStatus(dictionary: dataPayload, timeStamp: event.timeStamp(), previousLastServerTimeStamp: previousLastServerTimestamp)
         } else {
-            conversation.updateRoleFromEventPayload(dataPayload, userId: id)
+            conversation.updateRoleFromEventPayload(dataPayload, userId: id!)
         }
     }
 

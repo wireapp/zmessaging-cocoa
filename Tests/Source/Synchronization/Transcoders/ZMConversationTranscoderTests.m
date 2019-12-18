@@ -2293,7 +2293,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.isFullyMuted = isSilencedBefore;
         ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
         NSMutableDictionary *dataWithSelf = [data mutableCopy];
-        dataWithSelf[@"id"] = selfUser.remoteIdentifier.transportString;
+        dataWithSelf[@"target"] = selfUser.remoteIdentifier.transportString;
         NSDictionary *payload = @{
                                   @"conversation" : conversation.remoteIdentifier.transportString,
                                   @"data" : dataWithSelf,
@@ -2336,7 +2336,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [self.syncMOC performGroupedBlockAndWait:^{
         ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
         NSMutableDictionary *dataWithSelf = [data mutableCopy];
-        dataWithSelf[@"id"] = selfUser.remoteIdentifier.transportString;
+        dataWithSelf[@"target"] = selfUser.remoteIdentifier.transportString;
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         [conversation addParticipantAndUpdateConversationStateWithUser:selfUser role:nil];
         conversation.remoteIdentifier = conversationID;

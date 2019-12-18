@@ -739,7 +739,7 @@ extension ZMConversationTranscoderTests_Swift {
                 "conversation": self.conversation!.remoteIdentifier!.transportString(),
                 "time": NSDate(timeIntervalSinceNow: 100).transportString(),
                 "data": [
-                    "id": userId.transportString(),
+                    "target": userId.transportString(),
                     "conversation_role": "new"
                 ],
                 "type": "conversation.member-update"
@@ -787,7 +787,7 @@ extension ZMConversationTranscoderTests_Swift {
                 "conversation": self.conversation!.remoteIdentifier!.transportString(),
                 "time": NSDate(timeIntervalSinceNow: 100).transportString(),
                 "data": [
-                    "id": userId.transportString(),
+                    "target": userId.transportString(),
                     "conversation_role": "new"
                 ],
                 "type": "conversation.member-update"
@@ -830,7 +830,7 @@ extension ZMConversationTranscoderTests_Swift {
                 "conversation": self.conversation!.remoteIdentifier!.transportString(),
                 "time": NSDate(timeIntervalSinceNow: 100).transportString(),
                 "data": [
-                    "id": selfUser.remoteIdentifier.transportString(),
+                    "target": selfUser.remoteIdentifier.transportString(),
                     "conversation_role": "new"
                 ],
                 "type": "conversation.member-update"
