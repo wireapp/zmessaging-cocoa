@@ -222,7 +222,9 @@ extension ZMConversationTranscoder {
     }
     
     @objc (processReceiptModeUpdate:inConversation:lastServerTimestamp:)
-    public func processReceiptModeUpdate(event: ZMUpdateEvent, in conversation: ZMConversation, lastServerTimestamp: Date) {
+    public func processReceiptModeUpdate(event: ZMUpdateEvent,
+                                         in conversation: ZMConversation,
+                                         lastServerTimestamp: Date?) {
         precondition(event.type == .conversationReceiptModeUpdate, "invalid update event type")
         
         guard let payload = event.payload["data"] as? [String : AnyHashable],
@@ -233,6 +235,7 @@ extension ZMConversationTranscoder {
         else { return }
         
         // Discard event if it has already been applied
+        guard let lastServerTimestamp = lastServerTimestamp else { return }
         guard serverTimestamp.compare(lastServerTimestamp) == .orderedDescending else { return }
         
         let newValue = readReceiptMode > 0
