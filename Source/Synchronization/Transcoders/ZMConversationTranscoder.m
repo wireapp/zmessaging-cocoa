@@ -582,6 +582,10 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     }
     insertedConversation.remoteIdentifier = remoteID;
     [insertedConversation updateWithTransportData:response.payload.asDictionary serverTimeStamp:nil];
+    
+    if (insertedConversation.team == nil) {
+        insertedConversation.needsToDownloadRoles = YES;
+    }
 }
 
 - (ZMUpdateEvent *)conversationEventWithKeys:(NSSet *)keys responsePayload:(id<ZMTransportData>)payload;

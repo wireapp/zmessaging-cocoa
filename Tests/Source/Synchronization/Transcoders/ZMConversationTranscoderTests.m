@@ -1651,6 +1651,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [self.syncMOC performGroupedBlockAndWait:^{
         XCTAssertEqualObjects(convUUID, insertedConversation.remoteIdentifier);
         XCTAssertEqualObjects(name, insertedConversation.userDefinedName);
+        XCTAssert([insertedConversation needsToDownloadRoles]);
     }];
 }
 
