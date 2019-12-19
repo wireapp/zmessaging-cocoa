@@ -411,6 +411,133 @@ extension ZMConversationTranscoderTests_Swift : ZMSyncStateDelegate {
 
 extension ZMConversationTranscoderTests_Swift {
     
+    // MARK: Conversation creation
+    
+    private func conversationCreationPayload(
+        conversationID: UUID,
+        selfUserID: UUID,
+        teamID: UUID? = nil) -> [String: Any] {
+        let payload: [String: Any] = [
+            "conversation" : conversationID.transportString(),
+            "data" : [
+                "id" : conversationID.transportString(),
+                "members" : [
+                    "others" : [
+                        
+                    ],
+                    "self" : [
+                        "id" : selfUserID.transportString(),
+                        "conversation_role" : "wire_admin",
+                        "otr_archived" : false,
+                        "status_time" : "1970-01-01T00:00:00.000Z",
+                        "otr_muted" : false,
+                        "status_ref" : "0.0",
+                        "hidden" : false,
+                        "status" : 0,
+                    ]
+                ],
+                "access" : [
+                    "invite",
+                    "code"
+                ],
+                "type" : 0,
+                "team" : (teamID?.transportString() ?? NSNull()) as Any,
+            ],
+            "type" : "conversation.create",
+            "time" : "2019-12-19T17:12:07.901Z",
+            "from" : "d52f7fe5-e143-40ef-bc86-ada5f785f4ef"
+        ]
+        return payload
+    }
+    
+    func testThatItNeedsToDowloadRolesWhenCreatingAConversationNotInTeam() {
+        
+        self.syncMOC.performGroupedBlockAndWait {
+
+            // Given
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            selfUser.remoteIdentifier = UUID.create()
+            let conversationID = UUID.create()
+            let payload = self.conversationCreationPayload(
+                conversationID: conversationID,
+                selfUserID: selfUser.remoteIdentifier,
+                teamID: nil)
+            self.syncMOC.saveOrRollback()
+            
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+            
+            // when
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // then
+            guard let conversation = ZMConversation.fetch(withRemoteIdentifier: conversationID, in: self.syncMOC) else {
+                return XCTFail("No conversation created")
+            }
+            XCTAssertTrue(conversation.needsToDownloadRoles)
+        }
+    }
+    
+    func testThatItNeedsToDowloadRolesWhenCreatingAConversationInAnotherTeam() {
+        
+        self.syncMOC.performGroupedBlockAndWait {
+            
+            // Given
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            selfUser.remoteIdentifier = UUID.create()
+            let conversationID = UUID.create()
+            let team = Team.insertNewObject(in: self.syncMOC)
+            team.remoteIdentifier = UUID.create()
+            _ = Member.getOrCreateMember(for: selfUser, in: team, context: self.syncMOC)
+            let payload = self.conversationCreationPayload(
+                conversationID: conversationID,
+                selfUserID: selfUser.remoteIdentifier,
+                teamID: UUID.create())
+            self.syncMOC.saveOrRollback()
+            
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+            
+            // when
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // then
+            guard let conversation = ZMConversation.fetch(withRemoteIdentifier: conversationID, in: self.syncMOC) else {
+                return XCTFail("No conversation created")
+            }
+            XCTAssertTrue(conversation.needsToDownloadRoles)
+        }
+    }
+    
+    func testThatItDoesNotNeedsToDowloadRolesWhenCreatingAConversationTeam() {
+        
+        self.syncMOC.performGroupedBlockAndWait {
+            
+            // Given
+            let selfUser = ZMUser.selfUser(in: self.syncMOC)
+            selfUser.remoteIdentifier = UUID.create()
+            let conversationID = UUID.create()
+            let team = Team.insertNewObject(in: self.syncMOC)
+            team.remoteIdentifier = UUID.create()
+            _ = Member.getOrCreateMember(for: selfUser, in: team, context: self.syncMOC)
+            let payload = self.conversationCreationPayload(
+                conversationID: conversationID,
+                selfUserID: selfUser.remoteIdentifier,
+                teamID: team.remoteIdentifier!)
+            self.syncMOC.saveOrRollback()
+            
+            let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+            
+            // when
+            self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+            
+            // then
+            guard let conversation = ZMConversation.fetch(withRemoteIdentifier: conversationID, in: self.syncMOC) else {
+                return XCTFail("No conversation created")
+            }
+            XCTAssertFalse(conversation.needsToDownloadRoles)
+        }
+    }
+    
+    
     // MARK: Receipt Mode
     
     func receiptModeUpdateEvent(enabled: Bool) -> ZMUpdateEvent {

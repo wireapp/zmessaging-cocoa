@@ -104,9 +104,13 @@ extension ZMConversationTranscoder {
 
         conversation.update(transportData: transportData, serverTimeStamp: serverTimeStamp)
 
+        let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
+        let notInMyTeam = conversation.teamRemoteIdentifier == nil ||
+            selfUser.team?.remoteIdentifier != conversation.teamRemoteIdentifier
+        
         if conversationCreated.boolValue,
            conversation.conversationType == .group,
-           conversation.teamRemoteIdentifier == nil {
+           notInMyTeam {
             conversation.needsToDownloadRoles = true
         }
 

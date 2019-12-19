@@ -314,11 +314,16 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         return prefetchedMapping[conversationID];
     }
     
+    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
+    
     ZMConversation *conversation = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:NO inContext:self.managedObjectContext];
     if (conversation == nil) {
         conversation = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:YES inContext:self.managedObjectContext];
+        
         // if we did not have this conversation before, refetch it
-        if (conversation.conversationType == ZMConversationTypeGroup && conversation.teamRemoteIdentifier == nil) {
+        
+        Boolean isNotInMyTeam = conversation.teamRemoteIdentifier == nil || (selfUser.team.remoteIdentifier != conversation.teamRemoteIdentifier);
+        if (conversation.conversationType == ZMConversationTypeGroup && isNotInMyTeam) {
             conversation.needsToDownloadRoles = YES;
         }
 
