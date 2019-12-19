@@ -63,6 +63,7 @@ struct ConversationRoleRequestFactory {
             switch response.httpStatus {
             case 200..<300:
                 conversation.addParticipantAndUpdateConversationState(user: participant, role: role)
+                conversation.managedObjectContext?.saveOrRollback()
                 completion?(.success)
             default:
                 completion?(.failure(RequestError.unknown))
