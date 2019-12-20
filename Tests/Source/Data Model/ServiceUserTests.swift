@@ -57,8 +57,12 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var richProfile: [UserRichProfileField] = []
     
-    var canCreateConversation: Bool = false
-    
+    /// Whether the user can create conversations.
+    @objc
+    func canCreateConversation(type: ZMConversationType) -> Bool {
+        return true
+    }
+
     var canCreateService: Bool = false
     
     var canManageTeam: Bool = false
