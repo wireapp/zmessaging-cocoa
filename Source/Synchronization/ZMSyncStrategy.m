@@ -1,20 +1,20 @@
-// 
+//
 // Wire
 // Copyright (C) 2016 Wire Swiss GmbH
-// 
+//
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
-// 
+//
 
 
 @import UIKit;
@@ -123,13 +123,13 @@ ZM_EMPTY_ASSERTING_INIT()
         self.uiMOC = storeProvider.contextDirectory.uiContext;
         self.hotFix = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
         self.eventProcessingTracker = [[EventProcessingTracker alloc] init];
-        
+
         self.eventMOC = [NSManagedObjectContext createEventContextWithSharedContainerURL:storeProvider.applicationContainer userIdentifier:storeProvider.userIdentifier];
         [self.eventMOC addGroup:self.syncMOC.dispatchGroup];
         self.applicationStatusDirectory = applicationStatusDirectory;
-        
+
         [self createTranscodersWithLocalNotificationsDispatcher:localNotificationsDispatcher flowManager:flowManager applicationStatusDirectory:applicationStatusDirectory];
-        
+
         self.eventsBuffer = [[ZMUpdateEventsBuffer alloc] initWithUpdateEventConsumer:self];
         self.userClientRequestStrategy = [[UserClientRequestStrategy alloc] initWithClientRegistrationStatus:applicationStatusDirectory.clientRegistrationStatus
                                                                                           clientUpdateStatus:applicationStatusDirectory.clientUpdateStatus
@@ -137,7 +137,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                                userKeysStore:self.syncMOC.zm_cryptKeyStore];
         self.missingClientsRequestStrategy = [[MissingClientsRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory];
         self.fetchingClientRequestStrategy = [[FetchingClientRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory];
-        
+
         self.requestStrategies = @[
                                    self.userClientRequestStrategy,
                                    self.missingClientsRequestStrategy,
@@ -187,8 +187,9 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[LabelDownstreamRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory syncStatus:applicationStatusDirectory.syncStatus],
                                    [[LabelUpstreamRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory],
                                    [[ConversationRoleDownstreamRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory]
+                                   [[VerifyPasswordRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory]
                                    ];
-        
+
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
 
         ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:self.syncMOC]);
@@ -346,7 +347,7 @@ ZM_EMPTY_ASSERTING_INIT()
         }];
         _allChangeTrackers = [_allChangeTrackers arrayByAddingObject:self.conversationStatusSync];
     }
-    
+
     return _allChangeTrackers;
 }
 
@@ -354,16 +355,16 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     if (_eventConsumers == nil) {
         NSMutableArray<id<ZMEventConsumer>> *eventConsumers = [NSMutableArray array];
-        
+
         for (id<ZMObjectStrategy> objectStrategy in self.requestStrategies) {
             if ([objectStrategy conformsToProtocol:@protocol(ZMEventConsumer)]) {
                 [eventConsumers addObject:objectStrategy];
             }
         }
-        
+
         _eventConsumers = eventConsumers;
     }
-    
+
     return _eventConsumers;
 }
 
@@ -373,11 +374,11 @@ ZM_EMPTY_ASSERTING_INIT()
         self.didFetchObjects = YES;
         [self.changeTrackerBootStrap fetchObjectsForChangeTrackers];
     }
-    
+
     if(self.tornDown) {
         return nil;
     }
-    
+
     return [self.requestStrategies firstNonNilReturnedFromSelector:@selector(nextRequest)];
 }
 
