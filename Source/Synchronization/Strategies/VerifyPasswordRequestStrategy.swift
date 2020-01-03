@@ -61,19 +61,22 @@ public final class VerifyPasswordRequestStrategy: AbstractRequestStrategy {
         return self.requestSync.nextRequest()
     }
     
-    public static func triggerPasswordVerification(with password: String, context moc: NSManagedObjectContext) {
-        NotificationCenter.default.post(name: .verifyPassword, object: moc, userInfo: [passwordKey: password])
+    static func triggerPasswordVerification(with password: String, completion: @escaping (VerifyPasswordResult?) -> Void, context moc: NSManagedObjectContext) {
+        let notificationCenter = NotificationCenter.default
+        var observerToken: Any?
+        observerToken = notificationCenter.addObserver(forName: .passwordVerified, object: moc, queue: nil) { notification in
+            let result = notification.userInfo?[VerifyPasswordRequestStrategy.verificationResultKey] as? VerifyPasswordResult
+            completion(result)
+            notificationCenter.removeObserver(observerToken!)
+        }
+        notificationCenter.post(name: .verifyPassword, object: moc, userInfo: [passwordKey: password])
     }
     
-    public static func addPasswordVerifiedObserver(_ observer: Any, selector: Selector, context moc: NSManagedObjectContext) {
-        NotificationCenter.default.addObserver(observer, selector: selector, name: .passwordVerified, object: moc)
-    }
-    
-    public static func notifyPasswordVerified(with result: VerifyPasswordResult, context moc: NSManagedObjectContext) {
+    private static func notifyPasswordVerified(with result: VerifyPasswordResult, context moc: NSManagedObjectContext) {
         NotificationCenter.default.post(name: .passwordVerified, object: moc, userInfo: [VerifyPasswordRequestStrategy.verificationResultKey: result])
     }
     
-    public static let verificationResultKey = "verificationResultKey"
+    private static let verificationResultKey = "verificationResultKey"
 }
 
 // MARK: - Request generation logic

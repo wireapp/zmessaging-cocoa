@@ -318,6 +318,7 @@
 		5EFE9C15212AB138007932A6 /* UnregisteredUser+Payload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EFE9C14212AB138007932A6 /* UnregisteredUser+Payload.swift */; };
 		5EFE9C17212AB945007932A6 /* RegistrationPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EFE9C16212AB945007932A6 /* RegistrationPhase.swift */; };
 		636B716223ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 636B716123ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift */; };
+		636B716823BF46EB00B624D6 /* ZMUserSession+VerifyPassword.swift in Sources */ = {isa = PBXBuildFile; fileRef = 636B716723BF46EA00B624D6 /* ZMUserSession+VerifyPassword.swift */; };
 		6387932F23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6387932E23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift */; };
 		7C1F4BF5203C4F67000537A8 /* Analytics+Push.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1F4BF4203C4F67000537A8 /* Analytics+Push.swift */; };
 		7C26879D21F7193800570AA9 /* EventProcessingTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C26879C21F7193800570AA9 /* EventProcessingTracker.swift */; };
@@ -939,6 +940,7 @@
 		5EFE9C14212AB138007932A6 /* UnregisteredUser+Payload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UnregisteredUser+Payload.swift"; sourceTree = "<group>"; };
 		5EFE9C16212AB945007932A6 /* RegistrationPhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationPhase.swift; sourceTree = "<group>"; };
 		636B716123ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyPasswordRequestStrategyTests.swift; sourceTree = "<group>"; };
+		636B716723BF46EA00B624D6 /* ZMUserSession+VerifyPassword.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+VerifyPassword.swift"; sourceTree = "<group>"; };
 		6387932E23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyPasswordRequestStrategy.swift; sourceTree = "<group>"; };
 		7C1F4BF4203C4F67000537A8 /* Analytics+Push.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Analytics+Push.swift"; sourceTree = "<group>"; };
 		7C26879C21F7193800570AA9 /* EventProcessingTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventProcessingTracker.swift; sourceTree = "<group>"; };
@@ -1793,6 +1795,7 @@
 				F9AB00211F0CDAF00037B437 /* FileRelocator.swift */,
 				BF36DDF01E8BACD400D61310 /* ZMUserSession+OperationLoop.h */,
 				54BAF1BC19212EBA008042FB /* ZMUserSession.m */,
+				636B716723BF46EA00B624D6 /* ZMUserSession+VerifyPassword.swift */,
 				549AEA3C1D6365C1003C0BEC /* ZMUserSession+AddressBook.swift */,
 				16E0FBE2233296A9000E3235 /* ZMUserSession+ConversationDirectory.swift */,
 				164EAF9B1F4455FA00B628C4 /* ZMUserSession+Actions.swift */,
@@ -2958,6 +2961,7 @@
 				5478A1411DEC4048006F7268 /* UserProfile.swift in Sources */,
 				5E8BB89E2147E9DF00EEA64B /* AVSWrapper+Handlers.swift in Sources */,
 				F16C8BE82044129700677D31 /* ZMConversationTranscoder.swift in Sources */,
+				636B716823BF46EB00B624D6 /* ZMUserSession+VerifyPassword.swift in Sources */,
 				1626344920D7DB81000D4063 /* PushNotificationCategory.swift in Sources */,
 				F98EDCD71D82B913001E65CB /* LocalNotificationContentType.swift in Sources */,
 				F19E55A222B3A3FA005C792D /* UNNotificationResponse+SafeLogging.swift in Sources */,

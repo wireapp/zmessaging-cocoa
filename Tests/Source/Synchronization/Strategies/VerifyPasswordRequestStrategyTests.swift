@@ -32,7 +32,6 @@ class VerifyPasswordRequestStrategyTests: MessagingTest {
         sync = ZMSingleRequestSync()
         mockApplicationStatus = MockApplicationStatus()
         sut = VerifyPasswordRequestStrategy(withManagedObjectContext: syncMOC, applicationStatus: mockApplicationStatus)
-        VerifyPasswordRequestStrategy.addPasswordVerifiedObserver(self, selector: #selector(passwordVerified(notification:)), context: syncMOC)
         RequestAvailableNotification.addObserver(self)
         didCallNewRequestAvailable = false
     }
@@ -49,7 +48,7 @@ class VerifyPasswordRequestStrategyTests: MessagingTest {
     func testThatItGeneratesCorrectRequestIfPasswordIsSet() {
         //given
         let password = "password"
-        VerifyPasswordRequestStrategy.triggerPasswordVerification(with: password, context: syncMOC)
+        VerifyPasswordRequestStrategy.triggerPasswordVerification(with: password, completion: {_ in}, context: syncMOC)
         
         //when
         let request = sut.nextRequestIfAllowed()
@@ -72,7 +71,7 @@ class VerifyPasswordRequestStrategyTests: MessagingTest {
         XCTAssertNil(request)
 
         //given
-        VerifyPasswordRequestStrategy.triggerPasswordVerification(with: "password", context: syncMOC)
+        VerifyPasswordRequestStrategy.triggerPasswordVerification(with: "password", completion: {_ in}, context: syncMOC)
         //when
         request = sut.nextRequestIfAllowed()
         //then
@@ -103,28 +102,18 @@ class VerifyPasswordRequestStrategyTests: MessagingTest {
         testThat(statusCode: 999, isProcessedAs: .unknown)
     }
     
-    func testThatNotificationObserversReactWhenObjectMatch() {
+    func testThatNotificationObserverReactsWhenObjectMatch() {
         //when
-        VerifyPasswordRequestStrategy.notifyPasswordVerified(with: .validated, context: syncMOC)
-        //then
-        XCTAssertEqual(verifyPasswordResult, VerifyPasswordResult.validated)
-        
-        //when
-        VerifyPasswordRequestStrategy.triggerPasswordVerification(with: "", context: syncMOC)
+        VerifyPasswordRequestStrategy.triggerPasswordVerification(with: "", completion: {_ in}, context: syncMOC)
         //then
         XCTAssertTrue(didCallNewRequestAvailable)
     }
     
-    func testThatNotificationObserversDontReactWhenObjectDontMatch() {
+    func testThatNotificationObserverDoesntReactWhenObjectDontMatch() {
         //given
         let moc = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         //when
-        VerifyPasswordRequestStrategy.notifyPasswordVerified(with: .validated, context: moc)
-        //then
-        XCTAssertNil(verifyPasswordResult)
-        
-        //when
-        VerifyPasswordRequestStrategy.triggerPasswordVerification(with: "", context: moc)
+        VerifyPasswordRequestStrategy.triggerPasswordVerification(with: "", completion: {_ in}, context: moc)
         //then
         XCTAssertFalse(didCallNewRequestAvailable)
     }
@@ -133,17 +122,17 @@ class VerifyPasswordRequestStrategyTests: MessagingTest {
 extension VerifyPasswordRequestStrategyTests {
     func testThat(statusCode: Int, isProcessedAs result: VerifyPasswordResult) {
         //given
-        VerifyPasswordRequestStrategy.triggerPasswordVerification(with: "password", context: syncMOC)
+        var verifyPasswordResult: VerifyPasswordResult?
+        VerifyPasswordRequestStrategy.triggerPasswordVerification(
+            with: "password",
+            completion: { verifyPasswordResult = $0 },
+            context: syncMOC)
         let response = ZMTransportResponse(payload: nil, httpStatus: statusCode, transportSessionError: nil)
         //when
         sut.didReceive(response, forSingleRequest: sync)
         //then
         XCTAssertNotNil(verifyPasswordResult)
         XCTAssertEqual(verifyPasswordResult, result)
-    }
-    
-    @objc func passwordVerified(notification: Notification) {
-        verifyPasswordResult = notification.userInfo?[VerifyPasswordRequestStrategy.verificationResultKey] as? VerifyPasswordResult
     }
 }
 
