@@ -20,9 +20,6 @@ import Foundation
 
 extension ZMUserSession {
     public func verify(password: String, completion: @escaping (VerifyPasswordResult?) -> Void) {
-        enqueueChanges { [weak self] in
-            guard let `self` = self else { return }
-            VerifyPasswordRequestStrategy.triggerPasswordVerification(with: password, completion: completion, context: self.syncManagedObjectContext)
-        }
+        VerifyPasswordRequestStrategy.triggerPasswordVerification(with: password, completion: completion, context: self.syncManagedObjectContext)
     }
 }
