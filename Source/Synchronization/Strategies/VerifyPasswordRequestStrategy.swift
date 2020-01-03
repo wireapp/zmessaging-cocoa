@@ -39,13 +39,14 @@ public final class VerifyPasswordRequestStrategy: AbstractRequestStrategy {
     private var requestSync: ZMSingleRequestSync!
     private var password: String?
     private let moc: NSManagedObjectContext
+    private var observerToken: Any?
 
     @objc public override init(withManagedObjectContext moc: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         self.moc = moc
         super.init(withManagedObjectContext: moc, applicationStatus: applicationStatus)
         self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
         
-        _ = NotificationInContext.addObserver(
+        observerToken = NotificationInContext.addObserver(
             name: .verifyPassword,
             context: moc.notificationContext,
             using: { [weak self] notification in

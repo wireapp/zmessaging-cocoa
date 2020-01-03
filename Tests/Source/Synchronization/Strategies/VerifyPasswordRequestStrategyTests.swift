@@ -112,6 +112,8 @@ class VerifyPasswordRequestStrategyTests: MessagingTest {
     func testThatNotificationObserverDoesntReactWhenObjectDontMatch() {
         //given
         let moc = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        moc.persistentStoreCoordinator = NSPersistentStoreCoordinator()
+        
         //when
         VerifyPasswordRequestStrategy.triggerPasswordVerification(with: "", completion: {_ in}, context: moc)
         //then
