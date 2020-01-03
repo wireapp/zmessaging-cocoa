@@ -48,7 +48,6 @@ public final class VerifyPasswordRequestStrategy: AbstractRequestStrategy {
         _ = NotificationInContext.addObserver(
             name: .verifyPassword,
             context: moc.notificationContext,
-            queue: .main,
             using: { [weak self] notification in
                 self?.preparePasswordVerification(notification)
             })
