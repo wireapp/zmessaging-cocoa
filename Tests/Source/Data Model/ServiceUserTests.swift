@@ -22,10 +22,6 @@ import XCTest
 @testable import WireSyncEngine
 
 final class DummyServiceUser: NSObject, ServiceUser {
-    
-    func role(in conversation: ZMConversation) -> Role? {
-        return nil
-    }
 
     var hasLegalHoldRequest: Bool = false
     
@@ -109,6 +105,18 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     func canModifyTitle(in conversation: ZMConversation) -> Bool {
         return false
+    }
+
+    func canModifyOtherMember(in conversation: ZMConversation) -> Bool {
+        return false
+    }
+
+    func canLeave(_ conversation: ZMConversation) -> Bool {
+        return false
+    }
+
+    func role(in conversation: ZMConversation) -> Role? {
+        return nil
     }
     
     var previewImageData: Data? = nil
