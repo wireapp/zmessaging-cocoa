@@ -45,11 +45,17 @@ public final class VerifyPasswordRequestStrategy: AbstractRequestStrategy {
         super.init(withManagedObjectContext: moc, applicationStatus: applicationStatus)
         self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
         
-        NotificationCenter.default.addObserver(self, selector: #selector(preparePasswordVerification(_:)), name: .verifyPassword, object: moc)
+        _ = NotificationInContext.addObserver(
+            name: .verifyPassword,
+            context: moc.notificationContext,
+            queue: .main,
+            using: { [weak self] notification in
+                self?.preparePasswordVerification(notification)
+            })
     }
     
-    @objc private func preparePasswordVerification(_ notification: Notification) {
-        self.password = notification.userInfo?[passwordKey] as? String
+    private func preparePasswordVerification(_ notification: NotificationInContext) {
+        self.password = notification.userInfo[passwordKey] as? String
         self.requestSync.readyForNextRequestIfNotBusy()
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
@@ -62,18 +68,22 @@ public final class VerifyPasswordRequestStrategy: AbstractRequestStrategy {
     }
     
     static func triggerPasswordVerification(with password: String, completion: @escaping (VerifyPasswordResult?) -> Void, context moc: NSManagedObjectContext) {
-        let notificationCenter = NotificationCenter.default
         var observerToken: Any?
-        observerToken = notificationCenter.addObserver(forName: .passwordVerified, object: moc, queue: nil) { notification in
-            let result = notification.userInfo?[VerifyPasswordRequestStrategy.verificationResultKey] as? VerifyPasswordResult
-            completion(result)
-            notificationCenter.removeObserver(observerToken!)
-        }
-        notificationCenter.post(name: .verifyPassword, object: moc, userInfo: [passwordKey: password])
+        observerToken = NotificationInContext.addObserver(
+            name: .passwordVerified,
+            context: moc.notificationContext,
+            queue: .main,
+            using: { notification in
+                let result = notification.userInfo[VerifyPasswordRequestStrategy.verificationResultKey] as? VerifyPasswordResult
+                completion(result)
+                _ = observerToken
+                observerToken = nil
+            })
+        NotificationInContext(name: .verifyPassword, context: moc.notificationContext, userInfo: [passwordKey: password]).post()
     }
     
     private static func notifyPasswordVerified(with result: VerifyPasswordResult, context moc: NSManagedObjectContext) {
-        NotificationCenter.default.post(name: .passwordVerified, object: moc, userInfo: [VerifyPasswordRequestStrategy.verificationResultKey: result])
+        NotificationInContext(name: .passwordVerified, context: moc.notificationContext, userInfo: [VerifyPasswordRequestStrategy.verificationResultKey: result]).post()
     }
     
     private static let verificationResultKey = "verificationResultKey"
@@ -101,7 +111,7 @@ extension VerifyPasswordRequestStrategy: ZMSingleRequestTranscoder {
         switch response.httpStatus {
         case 403: // Invalid credentials
             result = .denied
-        case 409: //
+        case 409: // Correct credentials
             result = .validated
         case 408:
             result = .timeout
