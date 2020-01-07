@@ -18,7 +18,11 @@
 
 import Foundation
 
-extension ZMUserSession {
+public protocol UserSessionVerifyPasswordInterface {
+    func verify(password: String, completion: @escaping (VerifyPasswordResult?) -> Void)
+}
+
+extension ZMUserSession: UserSessionVerifyPasswordInterface {
     public func verify(password: String, completion: @escaping (VerifyPasswordResult?) -> Void) {
         VerifyPasswordRequestStrategy.triggerPasswordVerification(with: password, completion: completion, context: self.syncManagedObjectContext)
     }
