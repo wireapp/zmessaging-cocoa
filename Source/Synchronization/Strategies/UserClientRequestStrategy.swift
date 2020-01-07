@@ -335,7 +335,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
                 return
             }
             // not there? delete
-            moc.delete($0)
+            $0.deleteClientAndEndSession()
         }
         
         moc.saveOrRollback()
