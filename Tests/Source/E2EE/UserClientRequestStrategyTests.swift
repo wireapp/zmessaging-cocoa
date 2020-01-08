@@ -678,7 +678,7 @@ extension UserClientRequestStrategyTests {
             // given
             self.clientRegistrationStatus.mockPhase = .unregistered
             self.clientUpdateStatus.mockPhase = .deletingClients
-            var clients = [
+            let clients = [
                 UserClient.insertNewObject(in: self.syncMOC),
                 UserClient.insertNewObject(in: self.syncMOC)
             ]
