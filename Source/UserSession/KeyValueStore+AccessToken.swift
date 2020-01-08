@@ -23,13 +23,13 @@ private let lastAccessTokenTypeKey = "ZMLastAccessTokenType";
 
 @objc extension NSManagedObjectContext {
     
-    public var accessToken : ZMAccessToken? {
+    public var accessToken : AccessToken? {
         get {
             guard let token = self.persistentStoreMetadata(forKey: lastAccessTokenKey) as? String,
                 let type = self.persistentStoreMetadata(forKey: lastAccessTokenTypeKey) as? String else {
                     return nil
             }
-            return ZMAccessToken(token: token, type: type, expiresInSeconds: 0)
+            return AccessToken(token: token, type: type, expiresInSeconds: 0)
         }
         
         set {
