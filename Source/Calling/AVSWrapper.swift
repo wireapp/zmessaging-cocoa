@@ -147,12 +147,15 @@ public class AVSWrapper: AVSWrapperType {
     /// Notifies AVS that we received a remote event.
     public func received(callEvent: CallEvent) -> CallError? {
         var result: CallError? = nil
-        callEvent.data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
+
+        callEvent.data.withUnsafeBytes { (pointer: UnsafeRawBufferPointer) in
+            guard let bytes = pointer.baseAddress?.assumingMemoryBound(to: UInt8.self) else { return }
             let currentTime = UInt32(callEvent.currentTimestamp.timeIntervalSince1970)
             let serverTime = UInt32(callEvent.serverTimestamp.timeIntervalSince1970)
             zmLog.debug("wcall_recv_msg: currentTime = \(currentTime), serverTime = \(serverTime)")
             result = CallError(wcall_error: wcall_recv_msg(handle, bytes, callEvent.data.count, currentTime, serverTime, callEvent.conversationId.transportString(), callEvent.userId.transportString(), callEvent.clientId))
         }
+
         return result
     }
 
