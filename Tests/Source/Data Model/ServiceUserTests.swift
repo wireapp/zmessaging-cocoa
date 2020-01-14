@@ -115,7 +115,7 @@ final class DummyServiceUser: NSObject, ServiceUser {
         return false
     }
 
-    func role(in conversation: ZMConversation) -> Role? {
+    func role(in conversation: ZMConversation) -> RoleType? {
         return nil
     }
     
