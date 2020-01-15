@@ -348,7 +348,7 @@ final class SessionManagerTests: IntegrationTest {
         sut?.accountManager.addAndSelect(createAccount())
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(sut?.accountManager.accounts.count, 1)
-        SessionManager.previousSystemBootTime = ProcessInfo.processInfo.systemBootTime
+        SessionManager.previousSystemBootTime = ProcessInfo.processInfo.bootTime()
         
         // EXPECT
         delegate.onLogout = { _ in

@@ -830,9 +830,10 @@ public protocol ForegroundNotificationResponder: class {
     
     @discardableResult
     internal func logoutAfterRebootIfNeeded() -> Bool {
-        guard configuration.authenticateAfterReboot else { return false }
+        guard configuration.authenticateAfterReboot, let systemBootTime = ProcessInfo.processInfo.bootTime() else {
+            return false
+        }
         
-        let systemBootTime = ProcessInfo.processInfo.systemBootTime
         var didLogoutCurrentSession = false
         
         if let previousSystemBootTime = SessionManager.previousSystemBootTime, abs(systemBootTime.timeIntervalSince(previousSystemBootTime)) > 1.0  {
@@ -846,9 +847,10 @@ public protocol ForegroundNotificationResponder: class {
     }
     
     internal func updateSystemBootTimeIfNeeded() {
-        guard configuration.authenticateAfterReboot else { return }
+        guard configuration.authenticateAfterReboot, let bootTime = ProcessInfo.processInfo.bootTime() else {
+            return
+        }
         
-        let bootTime = ProcessInfo.processInfo.systemBootTime
         SessionManager.previousSystemBootTime = bootTime
         log.debug("Updated system boot time: \(bootTime)")
     }
