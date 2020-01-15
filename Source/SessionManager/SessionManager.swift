@@ -836,7 +836,7 @@ public protocol ForegroundNotificationResponder: class {
         var didLogoutCurrentSession = false
         
         if let previousSystemBootTime = SessionManager.previousSystemBootTime, abs(systemBootTime.timeIntervalSince(previousSystemBootTime)) > 1.0  {
-            log.debug("Logout caused by device reboot at \(systemBootTime)")
+            log.debug("Logout caused by device reboot. Previous boot time: \(previousSystemBootTime). Current boot time: \(systemBootTime)")
             let error = NSError(code: .needsAuthenticationAfterReboot, userInfo: accountManager.selectedAccount?.loginCredentials?.dictionaryRepresentation)
             self.logoutCurrentSession(deleteCookie: true, error: error)
             didLogoutCurrentSession = true
@@ -848,7 +848,9 @@ public protocol ForegroundNotificationResponder: class {
     internal func updateSystemBootTimeIfNeeded() {
         guard configuration.authenticateAfterReboot else { return }
         
-        SessionManager.previousSystemBootTime = ProcessInfo.processInfo.systemBootTime
+        let bootTime = ProcessInfo.processInfo.systemBootTime
+        SessionManager.previousSystemBootTime = bootTime
+        log.debug("Updated system boot time: \(bootTime)")
     }
 }
 
