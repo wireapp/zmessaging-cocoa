@@ -467,7 +467,7 @@ public protocol ForegroundNotificationResponder: class {
         }
         
         guard !shouldPerformPostRebootLogout() else {
-            postRebootLogout()
+            performPostRebootLogout()
             return
         }
         
@@ -843,7 +843,7 @@ public protocol ForegroundNotificationResponder: class {
         return true
     }
     
-    func postRebootLogout() {
+    func performPostRebootLogout() {
         let error = NSError(code: .needsAuthenticationAfterReboot, userInfo: accountManager.selectedAccount?.loginCredentials?.dictionaryRepresentation)
         self.logoutCurrentSession(deleteCookie: true, error: error)
         log.debug("Logout caused by device reboot.")

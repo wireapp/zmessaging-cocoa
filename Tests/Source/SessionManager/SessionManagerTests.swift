@@ -330,7 +330,7 @@ final class SessionManagerTests: IntegrationTest {
         }
         
         performIgnoringZMLogError {
-            self.sut!.postRebootLogout()
+            self.sut!.performPostRebootLogout()
         }
         
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 2))
