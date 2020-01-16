@@ -410,8 +410,9 @@ extension IntegrationTest {
             teamConversation.creator = self.selfUser
             teamConversation.changeName(by:self.selfUser, name:"Team Group conversation")
             self.groupConversationWithWholeTeam = teamConversation
-            self.selfUser.role = "wire_admin"
-            
+            MockRole.createConversationRoles(context: self.mockTransportSession.managedObjectContext)
+            let pc = MockParticipantRole.insert(in: self.mockTransportSession.managedObjectContext, conversation: groupConversation, user: self.selfUser)
+            pc.role = MockRole.adminRole            
         })
     }
     

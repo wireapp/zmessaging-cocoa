@@ -115,8 +115,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
         return false
     }
 
-    func role(in conversation: ZMConversation) -> Role? {
-        return nil
+    func isGroupAdmin(in conversation: ZMConversation) -> Bool {
+        return false
     }
     
     var previewImageData: Data? = nil
