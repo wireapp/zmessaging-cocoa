@@ -831,7 +831,7 @@ public protocol ForegroundNotificationResponder: class {
         }
     }
     
-    internal func shouldPerformPostRebootLogout() -> Bool {
+    func shouldPerformPostRebootLogout() -> Bool {
         guard configuration.authenticateAfterReboot,
             accountManager.selectedAccount != nil,
             let systemBootTime = ProcessInfo.processInfo.bootTime(),
