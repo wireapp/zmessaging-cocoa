@@ -466,7 +466,10 @@ public protocol ForegroundNotificationResponder: class {
             }
         }
         
-        guard !logoutAfterRebootIfNeeded() else { return }
+        guard !shouldPerformPostRebootLogout() else {
+            postRebootLogout()
+            return
+        }
         
         loadSession(for: account) { [weak self] session in
             guard let `self` = self, let session = session else { return }
@@ -828,22 +831,22 @@ public protocol ForegroundNotificationResponder: class {
         }
     }
     
-    @discardableResult
-    internal func logoutAfterRebootIfNeeded() -> Bool {
-        guard configuration.authenticateAfterReboot, let systemBootTime = ProcessInfo.processInfo.bootTime() else {
-            return false
-        }
-        
-        var didLogoutCurrentSession = false
-        
-        if let previousSystemBootTime = SessionManager.previousSystemBootTime, abs(systemBootTime.timeIntervalSince(previousSystemBootTime)) > 1.0  {
-            log.debug("Logout caused by device reboot. Previous boot time: \(previousSystemBootTime). Current boot time: \(systemBootTime)")
-            let error = NSError(code: .needsAuthenticationAfterReboot, userInfo: accountManager.selectedAccount?.loginCredentials?.dictionaryRepresentation)
-            self.logoutCurrentSession(deleteCookie: true, error: error)
-            didLogoutCurrentSession = true
-        }
-        
-        return didLogoutCurrentSession
+    internal func shouldPerformPostRebootLogout() -> Bool {
+        guard configuration.authenticateAfterReboot,
+            accountManager.selectedAccount != nil,
+            let systemBootTime = ProcessInfo.processInfo.bootTime(),
+            let previousSystemBootTime = SessionManager.previousSystemBootTime,
+            abs(systemBootTime.timeIntervalSince(previousSystemBootTime)) > 1.0
+        else { return false }
+
+        log.debug("Will logout due to device reboot. Previous boot time: \(previousSystemBootTime). Current boot time: \(systemBootTime)")
+        return true
+    }
+    
+    internal func postRebootLogout() {
+        let error = NSError(code: .needsAuthenticationAfterReboot, userInfo: accountManager.selectedAccount?.loginCredentials?.dictionaryRepresentation)
+        self.logoutCurrentSession(deleteCookie: true, error: error)
+        log.debug("Logout caused by device reboot.")
     }
     
     internal func updateSystemBootTimeIfNeeded() {
