@@ -195,7 +195,7 @@ extension NotificationUserInfo {
      * - returns: The sender of the event, if found.
      */
 
-    public func sender(in managedObjectContext: NSManagedObjectContext) -> ZMUser? {
+    func sender(in managedObjectContext: NSManagedObjectContext) -> ZMUser? {
         guard let senderID = senderID else {
             return nil
         }

@@ -25,7 +25,7 @@ import WireTransport
     func enqueueDelayedSave()
 }
 
-@objc public final class ZMLocalNotificationSet : NSObject  {
+@objc final class ZMLocalNotificationSet : NSObject  {
     
     let archivingKey : String
     let keyValueStore : ZMSynchonizableKeyValueStore
@@ -125,7 +125,7 @@ import WireTransport
 
 
 // Event Notifications
-public extension ZMLocalNotificationSet {
+extension ZMLocalNotificationSet {
 
     func cancelNotificationForIncomingCall(_ conversation: ZMConversation) {
         let toRemove = notifications.filter {

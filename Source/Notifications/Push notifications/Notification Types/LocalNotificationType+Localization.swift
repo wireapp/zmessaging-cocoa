@@ -177,7 +177,7 @@ extension LocalNotificationType {
         return .localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
     }
     
-    public func titleText(selfUser: ZMUser, conversation : ZMConversation? = nil) -> String? {
+    func titleText(selfUser: ZMUser, conversation : ZMConversation? = nil) -> String? {
         
         if case .message(let contentType) = self {
             switch contentType {
@@ -230,7 +230,7 @@ extension LocalNotificationType {
         }
     }
     
-    public func messageBodyText(sender: ZMUser?, conversation: ZMConversation?) -> String {
+    func messageBodyText(sender: ZMUser?, conversation: ZMConversation?) -> String {
         
         if case LocalNotificationType.event(let eventType) = self {
             return messageBodyText(eventType: eventType, senderName: sender?.name)

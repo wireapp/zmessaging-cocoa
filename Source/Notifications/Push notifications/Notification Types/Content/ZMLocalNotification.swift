@@ -52,7 +52,7 @@ protocol NotificationBuilder {
 /// various notification types (message, calling, etc.) and includes
 /// information regarding the conversation, sender, and team name.
 ///
-open class ZMLocalNotification: NSObject {
+class ZMLocalNotification: NSObject {
     
     /// The unique identifier for this notification. Use it to later update
     /// or remove pending or scheduled notification requests.
