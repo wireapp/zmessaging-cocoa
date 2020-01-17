@@ -23,7 +23,6 @@
 
 #import "ZMTyping.h"
 #import "ZMTypingUsersTimeout.h"
-#import "ZMTypingUsers.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 
