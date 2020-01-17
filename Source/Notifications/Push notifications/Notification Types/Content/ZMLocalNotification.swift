@@ -16,13 +16,6 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import UIKit
-import UserNotifications
-import WireSystem
-import WireUtilities
-import WireTransport
-import WireDataModel
-
 
 /// Defines the various types of local notifications, some of which
 /// have associated subtypes.
