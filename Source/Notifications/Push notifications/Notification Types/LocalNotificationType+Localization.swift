@@ -145,7 +145,7 @@ extension LocalNotificationType {
         }
     }
     
-    fileprivate func senderKey(_ sender: UserType?, _ conversation: ZMConversation?) -> String? {
+    fileprivate func senderKey(_ sender : ZMUser?, _ conversation : ZMConversation?) -> String? {
         guard let sender = sender else { return NoUserNameKey }
         
         if case .failedMessage = self {
@@ -177,7 +177,7 @@ extension LocalNotificationType {
         return .localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
     }
     
-    public func titleText(selfUser: UserType, conversation: ZMConversation? = nil) -> String? {
+    public func titleText(selfUser: ZMUser, conversation : ZMConversation? = nil) -> String? {
         
         if case .message(let contentType) = self {
             switch contentType {
@@ -190,7 +190,7 @@ extension LocalNotificationType {
             }
         }
         
-        let teamName = selfUser.teamName
+        let teamName = selfUser.team?.name
         let conversationName = conversation?.meaningfulDisplayName
         
         if let conversationName = conversationName, let teamName = teamName {
@@ -230,7 +230,7 @@ extension LocalNotificationType {
         }
     }
     
-    public func messageBodyText(sender: UserType?, conversation: ZMConversation?) -> String {
+    public func messageBodyText(sender: ZMUser?, conversation: ZMConversation?) -> String {
         
         if case LocalNotificationType.event(let eventType) = self {
             return messageBodyText(eventType: eventType, senderName: sender?.name)
