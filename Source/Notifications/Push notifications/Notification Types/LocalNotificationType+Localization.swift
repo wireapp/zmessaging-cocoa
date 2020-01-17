@@ -204,7 +204,7 @@ extension LocalNotificationType {
         return nil
     }
     
-    public func alertTitleText(team: Team?) -> String? {
+    func alertTitleText(team: Team?) -> String? {
         guard case .availabilityBehaviourChangeAlert(let availability) = self, availability.isOne(of: .away, .busy) else { return nil }
         
         let teamName = team?.name
@@ -214,7 +214,7 @@ extension LocalNotificationType {
         return .localizedStringWithFormat(localizationKey.pushFormatString, arguments: [teamName].compactMap({ $0 }))
     }
     
-    public func alertMessageBodyText() -> String {
+    func alertMessageBodyText() -> String {
         guard case .availabilityBehaviourChangeAlert(let availability) = self, availability.isOne(of: .away, .busy) else { return "" }
         
         let availabilityKey = availability == .away ? "away" : "busy"
@@ -222,7 +222,7 @@ extension LocalNotificationType {
         return .localizedStringWithFormat(localizationKey.pushFormatString)
     }
     
-    public func messageBodyText(senderName: String?) -> String {
+    func messageBodyText(senderName: String?) -> String {
         if case LocalNotificationType.event(let eventType) = self {
             return messageBodyText(eventType: eventType, senderName: senderName)
         } else {
