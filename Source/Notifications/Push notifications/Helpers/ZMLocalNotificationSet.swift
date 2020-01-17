@@ -21,7 +21,7 @@ import UIKit
 import WireTransport
 
 
-@objc protocol ZMSynchonizableKeyValueStore : KeyValueStore {
+@objc public protocol ZMSynchonizableKeyValueStore : KeyValueStore {
     func enqueueDelayedSave()
 }
 
