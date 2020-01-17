@@ -195,7 +195,7 @@ extension NotificationUserInfo {
      * - returns: The sender of the event, if found.
      */
 
-    public func sender(in managedObjectContext: NSManagedObjectContext) -> ZMUser? {
+    public func sender(in managedObjectContext: NSManagedObjectContext) -> UserType? {
         guard let senderID = senderID else {
             return nil
         }
@@ -209,7 +209,8 @@ extension NotificationUserInfo {
 
 extension NotificationUserInfo {
 
-    public func setupUserInfo(for conversation: ZMConversation, sender: ZMUser) {
+    public func setupUserInfo(for conversation: ZMConversation, sender: UserType) {
+        guard let sender = sender as? ZMUser else { return }
         addSelfUserInfo(using: conversation)
         self.conversationID = conversation.remoteIdentifier
         self.senderID = sender.remoteIdentifier

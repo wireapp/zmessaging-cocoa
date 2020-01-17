@@ -145,7 +145,7 @@ extension ZMLocalNotification {
         return userInfo?.conversation(in: moc)
     }
     
-    public func sender(in moc: NSManagedObjectContext) -> ZMUser? {
+    public func sender(in moc: NSManagedObjectContext) -> UserType? {
         return userInfo?.sender(in: moc)
     }
 }
