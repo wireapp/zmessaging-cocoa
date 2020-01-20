@@ -162,7 +162,7 @@ class TypingUsersTimeoutTests: MessagingTest {
 
     func testThatItReturnsAnEmptySetWhenPruningAndNothingWasAdded() {
         // When
-        let result = sut.pruneConversationsThatHaveTimoutAfter(date: Date(timeIntervalSinceNow: -10))
+        let result = sut.pruneConversationsThatHaveTimoutBefore(date: Date(timeIntervalSinceNow: -10))
 
         // Then
         XCTAssertEqual(result, Set())
@@ -174,7 +174,7 @@ class TypingUsersTimeoutTests: MessagingTest {
         sut.add(userA, for: conversationA, withTimeout: timeout)
 
         // When
-        let result = sut.pruneConversationsThatHaveTimoutAfter(date: Date())
+        let result = sut.pruneConversationsThatHaveTimoutBefore(date: Date())
 
         // Then
         XCTAssertEqual(result, Set())
@@ -187,7 +187,7 @@ class TypingUsersTimeoutTests: MessagingTest {
         sut.add(userA, for: conversationA, withTimeout: timeout1)
 
         // When
-        let result = sut.pruneConversationsThatHaveTimoutAfter(date: timeout2)
+        let result = sut.pruneConversationsThatHaveTimoutBefore(date: timeout2)
 
         // Then
         XCTAssertEqual(result, Set([conversationA.objectID]))
@@ -201,7 +201,7 @@ class TypingUsersTimeoutTests: MessagingTest {
         sut.add(userB, for: conversationB, withTimeout: timeout1)
 
         // When
-        let result = sut.pruneConversationsThatHaveTimoutAfter(date: timeout2)
+        let result = sut.pruneConversationsThatHaveTimoutBefore(date: timeout2)
 
         // Then
         XCTAssertEqual(result, Set([conversationA.objectID, conversationB.objectID]))
@@ -216,7 +216,7 @@ class TypingUsersTimeoutTests: MessagingTest {
         sut.add(userB, for: conversationA, withTimeout: timeout3)
 
         // When
-        _ = sut.pruneConversationsThatHaveTimoutAfter(date: timeout2)
+        _ = sut.pruneConversationsThatHaveTimoutBefore(date: timeout2)
 
         // Then
         XCTAssertFalse(sut.contains(userA, for: conversationA))
