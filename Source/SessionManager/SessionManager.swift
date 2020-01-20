@@ -96,6 +96,7 @@ public protocol SessionManagerType : class {
     /// Needs to be called before we try to register another device because API requires password
     func update(credentials: ZMCredentials) -> Bool
     
+    func passwordVerificationDidFail(with failCount: Int)
 }
 
 @objc
@@ -849,13 +850,21 @@ public protocol ForegroundNotificationResponder: class {
         log.debug("Logout caused by device reboot.")
     }
     
-    internal func updateSystemBootTimeIfNeeded() {
+    func updateSystemBootTimeIfNeeded() {
         guard configuration.authenticateAfterReboot, let bootTime = ProcessInfo.processInfo.bootTime() else {
             return
         }
         
         SessionManager.previousSystemBootTime = bootTime
         log.debug("Updated system boot time: \(bootTime)")
+    }
+    
+    public func passwordVerificationDidFail(with failCount: Int) {
+        guard let count = configuration.failedPasswordThresholdBeforeWipe,
+            failCount >= count, let account = accountManager.selectedAccount else {
+                return
+        }
+        delete(account: account, reason: .failedPasswordLimitReached)
     }
 }
 
