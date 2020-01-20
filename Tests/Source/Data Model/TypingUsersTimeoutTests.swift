@@ -216,11 +216,11 @@ class TypingUsersTimeoutTests: MessagingTest {
         sut.add(userB, for: conversationA, withTimeout: timeout3)
 
         // When
-        let result = sut.prruneConversationsThatHaveTimoutAfter(date: timeout2)
+        sut.prruneConversationsThatHaveTimoutAfter(date: timeout2)
 
         // Then
         XCTAssertFalse(sut.contains(userA, for: conversationA))
-        XCTAssertFalse(sut.contains(userB, for: conversationA))
+        XCTAssertTrue(sut.contains(userB, for: conversationA))
         XCTAssertEqual(sut.userIds(in: conversationA), Set([userB.objectID]))
     }
 }
