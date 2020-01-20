@@ -153,7 +153,6 @@
 		3E27131F1A8A68BF008EE50F /* Push.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3E27131A1A8A68BF008EE50F /* Push.strings */; };
 		3E2713211A8A68BF008EE50F /* Push.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = 3E27131C1A8A68BF008EE50F /* Push.stringsdict */; };
 		3E288A6C19C859210031CFCE /* NotificationObservers.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E288A6A19C859210031CFCE /* NotificationObservers.m */; };
-		3E3C00D21A2358CF00D02D21 /* ZMTypingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E3C00D01A2358CF00D02D21 /* ZMTypingTests.m */; };
 		3E3C00DB1A235F6000D02D21 /* ZMTypingUsersTimeoutTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E3C00D91A235F6000D02D21 /* ZMTypingUsersTimeoutTests.m */; };
 		3E9848BD1A65253000F7B050 /* Hack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E9848BC1A65253000F7B050 /* Hack.swift */; };
 		3ED972FB1A0A65D800BAFC61 /* ZMBlacklistVerificatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = F9F11A061A0A630900F1DCEE /* ZMBlacklistVerificatorTest.m */; };
@@ -423,6 +422,7 @@
 		EE1108F923D1F945005DC663 /* TypingUsersTimeout.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1108F823D1F945005DC663 /* TypingUsersTimeout.swift */; };
 		EE1108FB23D2087F005DC663 /* Typing.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1108FA23D2087F005DC663 /* Typing.swift */; };
 		EE1108FE23D5972A005DC663 /* IsTypingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1108FC23D59720005DC663 /* IsTypingTests.swift */; };
+		EE1DEBB323D5A6930087EE1F /* TypingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1DEBB223D5A6930087EE1F /* TypingTests.swift */; };
 		EE5BF6351F8F907C00B49D06 /* ZMLocalNotificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5BF6341F8F907C00B49D06 /* ZMLocalNotificationTests.swift */; };
 		EE5BF6371F8F9D6100B49D06 /* ZMLocalNotificationTests_Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5BF6361F8F9D6100B49D06 /* ZMLocalNotificationTests_Event.swift */; };
 		EE5FEF0521E8948F00E24F7F /* ZMUserSession+DarwinNotificationCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5FEF0421E8948F00E24F7F /* ZMUserSession+DarwinNotificationCenter.swift */; };
@@ -755,7 +755,6 @@
 		3E2712FE1A891781008EE50F /* Tests-ios-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tests-ios-Info.plist"; sourceTree = "<group>"; };
 		3E288A6919C859210031CFCE /* NotificationObservers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NotificationObservers.h; sourceTree = "<group>"; };
 		3E288A6A19C859210031CFCE /* NotificationObservers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NotificationObservers.m; sourceTree = "<group>"; };
-		3E3C00D01A2358CF00D02D21 /* ZMTypingTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMTypingTests.m; sourceTree = "<group>"; };
 		3E3C00D91A235F6000D02D21 /* ZMTypingUsersTimeoutTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMTypingUsersTimeoutTests.m; sourceTree = "<group>"; };
 		3E4F727C19EC0868002FE184 /* ZMUserSession+Background.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ZMUserSession+Background.h"; sourceTree = "<group>"; };
 		3E4F728219EC0D76002FE184 /* ZMUserSession+Background.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "ZMUserSession+Background.m"; sourceTree = "<group>"; };
@@ -1076,6 +1075,7 @@
 		EE1108F823D1F945005DC663 /* TypingUsersTimeout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingUsersTimeout.swift; sourceTree = "<group>"; };
 		EE1108FA23D2087F005DC663 /* Typing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typing.swift; sourceTree = "<group>"; };
 		EE1108FC23D59720005DC663 /* IsTypingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsTypingTests.swift; sourceTree = "<group>"; };
+		EE1DEBB223D5A6930087EE1F /* TypingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingTests.swift; sourceTree = "<group>"; };
 		EE5BF6341F8F907C00B49D06 /* ZMLocalNotificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ZMLocalNotificationTests.swift; path = Tests/Source/Notifications/PushNotifications/ZMLocalNotificationTests.swift; sourceTree = SOURCE_ROOT; };
 		EE5BF6361F8F9D6100B49D06 /* ZMLocalNotificationTests_Event.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ZMLocalNotificationTests_Event.swift; path = Tests/Source/Notifications/PushNotifications/ZMLocalNotificationTests_Event.swift; sourceTree = SOURCE_ROOT; };
 		EE5FEF0421E8948F00E24F7F /* ZMUserSession+DarwinNotificationCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+DarwinNotificationCenter.swift"; sourceTree = "<group>"; };
@@ -1624,7 +1624,7 @@
 				F9B71F4A1CB2B841001DB03F /* NSManagedObjectContext+TestHelpers.h */,
 				F9B71F4B1CB2B841001DB03F /* NSManagedObjectContext+TestHelpers.m */,
 				85D856D10F3CD0262DCB5730 /* MockDataModel */,
-				3E3C00D01A2358CF00D02D21 /* ZMTypingTests.m */,
+				EE1DEBB223D5A6930087EE1F /* TypingTests.swift */,
 				3E3C00D91A235F6000D02D21 /* ZMTypingUsersTimeoutTests.m */,
 				3E26BEE71A408F590071B4C9 /* ZMTypingUsersTests.m */,
 				16AD86B71F7292EB00E4C797 /* TypingChange.swift */,
@@ -2712,6 +2712,7 @@
 				7CE017152317D07E00144905 /* ZMAuthenticationStatusTests.swift in Sources */,
 				548241F01AB09C1500E0ED07 /* APNSTests.m in Sources */,
 				16085B351F719E6D000B9F22 /* NetworkStateRecorder.swift in Sources */,
+				EE1DEBB323D5A6930087EE1F /* TypingTests.swift in Sources */,
 				EE1108FE23D5972A005DC663 /* IsTypingTests.swift in Sources */,
 				09BA924C1BD55FA5000DC962 /* UserClientRequestStrategyTests.swift in Sources */,
 				A9692F8A1986476900849241 /* NSString_NormalizationTests.m in Sources */,
@@ -2768,7 +2769,6 @@
 				F9ABE8AE1F02A88200D83214 /* TeamSyncRequestStrategyTests.swift in Sources */,
 				EFC8281E1FB34F9600E27E21 /* EmailVerificationStrategyTests.swift in Sources */,
 				87D4625D1C3D526D00433469 /* DeleteAccountRequestStrategyTests.swift in Sources */,
-				3E3C00D21A2358CF00D02D21 /* ZMTypingTests.m in Sources */,
 				166264932166517A00300F45 /* CallEventStatusTests.swift in Sources */,
 				160C31411E6DDFC30012E4BC /* VoiceChannelV3Tests.swift in Sources */,
 				F190E0DD1E8E7C9D003E81F8 /* SlowSyncTests+Swift.swift in Sources */,

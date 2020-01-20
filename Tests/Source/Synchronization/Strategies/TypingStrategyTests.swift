@@ -19,10 +19,10 @@
 @testable import WireSyncEngine
 
 
-class MockTyping : ZMTyping {
-    var didTearDown : Bool = false
-    var typingUsers : [ZMConversation : Set<ZMUser>] = [:]
-    var didSetTypingUsers : Bool = false
+class MockTyping: WireSyncEngine.Typing {
+    var didTearDown: Bool = false
+    var typingUsers: [ZMConversation : Set<ZMUser>] = [:]
+    var didSetTypingUsers: Bool = false
     
     override func tearDown() {
         didTearDown = true
@@ -30,7 +30,7 @@ class MockTyping : ZMTyping {
         super.tearDown()
     }
     
-    override func setIs(_ isTyping: Bool, for user: ZMUser!, in conversation: ZMConversation!) {
+    override func setIsTyping(_ isTyping: Bool, for user: ZMUser!, in conversation: ZMConversation!) {
         didSetTypingUsers = true
         var newTypingUsers = typingUsers[conversation] ?? Set()
         if isTyping {
@@ -73,8 +73,8 @@ class TypingStrategyTests : MessagingTest {
         super.setUp()
         originalTimeout = ZMTypingDefaultTimeout
         ZMTypingDefaultTimeout = 3.0
-        
-        self.typing = MockTyping()
+
+        self.typing = MockTyping(uiContext: uiMOC, syncContext: syncMOC)
         self.mockApplicationStatus = MockApplicationStatus()
         self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
 
@@ -110,7 +110,7 @@ class TypingStrategyTests : MessagingTest {
     }
     
     func simulateTyping(){
-        typing.setIs(true, for: userA, in: conversationA)
+        typing.setIsTyping(true, for: userA, in: conversationA)
         XCTAssertTrue(typing.isUserTyping(user: userA, in: conversationA))
         typing.didSetTypingUsers = false
     }
