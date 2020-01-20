@@ -111,7 +111,7 @@ class Typing {
 extension Typing: ZMTimerClient {
 
     func timerDidFire(_ timer: ZMTimer!) {
-        guard timer == expirationTimer else { return }
+        guard timer === expirationTimer else { return }
 
         syncContext.performGroupedBlock {
             let conversationIds = self.typingUserTimeout.pruneConversationsThatHaveTimoutAfter(date: Date())
