@@ -74,9 +74,7 @@ class Typing: ZMTimerClient {
             sendNotification(for: conversation)
         }
 
-        if let firstTimeout = typingUserTimeout.firstTimeout {
-            updateExpiration(with: firstTimeout)
-        }
+        updateExpirationIfNeeded()
     }
 
     private func sendNotification(for conversation: ZMConversation) {
@@ -87,20 +85,23 @@ class Typing: ZMTimerClient {
             if let conversation = self.uiContext.object(with: conversationId) as? ZMConversation {
                 let users = userIds.compactMap { self.uiContext.object(with: $0) as? ZMUser }
                 self.uiContext.typingUsers?.update(typingUsers: Set(users), in: conversation)
-                // TODO: rename this to "notifyTypingUsers:(_)"
                 conversation.notifyTyping(typingUsers: Set(users))
             }
         }
     }
 
-    private func updateExpiration(with date: Date) {
-        guard date != nextPruneDate else { return }
-        expirationTimer?.cancel()
-        nextPruneDate = date
+    private func updateExpirationIfNeeded() {
+        guard
+            let date = typingUserTimeout.firstTimeout,
+            date != nextPruneDate
+        else {
+            return
+        }
 
-        guard let pruneDate = nextPruneDate else { return }
+        expirationTimer?.cancel()
         expirationTimer = ZMTimer(target: self)
-        expirationTimer?.fire(at: pruneDate)
+        expirationTimer?.fire(at: date)
+        nextPruneDate = date
     }
 
     func timerDidFire(_ timer: ZMTimer!) {
@@ -114,9 +115,7 @@ class Typing: ZMTimerClient {
                 }
             }
 
-            if let firstTimeout = self.typingUserTimeout.firstTimeout {
-                self.updateExpiration(with: firstTimeout)
-            }
+            self.updateExpirationIfNeeded()
         }
     }
 }
