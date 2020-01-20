@@ -72,7 +72,7 @@ class TypingUsersTimeout: NSObject {
         return Set(userIds)
     }
 
-    func prruneConversationsThatHaveTimoutAfter(date pruneDate: Date) -> Set<NSManagedObjectID> {
+    func pruneConversationsThatHaveTimoutAfter(date pruneDate: Date) -> Set<NSManagedObjectID> {
         let keysToRemove = timeouts
             .filter { $0.value < pruneDate }
             .keys
