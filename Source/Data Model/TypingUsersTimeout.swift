@@ -18,49 +18,26 @@
 
 import Foundation
 
-private let log = ZMSLog(tag: "Core Data")
-
-struct ZMUserAndConversationKey: Hashable {
-
-    var userObjectId: NSManagedObjectID
-    var conversationObjectId: NSManagedObjectID
-
-    init(user: ZMUser, conversation: ZMConversation) {
-        // We need the ids to be permanent.
-        if (user.objectID.isTemporaryID || conversation.objectID.isTemporaryID) {
-            do {
-                try user.managedObjectContext?.obtainPermanentIDs(for: [user, conversation])
-            } catch let error {
-                log.error("Failed to obtain permanent object ids: \(error.localizedDescription)")
-            }
-        }
-
-        userObjectId = user.objectID
-        conversationObjectId = conversation.objectID
-        require(!userObjectId.isTemporaryID && !conversationObjectId.isTemporaryID)
-    }
-}
-
 class TypingUsersTimeout: NSObject {
+
+    private var timeouts = [Key: Date]()
 
     var firstTimeout: Date? {
         return timeouts.values.min()
     }
 
-    private var timeouts = [ZMUserAndConversationKey: Date]()
-
     func add(_ user: ZMUser, for conversation: ZMConversation, withTimeout timeout: Date) {
-        let key = ZMUserAndConversationKey(user: user, conversation: conversation)
+        let key = Key(user: user, conversation: conversation)
         timeouts[key] = timeout
     }
 
     func remove(_ user: ZMUser, for conversation: ZMConversation) {
-        let key = ZMUserAndConversationKey(user: user, conversation: conversation)
+        let key = Key(user: user, conversation: conversation)
         timeouts.removeValue(forKey: key)
     }
 
     func contains(_ user: ZMUser, for conversation: ZMConversation) -> Bool {
-        let key = ZMUserAndConversationKey(user: user, conversation: conversation)
+        let key = Key(user: user, conversation: conversation)
         return timeouts[key] != nil
     }
 
