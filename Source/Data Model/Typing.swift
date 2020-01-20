@@ -18,7 +18,7 @@
 
 import Foundation
 
-class Typing: ZMTimerClient {
+class Typing {
 
     #if DEBUG
     public static var defaultTimeout: TimeInterval = 60
@@ -103,6 +103,12 @@ class Typing: ZMTimerClient {
         expirationTimer?.fire(at: date)
         nextPruneDate = date
     }
+
+}
+
+// MARK: - TimerClient
+
+extension Typing: ZMTimerClient {
 
     func timerDidFire(_ timer: ZMTimer!) {
         guard timer == expirationTimer else { return }
