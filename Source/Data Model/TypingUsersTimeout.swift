@@ -49,17 +49,17 @@ class TypingUsersTimeout: NSObject {
 
     private var timeouts = [ZMUserAndConversationKey: Date]()
 
-    func add(user: ZMUser, for conversation: ZMConversation, withTimeout timeout: Date) {
+    func add(_ user: ZMUser, for conversation: ZMConversation, withTimeout timeout: Date) {
         let key = ZMUserAndConversationKey(user: user, conversation: conversation)
         timeouts[key] = timeout
     }
 
-    func remove(user: ZMUser, for conversation: ZMConversation) {
+    func remove(_ user: ZMUser, for conversation: ZMConversation) {
         let key = ZMUserAndConversationKey(user: user, conversation: conversation)
         timeouts.removeValue(forKey: key)
     }
 
-    func contains(user: ZMUser, for conversation: ZMConversation) -> Bool {
+    func contains(_ user: ZMUser, for conversation: ZMConversation) -> Bool {
         let key = ZMUserAndConversationKey(user: user, conversation: conversation)
         return timeouts[key] != nil
     }
