@@ -20,13 +20,15 @@
 
 class IsTypingTests: IntegrationTest, ZMTypingChangeObserver {
 
+    private typealias Typing = WireSyncEngine.Typing
+
     private var oldTimeout: TimeInterval = 0
     private var notifications: [TypingChange] = []
     private var token: Any?
 
     override func setUp() {
-        oldTimeout = ZMTypingDefaultTimeout
-        ZMTypingDefaultTimeout = 2
+        oldTimeout = Typing.defaultTimeout
+        Typing.defaultTimeout = 2
 
         super.setUp()
 
@@ -37,7 +39,7 @@ class IsTypingTests: IntegrationTest, ZMTypingChangeObserver {
     }
 
     override func tearDown() {
-        ZMTypingDefaultTimeout = oldTimeout
+        Typing.defaultTimeout = oldTimeout
         token = nil
         super.tearDown()
     }
@@ -66,7 +68,7 @@ class IsTypingTests: IntegrationTest, ZMTypingChangeObserver {
         notifications.removeAll()
 
         // When
-        spinMainQueue(withTimeout: ZMTypingDefaultTimeout + 1)
+        spinMainQueue(withTimeout: Typing.defaultTimeout + 1)
 
         // Then
         XCTAssertEqual(notifications.count, 1)

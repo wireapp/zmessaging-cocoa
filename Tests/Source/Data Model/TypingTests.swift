@@ -88,7 +88,7 @@ class TypingTests: MessagingTest, ZMTypingChangeObserver {
 
     func testThatTimeoutIsInitializedWithDefault() {
         // Given, then
-        XCTAssertEqual(sut.timeout, ZMTypingDefaultTimeout)
+        XCTAssertEqual(sut.timeout, Typing.defaultTimeout)
     }
 
     func testThatItSendsOutANotificationWhenAUserStartsTyping() {

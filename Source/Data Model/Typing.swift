@@ -18,17 +18,18 @@
 
 import Foundation
 
-#if DEBUG
-public var ZMTypingDefaultTimeout: TimeInterval = 60 // Get this checked
-#else
-public let ZMTypingDefaultTimeout: TimeInterval = 60
-#endif
-
-/// We only send typing events to the backend every ZMTypingDefaultTimeout / ZMTypingRelativeSendTimeout seconds.
-public let ZMTypingRelativeSendTimeout: TimeInterval = 5
-
 class Typing: ZMTimerClient {
 
+    #if DEBUG
+    public static var defaultTimeout: TimeInterval = 60
+    #else
+    public static let defaultTimeout: TimeInterval = 60
+    #endif
+
+    /// We only send typing events to the backend every ZMTypingDefaultTimeout / ZMTypingRelativeSendTimeout seconds.
+    public static let relativeSendTimeout: TimeInterval = 5
+
+    // MARK: - Properties
 
     var timeout: TimeInterval = 0
 
@@ -41,11 +42,13 @@ class Typing: ZMTimerClient {
 
     private var needsTearDown: Bool
 
+    // MARK: - Life Cycle
+
     init(uiContext: NSManagedObjectContext, syncContext: NSManagedObjectContext) {
         self.needsTearDown = true
         self.uiContext = uiContext
         self.syncContext = syncContext
-        self.timeout = ZMTypingDefaultTimeout
+        self.timeout = Typing.defaultTimeout
         self.typingUserTimeout = TypingUsersTimeout()
     }
 
@@ -54,6 +57,8 @@ class Typing: ZMTimerClient {
         expirationTimer?.cancel()
         expirationTimer = nil
     }
+
+    // MARK: - Methods
 
     func setIsTyping(_ isTyping: Bool, for user: ZMUser, in conversation: ZMConversation) {
         let wasTyping = typingUserTimeout.contains(user, for: conversation)
