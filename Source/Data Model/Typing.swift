@@ -19,14 +19,16 @@
 import Foundation
 
 #if DEBUG
-var ZMTypingDefaultTimeout: TimeInterval = 60 // Get this checked
+public var ZMTypingDefaultTimeout: TimeInterval = 60 // Get this checked
 #else
-let ZMTypingDefaultTimeout: TimeInterval = 60
+public let ZMTypingDefaultTimeout: TimeInterval = 60
 #endif
+
 /// We only send typing events to the backend every ZMTypingDefaultTimeout / ZMTypingRelativeSendTimeout seconds.
-let ZMTypingRelativeSendTimeout: TimeInterval = 5
+public let ZMTypingRelativeSendTimeout: TimeInterval = 5
 
 class Typing: ZMTimerClient {
+
 
     var timeout: TimeInterval = 0
 
