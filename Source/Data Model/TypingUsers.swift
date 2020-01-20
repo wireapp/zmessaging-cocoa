@@ -58,32 +58,3 @@ import Foundation
     }
 
 }
-
-@objc extension NSManagedObjectContext {
-
-    private static let TypingUsersKey = "ZMTypingUsers"
-
-    @objc var typingUsers: TypingUsers? {
-        guard zm_isUserInterfaceContext else { return nil }
-
-        if let users = userInfo[NSManagedObjectContext.TypingUsersKey] as? TypingUsers {
-            return users
-        } else {
-            let users = TypingUsers()
-            userInfo[NSManagedObjectContext.TypingUsersKey] = users
-            return users
-        }
-    }
-}
-
-@objc public extension ZMConversation {
-
-    @objc (setIsTyping:)
-    func setIsTyping(_ isTyping: Bool) {
-        TypingStrategy.notifyTranscoderThatUser(isTyping: isTyping, in: self)
-    }
-
-    var typingUsers: Set<ZMUser> {
-        return managedObjectContext?.typingUsers?.typingUsers(in: self) ?? Set()
-    }
-}
