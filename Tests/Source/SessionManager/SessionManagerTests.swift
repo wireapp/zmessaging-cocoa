@@ -499,6 +499,48 @@ class SessionManagerTests_AuthenticationFailure: IntegrationTest {
     
 }
 
+class SessionManagerTests_PasswordVerificationFailure_With_DeleteAccountAfterThreshold: IntegrationTest {
+    private var threshold: Int? = 2
+    override func setUp() {
+        super.setUp()
+        createSelfUserAndConversation()
+    }
+    
+    override var sessionManagerConfiguration: SessionManagerConfiguration {
+        return SessionManagerConfiguration(failedPasswordThresholdBeforeWipe: threshold)
+    }
+    
+    func testThatItDeletesAccount_IfLimitIsReached() {
+        // given
+        XCTAssertTrue(login())
+        let account = sessionManager!.accountManager.selectedAccount!
+        
+        // when
+        sessionManager?.passwordVerificationDidFail(with: threshold!)
+        
+        // then
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        
+        XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
+    }
+    
+    func testThatItDoesntDeleteAccount_IfLimitIsNotReached() {
+        // given
+        XCTAssertTrue(login())
+        let account = sessionManager!.accountManager.selectedAccount!
+        
+        // when
+        sessionManager?.passwordVerificationDidFail(with: threshold! - 1)
+        
+        // then
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        
+        XCTAssertTrue(FileManager.default.fileExists(atPath: accountFolder.path))
+    }
+}
+
 class SessionManagerTests_AuthenticationFailure_With_DeleteAccountOnAuthentictionFailure: IntegrationTest {
     
     override func setUp() {

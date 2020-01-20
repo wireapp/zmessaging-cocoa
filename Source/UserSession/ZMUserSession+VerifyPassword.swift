@@ -23,6 +23,8 @@ public protocol UserSessionVerifyPasswordInterface {
 }
 
 extension ZMUserSession: UserSessionVerifyPasswordInterface {
+    static let failedPasswordCountKey: String = "failedPasswordCount"
+    
     public func verify(password: String, completion: @escaping (VerifyPasswordResult?) -> Void) {
         VerifyPasswordRequestStrategy.triggerPasswordVerification(
             with: password,
@@ -37,15 +39,14 @@ extension ZMUserSession: UserSessionVerifyPasswordInterface {
                 }
             },
             context: self.syncManagedObjectContext)
-        
     }
     
-    var failedPasswordCount: Int {
+    private var failedPasswordCount: Int {
         get {
-            let count = self.managedObjectContext.persistentStoreMetadata(forKey: "failedPasswordCount") as? Int
+            let count = self.managedObjectContext.persistentStoreMetadata(forKey: ZMUserSession.failedPasswordCountKey) as? Int
             return count ?? 0
         } set {
-            self.managedObjectContext.setPersistentStoreMetadata(newValue, key: "failedPasswordCount")
+            self.managedObjectContext.setPersistentStoreMetadata(newValue, key: ZMUserSession.failedPasswordCountKey)
             self.managedObjectContext.saveOrRollback()
         }
     }
