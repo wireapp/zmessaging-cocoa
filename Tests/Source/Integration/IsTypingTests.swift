@@ -44,8 +44,9 @@ class IsTypingTests: IntegrationTest, ZMTypingChangeObserver {
         super.tearDown()
     }
 
-    func typingDidChange(conversation: ZMConversation, typingUsers: Set<ZMUser>) {
-        notifications.append(TypingChange(conversation: conversation, typingUsers: typingUsers))
+    func typingDidChange(conversation: ZMConversation, typingUsers: [UserType]) {
+        let users = typingUsers.compactMap { $0 as? ZMUser }
+        notifications.append(TypingChange(conversation: conversation, typingUsers: Set(users)))
     }
 
     // MARK: - Tests

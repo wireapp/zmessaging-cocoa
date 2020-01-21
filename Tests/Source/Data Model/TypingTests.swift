@@ -80,8 +80,9 @@ class TypingTests: MessagingTest, ZMTypingChangeObserver {
         return ZMUser.insertNewObject(in: uiMOC)
     }
 
-    func typingDidChange(conversation: ZMConversation, typingUsers: Set<ZMUser>) {
-        receivedNotifications.append(TypingChange(conversation: conversationA, typingUsers: typingUsers))
+    func typingDidChange(conversation: ZMConversation, typingUsers: [UserType]) {
+        let users = typingUsers.compactMap { $0 as? ZMUser }
+        receivedNotifications.append(TypingChange(conversation: conversationA, typingUsers: Set(users)))
     }
 
     // MARK: - Tests
