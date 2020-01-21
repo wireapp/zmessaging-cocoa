@@ -69,7 +69,7 @@ class Typing {
 
         if wasTyping != isTyping {
             if (!isTyping) {
-                typingUserTimeout .remove(user, for: conversation)
+                typingUserTimeout.remove(user, for: conversation)
             }
             sendNotification(for: conversation)
         }
