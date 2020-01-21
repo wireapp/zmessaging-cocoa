@@ -19,10 +19,8 @@
 import Foundation
 import Contacts
 
-private let zmLog = ZMSLog(tag: "ContactAddressBook")
-
 /// iOS Contacts-based address book
-final class ContactAddressBook : AddressBook {
+class ContactAddressBook : AddressBook {
     
     let store = CNContactStore()
 }
@@ -69,12 +67,12 @@ extension ContactAddressBook : AddressBookAccessor {
                 stop.initialize(to: ObjCBool(!shouldContinue))
             }
         } catch {
-            zmLog.error(error.localizedDescription)
+            fatal(error.localizedDescription)
         }
     }
 
     /// Number of contacts in the address book
-    var numberOfContacts: UInt {
+    internal var numberOfContacts: UInt {
         return 0
     }
 }

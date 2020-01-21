@@ -20,8 +20,6 @@ import XCTest
 @testable import WireSyncEngine
 
 class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
-
-    typealias ZMLocalNotification = WireSyncEngine.ZMLocalNotification
     
     var userWithNoName: ZMUser!
     var userWithName: ZMUser!

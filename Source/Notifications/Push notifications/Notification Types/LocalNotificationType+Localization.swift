@@ -177,7 +177,7 @@ extension LocalNotificationType {
         return .localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
     }
     
-    func titleText(selfUser: ZMUser, conversation : ZMConversation? = nil) -> String? {
+    public func titleText(selfUser: ZMUser, conversation : ZMConversation? = nil) -> String? {
         
         if case .message(let contentType) = self {
             switch contentType {
@@ -204,7 +204,7 @@ extension LocalNotificationType {
         return nil
     }
     
-    func alertTitleText(team: Team?) -> String? {
+    public func alertTitleText(team: Team?) -> String? {
         guard case .availabilityBehaviourChangeAlert(let availability) = self, availability.isOne(of: .away, .busy) else { return nil }
         
         let teamName = team?.name
@@ -214,7 +214,7 @@ extension LocalNotificationType {
         return .localizedStringWithFormat(localizationKey.pushFormatString, arguments: [teamName].compactMap({ $0 }))
     }
     
-    func alertMessageBodyText() -> String {
+    public func alertMessageBodyText() -> String {
         guard case .availabilityBehaviourChangeAlert(let availability) = self, availability.isOne(of: .away, .busy) else { return "" }
         
         let availabilityKey = availability == .away ? "away" : "busy"
@@ -222,7 +222,7 @@ extension LocalNotificationType {
         return .localizedStringWithFormat(localizationKey.pushFormatString)
     }
     
-    func messageBodyText(senderName: String?) -> String {
+    public func messageBodyText(senderName: String?) -> String {
         if case LocalNotificationType.event(let eventType) = self {
             return messageBodyText(eventType: eventType, senderName: senderName)
         } else {
@@ -230,7 +230,7 @@ extension LocalNotificationType {
         }
     }
     
-    func messageBodyText(sender: ZMUser?, conversation: ZMConversation?) -> String {
+    public func messageBodyText(sender: ZMUser?, conversation: ZMConversation?) -> String {
         
         if case LocalNotificationType.event(let eventType) = self {
             return messageBodyText(eventType: eventType, senderName: sender?.name)

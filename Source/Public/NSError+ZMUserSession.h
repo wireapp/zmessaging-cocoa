@@ -26,9 +26,7 @@ typedef NS_ENUM(NSUInteger, ZMAccountDeletedReason) {
     /// The user account was deleted because a jailbreak was detected
     ZMAccountDeletedReasonJailbreakDetected,
     /// The user account was deleted because the session expired
-    ZMAccountDeletedReasonSessionExpired,
-    /// The user account was deleted because the limit of failed password attempts was reached
-    ZMAccountDeletedReasonFailedPasswordLimitReached
+    ZMAccountDeletedReasonSessionExpired
 };
 
 typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {

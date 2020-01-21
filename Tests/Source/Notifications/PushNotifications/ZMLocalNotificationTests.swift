@@ -20,8 +20,6 @@ import XCTest
 @testable import WireSyncEngine
 
 class ZMLocalNotificationTests: MessagingTest {
-
-    typealias ZMLocalNotification = WireSyncEngine.ZMLocalNotification
     
     var sender: ZMUser!
     var selfUser: ZMUser!

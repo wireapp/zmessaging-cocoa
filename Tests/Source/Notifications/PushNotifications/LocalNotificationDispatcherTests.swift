@@ -21,8 +21,6 @@
 import XCTest
 
 class LocalNotificationDispatcherTests: MessagingTest {
-
-    typealias ZMLocalNotification = WireSyncEngine.ZMLocalNotification
     
     var sut: LocalNotificationDispatcher!
     var conversation1: ZMConversation!
