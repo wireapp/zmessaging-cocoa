@@ -55,18 +55,26 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     /// The default value of this property is `false`
     public var authenticateAfterReboot: Bool
     
+    /// The `failedPasswordThresholdBeforeWipe` configures the limit of failed password attempts before
+    /// which the session manager will delete account data.
+    ///
+    /// The default value of this property is `nil`, i.e. threshold is ignored
+    public var failedPasswordThresholdBeforeWipe: Int?
+    
     public init(wipeOnCookieInvalid: Bool = false,
                 blacklistDownloadInterval: TimeInterval = 6 * 60 * 60,
                 blockOnJailbreakOrRoot: Bool = false,
                 wipeOnJailbreakOrRoot: Bool = false,
                 messageRetentionInterval: TimeInterval? = nil,
-                authenticateAfterReboot: Bool = false) {
+                authenticateAfterReboot: Bool = false,
+                failedPasswordThresholdBeforeWipe: Int? = nil) {
         self.wipeOnCookieInvalid = wipeOnCookieInvalid
         self.blacklistDownloadInterval = blacklistDownloadInterval
         self.blockOnJailbreakOrRoot = blockOnJailbreakOrRoot
         self.wipeOnJailbreakOrRoot = wipeOnJailbreakOrRoot
         self.messageRetentionInterval = messageRetentionInterval
         self.authenticateAfterReboot = authenticateAfterReboot
+        self.failedPasswordThresholdBeforeWipe = failedPasswordThresholdBeforeWipe
     }
     
     public func copy(with zone: NSZone? = nil) -> Any {
@@ -75,7 +83,8 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                                                blockOnJailbreakOrRoot: blockOnJailbreakOrRoot,
                                                wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot,
                                                messageRetentionInterval: messageRetentionInterval,
-                                               authenticateAfterReboot: authenticateAfterReboot)
+                                               authenticateAfterReboot: authenticateAfterReboot,
+                                               failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe)
         
         return copy
     }

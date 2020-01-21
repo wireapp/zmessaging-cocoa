@@ -89,7 +89,9 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
         return false
     }
     
-    
+    func passwordVerificationDidFail(with failCount: Int) {
+        // no-op
+    }
 }
 
 class MockCallKitProvider: CXProvider {
