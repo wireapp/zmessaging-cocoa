@@ -28,7 +28,7 @@ extension UserChangeInfo {
     ///
     @objc(addObserver:forUser:inUserSession:)
     public static func add(observer: ZMUserObserver, for user: UserType, in userSession: ZMUserSession) -> NSObjectProtocol? {
-        return add(observer: observer, for: user, managedObjectContext: userSession.managedObjectContext)
+        return add(observer: observer, for: user, in: userSession.managedObjectContext)
     }
 
     // MARK: - Registering UserObservers
