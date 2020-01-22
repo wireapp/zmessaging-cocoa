@@ -37,7 +37,7 @@ extension UserChangeInfo {
     ///
     @objc(addUserObserver:inUserSession:)
     public static func add(userObserver observer: ZMUserObserver, in userSession: ZMUserSession) -> NSObjectProtocol {
-        return add(userObserver: observer, for: nil, managedObjectContext: userSession.managedObjectContext)
+        return add(userObserver: observer, in: userSession.managedObjectContext)
     }
 
     // MARK: - Registering SearchUserObservers
@@ -47,7 +47,7 @@ extension UserChangeInfo {
     ///
     @objc(addSearchUserObserver:inUserSession:)
     public static func add(searchUserObserver observer: ZMUserObserver, in userSession: ZMUserSession) -> NSObjectProtocol {
-        return add(searchUserObserver: observer, for: nil, managedObjectContext: userSession.managedObjectContext)
+        return add(searchUserObserver: observer, in: userSession.managedObjectContext)
     }
 
 }
