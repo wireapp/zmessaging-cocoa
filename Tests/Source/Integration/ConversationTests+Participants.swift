@@ -32,7 +32,7 @@ class ConversationTests_Participants: ConversationTestsBase {
         observer?.clearNotifications()
         
         // when
-        conversation.addParticipants(Set(arrayLiteral: connectedUser), userSession: userSession!, completion: { (_) in })
+        conversation.addParticipants([connectedUser], userSession: userSession!, completion: { (_) in })
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then - Participants changes and messages changes (System message for the added user)
@@ -70,7 +70,7 @@ class ConversationTests_Participants: ConversationTestsBase {
         XCTAssertFalse(conversation.localParticipants.contains(connectedUser))
         
         // when
-        conversation.addParticipants(Set(arrayLiteral: connectedUser), userSession: userSession!, completion: { (_) in })
+        conversation.addParticipants([connectedUser], userSession: userSession!, completion: { (_) in })
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then

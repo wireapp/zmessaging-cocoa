@@ -22,13 +22,16 @@ extension ZMConversation {
 
     private typealias Factory = ConversationRoleRequestFactory
 
-    public func updateRole(of participant: ZMUser,
+    public func updateRole(of participant: UserType,
                            to newRole: Role,
                            session: ZMUserSession,
                            completion: @escaping (VoidResult) -> Void) {
 
+        guard let user = participant as? ZMUser else {
+            return
+        }
         let maybeRequest = Factory.requestForUpdatingParticipantRole(newRole,
-                                                                     for: participant,
+                                                                     for: user,
                                                                      in: self,
                                                                      completion: completion)
         if let request = maybeRequest {
