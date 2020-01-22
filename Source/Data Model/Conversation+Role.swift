@@ -18,6 +18,10 @@
 
 import Foundation
 
+private enum RequestError: Int, Error {
+    case unknown = 0
+}
+
 extension ZMConversation {
 
     private typealias Factory = ConversationRoleRequestFactory
@@ -28,6 +32,7 @@ extension ZMConversation {
                            completion: @escaping (VoidResult) -> Void) {
 
         guard let user = participant as? ZMUser else {
+            completion(.failure(RequestError.unknown))
             return
         }
         let maybeRequest = Factory.requestForUpdatingParticipantRole(newRole,
@@ -41,10 +46,6 @@ extension ZMConversation {
 }
 
 struct ConversationRoleRequestFactory {
-
-    enum RequestError: Int, Error {
-        case unknown = 0
-    }
 
     static func requestForUpdatingParticipantRole(_ role: Role,
                                                   for participant: ZMUser,
