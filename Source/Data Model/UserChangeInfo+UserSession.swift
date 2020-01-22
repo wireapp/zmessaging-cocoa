@@ -26,8 +26,8 @@ extension UserChangeInfo {
     /// Adds an observer for a user conforming to UserType. You must hold on to the token until you want to stop
     /// observing.
     ///
-    @objc(addObserver:forUser:userSession:)
-    public static func add(observer: ZMUserObserver, for user: UserType, userSession: ZMUserSession) -> NSObjectProtocol? {
+    @objc(addObserver:forUser:inUserSession:)
+    public static func add(observer: ZMUserObserver, for user: UserType, in userSession: ZMUserSession) -> NSObjectProtocol? {
         return add(observer: observer, for: user, managedObjectContext: userSession.managedObjectContext)
     }
 
