@@ -18,13 +18,13 @@
 
 import Foundation
 
-@objcMembers class UserExpirationObserver: NSObject {
+@objcMembers public class UserExpirationObserver: NSObject {
 
     internal private(set) var expiringUsers: Set<ZMUser> = Set()
     private var timerForUser: [ZMTimer: ZMUser] = [:]
     private let managedObjectContext: NSManagedObjectContext
 
-    init(managedObjectContext: NSManagedObjectContext) {
+    public init(managedObjectContext: NSManagedObjectContext) {
         self.managedObjectContext = managedObjectContext
     }
 
@@ -32,7 +32,7 @@ import Foundation
         timerForUser.forEach { $0.key.cancel() }
     }
 
-    func check(usersIn conversation: ZMConversation) {
+    public func check(usersIn conversation: ZMConversation) {
         check(users: conversation.localParticipants)
     }
     
@@ -60,7 +60,7 @@ import Foundation
 
 extension UserExpirationObserver: ZMTimerClient {
 
-    func timerDidFire(_ timer: ZMTimer) {
+    public func timerDidFire(_ timer: ZMTimer) {
         managedObjectContext.performGroupedBlock {
             guard let user = self.timerForUser[timer] else { fatal("Unknown timer: \(timer)") }
             user.needsToBeUpdatedFromBackend = true
