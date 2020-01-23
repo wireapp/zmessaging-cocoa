@@ -123,7 +123,7 @@ public class CompanyLoginRequester {
     /**
      * Validated a company login token.
      *
-     * This method will verify a compy login token with the backend.
+     * This method will verify a company login token with the backend.
      * The requester provided by the `enqueueProvider` passed to `init` will
      * be used to perform the request.
      *
