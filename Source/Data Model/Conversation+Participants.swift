@@ -53,8 +53,8 @@ extension ZMConversation {
     
     public func addParticipants(_ participants: [UserType], userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
         
-        let users = participants.compactMap { $0 as? ZMUser }
-        guard conversationType == .group,
+        guard let users = participants as? [ZMUser],
+              conversationType == .group,
               !users.isEmpty,
               !users.contains(ZMUser.selfUser(inUserSession: userSession))
         else { return completion(.failure(ConversationAddParticipantsError.invalidOperation)) }
