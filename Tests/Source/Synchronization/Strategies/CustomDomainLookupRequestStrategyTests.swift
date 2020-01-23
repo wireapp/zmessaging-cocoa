@@ -99,8 +99,14 @@ class CustomDomainLookupRequestStrategyTests: MessagingTest {
     
     func testThat404ResponseWithNoMatchingLabelIsError() {
         testThat(statusCode: 404,
-                 isProcessedAs: .error(httpCode: 404, label: nil),
+                 isProcessedAs: .error(httpCode: 404, label: "foobar"),
                  payload: ["label": "foobar"] as ZMTransportData)
+    }
+    
+    func testThat404ResponseWithMatchingLabelIsNotFound() {
+        testThat(statusCode: 404,
+                 isProcessedAs: .notFound,
+                 payload: ["label": "custom-instance-not-found"] as ZMTransportData)
     }
     
     func testThat500ResponseIsError() {
@@ -139,8 +145,13 @@ class CustomDomainLookupRequestStrategyTests: MessagingTest {
     }
     
     func testThatNotificationObserverReactsWhenObjectDoesNotMatch() {
+        
+        // given
+        let moc = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        moc.persistentStoreCoordinator = NSPersistentStoreCoordinator()
+        
         //when
-        CustomDomainLookupRequestStrategy.triggerDomainLookup(domain: "", completion: {_ in}, context: uiMOC)
+        CustomDomainLookupRequestStrategy.triggerDomainLookup(domain: "", completion: {_ in}, context: moc)
         //then
         XCTAssertFalse(didCallNewRequestAvailable)
     }

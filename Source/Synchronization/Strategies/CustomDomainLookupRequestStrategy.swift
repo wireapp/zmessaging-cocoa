@@ -107,8 +107,7 @@ extension CustomDomainLookupRequestStrategy: ZMSingleRequestTranscoder {
         switch response.httpStatus {
         case 200..<300: // OK
             guard
-                let data = response.rawData,
-                let info = try? JSONDecoder().decode(CustomDomainInformation.self, from: data) else {
+                let info = response.payload.flatMap({ CustomDomainInformation(data: $0) }) else {
                 result = .parsingError
                 break
             }
@@ -123,11 +122,22 @@ extension CustomDomainLookupRequestStrategy: ZMSingleRequestTranscoder {
     }
 }
 
-public struct CustomDomainInformation: Codable, Equatable {
+public struct CustomDomainInformation: Equatable {
     let configJson: URL
     
-    enum CodingKeys: String, CodingKey {
-        case configJson = "config_json"
+    init?(data: ZMTransportData) {
+        guard let configURL = (data as? [String: Any])
+            .flatMap({ $0["config_json"] as? String })
+            .flatMap({ URL(string: $0 )}),
+            configURL.scheme != nil
+        else {
+                return nil
+        }
+        self.configJson = configURL
+    }
+    
+    init(configJson: URL) {
+        self.configJson = configJson
     }
 }
 
