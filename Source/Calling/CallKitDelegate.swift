@@ -479,7 +479,7 @@ extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMisse
         }
     }
     
-    public func callCenterMissedCall(conversation: ZMConversation, caller: ZMUser, timestamp: Date, video: Bool) {
+    public func callCenterMissedCall(conversation: ZMConversation, caller: UserType, timestamp: Date, video: Bool) {
         // Since we missed the call we will not have an assigned callUUID and can just create a random one
         provider.reportCall(with: UUID(), endedAt: timestamp, reason: .unanswered)
     }

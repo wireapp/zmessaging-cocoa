@@ -139,8 +139,8 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
         }
     }
     
-    public func callCenterMissedCall(conversation: ZMConversation, caller: ZMUser, timestamp: Date, video: Bool) {
-        let callerId = caller.remoteIdentifier
+    public func callCenterMissedCall(conversation: ZMConversation, caller: UserType, timestamp: Date, video: Bool) {
+        let callerId = (caller as? ZMUser)?.remoteIdentifier
         let conversationId = conversation.remoteIdentifier
         
         syncManagedObjectContext.performGroupedBlock {

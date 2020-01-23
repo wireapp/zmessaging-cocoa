@@ -114,7 +114,7 @@ public struct WireCallCenterCallStateNotification : SelfPostingNotification {
 // MARK:- Missed call observer
 
 public protocol WireCallCenterMissedCallObserver : class {
-    func callCenterMissedCall(conversation: ZMConversation, caller: ZMUser, timestamp: Date, video: Bool)
+    func callCenterMissedCall(conversation: ZMConversation, caller: UserType, timestamp: Date, video: Bool)
 }
 
 public struct WireCallCenterMissedCallNotification : SelfPostingNotification {
