@@ -136,7 +136,7 @@
     XCTAssertEqualObjects(selfUser.phoneNumber, @"");
     
     id userObserver = [OCMockObject mockForProtocol:@protocol(ZMUserObserver)];
-    id userObserverToken = [UserChangeInfo addObserver:userObserver forUser:selfUser userSession:self.userSession];
+    id userObserverToken = [UserChangeInfo addObserver:userObserver forUser:selfUser inUserSession:self.userSession];
     
     id editableUserObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
     id editableUserObserverToken = [self.userSession.userProfile addObserver:editableUserObserver];
@@ -400,7 +400,7 @@
     [[editUserObserver expect] didSendVerificationEmail];
     
     id userObserver = [OCMockObject mockForProtocol:@protocol(ZMUserObserver)];
-    id userObserverToken = [UserChangeInfo addObserver:userObserver forUser:selfUser userSession:self.userSession];
+    id userObserverToken = [UserChangeInfo addObserver:userObserver forUser:selfUser inUserSession:self.userSession];
     [(id<ZMUserObserver>)[userObserver expect] userDidChange:OCMOCK_ANY]; // <- DONE: when receiving this, I know that the email was set
     
     // when
@@ -471,7 +471,7 @@
     id editingObserver = [OCMockObject mockForProtocol:@protocol(UserProfileUpdateObserver)];
     id editingToken = [self.userSession.userProfile addObserver:editingObserver];
     id userObserver = [OCMockObject mockForProtocol:@protocol(ZMUserObserver)];
-    id userObserverToken = [UserChangeInfo addObserver:userObserver forUser:selfUser userSession:self.userSession];
+    id userObserverToken = [UserChangeInfo addObserver:userObserver forUser:selfUser inUserSession:self.userSession];
     [(id<ZMUserObserver>)[userObserver expect] userDidChange:OCMOCK_ANY]; // when receiving this, I know that the email was set
     
     // expect

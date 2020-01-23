@@ -147,7 +147,7 @@ ZM_EMPTY_ASSERTING_INIT()
     self = [super init];
     if(self) {
         self.user = user;
-        self.token = [UserChangeInfo addObserver:self forUser:user managedObjectContext:managedObjectContext];
+        self.token = [UserChangeInfo addObserver:self forUser:user inManagedObjectContext:managedObjectContext];
     }
     return self;
 }

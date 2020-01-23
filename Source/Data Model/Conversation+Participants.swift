@@ -51,14 +51,15 @@ import Foundation
 
 extension ZMConversation {
     
-    public func addParticipants(_ participants: Set<ZMUser>, userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
+    public func addParticipants(_ participants: [UserType], userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
         
-        guard conversationType == .group,
-              !participants.isEmpty,
-              !participants.contains(ZMUser.selfUser(inUserSession: userSession))
+        guard let users = participants as? [ZMUser],
+              conversationType == .group,
+              !users.isEmpty,
+              !users.contains(ZMUser.selfUser(inUserSession: userSession))
         else { return completion(.failure(ConversationAddParticipantsError.invalidOperation)) }
         
-        let request = ConversationParticipantRequestFactory.requestForAddingParticipants(participants, conversation: self)
+        let request = ConversationParticipantRequestFactory.requestForAddingParticipants(Set(users), conversation: self)
         
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
             if response.httpStatus == 200 {
@@ -83,12 +84,15 @@ extension ZMConversation {
         userSession.transportSession.enqueueOneTime(request)
     }
     
-    public func removeParticipant(_ participant: ZMUser, userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
+    public func removeParticipant(_ participant: UserType, userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
         
-        guard conversationType == .group, let conversationId = remoteIdentifier  else { return completion(.failure(ConversationRemoveParticipantError.invalidOperation)) }
+        guard conversationType == .group,
+            let conversationId = remoteIdentifier,
+            let user = participant as? ZMUser
+        else { return completion(.failure(ConversationRemoveParticipantError.invalidOperation)) }
         
         let isRemovingSelfUser = participant.isSelfUser
-        let request = ConversationParticipantRequestFactory.requestForRemovingParticipant(participant, conversation: self)
+        let request = ConversationParticipantRequestFactory.requestForRemovingParticipant(user, conversation: self)
         
         request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
             if response.httpStatus == 200 {
@@ -142,6 +146,5 @@ internal struct ConversationParticipantRequestFactory {
         
         return ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
     }
-    
     
 }
