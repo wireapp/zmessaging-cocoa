@@ -20,9 +20,9 @@ import Foundation
 import WireDataModel
 import WireTransport
 
-public enum LegalHoldActivationError: Error, Equatable {
-    case userNotInTeam(ZMUser)
-    case invalidUser(ZMUser)
+public enum LegalHoldActivationError: Error {
+    case userNotInTeam(UserType)
+    case invalidUser(UserType)
     case invalidResponse(Int, String?)
     case invalidPassword
     case couldNotEstablishSession
