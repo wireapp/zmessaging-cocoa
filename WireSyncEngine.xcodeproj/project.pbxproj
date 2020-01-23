@@ -85,6 +85,8 @@
 		166264742166093800300F45 /* CallEventStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166264732166093800300F45 /* CallEventStatus.swift */; };
 		1662648221661C9F00300F45 /* ZMOperatonLoop+Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1662648121661C9F00300F45 /* ZMOperatonLoop+Background.swift */; };
 		166264932166517A00300F45 /* CallEventStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166264922166517A00300F45 /* CallEventStatusTests.swift */; };
+		1662B0F723D9B29C00B8C7C5 /* UnauthenticatedSession+DomainLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1662B0F623D9B29C00B8C7C5 /* UnauthenticatedSession+DomainLookup.swift */; };
+		1662B0F923D9CE8F00B8C7C5 /* UnauthenticatedSessionTests+DomainLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1662B0F823D9CE8F00B8C7C5 /* UnauthenticatedSessionTests+DomainLookup.swift */; };
 		166A8BF31E015F3B00F5EEEA /* WireCallCenterV3Factory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166A8BF21E015F3B00F5EEEA /* WireCallCenterV3Factory.swift */; };
 		166A8BF91E02C7D500F5EEEA /* ZMHotFix+PendingChanges.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166A8BF81E02C7D500F5EEEA /* ZMHotFix+PendingChanges.swift */; };
 		166D18A4230EBFFA001288CD /* MediaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166D18A3230EBFFA001288CD /* MediaManager.swift */; };
@@ -687,6 +689,8 @@
 		166264732166093800300F45 /* CallEventStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallEventStatus.swift; sourceTree = "<group>"; };
 		1662648121661C9F00300F45 /* ZMOperatonLoop+Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMOperatonLoop+Background.swift"; sourceTree = "<group>"; };
 		166264922166517A00300F45 /* CallEventStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallEventStatusTests.swift; sourceTree = "<group>"; };
+		1662B0F623D9B29C00B8C7C5 /* UnauthenticatedSession+DomainLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UnauthenticatedSession+DomainLookup.swift"; sourceTree = "<group>"; };
+		1662B0F823D9CE8F00B8C7C5 /* UnauthenticatedSessionTests+DomainLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UnauthenticatedSessionTests+DomainLookup.swift"; sourceTree = "<group>"; };
 		166A8BF21E015F3B00F5EEEA /* WireCallCenterV3Factory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WireCallCenterV3Factory.swift; sourceTree = "<group>"; };
 		166A8BF81E02C7D500F5EEEA /* ZMHotFix+PendingChanges.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMHotFix+PendingChanges.swift"; sourceTree = "<group>"; };
 		166D18A3230EBFFA001288CD /* MediaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaManager.swift; sourceTree = "<group>"; };
@@ -1688,6 +1692,7 @@
 				160C31491E82AC170012E4BC /* OperationStatusTests.swift */,
 				16A702CF1E92998100B8410D /* ApplicationStatusDirectoryTests.swift */,
 				8766853A1F2A1A860031081B /* UnauthenticatedSessionTests.swift */,
+				1662B0F823D9CE8F00B8C7C5 /* UnauthenticatedSessionTests+DomainLookup.swift */,
 				16085B341F719E6D000B9F22 /* NetworkStateRecorder.swift */,
 				168CF42E2007BCD9009FCB89 /* TeamInvitationStatusTests.swift */,
 				D55272E92062732100F542BE /* AssetDeletionStatusTests.swift */,
@@ -2289,6 +2294,7 @@
 				F19F1D1B1EFBC2F000275E27 /* ZMAuthenticationStatus.m */,
 				54FF64281F73D00C00787EF2 /* NSManagedObjectContext+AuthenticationStatus.swift */,
 				F19F1D131EFBC18E00275E27 /* UnauthenticatedSession.swift */,
+				1662B0F623D9B29C00B8C7C5 /* UnauthenticatedSession+DomainLookup.swift */,
 				F1A94BD11F010287003083D9 /* UnauthenticatedSession+Login.swift */,
 				F19F1D321EFBE3FE00275E27 /* UnauthenticatedOperationLoop.swift */,
 			);
@@ -2851,6 +2857,7 @@
 				54877C9619922C0B0097FB58 /* UserProfileTests.m in Sources */,
 				D59F3A12206929AF0023474F /* SessionManagerTests+Backup.swift in Sources */,
 				54DFB8F01B30649000F1C736 /* GiphyTests.m in Sources */,
+				1662B0F923D9CE8F00B8C7C5 /* UnauthenticatedSessionTests+DomainLookup.swift in Sources */,
 				164B8C211E254AD00060AB26 /* WireCallCenterV3Mock.swift in Sources */,
 				F170AF211E78013A0033DC33 /* UserImageAssetUpdateStrategyTests.swift in Sources */,
 				F95ECF511B94BD05009F91BA /* ZMHotFixTests.m in Sources */,
@@ -2901,6 +2908,7 @@
 				549815DC1A432BC700A7CE2E /* NSError+ZMUserSession.m in Sources */,
 				EEEA75FB1F8A6142006D1070 /* ZMLocalNotification+Events.swift in Sources */,
 				87508EA01D08264000162483 /* ZMSound.swift in Sources */,
+				1662B0F723D9B29C00B8C7C5 /* UnauthenticatedSession+DomainLookup.swift in Sources */,
 				5E9D326F2109C1740032FB06 /* CompanyLoginErrorCode.swift in Sources */,
 				F95706541DE5D1CC0087442C /* SearchUserImageStrategy.swift in Sources */,
 				A9FAEACC23D85E1A00023793 /* CustomDomainLookupRequestStrategy.swift in Sources */,
