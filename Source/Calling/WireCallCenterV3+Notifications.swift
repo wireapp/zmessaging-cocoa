@@ -97,7 +97,7 @@ public protocol WireCallCenterCallStateObserver : class {
      - parameter caller: user which initiated the call
      - parameter timestamp: when the call state change occured
      */
-    func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?)
+    func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: UserType, timestamp: Date?, previousCallState: CallState?)
 }
 
 public struct WireCallCenterCallStateNotification : SelfPostingNotification {
