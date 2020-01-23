@@ -103,9 +103,9 @@ public final class UnauthenticatedSessionTests_DomainLookup: ZMTBaseTest {
                   payload: payload as ZMTransportData)
     }
     
-    func testThat200ResponseWithMalformdURLIsProcessedAsValid() {
+    func testThat200ResponseWithMalformdURLGeneratesParseError() {
         checkThat(statusCode: 200,
-                  isProcessedAs: .success(DomainInfo(configurationURL: URL(string: "22")!)),
+                  isProcessedAs: .failure(DomainLookupError.malformedData),
                   payload: ["config_json": "22"] as ZMTransportData)
     }
 

@@ -41,7 +41,13 @@ public struct DomainInfo: Codable, Equatable {
         let decoder = JSONDecoder()
         
         do {
-            self = try decoder.decode(DomainInfo.self, from: data)
+            let domainInfo = try decoder.decode(DomainInfo.self, from: data)
+            
+            if domainInfo.configurationURL.scheme != nil {
+                self = domainInfo
+            } else {
+                return nil
+            }
         } catch {
             return nil
         }
