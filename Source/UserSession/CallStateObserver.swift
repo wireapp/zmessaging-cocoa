@@ -60,9 +60,8 @@ public final class CallStateObserver : NSObject {
 
 extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver  {
     
-    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?) {
-        
-        let callerId = caller.remoteIdentifier
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: UserType, timestamp: Date?, previousCallState: CallState?) {
+        let callerId = (caller as? ZMUser)?.remoteIdentifier
         let conversationId = conversation.remoteIdentifier
         
         syncManagedObjectContext.performGroupedBlock {
