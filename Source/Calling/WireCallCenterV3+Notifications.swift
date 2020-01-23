@@ -18,23 +18,6 @@
 
 import Foundation
 
-@objc
-public enum ReceivedVideoState : UInt {
-    /// Sender is not sending video
-    case stopped
-    /// Sender is sending video
-    case started
-    /// Sender is sending video but currently has a bad connection
-    case badConnection
-}
-
-@objc
-public protocol ReceivedVideoObserver : class {
-    
-    @objc(callCenterDidChangeReceivedVideoState:user:)
-    func callCenterDidChange(receivedVideoState: ReceivedVideoState, user: ZMUser)
-    
-}
 
 protocol SelfPostingNotification {
     static var notificationName : Notification.Name { get }
