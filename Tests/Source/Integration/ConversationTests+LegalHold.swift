@@ -89,7 +89,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
-        groupConversation?.addParticipants(Set(arrayLiteral: legalHoldUser), userSession: userSession!, completion: { _ in })
+        groupConversation?.addParticipants([legalHoldUser], userSession: userSession!, completion: { _ in })
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -111,7 +111,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
         legalHoldUser.fetchUserClients()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        groupConversation?.addParticipants(Set(arrayLiteral: legalHoldUser), userSession: userSession!, completion: { _ in })
+        groupConversation?.addParticipants([legalHoldUser], userSession: userSession!, completion: { _ in })
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(groupConversation?.legalHoldStatus, .pendingApproval)
         

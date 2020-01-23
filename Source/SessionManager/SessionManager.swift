@@ -96,6 +96,7 @@ public protocol SessionManagerType : class {
     /// Needs to be called before we try to register another device because API requires password
     func update(credentials: ZMCredentials) -> Bool
     
+    func passwordVerificationDidFail(with failCount: Int)
 }
 
 @objc
@@ -466,7 +467,10 @@ public protocol ForegroundNotificationResponder: class {
             }
         }
         
-        guard !logoutAfterRebootIfNeeded() else { return }
+        guard !shouldPerformPostRebootLogout() else {
+            performPostRebootLogout()
+            return
+        }
         
         loadSession(for: account) { [weak self] session in
             guard let `self` = self, let session = session else { return }
@@ -647,7 +651,7 @@ public protocol ForegroundNotificationResponder: class {
         
         let selfUser = ZMUser.selfUser(inUserSession: session)
         let teamObserver = TeamChangeInfo.add(observer: self, for: nil, managedObjectContext: session.managedObjectContext)
-        let selfObserver = UserChangeInfo.add(observer: self, for: selfUser, managedObjectContext: session.managedObjectContext)
+        let selfObserver = UserChangeInfo.add(observer: self, for: selfUser, in: session.managedObjectContext)
         let conversationListObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.conversations(inUserSession: session), userSession: session)
         let connectionRequestObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.pendingConnectionConversations(inUserSession: session), userSession: session)
         let unreadCountObserver = NotificationInContext.addObserver(name: .AccountUnreadCountDidChangeNotification,
@@ -828,31 +832,39 @@ public protocol ForegroundNotificationResponder: class {
         }
     }
     
-    @discardableResult
-    internal func logoutAfterRebootIfNeeded() -> Bool {
-        guard configuration.authenticateAfterReboot, let systemBootTime = ProcessInfo.processInfo.bootTime() else {
-            return false
-        }
-        
-        var didLogoutCurrentSession = false
-        
-        if let previousSystemBootTime = SessionManager.previousSystemBootTime, abs(systemBootTime.timeIntervalSince(previousSystemBootTime)) > 1.0  {
-            log.debug("Logout caused by device reboot. Previous boot time: \(previousSystemBootTime). Current boot time: \(systemBootTime)")
-            let error = NSError(code: .needsAuthenticationAfterReboot, userInfo: accountManager.selectedAccount?.loginCredentials?.dictionaryRepresentation)
-            self.logoutCurrentSession(deleteCookie: true, error: error)
-            didLogoutCurrentSession = true
-        }
-        
-        return didLogoutCurrentSession
+    func shouldPerformPostRebootLogout() -> Bool {
+        guard configuration.authenticateAfterReboot,
+            accountManager.selectedAccount != nil,
+            let systemBootTime = ProcessInfo.processInfo.bootTime(),
+            let previousSystemBootTime = SessionManager.previousSystemBootTime,
+            abs(systemBootTime.timeIntervalSince(previousSystemBootTime)) > 1.0
+        else { return false }
+
+        log.debug("Will logout due to device reboot. Previous boot time: \(previousSystemBootTime). Current boot time: \(systemBootTime)")
+        return true
     }
     
-    internal func updateSystemBootTimeIfNeeded() {
+    func performPostRebootLogout() {
+        let error = NSError(code: .needsAuthenticationAfterReboot, userInfo: accountManager.selectedAccount?.loginCredentials?.dictionaryRepresentation)
+        self.logoutCurrentSession(deleteCookie: true, error: error)
+        log.debug("Logout caused by device reboot.")
+    }
+    
+    func updateSystemBootTimeIfNeeded() {
         guard configuration.authenticateAfterReboot, let bootTime = ProcessInfo.processInfo.bootTime() else {
             return
         }
         
         SessionManager.previousSystemBootTime = bootTime
         log.debug("Updated system boot time: \(bootTime)")
+    }
+    
+    public func passwordVerificationDidFail(with failCount: Int) {
+        guard let count = configuration.failedPasswordThresholdBeforeWipe,
+            failCount >= count, let account = accountManager.selectedAccount else {
+                return
+        }
+        delete(account: account, reason: .failedPasswordLimitReached)
     }
 }
 

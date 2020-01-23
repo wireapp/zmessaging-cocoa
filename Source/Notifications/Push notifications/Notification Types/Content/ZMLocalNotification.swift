@@ -16,18 +16,11 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import UIKit
-import UserNotifications
-import WireSystem
-import WireUtilities
-import WireTransport
-import WireDataModel
-
 
 /// Defines the various types of local notifications, some of which
 /// have associated subtypes.
 ///
-public enum LocalNotificationType {
+enum LocalNotificationType {
     case event(LocalNotificationEventType)
     case calling(CallState)
     case message(LocalNotificationContentType)
@@ -52,18 +45,18 @@ protocol NotificationBuilder {
 /// various notification types (message, calling, etc.) and includes
 /// information regarding the conversation, sender, and team name.
 ///
-open class ZMLocalNotification: NSObject {
+class ZMLocalNotification: NSObject {
     
     /// The unique identifier for this notification. Use it to later update
     /// or remove pending or scheduled notification requests.
-    public let id: UUID
+    let id: UUID
     
-    public let type: LocalNotificationType
-    public var title: String?
-    public var body: String
-    public var category: String
-    public var sound: NotificationSound
-    public var userInfo: NotificationUserInfo?
+    let type: LocalNotificationType
+    var title: String?
+    var body: String
+    var category: String
+    var sound: NotificationSound
+    var userInfo: NotificationUserInfo?
 
     init?(conversation: ZMConversation?, builder: NotificationBuilder) {
         guard builder.shouldCreateNotification() else { return nil }
@@ -80,7 +73,7 @@ open class ZMLocalNotification: NSObject {
     }
 
     /// Returns a configured concrete `UNNotificationContent` object.
-    public lazy var content: UNNotificationContent = {
+    lazy var content: UNNotificationContent = {
         let content = UNMutableNotificationContent()
         content.body = self.body
         content.categoryIdentifier = self.category
@@ -106,7 +99,7 @@ open class ZMLocalNotification: NSObject {
     }()
     
     /// Returns a configured concrete `UNNotificationRequest`.
-    public lazy var request: UNNotificationRequest = {
+    lazy var request: UNNotificationRequest = {
         return UNNotificationRequest(identifier: id.uuidString, content: content, trigger: nil)
     }()
 
@@ -116,13 +109,13 @@ open class ZMLocalNotification: NSObject {
 
 extension ZMLocalNotification {
 
-    public var selfUserID: UUID? { return userInfo?.selfUserID }
-    public var senderID: UUID? { return userInfo?.senderID }
-    public var messageNonce: UUID? { return userInfo?.messageNonce }
-    public var conversationID: UUID? { return userInfo?.conversationID }
+    var selfUserID: UUID? { return userInfo?.selfUserID }
+    var senderID: UUID? { return userInfo?.senderID }
+    var messageNonce: UUID? { return userInfo?.messageNonce }
+    var conversationID: UUID? { return userInfo?.conversationID }
 
     /// Returns true if it is a calling notification, else false.
-    public var isCallingNotification: Bool {
+    var isCallingNotification: Bool {
         switch type {
         case .calling: return true
         default: return false
@@ -130,7 +123,7 @@ extension ZMLocalNotification {
     }
     
     /// Returns true if it is a ephemeral notification, else false.
-    public var isEphemeral: Bool {
+    var isEphemeral: Bool {
         guard case .message(.ephemeral) = type else { return false }
         return true
     }
@@ -141,11 +134,11 @@ extension ZMLocalNotification {
 
 extension ZMLocalNotification {
 
-    public func conversation(in moc: NSManagedObjectContext) -> ZMConversation? {
+    func conversation(in moc: NSManagedObjectContext) -> ZMConversation? {
         return userInfo?.conversation(in: moc)
     }
     
-    public func sender(in moc: NSManagedObjectContext) -> ZMUser? {
+    func sender(in moc: NSManagedObjectContext) -> ZMUser? {
         return userInfo?.sender(in: moc)
     }
 }

@@ -42,6 +42,9 @@ public final class MockKVStore : NSObject, ZMSynchonizableKeyValueStore {
 
 class ZMLocalNotificationSetTests : MessagingTest {
 
+    typealias ZMLocalNotification = WireSyncEngine.ZMLocalNotification
+    typealias ZMLocalNotificationSet = WireSyncEngine.ZMLocalNotificationSet
+
     var sut : ZMLocalNotificationSet!
     var notificationCenter: UserNotificationCenterMock!
     var keyValueStore : MockKVStore!

@@ -164,7 +164,7 @@ extension NotificationUserInfo {
      * - returns: The conversation, if found.
      */
 
-    public func conversation(in managedObjectContext: NSManagedObjectContext) -> ZMConversation? {
+    func conversation(in managedObjectContext: NSManagedObjectContext) -> ZMConversation? {
         guard let remoteID = conversationID else {
             return nil
         }
@@ -180,7 +180,7 @@ extension NotificationUserInfo {
      * - returns: The message, if found.
      */
 
-    public func message(in conversation: ZMConversation, managedObjectContext: NSManagedObjectContext) -> ZMMessage? {
+    func message(in conversation: ZMConversation, managedObjectContext: NSManagedObjectContext) -> ZMMessage? {
         guard let nonce = messageNonce else {
             return nil
         }
@@ -195,7 +195,7 @@ extension NotificationUserInfo {
      * - returns: The sender of the event, if found.
      */
 
-    public func sender(in managedObjectContext: NSManagedObjectContext) -> ZMUser? {
+    func sender(in managedObjectContext: NSManagedObjectContext) -> ZMUser? {
         guard let senderID = senderID else {
             return nil
         }
@@ -209,13 +209,13 @@ extension NotificationUserInfo {
 
 extension NotificationUserInfo {
 
-    public func setupUserInfo(for conversation: ZMConversation, sender: ZMUser) {
+    func setupUserInfo(for conversation: ZMConversation, sender: ZMUser) {
         addSelfUserInfo(using: conversation)
         self.conversationID = conversation.remoteIdentifier
         self.senderID = sender.remoteIdentifier
     }
 
-    public func setupUserInfo(for conversation: ZMConversation, event: ZMUpdateEvent) {
+    func setupUserInfo(for conversation: ZMConversation, event: ZMUpdateEvent) {
         addSelfUserInfo(using: conversation)
         self.conversationID = conversation.remoteIdentifier
         self.senderID = event.senderUUID()
@@ -223,7 +223,7 @@ extension NotificationUserInfo {
         self.eventTime = event.timeStamp()
     }
 
-    public func setupUserInfo(for message: ZMMessage) {
+    func setupUserInfo(for message: ZMMessage) {
         addSelfUserInfo(using: message)
         self.conversationID = message.conversation?.remoteIdentifier
         self.senderID = message.sender?.remoteIdentifier

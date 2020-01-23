@@ -313,15 +313,12 @@ final class SessionManagerTests: IntegrationTest {
     }
     
     func testAuthenticationAfterReboot() {
-        
         //GIVEN
         sut = createManager()
-        sut?.configuration.authenticateAfterReboot = true
 
         //WHEN
         sut?.accountManager.addAndSelect(createAccount())
         XCTAssertEqual(sut?.accountManager.accounts.count, 1)
-        SessionManager.previousSystemBootTime = Date(timeIntervalSince1970: 0)
         
         //THEN
         let logoutExpectation = expectation(description: "Authentication after reboot")
@@ -333,15 +330,13 @@ final class SessionManagerTests: IntegrationTest {
         }
         
         performIgnoringZMLogError {
-            self.sut!.logoutAfterRebootIfNeeded()
+            self.sut!.performPostRebootLogout()
         }
         
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 2))
     }
     
-    
-    func testAuthenticationAfterReboot_DoesntLogoutIfNotRebooted() {
-        
+    func testThatShouldPerformPostRebootLogoutReturnsFalseIfNotRebooted() {
         //GIVEN
         sut = createManager()
         sut?.configuration.authenticateAfterReboot = true
@@ -349,19 +344,14 @@ final class SessionManagerTests: IntegrationTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(sut?.accountManager.accounts.count, 1)
         SessionManager.previousSystemBootTime = ProcessInfo.processInfo.bootTime()
-        
-        // EXPECT
-        delegate.onLogout = { _ in
-            XCTFail("We should not have been logged out")
-        }
-        
-        // WHEN
+
+        //WHEN/THEN
         performIgnoringZMLogError {
-            self.sut!.logoutAfterRebootIfNeeded()
+            XCTAssertFalse(self.sut!.shouldPerformPostRebootLogout())
         }
     }
     
-    func testAuthenticationAfterReboot_DoesntLogoutIfNoPreviousBootTimeExists() {
+    func testThatShouldPerformPostRebootLogoutReturnsFalseIfNoPreviousBootTimeExists() {
         
         //GIVEN
         sut = createManager()
@@ -371,14 +361,9 @@ final class SessionManagerTests: IntegrationTest {
         XCTAssertEqual(sut?.accountManager.accounts.count, 1)
         ZMKeychain.deleteAllKeychainItems(withAccountName: SessionManager.previousSystemBootTimeContainer)
         
-        // EXPECT
-        delegate.onLogout = { _ in
-            XCTFail("We should not have been logged out")
-        }
-        
-        // WHEN
+        //WHEN/THEN
         performIgnoringZMLogError {
-            self.sut!.logoutAfterRebootIfNeeded()
+            XCTAssertFalse(self.sut!.shouldPerformPostRebootLogout())
         }
     }
     
@@ -512,6 +497,48 @@ class SessionManagerTests_AuthenticationFailure: IntegrationTest {
         XCTAssertNil(sessionManager?.backgroundUserSessions[additionalAccount.userIdentifier])
     }
     
+}
+
+class SessionManagerTests_PasswordVerificationFailure_With_DeleteAccountAfterThreshold: IntegrationTest {
+    private var threshold: Int? = 2
+    override func setUp() {
+        super.setUp()
+        createSelfUserAndConversation()
+    }
+    
+    override var sessionManagerConfiguration: SessionManagerConfiguration {
+        return SessionManagerConfiguration(failedPasswordThresholdBeforeWipe: threshold)
+    }
+    
+    func testThatItDeletesAccount_IfLimitIsReached() {
+        // given
+        XCTAssertTrue(login())
+        let account = sessionManager!.accountManager.selectedAccount!
+        
+        // when
+        sessionManager?.passwordVerificationDidFail(with: threshold!)
+        
+        // then
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        
+        XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
+    }
+    
+    func testThatItDoesntDeleteAccount_IfLimitIsNotReached() {
+        // given
+        XCTAssertTrue(login())
+        let account = sessionManager!.accountManager.selectedAccount!
+        
+        // when
+        sessionManager?.passwordVerificationDidFail(with: threshold! - 1)
+        
+        // then
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        
+        XCTAssertTrue(FileManager.default.fileExists(atPath: accountFolder.path))
+    }
 }
 
 class SessionManagerTests_AuthenticationFailure_With_DeleteAccountOnAuthentictionFailure: IntegrationTest {

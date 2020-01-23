@@ -72,7 +72,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let receivedSuccess = expectation(description: "received success")
         
         // when
-        conversation.addParticipants(Set(arrayLiteral: user), userSession: mockUserSession) { result in
+        conversation.addParticipants([user], userSession: mockUserSession) { result in
             switch result {
             case .success:
                 receivedSuccess.fulfill()
@@ -103,7 +103,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.addParticipants(Set(arrayLiteral: selfUser), userSession: mockUserSession) { result in
+        conversation.addParticipants([selfUser], userSession: mockUserSession) { result in
             switch result {
             case .failure(let error):
                 if case ConversationAddParticipantsError.invalidOperation = error {
@@ -130,7 +130,7 @@ class Conversation_ParticipantsTests: MessagingTest {
             let receivedError = expectation(description: "received error")
             
             // when
-            conversation.addParticipants(Set(arrayLiteral: user), userSession: mockUserSession) { result in
+            conversation.addParticipants([user], userSession: mockUserSession) { result in
                 switch result {
                 case .failure(let error):
                     if case ConversationAddParticipantsError.invalidOperation = error {
@@ -163,7 +163,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.addParticipants(Set(arrayLiteral: user), userSession: mockUserSession) { result in
+        conversation.addParticipants([user], userSession: mockUserSession) { result in
             switch result {
             case .failure(let error):
                 if case ConversationAddParticipantsError.invalidOperation = error {
@@ -198,7 +198,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.addParticipants(Set(arrayLiteral: user), userSession: mockUserSession) { result in
+        conversation.addParticipants([user], userSession: mockUserSession) { result in
             switch result {
             case .failure(let error):
                 if case ConversationAddParticipantsError.conversationNotFound = error {
