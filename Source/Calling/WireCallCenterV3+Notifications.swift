@@ -154,7 +154,7 @@ public struct WireCallCenterCallParticipantNotification : SelfPostingNotificatio
 
 @objc
 public protocol VoiceGainObserver : class {
-    func voiceGainDidChange(forParticipant participant: ZMUser, volume: Float)
+    func voiceGainDidChange(forParticipant participant: UserType, volume: Float)
 }
 
 @objcMembers
