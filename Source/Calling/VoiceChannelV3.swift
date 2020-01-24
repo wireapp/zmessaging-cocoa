@@ -79,7 +79,7 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         return callCenter.networkQuality(conversationId: remoteIdentifier)
     }
     
-    public var initiator : ZMUser? {
+    public var initiator: UserType? {
         guard let context = conversation?.managedObjectContext,
               let convId = conversation?.remoteIdentifier,
               let userId = self.callCenter?.initiatorForCall(conversationId: convId)

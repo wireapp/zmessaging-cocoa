@@ -83,10 +83,10 @@ extension ZMUserSession {
 // MARK: - Typing
 private let typingNotificationUsersKey = "typingUsers"
 
-public extension ZMConversation {
+extension ZMConversation {
 
     @objc
-    func addTypingObserver(_ observer: ZMTypingChangeObserver) -> Any {
+    public func addTypingObserver(_ observer: ZMTypingChangeObserver) -> Any {
         return NotificationInContext.addObserver(name: ZMConversation.typingNotificationName,
                                                  context: self.managedObjectContext!.notificationContext,
                                                  object: self)
@@ -95,7 +95,7 @@ public extension ZMConversation {
             guard let `self` = self else { return }
             
             let users = note.userInfo[typingNotificationUsersKey] as? Set<ZMUser> ?? Set()
-            observer?.typingDidChange(conversation: self, typingUsers: users)
+            observer?.typingDidChange(conversation: self, typingUsers: Array(users))
         }
     }
     
@@ -111,7 +111,7 @@ public extension ZMConversation {
 
 @objc public protocol ZMTypingChangeObserver: NSObjectProtocol {
     
-    func typingDidChange(conversation: ZMConversation, typingUsers: Set<ZMUser>)
+    func typingDidChange(conversation: ZMConversation, typingUsers: [UserType])
 }
 
 // MARK: - Connection limit reached

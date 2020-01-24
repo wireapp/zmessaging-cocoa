@@ -21,8 +21,8 @@ import WireDataModel
 import WireTransport
 
 public enum LegalHoldActivationError: Error, Equatable {
-    case userNotInTeam(ZMUser)
-    case invalidUser(ZMUser)
+    case selfUserNotInTeam
+    case invalidSelfUser
     case invalidResponse(Int, String?)
     case invalidPassword
     case couldNotEstablishSession
@@ -58,11 +58,11 @@ extension ZMUserSession {
 
             // 1) Check the state
             guard let teamID = selfUser.team?.remoteIdentifier else {
-                return complete(error: .userNotInTeam(selfUser))
+                return complete(error: .selfUserNotInTeam)
             }
 
             guard let userID = selfUser.remoteIdentifier else {
-                return complete(error: .invalidUser(selfUser))
+                return complete(error: .invalidSelfUser)
             }
 
             // 2) Create the potential LH client

@@ -462,11 +462,10 @@ extension CallKitDelegate : CXProviderDelegate {
 
 extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
     
-    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?) {
-        
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: UserType, timestamp: Date?, previousCallState: CallState?) {
         switch callState {
         case .incoming(video: let video, shouldRing: let shouldRing, degraded: _):
-            if shouldRing {
+            if shouldRing, let caller = caller as? ZMUser {
                 if conversation.mutedMessageTypesIncludingAvailability == .none {
                     reportIncomingCall(from: caller, in: conversation, video: video)
                 }
@@ -480,7 +479,7 @@ extension CallKitDelegate : WireCallCenterCallStateObserver, WireCallCenterMisse
         }
     }
     
-    public func callCenterMissedCall(conversation: ZMConversation, caller: ZMUser, timestamp: Date, video: Bool) {
+    public func callCenterMissedCall(conversation: ZMConversation, caller: UserType, timestamp: Date, video: Bool) {
         // Since we missed the call we will not have an assigned callUUID and can just create a random one
         provider.reportCall(with: UUID(), endedAt: timestamp, reason: .unanswered)
     }
@@ -568,7 +567,7 @@ class CallObserver : WireCallCenterCallStateObserver {
         token = WireCallCenterV3.addCallStateObserver(observer: self, for: conversation, context: conversation.managedObjectContext!)
     }
     
-    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?) {
+    public func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: UserType, timestamp: Date?, previousCallState: CallState?) {
         switch callState {
         case .answered(degraded: false):
             onAnswered?()
