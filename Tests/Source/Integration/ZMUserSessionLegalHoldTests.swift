@@ -103,8 +103,7 @@ class ZMUserSessionLegalHoldTests: IntegrationTest {
         let completionExpectation = expectation(description: "The request completes.")
 
         userSession?.accept(legalHoldRequest: legalHoldRequest, password: "I tRieD 3 tImeS!") { error in
-            XCTAssertEqual(error?.index, LegalHoldActivationError.invalidPassword.index)
-            
+            XCTAssertEqual(error, .invalidPassword)
             completionExpectation.fulfill()
         }
 
@@ -116,24 +115,4 @@ class ZMUserSessionLegalHoldTests: IntegrationTest {
         XCTAssertEqual(realSelfUser.legalHoldStatus, .pending(legalHoldRequest))
     }
 
-}
-
-// The property was created with the purpose of using it in tests.
-// We can't make LegalHoldActivationError equatable, because we'd also need to make UserType equatable.
-// But UserType is marked with @objc and Equatable is a Swift only protocol.
-extension LegalHoldActivationError {
-     var index: Int {
-        switch self {
-        case .userNotInTeam:
-            return 0
-        case .invalidUser:
-            return 1
-        case .invalidResponse:
-            return 2
-        case .invalidPassword:
-            return 3
-        default:
-            return 4
-        }
-    }
 }
