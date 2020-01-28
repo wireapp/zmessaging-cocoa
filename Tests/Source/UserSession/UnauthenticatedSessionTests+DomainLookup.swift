@@ -96,7 +96,7 @@ public final class UnauthenticatedSessionTests_DomainLookup: ZMTBaseTest {
     
     func testThat200ResponseIsProcessedAsValid() {
         let url = URL(string: "https://wire.com/config.json")!
-        let payload = ["foo": "bar", "config_json": url.absoluteString]
+        let payload = ["foo": "bar", "config_json_url": url.absoluteString]
         
         checkThat(statusCode: 200,
                   isProcessedAs: .success(DomainInfo(configurationURL: url)),
@@ -106,7 +106,7 @@ public final class UnauthenticatedSessionTests_DomainLookup: ZMTBaseTest {
     func testThat200ResponseWithMalformdURLGeneratesParseError() {
         checkThat(statusCode: 200,
                   isProcessedAs: .failure(DomainLookupError.malformedData),
-                  payload: ["config_json": "22"] as ZMTransportData)
+                  payload: ["config_json_url": "22"] as ZMTransportData)
     }
 
     func testThat200ResponseWithMissingPayloadGeneratesParseError() {

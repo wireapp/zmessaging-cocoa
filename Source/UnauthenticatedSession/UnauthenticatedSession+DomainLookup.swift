@@ -27,10 +27,10 @@ public enum DomainLookupError: Error, Equatable {
 
 public struct DomainInfo: Codable, Equatable {
     
-    let configurationURL: URL
+    public let configurationURL: URL
     
     private enum CodingKeys: String, CodingKey {
-        case configurationURL = "config_json"
+        case configurationURL = "config_json_url"
     }
     
     init(configurationURL: URL) {
