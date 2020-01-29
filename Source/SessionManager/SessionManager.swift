@@ -583,7 +583,7 @@ public protocol ForegroundNotificationResponder: class {
                 self?.environment.cookieStorage(for: account).deleteKeychainItems()
             }
             
-            self?.activeUserSession?.closeAndDeleteCookie(deleteCookie)
+            self?.activeUserSession?.close(deleteCookie: deleteCookie)
             self?.activeUserSession = nil
             StorageStack.reset()
             
@@ -750,7 +750,7 @@ public protocol ForegroundNotificationResponder: class {
             log.error("No session to tear down for \(accountId), known sessions: \(self.backgroundUserSessions)")
             return
         }
-        userSession.closeAndDeleteCookie(false)
+        userSession.close(deleteCookie: false)
         self.tearDownObservers(account: accountId)
         self.backgroundUserSessions[accountId] = nil
         notifyUserSessionDestroyed(accountId)

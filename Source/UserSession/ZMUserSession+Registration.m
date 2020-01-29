@@ -25,7 +25,6 @@
 
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Registration.h"
-#import "ZMUserSession+Authentication.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
 #import "NSError+ZMUserSessionInternal.h"

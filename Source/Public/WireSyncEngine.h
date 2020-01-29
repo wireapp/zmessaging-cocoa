@@ -23,7 +23,6 @@
 #import <WireSyncEngine/ZMCredentials.h>
 #import <WireSyncEngine/ZMUserSession.h>
 #import <WireSyncEngine/ZMUserSession+Registration.h>
-#import <WireSyncEngine/ZMUserSession+Authentication.h>
 #import <WireSyncEngine/ZMNetworkState.h>
 #import <WireSyncEngine/ZMCredentials.h>
 #import <WireSyncEngine/ZMUserSession+OTR.h>

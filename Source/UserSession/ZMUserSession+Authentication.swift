@@ -20,6 +20,53 @@ import Foundation
 
 extension ZMUserSession {
     
+    @objc(setEmailCredentials:)
+    func setEmailCredentials(_ emailCredentials: ZMEmailCredentials?) {
+        applicationStatusDirectory.clientRegistrationStatus.emailCredentials = emailCredentials
+    }
+    
+    /// Check whether the user is logged in
+    @objc(checkIfLoggedInWithCallback:)
+    public func checkIfLoggedIn(_ completion: @escaping (_ loggedIn: Bool) -> Void) {
+        syncManagedObjectContext.performGroupedBlock {
+            let result = self.isLoggedIn()
+            
+            self.managedObjectContext.performGroupedBlock {
+                completion(result)
+            }
+        }
+    }
+    
+    /// This will delete user data stored by WireSyncEngine in the keychain.
+    func deleteUserKeychainItems() {
+        transportSession.cookieStorage.deleteKeychainItems()
+    }
+    
+    /// Logout the current user
+    ///
+    /// - parameter deleteCookie: If set to true the cookies associated with the session will be deleted
+    
+    @objc(closeAndDeleteCookie:)
+    func close(deleteCookie: Bool) {
+        UserDefaults.standard.synchronize()
+        UserDefaults.shared()?.synchronize()
+        
+        if deleteCookie {
+            deleteUserKeychainItems()
+        }
+        
+        let uiMOC = managedObjectContext
+        let syncMOC = syncManagedObjectContext
+        
+        uiMOC?.performGroupedBlockAndWait {}
+        syncMOC?.performGroupedBlockAndWait {}
+        
+        tearDown()
+        
+        uiMOC?.performGroupedBlockAndWait {}
+        syncMOC?.performGroupedBlockAndWait {}
+    }
+    
     public func logout(credentials: ZMEmailCredentials, _ completion: @escaping (VoidResult) -> Void) {
         guard let selfClientIdentifier = ZMUser.selfUser(inUserSession: self).selfClient()?.remoteIdentifier else { return }
         

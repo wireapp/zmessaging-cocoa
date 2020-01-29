@@ -62,6 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) id<MediaManagerType> mediaManager;
 
 - (void)tearDown;
+- (BOOL)isLoggedIn;
 
 @end
 
