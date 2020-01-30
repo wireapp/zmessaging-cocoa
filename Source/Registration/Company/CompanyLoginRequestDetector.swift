@@ -35,6 +35,12 @@ public final class CompanyLoginRequestDetector: NSObject {
         public let isNew: Bool  // Weather or not the code changed since the last check.
     }
 
+    public enum ParserResult {
+        case ssoCode(UUID)
+        case domain(String)
+        case unknown
+    }
+    
     private let pasteboard: Pasteboard
     private let processQueue = DispatchQueue(label: "WireSyncEngine.SharedIdentitySessionRequestDetector")
     private var previousChangeCount: Int?
@@ -76,6 +82,20 @@ public final class CompanyLoginRequestDetector: NSObject {
         }
     }
 
+    public static func parse(input: String) -> ParserResult {
+        if ZMEmailAddressValidator.isValidEmailAddress(input), let domain = domain(from: input) {
+            return .domain(domain)
+        } else if let code = requestCode(in: input) {
+            return .ssoCode(code)
+        } else {
+            return .unknown
+        }
+    }
+    
+    private static func domain(from email: String) -> String? {
+        return email.components(separatedBy: "@").last
+    }
+    
     /**
      * Tries to extract the request ID from the contents of the text.
      */
