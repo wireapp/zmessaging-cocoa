@@ -19,7 +19,6 @@
 
 @import WireTesting;
 
-#import "ZMUserSession+OTR.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @interface FakeClientObserver : NSObject <ZMClientUpdateObserver>

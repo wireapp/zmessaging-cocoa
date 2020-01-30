@@ -24,7 +24,6 @@
 #import <WireSyncEngine/ZMUserSession.h>
 #import <WireSyncEngine/ZMNetworkState.h>
 #import <WireSyncEngine/ZMCredentials.h>
-#import <WireSyncEngine/ZMUserSession+OTR.h>
 
 // PRIVATE
 #import <WireSyncEngine/ZMBlacklistVerificator.h>

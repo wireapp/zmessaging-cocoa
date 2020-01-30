@@ -29,6 +29,7 @@
 @class ApplicationStatusDirectory;
 @class UserExpirationObserver;
 @class ProxiedRequestsStatus;
+@class ClientUpdateStatus;
 
 @protocol MediaManagerType;
 @protocol TransportSessionType;
@@ -55,6 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) OperationStatus *operationStatus;
 @property (nonatomic, readonly) AccountStatus *accountStatus;
 @property (nonatomic, readonly) ProxiedRequestsStatus *proxiedRequestStatus;
+@property (nonatomic, readonly) ClientUpdateStatus *clientUpdateStatus;
 @property (nonatomic, readonly) ApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic, readonly) NotificationDispatcher *notificationDispatcher;
 @property (nonatomic, readonly) LocalNotificationDispatcher *localNotificationDispatcher;

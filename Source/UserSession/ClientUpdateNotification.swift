@@ -34,7 +34,7 @@ import WireDataModel
     private static let typeKey = "notificationType"
     private static let errorKey = "error"
     
-    @objc public static func addOserver(context: NSManagedObjectContext, block: @escaping (ZMClientUpdateNotificationType, [NSManagedObjectID], NSError?) -> ()) -> Any {
+    @objc public static func addObserver(context: NSManagedObjectContext, block: @escaping (ZMClientUpdateNotificationType, [NSManagedObjectID], NSError?) -> ()) -> Any {
         return NotificationInContext.addObserver(name: self.name,
                                                  context: context.notificationContext)
         { note in
