@@ -60,9 +60,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) ManagedObjectContextChangeObserver *likeMesssageObserver;
 @property (nonatomic, nonnull)  UserExpirationObserver *userExpirationObserver;
 @property (nonatomic, readonly) id<MediaManagerType> mediaManager;
+@property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
 
 - (void)tearDown;
 - (BOOL)isLoggedIn;
+- (void)notifyThirdPartyServices;
 
 @end
 

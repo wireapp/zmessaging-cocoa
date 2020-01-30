@@ -55,13 +55,10 @@
 
 @property (nonatomic, readonly) id<ZMApplication> application;
 @property (nonatomic) ZMCallStateObserver *callStateObserver;
-@property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
 @property (nonatomic) ManagedObjectContextChangeObserver *messageReplyObserver;
 @property (nonatomic) ManagedObjectContextChangeObserver *likeMesssageObserver;
 @property (nonatomic)  UserExpirationObserver *userExpirationObserver;
 @property (nonatomic, readonly) NSURL *sharedContainerURL;
-
-- (void)notifyThirdPartyServices;
 
 @end
 

@@ -29,7 +29,6 @@
 // PRIVATE
 #import <WireSyncEngine/ZMBlacklistVerificator.h>
 #import <WireSyncEngine/ZMUserSession+Private.h>
-#import <WireSyncEngine/ZMUserSession+Background.h>
 #import <WireSyncEngine/ZMAuthenticationStatus.h>
 #import <WireSyncEngine/ZMClientRegistrationStatus.h>
 #import <WireSyncEngine/ZMAPSMessageDecoder.h>
@@ -49,3 +48,4 @@
 #import <WireSyncEngine/ZMObjectStrategyDirectory.h>
 #import <WireSyncEngine/ZMUpdateEventsBuffer.h>
 #import <WireSyncEngine/ZMConversationTranscoder.h>
+#import <WireSyncEngine/ZMMissingUpdateEventsTranscoder.h>

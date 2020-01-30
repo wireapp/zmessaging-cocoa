@@ -16,6 +16,8 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+import UserNotifications
+
 
 /// Defines the various types of local notifications, some of which
 /// have associated subtypes.

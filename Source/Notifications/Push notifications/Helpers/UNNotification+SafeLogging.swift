@@ -17,6 +17,7 @@
 //
 
 import Foundation
+import UserNotifications
 
 extension UNNotification: SafeForLoggingStringConvertible {
     public var safeForLoggingDescription: String {
