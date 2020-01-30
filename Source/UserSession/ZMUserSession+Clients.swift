@@ -38,7 +38,7 @@ extension ZMUserSession {
     /// Fetch all selfUser clients to manage them from the settings screen
     /// The current client must be already registered
     ///
-    /// Calling this method without a registered client will throw an error
+    /// Calling this method without a registered client will fail.
     
     @objc
     public func fetchAllClients() {
