@@ -458,16 +458,6 @@ ZM_EMPTY_ASSERTING_INIT()
 @end
 
 
-@implementation ZMUserSession (PushToken)
-
-- (BOOL)isAuthenticated
-{
-    return self.authenticationStatus.isAuthenticated;
-}
-
-@end
-
-
 
 @implementation ZMUserSession (Transport)
 

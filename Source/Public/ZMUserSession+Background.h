@@ -43,11 +43,3 @@
 - (void)mergeChangesFromStoredSaveNotificationsIfNeeded;
 
 @end
-
-
-// PRIVATE
-@interface ZMUserSession (PushToken)
-
-- (BOOL)isAuthenticated;
-
-@end

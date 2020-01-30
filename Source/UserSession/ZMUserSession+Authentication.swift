@@ -45,6 +45,10 @@ extension ZMUserSession {
         }
     }
     
+    var isAuthenticated: Bool {
+        return transportSession.cookieStorage.isAuthenticated
+    }
+    
     /// This will delete user data stored by WireSyncEngine in the keychain.
     
     func deleteUserKeychainItems() {

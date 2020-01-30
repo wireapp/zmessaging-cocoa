@@ -162,7 +162,7 @@ extension ZMUserSession {
         let accountID = self.storeProvider.userIdentifier;
 
         syncMoc.performGroupedBlock {
-            let notAuthenticated = !self.isAuthenticated()
+            let notAuthenticated = !self.isAuthenticated
             
             if notAuthenticated {
                 Logging.push.safePublic("Not displaying notification because app is not authenticated")
