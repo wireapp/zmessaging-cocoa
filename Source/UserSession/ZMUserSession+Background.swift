@@ -26,7 +26,7 @@ extension ZMUserSession {
     }
     
     @objc(application:performFetchWithCompletionHandler:)
-    public func application(_ application: ZMApplication, performFetch completionHandler: @escaping (UIBackgroundFetchResult) -> Void ) {
+    public func application(_ application: ZMApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void ) {
         BackgroundActivityFactory.shared.resume()
         
         syncManagedObjectContext.performGroupedBlock {
