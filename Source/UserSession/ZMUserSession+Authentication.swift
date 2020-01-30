@@ -20,12 +20,20 @@ import Foundation
 
 extension ZMUserSession {
     
+    /// Whether the user completed the registration on this device
+    
+    @objc
+    public var registeredOnThisDevice: Bool {
+        return managedObjectContext.registeredOnThisDevice
+    }
+    
     @objc(setEmailCredentials:)
     func setEmailCredentials(_ emailCredentials: ZMEmailCredentials?) {
         applicationStatusDirectory.clientRegistrationStatus.emailCredentials = emailCredentials
     }
     
     /// Check whether the user is logged in
+    
     @objc(checkIfLoggedInWithCallback:)
     public func checkIfLoggedIn(_ completion: @escaping (_ loggedIn: Bool) -> Void) {
         syncManagedObjectContext.performGroupedBlock {
@@ -38,6 +46,7 @@ extension ZMUserSession {
     }
     
     /// This will delete user data stored by WireSyncEngine in the keychain.
+    
     func deleteUserKeychainItems() {
         transportSession.cookieStorage.deleteKeychainItems()
     }

@@ -24,7 +24,6 @@
 #import "MessagingTest.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+Background.h"
-#import "ZMUserSession+Registration.h"
 #import "ZMUserSessionRegistrationNotification.h"
 
 #import "NSError+ZMUserSessionInternal.h"
