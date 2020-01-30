@@ -45,7 +45,6 @@
 @property (nonatomic, readonly) UserProfileUpdateStatus *userProfileUpdateStatus;
 @property (nonatomic, readonly) ZMClientRegistrationStatus *clientRegistrationStatus;
 @property (nonatomic, readonly) ClientUpdateStatus *clientUpdateStatus;
-@property (nonatomic, readonly) ProxiedRequestsStatus *proxiedRequestStatus;
 @property (nonatomic, readonly) id<AuthenticationStatusProvider> authenticationStatus;
 
 @end

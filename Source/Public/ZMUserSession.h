@@ -153,20 +153,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 @end
 
 
-typedef NS_ENUM (NSInteger, ProxiedRequestType) {
-    ProxiedRequestTypeGiphy,
-    ProxiedRequestTypeSoundcloud,
-    ProxiedRequestTypeYouTube
-};
-
-@interface ZMUserSession (Proxy)
-
-- (ZMProxyRequest *)proxiedRequestWithPath:(NSString *)path method:(ZMTransportRequestMethod)method type:(ProxiedRequestType)type callback:(void (^)(NSData *, NSHTTPURLResponse *, NSError *))callback;
-- (void)cancelProxiedRequest:(ZMProxyRequest *)proxyRequest;
-
-@end
-
-
 @interface ZMUserSession (SelfUserClient)
 
 /// Object for updating profile
