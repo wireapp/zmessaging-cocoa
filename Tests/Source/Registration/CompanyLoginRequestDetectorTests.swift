@@ -259,4 +259,52 @@ class CompanyLoginRequestDetectorTests: XCTestCase {
         }
     }
 
+    func testThatParseReturnsSSOCodeCaseIfInputIsSSO() {
+        // GIVEN
+        let code = "wire-81DD91BA-B3D0-46F0-BC29-E491938F0A54"
+        var valuesEqual: Bool = false
+
+        // WHEN
+        let result = CompanyLoginRequestDetector.parse(input: code)
+        if case CompanyLoginRequestDetector.ParserResult.ssoCode = result {
+            valuesEqual = true
+        }
+        
+        // THEN
+        XCTAssertTrue(valuesEqual)
+    }
+    
+    func testThatParseReturnsDomainCaseIfInputIsEmail() {
+        // GIVEN
+        let email = "bob@wire.com"
+        var valuesEqual: Bool = false
+        var resultDomain: String? = nil
+        
+        // WHEN
+        let result = CompanyLoginRequestDetector.parse(input: email)
+        if case CompanyLoginRequestDetector.ParserResult.domain(let domain) = result {
+            resultDomain = domain
+            valuesEqual = true
+        }
+        
+        // THEN
+        XCTAssertTrue(valuesEqual)
+        XCTAssertNotNil(resultDomain)
+        XCTAssertEqual(resultDomain, "wire.com")
+    }
+    
+    func testThatParseReturnsUnknownCaseIfInputIsInvalid() {
+        // GIVEN
+        let input = "123pho567"
+        var valuesEqual: Bool = false
+
+        // WHEN
+        let result = CompanyLoginRequestDetector.parse(input: input)
+        if case CompanyLoginRequestDetector.ParserResult.unknown = result {
+            valuesEqual = true
+        }
+        
+        // THEN
+        XCTAssertTrue(valuesEqual)
+    }
 }
