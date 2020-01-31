@@ -35,6 +35,12 @@ public final class CompanyLoginRequestDetector: NSObject {
         public let isNew: Bool  // Weather or not the code changed since the last check.
     }
 
+    
+    /// An enum describing the parsing result of a presumed SSO code / email
+    ///
+    /// - ssoCode: SSO code
+    /// - domain: Domain extracted from the email
+    /// - unknown: Not matching an email or SSO code
     public enum ParserResult {
         case ssoCode(UUID)
         case domain(String)
@@ -82,8 +88,13 @@ public final class CompanyLoginRequestDetector: NSObject {
         }
     }
 
+    
+    /// Parses the input and returns its type (.ssoCode, .domain or .unknown)
+    ///
+    /// - Parameter input: to be parsed
+    /// - Returns: type of input with its eventual associated value
     public static func parse(input: String) -> ParserResult {
-        if ZMEmailAddressValidator.isValidEmailAddress(input), let domain = domain(from: input) {
+        if let domain = domain(from: input) {
             return .domain(domain)
         } else if let code = requestCode(in: input) {
             return .ssoCode(code)
@@ -92,7 +103,12 @@ public final class CompanyLoginRequestDetector: NSObject {
         }
     }
     
+    /// Tries to extract the domain from a given email
+    ///
+    /// - Parameter email: the email to extract the domain from. e.g. bob@domain.com
+    /// - Returns: domain. e.g. domain.com
     private static func domain(from email: String) -> String? {
+        guard ZMEmailAddressValidator.isValidEmailAddress(email) else { return nil }
         return email.components(separatedBy: "@").last
     }
     
