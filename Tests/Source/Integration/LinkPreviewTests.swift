@@ -44,15 +44,21 @@ class LinkPreviewTests: ConversationTestsBase {
             
             switch linkPreviewURL {
             case .articleWithPicture, .tweetWithPicture:
-                XCTAssertTrue(linkPreview.image.hasUploaded() && linkPreview.article.image.hasUploaded(), "Link preview with image didn't contain uploaded asset", file: file, line: line)
+                XCTAssertTrue(linkPreview.image.hasUploaded(), "Link preview with image didn't contain uploaded asset", file: file, line: line)
                 
                 // We don't compare the whole proto buffer since the mock one won't have the uploaded image
                 XCTAssertEqual(linkPreview.urlOffset, expectedLinkPreview.urlOffset)
                 XCTAssertEqual(linkPreview.title, expectedLinkPreview.title)
                 XCTAssertEqual(linkPreview.summary, expectedLinkPreview.summary)
-            default:
-                XCTAssertEqual(linkPreview, expectedLinkPreview, file: file, line: line)
-                break
+            case .article:
+                XCTAssertEqual(linkPreview.urlOffset, expectedLinkPreview.urlOffset)
+                XCTAssertEqual(linkPreview.title, expectedLinkPreview.title)
+                XCTAssertEqual(linkPreview.summary, expectedLinkPreview.summary)
+            case .tweet:
+                XCTAssertEqual(linkPreview.urlOffset, expectedLinkPreview.urlOffset)
+                XCTAssertEqual(linkPreview.title, expectedLinkPreview.title)
+                XCTAssertEqual(linkPreview.summary, expectedLinkPreview.summary)
+                XCTAssertEqual(linkPreview.tweet, expectedLinkPreview.tweet)
             }
         } else {
             XCTFail("Message didn't contain a link preview", file: file, line: line)
