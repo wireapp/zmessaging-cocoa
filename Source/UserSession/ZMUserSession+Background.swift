@@ -30,8 +30,8 @@ extension ZMUserSession {
         BackgroundActivityFactory.shared.resume()
         
         syncManagedObjectContext.performGroupedBlock {
-            self.operationLoop.syncStrategy.missingUpdateEventsTranscoder.startDownloadingMissingNotifications()
-            self.operationStatus.startBackgroundFetch(withCompletionHandler: completionHandler)
+            self.operationLoop?.syncStrategy.missingUpdateEventsTranscoder.startDownloadingMissingNotifications()
+            self.applicationStatusDirectory?.operationStatus.startBackgroundFetch(withCompletionHandler: completionHandler)
         }
     }
     
@@ -47,7 +47,8 @@ extension ZMUserSession {
     
     @objc
     public func applicationWillEnterForeground(_ note: Notification?) {
-        didNotifyThirdPartyServices = false
+        
+        hasNotifiedThirdPartyServices = false
         
         mergeChangesFromStoredSaveNotificationsIfNeeded()
         startEphemeralTimers()

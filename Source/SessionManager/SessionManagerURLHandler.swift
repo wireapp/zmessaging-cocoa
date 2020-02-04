@@ -40,13 +40,9 @@ public enum URLAction: Equatable {
     ///
     /// - Parameter userSession: the active ZMUserSession
     mutating func setUserSession(userSession: ZMUserSession) {
-        guard let moc = userSession.managedObjectContext else {
-            return
-        }
-
         switch self {
         case .openConversation(let id, _):
-            guard let conversation = ZMConversation(remoteID: id, createIfNeeded: false, in: moc) else {
+            guard let conversation = ZMConversation(remoteID: id, createIfNeeded: false, in: userSession.managedObjectContext) else {
                 self = .warnInvalidDeepLink(error: .invalidConversationLink)
                 return
             }

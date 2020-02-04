@@ -23,8 +23,8 @@
 
 #import "ZMSelfStrategy+Internal.h"
 #import "ZMSyncStrategy.h"
-#import "ZMUserSession+Internal.h"
 #import "ZMClientRegistrationStatus.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *SelfPath = @"/self";
 

@@ -30,7 +30,7 @@ extension Team {
      */
     public func invite(email : String, in userSession : ZMUserSession, completion: @escaping InviteCompletionHandler) {
         userSession.syncManagedObjectContext.performGroupedBlock {
-            userSession.applicationStatusDirectory.teamInvitationStatus.invite(email, completionHandler: { [weak userSession] result in
+            userSession.applicationStatusDirectory?.teamInvitationStatus.invite(email, completionHandler: { [weak userSession] result in
                 userSession?.managedObjectContext.performGroupedBlock {
                     completion(result)
                 }

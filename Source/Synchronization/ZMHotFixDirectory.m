@@ -19,7 +19,6 @@
 
 @import WireDataModel;
 #import "ZMHotFixDirectory.h"
-#import "ZMUserSession.h"
 #import <WireTransport/WireTransport.h>
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
@@ -203,7 +202,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
 
 + (void)resetPushTokens
 {
-    [[NSNotificationCenter defaultCenter] postNotificationName:ZMUserSessionResetPushTokensNotificationName object:nil];
+    [[NSNotificationCenter defaultCenter] postNotificationName:ZMUserSession.registerCurrentPushTokenNotificationName object:nil];
 }
 
 + (void)removeSharingExtension

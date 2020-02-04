@@ -57,7 +57,7 @@ extension ZMConversation {
             if response.httpStatus.isOne(of: 200, 204),  let event = response.updateEvent {
                 // Process `conversation.message-timer-update` event
                 userSession.syncManagedObjectContext.performGroupedBlock {
-                    userSession.operationLoop.syncStrategy.process(updateEvents: [event], ignoreBuffer: true)
+                    userSession.operationLoop?.syncStrategy.process(updateEvents: [event], ignoreBuffer: true)
                 }
                 completion(.success)
             } else {

@@ -58,10 +58,10 @@ open class AuthenticatedSessionFactory {
         )
 
         return ZMUserSession(
+            transportSession: transportSession,
             mediaManager: mediaManager,
             flowManager:flowManager,
             analytics: analytics,
-            transportSession: transportSession,
             application: application,
             appVersion: appVersion,
             storeProvider: storeProvider

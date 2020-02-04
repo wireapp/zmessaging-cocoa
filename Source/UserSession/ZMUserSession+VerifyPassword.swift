@@ -33,7 +33,7 @@ extension ZMUserSession: UserSessionVerifyPasswordInterface {
                 completion(result)
                 if case .denied? = result {
                     self.failedPasswordCount += 1
-                    self.sessionManager.passwordVerificationDidFail(with: self.failedPasswordCount)
+                    self.sessionManager?.passwordVerificationDidFail(with: self.failedPasswordCount)
                 } else if case .validated? = result {
                     self.failedPasswordCount = 0
                 }

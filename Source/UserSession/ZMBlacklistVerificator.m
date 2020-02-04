@@ -22,7 +22,6 @@
 
 #import "ZMBlacklistVerificator+Testing.h"
 #import "ZMBlacklistDownloader.h"
-#import "ZMUserSession.h"
 
 @interface ZMBlacklistVerificator ()
 @property (nonatomic) ZMBlacklistDownloader *downloader;

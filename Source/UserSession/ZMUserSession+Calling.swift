@@ -25,11 +25,11 @@ import Foundation
     }
     
     internal var callNotificationStyle : CallNotificationStyle {
-        return sessionManager.callNotificationStyle
+        return sessionManager!.callNotificationStyle // TODO jacob avoid force unwrapping
     }
     
     internal var callKitDelegate : CallKitDelegate? {
-        return sessionManager.callKitDelegate
+        return sessionManager!.callKitDelegate //  TODO jacob avoid force unwrapping
     }
     
     @objc var useConstantBitRateAudio : Bool {
