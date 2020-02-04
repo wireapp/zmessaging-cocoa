@@ -34,7 +34,7 @@ class CallStateObserverTests : MessagingTest {
     override func setUp() {
         super.setUp()
         
-        self.mockUserSession.operationStatus.isInBackground = true
+        self.mockUserSession.applicationStatusDirectory?.operationStatus.isInBackground = true
 
         syncMOC.performGroupedBlockAndWait {
             let sender = ZMUser.insertNewObject(in: self.syncMOC)

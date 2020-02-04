@@ -44,7 +44,6 @@
 #import "ZMLastUpdateEventIDTranscoder.h"
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
-#import "ZMUserSession+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
@@ -437,17 +436,15 @@ static ZMReachability *sharedReachabilityMock = nil;
 
 - (ZMUserSession *)mockUserSession
 {
-    if (nil == _mockUserSession) {
+    if (nil == _mockUserSession) { // TODO jacob remove this mock user session?
         id mockUserSession = [OCMockObject niceMockForClass:[ZMUserSession class]];
         [[[mockUserSession stub] andReturn:self.uiMOC] managedObjectContext];
         [[[mockUserSession stub] andReturn:self.syncMOC] syncManagedObjectContext];
         [[[mockUserSession stub] andReturn:self.searchMOC] searchManagedObjectContext];
         [[[mockUserSession stub] andReturn:self.sharedContainerURL] sharedContainerURL];
         [[[mockUserSession stub] andReturn:self.mockOperationStatus] operationStatus];
-        [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockOperationLoop] operationLoop];
         [[[mockUserSession stub] andReturnValue:@(self.mockCallNotificationStyle)] callNotificationStyle];
 
-        [(ZMUserSession *)[[mockUserSession stub] andReturn:self.mockTransportSession] transportSession];
         _mockUserSession = mockUserSession;
     }
     

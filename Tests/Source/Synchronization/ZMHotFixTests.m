@@ -78,7 +78,7 @@
     self = [super init];
     if (self) {
         self.notificationCount = 0;
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(notificationFired) name:ZMUserSessionResetPushTokensNotificationName object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(notificationFired) name:ZMUserSession.registerCurrentPushTokenNotificationName object:nil];
     }
     return self;
 }

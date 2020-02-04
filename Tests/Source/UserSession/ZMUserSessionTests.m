@@ -56,16 +56,16 @@
     // expect
     id userAgent = [OCMockObject mockForClass:ZMUserAgent.class];
     [[[userAgent expect] classMethod] setWireAppVersion:version];
-
+    
     // when
-
-    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:nil
-                                                             flowManager:self.flowManagerMock
-                                                               analytics:nil
-                                                        transportSession:transportSession
-                                                             application:self.application
-                                                              appVersion:version
-                                                           storeProvider:self.storeProvider];
+    ZMUserSession *session = [[ZMUserSession alloc] initWithTransportSession:transportSession
+                                                                mediaManager:self.mediaManager
+                                                                 flowManager:self.flowManagerMock
+                                                                   analytics:nil
+                                                               operationLoop:nil
+                                                                 application:self.application
+                                                                  appVersion:version
+                                                               storeProvider:self.storeProvider];
     XCTAssertNotNil(session);
     
     // then
@@ -747,41 +747,41 @@
 #endif
 
 
+// TODO jacob not used any more
+//@implementation ZMUserSessionTests (LaunchOptions)
+//
+//- (void)testThatItSendsNotificationIfLaunchedWithPhoneVerficationURL
+//{
+//    // given
+//    NSURL *verificationURL = [NSURL URLWithString:@"wire://verify-phone/123456"];
+//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didReceiveNotification:) name:ZMLaunchedWithPhoneVerificationCodeNotificationName object:nil];
+//
+//    // when
+//    [self.sut didLaunchWithURL:verificationURL];
+//
+//    // then
+//    XCTAssertEqualObjects(self.lastReceivedNotification.name, ZMLaunchedWithPhoneVerificationCodeNotificationName);
+//    XCTAssertEqualObjects([self.lastReceivedNotification.userInfo objectForKey:ZMPhoneVerificationCodeKey], @"123456");
+//    [[NSNotificationCenter defaultCenter] removeObserver:self name:ZMLaunchedWithPhoneVerificationCodeNotificationName object:nil];
+//}
+//
+//@end
 
-@implementation ZMUserSessionTests (LaunchOptions)
 
-- (void)testThatItSendsNotificationIfLaunchedWithPhoneVerficationURL
-{
-    // given
-    NSURL *verificationURL = [NSURL URLWithString:@"wire://verify-phone/123456"];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didReceiveNotification:) name:ZMLaunchedWithPhoneVerificationCodeNotificationName object:nil];
-    
-    // when
-    [self.sut didLaunchWithURL:verificationURL];
-    
-    // then
-    XCTAssertEqualObjects(self.lastReceivedNotification.name, ZMLaunchedWithPhoneVerificationCodeNotificationName);
-    XCTAssertEqualObjects([self.lastReceivedNotification.userInfo objectForKey:ZMPhoneVerificationCodeKey], @"123456");
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:ZMLaunchedWithPhoneVerificationCodeNotificationName object:nil];
-}
-
-@end
-
-
-
-@implementation ZMUserSessionTests (Transport)
-
-- (void)testThatItCallsTheTransportSessionWithTheIdentifierAndHandlerIf_AddCompletionHandlerForBackgroundSessionWithIdentifier_IsCalled
-{
-    // given
-    dispatch_block_t handler = ^{};
-    NSString * const identifier = @"com.wearezeta.background_session";
-    
-    // expect
-    [[self.transportSession expect] addCompletionHandlerForBackgroundSessionWithIdentifier:identifier handler:handler];
-    
-    // when
-    [self.sut addCompletionHandlerForBackgroundURLSessionWithIdentifier:identifier handler:handler];
-}
-
-@end
+// TODO jacob not used any more
+//@implementation ZMUserSessionTests (Transport)
+//
+//- (void)testThatItCallsTheTransportSessionWithTheIdentifierAndHandlerIf_AddCompletionHandlerForBackgroundSessionWithIdentifier_IsCalled
+//{
+//    // given
+//    dispatch_block_t handler = ^{};
+//    NSString * const identifier = @"com.wearezeta.background_session";
+//
+//    // expect
+//    [[self.transportSession expect] addCompletionHandlerForBackgroundSessionWithIdentifier:identifier handler:handler];
+//
+//    // when
+//    [self.sut addCompletionHandlerForBackgroundURLSessionWithIdentifier:identifier handler:handler];
+//}
+//
+//@end

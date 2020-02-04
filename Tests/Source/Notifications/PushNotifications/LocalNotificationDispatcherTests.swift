@@ -53,7 +53,7 @@ class LocalNotificationDispatcherTests: MessagingTest {
          self.sut.messageNotifications,
          self.sut.callingNotifications].forEach { $0.notificationCenter = notificationCenter }
         
-        self.mockUserSession.operationStatus.isInBackground = true
+        self.mockUserSession.applicationStatusDirectory?.operationStatus.isInBackground = true
         
         syncMOC.performGroupedBlockAndWait {
             self.user1 = ZMUser.insertNewObject(in: self.syncMOC)

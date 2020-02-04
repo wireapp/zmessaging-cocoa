@@ -26,7 +26,6 @@
 
 
 #import "MessagingTest.h"
-#import "ZMUserSession+Internal.h"
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
 #import "ZMUpdateEventsBuffer.h"

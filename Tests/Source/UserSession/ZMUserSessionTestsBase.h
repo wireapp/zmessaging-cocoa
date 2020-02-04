@@ -22,7 +22,6 @@
 #import <WireDataModel/WireDataModel.h>
 
 #import "MessagingTest.h"
-#import "ZMUserSession+Internal.h"
 #import "ZMUserSessionRegistrationNotification.h"
 
 #import "NSError+ZMUserSessionInternal.h"

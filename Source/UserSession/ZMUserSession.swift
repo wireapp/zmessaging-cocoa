@@ -18,24 +18,27 @@
 
 import Foundation
 
-public protocol ThirdPartyServicesDelegate: class {
+@objc(ZMThirdPartyServicesDelegate)
+public protocol ThirdPartyServicesDelegate: NSObjectProtocol {
     
     /// This will get called at a convenient point in time when Hockey and Localytics should upload their data.
     /// We try not to have Hockey and Localytics use the network while we're sync'ing.
+    @objc(userSessionIsReadyToUploadServicesData:)
     func userSessionIsReadyToUploadServicesData(userSession: ZMUserSession)
     
 }
 
+@objcMembers
 public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     
     private let appVersion: String
-    
     private var tokens: [Any] = []
-    private var isNetworkOnline: Bool = true
-    private var isPerformingSync: Bool = true
-    private var hasCompletedInitialSync: Bool = false
-    var hasNotifiedThirdPartyServices: Bool = false // TODO jacob move code accessing this inside this file?
     private var tornDown: Bool = false
+    
+    var isNetworkOnline: Bool = true
+    var isPerformingSync: Bool = true
+    var hasCompletedInitialSync: Bool = false
+    var hasNotifiedThirdPartyServices: Bool = false // TODO jacob move code accessing this inside this file?
     
     let storeProvider: LocalStoreProviderProtocol
     let application: ZMApplication
@@ -63,15 +66,19 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         return storeProvider.contextDirectory.syncContext
     }
     
-    var searchManagedObjectContext: NSManagedObjectContext {
+    public var searchManagedObjectContext: NSManagedObjectContext { // TODO jacob we don't want this to be public
         return storeProvider.contextDirectory.searchContext
     }
     
-    var selfUserClient: UserClient? {
+    public var sharedContainerURL: URL { // TODO jacob we don't want this to be public
+        return storeProvider.applicationContainer
+    }
+    
+    public var selfUserClient: UserClient? { // TODO jacob we don't want this to be public
         return ZMUser.selfUser(in: managedObjectContext).selfClient()
     }
     
-    var userProfile: UserProfile? {
+    public var userProfile: UserProfile? {
         return applicationStatusDirectory?.userProfileUpdateStatus
     }
     
@@ -83,7 +90,11 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         return managedObjectContext.conversationListDirectory()
     }
     
-    var networkState: ZMNetworkState = .online {
+    public var operationStatus: OperationStatus? { // TODO jacob we don't want this to be public
+        return applicationStatusDirectory?.operationStatus
+    }
+    
+    public private(set) var networkState: ZMNetworkState = .online {
         didSet {
             if oldValue != networkState {
                 ZMNetworkAvailabilityChangeNotification.notify(networkState: networkState, userSession: self)
@@ -91,7 +102,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         }
     }
     
-    var isLoggedIn: Bool {
+    public var isLoggedIn: Bool { // TODO jacob we don't want this to be public
         return transportSession.cookieStorage.isAuthenticated && applicationStatusDirectory?.clientRegistrationStatus.currentPhase == .registered
     }
     
@@ -108,9 +119,9 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         }
     }
     
-    weak var sessionManager: SessionManagerType?
+    public weak var sessionManager: SessionManagerType?
     
-    public weak var thirdPartyServiceDelegate: ThirdPartyServicesDelegate?
+    public weak var thirdPartyServicesDelegate: ThirdPartyServicesDelegate?
     
     // MARK: - Tear down
     
@@ -118,7 +129,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         require(tornDown, "tearDown must be called before the ZMUserSession is deallocated")
     }
     
-    func tearDown() {
+    public func tearDown() {
         tokens.removeAll()
         application.unregisterObserverForStateChange(self)
         callStateObserver = nil
@@ -144,7 +155,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         tornDown = true
     }
     
-    init(transportSession: TransportSessionType,
+    @objc
+    public init(transportSession: TransportSessionType,
          mediaManager: MediaManagerType,
          flowManager: FlowManagerType,
          analytics: AnalyticsType?,
@@ -152,6 +164,12 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
          application: ZMApplication,
          appVersion: String,
          storeProvider: LocalStoreProviderProtocol) {
+        
+        storeProvider.contextDirectory.syncContext.performGroupedBlockAndWait {
+            storeProvider.contextDirectory.syncContext.analytics = analytics
+            storeProvider.contextDirectory.syncContext.zm_userInterface = storeProvider.contextDirectory.uiContext // TODO jacob configure in store provider
+        }
+        storeProvider.contextDirectory.uiContext.zm_sync = storeProvider.contextDirectory.syncContext
         
         self.application = application
         self.appVersion = appVersion
@@ -172,7 +190,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         
         // TODO jacob optionally start the request loop tracker
         
-        configureManagedObjectContexts()
+//        configureManagedObjectContexts()
         configureCaches()
 
         syncManagedObjectContext.performGroupedBlockAndWait {
@@ -191,13 +209,13 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
     
-    private func configureManagedObjectContexts() {
-        syncManagedObjectContext.performGroupedBlockAndWait {
-            self.syncManagedObjectContext.analytics = self.analytics
-            self.syncManagedObjectContext.zm_userInterface = self.managedObjectContext // TODO jacob configure in store provider
-        }
-        managedObjectContext.zm_sync = self.syncManagedObjectContext
-    }
+//    private func configureManagedObjectContexts() {
+//        syncManagedObjectContext.performGroupedBlockAndWait {
+//            self.syncManagedObjectContext.analytics = self.analytics
+//            self.syncManagedObjectContext.zm_userInterface = self.managedObjectContext // TODO jacob configure in store provider
+//        }
+//        managedObjectContext.zm_sync = self.syncManagedObjectContext
+//    }
     
     private func configureTransportSession() {
         transportSession.pushChannel.clientID = selfUserClient?.remoteIdentifier
@@ -247,7 +265,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                                           notificationsDispatcher: notificationDispatcher,
                                           applicationStatusDirectory: applicationStatusDirectory!,
                                           application: application)
-        
+        self.syncStrategy = syncStrategy
 
         return ZMOperationLoop(transportSession: transportSession,
                                syncStrategy: syncStrategy,
@@ -425,7 +443,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
     func notifyThirdPartyServices() {
         if !hasNotifiedThirdPartyServices {
             hasNotifiedThirdPartyServices = true
-            thirdPartyServiceDelegate?.userSessionIsReadyToUploadServicesData(userSession: self)
+            thirdPartyServicesDelegate?.userSessionIsReadyToUploadServicesData(userSession: self)
         }
     }
     

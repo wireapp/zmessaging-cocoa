@@ -18,6 +18,7 @@
 
 
 import XCTest
+@testable import WireSyncEngine
 
 class UserSessionGiphyRequestStateTests: ZMUserSessionTestsBase {
 
@@ -37,7 +38,7 @@ class UserSessionGiphyRequestStateTests: ZMUserSessionTestsBase {
         
         //then
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        let request = self.sut.proxiedRequestStatus.pendingRequests.first
+        let request = self.sut.applicationStatusDirectory?.proxiedRequestStatus.pendingRequests.first
         XCTAssert(request != nil)
         XCTAssertEqual(request!.path, path)
         XCTAssert(request!.callback != nil)
@@ -82,7 +83,7 @@ class UserSessionGiphyRequestStateTests: ZMUserSessionTestsBase {
         self.sut.proxiedRequest(path: url.absoluteString, method: .methodGET, type: .giphy, callback: callback)
         
         //then
-        var request = self.sut.proxiedRequestStatus.pendingRequests.first
+        var request = self.sut.applicationStatusDirectory?.proxiedRequestStatus.pendingRequests.first
         XCTAssertTrue(request == nil)
 
         //when
@@ -91,7 +92,7 @@ class UserSessionGiphyRequestStateTests: ZMUserSessionTestsBase {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         //then
-        request = self.sut.proxiedRequestStatus.pendingRequests.first
+        request = self.sut.applicationStatusDirectory?.proxiedRequestStatus.pendingRequests.first
         XCTAssert(request != nil)
     }
     

@@ -23,7 +23,6 @@
 @import WireDataModel;
 @import WireRequestStrategy;
 
-#import "ZMUserSession.h"
 #import "ZMUser+Testing.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
