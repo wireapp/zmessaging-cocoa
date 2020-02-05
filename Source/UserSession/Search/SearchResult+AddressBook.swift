@@ -26,7 +26,7 @@ extension SearchResult {
     
     /// Creates a new search result with the same results and additional
     /// results obtained by searching through the address book with the same query
-    public func extendWithContactsFromAddressBook(_ query: String, userSession: ZMUserSession) -> SearchResult {
+    public func extendWithContactsFromAddressBook(_ query: String, contextProvider: ZMManagedObjectContextProvider) -> SearchResult {
         /*
          When I have a search result obtained (either with a local search or from the BE) by matching on Wire
          users display names or handle, I also want to check if I have any address book contact in my local
@@ -45,17 +45,17 @@ extension SearchResult {
         // the result as Wire user results, not an non-Wire address book results
         
         let (additionalUsersFromAddressBook, addressBookContactsWithoutUser) = contactsThatAreAlsoUsers(contacts: allMatchingAddressBookContacts,
-                                                                                                        managedObjectContext: userSession.managedObjectContext)
-        let searchUsersFromAddressBook = addressBookContactsWithoutUser.compactMap {  ZMSearchUser(contextProvider: userSession, contact: $0) }
+                                                                                                        managedObjectContext: contextProvider.managedObjectContext)
+        let searchUsersFromAddressBook = addressBookContactsWithoutUser.compactMap {  ZMSearchUser(contextProvider: contextProvider, contact: $0) }
         
         // of those users, which one are connected and which one are not?
         let additionalConnectedUsers = additionalUsersFromAddressBook
             .filter { $0.connection != nil }
-            .compactMap { ZMSearchUser(contextProvider: userSession, user: $0) }
+            .compactMap { ZMSearchUser(contextProvider: contextProvider, user: $0) }
         let additionalNonConnectedUsers = additionalUsersFromAddressBook
             .filter { $0.connection == nil }
-            .compactMap { ZMSearchUser(contextProvider: userSession, user: $0) }
-        let connectedUsers = contacts.compactMap { ZMSearchUser(contextProvider: userSession, user: $0) }
+            .compactMap { ZMSearchUser(contextProvider: contextProvider, user: $0) }
+        let connectedUsers = contacts.compactMap { ZMSearchUser(contextProvider: contextProvider, user: $0) }
         
         return SearchResult(contacts: contacts,
                             teamMembers: teamMembers,

@@ -28,8 +28,9 @@ public class SearchTask {
     
     public typealias ResultHandler = (_ result: SearchResult, _ isCompleted: Bool) -> Void
  
-    fileprivate let session: ZMUserSession
-    fileprivate let context: NSManagedObjectContext
+    fileprivate let transportSession: TransportSessionType
+    fileprivate let searchContext: NSManagedObjectContext
+    fileprivate let contextProvider: ZMManagedObjectContextProvider
     fileprivate let task: Task
     fileprivate var userLookupTaskIdentifier: ZMTaskIdentifier?
     fileprivate var directoryTaskIdentifier: ZMTaskIdentifier?
@@ -52,18 +53,25 @@ public class SearchTask {
         }
     }
     
-    convenience init(request: SearchRequest, context: NSManagedObjectContext, session: ZMUserSession) {
-        self.init(task: .search(searchRequest: request), context: context, session: session)
+    convenience init(request: SearchRequest,
+                     searchContext: NSManagedObjectContext,
+                     contextProvider: ZMManagedObjectContextProvider,
+                     transportSession: TransportSessionType) {
+        self.init(task: .search(searchRequest: request), searchContext: searchContext, contextProvider: contextProvider, transportSession: transportSession)
     }
     
-    convenience init(lookupUserId userId: UUID, context: NSManagedObjectContext, session: ZMUserSession) {
-        self.init(task: .lookup(userId: userId), context: context, session: session)
+    convenience init(lookupUserId userId: UUID,
+                     searchContext: NSManagedObjectContext,
+                     contextProvider: ZMManagedObjectContextProvider,
+                     transportSession: TransportSessionType) {
+        self.init(task: .lookup(userId: userId), searchContext: searchContext, contextProvider: contextProvider, transportSession: transportSession)
     }
     
-    public init(task: Task, context: NSManagedObjectContext, session: ZMUserSession) {
+    public init(task: Task, searchContext: NSManagedObjectContext, contextProvider: ZMManagedObjectContextProvider, transportSession: TransportSessionType) {
         self.task = task
-        self.session = session
-        self.context = context
+        self.transportSession = transportSession
+        self.searchContext = searchContext
+        self.contextProvider = contextProvider
     }
     
     /// Add a result handler
@@ -75,10 +83,10 @@ public class SearchTask {
     public func cancel() {
         resultHandlers.removeAll()
         
-        userLookupTaskIdentifier.flatMap(session.transportSession.cancelTask)
-        directoryTaskIdentifier.flatMap(session.transportSession.cancelTask)
-        servicesTaskIdentifier.flatMap(session.transportSession.cancelTask)
-        handleTaskIdentifier.flatMap(session.transportSession.cancelTask)
+        userLookupTaskIdentifier.flatMap(transportSession.cancelTask)
+        directoryTaskIdentifier.flatMap(transportSession.cancelTask)
+        servicesTaskIdentifier.flatMap(transportSession.cancelTask)
+        handleTaskIdentifier.flatMap(transportSession.cancelTask)
         
         tasksRemaining = 0
     }
@@ -106,8 +114,8 @@ extension SearchTask {
 
         tasksRemaining += 1
 
-        context.performGroupedBlock {
-            let selfUser = ZMUser.selfUser(in: self.context)
+        searchContext.performGroupedBlock {
+            let selfUser = ZMUser.selfUser(in: self.searchContext)
 
             var options = SearchOptions()
 
@@ -122,8 +130,8 @@ extension SearchTask {
                                       teamMembers: teamMembers,
                                       addressBook: [], directory: [], conversations: [], services: [])
 
-            self.session.managedObjectContext.performGroupedBlock {
-                self.result = self.result.union(withLocalResult: result.copy(on: self.session.managedObjectContext))
+            self.contextProvider.managedObjectContext.performGroupedBlock {
+                self.result = self.result.union(withLocalResult: result.copy(on: self.contextProvider.managedObjectContext))
 
                 self.tasksRemaining -= 1
             }
@@ -135,11 +143,11 @@ extension SearchTask {
         
         tasksRemaining += 1
         
-        context.performGroupedBlock {
+        searchContext.performGroupedBlock {
             
             var team : Team? = nil
             if let teamObjectID = request.team?.objectID {
-                team = (try? self.context.existingObject(with: teamObjectID)) as? Team
+                team = (try? self.searchContext.existingObject(with: teamObjectID)) as? Team
             }
             
             let connectedUsers = request.searchOptions.contains(.contacts) ? self.connectedUsers(matchingQuery: request.normalizedQuery) : []
@@ -147,11 +155,11 @@ extension SearchTask {
             let conversations = request.searchOptions.contains(.conversations) ? self.conversations(matchingQuery: request.query) : []
             let result = SearchResult(contacts: connectedUsers, teamMembers: teamMembers, addressBook: [], directory: [], conversations: conversations, services: [])
             
-            self.session.managedObjectContext.performGroupedBlock {
-                self.result = self.result.union(withLocalResult: result.copy(on: self.session.managedObjectContext))
+            self.contextProvider.managedObjectContext.performGroupedBlock {
+                self.result = self.result.union(withLocalResult: result.copy(on: self.contextProvider.managedObjectContext))
                 
                 if request.searchOptions.contains(.addressBook) {
-                    self.result = self.result.extendWithContactsFromAddressBook(request.normalizedQuery, userSession: self.session)
+                    self.result = self.result.extendWithContactsFromAddressBook(request.normalizedQuery, contextProvider: self.contextProvider)
                 }
                 
                 self.tasksRemaining -= 1
@@ -160,9 +168,9 @@ extension SearchTask {
     }
 
     private func filterNonActiveTeamMembers(members: [Member]) -> [Member] {
-        let activeConversations = ZMUser.selfUser(in: context).activeConversations
+        let activeConversations = ZMUser.selfUser(in: searchContext).activeConversations
         let activeContacts = Set(activeConversations.flatMap({ $0.localParticipants }))
-        let selfUser = ZMUser.selfUser(in: context)
+        let selfUser = ZMUser.selfUser(in: searchContext)
 
         return members.filter({
             guard let user = $0.user else { return false }
@@ -179,8 +187,8 @@ extension SearchTask {
         
         if searchOptions.contains(.excludeNonActivePartners) {
             let query = query.strippingLeadingAtSign()
-            let selfUser = ZMUser.selfUser(in: context)
-            let activeConversations = ZMUser.selfUser(in: context).activeConversations
+            let selfUser = ZMUser.selfUser(in: searchContext)
+            let activeConversations = ZMUser.selfUser(in: searchContext).activeConversations
             let activeContacts = Set(activeConversations.flatMap({ $0.localParticipants }))
             
             result = result.filter({
@@ -197,14 +205,14 @@ extension SearchTask {
     
     func connectedUsers(matchingQuery query: String) -> [ZMUser] {
         let fetchRequest = ZMUser.sortedFetchRequest(with: ZMUser.predicateForConnectedUsers(withSearch: query))
-        return context.executeFetchRequestOrAssert(fetchRequest) as? [ZMUser] ?? []
+        return searchContext.executeFetchRequestOrAssert(fetchRequest) as? [ZMUser] ?? []
     }
     
     func conversations(matchingQuery query: String) -> [ZMConversation] {
         ///TODO: use the interface with tean param?
-        let fetchRequest = ZMConversation.sortedFetchRequest(with: ZMConversation.predicate(forSearchQuery: query, selfUser: ZMUser.selfUser(in: context)))
+        let fetchRequest = ZMConversation.sortedFetchRequest(with: ZMConversation.predicate(forSearchQuery: query, selfUser: ZMUser.selfUser(in: searchContext)))
         fetchRequest?.sortDescriptors = [NSSortDescriptor(key: ZMNormalizedUserDefinedNameKey, ascending: true)]
-        var conversations = context.executeFetchRequestOrAssert(fetchRequest) as? [ZMConversation] ?? []
+        var conversations = searchContext.executeFetchRequestOrAssert(fetchRequest) as? [ZMConversation] ?? []
         
         if query.hasPrefix("@") {
             // if we are searching for a username only include conversations with matching displayName
@@ -236,18 +244,18 @@ extension SearchTask {
         
         tasksRemaining += 1
         
-        context.performGroupedBlock {
+        searchContext.performGroupedBlock {
             let request  = type(of: self).searchRequestForUser(withUUID: userId)
             
-            request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in
+            request.add(ZMCompletionHandler(on: self.contextProvider.managedObjectContext, block: { [weak self] (response) in
                 defer {
                     self?.tasksRemaining -= 1
                 }
                 
                 guard
-                    let session = self?.session,
+                    let contextProvider = self?.contextProvider,
                     let payload = response.payload?.asDictionary(),
-                    let result = SearchResult(userLookupPayload: payload, userSession: session)
+                    let result = SearchResult(userLookupPayload: payload, contextProvider: contextProvider)
                     else {
                         return
                 }
@@ -257,11 +265,11 @@ extension SearchTask {
                 }
             }))
             
-            request.add(ZMTaskCreatedHandler(on: self.context, block: { [weak self] (taskIdentifier) in
+            request.add(ZMTaskCreatedHandler(on: self.searchContext, block: { [weak self] (taskIdentifier) in
                 self?.userLookupTaskIdentifier = taskIdentifier
             }))
             
-            self.session.transportSession.enqueueOneTime(request)
+            self.transportSession.enqueueOneTime(request)
         }
         
     }
@@ -279,19 +287,19 @@ extension SearchTask {
         
         tasksRemaining += 1
         
-        context.performGroupedBlock {
+        searchContext.performGroupedBlock {
             let request = type(of: self).searchRequestInDirectory(withQuery: searchRequest.query)
             
-            request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in
+            request.add(ZMCompletionHandler(on: self.contextProvider.managedObjectContext, block: { [weak self] (response) in
                 
                 defer {
                     self?.tasksRemaining -= 1
                 }
                 
                 guard
-                    let session = self?.session,
+                    let contextProvider = self?.contextProvider,
                     let payload = response.payload?.asDictionary(),
-                    let result = SearchResult(payload: payload, query: searchRequest.query, userSession: session)
+                    let result = SearchResult(payload: payload, query: searchRequest.query, contextProvider: contextProvider)
                 else {
                     return
                 }
@@ -301,11 +309,11 @@ extension SearchTask {
                 }
             }))
             
-            request.add(ZMTaskCreatedHandler(on: self.context, block: { [weak self] (taskIdentifier) in
+            request.add(ZMTaskCreatedHandler(on: self.searchContext, block: { [weak self] (taskIdentifier) in
                 self?.directoryTaskIdentifier = taskIdentifier
             }))
             
-            self.session.transportSession.enqueueOneTime(request)
+            self.transportSession.enqueueOneTime(request)
         }
     }
     
@@ -332,17 +340,17 @@ extension SearchTask {
         
         tasksRemaining += 1
         
-        context.performGroupedBlock {
+        searchContext.performGroupedBlock {
             let request = type(of: self).searchRequestInDirectory(withHandle: searchRequest.query)
             
-            request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in
+            request.add(ZMCompletionHandler(on: self.contextProvider.managedObjectContext, block: { [weak self] (response) in
                 
                 defer {
                     self?.tasksRemaining -= 1
                 }
                 
                 guard
-                    let session = self?.session,
+                    let contextProvider = self?.contextProvider,
                     let payload = response.payload?.asArray(),
                     let userPayload = (payload.first as? ZMTransportData)?.asDictionary()
                     else {
@@ -359,7 +367,7 @@ extension SearchTask {
                 
                 let document = ["handle": handle, "name": name, "id": id]
                 let documentPayload = ["documents": [document]]
-                guard let result = SearchResult(payload: documentPayload, query: searchRequest.query, userSession: session) else {
+                guard let result = SearchResult(payload: documentPayload, query: searchRequest.query, contextProvider: contextProvider) else {
                     return
                 }
                 
@@ -383,11 +391,11 @@ extension SearchTask {
                 
             }))
             
-            request.add(ZMTaskCreatedHandler(on: self.context, block: { [weak self] (taskIdentifier) in
+            request.add(ZMTaskCreatedHandler(on: self.searchContext, block: { [weak self] (taskIdentifier) in
                 self?.handleTaskIdentifier = taskIdentifier
             }))
             
-            self.session.transportSession.enqueueOneTime(request)
+            self.transportSession.enqueueOneTime(request)
         }
     }
     
@@ -413,22 +421,22 @@ extension SearchTask {
         
         tasksRemaining += 1
 
-        context.performGroupedBlock {
-            let selfUser = ZMUser.selfUser(in: self.context)
+        searchContext.performGroupedBlock {
+            let selfUser = ZMUser.selfUser(in: self.searchContext)
             guard let teamIdentifier = selfUser.team?.remoteIdentifier else { return }
 
             let request = type(of: self).servicesSearchRequest(teamIdentifier: teamIdentifier, query: searchRequest.query)
             
-            request.add(ZMCompletionHandler(on: self.session.managedObjectContext, block: { [weak self] (response) in
+            request.add(ZMCompletionHandler(on: self.contextProvider.managedObjectContext, block: { [weak self] (response) in
                 
                 defer {
                     self?.tasksRemaining -= 1
                 }
                 
                 guard
-                    let session = self?.session,
+                    let contextProvider = self?.contextProvider,
                     let payload = response.payload?.asDictionary(),
-                    let result = SearchResult(servicesPayload: payload, query: searchRequest.query, userSession: session)
+                    let result = SearchResult(servicesPayload: payload, query: searchRequest.query, contextProvider: contextProvider)
                     else {
                         return
                 }
@@ -438,11 +446,11 @@ extension SearchTask {
                 }
             }))
             
-            request.add(ZMTaskCreatedHandler(on: self.context, block: { [weak self] (taskIdentifier) in
+            request.add(ZMTaskCreatedHandler(on: self.searchContext, block: { [weak self] (taskIdentifier) in
                 self?.servicesTaskIdentifier = taskIdentifier
             }))
             
-            self.session.transportSession.enqueueOneTime(request)
+            self.transportSession.enqueueOneTime(request)
         }
     }
     
