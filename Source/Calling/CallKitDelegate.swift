@@ -38,23 +38,23 @@ public class CallKitDelegate : NSObject {
     
     fileprivate let provider : CXProvider
     fileprivate let callController : CXCallController
-    fileprivate unowned let sessionManager : SessionManagerType
+    fileprivate unowned let sessionManager : SessionManagerInternal
     fileprivate weak var mediaManager: MediaManagerType?
     fileprivate var callStateObserverToken : Any?
     fileprivate var missedCallObserverToken : Any?
     fileprivate var connectedCallConversation : ZMConversation?
     fileprivate var calls : [UUID : CallKitCall]
     
-    public convenience init(sessionManager: SessionManagerType, mediaManager: MediaManagerType?) {
+    convenience init(sessionManager: SessionManagerInternal, mediaManager: MediaManagerType?) {
         self.init(provider: CXProvider(configuration: CallKitDelegate.providerConfiguration),
                   callController: CXCallController(queue: DispatchQueue.main),
                   sessionManager: sessionManager,
                   mediaManager: mediaManager)
     }
     
-    public init(provider : CXProvider,
+    init(provider : CXProvider,
          callController: CXCallController,
-         sessionManager: SessionManagerType,
+         sessionManager: SessionManagerInternal,
          mediaManager: MediaManagerType?) {
         
         self.provider = provider
@@ -140,7 +140,7 @@ extension CallKitDelegate {
             return
         }
         
-        sessionManager.withSession(for: account) { (userSession) in
+        sessionManager.performWithSession(for: account) { (userSession) in
             if let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.managedObjectContext) {
                 completion(conversation)
             }

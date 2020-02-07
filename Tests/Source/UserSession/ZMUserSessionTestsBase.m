@@ -126,7 +126,7 @@
                                                  storeProvider:self.storeProvider];
         
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
-    self.sut.sessionManager = self.mockSessionManager;
+    self.sut.sessionManager = (id<SessionManagerType>)self.mockSessionManager; // TODO jacob fix by converting this class to Swift
     
     WaitForAllGroupsToBeEmpty(0.5);
     
