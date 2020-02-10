@@ -34,7 +34,7 @@
 @class ZMPushRegistrant;
 @class UserProfileUpdateStatus;
 @class ClientUpdateStatus;
-@class CallKitDelegate;
+@class CallKitManager;
 
 @protocol MediaManagerType; 
 @protocol FlowManagerType;

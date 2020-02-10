@@ -20,29 +20,23 @@ import Foundation
 
 @testable import WireSyncEngine
 
-class MockSessionManager : NSObject, WireSyncEngine.SessionManagerInternal {
+class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
     
     static let accountManagerURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("MockSessionManager.accounts")
     
     var foregroundNotificationResponder: ForegroundNotificationResponder? = nil
-    var callKitDelegate: WireSyncEngine.CallKitDelegate? = nil
+    var callKitManager: WireSyncEngine.CallKitManager? = nil
     var callNotificationStyle: CallNotificationStyle = .pushNotifications
     var accountManager: AccountManager = AccountManager(sharedDirectory: accountManagerURL)
     var backgroundUserSessions: [UUID : ZMUserSession] = [:]
-    var mockUserSession : MockUserSession? = nil
+    var mockUserSession: ZMUserSession? = nil
     
     var lastRequestToShowMessage: (ZMUserSession, ZMConversation, ZMConversationMessage)?
     var lastRequestToShowConversation: (ZMUserSession, ZMConversation)?
     var lastRequestToShowConversationsList: ZMUserSession?
     var lastRequestToShowUserProfile: UserType?
     var lastRequestToShowConnectionRequest: UUID?
-    
-    func performWithSession(for account: Account, block: @escaping (WireSyncEngine.UserSessionInternal) -> Void) {
-        if let userSession = mockUserSession {
-            block(userSession)
-        }
-    }
-    
+        
     func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?, in session: ZMUserSession) {
         if let message = message {
             lastRequestToShowMessage = (session, conversation, message)

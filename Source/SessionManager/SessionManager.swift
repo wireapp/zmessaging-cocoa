@@ -55,25 +55,16 @@ public protocol UserSessionSource: class {
     var isSelectedAccountAuthenticated: Bool { get }
 }
 
-/// The internal interface for the session manager.
-
-protocol SessionManagerInternal: SessionManagerType {
-    
-    func performWithSession(for account: Account, block: @escaping (_ userSession: UserSessionInternal) -> Void)
-    
-}
-
 /// The public interface for the session manager.
 
 @objc
 public protocol SessionManagerType: class {
     
     var accountManager : AccountManager { get }
-    var backgroundUserSessions: [UUID: ZMUserSession] { get }
     
     weak var foregroundNotificationResponder: ForegroundNotificationResponder? { get }
     
-    var callKitDelegate : CallKitDelegate? { get }
+    var callKitManager : CallKitManager? { get }
     var callNotificationStyle: CallNotificationStyle { get }
     
     func updateAppIconBadge(accountID: UUID, unreadCount: Int)
@@ -182,7 +173,7 @@ public protocol ForegroundNotificationResponder: class {
 ///
 
 
-@objcMembers public class SessionManager : NSObject, SessionManagerInternal, UserSessionSource {
+@objcMembers public class SessionManager : NSObject, SessionManagerType, UserSessionSource {
 
     /// Maximum number of accounts which can be logged in simultanously
     public static let maxNumberAccounts = 3
@@ -245,7 +236,7 @@ public protocol ForegroundNotificationResponder: class {
     fileprivate var memoryWarningObserver: NSObjectProtocol?
     fileprivate var isSelectingAccount : Bool = false
         
-    public var callKitDelegate : CallKitDelegate?
+    public var callKitManager : CallKitManager?
 
     public var isSelectedAccountAuthenticated: Bool {
         guard let selectedAccount = accountManager.selectedAccount else {
@@ -603,16 +594,6 @@ public protocol ForegroundNotificationResponder: class {
         })
     }
     
-    // MARK: Session loading
-    
-    /// Perform an action on a user session
-    ///
-    /// This does not operation does change the active user session.
-    
-    func performWithSession(for account: Account, block: @escaping (UserSessionInternal) -> Void) {
-        withSession(for: account, perform: block)
-    }
-    
     /**
      Loads a session for a given account
      
@@ -817,19 +798,19 @@ public protocol ForegroundNotificationResponder: class {
     }
     
     @objc public func updateCallKitConfiguration() {
-        callKitDelegate?.updateConfiguration()
+        callKitManager?.updateConfiguration()
     }
     
     private func updateCallNotificationStyle() {
         switch callNotificationStyle {
         case .pushNotifications:
             authenticatedSessionFactory.mediaManager.setUiStartsAudio(false)
-            callKitDelegate = nil
+            callKitManager = nil
         case .callKit:
             // Should be set to true when CallKit is used. Then AVS will not start
             // the audio before the audio session is active
             authenticatedSessionFactory.mediaManager.setUiStartsAudio(true)
-            callKitDelegate = CallKitDelegate(sessionManager: self, mediaManager: authenticatedSessionFactory.mediaManager)
+            callKitManager = CallKitManager(delegate: self, mediaManager: authenticatedSessionFactory.mediaManager)
         }
     }
     
@@ -1053,9 +1034,6 @@ extension SessionManager: PostLoginAuthenticationObserver {
         }
     }
 
-}
-
-extension SessionManager {
 }
 
 // MARK: - Application lifetime notifications

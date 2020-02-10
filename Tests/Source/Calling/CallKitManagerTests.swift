@@ -150,13 +150,31 @@ class MockProvider : CXProvider {
     
 }
 
-class CallKitDelegateTest: DatabaseTest {
-    var sut: WireSyncEngine.CallKitDelegate!
+class MockCallKitManagerDelegate: WireSyncEngine.CallKitManagerDelegate {
+    
+    var mockConversations: [WireSyncEngine.CallHandle: ZMConversation] = [:]
+    func lookupConversation(by handle: WireSyncEngine.CallHandle, completionHandler: @escaping (Result<ZMConversation>) -> Void) {
+        if let conversation = mockConversations[handle] {
+            completionHandler(.success(conversation))
+        } else {
+            completionHandler(.failure(WireSyncEngine.ConversationLookupError.conversationDoesNotExist))
+        }
+    }
+    
+    var hasEndedAllCalls: Bool = false
+    func endAllCalls() {
+        hasEndedAllCalls = true
+    }
+    
+}
+
+class CallKitManagerTest: DatabaseTest {
+    var sut: WireSyncEngine.CallKitManager!
     var callKitProvider: MockCallKitProvider!
     var callKitController: MockCallKitCallController!
     var mockWireCallCenterV3: WireCallCenterV3Mock!
-    var mockSessionManager:  MockSessionManager!
     var mockTransportSession: MockTransportSession!
+    var mockCallKitManagerDelegate: MockCallKitManagerDelegate!
     
     func otherUser(moc: NSManagedObjectContext) -> ZMUser {
         let otherUser = ZMUser(context: moc)
@@ -199,21 +217,18 @@ class CallKitDelegateTest: DatabaseTest {
         selfUser.remoteIdentifier = UUID()
         
         let flowManager = FlowManagerMock()
-        let configuration = WireSyncEngine.CallKitDelegate.providerConfiguration
+        let configuration = WireSyncEngine.CallKitManager.providerConfiguration
         self.callKitProvider = MockCallKitProvider(configuration: configuration)
         self.callKitController = MockCallKitCallController()
         self.mockWireCallCenterV3 = WireCallCenterV3Mock(userId: selfUser.remoteIdentifier!, clientId: "123", uiMOC: uiMOC, flowManager: flowManager, transport: WireCallCenterTransportMock())
-        self.mockSessionManager = MockSessionManager()
+        self.mockCallKitManagerDelegate = MockCallKitManagerDelegate()
         self.mockTransportSession = MockTransportSession(dispatchGroup: dispatchGroup)
         
-        mockSessionManager.mockUserSession = MockUserSession(contextDirectory: contextDirectory!, transportSession: mockTransportSession, eventProcessor: MockUpdateEventProcessor())
-        mockSessionManager.accountManager.addAndSelect(Account(userName: "Test User", userIdentifier: selfUser.remoteIdentifier!))
         
-        self.sut = WireSyncEngine.CallKitDelegate(provider: callKitProvider,
-                                                  callController: callKitController,
-                                                  sessionManager: mockSessionManager,
-                                                  mediaManager: nil)
-        
+        self.sut = WireSyncEngine.CallKitManager(provider: callKitProvider,
+                                                 callController: callKitController,
+                                                 delegate: mockCallKitManagerDelegate,
+                                                 mediaManager: nil)
         self.uiMOC.zm_callCenter = mockWireCallCenterV3
     }
     
@@ -222,7 +237,7 @@ class CallKitDelegateTest: DatabaseTest {
         
         self.sut = nil
         self.mockWireCallCenterV3 = nil
-        self.mockSessionManager = nil
+        self.mockCallKitManagerDelegate = nil
         self.mockTransportSession.cleanUp()
         self.mockTransportSession = nil
         
@@ -232,7 +247,7 @@ class CallKitDelegateTest: DatabaseTest {
     // MARK: Provider configuration
     func testThatItReturnsTheProviderConfiguration() {
         // when
-        let configuration = WireSyncEngine.CallKitDelegate.providerConfiguration
+        let configuration = WireSyncEngine.CallKitManager.providerConfiguration
         
         // then
         XCTAssertEqual(configuration.supportsVideo, true)
@@ -242,7 +257,7 @@ class CallKitDelegateTest: DatabaseTest {
     
     func testThatItReturnsDefaultRingSound() {
         // when
-        let configuration = WireSyncEngine.CallKitDelegate.providerConfiguration
+        let configuration = WireSyncEngine.CallKitManager.providerConfiguration
         
         // then
         XCTAssertEqual(configuration.ringtoneSound, "ringing_from_them_long.caf")
@@ -256,7 +271,7 @@ class CallKitDelegateTest: DatabaseTest {
         // given
         UserDefaults.standard.setValue(customSoundName, forKey: "ZMCallSoundName")
         // when
-        let configuration = WireSyncEngine.CallKitDelegate.providerConfiguration
+        let configuration = WireSyncEngine.CallKitManager.providerConfiguration
         
         // then
         XCTAssertEqual(configuration.ringtoneSound, customSoundName + ".m4a")
@@ -264,10 +279,10 @@ class CallKitDelegateTest: DatabaseTest {
     
     func testThatItInvalidatesTheProviderOnDeinit() {
         // given
-        sut = WireSyncEngine.CallKitDelegate(provider: callKitProvider,
-                                             callController: callKitController,
-                                             sessionManager: mockSessionManager,
-                                             mediaManager: nil)
+        sut = WireSyncEngine.CallKitManager(provider: callKitProvider,
+                                            callController: callKitController,
+                                            delegate: mockCallKitManagerDelegate,
+                                            mediaManager: nil)
         
         // when
         sut = nil
@@ -604,7 +619,10 @@ class CallKitDelegateTest: DatabaseTest {
         let identifier = "\(selfUser.remoteIdentifier!.transportString())+\(conversation.remoteIdentifier!.transportString())"
         let handle = INPersonHandle(value: identifier, type: .unknown)
         let person = INPerson(personHandle: handle, nameComponents: .none, displayName: .none, image: .none, contactIdentifier: .none, customIdentifier: identifier)
+        let callHandle = WireSyncEngine.CallHandle(customIdentifier: identifier)!
         let activity = self.userActivityFor(contacts: [person])
+        
+        mockCallKitManagerDelegate.mockConversations[callHandle] = conversation
         
         // when
         _ = sut.continueUserActivity(activity)

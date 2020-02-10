@@ -29,7 +29,7 @@
 @class ZMConversation;
 @class UserClient;
 @class ZMProxyRequest;
-@class CallKitDelegate;
+@class CallKitManager;
 @class CallingRequestStrategy;
 @class WireCallCenterV3;
 @class SessionManager;
