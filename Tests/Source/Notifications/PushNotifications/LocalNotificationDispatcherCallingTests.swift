@@ -20,7 +20,7 @@ import UserNotifications
 
 @testable import WireSyncEngine
 
-class LocalNotificationDispatcherCallingTests : MessagingTest {
+class LocalNotificationDispatcherCallingTests: DatabaseTest {
     
     var sut : LocalNotificationDispatcher!
     var notificationCenter : UserNotificationCenterMock!
@@ -39,8 +39,6 @@ class LocalNotificationDispatcherCallingTests : MessagingTest {
         notificationCenter = UserNotificationCenterMock()
         sut.notificationCenter = notificationCenter
         sut.callingNotifications.notificationCenter = notificationCenter
-        
-        self.mockUserSession.operationStatus.isInBackground = true
         
         syncMOC.performGroupedBlockAndWait {
             let sender = ZMUser.insertNewObject(in: self.syncMOC)
