@@ -19,7 +19,7 @@
 import Foundation
 @testable import WireSyncEngine
 
-class CallStateObserverTests : MessagingTest {
+class CallStateObserverTests : DatabaseTest, CallNotificationStyleProvider {
     
     var sut : CallStateObserver!
     var sender : ZMUser!
@@ -30,12 +30,11 @@ class CallStateObserverTests : MessagingTest {
     var localNotificationDispatcher : LocalNotificationDispatcher!
     var notificationCenter : UserNotificationCenterMock!
     var mockCallCenter : WireCallCenterV3Mock?
+    var callNotificationStyle: CallNotificationStyle = .pushNotifications
     
     override func setUp() {
         super.setUp()
         
-        self.mockUserSession.operationStatus.isInBackground = true
-
         syncMOC.performGroupedBlockAndWait {
             let sender = ZMUser.insertNewObject(in: self.syncMOC)
             sender.name = "Sender"
@@ -70,7 +69,7 @@ class CallStateObserverTests : MessagingTest {
 
         senderUI = uiMOC.object(with: sender.objectID) as? ZMUser
         conversationUI = uiMOC.object(with: conversation.objectID) as? ZMConversation
-        sut = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
+        sut = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, contextProvider: contextDirectory!, callNotificationStyleProvider: self)
         uiMOC.zm_callCenter = mockCallCenter
     }
     
@@ -89,7 +88,7 @@ class CallStateObserverTests : MessagingTest {
     }
     
     func testThatInstanceDoesntHaveRetainCycles() {
-        var instance: CallStateObserver? = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, userSession: mockUserSession)
+        var instance: CallStateObserver? = CallStateObserver(localNotificationDispatcher: localNotificationDispatcher, contextProvider: contextDirectory!, callNotificationStyleProvider: self)
         weak var weakInstance = instance
         instance = nil
         XCTAssertNil(weakInstance)
@@ -184,8 +183,10 @@ class CallStateObserverTests : MessagingTest {
     
     func testIncomingCallsInUnfetchedConversationAreForwaredToTheNotificationDispatcher_whenCallStyleIsCallkit() {
         // given
-        mockCallNotificationStyle = .callKit
-        conversationUI.conversationType = .invalid
+        callNotificationStyle = .callKit
+        conversationUI.needsToBeUpdatedFromBackend = true
+        uiMOC.saveOrRollback()
+        syncMOC.refreshAllObjects()
         
         // when
         sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversationUI, caller: senderUI, timestamp: Date(), previousCallState: nil)
@@ -197,8 +198,11 @@ class CallStateObserverTests : MessagingTest {
     
     func testThatIncomingCallsInMutedConversationAreForwardedToTheNotificationDispatcher_whenCallStyleIsCallkit() {
         // given
-        mockCallNotificationStyle = .callKit
+        ZMUser.selfUser(in: uiMOC).teamIdentifier = UUID()
+        callNotificationStyle = .callKit
         conversationUI.mutedMessageTypes = .regular
+        uiMOC.saveOrRollback()
+        syncMOC.refreshAllObjects()
         
         // when
         sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversationUI, caller: senderUI, timestamp: nil, previousCallState: nil)
@@ -210,8 +214,8 @@ class CallStateObserverTests : MessagingTest {
     
     func testIncomingCallsInUnfetchedConversationAreForwaredToTheNotificationDispatcher_whenCallStyleIsPushNotification() {
         // given
-        mockCallNotificationStyle = .pushNotifications
-        conversationUI.conversationType = .invalid
+        callNotificationStyle = .pushNotifications
+        conversationUI.needsToBeUpdatedFromBackend = true
         
         // when
         sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversationUI, caller: senderUI, timestamp: Date(), previousCallState: nil)
@@ -223,7 +227,7 @@ class CallStateObserverTests : MessagingTest {
     
     func testThatIncomingCallsAreForwardedToTheNotificationDispatcher_whenCallStyleIsPushNotification() {
         // given
-        mockCallNotificationStyle = .pushNotifications
+        callNotificationStyle = .pushNotifications
         
         // when
         sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversationUI, caller: senderUI, timestamp: nil, previousCallState: nil)
@@ -237,7 +241,7 @@ class CallStateObserverTests : MessagingTest {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
         mockCallCenter?.setMockCallState(.established, conversationId: conversation.remoteIdentifier!, callerId: mockCallCenter!.selfUserId, isVideo: false)
-        mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
+        uiMOC.zm_callCenter = mockCallCenter
         
         // expect
         expectation(forNotification: CallStateObserver.CallInProgressNotification, object: nil) { (_) -> Bool in
@@ -253,7 +257,7 @@ class CallStateObserverTests : MessagingTest {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
         mockCallCenter?.setMockCallState(.establishedDataChannel, conversationId: conversation.remoteIdentifier!, callerId: mockCallCenter!.selfUserId, isVideo: false)
-        mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
+        uiMOC.zm_callCenter  = mockCallCenter
         
         // expect
         expectation(forNotification: CallStateObserver.CallInProgressNotification, object: nil) { (_) -> Bool in
@@ -269,7 +273,7 @@ class CallStateObserverTests : MessagingTest {
         // given
         mockCallCenter = WireCallCenterV3Mock(userId: UUID.create(), clientId: "1234567", uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
         mockCallCenter?.setMockCallState(.established, conversationId: conversation.remoteIdentifier!, callerId: mockCallCenter!.selfUserId, isVideo: false)
-        mockUserSession.managedObjectContext.zm_callCenter = mockCallCenter
+        uiMOC.zm_callCenter = mockCallCenter
         sut.callCenterDidChange(callState: .established, conversation: conversationUI, caller: senderUI, timestamp: Date(), previousCallState: nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         

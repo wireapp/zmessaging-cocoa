@@ -18,13 +18,20 @@
 
 import Foundation
 
-@objc extension ZMUserSession {
+@objc
+public protocol CallNotificationStyleProvider: class {
+    
+    var callNotificationStyle: CallNotificationStyle { get }
+    
+}
+
+@objc extension ZMUserSession: CallNotificationStyleProvider {
     
     public var callCenter : WireCallCenterV3? {
         return managedObjectContext.zm_callCenter
     }
     
-    internal var callNotificationStyle : CallNotificationStyle {
+    public var callNotificationStyle : CallNotificationStyle {
         return sessionManager.callNotificationStyle
     }
     

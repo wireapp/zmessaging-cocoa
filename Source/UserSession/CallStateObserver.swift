@@ -26,30 +26,35 @@ public final class CallStateObserver : NSObject {
     @objc static public let CallInProgressNotification = Notification.Name(rawValue: "ZMCallInProgressNotification")
     @objc static public let CallInProgressKey = "callInProgress"
     
-    fileprivate weak var userSession: ZMUserSession?
+    fileprivate weak var notificationStyleProvider: CallNotificationStyleProvider?
     fileprivate let localNotificationDispatcher : LocalNotificationDispatcher
-    fileprivate let syncManagedObjectContext : NSManagedObjectContext
+    fileprivate let uiContext : NSManagedObjectContext
+    fileprivate let syncContext : NSManagedObjectContext
     fileprivate var callStateToken : Any? = nil
     fileprivate var missedCalltoken : Any? = nil
     fileprivate let systemMessageGenerator = CallSystemMessageGenerator()
     
-    @objc public init(localNotificationDispatcher : LocalNotificationDispatcher, userSession: ZMUserSession) {
-        self.userSession = userSession
+    @objc public init(localNotificationDispatcher: LocalNotificationDispatcher,
+                      contextProvider: ZMManagedObjectContextProvider,
+                      callNotificationStyleProvider: CallNotificationStyleProvider) {
+        
+        self.uiContext = contextProvider.managedObjectContext
+        self.syncContext = contextProvider.syncManagedObjectContext
+        self.notificationStyleProvider = callNotificationStyleProvider
         self.localNotificationDispatcher = localNotificationDispatcher
-        self.syncManagedObjectContext = userSession.syncManagedObjectContext
         
         super.init()
         
-        self.callStateToken = WireCallCenterV3.addCallStateObserver(observer: self, context: userSession.managedObjectContext)
-        self.missedCalltoken = WireCallCenterV3.addMissedCallObserver(observer: self, context: userSession.managedObjectContext)
+        self.callStateToken = WireCallCenterV3.addCallStateObserver(observer: self, context: uiContext)
+        self.missedCalltoken = WireCallCenterV3.addMissedCallObserver(observer: self, context: uiContext)
     }
     
     fileprivate var callInProgress : Bool = false {
         didSet {
             if callInProgress != oldValue {
-                syncManagedObjectContext.performGroupedBlock {
+                syncContext.performGroupedBlock {
                     NotificationInContext(name: CallStateObserver.CallInProgressNotification,
-                                          context: self.syncManagedObjectContext.notificationContext,
+                                          context: self.syncContext.notificationContext,
                                           userInfo: [ CallStateObserver.CallInProgressKey : self.callInProgress ]).post()
                 }
             }
@@ -64,19 +69,18 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
         let callerId = (caller as? ZMUser)?.remoteIdentifier
         let conversationId = conversation.remoteIdentifier
         
-        syncManagedObjectContext.performGroupedBlock {
+        syncContext.performGroupedBlock {
             guard
                 let callerId = callerId,
                 let conversationId = conversationId,
-                let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncManagedObjectContext),
-                let caller = ZMUser(remoteID: callerId, createIfNeeded: false, in: self.syncManagedObjectContext)
+                let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncContext),
+                let caller = ZMUser(remoteID: callerId, createIfNeeded: false, in: self.syncContext)
             else {
                 return
             }
             
-            let uiManagedObjectContext = self.syncManagedObjectContext.zm_userInterface
-            uiManagedObjectContext?.performGroupedBlock {
-                if let activeCallCount = uiManagedObjectContext?.zm_callCenter?.activeCalls.count {
+            self.uiContext.performGroupedBlock {
+                if let activeCallCount = self.uiContext.zm_callCenter?.activeCalls.count {
                     self.callInProgress = activeCallCount > 0
                 }
             }
@@ -86,7 +90,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
             
             // CallKit depends on a fetched conversation & and is not used for muted conversations
             let skipCallKit = conversation.needsToBeUpdatedFromBackend || conversation.mutedMessageTypesIncludingAvailability != .none
-            let notificationStyle = self.userSession?.callNotificationStyle ?? .callKit
+            let notificationStyle = self.notificationStyleProvider?.callNotificationStyle ?? .callKit
             
             if notificationStyle == .pushNotifications || skipCallKit {
                 self.localNotificationDispatcher.process(callState: callState, in: conversation, caller: caller)
@@ -107,16 +111,15 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                     break
                 }
                 
-                self.syncManagedObjectContext.enqueueDelayedSave()
+                self.syncContext.enqueueDelayedSave()
             }
         }
     }
     
     public func updateConversationListIndicator(convObjectID: NSManagedObjectID, callState: CallState){
         // We need to switch to the uiContext here because we are making changes that need to be present on the UI when the change notification fires
-        guard let uiMOC = self.syncManagedObjectContext.zm_userInterface else { return }
-        uiMOC.performGroupedBlock {
-            guard let uiConv = (try? uiMOC.existingObject(with: convObjectID)) as? ZMConversation else { return }
+        uiContext.performGroupedBlock {
+            guard let uiConv = (try? self.uiContext.existingObject(with: convObjectID)) as? ZMConversation else { return }
             
             switch callState {
             case .incoming(video: _, shouldRing: let shouldRing, degraded: _):
@@ -131,10 +134,10 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                 break
             }
             
-            if uiMOC.zm_hasChanges {
+            if self.uiContext.zm_hasChanges {
                 NotificationDispatcher.notifyNonCoreDataChanges(objectID: convObjectID,
                                                                 changedKeys: [ZMConversationListIndicatorKey],
-                                                                uiContext: uiMOC)
+                                                                uiContext: self.uiContext)
             }
         }
     }
@@ -143,22 +146,22 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
         let callerId = (caller as? ZMUser)?.remoteIdentifier
         let conversationId = conversation.remoteIdentifier
         
-        syncManagedObjectContext.performGroupedBlock {
+        syncContext.performGroupedBlock {
             guard
                 let callerId = callerId,
                 let conversationId = conversationId,
-                let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncManagedObjectContext),
-                let caller = ZMUser(remoteID: callerId, createIfNeeded: false, in: self.syncManagedObjectContext)
+                let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.syncContext),
+                let caller = ZMUser(remoteID: callerId, createIfNeeded: false, in: self.syncContext)
                 else {
                     return
             }
             
-            if (self.userSession?.callNotificationStyle ?? .callKit) == .pushNotifications {
+            if (self.notificationStyleProvider?.callNotificationStyle ?? .callKit) == .pushNotifications {
                 self.localNotificationDispatcher.processMissedCall(in: conversation, caller: caller)
             }
             
             conversation.appendMissedCallMessage(fromUser: caller, at: timestamp)
-            self.syncManagedObjectContext.enqueueDelayedSave()
+            self.syncContext.enqueueDelayedSave()
         }
     }
     
@@ -173,7 +176,7 @@ extension CallStateObserver : WireCallCenterCallStateObserver, WireCallCenterMis
                 conversation.updateLastModified(timestamp)
             }
             
-            self.syncManagedObjectContext.enqueueDelayedSave()
+            syncContext.enqueueDelayedSave()
         default: break
         }
     }
