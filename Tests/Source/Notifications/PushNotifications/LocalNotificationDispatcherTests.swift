@@ -21,7 +21,7 @@ import UserNotifications
 
 @testable import WireSyncEngine
 
-class LocalNotificationDispatcherTests: MessagingTest {
+class LocalNotificationDispatcherTests: DatabaseTest {
 
     typealias ZMLocalNotification = WireSyncEngine.ZMLocalNotification
     
@@ -52,8 +52,6 @@ class LocalNotificationDispatcherTests: MessagingTest {
          self.sut.failedMessageNotifications,
          self.sut.messageNotifications,
          self.sut.callingNotifications].forEach { $0.notificationCenter = notificationCenter }
-        
-        self.mockUserSession.operationStatus.isInBackground = true
         
         syncMOC.performGroupedBlockAndWait {
             self.user1 = ZMUser.insertNewObject(in: self.syncMOC)
@@ -168,7 +166,7 @@ extension LocalNotificationDispatcherTests {
 
     func testThatItDoesNotCreateANotificationForAnUnsupportedEventType() {
         // GIVEN
-        let event = self.event(withPayload: nil, in: self.conversation1, type: EventConversationTyping)!
+        let event = self.event(withPayload: nil, type: .conversationTyping, in: self.conversation1, user: self.user1)
 
         // WHEN
         self.sut.didReceive(events: [event], conversationMap: [:])
