@@ -33,7 +33,7 @@ extension ZMUser {
     
     public func fetchMarketingConsent(in userSession: ZMUserSession,
                                       completion: @escaping CompletionFetch) {
-        fetchConsent(for: .marketing, in: userSession, completion: completion)
+        fetchConsent(for: .marketing, on: userSession.transportSession, completion: completion)
     }
     
     static func parse(consentPayload: ZMTransportData) -> [ConsentType: Bool] {
@@ -59,7 +59,7 @@ extension ZMUser {
     }
     
     func fetchConsent(for consentType: ConsentType,
-                      in userSession: ZMUserSession,
+                      on transportSession: TransportSessionType,
                       completion: @escaping CompletionFetch) {
         
         
@@ -81,19 +81,19 @@ extension ZMUser {
             completion(.success(status))
         })
         
-        userSession.transportSession.enqueueOneTime(request)
+        transportSession.enqueueOneTime(request)
     }
     
     public typealias CompletionSet   = (VoidResult) -> Void
     public func setMarketingConsent(to value: Bool,
                                     in userSession: ZMUserSession,
                                     completion: @escaping CompletionSet) {
-        setConsent(to: value, for: .marketing, in: userSession, completion: completion)
+        setConsent(to: value, for: .marketing, on: userSession.transportSession, completion: completion)
     }
     
     func setConsent(to value: Bool,
                     for consentType: ConsentType,
-                    in userSession: ZMUserSession,
+                    on transportSession: TransportSessionType,
                     completion: @escaping CompletionSet) {
         let request = ConsentRequestFactory.setConsentRequest(for: consentType, value: value)
         
@@ -110,7 +110,7 @@ extension ZMUser {
             completion(.success)
         })
         
-        userSession.transportSession.enqueueOneTime(request)
+        transportSession.enqueueOneTime(request)
     }
 }
 
