@@ -88,23 +88,6 @@ class DatabaseTest: ZMTBaseTest {
             self.syncMOC.zm_fileAssetCache = fileAssetCache
             self.uiMOC.zm_userImageCache = userImageCache
         }
-        
-//        FileAssetCache *fileAssetCache = [[FileAssetCache alloc] initWithLocation:nil];
-//        UserImageLocalCache *userImageCache = [[UserImageLocalCache alloc] initWithLocation:nil];
-//
-//        [self.uiMOC addGroup:self.dispatchGroup];
-//        self.uiMOC.userInfo[@"TestName"] = self.name;
-//
-//        [self.syncMOC performGroupedBlockAndWait:^{
-//            self.syncMOC.userInfo[@"TestName"] = self.name;
-//            [self.syncMOC addGroup:self.dispatchGroup];
-//            [self.syncMOC saveOrRollback];
-//
-//            [self.syncMOC setZm_userInterfaceContext:self.uiMOC];
-//            [self.syncMOC setPersistentStoreMetadata:@(notificationContentVisible) forKey:@"ZMShouldNotificationContentKey"];
-//            self.syncMOC.zm_fileAssetCache = fileAssetCache;
-//            self.syncMOC.zm_userImageCache = userImageCache;
-//            }];
     }
     
     override func setUp() {
