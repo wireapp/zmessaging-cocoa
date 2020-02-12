@@ -22,7 +22,6 @@
 
 #import "NSError+ZMUserSessionInternal.h"
 #import "ZMUserSession+Internal.h"
-#import "ZMUserSession+OTR.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 

@@ -34,7 +34,7 @@
 @class ZMPushRegistrant;
 @class UserProfileUpdateStatus;
 @class ClientUpdateStatus;
-@class CallKitDelegate;
+@class CallKitManager;
 
 @protocol MediaManagerType; 
 @protocol FlowManagerType;
@@ -44,8 +44,6 @@
 
 @property (nonatomic, readonly) UserProfileUpdateStatus *userProfileUpdateStatus;
 @property (nonatomic, readonly) ZMClientRegistrationStatus *clientRegistrationStatus;
-@property (nonatomic, readonly) ClientUpdateStatus *clientUpdateStatus;
-@property (nonatomic, readonly) ProxiedRequestsStatus *proxiedRequestStatus;
 @property (nonatomic, readonly) id<AuthenticationStatusProvider> authenticationStatus;
 
 @end
@@ -55,13 +53,10 @@
 
 @property (nonatomic, readonly) id<ZMApplication> application;
 @property (nonatomic) ZMCallStateObserver *callStateObserver;
-@property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
 @property (nonatomic) ManagedObjectContextChangeObserver *messageReplyObserver;
 @property (nonatomic) ManagedObjectContextChangeObserver *likeMesssageObserver;
 @property (nonatomic)  UserExpirationObserver *userExpirationObserver;
 @property (nonatomic, readonly) NSURL *sharedContainerURL;
-
-- (void)notifyThirdPartyServices;
 
 @end
 

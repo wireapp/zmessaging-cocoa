@@ -20,14 +20,15 @@ import Foundation
 
 @testable import WireSyncEngine
 
-class SearchDirectoryTests : MessagingTest {
+class SearchDirectoryTests : DatabaseTest {
 
     func testThatItEmptiesTheSearchUserCacheOnTeardown() {
         // given
         uiMOC.zm_searchUserCache = NSCache()
+        let mockTransport = MockTransportSession(dispatchGroup: dispatchGroup)
         let uuid = UUID.create()
-        let sut = SearchDirectory(userSession: mockUserSession)
-        _ = ZMSearchUser(contextProvider: mockUserSession, name: "John Doe", handle: "john", accentColor: .brightOrange, remoteIdentifier: uuid)
+        let sut = SearchDirectory(searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransport)
+        _ = ZMSearchUser(contextProvider: contextDirectory!, name: "John Doe", handle: "john", accentColor: .brightOrange, remoteIdentifier: uuid)
         XCTAssertNotNil(uiMOC.zm_searchUserCache?.object(forKey: uuid as NSUUID))
     
         // when

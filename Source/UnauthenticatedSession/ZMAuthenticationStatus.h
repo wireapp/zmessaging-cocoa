@@ -21,7 +21,6 @@
 @import CoreData;
 
 #import "NSError+ZMUserSession.h"
-#import "ZMUserSession+Authentication.h"
 #import "ZMClientRegistrationStatus+Internal.h"
 
 @class UserInfo;

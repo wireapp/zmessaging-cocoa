@@ -24,7 +24,7 @@ extension SessionManager {
     @objc(continueUserActivity:restorationHandler:)
     public func continueUserActivity(_ userActivity : NSUserActivity, restorationHandler: ([AnyObject]?) -> Void) -> Bool {
         if #available(iOS 10.0, *) {
-            return callKitDelegate?.continueUserActivity(userActivity) ?? false
+            return callKitManager?.continueUserActivity(userActivity) ?? false
         } else {
             return false
         }

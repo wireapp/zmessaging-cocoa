@@ -52,7 +52,7 @@ public struct TypingEvent {
     }
     
     func isEqual(other: TypingEvent) -> Bool {
-        return isTyping == other.isTyping && objectID.isEqual(other.objectID) && fabs(date.timeIntervalSince(other.date)) < (ZMTypingDefaultTimeout / ZMTypingRelativeSendTimeout)
+        return isTyping == other.isTyping && objectID.isEqual(other.objectID) && fabs(date.timeIntervalSince(other.date)) < (Typing.defaultTimeout / Typing.relativeSendTimeout)
     }
     
 }
@@ -106,7 +106,7 @@ class TypingEventQueue {
 
 public class TypingStrategy : AbstractRequestStrategy {
     
-    fileprivate var typing : ZMTyping!
+    fileprivate var typing : Typing!
     fileprivate let typingEventQueue = TypingEventQueue()
     fileprivate var tornDown : Bool = false
     fileprivate var observers: [Any] = []
@@ -120,8 +120,8 @@ public class TypingStrategy : AbstractRequestStrategy {
         self.init(applicationStatus: applicationStatus, syncContext: managedObjectContext, uiContext: managedObjectContext.zm_userInterface, typing: nil)
     }
     
-    init(applicationStatus: ApplicationStatus, syncContext: NSManagedObjectContext, uiContext: NSManagedObjectContext, typing: ZMTyping?) {
-        self.typing = typing ?? ZMTyping(userInterfaceManagedObjectContext: uiContext, syncManagedObjectContext: syncContext)
+    init(applicationStatus: ApplicationStatus, syncContext: NSManagedObjectContext, uiContext: NSManagedObjectContext, typing: Typing?) {
+        self.typing = typing ?? Typing(uiContext: uiContext, syncContext: syncContext)
         super.init(withManagedObjectContext: syncContext, applicationStatus: applicationStatus)
         self.configuration = [
             .allowsRequestsWhileInBackground,
@@ -237,12 +237,12 @@ extension TypingStrategy : ZMEventConsumer {
             
             if let message = ZMGenericMessage(from: event),
                 message.hasText() || message.hasEdited() || (message.hasEphemeral() && message.ephemeral.hasText())  {
-                typing.setIs(false, for: user, in: conversation)
+                typing.setIsTyping(false, for: user, in: conversation)
             }
         } else if event.type == .conversationMemberLeave {
             let users = event.usersFromUserIDs(in: managedObjectContext, createIfNeeded: false).compactMap { $0 as? ZMUser }
             users.forEach { user in
-                typing.setIs(false, for: user, in: conversation)
+                typing.setIsTyping(false, for: user, in: conversation)
             }
         }
     }
@@ -251,7 +251,7 @@ extension TypingStrategy : ZMEventConsumer {
         let startedTyping = (status == StartedKey)
         let stoppedTyping = (status == StoppedKey)
         if (startedTyping || stoppedTyping) {
-            typing.setIs(startedTyping, for: user, in: conversation)
+            typing.setIsTyping(startedTyping, for: user, in: conversation)
         }
     }
 }

@@ -189,6 +189,12 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchCode:^(NSManagedObjectContext *context) {
                          [ZMHotFixDirectory refetchLabels:context];
                      }],
+                    
+                    /// We need to migrate the backend environment to the shared user defaults for it to work with the share extension.
+                    [ZMHotFixPatch
+                     patchWithVersion:@"295.1.0" patchCode:^(__unused NSManagedObjectContext *context) {
+                         [ZMHotFixDirectory migrateBackendEnvironmentToSharedUserDefaults];
+                     }],
                     ];
     });
     return patches;

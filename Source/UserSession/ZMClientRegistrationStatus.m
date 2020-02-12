@@ -70,7 +70,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)observeClientUpdates
 {
     ZM_WEAK(self);
-    self.clientUpdateToken = [ZMClientUpdateNotification addOserverWithContext:self.managedObjectContext block:^(enum ZMClientUpdateNotificationType type, NSArray<NSManagedObjectID *> *clientObjectIDs, NSError *error) {
+    self.clientUpdateToken = [ZMClientUpdateNotification addObserverWithContext:self.managedObjectContext block:^(enum ZMClientUpdateNotificationType type, NSArray<NSManagedObjectID *> *clientObjectIDs, NSError *error) {
         ZM_STRONG(self);
         [self.managedObjectContext performGroupedBlock:^{
             if (type == ZMClientUpdateNotificationTypeFetchCompleted) {

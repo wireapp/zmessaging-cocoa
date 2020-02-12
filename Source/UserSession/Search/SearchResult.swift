@@ -29,7 +29,7 @@ public struct SearchResult {
 
 extension SearchResult {
     
-    public init?(payload: [AnyHashable : Any], query: String, userSession: ZMUserSession) {
+    public init?(payload: [AnyHashable : Any], query: String, contextProvider: ZMManagedObjectContextProvider) {
         guard let documents = payload["documents"] as? [[String : Any]] else {
             return nil
         }
@@ -44,7 +44,7 @@ extension SearchResult {
             return !isHandleQuery || name?.hasPrefix("@") ?? true || handle?.contains(queryWithoutAtSymbol) ?? false
         }
         
-        let searchUsers = ZMSearchUser.searchUsers(from: filteredDocuments, contextProvider: userSession)
+        let searchUsers = ZMSearchUser.searchUsers(from: filteredDocuments, contextProvider: contextProvider)
         
         contacts = []
         teamMembers = []
@@ -54,12 +54,12 @@ extension SearchResult {
         services = []
     }
     
-    public init?(servicesPayload servicesFullPayload: [AnyHashable : Any], query: String, userSession: ZMUserSession) {
+    public init?(servicesPayload servicesFullPayload: [AnyHashable : Any], query: String, contextProvider: ZMManagedObjectContextProvider) {
         guard let servicesPayload = servicesFullPayload["services"] as? [[String : Any]] else {
             return nil
         }
         
-        let searchUsersServices = ZMSearchUser.searchUsers(from: servicesPayload, contextProvider: userSession)
+        let searchUsersServices = ZMSearchUser.searchUsers(from: servicesPayload, contextProvider: contextProvider)
         
         contacts = []
         teamMembers = []
@@ -69,9 +69,9 @@ extension SearchResult {
         services = searchUsersServices
     }
     
-    public init?(userLookupPayload: [AnyHashable : Any], userSession: ZMUserSession) {
+    public init?(userLookupPayload: [AnyHashable : Any], contextProvider: ZMManagedObjectContextProvider) {
         guard let userLookupPayload = userLookupPayload as? [String : Any],
-              let searchUser = ZMSearchUser.searchUser(from: userLookupPayload, contextProvider: userSession),
+              let searchUser = ZMSearchUser.searchUser(from: userLookupPayload, contextProvider: contextProvider),
               searchUser.user == nil ||
               searchUser.user?.isTeamMember == false else {
             return nil

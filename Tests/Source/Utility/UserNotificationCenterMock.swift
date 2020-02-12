@@ -18,6 +18,7 @@
 
 import Foundation
 import WireSyncEngine
+import UserNotifications
 
 @objc class UserNotificationCenterMock: NSObject, UserNotificationCenter {
     

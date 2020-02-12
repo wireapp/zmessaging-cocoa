@@ -52,20 +52,36 @@ import Foundation
 extension ZMConversation {
     
     public func addParticipants(_ participants: [UserType], userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
+        addParticipants(participants,
+                        transportSession: userSession.transportSession,
+                        eventProcessor: userSession.operationLoop.syncStrategy,
+                        contextProvider: userSession,
+                        completion: completion)
+    }
+    
+    func addParticipants(_ participants: [UserType],
+                         transportSession: TransportSessionType,
+                         eventProcessor: UpdateEventProcessor,
+                         contextProvider: ZMManagedObjectContextProvider,
+                         completion: @escaping (VoidResult) -> Void) {
         
         guard let users = participants as? [ZMUser],
               conversationType == .group,
               !users.isEmpty,
-              !users.contains(ZMUser.selfUser(inUserSession: userSession))
+              !users.contains(ZMUser.selfUser(in: contextProvider.managedObjectContext))
         else { return completion(.failure(ConversationAddParticipantsError.invalidOperation)) }
         
         let request = ConversationParticipantRequestFactory.requestForAddingParticipants(Set(users), conversation: self)
         
-        request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
+        request.add(ZMCompletionHandler(on: managedObjectContext!) { [weak contextProvider, weak eventProcessor] response in
+            guard let syncMOC = contextProvider?.syncManagedObjectContext, let eventProcessor = eventProcessor else {
+                return  completion(.failure(ConversationAddParticipantsError.unknown))
+            }
+            
             if response.httpStatus == 200 {
                 if let payload = response.payload, let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
-                    userSession.syncManagedObjectContext.performGroupedBlock {
-                        userSession.operationLoop.syncStrategy.process(updateEvents: [event], ignoreBuffer: true)
+                    syncMOC.performGroupedBlock {
+                        eventProcessor.process(updateEvents: [event], ignoreBuffer: true)
                     }
                 }
                 
@@ -81,10 +97,22 @@ extension ZMConversation {
             }
         })
         
-        userSession.transportSession.enqueueOneTime(request)
+        transportSession.enqueueOneTime(request)
     }
     
     public func removeParticipant(_ participant: UserType, userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
+        removeParticipant(participant,
+                          transportSession: userSession.transportSession,
+                          eventProcessor: userSession.operationLoop.syncStrategy,
+                          contextProvider: userSession,
+                          completion: completion)
+    }
+    
+    func removeParticipant(_ participant: UserType,
+                                  transportSession: TransportSessionType,
+                                  eventProcessor: UpdateEventProcessor,
+                                  contextProvider: ZMManagedObjectContextProvider,
+                                  completion: @escaping (VoidResult) -> Void) {
         
         guard conversationType == .group,
             let conversationId = remoteIdentifier,
@@ -94,18 +122,22 @@ extension ZMConversation {
         let isRemovingSelfUser = participant.isSelfUser
         let request = ConversationParticipantRequestFactory.requestForRemovingParticipant(user, conversation: self)
         
-        request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
+        request.add(ZMCompletionHandler(on: managedObjectContext!) { [weak contextProvider, weak eventProcessor] response in
+            guard let syncMOC = contextProvider?.syncManagedObjectContext, let eventProcessor = eventProcessor else {
+                return  completion(.failure(ConversationRemoveParticipantError.unknown))
+            }
+            
             if response.httpStatus == 200 {
                 if let payload = response.payload, let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
-                    userSession.syncManagedObjectContext.performGroupedBlock {
-                        let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.syncManagedObjectContext)
+                    syncMOC.performGroupedBlock {
+                        let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: syncMOC)
                         
                         // Update cleared timestamp if self user left and deleted history
                         if let clearedTimestamp = conversation?.clearedTimeStamp, clearedTimestamp == conversation?.lastServerTimeStamp, isRemovingSelfUser {
                             conversation?.updateCleared(fromPostPayloadEvent: event)
                         }
                         
-                        userSession.operationLoop.syncStrategy.process(updateEvents: [event], ignoreBuffer: true)
+                        eventProcessor.process(updateEvents: [event], ignoreBuffer: true)
                     }
                 }
                 
@@ -121,7 +153,7 @@ extension ZMConversation {
             }
         })
         
-        userSession.transportSession.enqueueOneTime(request)
+        transportSession.enqueueOneTime(request)
     }
     
 }

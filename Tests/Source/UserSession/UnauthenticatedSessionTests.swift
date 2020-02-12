@@ -101,7 +101,13 @@ public class PreLoginAuthenticationNotificationRecorder : NSObject {
 final class TestUnauthenticatedTransportSession: NSObject, UnauthenticatedTransportSessionProtocol {
 
     public var cookieStorage = ZMPersistentCookieStorage()
+    
     var nextEnqueueResult: EnqueueResult = .nilRequest
+    var lastEnqueuedRequest: ZMTransportRequest?
+    
+    func enqueueOneTime(_ request: ZMTransportRequest) {
+        lastEnqueuedRequest = request
+    }
 
     func enqueueRequest(withGenerator generator: () -> ZMTransportRequest?) -> EnqueueResult {
         return nextEnqueueResult

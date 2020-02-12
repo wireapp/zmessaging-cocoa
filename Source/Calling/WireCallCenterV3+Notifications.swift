@@ -18,23 +18,6 @@
 
 import Foundation
 
-@objc
-public enum ReceivedVideoState : UInt {
-    /// Sender is not sending video
-    case stopped
-    /// Sender is sending video
-    case started
-    /// Sender is sending video but currently has a bad connection
-    case badConnection
-}
-
-@objc
-public protocol ReceivedVideoObserver : class {
-    
-    @objc(callCenterDidChangeReceivedVideoState:user:)
-    func callCenterDidChange(receivedVideoState: ReceivedVideoState, user: ZMUser)
-    
-}
 
 protocol SelfPostingNotification {
     static var notificationName : Notification.Name { get }
@@ -97,7 +80,7 @@ public protocol WireCallCenterCallStateObserver : class {
      - parameter caller: user which initiated the call
      - parameter timestamp: when the call state change occured
      */
-    func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: ZMUser, timestamp: Date?, previousCallState: CallState?)
+    func callCenterDidChange(callState: CallState, conversation: ZMConversation, caller: UserType, timestamp: Date?, previousCallState: CallState?)
 }
 
 public struct WireCallCenterCallStateNotification : SelfPostingNotification {
@@ -114,7 +97,7 @@ public struct WireCallCenterCallStateNotification : SelfPostingNotification {
 // MARK:- Missed call observer
 
 public protocol WireCallCenterMissedCallObserver : class {
-    func callCenterMissedCall(conversation: ZMConversation, caller: ZMUser, timestamp: Date, video: Bool)
+    func callCenterMissedCall(conversation: ZMConversation, caller: UserType, timestamp: Date, video: Bool)
 }
 
 public struct WireCallCenterMissedCallNotification : SelfPostingNotification {
@@ -171,7 +154,7 @@ public struct WireCallCenterCallParticipantNotification : SelfPostingNotificatio
 
 @objc
 public protocol VoiceGainObserver : class {
-    func voiceGainDidChange(forParticipant participant: ZMUser, volume: Float)
+    func voiceGainDidChange(forParticipant participant: UserType, volume: Float)
 }
 
 @objcMembers

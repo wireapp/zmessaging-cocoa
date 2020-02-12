@@ -24,7 +24,6 @@
 @import WireDataModel;
 @import CoreTelephony;
 
-#import "ZMUserSession+Background.h"
 #import "ZMUserSession+Internal.h"
 #import "ZMUserSession+OperationLoop.h"
 #import "ZMSyncStrategy.h"
@@ -57,6 +56,7 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic) NSMutableArray* observersToken;
 @property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
+@property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
 
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
 @property (nonatomic) BOOL hasCompletedInitialSync;
@@ -458,16 +458,6 @@ ZM_EMPTY_ASSERTING_INIT()
 @end
 
 
-@implementation ZMUserSession (PushToken)
-
-- (BOOL)isAuthenticated
-{
-    return self.authenticationStatus.isAuthenticated;
-}
-
-@end
-
-
 
 @implementation ZMUserSession (Transport)
 
@@ -699,3 +689,12 @@ static NSString * const IsOfflineKey = @"IsOfflineKey";
 
 @end
 
+@implementation ZMUserSession (ZMBackgroundFetch)
+
+- (void)enableBackgroundFetch;
+{
+    // We enable background fetch by setting the minimum interval to something different from UIApplicationBackgroundFetchIntervalNever
+    [self.application setMinimumBackgroundFetchInterval:10. * 60. + arc4random_uniform(5 * 60)];
+}
+
+@end

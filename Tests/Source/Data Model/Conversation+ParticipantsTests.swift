@@ -20,7 +20,27 @@ import XCTest
 
 @testable import WireSyncEngine
 
-class Conversation_ParticipantsTests: MessagingTest {
+class Conversation_ParticipantsTests: DatabaseTest {
+    
+    var mockTransportSession: MockTransportSession!
+    var mockUpdateEventProcessor: MockUpdateEventProcessor!
+    
+    override func setUp() {
+        super.setUp()
+        
+        mockTransportSession = MockTransportSession(dispatchGroup: dispatchGroup)
+        mockUpdateEventProcessor = MockUpdateEventProcessor()
+    }
+    
+    override func tearDown() {
+        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+        
+        mockTransportSession.cleanUp()
+        mockTransportSession = nil
+        mockUpdateEventProcessor = nil
+        
+        super.tearDown()
+    }
     
     func responsePayloadForUserEventInConversation(_ conversationId: UUID, senderId: UUID, usersIds: [UUID], eventType: String, time: Date = Date()) -> ZMTransportData {
         return ["conversation": conversationId.transportString(),
@@ -72,7 +92,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let receivedSuccess = expectation(description: "received success")
         
         // when
-        conversation.addParticipants([user], userSession: mockUserSession) { result in
+        conversation.addParticipants([user], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
             switch result {
             case .success:
                 receivedSuccess.fulfill()
@@ -83,8 +103,8 @@ class Conversation_ParticipantsTests: MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(processedUpdateEvents.count, 1);
-        XCTAssertEqual((processedUpdateEvents.firstObject as? ZMUpdateEvent)?.type, ZMUpdateEventType.conversationMemberJoin)
+        XCTAssertEqual(mockUpdateEventProcessor.processedEvents.count, 1);
+        XCTAssertEqual(mockUpdateEventProcessor.processedEvents.first?.type, .conversationMemberJoin)
         
         mockTransportSession.responseGeneratorBlock = nil
         mockTransportSession.resetReceivedRequests()
@@ -103,7 +123,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.addParticipants([selfUser], userSession: mockUserSession) { result in
+        conversation.addParticipants([selfUser], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
             switch result {
             case .failure(let error):
                 if case ConversationAddParticipantsError.invalidOperation = error {
@@ -130,7 +150,7 @@ class Conversation_ParticipantsTests: MessagingTest {
             let receivedError = expectation(description: "received error")
             
             // when
-            conversation.addParticipants([user], userSession: mockUserSession) { result in
+            conversation.addParticipants([user], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
                 switch result {
                 case .failure(let error):
                     if case ConversationAddParticipantsError.invalidOperation = error {
@@ -163,7 +183,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.addParticipants([user], userSession: mockUserSession) { result in
+        conversation.addParticipants([user], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
             switch result {
             case .failure(let error):
                 if case ConversationAddParticipantsError.invalidOperation = error {
@@ -198,7 +218,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.addParticipants([user], userSession: mockUserSession) { result in
+        conversation.addParticipants([user], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
             switch result {
             case .failure(let error):
                 if case ConversationAddParticipantsError.conversationNotFound = error {
@@ -253,7 +273,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let receivedSuccess = expectation(description: "received success")
         
         // when
-        conversation.removeParticipant(user, userSession: mockUserSession) { result in
+        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
             switch result {
             case .success:
                 receivedSuccess.fulfill()
@@ -280,7 +300,7 @@ class Conversation_ParticipantsTests: MessagingTest {
             let receivedError = expectation(description: "received error")
             
             // when
-            conversation.removeParticipant(user, userSession: mockUserSession) { result in
+            conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
                 switch result {
                 case .failure(let error):
                     if case ConversationRemoveParticipantError.invalidOperation = error {
@@ -314,7 +334,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.removeParticipant(user, userSession: mockUserSession) { result in
+        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
             switch result {
             case .failure(let error):
                 if case ConversationRemoveParticipantError.invalidOperation = error {
@@ -349,7 +369,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.removeParticipant(user, userSession: mockUserSession) { result in
+        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
             switch result {
             case .failure(let error):
                 if case ConversationRemoveParticipantError.conversationNotFound = error {
@@ -384,7 +404,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         let receivedSuccess = expectation(description: "received success")
 
         // when
-        conversation.removeParticipant(user, userSession: mockUserSession) { result in
+        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
             switch result {
             case .success:
                 receivedSuccess.fulfill()
@@ -395,8 +415,8 @@ class Conversation_ParticipantsTests: MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(processedUpdateEvents.count, 1);
-        XCTAssertEqual((processedUpdateEvents.firstObject as? ZMUpdateEvent)?.type, ZMUpdateEventType.conversationMemberLeave)
+        XCTAssertEqual(mockUpdateEventProcessor.processedEvents.count, 1);
+        XCTAssertEqual(mockUpdateEventProcessor.processedEvents.first?.type, .conversationMemberLeave)
         
         mockTransportSession.responseGeneratorBlock = nil
         mockTransportSession.resetReceivedRequests()
@@ -435,7 +455,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         }
         
         // when
-        conversation.removeParticipant(selfUser, userSession: mockUserSession) { result in
+        conversation.removeParticipant(selfUser, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
             switch result {
             case .success:
                 receivedSuccess.fulfill()
@@ -490,7 +510,7 @@ class Conversation_ParticipantsTests: MessagingTest {
         }
         
         // when
-        conversation.removeParticipant(user, userSession: mockUserSession) { result in
+        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
             switch result {
             case .success:
                 receivedSuccess.fulfill()

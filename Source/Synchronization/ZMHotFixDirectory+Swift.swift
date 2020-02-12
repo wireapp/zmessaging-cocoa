@@ -217,4 +217,10 @@ import Foundation
     public static func refetchLabels(_ context: NSManagedObjectContext) {
         ZMUser.selfUser(in: context).needsToRefetchLabels = true
     }
+    
+    public static func migrateBackendEnvironmentToSharedUserDefaults() {
+        guard let sharedUserDefaults = UserDefaults.shared() else { return }
+        
+        BackendEnvironment.migrate(from: .standard, to: sharedUserDefaults)
+    }
 }

@@ -28,8 +28,8 @@ import Foundation
         return sessionManager.callNotificationStyle
     }
     
-    internal var callKitDelegate : CallKitDelegate? {
-        return sessionManager.callKitDelegate
+    internal var callKitManager : CallKitManager? {
+        return sessionManager.callKitManager
     }
     
     @objc var useConstantBitRateAudio : Bool {

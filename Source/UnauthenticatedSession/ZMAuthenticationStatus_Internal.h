@@ -19,6 +19,8 @@
 
 #import <WireSyncEngine/WireSyncEngine.h>
 
+@class ZMCompleteRegistrationUser;
+
 @interface ZMAuthenticationStatus () <ZMTimerClient>
 
 @property (nonatomic, copy) NSString *registrationPhoneNumberThatNeedsAValidationCode;

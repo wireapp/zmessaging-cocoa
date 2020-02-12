@@ -16,9 +16,10 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+import XCTest
+import UserNotifications
 
 @testable import WireSyncEngine
-import XCTest
 
 class LocalNotificationDispatcherTests: MessagingTest {
 

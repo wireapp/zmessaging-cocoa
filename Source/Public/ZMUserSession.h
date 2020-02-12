@@ -29,7 +29,7 @@
 @class ZMConversation;
 @class UserClient;
 @class ZMProxyRequest;
-@class CallKitDelegate;
+@class CallKitManager;
 @class CallingRequestStrategy;
 @class WireCallCenterV3;
 @class SessionManager;
@@ -149,20 +149,6 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
 /// This will get called at a convenient point in time when Hockey and Localytics should upload their data.
 /// We try not to have Hockey and Localytics use the network while we're sync'ing.
 - (void)userSessionIsReadyToUploadServicesData:(ZMUserSession *)userSession;
-
-@end
-
-
-typedef NS_ENUM (NSInteger, ProxiedRequestType) {
-    ProxiedRequestTypeGiphy,
-    ProxiedRequestTypeSoundcloud,
-    ProxiedRequestTypeYouTube
-};
-
-@interface ZMUserSession (Proxy)
-
-- (ZMProxyRequest *)proxiedRequestWithPath:(NSString *)path method:(ZMTransportRequestMethod)method type:(ProxiedRequestType)type callback:(void (^)(NSData *, NSHTTPURLResponse *, NSError *))callback;
-- (void)cancelProxiedRequest:(ZMProxyRequest *)proxyRequest;
 
 @end
 

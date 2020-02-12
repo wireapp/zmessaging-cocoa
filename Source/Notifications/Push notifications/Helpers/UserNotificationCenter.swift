@@ -17,6 +17,8 @@
 //
 
 import Foundation
+import UserNotifications
+
 
 /**
  * An abstraction of the `UNUserNotificationCenter` object to facilitate
