@@ -57,6 +57,8 @@ static NSString * const AppstoreURL = @"https://itunes.apple.com/us/app/zeta-cli
 @property (nonatomic) NSMutableArray* observersToken;
 @property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
+@property (nonatomic) URLActionProcessorStrategy *urlActionProcessorStrategy;
+@property (nonatomic) id<ShowContentDelegate> showContentDelegate;
 
 @property (nonatomic) TopConversationsDirectory *topConversationsDirectory;
 @property (nonatomic) BOOL hasCompletedInitialSync;
@@ -94,7 +96,8 @@ ZM_EMPTY_ASSERTING_INIT()
                     transportSession:(id<TransportSessionType>)transportSession
                          application:(id<ZMApplication>)application
                           appVersion:(NSString *)appVersion
-                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
+                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
+                 showContentDelegate:(id<ShowContentDelegate>)showContentDelegate
 {
     [storeProvider.contextDirectory.syncContext performBlockAndWait:^{
         storeProvider.contextDirectory.syncContext.analytics = analytics;
@@ -122,7 +125,8 @@ ZM_EMPTY_ASSERTING_INIT()
                             operationLoop:nil
                               application:application
                                appVersion:appVersion
-                            storeProvider:storeProvider];
+                            storeProvider:storeProvider
+                      showContentDelegate:showContentDelegate];
     return self;
 }
 
@@ -133,11 +137,13 @@ ZM_EMPTY_ASSERTING_INIT()
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
-                            storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
+                           storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
+                     showContentDelegate:(id<ShowContentDelegate>)showContentDelegate
 {
     self = [super init];
     if(self) {
         _storeProvider = storeProvider;
+        _showContentDelegate = showContentDelegate;
         self.observersToken = [[NSMutableArray alloc] init];
         
         self.appVersion = appVersion;
@@ -200,6 +206,10 @@ ZM_EMPTY_ASSERTING_INIT()
 
         _application = application;
         self.topConversationsDirectory = [[TopConversationsDirectory alloc] initWithManagedObjectContext:self.managedObjectContext];
+        self.urlActionProcessorStrategy = [[URLActionProcessorStrategy alloc] initWithContextProvider:self
+                                                                                     transportSession:self.transportSession
+                                                                                       eventProcessor:self.operationLoop.syncStrategy
+                                                                                  showContentDelegate:self.showContentDelegate];
         
         [self.syncManagedObjectContext performBlockAndWait:^{
             

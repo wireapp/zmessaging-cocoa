@@ -186,6 +186,7 @@ extension SessionManager: PKPushRegistryDelegate {
 
 // MARK: - ShowContentDelegate
 
+@objc
 public protocol ShowContentDelegate: class {
     func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?)
     func showConversationList()

@@ -29,6 +29,7 @@ open class AuthenticatedSessionFactory {
     let application : ZMApplication
     var environment: BackendEnvironmentProvider
     let reachability: ReachabilityProvider & TearDownCapable
+    weak var showContentDelegate: ShowContentDelegate?
 
     public init(
         appVersion: String,
@@ -37,7 +38,8 @@ open class AuthenticatedSessionFactory {
         flowManager: FlowManagerType,
         environment: BackendEnvironmentProvider,
         reachability: ReachabilityProvider & TearDownCapable,
-        analytics: AnalyticsType? = nil
+        analytics: AnalyticsType? = nil,
+        showContentDelegate: ShowContentDelegate? = nil
         ) {
         self.appVersion = appVersion
         self.mediaManager = mediaManager
@@ -46,6 +48,7 @@ open class AuthenticatedSessionFactory {
         self.application = application
         self.environment = environment
         self.reachability = reachability
+        self.showContentDelegate = showContentDelegate
     }
 
     func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
@@ -64,7 +67,8 @@ open class AuthenticatedSessionFactory {
             transportSession: transportSession,
             application: application,
             appVersion: appVersion,
-            storeProvider: storeProvider
+            storeProvider: storeProvider,
+            showContentDelegate: showContentDelegate
         )
     }
     

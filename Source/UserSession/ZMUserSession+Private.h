@@ -30,9 +30,12 @@
 @class UserExpirationObserver;
 @class ProxiedRequestsStatus;
 @class ClientUpdateStatus;
+@class URLActionProcessorStrategy;
 
 @protocol MediaManagerType;
 @protocol TransportSessionType;
+@protocol URLActionProcessor;
+@protocol ShowContentDelegate;
 
 #import "ZMUserSession.h"
 
@@ -64,7 +67,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) ManagedObjectContextChangeObserver *likeMesssageObserver;
 @property (nonatomic, nonnull)  UserExpirationObserver *userExpirationObserver;
 @property (nonatomic, readonly) id<MediaManagerType> mediaManager;
+@property (nonatomic, readonly) URLActionProcessorStrategy *urlActionProcessorStrategy;
 @property (nonatomic) ContextDidSaveNotificationPersistence *storedDidSaveNotifications;
+@property (nonatomic, weak, nullable) id<ShowContentDelegate> showContentDelegate;
 
 - (void)tearDown;
 - (BOOL)isLoggedIn;

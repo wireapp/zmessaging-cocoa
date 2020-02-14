@@ -74,7 +74,8 @@
                            operationLoop:(ZMOperationLoop *)operationLoop
                              application:(id<ZMApplication>)application
                               appVersion:(NSString *)appVersion
-                           storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
+                           storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
+                     showContentDelegate:(id<ShowContentDelegate>)showContentDelegate;
 
 @end
 

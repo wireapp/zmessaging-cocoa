@@ -47,6 +47,7 @@
 @protocol FlowManagerType;
 @protocol SessionManagerType;
 @protocol LocalStoreProviderProtocol;
+@protocol ShowContentDelegate;
 
 @class ManagedObjectContextDirectory;
 @class TopConversationsDirectory;
@@ -76,7 +77,8 @@ extern NSString * const ZMUserSessionResetPushTokensNotificationName;
                     transportSession:(id<TransportSessionType>)transportSession
                          application:(id<ZMApplication>)application
                           appVersion:(NSString *)appVersion
-                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider;
+                       storeProvider:(id<LocalStoreProviderProtocol>)storeProvider
+                 showContentDelegate:(id<ShowContentDelegate>)showContentDelegate;
 
 @property (nonatomic, readonly) id <LocalStoreProviderProtocol> storeProvider;
 @property (nonatomic, weak) id<SessionManagerType> sessionManager;

@@ -174,6 +174,10 @@ public protocol ForegroundNotificationResponder: class {
 
 
 @objcMembers public class SessionManager : NSObject, SessionManagerType, UserSessionSource {
+    
+    public enum AccountError: Error {
+        case accountLimitReached
+    }
 
     /// Maximum number of accounts which can be logged in simultanously
     public static let maxNumberAccounts = 3
@@ -183,7 +187,7 @@ public protocol ForegroundNotificationResponder: class {
     public weak var delegate: SessionManagerDelegate? = nil
     public let accountManager: AccountManager
     public fileprivate(set) var activeUserSession: ZMUserSession?
-    public var urlHandler: SessionManagerURLHandler!
+    public weak var urlActionDelegate: URLActionDelegate?
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public internal(set) var unauthenticatedSession: UnauthenticatedSession? {
@@ -214,6 +218,7 @@ public protocol ForegroundNotificationResponder: class {
     var pushRegistry: PushRegistry
     let notificationsTracker: NotificationsTracker?
     let configuration: SessionManagerConfiguration
+    var pendingURLAction: URLAction?
     
     var notificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()
     
@@ -257,6 +262,7 @@ public protocol ForegroundNotificationResponder: class {
         mediaManager: MediaManagerType,
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
+        showContentDelegate: ShowContentDelegate?,
         application: ZMApplication,
         environment: BackendEnvironmentProvider,
         configuration: SessionManagerConfiguration,
@@ -270,6 +276,7 @@ public protocol ForegroundNotificationResponder: class {
                 mediaManager: mediaManager,
                 analytics: analytics,
                 delegate: delegate,
+                showContentDelegate: showContentDelegate,
                 application: application,
                 environment: environment,
                 configuration: configuration,
@@ -287,6 +294,7 @@ public protocol ForegroundNotificationResponder: class {
         mediaManager: MediaManagerType,
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
+        showContentDelegate: ShowContentDelegate?,
         application: ZMApplication,
         environment: BackendEnvironmentProvider,
         configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
@@ -306,7 +314,8 @@ public protocol ForegroundNotificationResponder: class {
             flowManager: flowManager,
             environment: environment,
             reachability: reachability,
-            analytics: analytics
+            analytics: analytics,
+            showContentDelegate: showContentDelegate
           )
 
         self.init(
@@ -425,7 +434,6 @@ public protocol ForegroundNotificationResponder: class {
         // register for voIP push notifications
         self.pushRegistry.delegate = self
         self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
-        self.urlHandler = SessionManagerURLHandler(userSessionSource: self)
 
         postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
@@ -462,7 +470,7 @@ public protocol ForegroundNotificationResponder: class {
 
     private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
         if let url = launchOptions[UIApplication.LaunchOptionsKey.url] as? URL {
-            if URLAction(url: url)?.causesLogout == true {
+            if (try? URLAction(url: url))?.causesLogout == true {
                 // Do not log in if the launch URL action causes a logout
                 return
             }
@@ -625,10 +633,10 @@ public protocol ForegroundNotificationResponder: class {
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
             completion(session)
             self.delegate?.sessionManagerActivated(userSession: session)
-            self.urlHandler.sessionManagerActivated(userSession: session)
             
             // Configure user notifications if they weren't already previously configured.
             self.configureUserNotifications()
+            self.processPendingURLAction()
         }
     }
     
@@ -936,6 +944,11 @@ extension SessionManager {
 }
 
 extension SessionManager: UnauthenticatedSessionDelegate {
+    
+    public func sessionIsAllowedToCreateNewAccount(_ session: UnauthenticatedSession) -> Bool {
+        return accountManager.accounts.count < SessionManager.maxNumberAccounts
+    }
+    
     public func session(session: UnauthenticatedSession, isExistingAccount account: Account) -> Bool {
         return accountManager.accounts.contains(account)
     }
