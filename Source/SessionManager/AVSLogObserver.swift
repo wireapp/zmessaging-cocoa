@@ -20,18 +20,16 @@ import avs
 
 private let zmLog = ZMSLog(tag: "AVS")
 
-final class AVSLogObserver: NSObject, AVSLogger {
+final class AVSLogObserver: AVSLogger {
     private var token: Any!
     
-    override init() {
-        super.init()
+    init() {
         token = SessionManager.addLogger(self)
     }
     
     // MARK: - AVSLoggger
     
     func log(message: String) {
-//        zmLog.safePublic(message) ///TODO: public?
-                zmLog.safePublic("Invalid participant change data", level: .public)
+        zmLog.safePublic(SanitizedString(stringLiteral: message), level: .public)
     }
 }
