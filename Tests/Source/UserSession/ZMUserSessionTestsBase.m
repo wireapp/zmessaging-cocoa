@@ -123,7 +123,8 @@
                                                  operationLoop:self.operationLoop
                                                    application:self.application
                                                     appVersion:@"00000"
-                                                 storeProvider:self.storeProvider];
+                                                 storeProvider:self.storeProvider
+                                           showContentDelegate:nil];
         
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
     self.sut.sessionManager = (id<SessionManagerType>)self.mockSessionManager; // TODO jacob fix by converting this class to Swift

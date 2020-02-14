@@ -62,8 +62,8 @@ public class UnauthenticatedSession: NSObject {
         self.reachability = reachability
         super.init()
 
-        self.urlActionProcessors = [CompanyLoginURLActionProcessor(delegate: self, authenticationStatus: authenticationStatus)]
         self.authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue, userInfoParser: self)
+        self.urlActionProcessors = [CompanyLoginURLActionProcessor(delegate: self, authenticationStatus: authenticationStatus)]
         self.operationLoop = UnauthenticatedOperationLoop(
             transportSession: transportSession,
             operationQueue: groupQueue,

@@ -81,7 +81,8 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
             transportSession: transportSession,
             application: application,
             appVersion: appVersion,
-            storeProvider: storeProvider
+            storeProvider: storeProvider,
+            showContentDelegate: showContentDelegate
         )
     }
 

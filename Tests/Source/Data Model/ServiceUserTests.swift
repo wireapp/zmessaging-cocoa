@@ -245,11 +245,10 @@ final class ServiceUserTests : IntegrationTest {
         let conversation = self.conversation(for: self.groupConversation)!
         
         // when
-        conversation.add(serviceUser: service, in: self.userSession!, completion: { error in
-            // expect
-            XCTAssertNil(error)
+        conversation.add(serviceUser: service, in: userSession!) { (result) in
+            XCTAssertNil(result.error)
             jobIsDone.fulfill()
-        })
+        }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
@@ -262,8 +261,8 @@ final class ServiceUserTests : IntegrationTest {
         let service = self.createService()
        
         // when
-        self.userSession!.startConversation(with: service) { conversation in
-            XCTAssertNotNil(conversation)
+        service.createConversation(in: userSession!) { (result) in
+            XCTAssertNotNil(result.value)
             jobIsDone.fulfill()
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

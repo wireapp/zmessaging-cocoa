@@ -40,7 +40,7 @@ class CompanyLoginURLActionProcessor: URLActionProcessor {
             authenticationStatus.loginSucceeded(with: userInfo)
         case .startCompanyLogin(let code):
             guard delegate?.isAllowedToCreateNewAccount == true else {
-                urlActionDelegate?.failedToPerformAction(urlAction, error: SessionManager.AccountError.accountLimitReached) // TODO jacob too many accounts error
+                urlActionDelegate?.failedToPerformAction(urlAction, error: SessionManager.AccountError.accountLimitReached)
                 return
             }
             
