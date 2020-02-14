@@ -18,22 +18,9 @@
 
 import Foundation
 
-/// A helper class that provides a reference to the current self user.
+/// A type that is able to provide an editble user.
 
-public class SelfUser {
+public protocol SelfUserProvider {
 
-    /// The underlying provider of the self user.
-
-    public static var provider: SelfUserProvider?
-
-    /// The current self user.
-    ///
-    /// Calling this property will intentionally crash if the `provider` is not configured.
-    /// This is a tradeoff for the convenience of not needing to unwrap the self user, as it
-    /// is available in the majority of the codebase.
-
-    public class var current: UserType & ZMEditableUser {
-        guard let provider = provider else { fatalError("Self user provider not set") }
-        return provider.selfUser
-    }
+    var selfUser: UserType & ZMEditableUser { get }
 }
