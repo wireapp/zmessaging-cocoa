@@ -36,4 +36,10 @@ public class SelfUser {
         guard let provider = provider else { fatalError("Self user provider not set") }
         return provider.selfUser
     }
+
+    /// The current self user, if it exists.
+
+    public class var currentSafe: (UserType & ZMEditableUser)? {
+        return provider?.selfUser
+    }
 }
