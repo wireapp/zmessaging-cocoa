@@ -212,7 +212,12 @@ public extension ServiceUser {
         var onCreatedRemotelyToken: NSObjectProtocol? = nil
         _ = onCreatedRemotelyToken // remove warning
         
-        onCreatedRemotelyToken = conversation.onCreatedRemotely {
+        onCreatedRemotelyToken = conversation.onCreatedRemotely { [weak contextProvider] in
+            guard let contextProvider = contextProvider else {
+                completionHandler(.failure(AddBotError.general))
+                return
+            }
+            
             conversation.add(serviceUser: serviceUserData,
                              transportSession: transportSession,
                              eventProcessor: eventProcessor,
