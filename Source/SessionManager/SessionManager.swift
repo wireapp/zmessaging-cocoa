@@ -48,13 +48,6 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
     func sessionManagerDidBlacklistJailbrokenDevice()
 }
 
-@objc
-public protocol UserSessionSource: class {
-    var activeUserSession: ZMUserSession? { get }
-    var activeUnauthenticatedSession: UnauthenticatedSession { get }
-    var isSelectedAccountAuthenticated: Bool { get }
-}
-
 /// The public interface for the session manager.
 
 @objc
@@ -173,7 +166,7 @@ public protocol ForegroundNotificationResponder: class {
 ///
 
 
-@objcMembers public class SessionManager : NSObject, SessionManagerType, UserSessionSource {
+@objcMembers public class SessionManager : NSObject, SessionManagerType {
     
     public enum AccountError: Error {
         case accountLimitReached
