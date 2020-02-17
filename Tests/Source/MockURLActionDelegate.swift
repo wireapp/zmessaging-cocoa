@@ -23,6 +23,7 @@ class MockURLActionDelegate: URLActionDelegate {
     var failedToPerformActionCalls: [(URLAction, Error)] = []
     var shouldPerformActionCalls: [URLAction] = []
     var completedURLActionCalls: [URLAction] = []
+    var isPerformingActions = true
     
     func failedToPerformAction(_ action: URLAction, error: Error) {
         failedToPerformActionCalls.append((action, error))
@@ -30,6 +31,7 @@ class MockURLActionDelegate: URLActionDelegate {
     
     func shouldPerformAction(_ action: URLAction, decisionHandler: @escaping (Bool) -> Void) {
         shouldPerformActionCalls.append(action)
+        decisionHandler(isPerformingActions)
     }
     
     func completedURLAction(_ action: URLAction) {
