@@ -374,6 +374,7 @@ public final class SessionManager : NSObject, SessionManagerType, UserSessionSou
         detector: JailbreakDetectorProtocol = JailbreakDetector()
         ) {
 
+        SessionManager.startAVSLogging()
         SessionManager.enableLogsByEnvironmentVariable()
         self.environment = environment
         self.appVersion = appVersion
@@ -1247,11 +1248,7 @@ extension SessionManager {
 
 // MARK: - AVS Logging
 extension SessionManager {
-    public static func startAVSLogging() {
+    static func startAVSLogging() {
         avsLogObserver = AVSLogObserver()
-    }
-
-    public static func stopAVSLogging() {
-        avsLogObserver = nil
     }
 }
