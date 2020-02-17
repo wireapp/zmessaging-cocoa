@@ -56,23 +56,25 @@ class SessionManagerTests_URLActions: IntegrationTest {
     
     func testThatItAsksDelegateIfURLActionShouldBePerformed() throws {
         // given
+        urlActionDelegate?.isPerformingActions = false
         let url = URL(string: "wire://connect?service=2e1863a6-4a12-11e8-842f-0ed5f89f718b&provider=3879b1ec-4a12-11e8-842f-0ed5f89f718b")!
         XCTAssertTrue(login())
-       
+        
         // when
         let canOpenURL = try sessionManager?.openURL(url, options: [:])
-        
+
         // then
         let expectedUserData = ServiceUserData(provider: UUID(uuidString: "3879b1ec-4a12-11e8-842f-0ed5f89f718b")!,
                                                service: UUID(uuidString: "2e1863a6-4a12-11e8-842f-0ed5f89f718b")!)
-        
         XCTAssertEqual(canOpenURL, true)
         XCTAssertEqual(urlActionDelegate.shouldPerformActionCalls.count, 1)
         XCTAssertEqual(urlActionDelegate.shouldPerformActionCalls.first, .connectBot(serviceUser: expectedUserData))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
     func testThatItDelaysURLActionProcessingUntilUserSessionBecomesAvailable() throws {
         // given
+        urlActionDelegate?.isPerformingActions = false
         let url = URL(string: "wire://connect?service=2e1863a6-4a12-11e8-842f-0ed5f89f718b&provider=3879b1ec-4a12-11e8-842f-0ed5f89f718b")!
         let canOpenURL = try sessionManager?.openURL(url, options: [:])
         XCTAssertEqual(canOpenURL, true)
