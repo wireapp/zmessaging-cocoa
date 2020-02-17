@@ -307,7 +307,6 @@ public extension ZMConversation {
                   let responseDictionary = response.payload?.asDictionary(),
                   let userAddEventPayload = responseDictionary["event"] as? ZMTransportData,
                   let event = ZMUpdateEvent(fromEventStreamPayload: userAddEventPayload, uuid: nil) else {
-                    zmLog.error("Wrong response for adding a bot: \(response)")
                     completionHandler(.failure(AddBotError(response: response)))
                     return
             }
