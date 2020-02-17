@@ -166,7 +166,8 @@ public protocol ForegroundNotificationResponder: class {
 ///
 
 
-@objcMembers public class SessionManager : NSObject, SessionManagerType {
+@objcMembers
+public final class SessionManager : NSObject, SessionManagerType {
     
     public enum AccountError: Error {
         case accountLimitReached
@@ -248,6 +249,8 @@ public protocol ForegroundNotificationResponder: class {
         return unauthenticatedSession ?? createUnauthenticatedSession()
     }
     
+    private static var avsLogObserver: AVSLogObserver?
+
     /// The entry point for SessionManager; call this instead of the initializers.
     ///
     public static func create(
@@ -1246,4 +1249,15 @@ extension SessionManager {
         })
     }
     
+}
+
+// MARK: - AVS Logging
+extension SessionManager {
+    public static func startAVSLogging() {
+        avsLogObserver = AVSLogObserver()
+    }
+
+    public static func stopAVSLogging() {
+        avsLogObserver = nil
+    }
 }

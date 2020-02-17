@@ -134,6 +134,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     var handle: String? = "service"
     
     var emailAddress: String? = "dummy@email.com"
+
+    var phoneNumber: String? = nil
     
     var isSelfUser: Bool = false
     
