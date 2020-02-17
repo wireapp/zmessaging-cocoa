@@ -63,7 +63,7 @@ extension SessionManager {
     public func openURL(_ url: URL, options: [UIApplication.OpenURLOptionsKey: Any]) throws -> Bool {
         guard let action = try URLAction(url: url) else { return false }
         
-        if let userSession = activeUserSession {
+        if action.requiresAuthentication, let userSession = activeUserSession {
             process(urlAction: action, on: userSession)
         } else if action.requiresAuthentication {
             pendingURLAction = action
