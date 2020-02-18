@@ -63,7 +63,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) ApplicationMock<ZMApplication> *application;
 
 @property (nonatomic, readonly) MockTransportSession *mockTransportSession;
-@property (nonatomic, readonly) ZMUserSession *mockUserSession;
 
 @property (nonatomic, readonly) NSString *groupIdentifier;
 @property (nonatomic, readonly) NSUUID *userIdentifier;

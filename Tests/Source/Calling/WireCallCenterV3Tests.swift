@@ -760,7 +760,9 @@ extension WireCallCenterV3Tests {
 }
 
 // Mark: - Muted state
+
 extension WireCallCenterV3Tests {
+    
     func testThatMutedStateHandlerUpdatesTheState() {
         class MuteObserver: MuteStateObserver {
             var muted: Bool? = nil
@@ -773,8 +775,7 @@ extension WireCallCenterV3Tests {
         sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let observer = MuteObserver()
-        
-        let token = WireCallCenterV3.addMuteStateObserver(observer: observer, userSession: mockUserSession)
+        let token = WireCallCenterV3.addMuteStateObserver(observer: observer, context: uiMOC)
         
         // when
         mockAVSWrapper.muted = true
@@ -786,6 +787,7 @@ extension WireCallCenterV3Tests {
             XCTAssertEqual(true, observer.muted)
         }
     }
+    
 }
 
 // MARK: - Ignoring Calls

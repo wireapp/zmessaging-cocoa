@@ -73,18 +73,14 @@ extension ZMUserSession {
                 switch type {
                 case .fetchCompleted:
                     let clients = clientObjectIDs.compactMap({ self?.managedObjectContext.object(with: $0) as? UserClient })
-                    if !clients.isEmpty {
-                        observer.finishedFetching(clients)
-                    }
+                    observer.finishedFetching(clients)
                 case .fetchFailed:
                     if let error = error {
                         observer.failedToFetchClients(error)
                     }
                 case .deletionCompleted:
                     let remainingClients = clientObjectIDs.compactMap({ self?.managedObjectContext.object(with: $0) as? UserClient })
-                    if !remainingClients.isEmpty {
-                        observer.finishedDeleting(remainingClients)
-                    }
+                    observer.finishedDeleting(remainingClients)
                 case .deletionFailed:
                     if let error = error {
                         observer.failedToDeleteClients(error)

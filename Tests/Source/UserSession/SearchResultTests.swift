@@ -20,7 +20,7 @@ import Foundation
 
 @testable import WireSyncEngine
 
-class SearchResultTests : MessagingTest {
+class SearchResultTests : DatabaseTest {
     
     func testThatItFiltersConnectedUsers() {
         // given
@@ -45,7 +45,7 @@ class SearchResultTests : MessagingTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "", userSession: mockUserSession)
+        let result = SearchResult(payload: payload, query: "", contextProvider: contextDirectory!)
         
         // then
         XCTAssertEqual(result?.directory.count, 1)
@@ -78,7 +78,7 @@ class SearchResultTests : MessagingTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "", userSession: mockUserSession)
+        let result = SearchResult(payload: payload, query: "", contextProvider: contextDirectory!)
         
         // then
         XCTAssertEqual(result?.directory.count, 1)
@@ -99,7 +99,7 @@ class SearchResultTests : MessagingTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: name, userSession: mockUserSession)
+        let result = SearchResult(payload: payload, query: name, contextProvider: contextDirectory!)
         
         // then
         XCTAssertEqual(result?.directory.count, 2)
@@ -121,7 +121,7 @@ class SearchResultTests : MessagingTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "@\(name)", userSession: mockUserSession)!
+        let result = SearchResult(payload: payload, query: "@\(name)", contextProvider: contextDirectory!)!
         
         // then
         XCTAssertEqual(result.directory.count, 1)

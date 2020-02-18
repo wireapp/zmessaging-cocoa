@@ -63,7 +63,7 @@ extension UnauthenticatedSession {
     
     public func lookup(domain: String, completion: @escaping (Result<DomainInfo>) -> Void) {
         
-        let path = "/custom-instance/by-domain/\(domain.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"
+        let path = "/custom-backend/by-domain/\(domain.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"
         let request = ZMTransportRequest(path: path, method: .methodGET, payload: nil)
         
         request.add(ZMCompletionHandler(on: operationLoop.operationQueue!, block: { (response) in

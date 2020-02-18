@@ -21,24 +21,30 @@ import Foundation
 
 @objcMembers public class SearchDirectory : NSObject {
     
-    let searchContext : NSManagedObjectContext
-    let userSession : ZMUserSession
+    let searchContext: NSManagedObjectContext
+    let contextProvider: ZMManagedObjectContextProvider
+    let transportSession: TransportSessionType
     var isTornDown = false
     
     deinit {
         assert(isTornDown, "`tearDown` must be called before SearchDirectory is deinitialized")
     }
     
-    public init(userSession: ZMUserSession) {
-        self.userSession = userSession
-        self.searchContext = userSession.searchManagedObjectContext
+    public convenience init(userSession: ZMUserSession) {
+        self.init(searchContext: userSession.searchManagedObjectContext, contextProvider: userSession, transportSession: userSession.transportSession)
+    }
+    
+    init(searchContext: NSManagedObjectContext, contextProvider: ZMManagedObjectContextProvider, transportSession: TransportSessionType) {
+        self.searchContext = searchContext
+        self.contextProvider = contextProvider
+        self.transportSession = transportSession
     }
 
     /// Perform a search request.
     ///
     /// Returns a SearchTask which should be retained until the results arrive.
     public func perform(_ request: SearchRequest) -> SearchTask {
-        let task = SearchTask(task: .search(searchRequest: request), context: searchContext, session: userSession)
+        let task = SearchTask(task: .search(searchRequest: request), searchContext: searchContext, contextProvider: contextProvider, transportSession: transportSession)
         
         task.onResult { [weak self] (result, _) in
             self?.observeSearchUsers(result)
@@ -52,7 +58,7 @@ import Foundation
     ///
     /// Returns a SearchTask which should be retained until the results arrive.
     public func lookup(userId: UUID) -> SearchTask {
-        let task = SearchTask(task: .lookup(userId: userId), context: searchContext, session: userSession)
+        let task = SearchTask(task: .lookup(userId: userId), searchContext: searchContext, contextProvider: contextProvider, transportSession: transportSession)
         
         task.onResult { [weak self] (result, _) in
             self?.observeSearchUsers(result)
@@ -62,7 +68,7 @@ import Foundation
     }
     
     func observeSearchUsers(_ result : SearchResult) {
-        let searchUserObserverCenter = userSession.managedObjectContext.searchUserObserverCenter
+        let searchUserObserverCenter = contextProvider.managedObjectContext.searchUserObserverCenter
         result.directory.forEach(searchUserObserverCenter.addSearchUser)
         result.services.compactMap { $0 as? ZMSearchUser }.forEach(searchUserObserverCenter.addSearchUser)
     }
@@ -75,10 +81,10 @@ extension SearchDirectory: TearDownCapable {
     /// NOTE: this must be called before releasing the instance
     public func tearDown() {
         // Evict all cached search users
-        userSession.managedObjectContext.zm_searchUserCache?.removeAllObjects()
+        contextProvider.managedObjectContext.zm_searchUserCache?.removeAllObjects()
 
         // Reset search user observer center to remove unnecessarily observed search users
-        userSession.managedObjectContext.searchUserObserverCenter.reset()
+        contextProvider.managedObjectContext.searchUserObserverCenter.reset()
 
         isTornDown = true
     }

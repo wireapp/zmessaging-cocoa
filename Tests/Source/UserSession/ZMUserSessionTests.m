@@ -59,13 +59,13 @@
     
     // when
     ZMUserSession *session = [[ZMUserSession alloc] initWithTransportSession:transportSession
-                                                                mediaManager:self.mediaManager
-                                                                 flowManager:self.flowManagerMock
-                                                                   analytics:nil
-                                                               operationLoop:nil
-                                                                 application:self.application
-                                                                  appVersion:version
-                                                               storeProvider:self.storeProvider];
+							    mediaManager:nil
+                                                             flowManager:self.flowManagerMock
+                                                               analytics:nil
+                                                             application:self.application
+                                                              appVersion:version
+                                                           storeProvider:self.storeProvider
+                                                     showContentDelegate:nil];
     XCTAssertNotNil(session);
     
     // then
@@ -211,7 +211,8 @@
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                                   storeProvider:self.storeProvider];
+                                                                   storeProvider:self.storeProvider
+                                                             showContentDelegate:nil];
     userSession.sessionManager = sessionManager;
     XCTAssertFalse([(MockSessionManager *)sessionManager updatePushTokenCalled]);
     [userSession didRegisterUserClient:userClient];
@@ -457,7 +458,8 @@
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                                   storeProvider:self.storeProvider];
+                                                                   storeProvider:self.storeProvider
+                                                             showContentDelegate:nil];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

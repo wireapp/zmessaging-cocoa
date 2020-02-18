@@ -32,7 +32,7 @@ final class SessionManagerTests: IntegrationTest {
         createSelfUserAndConversation()
     }
     
-    func createManager() -> SessionManager? {
+    func createManager(launchOptions: LaunchOptions = [:]) -> SessionManager? {
         guard let application = application else { return nil }
         let environment = MockEnvironment()
         let reachability = TestReachability()
@@ -60,7 +60,7 @@ final class SessionManagerTests: IntegrationTest {
             detector: jailbreakDetector
         )
         
-        sessionManager.start(launchOptions: [:])
+        sessionManager.start(launchOptions: launchOptions)
         
         return sessionManager
     }
@@ -138,6 +138,7 @@ final class SessionManagerTests: IntegrationTest {
                               mediaManager: MockMediaManager(),
                               analytics: nil,
                               delegate: nil,
+                              showContentDelegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
                               configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
@@ -225,6 +226,7 @@ final class SessionManagerTests: IntegrationTest {
                               mediaManager: MockMediaManager(),
                               analytics: nil,
                               delegate: nil,
+                              showContentDelegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
                               configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
@@ -283,6 +285,7 @@ final class SessionManagerTests: IntegrationTest {
                               mediaManager: mockMediaManager,
                               analytics: nil,
                               delegate: self.delegate,
+                              showContentDelegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
                               configuration: configuration,
@@ -873,6 +876,7 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
                               mediaManager: MockMediaManager(),
                               analytics: nil,
                               delegate: nil,
+                              showContentDelegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
                               configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
@@ -928,6 +932,7 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
                        mediaManager: MockMediaManager(),
                        analytics: nil,
                        delegate: nil,
+                       showContentDelegate: nil,
                        application: application,
                        environment: sessionManager!.environment,
                        configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
@@ -1342,46 +1347,24 @@ extension SessionManagerTests {
     }
 }
 
-final class MockSessionManagerURLHandlerDelegate: NSObject, SessionManagerURLHandlerDelegate  {
-
-    var allowedAction: URLAction?
-
-    func sessionManagerShouldExecuteURLAction(_ action: URLAction, callback: @escaping (Bool) -> Void) {
-        callback(action == allowedAction)
-    }
-
-}
-
 extension SessionManagerTests {
 
-    func testThatItLogsOutWithCompanyLoginURL() {
+    func testThatItLogsOutWithCompanyLoginURL() throws {
         // GIVEN
         let id = UUID(uuidString: "1E628B42-4C83-49B7-B2B4-EF27BFE503EF")!
         let url = URL(string: "wire://start-sso/wire-\(id)")!
+        let urlActionDelegate = MockURLActionDelegate()
 
-        sut = createManager()
-
-        let urlDelegate = MockSessionManagerURLHandlerDelegate()
-        urlDelegate.allowedAction = URLAction.startCompanyLogin(code: id)
-        sut?.urlHandler.delegate = urlDelegate
-
+        sessionManager?.urlActionDelegate = urlActionDelegate
+        XCTAssertTrue(login())
+        XCTAssertNotNil(userSession)
+        
         // WHEN
-        let logoutExpectation = expectation(description: "The company login flow starts when the user adds .")
-
-        delegate.onLogout = { error in
-            let loginCode = error?.userInfo[SessionManager.companyLoginCodeKey]
-            XCTAssertEqual(loginCode as? UUID, id)
-            XCTAssertEqual(error?.userSessionErrorCode, .addAccountRequested)
-            logoutExpectation.fulfill()
-        }
-
-        sut?.urlHandler.openURL(url, options: [:])
-
+        try sessionManager?.openURL(url, options: [:])
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
         // THEN
-        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 2))
-
-        // CLEANUP
-        self.sut!.tearDownAllBackgroundSessions()
+        XCTAssertNil(userSession)
     }
 
 }

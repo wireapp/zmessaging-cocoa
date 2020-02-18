@@ -37,21 +37,27 @@ extension ZMConversation {
     ///
     /// Only team conversations can be deleted.
     public func delete(in userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
+        delete(in: userSession, transportSession: userSession.transportSession, completion: completion)
+    }
         
-        guard ZMUser.selfUser(inUserSession: userSession).canDeleteConversation(self),
+    func delete(in contextProvider: ZMManagedObjectContextProvider, transportSession: TransportSessionType, completion: @escaping (VoidResult) -> Void) {
+        
+        guard ZMUser.selfUser(in: contextProvider.managedObjectContext).canDeleteConversation(self),
               let conversationId = remoteIdentifier,
               let request = ConversationDeletionRequestFactory.requestForDeletingTeamConversation(self)
         else {
             return completion(.failure(ConversationDeletionError.invalidOperation))
         }
         
-        request.add(ZMCompletionHandler(on: managedObjectContext!) { response in
+        request.add(ZMCompletionHandler(on: managedObjectContext!) { [weak contextProvider] response in
+            guard let contextProvider = contextProvider else { return completion(.failure(ConversationDeletionError.unknown)) }
+            
             if response.httpStatus == 200 {
                 
-                userSession.syncManagedObjectContext.performGroupedBlock {
-                    guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: userSession.syncManagedObjectContext) else { return }
-                    userSession.syncManagedObjectContext.delete(conversation)
-                    userSession.syncManagedObjectContext.saveOrRollback()
+                contextProvider.syncManagedObjectContext.performGroupedBlock {
+                    guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: contextProvider.syncManagedObjectContext) else { return }
+                    contextProvider.syncManagedObjectContext.delete(conversation)
+                    contextProvider.syncManagedObjectContext.saveOrRollback()
                 }
                 
                 completion(.success)
@@ -62,7 +68,7 @@ extension ZMConversation {
             }
         })
         
-        userSession.transportSession.enqueueOneTime(request)
+        transportSession.enqueueOneTime(request)
         
     }
     

@@ -25,6 +25,7 @@ public protocol UnauthenticatedSessionDelegate: class {
     func session(session: UnauthenticatedSession, updatedProfileImage imageData: Data)
     func session(session: UnauthenticatedSession, createdAccount account: Account)
     func session(session: UnauthenticatedSession, isExistingAccount account: Account) -> Bool
+    func sessionIsAllowedToCreateNewAccount(_ session: UnauthenticatedSession) -> Bool
 }
 
 @objc public protocol UserInfoParser: class {
@@ -48,6 +49,7 @@ public class UnauthenticatedSession: NSObject {
     let reachability: ReachabilityProvider
     private(set) var operationLoop: UnauthenticatedOperationLoop!
     private let transportSession: UnauthenticatedTransportSessionProtocol
+    fileprivate var urlActionProcessors: [URLActionProcessor] = []
     fileprivate var tornDown = false
 
     weak var delegate: UnauthenticatedSessionDelegate?
@@ -61,6 +63,7 @@ public class UnauthenticatedSession: NSObject {
         super.init()
 
         self.authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue, userInfoParser: self)
+        self.urlActionProcessors = [CompanyLoginURLActionProcessor(delegate: self, authenticationStatus: authenticationStatus)]
         self.operationLoop = UnauthenticatedOperationLoop(
             transportSession: transportSession,
             operationQueue: groupQueue,
@@ -84,6 +87,22 @@ public class UnauthenticatedSession: NSObject {
             authenticationStatus.notifyAuthenticationDidFail(NSError(code: .networkError, userInfo:nil))
         }
     }
+}
+
+extension UnauthenticatedSession: CompanyLoginURLActionProcessorDelegate {
+    
+    var isAllowedToCreateNewAccount: Bool {
+        return delegate?.sessionIsAllowedToCreateNewAccount(self) ?? false
+    }
+    
+}
+
+extension UnauthenticatedSession: URLActionProcessor {
+    
+    func process(urlAction: URLAction, delegate: URLActionDelegate?) {
+        urlActionProcessors.forEach({ $0.process(urlAction: urlAction, delegate: delegate) })
+    }
+    
 }
 
 extension UnauthenticatedSession: TearDownCapable {

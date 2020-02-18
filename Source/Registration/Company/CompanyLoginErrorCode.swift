@@ -31,39 +31,60 @@ public enum ConmpanyLoginRequestError: Error, Equatable {
  * Errors that can occur within the company login flow.
  */
 
-public enum CompanyLoginError: String {
+public enum CompanyLoginError: Error, Equatable {
 
-    case unknownLabel = "0"
-    case missingRequiredParameter = "-2063"
-    case invalidCookie = "-67700"
-    case tokenNotFound = "-25346"
+    case unknownLabel
+    case missingRequiredParameter
+    case invalidCookie
+    case tokenNotFound
 
     // MARK: - SAML
 
-    case serverErrorUnsupportedSAML = "server-error-unsupported-saml"
-    case badSuccessRedirect = "bad-success-redirect"
-    case badFailureRedirect = "bad-failure-redirect"
-    case badUsername = "bad-username"
-    case badUpstream = "bad-upstream"
-    case serverError = "server-error"
-    case notFound = "not-found"
-    case forbidden = "forbidden"
-    case noMatchingAuthReq = "no-matching-auth-req"
-    case insufficientPermissions = "insufficient-permissions"
+    case serverErrorUnsupportedSAML
+    case badSuccessRedirect
+    case badFailureRedirect
+    case badUsername
+    case badUpstream
+    case serverError
+    case notFound
+    case forbidden
+    case noMatchingAuthReq
+    case insufficientPermissions
 
     // MARK: - Metadata
 
     /// Parses the error label, or fallbacks to the default error if it is not known.
     init(label: String) {
-        self = CompanyLoginError(rawValue: label) ?? .unknownLabel
+        switch label {
+        case "0": self = .unknownLabel
+        case "-2063": self = .missingRequiredParameter
+        case "-67700": self = .invalidCookie
+        case "-25346": self = .tokenNotFound
+            
+            // MARK: - SAML
+            
+        case "server-error-unsupported-saml": self = .serverErrorUnsupportedSAML
+        case "bad-success-redirect": self = .badSuccessRedirect
+        case "bad-failure-redirect": self = .badFailureRedirect
+        case "bad-username": self = .badUsername
+        case "bad-upstream": self = .badUpstream
+        case "server-error": self = .serverError
+        case "not-found": self = .notFound
+        case "forbidden": self = .forbidden
+        case "no-matching-auth-req": self = .noMatchingAuthReq
+        case "insufficient-permissions": self = .insufficientPermissions
+        default:
+            self = .unknownLabel
+        }
     }
 
     /// The code to display to the user inside alerts.
     public var displayCode: String {
         switch self {
-        case .unknownLabel, .missingRequiredParameter, .invalidCookie, .tokenNotFound:
-            return rawValue
-
+        case .unknownLabel: return "0"
+        case .missingRequiredParameter: return "-2063"
+        case .invalidCookie: return "-67700"
+        case .tokenNotFound: return "-25346"
         case .serverErrorUnsupportedSAML: return "1"
         case .badSuccessRedirect: return "2"
         case .badFailureRedirect: return "3"

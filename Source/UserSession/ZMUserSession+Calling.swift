@@ -18,18 +18,25 @@
 
 import Foundation
 
-@objc extension ZMUserSession {
+@objc
+public protocol CallNotificationStyleProvider: class {
+    
+    var callNotificationStyle: CallNotificationStyle { get }
+    
+}
+
+@objc extension ZMUserSession: CallNotificationStyleProvider {
     
     public var callCenter : WireCallCenterV3? {
         return managedObjectContext.zm_callCenter
     }
     
-    internal var callNotificationStyle : CallNotificationStyle {
-        return sessionManager!.callNotificationStyle // TODO jacob avoid force unwrapping
+    public var callNotificationStyle : CallNotificationStyle {
+        return sessionManager.callNotificationStyle
     }
     
-    internal var callKitDelegate : CallKitDelegate? {
-        return sessionManager!.callKitDelegate //  TODO jacob avoid force unwrapping
+    internal var callKitManager : CallKitManager? {
+        return sessionManager.callKitManager
     }
     
     @objc var useConstantBitRateAudio : Bool {
