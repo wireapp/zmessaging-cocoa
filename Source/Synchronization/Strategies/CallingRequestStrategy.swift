@@ -181,8 +181,8 @@ extension CallingRequestStrategy : WireCallCenterTransport {
             
             self.zmLog.debug("sending calling message")
             
-            let genericMessage = ZMGenericMessage.message(content: ZMCalling.calling(message: dataString))
-            
+            let genericMessage = GenericMessage(content: Calling(content: dataString))
+
             self.genericMessageStrategy.schedule(message: genericMessage, inConversation: conversation) { (response) in
                 if response.httpStatus == 201 {
                     completionHandler(response.httpStatus)
