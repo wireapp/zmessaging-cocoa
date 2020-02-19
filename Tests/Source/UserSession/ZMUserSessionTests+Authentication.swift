@@ -20,9 +20,18 @@ import Foundation
 
 class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
     
+    override func setUp() {
+        super.setUp()
+        
+        syncMOC.performGroupedBlockAndWait {
+            self.createSelfClient()
+        }
+    }
+    
+    
     func testThatItEnqueuesRequestToDeleteTheSelfClient() {
         // given
-        let selfClient = createSelfClient()
+        let selfClient = ZMUser.selfUser(in: uiMOC).selfClient()!
         let credentials = ZMEmailCredentials(email: "john.doe@domain.com", password: "123456")
         
         // when
@@ -30,7 +39,7 @@ class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        let request = lastEnqueuedRequest!
+        let request = transportSession.lastEnqueuedRequest!
         let payload = request.payload as? [String: Any]
         XCTAssertEqual(request.method, ZMTransportRequestMethod.methodDELETE)
         XCTAssertEqual(request.path, "/clients/\(selfClient.remoteIdentifier!)")
@@ -39,7 +48,7 @@ class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
     
     func testThatItEnqueuesRequestToDeleteTheSelfClientWithoutPassword() {
         // given
-        let selfClient = createSelfClient()
+        let selfClient = ZMUser.selfUser(in: uiMOC).selfClient()!
         let credentials = ZMEmailCredentials(email: "john.doe@domain.com", password: "")
         
         // when
@@ -47,7 +56,7 @@ class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        let request = lastEnqueuedRequest!
+        let request = transportSession.lastEnqueuedRequest!
         let payload = request.payload as? [String: Any]
         XCTAssertEqual(request.method, ZMTransportRequestMethod.methodDELETE)
         XCTAssertEqual(request.path, "/clients/\(selfClient.remoteIdentifier!)")
@@ -58,12 +67,11 @@ class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
         // given
         let recorder = PostLoginAuthenticationNotificationRecorder(managedObjectContext: uiMOC)
         let credentials = ZMEmailCredentials(email: "john.doe@domain.com", password: "123456")
-        _ = createSelfClient()
         
         // when
         sut.logout(credentials: credentials, {_ in })
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        lastEnqueuedRequest?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
+        transportSession.lastEnqueuedRequest?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -76,7 +84,6 @@ class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
     func testThatItCallsTheCompletionHandler_WhenLogoutRequestSucceeds() {
         // given
         let credentials = ZMEmailCredentials(email: "john.doe@domain.com", password: "123456")
-        _ = createSelfClient()
         
         // expect
         let completionHandlerCalled = expectation(description: "Completion handler called")
@@ -91,7 +98,7 @@ class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
             }
         })
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        lastEnqueuedRequest?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
+        transportSession.lastEnqueuedRequest?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
         
@@ -105,7 +112,6 @@ class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
     func checkThatItCallsTheCompletionHandler(with errorCode: ZMUserSessionErrorCode, for response: ZMTransportResponse) {
         // given
         let credentials = ZMEmailCredentials(email: "john.doe@domain.com", password: "123456")
-        _ = createSelfClient()
         
         // expect
         let completionHandlerCalled = expectation(description: "Completion handler called")
@@ -123,7 +129,7 @@ class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
             }
         })
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        lastEnqueuedRequest?.complete(with: response)
+        transportSession.lastEnqueuedRequest?.complete(with: response)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     

@@ -252,7 +252,7 @@ static ZMReachability *sharedReachabilityMock = nil;
     [self tearDownUserInfoObjectsOfMOC:self.uiMOC];
     [self tearDownUserInfoObjectsOfMOC:self.testMOC];
     
-    [self.syncMOC performGroupedBlock:^{
+    [self.syncMOC performGroupedBlockAndWait:^{
         [self tearDownUserInfoObjectsOfMOC:self.syncMOC];
         [self.syncMOC zm_tearDownCryptKeyStore];
         [self.syncMOC.userInfo removeAllObjects];

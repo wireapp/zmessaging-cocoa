@@ -40,7 +40,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var hasCompletedInitialSync: Bool = false
     var hasNotifiedThirdPartyServices: Bool = false // TODO jacob move code accessing this inside this file?
     
-    let storeProvider: LocalStoreProviderProtocol
+    var storeProvider: LocalStoreProviderProtocol!
     let application: ZMApplication
     let flowManager: FlowManagerType
     var mediaManager: MediaManagerType
@@ -57,6 +57,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var callStateObserver: CallStateObserver?
     var messageReplyObserver: ManagedObjectContextChangeObserver?
     var likeMesssageObserver: ManagedObjectContextChangeObserver?
+    var urlActionProcessors: [URLActionProcessor]?
     
     public var managedObjectContext: NSManagedObjectContext { // TODO jacob we don't want this to be public
         return storeProvider.contextDirectory.uiContext
@@ -123,6 +124,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     
     public weak var thirdPartyServicesDelegate: ThirdPartyServicesDelegate?
     
+    public weak var showContentDelegate: ShowContentDelegate?
+    
     // MARK: - Tear down
     
     deinit {
@@ -140,30 +143,33 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         transportSession.tearDown()
         applicationStatusDirectory = nil
         localNotificationDispatcher.tearDown()
-        
-        // TODO jacob tear down objects in managed object context user info
+        notificationDispatcher.tearDown()
         
         let uiMOC = storeProvider.contextDirectory.uiContext
-        let shouldWaitOnUIMoc = !(OperationQueue.current == OperationQueue.main && uiMOC?.concurrencyType == .mainQueueConcurrencyType)
+        storeProvider = nil
         
+        let shouldWaitOnUIMoc = !(OperationQueue.current == OperationQueue.main && uiMOC?.concurrencyType == .mainQueueConcurrencyType)
         if shouldWaitOnUIMoc {
             uiMOC?.performAndWait {
                 // warning: this will hang if the uiMoc queue is same as self.requestQueue (typically uiMoc queue is the main queue)
             }
         }
         
+        NotificationCenter.default.removeObserver(self)
+        
         tornDown = true
     }
     
     @objc
     public init(transportSession: TransportSessionType,
-         mediaManager: MediaManagerType,
-         flowManager: FlowManagerType,
-         analytics: AnalyticsType?,
-         operationLoop: ZMOperationLoop? = nil,
-         application: ZMApplication,
-         appVersion: String,
-         storeProvider: LocalStoreProviderProtocol) {
+                mediaManager: MediaManagerType,
+                flowManager: FlowManagerType,
+                analytics: AnalyticsType?,
+                operationLoop: ZMOperationLoop? = nil,
+                application: ZMApplication,
+                appVersion: String,
+                storeProvider: LocalStoreProviderProtocol,
+                showContentDelegate: ShowContentDelegate?) {
         
         storeProvider.contextDirectory.syncContext.performGroupedBlockAndWait {
             storeProvider.contextDirectory.syncContext.analytics = analytics
@@ -178,11 +184,14 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.analytics = analytics
         self.storeProvider = storeProvider
         self.transportSession = transportSession
+        self.showContentDelegate = showContentDelegate
         self.notificationDispatcher = NotificationDispatcher(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.localNotificationDispatcher = LocalNotificationDispatcher(in: storeProvider.contextDirectory.uiContext)
         self.storedDidSaveNotifications = ContextDidSaveNotificationPersistence(accountContainer: storeProvider.accountContainer)
         self.userExpirationObserver = UserExpirationObserver(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
+        
+
         
         super.init()
         
@@ -190,13 +199,16 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         
         // TODO jacob optionally start the request loop tracker
         
-//        configureManagedObjectContexts()
         configureCaches()
 
         syncManagedObjectContext.performGroupedBlockAndWait {
+            self.configureTransportSession()
             self.applicationStatusDirectory = self.createApplicationStatusDirectory()
             self.operationLoop = operationLoop ?? self.createOperationLoop()
-            self.callStateObserver = CallStateObserver(localNotificationDispatcher: self.localNotificationDispatcher, userSession: self)
+            self.urlActionProcessors = self.createURLActionProcessors()
+            self.callStateObserver = CallStateObserver(localNotificationDispatcher: self.localNotificationDispatcher,
+                                                       contextProvider: self,
+                                                       callNotificationStyleProvider: self)
         }
 
         registerForRegisteringPushTokenNotification()
@@ -208,14 +220,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
     }
-    
-//    private func configureManagedObjectContexts() {
-//        syncManagedObjectContext.performGroupedBlockAndWait {
-//            self.syncManagedObjectContext.analytics = self.analytics
-//            self.syncManagedObjectContext.zm_userInterface = self.managedObjectContext // TODO jacob configure in store provider
-//        }
-//        managedObjectContext.zm_sync = self.syncManagedObjectContext
-//    }
     
     private func configureTransportSession() {
         transportSession.pushChannel.clientID = selfUserClient?.remoteIdentifier
@@ -255,6 +259,13 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.hasCompletedInitialSync = !applicationStatusDirectory.syncStatus.isSlowSyncing
         
         return applicationStatusDirectory
+    }
+    
+    private func createURLActionProcessors() -> [URLActionProcessor] {
+        return [
+            DeepLinkURLActionProcessor(contextProvider: self, showContentdelegate: showContentDelegate),
+            ConnectToBotURLActionProcessor(contextprovider: self, transportSession: transportSession, eventProcessor: operationLoop!.syncStrategy)
+        ]
     }
     
     private func createOperationLoop() -> ZMOperationLoop {
@@ -369,7 +380,7 @@ extension ZMUserSession: ZMNetworkStateDelegate {
     
     public func didGoOffline() {
         managedObjectContext.performGroupedBlock { [weak self] in
-            self?.isNetworkOnline = true
+            self?.isNetworkOnline = false
             self?.updateNetworkState()
             self?.saveOrRollbackChanges()
             
@@ -445,6 +456,14 @@ extension ZMUserSession: ZMSyncStateDelegate {
             hasNotifiedThirdPartyServices = true
             thirdPartyServicesDelegate?.userSessionIsReadyToUploadServicesData(userSession: self)
         }
+    }
+    
+}
+
+extension ZMUserSession: URLActionProcessor {
+    
+    func process(urlAction: URLAction, delegate: URLActionDelegate?) {
+        urlActionProcessors?.forEach({ $0.process(urlAction: urlAction, delegate: delegate)} )
     }
     
 }

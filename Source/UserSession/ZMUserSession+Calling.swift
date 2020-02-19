@@ -32,11 +32,11 @@ public protocol CallNotificationStyleProvider: class {
     }
     
     public var callNotificationStyle : CallNotificationStyle {
-        return sessionManager.callNotificationStyle
+        return sessionManager?.callNotificationStyle ?? .pushNotifications
     }
     
     internal var callKitManager : CallKitManager? {
-        return sessionManager.callKitManager
+        return sessionManager?.callKitManager
     }
     
     @objc var useConstantBitRateAudio : Bool {

@@ -34,8 +34,10 @@
 
 #import <WireSyncEngine/ZMAuthenticationStatus.h>
 
+@class MockPushChannel;
 @class FlowManagerMock;
 @class MockSessionManager;
+@class RecordingMockTransportSession;
 
 @interface ThirdPartyServices : NSObject <ZMThirdPartyServicesDelegate>
 
@@ -59,12 +61,10 @@
 @interface ZMUserSessionTestsBase : MessagingTest <ZMAuthenticationStatusObserver>
 
 @property (nonatomic) MockSessionManager *mockSessionManager;
-@property (nonatomic) id transportSession;
-@property (nonatomic) ZMTransportRequest *lastEnqueuedRequest;
+@property (nonatomic) MockPushChannel *mockPushChannel;
+@property (nonatomic) RecordingMockTransportSession *transportSession;
 @property (nonatomic) ZMPersistentCookieStorage *cookieStorage;
 @property (nonatomic) NSData *validCookie;
-@property (nonatomic, copy) ZMCompletionHandlerBlock authFailHandler;
-@property (nonatomic, copy) ZMAccessTokenHandlerBlock tokenSuccessHandler;
 @property (nonatomic) NSURL *baseURL;
 @property (nonatomic) ZMUserSession *sut;
 @property (nonatomic) ZMSyncStrategy *syncStrategy;
