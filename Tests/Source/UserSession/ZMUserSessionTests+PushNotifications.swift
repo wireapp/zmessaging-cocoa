@@ -201,7 +201,13 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         
         guard let originalMessage = conversation.lastMessages().last as? ZMClientMessage else { return XCTFail() }
         ZMUser.selfUser(in: uiMOC).readReceiptsEnabled = true
-        originalMessage.genericMessage?.setExpectsReadConfirmation(true)?.data().apply(originalMessage.add)
+        var genericMessage = originalMessage.underlyingMessage!
+        genericMessage.setExpectsReadConfirmation(true)
+        do {
+            originalMessage.add(try genericMessage.serializedData())
+        } catch {
+            XCTFail("Error in adding data: \(error)")
+        }
         
         // when
         self.handle(conversationAction: .reply, category: .conversation, userInfo: userInfo, userText: "Hello World")
@@ -227,7 +233,13 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         
         guard let originalMessage = conversation.lastMessages().last as? ZMClientMessage else { return XCTFail() }
         ZMUser.selfUser(in: uiMOC).readReceiptsEnabled = true
-        originalMessage.genericMessage?.setExpectsReadConfirmation(true)?.data().apply(originalMessage.add)
+        var genericMessage = originalMessage.underlyingMessage!
+        genericMessage.setExpectsReadConfirmation(true)
+        do {
+            originalMessage.add(try genericMessage.serializedData())
+        } catch {
+            XCTFail("Error in adding data: \(error)")
+        }
         
         // when
         handle(conversationAction: .like, category: .conversation, userInfo: userInfo)
