@@ -17,6 +17,7 @@
 //
 
 import Foundation
+@testable import WireSyncEngine
 
 class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
     
@@ -28,6 +29,19 @@ class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
         }
     }
     
+    func testThatIsLoggedInIsFalseAtStartup() {
+        // then
+        XCTAssertFalse(sut.isLoggedIn)
+    }
+    
+    
+    func testThatIsLoggedInIsTrueIfItHasACookieAndSelfUserRemoteIdAndRegisteredClientID() {
+        // when
+        simulateLoggedInUser()
+        
+        // then
+        XCTAssertTrue(sut.isLoggedIn)
+    }
     
     func testThatItEnqueuesRequestToDeleteTheSelfClient() {
         // given

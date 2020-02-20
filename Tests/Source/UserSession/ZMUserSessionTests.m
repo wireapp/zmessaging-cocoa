@@ -169,22 +169,6 @@
     XCTAssertNil(mocUI.zm_syncContext);
 }
 
-- (void)testThatIsLoggedInIsFalseAtStartup
-{
-    // then
-    XCTAssertFalse([self.sut isLoggedIn]);
-}
-
-
-- (void)testThatIsLoggedInIsTrueIfItHasACookieAndSelfUserRemoteIdAndRegisteredClientID
-{
-    // when
-    [self simulateLoggedInUser];
-    
-    // then
-    XCTAssertTrue([self.sut isLoggedIn]);
-}
-
 @end
 
 
