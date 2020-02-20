@@ -49,15 +49,15 @@ final class CallSystemMessageGenerator: NSObject {
         var systemMessage : ZMSystemMessage? = nil
         if let connectDate = connectDateByConversation[conversation] {
             let duration = -connectDate.timeIntervalSinceNow
-            log.info("Appending performed call message: \(duration), \(caller.displayName), \"\(conversation.displayName)\"")
+            log.info("Appending performed call message: \(duration), \(caller.name ?? ""), \"\(conversation.displayName)\"")
             systemMessage =  conversation.appendPerformedCallMessage(with: duration, caller: caller)
         }
         else {
             if caller.isSelfUser {
-                log.info("Appending performed call message: \(caller.displayName), \"\(conversation.displayName)\"")
+                log.info("Appending performed call message: \(caller.name ?? ""), \"\(conversation.displayName)\"")
                 systemMessage =  conversation.appendPerformedCallMessage(with: 0, caller: caller)
             } else if reason.isOne(of: .canceled, .timeout, .normal) {
-                log.info("Appending missed call message: \(caller.displayName), \"\(conversation.displayName)\"")
+                log.info("Appending missed call message: \(caller.name ?? ""), \"\(conversation.displayName)\"")
                 
                 var isRelevant = true
                 if case .incoming(video: _, shouldRing: false, degraded: _)? = previousCallState {

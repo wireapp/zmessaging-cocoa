@@ -134,7 +134,7 @@
     // then
     NSArray *allConversations = [ZMConversationList conversationsInUserSession:self.userSession];
     ZMConversation *foundConversation = [allConversations firstObjectMatchingWithBlock:^BOOL(ZMConversation *conv) {
-        if([conv.connectedUser.displayName isEqualToString:@"Karl"]) {
+        if([conv.connectedUser.name isEqualToString:@"Karl McUser"]) {
             return YES;
         }
         return NO;
