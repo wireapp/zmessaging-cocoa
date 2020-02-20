@@ -108,7 +108,7 @@
                                            showContentDelegate:nil];
         
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
-    self.sut.sessionManager = (id<SessionManagerType>)self.mockSessionManager; // TODO jacob fix by converting this class to Swift
+    self.sut.sessionManager = (id<SessionManagerType>)self.mockSessionManager;
     
     WaitForAllGroupsToBeEmpty(0.5);
     

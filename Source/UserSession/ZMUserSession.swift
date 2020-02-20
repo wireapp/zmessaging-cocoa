@@ -38,7 +38,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var isNetworkOnline: Bool = true
     var isPerformingSync: Bool = true
     var hasCompletedInitialSync: Bool = false
-    var hasNotifiedThirdPartyServices: Bool = false // TODO jacob move code accessing this inside this file?
+    var hasNotifiedThirdPartyServices: Bool = false
     
     var storeProvider: LocalStoreProviderProtocol!
     let application: ZMApplication
@@ -177,7 +177,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         
         storeProvider.contextDirectory.syncContext.performGroupedBlockAndWait {
             storeProvider.contextDirectory.syncContext.analytics = analytics
-            storeProvider.contextDirectory.syncContext.zm_userInterface = storeProvider.contextDirectory.uiContext // TODO jacob configure in store provider
+            storeProvider.contextDirectory.syncContext.zm_userInterface = storeProvider.contextDirectory.uiContext
         }
         storeProvider.contextDirectory.uiContext.zm_sync = storeProvider.contextDirectory.syncContext
         
@@ -194,8 +194,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.storedDidSaveNotifications = ContextDidSaveNotificationPersistence(accountContainer: storeProvider.accountContainer)
         self.userExpirationObserver = UserExpirationObserver(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
-        
-
         
         super.init()
         
