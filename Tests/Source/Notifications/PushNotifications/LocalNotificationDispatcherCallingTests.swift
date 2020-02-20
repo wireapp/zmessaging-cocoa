@@ -59,7 +59,6 @@ class LocalNotificationDispatcherCallingTests: DatabaseTest {
     }
     
     override func tearDown() {
-        sut.tearDown()
         sut = nil
         notificationCenter = nil
         sender = nil

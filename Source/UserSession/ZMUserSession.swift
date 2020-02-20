@@ -142,7 +142,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         operationLoop = nil
         transportSession.tearDown()
         applicationStatusDirectory = nil
-        localNotificationDispatcher.tearDown()
         notificationDispatcher.tearDown()
         
         let uiMOC = storeProvider.contextDirectory.uiContext

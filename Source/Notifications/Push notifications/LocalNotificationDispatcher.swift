@@ -32,7 +32,6 @@ import UserNotifications
     var notificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()
 
     let syncMOC: NSManagedObjectContext
-    fileprivate(set) var isTornDown: Bool
     fileprivate var observers: [Any] = []
 
     var localNotificationBuffer = [ZMLocalNotification]()
@@ -44,7 +43,6 @@ import UserNotifications
         self.failedMessageNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherFailedNotificationsKey", keyValueStore: managedObjectContext)
         self.callingNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherCallingNotificationsKey", keyValueStore: managedObjectContext)
         self.messageNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherMessageNotificationsKey", keyValueStore: managedObjectContext)
-        self.isTornDown = false
         super.init()
         observers.append(
             NotificationInContext.addObserver(name: ZMConversation.lastReadDidChangeNotificationName,
@@ -52,13 +50,7 @@ import UserNotifications
                                               using: { [weak self] in self?.cancelNotificationForLastReadChanged(notification: $0)})
         )
     }
-
-
-
-    deinit {
-        precondition(self.isTornDown)
-    }
-
+    
     func scheduleLocalNotification(_ note: ZMLocalNotification) {
         Logging.push.safePublic("Scheduling local notification with id=\(note.id)")
         
@@ -98,16 +90,6 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
             let note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
             note.apply(eventNotifications.addObject)
             note.apply(scheduleLocalNotification)
-        }
-    }
-}
-
-extension LocalNotificationDispatcher: TearDownCapable {
-    public func tearDown() {
-        self.isTornDown = true
-        self.observers = []
-        syncMOC.performGroupedBlock { [weak self] in
-            self?.cancelAllNotifications()
         }
     }
 }

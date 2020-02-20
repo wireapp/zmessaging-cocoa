@@ -64,6 +64,11 @@ extension ZMUserSession {
         UserDefaults.standard.synchronize()
         UserDefaults.shared()?.synchronize()
         
+        // Clear all notifications associated with the account from the notification center
+        syncManagedObjectContext.performGroupedBlock {
+            self.localNotificationDispatcher.cancelAllNotifications()
+        }
+        
         if deleteCookie {
             deleteUserKeychainItems()
         }

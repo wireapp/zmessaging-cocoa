@@ -66,6 +66,10 @@ extension SessionManager {
         if action.requiresAuthentication, let userSession = activeUserSession {
             process(urlAction: action, on: userSession)
         } else if action.requiresAuthentication {
+            guard isSelectedAccountAuthenticated else {
+                throw DeepLinkRequestError.notLoggedIn
+            }
+            
             pendingURLAction = action
         } else {
             process(urlAction: action, on: activeUnauthenticatedSession)
