@@ -688,8 +688,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertEqualObjects([recorder.notifications.firstObject.error.userInfo objectForKey:ZMEmailCredentialKey], IntegrationTest.SelfUserEmail);
 }
 
-// TODO jacob restore
-- (void)DISABLED_testThatItCanRegisterNewClientAfterDeletingSelfClientAndReceivingNeedsPasswordToRegisterClient
+- (void)testThatItCanRegisterNewClientAfterDeletingSelfClientAndReceivingNeedsPasswordToRegisterClient
 {
     // given
     NSString *phone = @"+4912345678900";

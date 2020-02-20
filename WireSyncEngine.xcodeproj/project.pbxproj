@@ -574,27 +574,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		161C886D23FD390E00CB0B8E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 161C886723FD390E00CB0B8E /* WireDataModel.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = F9C9A4FC1CAD5DF10039E10C;
-			remoteInfo = WireDataModel;
-		};
-		161C886F23FD390E00CB0B8E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 161C886723FD390E00CB0B8E /* WireDataModel.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = F9C9A5061CAD5DF10039E10C;
-			remoteInfo = WireDataModelTests;
-		};
-		161C887123FD390E00CB0B8E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 161C886723FD390E00CB0B8E /* WireDataModel.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = F9C9A7F31CAED9510039E10C;
-			remoteInfo = WireDataModelTestHost;
-		};
 		3E1860D0191A649D000FE027 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 540029AB1918CA8500578793 /* Project object */;
@@ -685,7 +664,6 @@
 		161ACB4223F6EE4800ABFF33 /* CompanyLoginURLActionProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyLoginURLActionProcessorTests.swift; sourceTree = "<group>"; };
 		161C886223FADDE400CB0B8E /* ConnectToBotURLActionProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectToBotURLActionProcessorTests.swift; sourceTree = "<group>"; };
 		161C886423FD248A00CB0B8E /* RecordingMockTransportSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingMockTransportSession.swift; sourceTree = "<group>"; };
-		161C886723FD390E00CB0B8E /* WireDataModel.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = WireDataModel.xcodeproj; path = "../wire-ios-data-model/WireDataModel.xcodeproj"; sourceTree = "<group>"; };
 		161C887323FD4CBF00CB0B8E /* MockReachability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockReachability.swift; sourceTree = "<group>"; };
 		161C887623FD4CFD00CB0B8E /* MockPushChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPushChannel.swift; sourceTree = "<group>"; };
 		161D3AC82134013C0053D39A /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
@@ -1441,16 +1419,6 @@
 			path = URLActionProcessors;
 			sourceTree = "<group>";
 		};
-		161C886823FD390E00CB0B8E /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				161C886E23FD390E00CB0B8E /* WireDataModel.framework */,
-				161C887023FD390E00CB0B8E /* WireDataModelTests.xctest */,
-				161C887223FD390E00CB0B8E /* WireDataModelTestHost.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		3E18605A191A4EF8000FE027 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -1608,7 +1576,6 @@
 		540029AA1918CA8500578793 = {
 			isa = PBXGroup;
 			children = (
-				161C886723FD390E00CB0B8E /* WireDataModel.xcodeproj */,
 				09284B6A1B8272C300EEE10E /* WireSyncEngine Test Host.entitlements */,
 				09CC4AB71B7CB8B700201C63 /* Cartfile */,
 				F93C4C6F1E1E8B77007E9CEE /* Cartfile.resolved */,
@@ -2656,12 +2623,6 @@
 			mainGroup = 540029AA1918CA8500578793;
 			productRefGroup = 540029B51918CA8500578793 /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 161C886823FD390E00CB0B8E /* Products */;
-					ProjectRef = 161C886723FD390E00CB0B8E /* WireDataModel.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				549815921A43232400A7CE2E /* WireSyncEngine-ios */,
@@ -2670,30 +2631,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXReferenceProxy section */
-		161C886E23FD390E00CB0B8E /* WireDataModel.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = WireDataModel.framework;
-			remoteRef = 161C886D23FD390E00CB0B8E /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		161C887023FD390E00CB0B8E /* WireDataModelTests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = WireDataModelTests.xctest;
-			remoteRef = 161C886F23FD390E00CB0B8E /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		161C887223FD390E00CB0B8E /* WireDataModelTestHost.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = WireDataModelTestHost.app;
-			remoteRef = 161C887123FD390E00CB0B8E /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		3E186086191A56F6000FE027 /* Resources */ = {

@@ -144,18 +144,8 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItReturnsAnErrorWhenImportingFileWithWrongPassword() throws {
         // Given
         XCTAssert(login())
-        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        
         let backupResult = backupActiveAcount(password: "correctpassword")
         guard let url = backupResult.value else { return XCTFail("\(backupResult.error!)") }
-        
-        let moc = sessionManager!.activeUserSession!.managedObjectContext
-        let userId = ZMUser.selfUser(in: moc).remoteIdentifier!
-        let accountFolder = StorageStack.accountFolder(accountIdentifier: userId, applicationContainer: sharedContainer)
-        let fm = FileManager.default
-        try fm.removeItem(at: accountFolder)
-        let storePath = accountFolder.appendingPathComponent("store").path
-        XCTAssertFalse(fm.fileExists(atPath: storePath))
         
         // When
         guard let error = restoreAcount(password: "wrongpassword!!11!", from: url).error else { return XCTFail("no error thrown") }

@@ -133,6 +133,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     }
     
     public func tearDown() {
+        guard !tornDown else { return }
+        
         tokens.removeAll()
         application.unregisterObserverForStateChange(self)
         callStateObserver = nil
@@ -143,6 +145,9 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         transportSession.tearDown()
         applicationStatusDirectory = nil
         notificationDispatcher.tearDown()
+        
+        // Wait for all sync operations to finish
+        syncManagedObjectContext.performGroupedBlockAndWait { }
         
         let uiMOC = storeProvider.contextDirectory.uiContext
         storeProvider = nil
@@ -185,7 +190,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.transportSession = transportSession
         self.showContentDelegate = showContentDelegate
         self.notificationDispatcher = NotificationDispatcher(managedObjectContext: storeProvider.contextDirectory.uiContext)
-        self.localNotificationDispatcher = LocalNotificationDispatcher(in: storeProvider.contextDirectory.uiContext)
+        self.localNotificationDispatcher = LocalNotificationDispatcher(in: storeProvider.contextDirectory.syncContext)
         self.storedDidSaveNotifications = ContextDidSaveNotificationPersistence(accountContainer: storeProvider.accountContainer)
         self.userExpirationObserver = UserExpirationObserver(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
