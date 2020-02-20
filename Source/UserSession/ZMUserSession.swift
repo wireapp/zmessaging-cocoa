@@ -199,10 +199,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         
         ZMUserAgent.setWireAppVersion(appVersion)
         
-        // TODO jacob optionally start the request loop tracker
-        
         configureCaches()
-
+        
         syncManagedObjectContext.performGroupedBlockAndWait {
             self.configureTransportSession()
             self.applicationStatusDirectory = self.createApplicationStatusDirectory()
@@ -287,6 +285,22 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                                syncMOC: syncManagedObjectContext)
     }
     
+    func startRequestLoopTracker() {
+        let tracker = RequestLoopAnalyticsTracker(with: analytics)
+        
+        transportSession.requestLoopDetectionCallback = { path in
+            // The tracker will return false in case the path should be ignored.
+            guard !tracker.tag(with: path) else { return }
+            
+            Logging.network.warn("Request loop happening at path: \(path)")
+            
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: Notification.Name(rawValue: ZMLoggingRequestLoopNotificationName),
+                                                object: nil,
+                                                userInfo: ["path": path])
+            }
+        }
+    }
     
     private func registerForBackgroundNotifications() {
         application.registerObserverForDidEnterBackground(self, selector: #selector(applicationDidEnterBackground(_:)))
