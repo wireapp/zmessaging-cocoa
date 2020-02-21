@@ -66,7 +66,7 @@ extension ZMUserSession {
         
         // Clear all notifications associated with the account from the notification center
         syncManagedObjectContext.performGroupedBlock {
-            self.localNotificationDispatcher.cancelAllNotifications()
+            self.localNotificationDispatcher?.cancelAllNotifications()
         }
         
         if deleteCookie {

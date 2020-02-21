@@ -51,7 +51,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var syncStrategy: ZMSyncStrategy?
     var operationLoop: ZMOperationLoop?
     var notificationDispatcher: NotificationDispatcher
-    var localNotificationDispatcher: LocalNotificationDispatcher
+    var localNotificationDispatcher: LocalNotificationDispatcher?
     var applicationStatusDirectory: ApplicationStatusDirectory?
     var topConversationsDirectory: TopConversationsDirectory
     var callStateObserver: CallStateObserver?
@@ -190,7 +190,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.transportSession = transportSession
         self.showContentDelegate = showContentDelegate
         self.notificationDispatcher = NotificationDispatcher(managedObjectContext: storeProvider.contextDirectory.uiContext)
-        self.localNotificationDispatcher = LocalNotificationDispatcher(in: storeProvider.contextDirectory.syncContext)
         self.storedDidSaveNotifications = ContextDidSaveNotificationPersistence(accountContainer: storeProvider.accountContainer)
         self.userExpirationObserver = UserExpirationObserver(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
@@ -202,11 +201,12 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         configureCaches()
         
         syncManagedObjectContext.performGroupedBlockAndWait {
+            self.localNotificationDispatcher = LocalNotificationDispatcher(in: storeProvider.contextDirectory.syncContext)
             self.configureTransportSession()
             self.applicationStatusDirectory = self.createApplicationStatusDirectory()
             self.operationLoop = operationLoop ?? self.createOperationLoop()
             self.urlActionProcessors = self.createURLActionProcessors()
-            self.callStateObserver = CallStateObserver(localNotificationDispatcher: self.localNotificationDispatcher,
+            self.callStateObserver = CallStateObserver(localNotificationDispatcher: self.localNotificationDispatcher!,
                                                        contextProvider: self,
                                                        callNotificationStyleProvider: self)
         }
@@ -272,7 +272,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         let syncStrategy = ZMSyncStrategy(storeProvider: storeProvider,
                                           cookieStorage: transportSession.cookieStorage,
                                           flowManager: flowManager,
-                                          localNotificationsDispatcher: localNotificationDispatcher,
+                                          localNotificationsDispatcher: localNotificationDispatcher!,
                                           notificationsDispatcher: notificationDispatcher,
                                           applicationStatusDirectory: applicationStatusDirectory!,
                                           application: application)
@@ -315,7 +315,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     
     private func notifyUserAboutChangesInAvailabilityBehaviourIfNeeded() {
         syncManagedObjectContext.performGroupedBlock {
-            self.localNotificationDispatcher.notifyAvailabilityBehaviourChangedIfNeeded()
+            self.localNotificationDispatcher?.notifyAvailabilityBehaviourChangedIfNeeded()
         }
     }
     

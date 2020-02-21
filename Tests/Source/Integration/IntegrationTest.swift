@@ -610,7 +610,7 @@ extension IntegrationTest : SessionManagerDelegate {
         self.userSession = userSession
         
         if let notificationCenter = self.notificationCenter {
-            self.userSession?.localNotificationDispatcher.notificationCenter = notificationCenter
+            self.userSession?.localNotificationDispatcher?.notificationCenter = notificationCenter
         }
         
         userSession.syncManagedObjectContext.performGroupedBlock {
