@@ -38,7 +38,6 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 @property (nonatomic, readonly, weak) ZMSyncStrategy *syncStrategy;
 @property (nonatomic, weak) id<PreviouslyReceivedEventIDsCollection> previouslyReceivedEventIDsCollection;
-@property (nonatomic, weak) id <ZMApplication> application;
 @property (nonatomic) PushNotificationStatus *pushNotificationStatus;
 @property (nonatomic, weak) SyncStatus* syncStatus;
 @property (nonatomic, weak) OperationStatus* operationStatus;
@@ -60,7 +59,6 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
 previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
-                         application:(id <ZMApplication>)application
                    applicationStatus:(ApplicationStatusDirectory *)applicationStatus
 {
     self = [super initWithManagedObjectContext:strategy.syncMOC applicationStatus:applicationStatus];
@@ -69,7 +67,6 @@ previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)e
         if (applicationStatus.analytics != nil) {
             self.notificationsTracker = [[NotificationsTracker alloc] initWithAnalytics:applicationStatus.analytics];
         }
-        self.application = application;
         self.previouslyReceivedEventIDsCollection = eventIDsCollection;
         self.pushNotificationStatus = applicationStatus.pushNotificationStatus;
         self.syncStatus = applicationStatus.syncStatus;

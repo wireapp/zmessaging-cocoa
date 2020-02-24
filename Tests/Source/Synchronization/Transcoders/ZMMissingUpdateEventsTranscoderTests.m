@@ -80,7 +80,6 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     
     _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy
                                     previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
-                                                             application:(id)self.application
                                                        applicationStatus:self.mockApplicationDirectory];
 }
 
@@ -402,7 +401,6 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     // when
     ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy
                                                                     previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
-                                                                                             application:(id)self.application
                                                                                        applicationStatus:self.mockApplicationDirectory];
     WaitForAllGroupsToBeEmpty(0.5);
     [sut.listPaginator resetFetching];

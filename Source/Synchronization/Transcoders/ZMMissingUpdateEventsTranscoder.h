@@ -32,7 +32,6 @@
 
 - (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
 previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
-                         application:(id <ZMApplication>)application
                    applicationStatus:(ApplicationStatusDirectory *)applicationStatus;
 
 - (void)startDownloadingMissingNotifications;
