@@ -21,22 +21,25 @@ import avs
 
 
 public struct AVSParticipantsChange: Codable {
-    public struct Member: Codable {
-        let userid: UUID
-        let clientid: String
-        let aestab: Int32
-        let vrecv: Int32
-    }
+
     let convid: UUID
     let members: [Member]
+
+    public struct Member: Codable {
+
+        let userid: UUID
+        let clientid: String
+        let aestab: AudioState
+        let vrecv: VideoState
+    }
 }
 
 extension AVSCallMember {
     init(member: AVSParticipantsChange.Member) {
         remoteId = member.userid
         clientId = member.clientid
-        audioEstablished = (member.aestab == 1)
-        videoState = VideoState(rawValue: member.vrecv) ?? .stopped
+        audioEstablished = member.aestab == .established
+        videoState = member.vrecv
         networkQuality = .normal
     }
 }
