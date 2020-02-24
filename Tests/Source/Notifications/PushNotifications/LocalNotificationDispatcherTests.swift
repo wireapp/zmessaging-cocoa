@@ -83,7 +83,6 @@ class LocalNotificationDispatcherTests: DatabaseTest {
         self.user2 = nil
         self.conversation1 = nil
         self.conversation2 = nil
-        self.sut.tearDown()
         self.sut = nil
         super.tearDown()
     }

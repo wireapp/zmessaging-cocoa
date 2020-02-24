@@ -72,21 +72,37 @@ class SessionManagerTests_URLActions: IntegrationTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
-    func testThatItDelaysURLActionProcessingUntilUserSessionBecomesAvailable() throws {
+    func testThatItThrowsAnErrorWhileProcessingAuthenticatedURLAction_WhenLoggedOut() throws {
         // given
         urlActionDelegate?.isPerformingActions = false
         let url = URL(string: "wire://connect?service=2e1863a6-4a12-11e8-842f-0ed5f89f718b&provider=3879b1ec-4a12-11e8-842f-0ed5f89f718b")!
+        
+        // when then
+        XCTAssertThrowsError(try sessionManager?.openURL(url, options: [:])) { (error) in
+            XCTAssertEqual(error as? DeepLinkRequestError, .notLoggedIn)
+        }
+    }
+    
+    func testThatItDelaysURLActionProcessing_UntilUserSessionBecomesAvailable() throws {
+        // given: user session is not availablle but we are still authenticated
+        XCTAssertTrue(login())
+        sessionManager?.logoutCurrentSession(deleteCookie: false)
+        urlActionDelegate?.isPerformingActions = false
+        
+        // when
+        let url = URL(string: "wire://connect?service=2e1863a6-4a12-11e8-842f-0ed5f89f718b&provider=3879b1ec-4a12-11e8-842f-0ed5f89f718b")!
         let canOpenURL = try sessionManager?.openURL(url, options: [:])
         XCTAssertEqual(canOpenURL, true)
+        
+        // then: action should get postponed
         XCTAssertEqual(urlActionDelegate.shouldPerformActionCalls.count, 0)
         
         // when
         XCTAssertTrue(login())
         
-        // then
+        // then: action should get resumed
         let expectedUserData = ServiceUserData(provider: UUID(uuidString: "3879b1ec-4a12-11e8-842f-0ed5f89f718b")!,
                                                service: UUID(uuidString: "2e1863a6-4a12-11e8-842f-0ed5f89f718b")!)
-        
         XCTAssertEqual(urlActionDelegate.shouldPerformActionCalls.count, 1)
         XCTAssertEqual(urlActionDelegate.shouldPerformActionCalls.first, .connectBot(serviceUser: expectedUserData))
     }

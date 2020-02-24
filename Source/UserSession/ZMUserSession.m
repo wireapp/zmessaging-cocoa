@@ -275,8 +275,6 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.transportSession tearDown];
     self.transportSession = nil;
     self.applicationStatusDirectory = nil;
-    
-    [self.localNotificationDispatcher tearDown];
     self.localNotificationDispatcher = nil;
     [self.blackList tearDown];
     

@@ -74,8 +74,6 @@ class CallStateObserverTests : DatabaseTest, CallNotificationStyleProvider {
     }
     
     override func tearDown() {
-        localNotificationDispatcher.tearDown()
-        
         sut = nil
         sender = nil
         receiver = nil
