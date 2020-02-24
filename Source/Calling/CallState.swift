@@ -93,7 +93,7 @@ enum AudioState: Int32, Codable {
  * The state of video in the call.
  */
 
-public enum VideoState: Int32 {
+public enum VideoState: Int32, Codable {
     /// Sender is not sending video
     case stopped = 0
     /// Sender is sending video
