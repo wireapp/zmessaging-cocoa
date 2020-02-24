@@ -66,6 +66,8 @@ public struct CallParticipant: Hashable {
 public enum CallParticipantState: Equatable {
     /// Participant is not in the call
     case unconnected
+    /// A network problem occured but calls may still connect
+    case unconnectedButMayConnect
     /// Participant is in the process of connecting to the call
     case connecting
     /// Participant is connected to call and audio is flowing
