@@ -163,6 +163,7 @@ public class AVSWrapper: AVSWrapperType {
 
     // MARK: - C Callback Handlers
 
+    // TODO: Pass clientId down or discard it.
     private let constantBitRateChangeHandler: ConstantBitRateChangeHandler = { _, clientId, enabledFlag, contextRef in
         AVSWrapper.withCallCenter(contextRef, enabledFlag) {
             $0.handleConstantBitRateChange(enabled: $1)
@@ -196,18 +197,21 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
+    // TODO: Pass clientId down or discard it.
     private let dataChannelEstablishedHandler: DataChannelEstablishedHandler = { conversationId, userId, clientId, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationId, userId) {
             $0.handleDataChannelEstablishement(conversationId: $1, userId: $2)
         }
     }
 
+    // TODO: Pass clientId down or discard it.
     private let establishedCallHandler: CallEstablishedHandler = { conversationId, userId, clientId, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationId, userId) {
             $0.handleEstablishedCall(conversationId: $1, userId: $2)
         }
     }
 
+    // TODO: Pass clientId down or discard it.
     private let closedCallHandler: CloseCallHandler = { reason, conversationId, messageTime, userId, clientId, contextRef in
         zmLog.debug("closedCallHandler: messageTime = \(messageTime)")
         let nonZeroMessageTime: UInt32 = messageTime != 0 ? messageTime : UInt32(Date().timeIntervalSince1970)
@@ -261,6 +265,7 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
+    // TODO: Pass clientId down.
     private let networkQualityHandler: NetworkQualityChangeHandler = { conversationIdRef, userIdRef, clientId, quality, rtt, uplinkLoss, downlinkLoss, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationIdRef, userIdRef, quality, { (callCenter, conversationId, userId, quality) in
             callCenter.handleNetworkQualityChange(conversationId: conversationId, userId: userId, quality: quality)
