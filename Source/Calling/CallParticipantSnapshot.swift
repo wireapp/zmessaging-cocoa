@@ -65,6 +65,7 @@ class CallParticipantsSnapshot {
         update(updatedMember: AVSCallMember(userId: userId, clientId: callMember.clientId, audioEstablished: true, videoState: callMember.videoState))
     }
 
+    // FIXME: This never get's called. We would likely want to call this for the new network state.
     func callParticpantNetworkQualityChanged(userId: UUID, networkQuality: NetworkQuality) {
         guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
 

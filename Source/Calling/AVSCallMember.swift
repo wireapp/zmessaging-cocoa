@@ -35,13 +35,13 @@ public struct AVSParticipantsChange: Codable {
 }
 
 extension AVSCallMember {
-    
+
     init(member: AVSParticipantsChange.Member) {
         remoteId = member.userid
         clientId = member.clientid
         audioEstablished = member.aestab == .established
         videoState = member.vrecv
-        networkQuality = .normal
+        networkQuality = .normal // Do we update this here depending on the audio state?
     }
 }
 
