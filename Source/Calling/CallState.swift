@@ -74,6 +74,21 @@ public enum CallParticipantState: Equatable {
     case connected(videoState: VideoState, clientId: String?)
 }
 
+
+/**
+ * The audio state of a participant in a call.
+ */
+
+enum AudioState: Int32, Codable {
+    /// Audio is in the process of connecting.
+    case connecting = 0
+    /// Audio has been established and is flowing.
+    case established = 1
+    /// No relay candidate, though audio may still connect.
+    case networkProblem = 2
+}
+
+
 /**
  * The state of video in the call.
  */
