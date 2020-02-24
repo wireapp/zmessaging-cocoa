@@ -35,6 +35,7 @@ public struct AVSParticipantsChange: Codable {
 }
 
 extension AVSCallMember {
+    
     init(member: AVSParticipantsChange.Member) {
         remoteId = member.userid
         clientId = member.clientid
