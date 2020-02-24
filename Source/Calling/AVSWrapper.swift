@@ -163,7 +163,7 @@ public class AVSWrapper: AVSWrapperType {
 
     // MARK: - C Callback Handlers
 
-    private let constantBitRateChangeHandler: ConstantBitRateChangeHandler = { _, enabledFlag, contextRef in
+    private let constantBitRateChangeHandler: ConstantBitRateChangeHandler = { _, clientId, enabledFlag, contextRef in
         AVSWrapper.withCallCenter(contextRef, enabledFlag) {
             $0.handleConstantBitRateChange(enabled: $1)
         }
@@ -196,19 +196,19 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    private let dataChannelEstablishedHandler: DataChannelEstablishedHandler = { conversationId, userId, contextRef in
+    private let dataChannelEstablishedHandler: DataChannelEstablishedHandler = { conversationId, userId, clientId, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationId, userId) {
             $0.handleDataChannelEstablishement(conversationId: $1, userId: $2)
         }
     }
 
-    private let establishedCallHandler: CallEstablishedHandler = { conversationId, userId, contextRef in
+    private let establishedCallHandler: CallEstablishedHandler = { conversationId, userId, clientId, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationId, userId) {
             $0.handleEstablishedCall(conversationId: $1, userId: $2)
         }
     }
 
-    private let closedCallHandler: CloseCallHandler = { reason, conversationId, messageTime, userId, contextRef in
+    private let closedCallHandler: CloseCallHandler = { reason, conversationId, messageTime, userId, clientId, contextRef in
         zmLog.debug("closedCallHandler: messageTime = \(messageTime)")
         let nonZeroMessageTime: UInt32 = messageTime != 0 ? messageTime : UInt32(Date().timeIntervalSince1970)
 
@@ -261,7 +261,7 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    private let networkQualityHandler: NetworkQualityChangeHandler = { conversationIdRef, userIdRef, quality, rtt, uplinkLoss, downlinkLoss, contextRef in
+    private let networkQualityHandler: NetworkQualityChangeHandler = { conversationIdRef, userIdRef, clientId, quality, rtt, uplinkLoss, downlinkLoss, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationIdRef, userIdRef, quality, { (callCenter, conversationId, userId, quality) in
             callCenter.handleNetworkQualityChange(conversationId: conversationId, userId: userId, quality: quality)
         })
