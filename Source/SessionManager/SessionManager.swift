@@ -763,11 +763,13 @@ public final class SessionManager : NSObject, SessionManagerType {
     
     // Tears down and releases all background user sessions.
     internal func tearDownAllBackgroundSessions() {
-        self.backgroundUserSessions.forEach { (accountId, session) in
-            if self.activeUserSession != session {
-                self.tearDownBackgroundSession(for: accountId)
-            }
+        let backgroundSessions = backgroundUserSessions.filter { (_, session) -> Bool in
+            return activeUserSession != session
         }
+        
+        backgroundSessions.keys.forEach({ sessionID in
+            tearDownBackgroundSession(for: sessionID)
+        })
     }
     
     fileprivate func tearDownObservers(account: UUID) {
