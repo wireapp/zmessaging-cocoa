@@ -79,7 +79,7 @@ public enum CallParticipantState: Equatable {
  * The audio state of a participant in a call.
  */
 
-enum AudioState: Int32, Codable {
+public enum AudioState: Int32, Codable {
     /// Audio is in the process of connecting.
     case connecting = 0
     /// Audio has been established and is flowing.

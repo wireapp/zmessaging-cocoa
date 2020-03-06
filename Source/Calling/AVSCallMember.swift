@@ -39,9 +39,9 @@ extension AVSCallMember {
     init(member: AVSParticipantsChange.Member) {
         remoteId = member.userid
         clientId = member.clientid
-        audioEstablished = member.aestab == .established
+        audioState = member.aestab
         videoState = member.vrecv
-        networkQuality = .normal // Do we update this here depending on the audio state?
+        networkQuality = .normal
     }
 }
 
@@ -57,8 +57,8 @@ public struct AVSCallMember: Hashable {
     /// The client identifier of the user, this is only available after the call member has connected
     public let clientId: String?
 
-    /// Whether an audio connection was established.
-    public let audioEstablished: Bool
+    /// The state of the audio connection.
+    public let audioState: AudioState
 
     /// The state of video connection.
     public let videoState: VideoState
@@ -72,15 +72,20 @@ public struct AVSCallMember: Hashable {
      * Creates the call member from its values.
      * - parameter userId: The remote identifier of the user.
      * - parameter clientId: The client identifier of the user. Default to `nil`
-     * - parameter audioEstablished: Whether an audio connection was established. Defaults to `false`.
+     * - parameter audioState: The state of the audio connection. Defaults to `.connecting`.
      * - parameter videoState: The state of video connection. Defaults to `stopped`.
      * - parameter networkQuality: The quality of the network connection. Defaults to `.normal`.
      */
 
-    public init(userId : UUID, clientId: String? = nil, audioEstablished: Bool = false, videoState: VideoState = .stopped, networkQuality: NetworkQuality = .normal) {
+    public init(userId: UUID,
+                clientId: String? = nil,
+                audioState: AudioState = .connecting,
+                videoState: VideoState = .stopped,
+                networkQuality: NetworkQuality = .normal)
+    {
         self.remoteId = userId
         self.clientId = clientId
-        self.audioEstablished = audioEstablished
+        self.audioState = audioState
         self.videoState = videoState
         self.networkQuality = networkQuality
     }
@@ -89,10 +94,14 @@ public struct AVSCallMember: Hashable {
 
     /// The state of the participant.
     var callParticipantState: CallParticipantState {
-        if audioEstablished {
-            return .connected(videoState: videoState, clientId: clientId)
-        } else {
+        switch audioState {
+        case .connecting:
             return .connecting
+        case .established:
+            return .connected(videoState: videoState, clientId: clientId)
+        case .networkProblem:
+            return .unconnectedButMayConnect
+
         }
     }
 
