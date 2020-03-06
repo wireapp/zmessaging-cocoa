@@ -265,11 +265,10 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    // TODO: Pass clientId down.
-    private let networkQualityHandler: NetworkQualityChangeHandler = { conversationIdRef, userIdRef, clientId, quality, rtt, uplinkLoss, downlinkLoss, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationIdRef, userIdRef, quality, { (callCenter, conversationId, userId, quality) in
-            callCenter.handleNetworkQualityChange(conversationId: conversationId, userId: userId, quality: quality)
-        })
+    private let networkQualityHandler: NetworkQualityChangeHandler = { conversationIdRef, userIdRef, clientIdRef, quality, rtt, uplinkLoss, downlinkLoss, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationIdRef, userIdRef, clientIdRef, quality) { (callCenter, conversationId, userId, clientId, quality) in
+            callCenter.handleNetworkQualityChange(conversationId: conversationId, userId: userId, clientId: clientId, quality: quality)
+        }
     }
 
     private let muteChangeHandler: MuteChangeHandler = { muted, contextRef in
