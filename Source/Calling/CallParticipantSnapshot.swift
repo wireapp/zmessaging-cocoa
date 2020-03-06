@@ -89,11 +89,17 @@ class CallParticipantsSnapshot {
     }
     
     func update(updatedMember: AVSCallMember) {
-        guard let targetMember = findMember(userId: updatedMember.remoteId, clientId: updatedMember.clientId) else { return }
-
-        members = OrderedSetState(array: members.array.map({ member in
-            member == targetMember ? updatedMember : member
-        }))
+        if let clientId = updatedMember.clientId, let targetMember = findMember(userId: updatedMember.remoteId, clientId: clientId) {
+            // Found a direct match
+            members = OrderedSetState(array: members.array.map({ member in
+                member == targetMember ? updatedMember : member
+            }))
+        } else if let targetMember = findMembers(with: updatedMember.remoteId).first {
+            // Found a match where don't yet know the client id
+            members = OrderedSetState(array: members.array.map({ member in
+                member == targetMember ? updatedMember : member
+            }))
+        }
     }
 
     func notifyChange() {
@@ -104,16 +110,20 @@ class CallParticipantsSnapshot {
     }
 
     public func callParticipantState(forUser userId: UUID) -> CallParticipantState {
-        guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return .unconnected }
+        guard let callMember = findMembers(with: userId).first else { return .unconnected }
         
         return callMember.callParticipantState
     }
 
-    /// Tries to find the call member with the matching userId and clientId, otherwise the first member
-    /// with the matching userId.
-    ///
-    private func findMember(userId: UUID, clientId: String?) -> AVSCallMember? {
-        let participantsByUser = members.array.filter { $0.remoteId == userId }
-        return participantsByUser.first { $0.clientId == clientId } ?? participantsByUser.first
+    /// Returns the first known call member matching the given user and client ids.
+
+    private func findMember(userId: UUID, clientId: String) -> AVSCallMember? {
+        return findMembers(with: userId).first { $0.clientId == clientId }
+    }
+
+    /// Returns all members matching the given user id.
+
+    private func findMembers(with userId: UUID) -> [AVSCallMember] {
+        return members.array.filter { $0.remoteId == userId }
     }
 }
