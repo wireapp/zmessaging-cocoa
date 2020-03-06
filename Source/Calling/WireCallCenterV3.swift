@@ -553,10 +553,11 @@ extension WireCallCenterV3 {
      * Handles a change in calling state.
      * - parameter conversationId: The ID of the conversation where the calling state has changed.
      * - parameter userId: The identifier of the user that caused the event.
+     * - parameter clientId: The identifier of the user's client that caused the event.
      * - parameter messageTime: The timestamp of the event.
      */
 
-    func handleCallState(callState: CallState, conversationId: UUID, userId: UUID?, messageTime: Date? = nil) {
+    func handleCallState(callState: CallState, conversationId: UUID, userId: UUID?, clientId: String? = nil, messageTime: Date? = nil) {
         callState.logState()
         var callState = callState
 
