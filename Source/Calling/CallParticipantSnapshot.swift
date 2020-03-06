@@ -20,34 +20,33 @@ import Foundation
 import WireUtilities
 
 class CallParticipantsSnapshot {
-    
-    public private(set) var members : OrderedSetState<AVSCallMember>
 
-    // We take the worst quality of all the legs
-    public var networkQuality: NetworkQuality {
-        return members.array.map(\.networkQuality)
-            .sorted() { $0.rawValue < $1.rawValue }
+    private unowned var callCenter: WireCallCenterV3
+    private let conversationId: UUID
+    private(set) var members: OrderedSetState<AVSCallMember>
+
+    // FIXME: take account of the new .problem case
+    /// The worst quality of all participants.
+
+    var networkQuality: NetworkQuality {
+        return members.array
+            .map(\.networkQuality)
+            .sorted { $0.rawValue < $1.rawValue }
             .last ?? .normal
     }
-    
-    fileprivate unowned var callCenter : WireCallCenterV3
-    fileprivate let conversationId : UUID
-    
+
     init(conversationId: UUID, members: [AVSCallMember], callCenter: WireCallCenterV3) {
         self.callCenter = callCenter
         self.conversationId = conversationId
         self.members = type(of: self).removeDuplicateMembers(members)
     }
-    
-    // Remove duplicates see: https://wearezeta.atlassian.net/browse/ZIOS-8610
-    static func removeDuplicateMembers(_ members: [AVSCallMember]) -> OrderedSetState<AVSCallMember> {
-        let callMembers = members.reduce([AVSCallMember]()){ (filtered, member) in
-            filtered + (filtered.contains(member) ? [] : [member])
-        }
-        
-        return callMembers.toOrderedSetState()
+
+    func callParticipantState(forUser userId: UUID) -> CallParticipantState {
+        guard let callMember = findMembers(with: userId).first else { return .unconnected }
+
+        return callMember.callParticipantState
     }
-    
+
     func callParticipantsChanged(participants: [AVSCallMember]) {
         members = type(of:self).removeDuplicateMembers(participants)
         notifyChange()
@@ -87,8 +86,20 @@ class CallParticipantsSnapshot {
 
         update(updatedMember: member)
     }
+
+    /// Returns the first known call member matching the given user and client ids.
+
+    private func findMember(userId: UUID, clientId: String) -> AVSCallMember? {
+        return findMembers(with: userId).first { $0.clientId == clientId }
+    }
+
+    /// Returns all members matching the given user id.
+
+    private func findMembers(with userId: UUID) -> [AVSCallMember] {
+        return members.array.filter { $0.remoteId == userId }
+    }
     
-    func update(updatedMember: AVSCallMember) {
+    private func update(updatedMember: AVSCallMember) {
         if let clientId = updatedMember.clientId, let targetMember = findMember(userId: updatedMember.remoteId, clientId: clientId) {
             // Found a direct match
             members = OrderedSetState(array: members.array.map({ member in
@@ -102,28 +113,23 @@ class CallParticipantsSnapshot {
         }
     }
 
-    func notifyChange() {
+    private func notifyChange() {
         guard let context = callCenter.uiMOC else { return }
         
         let participants = members.map { CallParticipant(member: $0, context: context) }.compactMap(\.self)
         WireCallCenterCallParticipantNotification(conversationId: conversationId, participants: participants).post(in: context.notificationContext)
     }
 
-    public func callParticipantState(forUser userId: UUID) -> CallParticipantState {
-        guard let callMember = findMembers(with: userId).first else { return .unconnected }
-        
-        return callMember.callParticipantState
-    }
+}
 
-    /// Returns the first known call member matching the given user and client ids.
+extension CallParticipantsSnapshot {
 
-    private func findMember(userId: UUID, clientId: String) -> AVSCallMember? {
-        return findMembers(with: userId).first { $0.clientId == clientId }
-    }
+    // Remove duplicates see: https://wearezeta.atlassian.net/browse/ZIOS-8610
+    private static func removeDuplicateMembers(_ members: [AVSCallMember]) -> OrderedSetState<AVSCallMember> {
+        let callMembers = members.reduce([AVSCallMember]()){ (filtered, member) in
+            filtered + (filtered.contains(member) ? [] : [member])
+        }
 
-    /// Returns all members matching the given user id.
-
-    private func findMembers(with userId: UUID) -> [AVSCallMember] {
-        return members.array.filter { $0.remoteId == userId }
+        return callMembers.toOrderedSetState()
     }
 }
