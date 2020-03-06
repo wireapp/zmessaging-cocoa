@@ -197,10 +197,10 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    // TODO: Pass clientId down or discard it.
+
     private let dataChannelEstablishedHandler: DataChannelEstablishedHandler = { conversationId, userId, clientId, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationId, userId) {
-            $0.handleDataChannelEstablishement(conversationId: $1, userId: $2)
+        AVSWrapper.withCallCenter(contextRef, conversationId, userId, clientId) {
+            $0.handleDataChannelEstablishement(conversationId: $1, userId: $2, clientId: $3)
         }
     }
 

@@ -100,9 +100,9 @@ extension WireCallCenterV3 {
     }
 
     /// Handles when data channel gets established.
-    func handleDataChannelEstablishement(conversationId: UUID, userId: UUID) {
+    func handleDataChannelEstablishement(conversationId: UUID, userId: UUID, clientId: String) {
         handleEvent("data-channel-established") {
-            self.handleCallState(callState: .establishedDataChannel, conversationId: conversationId, userId: userId)
+            self.handleCallState(callState: .establishedDataChannel, conversationId: conversationId, userId: userId, clientId: clientId)
         }
     }
 
