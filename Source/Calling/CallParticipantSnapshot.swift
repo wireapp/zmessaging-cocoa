@@ -76,10 +76,10 @@ class CallParticipantsSnapshot {
     }
 
     // FIXME: This never get's called. We would likely want to call this for the new network state.
-    func callParticpantNetworkQualityChanged(userId: UUID, networkQuality: NetworkQuality) {
-        guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
+    func callParticpantNetworkQualityChanged(userId: UUID, clientId: String, networkQuality: NetworkQuality) {
+        guard let callMember = findMember(userId: userId, clientId: clientId) else { return }
 
-        let member = AVSCallMember(userId: userId,
+        let member = AVSCallMember(userId: callMember.remoteId,
                                    clientId: callMember.clientId,
                                    audioState: callMember.audioState,
                                    videoState: callMember.videoState,
