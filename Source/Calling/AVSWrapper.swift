@@ -209,13 +209,12 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    // TODO: Pass clientId down or discard it.
     private let closedCallHandler: CloseCallHandler = { reason, conversationId, messageTime, userId, clientId, contextRef in
         zmLog.debug("closedCallHandler: messageTime = \(messageTime)")
         let nonZeroMessageTime: UInt32 = messageTime != 0 ? messageTime : UInt32(Date().timeIntervalSince1970)
 
-        AVSWrapper.withCallCenter(contextRef, reason, conversationId, nonZeroMessageTime) {
-            $0.handleCallEnd(reason: $1, conversationId: $2, messageTime: $3, userId: UUID(rawValue: userId))
+        AVSWrapper.withCallCenter(contextRef, reason, conversationId, nonZeroMessageTime, clientId) {
+            $0.handleCallEnd(reason: $1, conversationId: $2, messageTime: $3, userId: UUID(rawValue: userId), clientId: $4)
         }
     }
 
