@@ -326,8 +326,8 @@ extension WireCallCenterV3 {
     }
 
     /// Call this method when the client established an audio connection with another user, and avs calls the `wcall_estab_h`.
-    func callParticipantAudioEstablished(conversationId: UUID, userId: UUID) {
-        callSnapshots[conversationId]?.callParticipants.callParticpantAudioEstablished(userId: userId)
+    func callParticipantAudioEstablished(conversationId: UUID, userId: UUID, clientId: String) {
+        callSnapshots[conversationId]?.callParticipants.callParticpantAudioEstablished(userId: userId, clientId: clientId)
     }
     
 }
@@ -577,8 +577,8 @@ extension WireCallCenterV3 {
                 establishedDate = Date()
             }
 
-            if let userId = userId {
-                callParticipantAudioEstablished(conversationId: conversationId, userId: userId)
+            if let userId = userId, let clientId = clientId {
+                callParticipantAudioEstablished(conversationId: conversationId, userId: userId, clientId: clientId)
             }
 
             if videoState(conversationId: conversationId) == .started {
