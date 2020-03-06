@@ -107,9 +107,9 @@ extension WireCallCenterV3 {
     }
 
     /// Handles established calls.
-    func handleEstablishedCall(conversationId: UUID, userId: UUID) {
+    func handleEstablishedCall(conversationId: UUID, userId: UUID, clientId: String) {
         handleEvent("established-call") {
-            self.handleCallState(callState: .established, conversationId: conversationId, userId: userId)
+            self.handleCallState(callState: .established, conversationId: conversationId, userId: userId, clientId: clientId)
         }
     }
 
