@@ -64,11 +64,11 @@ class CallParticipantsSnapshot {
         update(updatedMember: member)
     }
 
-    func callParticpantAudioEstablished(userId: UUID) {
-        guard let callMember = members.array.first(where: { $0.remoteId == userId }) else { return }
+    func callParticpantAudioEstablished(userId: UUID, clientId: String) {
+        guard let callMember = findMember(userId: userId, clientId: clientId) else { return }
 
         let member = AVSCallMember(userId: userId,
-                                   clientId: callMember.clientId,
+                                   clientId: clientId,
                                    audioState: .established,
                                    videoState: callMember.videoState)
 
