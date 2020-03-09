@@ -53,7 +53,9 @@ class CallParticipantsSnapshot {
     }
 
     func callParticpantVideoStateChanged(userId: UUID, clientId: String, videoState: VideoState) {
-        guard let callMember = findMember(userId: userId, clientId: clientId) else { return }
+        let exactCallMember = findMember(userId: userId, clientId: clientId)
+
+        guard let callMember = exactCallMember ?? findMembers(with: userId).first  else { return }
 
         let member = AVSCallMember(userId: userId,
                                    clientId: clientId,
