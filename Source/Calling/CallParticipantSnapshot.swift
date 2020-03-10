@@ -46,14 +46,6 @@ class CallParticipantsSnapshot {
 
     // MARK: - Updates
 
-    // Should we update this?
-
-    func callParticipantState(forUser userId: UUID) -> CallParticipantState {
-        guard let callMember = findMembers(with: userId).first else { return .unconnected }
-
-        return callMember.callParticipantState
-    }
-
     func callParticipantsChanged(participants: [AVSCallMember]) {
         members = type(of:self).removeDuplicateMembers(participants)
         notifyChange()
