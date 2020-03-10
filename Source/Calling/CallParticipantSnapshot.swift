@@ -44,6 +44,8 @@ class CallParticipantsSnapshot {
         self.members = type(of: self).removeDuplicateMembers(members)
     }
 
+    // MARK: - Updates
+
     // Should we update this?
 
     func callParticipantState(forUser userId: UUID) -> CallParticipantState {
