@@ -20,17 +20,21 @@
 import Foundation
 @testable import WireSyncEngine
 
-class CallParticipantsSnapshotTests : MessagingTest {
+class CallParticipantsSnapshotTests: MessagingTest {
 
     private typealias Sut = WireSyncEngine.CallParticipantsSnapshot
 
-    var mockWireCallCenterV3 : WireCallCenterV3Mock!
-    var mockFlowManager : FlowManagerMock!
+    var mockWireCallCenterV3: WireCallCenterV3Mock!
+    var mockFlowManager: FlowManagerMock!
 
     override func setUp() {
         super.setUp()
         mockFlowManager = FlowManagerMock()
-        mockWireCallCenterV3 = WireCallCenterV3Mock(userId: UUID(), clientId: "foo", uiMOC: uiMOC, flowManager: mockFlowManager, transport: WireCallCenterTransportMock())
+        mockWireCallCenterV3 = WireCallCenterV3Mock(userId: UUID(),
+                                                    clientId: UUID().transportString(),
+                                                    uiMOC: uiMOC,
+                                                    flowManager: mockFlowManager,
+                                                    transport: WireCallCenterTransportMock())
     }
     
     override func tearDown() {
