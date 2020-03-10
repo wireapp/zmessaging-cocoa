@@ -21,12 +21,13 @@ import WireUtilities
 
 class CallParticipantsSnapshot {
 
+    // MARK: - Properties
+
     private unowned var callCenter: WireCallCenterV3
     private let conversationId: UUID
     private(set) var members: OrderedSetState<AVSCallMember>
 
-    // FIXME: take account of the new .problem case
-    /// The worst quality of all participants.
+    /// Worst network quality of all the participants.
 
     var networkQuality: NetworkQuality {
         return members.array
@@ -34,6 +35,8 @@ class CallParticipantsSnapshot {
             .sorted { $0.rawValue < $1.rawValue }
             .last ?? .normal
     }
+
+    // MARK: - Life Cycle
 
     init(conversationId: UUID, members: [AVSCallMember], callCenter: WireCallCenterV3) {
         self.callCenter = callCenter
@@ -104,11 +107,17 @@ class CallParticipantsSnapshot {
         return members.array.filter { $0.remoteId == userId }
     }
 
+    /// Notifies observers of a potential change in the participants set.
+
     private func notifyChange() {
         guard let context = callCenter.uiMOC else { return }
         
-        let participants = members.map { CallParticipant(member: $0, context: context) }.compactMap(\.self)
-        WireCallCenterCallParticipantNotification(conversationId: conversationId, participants: participants).post(in: context.notificationContext)
+        let participants = members
+            .map { CallParticipant(member: $0, context: context) }
+            .compactMap(\.self)
+
+        WireCallCenterCallParticipantNotification(conversationId: conversationId, participants: participants)
+            .post(in: context.notificationContext)
     }
 
 }
@@ -117,7 +126,7 @@ extension CallParticipantsSnapshot {
 
     // Remove duplicates see: https://wearezeta.atlassian.net/browse/ZIOS-8610
     private static func removeDuplicateMembers(_ members: [AVSCallMember]) -> OrderedSetState<AVSCallMember> {
-        let callMembers = members.reduce([AVSCallMember]()){ (filtered, member) in
+        let callMembers = members.reduce([AVSCallMember]()) { (filtered, member) in
             filtered + (filtered.contains(member) ? [] : [member])
         }
 
