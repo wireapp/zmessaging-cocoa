@@ -41,6 +41,8 @@ class CallParticipantsSnapshot {
         self.members = type(of: self).removeDuplicateMembers(members)
     }
 
+    // Should we update this?
+
     func callParticipantState(forUser userId: UUID) -> CallParticipantState {
         guard let callMember = findMembers(with: userId).first else { return .unconnected }
 
@@ -53,66 +55,53 @@ class CallParticipantsSnapshot {
     }
 
     func callParticpantVideoStateChanged(userId: UUID, clientId: String, videoState: VideoState) {
-        let exactCallMember = findMember(userId: userId, clientId: clientId)
-
-        guard let callMember = exactCallMember ?? findMembers(with: userId).first  else { return }
-
-        let member = AVSCallMember(userId: userId,
-                                   clientId: clientId,
-                                   audioState: callMember.audioState,
-                                   videoState: videoState)
-
-        update(updatedMember: member)
+        updateMember(userId: userId, clientId: clientId, videoState: videoState)
     }
 
     func callParticpantAudioEstablished(userId: UUID, clientId: String) {
-        guard let callMember = findMember(userId: userId, clientId: clientId) else { return }
-
-        let member = AVSCallMember(userId: userId,
-                                   clientId: clientId,
-                                   audioState: .established,
-                                   videoState: callMember.videoState)
-
-        update(updatedMember: member)
+        updateMember(userId: userId, clientId: clientId, audioState: .established)
     }
 
     // FIXME: This never get's called. We would likely want to call this for the new network state.
     func callParticpantNetworkQualityChanged(userId: UUID, clientId: String, networkQuality: NetworkQuality) {
-        guard let callMember = findMember(userId: userId, clientId: clientId) else { return }
-
-        let member = AVSCallMember(userId: callMember.remoteId,
-                                   clientId: callMember.clientId,
-                                   audioState: callMember.audioState,
-                                   videoState: callMember.videoState,
-                                   networkQuality: networkQuality)
-
-        update(updatedMember: member)
+        updateMember(userId: userId, clientId: clientId, networkQuality: networkQuality)
     }
 
-    /// Returns the first known call member matching the given user and client ids.
+    // MARK: - Helpers
 
-    private func findMember(userId: UUID, clientId: String) -> AVSCallMember? {
-        return findMembers(with: userId).first { $0.clientId == clientId }
+    /// Updates the locally stored member for the given userId and clientId with the given non nil properties.
+    ///
+    /// The locally stored member may not yet have a clientId; we know the userId from the incoming call event but
+    /// only get the clientId once the call connects. In this case, if we can't find a member matching both ids
+    /// then we take the first where the userId matches and clientId is nil.
+
+    private func updateMember(userId: UUID,
+                              clientId: String,
+                              audioState: AudioState? = nil,
+                              videoState: VideoState? = nil,
+                              networkQuality: NetworkQuality? = nil) {
+
+        let candidateMembers = findMembers(with: userId)
+        let targetMember = candidateMembers.first { $0.clientId == clientId }
+        let fallBackMember = candidateMembers.first { $0.clientId == nil }
+
+        guard let localMember = targetMember ?? fallBackMember else { return }
+
+        let updatedMember = AVSCallMember(userId: userId,
+                                          clientId: clientId,
+                                          audioState: audioState ?? localMember.audioState,
+                                          videoState: videoState ?? localMember.videoState,
+                                          networkQuality: networkQuality ?? localMember.networkQuality)
+
+        members = OrderedSetState(array: members.array.map({ member in
+            member == localMember ? updatedMember : member
+        }))
     }
 
-    /// Returns all members matching the given user id.
+    /// Returns all members matching the given userId.
 
     private func findMembers(with userId: UUID) -> [AVSCallMember] {
         return members.array.filter { $0.remoteId == userId }
-    }
-    
-    private func update(updatedMember: AVSCallMember) {
-        if let clientId = updatedMember.clientId, let targetMember = findMember(userId: updatedMember.remoteId, clientId: clientId) {
-            // Found a direct match
-            members = OrderedSetState(array: members.array.map({ member in
-                member == targetMember ? updatedMember : member
-            }))
-        } else if let targetMember = findMembers(with: updatedMember.remoteId).first {
-            // Found a match where don't yet know the client id
-            members = OrderedSetState(array: members.array.map({ member in
-                member == targetMember ? updatedMember : member
-            }))
-        }
     }
 
     private func notifyChange() {
