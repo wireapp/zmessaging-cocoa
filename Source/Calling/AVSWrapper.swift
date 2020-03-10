@@ -163,8 +163,7 @@ public class AVSWrapper: AVSWrapperType {
 
     // MARK: - C Callback Handlers
 
-    // TODO: Pass clientId down or discard it.
-    private let constantBitRateChangeHandler: ConstantBitRateChangeHandler = { _, clientId, enabledFlag, contextRef in
+    private let constantBitRateChangeHandler: ConstantBitRateChangeHandler = { userId, clientId, enabledFlag, contextRef in
         AVSWrapper.withCallCenter(contextRef, enabledFlag) {
             $0.handleConstantBitRateChange(enabled: $1)
         }
