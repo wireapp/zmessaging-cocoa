@@ -27,7 +27,6 @@
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
 
 #import "ZMUserTranscoder.h"
-#import "ZMUserSession.h"
 #import <libkern/OSAtomic.h>
 #import <os/activity.h>
 #import "WireSyncEngineLogs.h"

@@ -114,7 +114,7 @@ import Foundation
             return
         }
 
-        operationStatus.startBackgroundTask { [weak self] (result) in
+        applicationStatusDirectory?.operationStatus.startBackgroundTask { [weak self] (result) in
             guard let `self` = self else { return }
 
             self.messageReplyObserver = nil
@@ -123,7 +123,7 @@ import Foundation
                 let conversationOnSyncContext = userInfo.conversation(in: self.syncManagedObjectContext)
                 if result == .failed {
                     Logging.push.safePublic("failed to reply via push notification action")
-                    self.localNotificationDispatcher.didFailToSendMessage(in: conversationOnSyncContext!)
+                    self.localNotificationDispatcher?.didFailToSendMessage(in: conversationOnSyncContext!)
                 } else {
                     self.syncManagedObjectContext.analytics?.tagActionOnPushNotification(conversation: conversationOnSyncContext, action: .text)
                 }
@@ -132,7 +132,7 @@ import Foundation
             }
         }
         
-        enqueueChanges {
+        enqueue {
             guard let message = conversation.append(text: message) else { return /* failure */ }
             self.appendReadReceiptIfNeeded(with: userInfo, in: conversation)
             self.messageReplyObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { [weak self] in
@@ -181,7 +181,7 @@ import Foundation
             return
         }
 
-        operationStatus.startBackgroundTask { [weak self] (result) in
+        applicationStatusDirectory?.operationStatus.startBackgroundTask { [weak self] (result) in
             guard let `self` =  self else { return }
         
             self.likeMesssageObserver = nil
@@ -192,7 +192,7 @@ import Foundation
             completionHandler()
         }
             
-        enqueueChanges {
+        enqueue {
             guard let reaction = ZMMessage.addReaction(.like, toMessage: message) else { return }
             self.appendReadReceiptIfNeeded(with: userInfo, in: conversation)
             self.likeMesssageObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { [weak self] in
@@ -203,9 +203,9 @@ import Foundation
     
     func updateBackgroundTask(with message : ZMConversationMessage) {
         if message.isSent {
-            operationStatus.finishBackgroundTask(withTaskResult: .finished)
+            applicationStatusDirectory?.operationStatus.finishBackgroundTask(withTaskResult: .finished)
         } else if message.deliveryState == .failedToSend {
-            operationStatus.finishBackgroundTask(withTaskResult: .failed)
+            applicationStatusDirectory?.operationStatus.finishBackgroundTask(withTaskResult: .failed)
         }
     }
  

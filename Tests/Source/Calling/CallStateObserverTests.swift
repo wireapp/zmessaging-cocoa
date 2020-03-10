@@ -184,7 +184,10 @@ class CallStateObserverTests : DatabaseTest, CallNotificationStyleProvider {
         callNotificationStyle = .callKit
         conversationUI.needsToBeUpdatedFromBackend = true
         uiMOC.saveOrRollback()
-        syncMOC.refreshAllObjects()
+        
+        syncMOC.performGroupedBlockAndWait {
+            self.syncMOC.refreshAllObjects()
+        }
         
         // when
         sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversationUI, caller: senderUI, timestamp: Date(), previousCallState: nil)
@@ -200,7 +203,10 @@ class CallStateObserverTests : DatabaseTest, CallNotificationStyleProvider {
         callNotificationStyle = .callKit
         conversationUI.mutedMessageTypes = .regular
         uiMOC.saveOrRollback()
-        syncMOC.refreshAllObjects()
+        
+        syncMOC.performGroupedBlockAndWait {
+            self.syncMOC.refreshAllObjects()
+        }
         
         // when
         sut.callCenterDidChange(callState: .incoming(video: false, shouldRing: true, degraded: false), conversation: conversationUI, caller: senderUI, timestamp: nil, previousCallState: nil)

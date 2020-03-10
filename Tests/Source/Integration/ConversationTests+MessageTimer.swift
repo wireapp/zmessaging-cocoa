@@ -62,7 +62,7 @@ class ConversationMessageTimerTests: IntegrationTest {
         let sut = conversation(for: groupConversation)!
         
         // given
-        userSession?.enqueueChanges {
+        userSession?.enqueue {
             sut.messageDestructionTimeout = .synced(.oneDay)
         }
 
@@ -85,7 +85,7 @@ class ConversationMessageTimerTests: IntegrationTest {
         XCTAssert(login())
         let sut = conversation(for: groupConversation)!
 
-        userSession?.enqueueChanges {
+        userSession?.enqueue {
             sut.messageDestructionTimeout = .local(.oneDay)
         }
 

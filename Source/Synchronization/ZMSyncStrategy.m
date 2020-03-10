@@ -26,7 +26,6 @@
 
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
-#import "ZMUserSession+Internal.h"
 #import "ZMConnectionTranscoder.h"
 #import "ZMUserTranscoder.h"
 #import "ZMSelfStrategy.h"

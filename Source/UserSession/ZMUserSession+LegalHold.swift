@@ -41,20 +41,16 @@ extension ZMUserSession {
 
     public func accept(legalHoldRequest: LegalHoldRequest, password: String?, completionHandler: @escaping (_ error: LegalHoldActivationError?) -> Void) {
 
-        guard let syncMoc = syncManagedObjectContext else {
-            return completionHandler(.invalidState)
-        }
-
         func complete(error: LegalHoldActivationError?) {
-            syncMoc.saveOrRollback()
+            syncManagedObjectContext.saveOrRollback()
 
             DispatchQueue.main.async {
                 completionHandler(error)
             }
         }
 
-        syncMoc.performGroupedBlock {
-            let selfUser = ZMUser.selfUser(in: syncMoc)
+        syncManagedObjectContext.performGroupedBlock {
+            let selfUser = ZMUser.selfUser(in: self.syncManagedObjectContext)
 
             // 1) Check the state
             guard let teamID = selfUser.team?.remoteIdentifier else {
@@ -70,7 +66,7 @@ extension ZMUserSession {
                 return complete(error: .invalidState)
             }
 
-            syncMoc.saveOrRollback()
+            self.syncManagedObjectContext.saveOrRollback()
 
             // 3) Create the request
             var payload: [String: Any] = [:]
@@ -80,7 +76,7 @@ extension ZMUserSession {
             let request = ZMTransportRequest(path: path, method: .methodPUT, payload: payload as NSDictionary)
 
             // 4) Handle the Response
-            request.add(ZMCompletionHandler(on: syncMoc, block: { response in
+            request.add(ZMCompletionHandler(on: self.syncManagedObjectContext, block: { response in
                 guard response.httpStatus == 200 else {
                     legalHoldClient.deleteClientAndEndSession()
 

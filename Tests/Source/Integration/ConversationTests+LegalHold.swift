@@ -30,7 +30,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
         }
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             conversation?.append(text: "Hello")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -50,7 +50,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
             legalHoldClient = session.registerClient(for: self.user1, label: "Legal Hold", type: "legalhold", deviceClass: "legalhold")
         }
         
-        userSession?.performChanges {
+        userSession?.perform {
             conversation?.append(text: "Hello")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -65,7 +65,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
         }
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             conversation?.append(text: "Hello")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -227,7 +227,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
             session.registerClient(for: self.user1, label: "Legal Hold", type: "legalhold", deviceClass: "legalhold")
         }
 
-        userSession?.performChanges {
+        userSession?.perform {
             conversation!.append(text: "This is the best group!")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

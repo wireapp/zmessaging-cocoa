@@ -38,7 +38,7 @@ class UserRichProfileIntegrationTests : IntegrationTest {
         // when
         let user = self.user(for: teamUser1)
         XCTAssertEqual(user?.richProfile.isEmpty, true)
-        userSession?.performChanges {
+        userSession?.perform {
             user?.needsRichProfileUpdate = true
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -65,7 +65,7 @@ class UserRichProfileIntegrationTests : IntegrationTest {
         
         // when
         let user = self.user(for: user1)
-        userSession?.performChanges {
+        userSession?.perform {
             user?.needsRichProfileUpdate = true
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -86,7 +86,7 @@ class UserRichProfileIntegrationTests : IntegrationTest {
 
         // when
         let user = self.user(for: teamUser1)
-        userSession?.performChanges {
+        userSession?.perform {
             user?.needsRichProfileUpdate = true
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

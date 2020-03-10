@@ -35,7 +35,7 @@ class ConversationTestsOTRSwift: ConversationTestsBase {
         var message: ZMConversationMessage?
         mockTransportSession.resetReceivedRequests()
         performIgnoringZMLogError {
-            self.userSession?.performChanges {
+            self.userSession?.perform {
                 message = conv?.append(text: "Hello World")
             }
             _ = self.waitForAllGroupsToBeEmpty(withTimeout: 0.5)
@@ -87,7 +87,7 @@ class ConversationTestsOTRSwift: ConversationTestsBase {
         // WHEN
         mockTransportSession.resetReceivedRequests()
         performIgnoringZMLogError {
-            self.userSession?.performChanges {
+            self.userSession?.perform {
                 message = conv?.append(imageFromData: self.verySmallJPEGData(), nonce: NSUUID.create()) as? ZMAssetClientMessage
             }
             _ = self.waitForAllGroupsToBeEmpty(withTimeout: 0.5)

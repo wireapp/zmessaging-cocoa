@@ -49,7 +49,7 @@ class AvailabilityTests: IntegrationTest {
         let client2 = user2.clients.anyObject() as! MockUserClient
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             selfUser.availability = .busy
         }
         XCTAssertTrue(selfUser.modifiedKeys!.contains(AvailabilityKey))
@@ -78,7 +78,7 @@ class AvailabilityTests: IntegrationTest {
         let selfUser = ZMUser.selfUser(inUserSession: self.userSession!)
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             selfUser.availability = .away
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

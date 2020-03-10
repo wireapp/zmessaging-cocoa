@@ -75,10 +75,10 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     override func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
         return ZMUserSession(
+            transportSession: transportSession,
             mediaManager: mediaManager,
             flowManager: flowManager,
             analytics: analytics,
-            transportSession: transportSession,
             application: application,
             appVersion: appVersion,
             storeProvider: storeProvider,
@@ -460,7 +460,7 @@ extension IntegrationTest {
     @objc(prefetchRemoteClientByInsertingMessageInConversation:)
     func prefetchClientByInsertingMessage(in mockConversation: MockConversation) {
         guard let convo = conversation(for: mockConversation) else { return }
-        userSession?.performChanges {
+        userSession?.perform {
             convo.append(text: "hum, t'es sûr?")
         }
 
@@ -575,7 +575,7 @@ extension IntegrationTest {
     }
     
     func performSlowSync() {
-        userSession?.applicationStatusDirectory.syncStatus.forceSlowSync()
+        userSession?.applicationStatusDirectory?.syncStatus.forceSlowSync()
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
@@ -610,7 +610,7 @@ extension IntegrationTest : SessionManagerDelegate {
         self.userSession = userSession
         
         if let notificationCenter = self.notificationCenter {
-            self.userSession?.localNotificationDispatcher.notificationCenter = notificationCenter
+            self.userSession?.localNotificationDispatcher?.notificationCenter = notificationCenter
         }
         
         userSession.syncManagedObjectContext.performGroupedBlock {

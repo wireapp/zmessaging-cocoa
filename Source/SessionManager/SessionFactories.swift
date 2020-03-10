@@ -60,16 +60,20 @@ open class AuthenticatedSessionFactory {
             applicationGroupIdentifier: nil
         )
 
-        return ZMUserSession(
+        let userSession = ZMUserSession(
+            transportSession: transportSession,
             mediaManager: mediaManager,
             flowManager:flowManager,
             analytics: analytics,
-            transportSession: transportSession,
             application: application,
             appVersion: appVersion,
             storeProvider: storeProvider,
             showContentDelegate: showContentDelegate
         )
+        
+        userSession.startRequestLoopTracker()
+        
+        return userSession
     }
     
 }

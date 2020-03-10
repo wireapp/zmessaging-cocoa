@@ -43,7 +43,7 @@ extension ZMUserSession {
     @objc
     public func fetchAllClients() {
         syncManagedObjectContext.performGroupedBlock {
-            self.clientUpdateStatus.needsToFetchClients(andVerifySelfClient: true)
+            self.applicationStatusDirectory?.clientUpdateStatus.needsToFetchClients(andVerifySelfClient: true)
             RequestAvailableNotification.notifyNewRequestsAvailable(self)
         }
     }
@@ -56,7 +56,7 @@ extension ZMUserSession {
         client.managedObjectContext?.saveOrRollback()
         
         syncManagedObjectContext.performGroupedBlock {
-            self.clientUpdateStatus.deleteClients(withCredentials: credentials)
+            self.applicationStatusDirectory?.clientUpdateStatus.deleteClients(withCredentials: credentials)
             RequestAvailableNotification.notifyNewRequestsAvailable(self)
         }
     }

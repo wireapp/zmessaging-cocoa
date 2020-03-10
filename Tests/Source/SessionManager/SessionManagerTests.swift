@@ -1127,7 +1127,6 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
         let session = self.setupSession()///TODO: crash at RequireString([NSOperationQueue mainQueue] == [NSOperationQueue currentQueue],
 //        "Must call be called on the main queue.");
         session.isPerformingSync = false
-        session.pushChannelIsOpen = true
         application?.applicationState = .background
         
         let selfConversation = ZMConversation(remoteID: currentUserIdentifier, createIfNeeded: false, in: session.managedObjectContext)
@@ -1162,7 +1161,6 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
         // GIVEN
         let session = self.setupSession()
         session.isPerformingSync = false
-        session.pushChannelIsOpen = true
         application?.applicationState = .inactive
 
         let selfConversation = ZMConversation(remoteID: currentUserIdentifier, createIfNeeded: false, in: session.managedObjectContext)
@@ -1198,7 +1196,6 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
         // GIVEN
         let session = self.setupSession()
         session.isPerformingSync = false
-        session.pushChannelIsOpen = true
         
         let responder = MockForegroundNotificationResponder()
         self.sessionManager?.foregroundNotificationResponder = responder

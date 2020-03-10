@@ -21,8 +21,6 @@
 @import WireSyncEngine;
 @import WireDataModel;
 
-#import "ZMUserSession.h"
-#import "ZMUserSession+Internal.h"
 #import "NotificationObservers.h"
 #import "ZMConversationTranscoder+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>

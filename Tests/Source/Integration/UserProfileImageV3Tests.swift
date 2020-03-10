@@ -60,12 +60,12 @@ class UserProfileImageV3Tests: IntegrationTest {
         XCTAssertTrue(login())
 
         // WHEN
-        userSession?.performChanges {
-            self.userSession?.profileUpdate.updateImage(imageData: self.mediumJPEGData())
+        userSession?.perform {
+            self.userSession?.userProfileImage?.updateImage(imageData: self.mediumJPEGData())
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        if let userProfileImageUpdateStatus = self.userSession?.profileUpdate as? UserProfileImageUpdateStatus {
+        if let userProfileImageUpdateStatus = self.userSession?.userProfileImage as? UserProfileImageUpdateStatus {
             // wait until image pre-processing is completed
             userProfileImageUpdateStatus.queue.waitUntilAllOperationsAreFinished()
         }
@@ -81,8 +81,8 @@ class UserProfileImageV3Tests: IntegrationTest {
         XCTAssertTrue(login())
         
         // WHEN
-        userSession?.performChanges {
-            self.userSession?.profileUpdate.updateImage(imageData: self.mediumJPEGData())
+        userSession?.perform {
+            self.userSession?.userProfileImage?.updateImage(imageData: self.mediumJPEGData())
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -100,12 +100,12 @@ class UserProfileImageV3Tests: IntegrationTest {
         XCTAssertNotNil(previewId)
         
         // WHEN
-        userSession?.performChanges {
-            self.userSession?.profileUpdate.updateImage(imageData: self.mediumJPEGData())
+        userSession?.perform {
+            self.userSession?.userProfileImage?.updateImage(imageData: self.mediumJPEGData())
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        if let userProfileImageUpdateStatus = self.userSession?.profileUpdate as? UserProfileImageUpdateStatus {
+        if let userProfileImageUpdateStatus = self.userSession?.userProfileImage as? UserProfileImageUpdateStatus {
             // wait until image pre-processing is completed
             userProfileImageUpdateStatus.queue.waitUntilAllOperationsAreFinished()
         }

@@ -25,7 +25,6 @@
 #import "MessagingTest.h"
 #import "ZMSyncStrategy.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
-#import <WireSyncEngine/ZMUserSession.h>
 #import "MockModelObjectContextFactory.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+Internal.h"

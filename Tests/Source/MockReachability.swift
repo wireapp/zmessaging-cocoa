@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2019 Wire Swiss GmbH
+// Copyright (C) 2020 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,10 +18,15 @@
 
 import Foundation
 
-extension ZMUserSession {
-
-    public var conversationDirectory: ConversationDirectoryType? {
-        return managedObjectContext?.conversationListDirectory()
-    }
+class MockReachability: NSObject, ReachabilityProvider & TearDownCapable {
+    
+    var mayBeReachable: Bool = true
+    var isMobileConnection: Bool = true
+    var oldMayBeReachable: Bool = true
+    var oldIsMobileConnection: Bool = true
+    
+    func add(_ observer: ZMReachabilityObserver, queue: OperationQueue?) -> Any { return NSObject() }
+    func addReachabilityObserver(on queue: OperationQueue?, block: @escaping ReachabilityObserverBlock) -> Any { return NSObject() }
+    func tearDown() { }
     
 }

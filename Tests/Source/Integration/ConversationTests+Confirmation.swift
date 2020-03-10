@@ -130,7 +130,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             
             let conversation = self.conversation(for: selfToUser1Conversation!)
             var message : ZMClientMessage!
-            self.userSession?.performChanges {
+            self.userSession?.perform {
                 message = conversation?.append(text: "Hello") as? ZMClientMessage
             }
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
@@ -162,7 +162,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
 
         let conversation = self.conversation(for: selfToUser1Conversation!)
         var message : ZMClientMessage!
-        self.userSession?.performChanges {
+        self.userSession?.perform {
             message = conversation?.append(text: "Hello") as? ZMClientMessage
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))

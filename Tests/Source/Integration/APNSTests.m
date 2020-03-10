@@ -19,8 +19,6 @@
 @import WireDataModel;
 @import WireSyncEngine;
 
-#import "ZMUserSession.h"
-#import "ZMUserSession+Internal.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"

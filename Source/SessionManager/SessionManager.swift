@@ -481,7 +481,6 @@ public final class SessionManager : NSObject, SessionManagerType {
             guard let `self` = self, let session = session else { return }
             self.updateCurrentAccount(in: session.managedObjectContext)
             session.application(self.application, didFinishLaunching: launchOptions)
-            (launchOptions[.url] as? URL).apply(session.didLaunch)
         }
     }
     
@@ -790,8 +789,8 @@ public final class SessionManager : NSObject, SessionManagerType {
     }
 
     func updateProfileImage(imageData: Data) {
-        activeUserSession?.enqueueChanges {
-            self.activeUserSession?.profileUpdate.updateImage(imageData: imageData)
+        activeUserSession?.enqueue {
+            self.activeUserSession?.userProfileImage?.updateImage(imageData: imageData)
         }
     }
 
@@ -981,7 +980,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
                 userSession.setEmailCredentials(emailCredentials)
                 userSession.syncManagedObjectContext.registeredOnThisDevice = registered
                 userSession.syncManagedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = registered
-                userSession.accountStatus.didCompleteLogin()
+                userSession.applicationStatusDirectory?.accountStatus.didCompleteLogin()
                 ZMMessage.deleteOldEphemeralMessages(userSession.syncManagedObjectContext)
             }
         }
@@ -1224,7 +1223,7 @@ extension SessionManager {
         self.accountManager.accounts.forEach { account in
             group.enter()
             self.withSession(for: account) { userSession in
-                userSession.performChanges {
+                userSession.perform {
                     userSession.markAllConversationsAsRead()
                 }
                 

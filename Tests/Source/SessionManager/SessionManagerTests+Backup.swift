@@ -71,7 +71,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         guard let url = result.value else { return XCTFail("\(result.error!)") }
         
         let decryptedURL = createTemporaryURL()
-        let moc = sessionManager!.activeUserSession!.managedObjectContext!
+        let moc = sessionManager!.activeUserSession!.managedObjectContext
         try SessionManager.decrypt(from: url, to: decryptedURL, password: "12345678", accountId: ZMUser.selfUser(in: moc).remoteIdentifier!)
         
         guard decryptedURL.unzip(to: unzippedURL) else { return XCTFail("Decompression failed") }
@@ -106,7 +106,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         let backupResult = backupActiveAcount(password: name)
         guard let url = backupResult.value else { return XCTFail("\(backupResult.error!)") }
         
-        let moc = sessionManager!.activeUserSession!.managedObjectContext!
+        let moc = sessionManager!.activeUserSession!.managedObjectContext
         let userId = ZMUser.selfUser(in: moc).remoteIdentifier!
         let accountFolder = StorageStack.accountFolder(accountIdentifier: userId, applicationContainer: sharedContainer)
         let fm = FileManager.default
@@ -131,7 +131,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         let randomData = Data.secureRandomData(length: 1024)
         try randomData.write(to: dataURL)
         let encryptedURL = createTemporaryURL()
-        let moc = sessionManager!.activeUserSession!.managedObjectContext!
+        let moc = sessionManager!.activeUserSession!.managedObjectContext
         try SessionManager.encrypt(from: dataURL, to: encryptedURL, password: "notsorandom", accountId: ZMUser.selfUser(in: moc).remoteIdentifier!)
 
         // When
@@ -144,18 +144,8 @@ class SessionManagerTests_Backup: IntegrationTest {
     func testThatItReturnsAnErrorWhenImportingFileWithWrongPassword() throws {
         // Given
         XCTAssert(login())
-        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        
         let backupResult = backupActiveAcount(password: "correctpassword")
         guard let url = backupResult.value else { return XCTFail("\(backupResult.error!)") }
-        
-        let moc = sessionManager!.activeUserSession!.managedObjectContext!
-        let userId = ZMUser.selfUser(in: moc).remoteIdentifier!
-        let accountFolder = StorageStack.accountFolder(accountIdentifier: userId, applicationContainer: sharedContainer)
-        let fm = FileManager.default
-        try fm.removeItem(at: accountFolder)
-        let storePath = accountFolder.appendingPathComponent("store").path
-        XCTAssertFalse(fm.fileExists(atPath: storePath))
         
         // When
         guard let error = restoreAcount(password: "wrongpassword!!11!", from: url).error else { return XCTFail("no error thrown") }
@@ -192,7 +182,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         do {
             let conversation = self.conversation(for: selfToUser1Conversation)!
             conversation.messageDestructionTimeout = .local(0.5)
-            let moc = sessionManager!.activeUserSession!.managedObjectContext!
+            let moc = sessionManager!.activeUserSession!.managedObjectContext
             
             let message = conversation.append(text: "foo") as! ZMClientMessage
             message.nonce = nonce

@@ -24,9 +24,7 @@
 #import "ObjectTranscoderTests.h"
 #import "ZMUserTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"
-#import "ZMUserSession.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
-#import "ZMUserSession+Internal.h"
 
 
 static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
