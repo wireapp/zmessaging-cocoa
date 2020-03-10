@@ -37,7 +37,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     
     var isNetworkOnline: Bool = true
     var isPerformingSync: Bool = true
-    var hasCompletedInitialSync: Bool = false
     var hasNotifiedThirdPartyServices: Bool = false
     
     var storeProvider: LocalStoreProviderProtocol!
@@ -53,11 +52,14 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var notificationDispatcher: NotificationDispatcher
     var localNotificationDispatcher: LocalNotificationDispatcher?
     var applicationStatusDirectory: ApplicationStatusDirectory?
-    var topConversationsDirectory: TopConversationsDirectory
     var callStateObserver: CallStateObserver?
     var messageReplyObserver: ManagedObjectContextChangeObserver?
     var likeMesssageObserver: ManagedObjectContextChangeObserver?
     var urlActionProcessors: [URLActionProcessor]?
+    
+    public var hasCompletedInitialSync: Bool = false
+    
+    public var topConversationsDirectory: TopConversationsDirectory
     
     public var managedObjectContext: NSManagedObjectContext { // TODO jacob we don't want this to be public
         return storeProvider.contextDirectory.uiContext
@@ -83,7 +85,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         return applicationStatusDirectory?.userProfileUpdateStatus
     }
     
-    var userProfileImage: UserProfileImageUpdateProtocol? {
+    public var userProfileImage: UserProfileImageUpdateProtocol? {
         return applicationStatusDirectory?.userProfileImageUpdateStatus
     }
     
@@ -320,6 +322,10 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     }
     
     // MARK: - Network
+    
+    public func requestSlowSync() {
+        applicationStatusDirectory?.requestSlowSync()
+    }
     
     private func transportSessionAccessTokenDidFail(response: ZMTransportResponse) {
         managedObjectContext.performGroupedBlock {
