@@ -848,7 +848,6 @@
     XCTAssertEqualObjects([(ZMSystemMessage *)lastMessages[0] text],  newName2);
 }
 
-
 - (void)testThatItExpiresAMessage
 {
     // given

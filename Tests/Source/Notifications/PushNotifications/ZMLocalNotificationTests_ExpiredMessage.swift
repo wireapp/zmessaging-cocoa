@@ -153,7 +153,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             
             // then
             XCTAssertNotNil(note)
-            XCTAssertEqual(note!.title, self.userWithName.displayName)
+            XCTAssertEqual(note!.title, self.userWithName.name)
             XCTAssertEqual(note!.body, "Unable to send a message")
         }
     }

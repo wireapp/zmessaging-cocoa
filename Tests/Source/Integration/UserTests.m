@@ -119,7 +119,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.2);
     
-    XCTAssertEqualObjects(selfUser.displayName, @"Super");
+    XCTAssertEqualObjects(selfUser.name, @"Super Name");
     
     // initialize observers
     
@@ -146,8 +146,8 @@
     NSArray *userNotes = userObserver.notifications;
     XCTAssertEqual(userNotes.count, 0u);
     
-    XCTAssertEqualObjects(realUser.displayName, @"Max");
-    XCTAssertEqualObjects(selfUser.displayName, @"Super");
+    XCTAssertEqualObjects(realUser.name, @"Max Tester");
+    XCTAssertEqualObjects(selfUser.name, @"Super Name");
 }
 
 - (void)testThatClientsGetAddedAndDeletedForUserWhenRequested
