@@ -179,7 +179,7 @@ extension CallingRequestStrategy : WireCallCenterTransport {
                 return
             }
             
-            self.zmLog.debug("sending calling message")
+            self.zmLog.debug("schedule calling message")
             
             let genericMessage = GenericMessage(content: Calling(content: dataString))
 
