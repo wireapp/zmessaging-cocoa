@@ -67,10 +67,6 @@ class CallParticipantsSnapshot {
     // MARK: - Helpers
 
     /// Updates the locally stored member for the given userId and clientId with the given non nil properties.
-    ///
-    /// The locally stored member may not yet have a clientId; we know the userId from the incoming call event but
-    /// only get the clientId once the call connects. In this case, if we can't find a member matching both ids
-    /// then we take the first where the userId matches and clientId is nil.
 
     private func updateMember(userId: UUID,
                               clientId: String,
@@ -78,11 +74,7 @@ class CallParticipantsSnapshot {
                               videoState: VideoState? = nil,
                               networkQuality: NetworkQuality? = nil) {
 
-        let candidateMembers = findMembers(with: userId)
-        let targetMember = candidateMembers.first { $0.clientId == clientId }
-        let fallBackMember = candidateMembers.first { $0.clientId == nil }
-
-        guard let localMember = targetMember ?? fallBackMember else { return }
+        guard let localMember = findMember(with: userId, clientId: clientId) else { return }
 
         let updatedMember = AVSCallMember(userId: userId,
                                           clientId: clientId,
@@ -95,10 +87,10 @@ class CallParticipantsSnapshot {
         }))
     }
 
-    /// Returns all members matching the given userId.
+    /// Returns the member matching the given userId and clientId.
 
-    private func findMembers(with userId: UUID) -> [AVSCallMember] {
-        return members.array.filter { $0.remoteId == userId }
+    private func findMember(with userId: UUID, clientId: String) -> AVSCallMember? {
+        return members.array.first { $0.remoteId == userId && $0.clientId == clientId }
     }
 
     /// Notifies observers of a potential change in the participants set.

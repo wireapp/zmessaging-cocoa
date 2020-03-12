@@ -27,6 +27,9 @@ class CallParticipantsSnapshotTests: MessagingTest {
     var mockWireCallCenterV3: WireCallCenterV3Mock!
     var mockFlowManager: FlowManagerMock!
 
+    private let alice = User()
+    private let bob = User()
+
     override func setUp() {
         super.setUp()
         mockFlowManager = FlowManagerMock()
@@ -51,60 +54,50 @@ class CallParticipantsSnapshotTests: MessagingTest {
 
     func testThat_ItDoesNotCrash_WhenInitialized_WithDuplicateCallMembers(){
         // Given
-        let userId = UUID()
-        let callMember1 = AVSCallMember(userId: userId, audioState: .established)
-        let callMember2 = AVSCallMember(userId: userId, audioState: .connecting)
+        let member1 = AVSCallMember(userId: alice.userId, clientId: alice.iphone, audioState: .established)
+        let member2 = AVSCallMember(userId: alice.userId, clientId: alice.iphone, audioState: .connecting)
 
         // When
-        let sut = createSut(members: [callMember1, callMember2])
+        let sut = createSut(members: [member1, member2])
 
         
         // Then
-        XCTAssertEqual(sut.members.array, [callMember1])
+        XCTAssertEqual(sut.members.array, [member1])
     }
     
     func testThat_ItDoesNotCrash_WhenUpdated_WithDuplicateCallMembers(){
         // Given
-        let userId = UUID()
-        let callMember1 = AVSCallMember(userId: userId, audioState: .established)
-        let callMember2 = AVSCallMember(userId: userId, audioState: .connecting)
+        let member1 = AVSCallMember(userId: alice.userId, clientId: alice.iphone, audioState: .established)
+        let member2 = AVSCallMember(userId: alice.userId, clientId: alice.iphone, audioState: .connecting)
         let sut = createSut(members: [])
 
         // when
-        sut.callParticipantsChanged(participants: [callMember1, callMember2])
+        sut.callParticipantsChanged(participants: [member1, member2])
         
         // then
-        XCTAssertEqual(sut.members.array, [callMember1])
+        XCTAssertEqual(sut.members.array, [member1])
     }
 
     func testThat_ItDoesNotConsider_AUserWithMultipleDevices_AsDuplicated() {
         // Given
-        let userId = UUID()
-        let callMember1 = AVSCallMember(userId: userId, clientId: "client1", audioState: .established)
-        let callMember2 = AVSCallMember(userId: userId, clientId: "client2", audioState: .connecting)
+        let member1 = AVSCallMember(userId: alice.userId, clientId: alice.iphone, audioState: .established)
+        let member2 = AVSCallMember(userId: alice.userId, clientId: alice.desktop, audioState: .connecting)
 
         // When
-        let sut = createSut(members: [callMember1, callMember2])
+        let sut = createSut(members: [member1, member2])
 
         // Then
-        XCTAssertEqual(sut.members.array, [callMember1, callMember2])
+        XCTAssertEqual(sut.members.array, [member1, member2])
     }
 
     // MARK: - Network Quality
 
     func testThat_ItTakesTheWorstNetworkQuality_FromParticipants() {
-        func member(with quality: NetworkQuality) -> AVSCallMember {
-            return AVSCallMember(userId: UUID(),
-                                 audioState: .established,
-                                 videoState: .started,
-                                 networkQuality: quality)
-        }
-
         // Given
-        let normalQuality = member(with: .normal)
-        let mediumQuality = member(with: .medium)
-        let poorQuality = member(with: .poor)
-        let problemQuality = member(with: .problem)
+        let normalQuality = AVSCallMember(userId: alice.userId, clientId: alice.iphone, networkQuality: .normal)
+        let mediumQuality = AVSCallMember(userId: alice.userId, clientId: alice.desktop, networkQuality: .medium)
+        let poorQuality = AVSCallMember(userId: bob.userId, clientId: bob.iphone, networkQuality: .poor)
+        let problemQuality = AVSCallMember(userId: bob.userId, clientId: bob.desktop, networkQuality: .problem)
         let sut = createSut(members: [])
 
         XCTAssertEqual(sut.networkQuality, .normal)
@@ -130,83 +123,81 @@ class CallParticipantsSnapshotTests: MessagingTest {
         XCTAssertEqual(sut.networkQuality, .poor)
     }
 
+    // MARK: - Updates
+
     func testThat_ItUpdatesNetworkQuality_WhenItChangesForParticipant() {
-        // given
-        let member1 = AVSCallMember(userId: UUID(), clientId: "member1", audioState: .established, networkQuality: .normal)
-        let member2 = AVSCallMember(userId: UUID(), clientId: "member2", audioState: .established, networkQuality: .normal)
+        // Given
+        let member1 = AVSCallMember(userId: alice.userId, clientId: alice.iphone, audioState: .established, networkQuality: .normal)
+        let member2 = AVSCallMember(userId: bob.userId, clientId: bob.iphone, audioState: .established, networkQuality: .normal)
         let sut = createSut(members: [member1, member2])
 
         XCTAssertEqual(sut.networkQuality, .normal)
 
         // When, then
-        sut.callParticpantNetworkQualityChanged(userId: member1.remoteId, clientId: member1.clientId!, networkQuality: .medium)
+        sut.callParticpantNetworkQualityChanged(userId: member1.remoteId, clientId: member1.clientId, networkQuality: .medium)
         XCTAssertEqual(sut.networkQuality, .medium)
 
         // When, then
-        sut.callParticpantNetworkQualityChanged(userId: member2.remoteId, clientId: member2.clientId!, networkQuality: .poor)
+        sut.callParticpantNetworkQualityChanged(userId: member2.remoteId, clientId: member2.clientId, networkQuality: .poor)
         XCTAssertEqual(sut.networkQuality, .poor)
 
         // When, then
-        sut.callParticpantNetworkQualityChanged(userId: member1.remoteId, clientId: member1.clientId!, networkQuality: .normal)
-        sut.callParticpantNetworkQualityChanged(userId: member2.remoteId, clientId: member2.clientId!, networkQuality: .normal)
+        sut.callParticpantNetworkQualityChanged(userId: member1.remoteId, clientId: member1.clientId, networkQuality: .normal)
+        sut.callParticpantNetworkQualityChanged(userId: member2.remoteId, clientId: member2.clientId, networkQuality: .normal)
         XCTAssertEqual(sut.networkQuality, .normal)
     }
 
-    // MARK: - Updates
-
-    func testThat_ItUpdatesMember_WhenACompleteMatchFound() {
+    func testThat_ItUpdatesAudioState_WhenItChangesForParticipant() {
         // Given
-        let userId = UUID()
-        let clientId1 = "client1"
-        let clientId2 = "client2"
-
-        let member1 = AVSCallMember(userId: userId, clientId: clientId1, videoState: .started)
-        let member2 = AVSCallMember(userId: userId, clientId: clientId2, videoState: .stopped)
+        let member1 = AVSCallMember(userId: alice.userId, clientId: alice.iphone, audioState: .connecting)
+        let member2 = AVSCallMember(userId: bob.userId, clientId: bob.iphone, audioState: .connecting)
         let sut = createSut(members: [member1, member2])
 
         // When
-        sut.callParticpantVideoStateChanged(userId: userId, clientId: clientId2, videoState: .screenSharing)
+        sut.callParticpantAudioEstablished(userId: member1.remoteId, clientId: member1.clientId)
 
         // Then
-        let updatedMember2 = AVSCallMember(userId: userId, clientId: clientId2, videoState: .screenSharing)
-        let expectation = [member1, updatedMember2]
-        XCTAssertEqual(sut.members.array, expectation)
+        let updatedMember1 = AVSCallMember(userId: alice.userId, clientId: alice.iphone, audioState: .established)
+        XCTAssertEqual(sut.members.array, [updatedMember1, member2])
     }
 
-    func testThat_ItUpdatesMember_WhenAPartialMatchFound() {
+    func testThat_ItUpdatesVideoState_WhenItChangesForParticipant() {
         // Given
-        let userId = UUID()
-        let clientId1 = "client1"
-
-        let member1 = AVSCallMember(userId: userId, clientId: clientId1, audioState: .connecting)
-        let member2 = AVSCallMember(userId: userId, clientId: nil, audioState: .connecting)
+        let member1 = AVSCallMember(userId: alice.userId, clientId: alice.iphone, videoState: .stopped)
+        let member2 = AVSCallMember(userId: bob.userId, clientId: bob.iphone, videoState: .stopped)
         let sut = createSut(members: [member1, member2])
 
         // When
-        sut.callParticpantAudioEstablished(userId: userId, clientId: "client2")
+        sut.callParticpantVideoStateChanged(userId: member1.remoteId, clientId: member1.clientId, videoState: .screenSharing)
 
         // Then
-        let updatedMember2 = AVSCallMember(userId: userId, clientId: "client2", audioState: .established)
-        let expectation = [member1, updatedMember2]
-        XCTAssertEqual(sut.members.array, expectation)
+        let updatedMember1 = AVSCallMember(userId: alice.userId, clientId: alice.iphone, videoState: .screenSharing)
+        XCTAssertEqual(sut.members.array, [updatedMember1, member2])
     }
 
     func testThat_ItDoesNotUpdateMember_WhenNoMatchFound() {
         // Given
-        let userId = UUID()
-        let clientId1 = "client1"
-        let clientId2 = "client2"
-
-        let member1 = AVSCallMember(userId: userId, clientId: clientId1, videoState: .started)
-        let member2 = AVSCallMember(userId: userId, clientId: clientId2, videoState: .stopped)
+        let member1 = AVSCallMember(userId: alice.userId, clientId: alice.iphone, videoState: .stopped)
+        let member2 = AVSCallMember(userId: bob.userId, clientId: bob.iphone, videoState: .stopped)
         let sut = createSut(members: [member1, member2])
 
         // When
-        sut.callParticpantVideoStateChanged(userId: userId, clientId: "client3", videoState: .screenSharing)
+        let unknownMember = AVSCallMember(userId: alice.userId, clientId: alice.desktop, videoState: .stopped)
+        sut.callParticpantVideoStateChanged(userId: unknownMember.remoteId, clientId: unknownMember.clientId, videoState: .screenSharing)
 
         // Then
-        let expectation = [member1, member2]
-        XCTAssertEqual(sut.members.array, expectation)
+        XCTAssertEqual(sut.members.array, [member1, member2])
     }
 
+}
+
+private extension CallParticipantsSnapshotTests {
+
+    struct User {
+
+        let userId = UUID()
+        let iphone = "String"
+        let desktop = "Desktop"
+
+    }
 }

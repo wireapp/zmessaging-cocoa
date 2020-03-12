@@ -71,7 +71,7 @@ public enum CallParticipantState: Equatable {
     /// Participant is in the process of connecting to the call
     case connecting
     /// Participant is connected to call and audio is flowing
-    case connected(videoState: VideoState, clientId: String?)
+    case connected(videoState: VideoState, clientId: String)
 }
 
 

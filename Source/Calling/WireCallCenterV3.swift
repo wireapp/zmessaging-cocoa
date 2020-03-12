@@ -314,9 +314,8 @@ extension WireCallCenterV3 {
         return callSnapshots[conversationId]?.callStarter
     }
 
-    /// Call this method when the callParticipants changed and avs calls the handler `wcall_group_changed_h`
+    /// Call this method when the callParticipants changed and avs calls the handler `wcall_participant_changed_h`
     func callParticipantsChanged(conversationId: UUID, participants: [AVSCallMember]) {
-        guard callSnapshots[conversationId]?.isGroup == true else { return }
         callSnapshots[conversationId]?.callParticipants.callParticipantsChanged(participants: participants)
     }
 
@@ -415,14 +414,8 @@ extension WireCallCenterV3 {
         let started = avsWrapper.startCall(conversationId: conversationId, callType: callType, conversationType: conversationType, useCBR: useConstantBitRateAudio)
         if started {
             let callState: CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
-            
-            let members: [AVSCallMember] = {
-                guard let user = conversation.connectedUser, conversation.conversationType == .oneOnOne else { return [] }
-                return [AVSCallMember(userId: user.remoteIdentifier)]
-            }()
-
             let previousCallState = callSnapshots[conversationId]?.callState
-            createSnapshot(callState: callState, members: members, callStarter: selfUserId, video: video, for: conversationId)
+            createSnapshot(callState: callState, members: [], callStarter: selfUserId, video: video, for: conversationId)
             
             if let context = uiMOC {
                 WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime: nil, previousCallState: previousCallState).post(in: context.notificationContext)

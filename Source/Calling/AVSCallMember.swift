@@ -54,8 +54,8 @@ public struct AVSCallMember: Hashable {
     /// The remote identifier of the user.
     public let remoteId: UUID
     
-    /// The client identifier of the user, this is only available after the call member has connected
-    public let clientId: String?
+    /// The client identifier of the user.
+    public let clientId: String
 
     /// The state of the audio connection.
     public let audioState: AudioState
@@ -78,7 +78,7 @@ public struct AVSCallMember: Hashable {
      */
 
     public init(userId: UUID,
-                clientId: String? = nil,
+                clientId: String,
                 audioState: AudioState = .connecting,
                 videoState: VideoState = .stopped,
                 networkQuality: NetworkQuality = .normal)
