@@ -175,13 +175,13 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    private let incomingCallHandler: IncomingCallHandler = { conversationId, messageTime, userId, isVideoCall, shouldRing, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, isVideoCall, shouldRing) {
-            $0.handleIncomingCall(conversationId: $1, messageTime: $2, userId: $3, isVideoCall: $4, shouldRing: $5)
+    private let incomingCallHandler: IncomingCallHandler = { conversationId, messageTime, userId, clientId, isVideoCall, shouldRing, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, clientId, isVideoCall, shouldRing) {
+            $0.handleIncomingCall(conversationId: $1, messageTime: $2, userId: $3, clientId: $4, isVideoCall: $5, shouldRing: $6)
         }
     }
 
-    private let missedCallHandler: MissedCallHandler = { conversationId, messageTime, userId, isVideoCall, contextRef in
+    private let missedCallHandler: MissedCallHandler = { conversationId, messageTime, userId, clientId, isVideoCall, contextRef in
         zmLog.debug("missedCallHandler: messageTime = \(messageTime)")
         let nonZeroMessageTime: UInt32 = messageTime != 0 ? messageTime : UInt32(Date().timeIntervalSince1970)
 

@@ -584,7 +584,7 @@ extension WireCallCenterV3 {
 
         switch callState {
         case .incoming(video: let video, shouldRing: _, degraded: _):
-            createSnapshot(callState: callState, members: [AVSCallMember(userId: userId!)], callStarter: userId, video: video, for: conversationId)
+            createSnapshot(callState: callState, members: [AVSCallMember(userId: userId!, clientId: clientId!)], callStarter: userId, video: video, for: conversationId)
         case .established:
             // WORKAROUND: the call established handler will is called once for every participant in a
             // group call. Until that's no longer the case we must take care to only set establishedDate once.

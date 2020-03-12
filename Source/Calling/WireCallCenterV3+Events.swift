@@ -77,10 +77,10 @@ extension WireCallCenterV3 {
     }
 
     /// Handles incoming calls.
-    func handleIncomingCall(conversationId: UUID, messageTime: Date, userId: UUID, isVideoCall: Bool, shouldRing: Bool) {
+    func handleIncomingCall(conversationId: UUID, messageTime: Date, userId: UUID, clientId: String, isVideoCall: Bool, shouldRing: Bool) {
         handleEvent("incoming-call") {
-            let callState : CallState = .incoming(video: isVideoCall, shouldRing: shouldRing, degraded: self.isDegraded(conversationId: conversationId))
-            self.handleCallState(callState: callState, conversationId: conversationId, userId: userId, messageTime: messageTime)
+            let callState: CallState = .incoming(video: isVideoCall, shouldRing: shouldRing, degraded: self.isDegraded(conversationId: conversationId))
+            self.handleCallState(callState: callState, conversationId: conversationId, userId: userId, clientId: clientId, messageTime: messageTime)
         }
     }
 
