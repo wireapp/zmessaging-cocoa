@@ -132,33 +132,6 @@ public enum CallState: Equatable {
     case unknown
 
     /**
-     * Creates the call state from the given AVS flag.
-     * - parameter wcallState: The state of the call as represented in AVS.
-     */
-
-    init(wcallState: Int32) {
-        switch wcallState {
-        case WCALL_STATE_NONE:
-            self = .none
-        case WCALL_STATE_INCOMING:
-            self = .incoming(video: false, shouldRing: true, degraded: false)
-        case WCALL_STATE_OUTGOING:
-            self = .outgoing(degraded: false)
-        case WCALL_STATE_ANSWERED:
-            self = .answered(degraded: false)
-        case WCALL_STATE_MEDIA_ESTAB:
-            self = .established
-        case WCALL_STATE_TERM_LOCAL: fallthrough
-        case WCALL_STATE_TERM_REMOTE:
-            self = .terminating(reason: .unknown)
-        default:
-            // WCALL_STATE_UNKNOWN can happen when we check the call state of a
-            // conversation id that isn't in the list of calls
-            self = .none
-        }
-    }
-
-    /**
      * Logs the current state to the calling logs.
      */
 
