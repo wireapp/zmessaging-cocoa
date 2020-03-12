@@ -30,7 +30,9 @@ extension WireCallCenterV3 : ZMConversationObserver {
             changeInfo.securityLevelChanged,
             let conversationId = changeInfo.conversation.remoteIdentifier,
             let previousSnapshot = callSnapshots[conversationId]
-        else { return }
+        else {
+            return
+        }
 
         if changeInfo.conversation.securityLevel == .secureWithIgnored, isActive(conversationId: conversationId) {
             // If an active call degrades we end it immediately
@@ -43,7 +45,13 @@ extension WireCallCenterV3 : ZMConversationObserver {
             callSnapshots[conversationId] = previousSnapshot.update(with: updatedCallState)
 
             if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId) {
-                WireCallCenterCallStateNotification(context: context, callState: updatedCallState, conversationId: conversationId, callerId: callerId, messageTime: Date(), previousCallState: previousSnapshot.callState).post(in: context.notificationContext)
+                let notification = WireCallCenterCallStateNotification(context: context,
+                                                                       callState: updatedCallState,
+                                                                       conversationId: conversationId,
+                                                                       callerId: callerId,
+                                                                       messageTime: Date(),
+                                                                       previousCallState: previousSnapshot.callState)
+                notification.post(in: context.notificationContext)
             }
         }
     }
@@ -153,7 +161,8 @@ extension WireCallCenterV3 {
     func handleCallMetrics(conversationId: UUID, metrics: String) {
         do {
             let metricsData = Data(metrics.utf8)
-            guard let attributes = try JSONSerialization.jsonObject(with: metricsData, options: .mutableContainers) as? [String: NSObject] else { return }
+            let jsonObject = try JSONSerialization.jsonObject(with: metricsData, options: .mutableContainers)
+            guard let attributes = jsonObject as? [String: NSObject] else { return }
             analytics?.tagEvent("calling.avs_metrics_ended_call", attributes: attributes)
         } catch {
             zmLog.error("Unable to parse call metrics JSON: \(error)")
@@ -168,8 +177,11 @@ extension WireCallCenterV3 {
     }
 
     /// Handles sending call messages
-    internal func handleCallMessageRequest(token: WireCallMessageToken, conversationId: UUID, senderUserId: UUID, senderClientId: String, data: Data)
-    {
+    internal func handleCallMessageRequest(token: WireCallMessageToken,
+                                           conversationId: UUID,
+                                           senderUserId: UUID,
+                                           senderClientId: String,
+                                           data: Data) {
         handleEvent("send-call-message") {
             self.send(
                 token: token,
@@ -196,6 +208,7 @@ extension WireCallCenterV3 {
                 zmLog.safePublic("Invalid participant change data")
                 return
             }
+
             // Example of `data`
             //  {
             //      "convid": "df371578-65cf-4f07-9f49-c72a49877ae7",
@@ -208,6 +221,7 @@ extension WireCallCenterV3 {
             //          }
             //      ]
             //}
+
             do {
                 let change = try JSONDecoder().decode(AVSParticipantsChange.self, from: data)
                 let members = change.members.map(AVSCallMember.init)
@@ -230,7 +244,11 @@ extension WireCallCenterV3 {
     /// Handles audio CBR mode enabling.
     func handleConstantBitRateChange(enabled: Bool) {
         handleEventInContext("cbr-change") {
-            if let establishedCall = self.callSnapshots.first(where: { $0.value.callState == .established || $0.value.callState == .establishedDataChannel }) {
+            let firstEstablishedCall = self.callSnapshots.first {
+                $0.value.callState == .established || $0.value.callState == .establishedDataChannel
+            }
+
+            if let establishedCall = firstEstablishedCall {
                 self.callSnapshots[establishedCall.key] = establishedCall.value.updateConstantBitrate(enabled)
                 WireCallCenterCBRNotification(enabled: enabled).post(in: $0.notificationContext)
             }
@@ -244,6 +262,7 @@ extension WireCallCenterV3 {
         }
     }
 
+    // TODO: Propagate clientId in the notification.
     /// Handles network quality change
     func handleNetworkQualityChange(conversationId: UUID, userId: UUID, clientId: String, quality: NetworkQuality) {
         handleEventInContext("network-quality-change") {
@@ -254,7 +273,10 @@ extension WireCallCenterV3 {
 
             if let call = self.callSnapshots[conversationId] {
                 self.callSnapshots[conversationId] = call.updateNetworkQuality(quality)
-                WireCallCenterNetworkQualityNotification(conversationId: conversationId, userId: userId, networkQuality: quality).post(in: $0.notificationContext)
+                let notification = WireCallCenterNetworkQualityNotification(conversationId: conversationId,
+                                                                            userId: userId,
+                                                                            networkQuality: quality)
+                notification.post(in: $0.notificationContext)
             }
         }
     }
