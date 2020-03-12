@@ -575,14 +575,16 @@ extension WireCallCenterV3 {
             callState = .incoming(video: false, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
         }
 
+        let callerId = initiatorForCall(conversationId: conversationId)
+        let previousCallState = callSnapshots[conversationId]?.callState
+
         if case .terminating = callState {
             clearSnapshot(conversationId: conversationId)
         } else if let previousSnapshot = callSnapshots[conversationId] {
             callSnapshots[conversationId] = previousSnapshot.update(with: callState)
         }
 
-        if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId)  {
-            let previousCallState = callSnapshots[conversationId]?.callState
+        if let context = uiMOC, let callerId = callerId  {
             let notification = WireCallCenterCallStateNotification(context: context,
                                                                    callState: callState,
                                                                    conversationId: conversationId,
