@@ -134,16 +134,16 @@ class CallParticipantsSnapshotTests: MessagingTest {
         XCTAssertEqual(sut.networkQuality, .normal)
 
         // When, then
-        sut.callParticpantNetworkQualityChanged(userId: member1.remoteId, clientId: member1.clientId, networkQuality: .medium)
+        sut.callParticipantNetworkQualityChanged(userId: member1.remoteId, clientId: member1.clientId, networkQuality: .medium)
         XCTAssertEqual(sut.networkQuality, .medium)
 
         // When, then
-        sut.callParticpantNetworkQualityChanged(userId: member2.remoteId, clientId: member2.clientId, networkQuality: .poor)
+        sut.callParticipantNetworkQualityChanged(userId: member2.remoteId, clientId: member2.clientId, networkQuality: .poor)
         XCTAssertEqual(sut.networkQuality, .poor)
 
         // When, then
-        sut.callParticpantNetworkQualityChanged(userId: member1.remoteId, clientId: member1.clientId, networkQuality: .normal)
-        sut.callParticpantNetworkQualityChanged(userId: member2.remoteId, clientId: member2.clientId, networkQuality: .normal)
+        sut.callParticipantNetworkQualityChanged(userId: member1.remoteId, clientId: member1.clientId, networkQuality: .normal)
+        sut.callParticipantNetworkQualityChanged(userId: member2.remoteId, clientId: member2.clientId, networkQuality: .normal)
         XCTAssertEqual(sut.networkQuality, .normal)
     }
 
@@ -154,7 +154,7 @@ class CallParticipantsSnapshotTests: MessagingTest {
         let sut = createSut(members: [member1, member2])
 
         // When
-        sut.callParticpantAudioEstablished(userId: member1.remoteId, clientId: member1.clientId)
+        sut.callParticipantAudioEstablished(userId: member1.remoteId, clientId: member1.clientId)
 
         // Then
         let updatedMember1 = AVSCallMember(userId: alice.userId, clientId: alice.iphone, audioState: .established)
@@ -168,7 +168,7 @@ class CallParticipantsSnapshotTests: MessagingTest {
         let sut = createSut(members: [member1, member2])
 
         // When
-        sut.callParticpantVideoStateChanged(userId: member1.remoteId, clientId: member1.clientId, videoState: .screenSharing)
+        sut.callParticipantVideoStateChanged(userId: member1.remoteId, clientId: member1.clientId, videoState: .screenSharing)
 
         // Then
         let updatedMember1 = AVSCallMember(userId: alice.userId, clientId: alice.iphone, videoState: .screenSharing)
@@ -183,7 +183,7 @@ class CallParticipantsSnapshotTests: MessagingTest {
 
         // When
         let unknownMember = AVSCallMember(userId: alice.userId, clientId: alice.desktop, videoState: .stopped)
-        sut.callParticpantVideoStateChanged(userId: unknownMember.remoteId, clientId: unknownMember.clientId, videoState: .screenSharing)
+        sut.callParticipantVideoStateChanged(userId: unknownMember.remoteId, clientId: unknownMember.clientId, videoState: .screenSharing)
 
         // Then
         XCTAssertEqual(sut.members.array, [member1, member2])

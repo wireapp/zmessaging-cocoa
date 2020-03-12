@@ -51,16 +51,16 @@ class CallParticipantsSnapshot {
         notifyChange()
     }
 
-    func callParticpantVideoStateChanged(userId: UUID, clientId: String, videoState: VideoState) {
+    func callParticipantVideoStateChanged(userId: UUID, clientId: String, videoState: VideoState) {
         updateMember(userId: userId, clientId: clientId, videoState: videoState)
     }
 
-    func callParticpantAudioEstablished(userId: UUID, clientId: String) {
+    func callParticipantAudioEstablished(userId: UUID, clientId: String) {
         updateMember(userId: userId, clientId: clientId, audioState: .established)
     }
 
     // FIXME: This never get's called. We would likely want to call this for the new network state.
-    func callParticpantNetworkQualityChanged(userId: UUID, clientId: String, networkQuality: NetworkQuality) {
+    func callParticipantNetworkQualityChanged(userId: UUID, clientId: String, networkQuality: NetworkQuality) {
         updateMember(userId: userId, clientId: clientId, networkQuality: networkQuality)
     }
 
