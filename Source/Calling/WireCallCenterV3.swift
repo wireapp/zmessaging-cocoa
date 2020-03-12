@@ -557,54 +557,23 @@ extension WireCallCenterV3 {
         completionHandler()
     }
 
+    
+
     /// Handles a change in calling state.
     ///
     /// - Parameters:
     ///     - callState: The state to handle.
     ///     - conversationId: The id of the conversation where teh calling state has changed.
-    ///     - userId: The id of the user that caused the event, if applicable.
-    ///     - clientId: The id of the user's client that caused the event, if applicable.
     ///     - messageTime: The timestamp of the event.
 
-    func handleCallState(callState: CallState,
-                         conversationId: UUID,
-                         userId: UUID?,
-                         clientId: String? = nil,
-                         messageTime: Date? = nil)
-    {
+    func handle(callState: CallState, conversationId: UUID, messageTime: Date? = nil) {
         callState.logState()
+
         var callState = callState
 
-        switch callState {
-        case .incoming(video: let video, shouldRing: _, degraded: _):
-            createSnapshot(callState: callState, members: [AVSCallMember(userId: userId!, clientId: clientId!)], callStarter: userId, video: video, for: conversationId)
-        case .established:
-            // WORKAROUND: the call established handler will is called once for every participant in a
-            // group call. Until that's no longer the case we must take care to only set establishedDate once.
-            if self.callState(conversationId: conversationId) != .established {
-                establishedDate = Date()
-            }
-
-            if let userId = userId, let clientId = clientId {
-                callParticipantAudioEstablished(conversationId: conversationId, userId: userId, clientId: clientId)
-            }
-
-            if videoState(conversationId: conversationId) == .started {
-                avsWrapper.setVideoState(conversationId: conversationId, videoState: .started)
-            }
-        case .establishedDataChannel:
-            if self.callState(conversationId: conversationId) == .established {
-                return // Ignore if data channel was established after audio
-            }
-        case .terminating(reason: .stillOngoing):
+        if case .terminating(reason: .stillOngoing) = callState {
             callState = .incoming(video: false, shouldRing: false, degraded: isDegraded(conversationId: conversationId))
-        default:
-            break
         }
-
-        let callerId = initiatorForCall(conversationId: conversationId)
-
-        let previousCallState = callSnapshots[conversationId]?.callState
 
         if case .terminating = callState {
             clearSnapshot(conversationId: conversationId)
@@ -612,8 +581,15 @@ extension WireCallCenterV3 {
             callSnapshots[conversationId] = previousSnapshot.update(with: callState)
         }
 
-        if let context = uiMOC, let callerId = callerId  {
-            WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: callerId, messageTime: messageTime, previousCallState:previousCallState).post(in: context.notificationContext)
+        if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId)  {
+            let previousCallState = callSnapshots[conversationId]?.callState
+            let notification = WireCallCenterCallStateNotification(context: context,
+                                                                   callState: callState,
+                                                                   conversationId: conversationId,
+                                                                   callerId: callerId,
+                                                                   messageTime: messageTime,
+                                                                   previousCallState: previousCallState)
+            notification.post(in: context.notificationContext)
         }
     }
 

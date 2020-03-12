@@ -79,8 +79,12 @@ extension WireCallCenterV3 {
     /// Handles incoming calls.
     func handleIncomingCall(conversationId: UUID, messageTime: Date, userId: UUID, clientId: String, isVideoCall: Bool, shouldRing: Bool) {
         handleEvent("incoming-call") {
-            let callState: CallState = .incoming(video: isVideoCall, shouldRing: shouldRing, degraded: self.isDegraded(conversationId: conversationId))
-            self.handleCallState(callState: callState, conversationId: conversationId, userId: userId, clientId: clientId, messageTime: messageTime)
+            let isDegraded = self.isDegraded(conversationId: conversationId)
+            let callState = CallState.incoming(video: isVideoCall, shouldRing: shouldRing, degraded: isDegraded)
+            let members = [AVSCallMember(userId: userId, clientId: clientId)]
+
+            self.createSnapshot(callState: callState, members: members, callStarter: userId, video: isVideoCall, for: conversationId)
+            self.handle(callState: callState, conversationId: conversationId)
         }
     }
 
@@ -94,22 +98,37 @@ extension WireCallCenterV3 {
     /// Handles answered calls.
     func handleAnsweredCall(conversationId: UUID) {
         handleEvent("answered-call") {
-            self.handleCallState(callState: .answered(degraded: self.isDegraded(conversationId: conversationId)),
-                                 conversationId: conversationId, userId: nil)
+            let callState = CallState.answered(degraded: self.isDegraded(conversationId: conversationId))
+            self.handle(callState: callState, conversationId: conversationId)
         }
     }
 
     /// Handles when data channel gets established.
     func handleDataChannelEstablishement(conversationId: UUID, userId: UUID, clientId: String) {
         handleEvent("data-channel-established") {
-            self.handleCallState(callState: .establishedDataChannel, conversationId: conversationId, userId: userId, clientId: clientId)
+            // Ignore if data channel was established after audio
+            if self.callState(conversationId: conversationId) != .established {
+                self.handle(callState: .establishedDataChannel, conversationId: conversationId)
+            }
         }
     }
 
     /// Handles established calls.
     func handleEstablishedCall(conversationId: UUID, userId: UUID, clientId: String) {
         handleEvent("established-call") {
-            self.handleCallState(callState: .established, conversationId: conversationId, userId: userId, clientId: clientId)
+            // WORKAROUND: the call established handler will is called once for every participant in a
+            // group call. Until that's no longer the case we must take care to only set establishedDate once.
+            if self.callState(conversationId: conversationId) != .established {
+                self.establishedDate = Date()
+            }
+
+            self.callParticipantAudioEstablished(conversationId: conversationId, userId: userId, clientId: clientId)
+
+            if self.videoState(conversationId: conversationId) == .started {
+                self.avsWrapper.setVideoState(conversationId: conversationId, videoState: .started)
+            }
+
+            self.handle(callState: .established, conversationId: conversationId)
         }
     }
 
@@ -126,7 +145,7 @@ extension WireCallCenterV3 {
 
     func handleCallEnd(reason: CallClosedReason, conversationId: UUID, messageTime: Date?, userId: UUID, clientId: String) {
         handleEvent("closed-call") {
-            self.handleCallState(callState: .terminating(reason: reason), conversationId: conversationId, userId: userId, clientId: clientId, messageTime: messageTime)
+            self.handle(callState: .terminating(reason: reason), conversationId: conversationId, messageTime: messageTime)
         }
     }
 
@@ -221,7 +240,7 @@ extension WireCallCenterV3 {
     /// Stopped when the media stream of a call was ended.
     func handleMediaStopped(conversationId: UUID) {
         handleEvent("media-stopped") {
-            self.handleCallState(callState: .mediaStopped, conversationId: conversationId, userId: nil)
+            self.handle(callState: .mediaStopped, conversationId: conversationId)
         }
     }
 
