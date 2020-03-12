@@ -262,7 +262,6 @@ extension WireCallCenterV3 {
         }
     }
 
-    // TODO: Propagate clientId in the notification.
     /// Handles network quality change
     func handleNetworkQualityChange(conversationId: UUID, userId: UUID, clientId: String, quality: NetworkQuality) {
         handleEventInContext("network-quality-change") {
@@ -275,6 +274,7 @@ extension WireCallCenterV3 {
                 self.callSnapshots[conversationId] = call.updateNetworkQuality(quality)
                 let notification = WireCallCenterNetworkQualityNotification(conversationId: conversationId,
                                                                             userId: userId,
+                                                                            clientId: clientId,
                                                                             networkQuality: quality)
                 notification.post(in: $0.notificationContext)
             }

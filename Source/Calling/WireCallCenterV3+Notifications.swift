@@ -41,6 +41,7 @@ struct WireCallCenterNetworkQualityNotification : SelfPostingNotification {
     static let notificationName = Notification.Name("WireCallCenterNetworkQualityNotification")
     public let conversationId: UUID
     public let userId: UUID
+    public let clientId: String
     public let networkQuality: NetworkQuality
 }
 
