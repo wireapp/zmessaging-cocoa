@@ -59,7 +59,6 @@ class CallParticipantsSnapshot {
         updateMember(userId: userId, clientId: clientId, audioState: .established)
     }
 
-    // FIXME: This never get's called. We would likely want to call this for the new network state.
     func callParticipantNetworkQualityChanged(userId: UUID, clientId: String, networkQuality: NetworkQuality) {
         updateMember(userId: userId, clientId: clientId, networkQuality: networkQuality)
     }
