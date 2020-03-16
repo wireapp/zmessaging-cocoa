@@ -163,25 +163,25 @@ public class AVSWrapper: AVSWrapperType {
 
     // MARK: - C Callback Handlers
 
-    private let constantBitRateChangeHandler: ConstantBitRateChangeHandler = { userId, clientId, enabledFlag, contextRef in
+    private let constantBitRateChangeHandler: Handler.ConstantBitRateChange = { userId, clientId, enabledFlag, contextRef in
         AVSWrapper.withCallCenter(contextRef, enabledFlag) {
             $0.handleConstantBitRateChange(enabled: $1)
         }
     }
 
-    private let videoStateChangeHandler: VideoStateChangeHandler = { conversationId, userId, clientId, state, contextRef in
+    private let videoStateChangeHandler: Handler.VideoStateChange = { conversationId, userId, clientId, state, contextRef in
         AVSWrapper.withCallCenter(contextRef, userId, clientId, state) {
             $0.handleVideoStateChange(userId: $1, clientId: $2, newState: $3)
         }
     }
 
-    private let incomingCallHandler: IncomingCallHandler = { conversationId, messageTime, userId, clientId, isVideoCall, shouldRing, contextRef in
+    private let incomingCallHandler: Handler.IncomingCall = { conversationId, messageTime, userId, clientId, isVideoCall, shouldRing, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, clientId, isVideoCall, shouldRing) {
             $0.handleIncomingCall(conversationId: $1, messageTime: $2, userId: $3, clientId: $4, isVideoCall: $5, shouldRing: $6)
         }
     }
 
-    private let missedCallHandler: MissedCallHandler = { conversationId, messageTime, userId, clientId, isVideoCall, contextRef in
+    private let missedCallHandler: Handler.MissedCall = { conversationId, messageTime, userId, clientId, isVideoCall, contextRef in
         zmLog.debug("missedCallHandler: messageTime = \(messageTime)")
         let nonZeroMessageTime: UInt32 = messageTime != 0 ? messageTime : UInt32(Date().timeIntervalSince1970)
 
@@ -190,25 +190,25 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    private let answeredCallHandler: AnsweredCallHandler = { conversationId, contextRef in
+    private let answeredCallHandler: Handler.AnsweredCall = { conversationId, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationId) {
             $0.handleAnsweredCall(conversationId: $1)
         }
     }
 
-    private let dataChannelEstablishedHandler: DataChannelEstablishedHandler = { conversationId, userId, clientId, contextRef in
+    private let dataChannelEstablishedHandler: Handler.DataChannelEstablished = { conversationId, userId, clientId, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationId, userId, clientId) {
             $0.handleDataChannelEstablishement(conversationId: $1, userId: $2, clientId: $3)
         }
     }
 
-    private let establishedCallHandler: CallEstablishedHandler = { conversationId, userId, clientId, contextRef in
+    private let establishedCallHandler: Handler.CallEstablished = { conversationId, userId, clientId, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationId, userId, clientId) {
             $0.handleEstablishedCall(conversationId: $1, userId: $2, clientId: $3)
         }
     }
 
-    private let closedCallHandler: CloseCallHandler = { reason, conversationId, messageTime, userId, clientId, contextRef in
+    private let closedCallHandler: Handler.CloseCall = { reason, conversationId, messageTime, userId, clientId, contextRef in
         zmLog.debug("closedCallHandler: messageTime = \(messageTime)")
         let nonZeroMessageTime: UInt32 = messageTime != 0 ? messageTime : UInt32(Date().timeIntervalSince1970)
 
@@ -217,26 +217,26 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    private let callMetricsHandler: CallMetricsHandler = { conversationId, metrics, contextRef in
+    private let callMetricsHandler: Handler.CallMetrics = { conversationId, metrics, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationId, metrics) {
             $0.handleCallMetrics(conversationId: $1, metrics: $2)
         }
     }
 
-    private let requestCallConfigHandler: CallConfigRefreshHandler = { handle, contextRef in
+    private let requestCallConfigHandler: Handler.CallConfigRefresh = { handle, contextRef in
         zmLog.debug("AVS: requestCallConfigHandler \(String(describing: handle)) \(String(describing: contextRef))")
         return AVSWrapper.withCallCenter(contextRef) {
             $0.handleCallConfigRefreshRequest()
         }
     }
 
-    private let readyHandler: CallReadyHandler = { version, contextRef in
+    private let readyHandler: Handler.CallReady = { version, contextRef in
         AVSWrapper.withCallCenter(contextRef) {
             $0.setCallReady(version: version)
         }
     }
 
-    private let sendCallMessageHandler: CallMessageSendHandler = { token, conversationId, senderUserId, senderClientId, _, _, data, dataLength, _, contextRef in
+    private let sendCallMessageHandler: Handler.CallMessageSend = { token, conversationId, senderUserId, senderClientId, _, _, data, dataLength, _, contextRef in
         guard let token = token else {
             return EINVAL
         }
@@ -249,25 +249,25 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
     
-    private let callParticipantHandler: CallParticipantChangedHandler = { conversationIdRef, json, contextRef in
+    private let callParticipantHandler: Handler.CallParticipantChange = { conversationIdRef, json, contextRef in
         AVSWrapper.withCallCenter(contextRef, json, conversationIdRef) {
             $0.handleParticipantChange(conversationId: $2, data: $1)
         }
     }
 
-    private let mediaStoppedChangeHandler: MediaStoppedChangeHandler = { conversationIdRef, contextRef in
+    private let mediaStoppedChangeHandler: Handler.MediaStoppedChange = { conversationIdRef, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationIdRef) {
             $0.handleMediaStopped(conversationId: $1)
         }
     }
 
-    private let networkQualityHandler: NetworkQualityChangeHandler = { conversationIdRef, userIdRef, clientIdRef, quality, rtt, uplinkLoss, downlinkLoss, contextRef in
+    private let networkQualityHandler: Handler.NetworkQualityChange = { conversationIdRef, userIdRef, clientIdRef, quality, rtt, uplinkLoss, downlinkLoss, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationIdRef, userIdRef, clientIdRef, quality) { (callCenter, conversationId, userId, clientId, quality) in
             callCenter.handleNetworkQualityChange(conversationId: conversationId, userId: userId, clientId: clientId, quality: quality)
         }
     }
 
-    private let muteChangeHandler: MuteChangeHandler = { muted, contextRef in
+    private let muteChangeHandler: Handler.MuteChange = { muted, contextRef in
         AVSWrapper.withCallCenter(contextRef, muted) {
             $0.handleMuteChange(muted: $1)
         }
