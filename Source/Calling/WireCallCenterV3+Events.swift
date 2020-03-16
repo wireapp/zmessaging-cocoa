@@ -153,7 +153,7 @@ extension WireCallCenterV3 {
      * If messageTime is set to 0, the event wasn't caused by a message therefore we don't have a serverTimestamp.
      */
 
-    func handleCallEnd(reason: CallClosedReason, conversationId: UUID, messageTime: Date?, userId: UUID, clientId: String) {
+    func handleCallEnd(reason: CallClosedReason, conversationId: UUID, messageTime: Date?, userId: UUID) {
         handleEvent("closed-call") {
             self.handle(callState: .terminating(reason: reason), conversationId: conversationId, messageTime: messageTime)
         }

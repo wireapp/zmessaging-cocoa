@@ -212,8 +212,8 @@ public class AVSWrapper: AVSWrapperType {
         zmLog.debug("closedCallHandler: messageTime = \(messageTime)")
         let nonZeroMessageTime: UInt32 = messageTime != 0 ? messageTime : UInt32(Date().timeIntervalSince1970)
 
-        AVSWrapper.withCallCenter(contextRef, reason, conversationId, nonZeroMessageTime, userId, clientId) {
-            $0.handleCallEnd(reason: $1, conversationId: $2, messageTime: $3, userId: $4, clientId: $5)
+        AVSWrapper.withCallCenter(contextRef, reason, conversationId, nonZeroMessageTime, userId) {
+            $0.handleCallEnd(reason: $1, conversationId: $2, messageTime: $3, userId: $4)
         }
     }
 
