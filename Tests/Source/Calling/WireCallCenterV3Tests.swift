@@ -986,7 +986,9 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        XCTAssertEqual(sut.callParticipants(conversationId: oneOnOneConversationID), [CallParticipant(user: otherUser, state: .connecting)])
+        let actual = sut.callParticipants(conversationId: oneOnOneConversationID)
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        XCTAssertEqual(actual, expected)
     }
 
     func callBackMemberHandler(conversationId: UUID, userId: UUID, clientId: String, audioEstablished: Bool) {
@@ -1008,7 +1010,9 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(sut.callParticipants(conversationId: oneOnOneConversationID), [CallParticipant(user: otherUser, state: .connecting)])
+        let actual = sut.callParticipants(conversationId: oneOnOneConversationID)
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        XCTAssertEqual(actual, expected)
     }
 
     func testThatItUpdatesTheParticipantsWhenGroupHandlerIsCalled() {
@@ -1018,7 +1022,9 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        XCTAssertEqual(sut.callParticipants(conversationId: groupConversationID), [CallParticipant(user: otherUser, state: .connecting)])
+        let actual = sut.callParticipants(conversationId: groupConversationID)
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        XCTAssertEqual(actual, expected)
     }
 
     func testThatItUpdatesTheStateForParticipant() {
@@ -1032,14 +1038,18 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        XCTAssertEqual(sut.callParticipants(conversationId: groupConversationID), [CallParticipant(user: otherUser, state: .connecting)])
+        var actual = sut.callParticipants(conversationId: groupConversationID)
+        var expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        XCTAssertEqual(actual, expected)
 
         // when
         callBackMemberHandler(conversationId: groupConversationID, userId: otherUserID, clientId: otherUserClientID, audioEstablished: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        XCTAssertEqual(sut.callParticipants(conversationId: groupConversationID), [CallParticipant(user: otherUser, state: .connected(videoState: .stopped, clientId: otherUserClientID))])
+        actual = sut.callParticipants(conversationId: groupConversationID)
+        expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connected(videoState: .stopped))]
+        XCTAssertEqual(actual, expected)
     }
 }
 

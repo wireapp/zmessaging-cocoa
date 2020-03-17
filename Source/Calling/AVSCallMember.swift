@@ -91,7 +91,7 @@ public struct AVSCallMember: Hashable {
         case .connecting:
             return .connecting
         case .established:
-            return .connected(videoState: videoState, clientId: client.clientId)
+            return .connected(videoState: videoState)
         case .networkProblem:
             return .unconnectedButMayConnect
 

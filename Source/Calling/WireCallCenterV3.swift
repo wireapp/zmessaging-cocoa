@@ -300,12 +300,15 @@ extension WireCallCenterV3 {
     
     /// Returns the callParticipants currently in the conversation
     func callParticipants(conversationId: UUID) -> [CallParticipant] {
-        guard let context = uiMOC,
-              let callParticipants = callSnapshots[conversationId]?.callParticipants
-        else { return [] }
+        guard
+            let context = uiMOC,
+            let callParticipants = callSnapshots[conversationId]?.callParticipants
+        else {
+            return []
+        }
         
-        return callParticipants.members.map {
-            CallParticipant(user: ZMUser(remoteID: $0.client.userId, createIfNeeded: false, in: context)!, state: $0.callParticipantState)
+        return callParticipants.members.array.compactMap {
+            CallParticipant(member: $0, context: context)
         }
     }
 
