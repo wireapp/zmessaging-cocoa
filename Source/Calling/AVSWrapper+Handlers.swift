@@ -23,9 +23,9 @@ extension AVSWrapper {
 
     enum Handler {
 
-        typealias StringPointer = UnsafePointer<Int8>?
-        typealias VoidPointer = UnsafeMutableRawPointer?
-        typealias ContextRef = VoidPointer
+        typealias StringPtr = UnsafePointer<Int8>?
+        typealias VoidPtr = UnsafeMutableRawPointer?
+        typealias ContextRef = VoidPtr
 
         /// Callback used to inform user that call uses CBR (in both directions).
         ///
@@ -34,10 +34,7 @@ extension AVSWrapper {
         ///                                         int enabled,
         ///                                         void *arg);
 
-        typealias ConstantBitRateChange = @convention(c) (StringPointer,
-            StringPointer,
-            Int32,
-            ContextRef) -> Void
+        typealias ConstantBitRateChange = @convention(c)(StringPtr, StringPtr, Int32, ContextRef) -> Void
 
 
         /// Callback used to inform user that received video has started or stopped.
@@ -48,11 +45,7 @@ extension AVSWrapper {
         ///                                           int state,
         ///                                           void *arg);
 
-        typealias VideoStateChange = @convention(c) (StringPointer,
-            StringPointer,
-            StringPointer,
-            Int32,
-            ContextRef) -> Void
+        typealias VideoStateChange = @convention(c) (StringPtr, StringPtr, StringPtr, Int32, ContextRef) -> Void
 
         /// Callback used to inform the user of an incoming call.
         ///
@@ -64,13 +57,7 @@ extension AVSWrapper {
         ///                                 int should_ring /*bool*/,
         ///                                 void *arg);
 
-        typealias IncomingCall = @convention(c) (StringPointer,
-            UInt32,
-            StringPointer,
-            StringPointer,
-            Int32,
-            Int32,
-            ContextRef) -> Void
+        typealias IncomingCall = @convention(c) (StringPtr, UInt32, StringPtr, StringPtr, Int32, Int32, ContextRef) -> Void
 
         /// Callback used to inform the user of a missed call.
         ///
@@ -81,18 +68,13 @@ extension AVSWrapper {
         ///                               int video_call /*bool*/,
         ///                               void *arg);
 
-        typealias MissedCall = @convention(c) (StringPointer,
-            UInt32,
-            StringPointer,
-            StringPointer,
-            Int32,
-            ContextRef) -> Void
+        typealias MissedCall = @convention(c) (StringPtr, UInt32, StringPtr, StringPtr, Int32, ContextRef) -> Void
 
         /// Callback used to inform user that a 1:1 call was answered.
         ///
         /// typedef void (wcall_answered_h)(const char *convid, void *arg);
 
-        typealias AnsweredCall = @convention(c) (StringPointer, ContextRef) -> Void
+        typealias AnsweredCall = @convention(c) (StringPtr, ContextRef) -> Void
 
         /// Callback used to inform the user that a data channel was established.
         ///
@@ -101,10 +83,7 @@ extension AVSWrapper {
         ///                                        const char *clientid,
         ///                                        void *arg);
 
-        typealias DataChannelEstablished = @convention(c) (StringPointer,
-            StringPointer,
-            StringPointer,
-            ContextRef) -> Void
+        typealias DataChannelEstablished = @convention(c) (StringPtr, StringPtr, StringPtr, ContextRef) -> Void
 
         /// Callback used to inform the user that a call was established (with media).
         ///
@@ -113,10 +92,7 @@ extension AVSWrapper {
         ///                              const char *clientid,
         ///                              void *arg);
 
-        typealias CallEstablished = @convention(c) (StringPointer,
-            StringPointer,
-            StringPointer,
-            ContextRef) -> Void
+        typealias CallEstablished = @convention(c) (StringPtr, StringPtr, StringPtr, ContextRef) -> Void
 
         /// Callback used to inform the user that a call was terminated.
         ///
@@ -127,12 +103,7 @@ extension AVSWrapper {
         ///                              const char *clientid,
         ///                              void *arg);
 
-        typealias CloseCall = @convention(c) (Int32,
-            StringPointer,
-            UInt32,
-            StringPointer,
-            StringPointer,
-            ContextRef) -> Void
+        typealias CloseCall = @convention(c) (Int32, StringPtr, UInt32, StringPtr, StringPtr, ContextRef) -> Void
 
         /// Callback used to inform the user of call metrics.
         ///
@@ -140,9 +111,7 @@ extension AVSWrapper {
         ///                                const char *metrics_json,
         ///                                void *arg);
 
-        typealias CallMetrics = @convention(c) (StringPointer,
-            StringPointer,
-            ContextRef) -> Void
+        typealias CallMetrics = @convention(c) (StringPtr, StringPtr, ContextRef) -> Void
 
         /// Callback used to request a refresh of the call config.
         ///
@@ -170,16 +139,7 @@ extension AVSWrapper {
         ///                            int transient /*bool*/,
         ///                            void *arg);
 
-        typealias CallMessageSend = @convention(c) (VoidPointer,
-            StringPointer,
-            StringPointer,
-            StringPointer,
-            StringPointer,
-            StringPointer,
-            UnsafePointer<UInt8>?,
-            Int,
-            Int32,
-            ContextRef) -> Int32
+        typealias CallMessageSend = @convention(c) (VoidPtr, StringPtr, StringPtr, StringPtr, StringPtr, StringPtr, UnsafePointer<UInt8>?, Int, Int32, ContextRef) -> Int32
 
         /// Callback used to inform the user when the list of participants in a call changes.
         ///
@@ -187,15 +147,13 @@ extension AVSWrapper {
         ///                                            const char *mjson,
         ///                                            void *arg);
 
-        typealias CallParticipantChange = @convention(c) (StringPointer,
-            StringPointer,
-            ContextRef) -> Void
+        typealias CallParticipantChange = @convention(c) (StringPtr, StringPtr, ContextRef) -> Void
 
         /// Callback used to inform the user that all media has stopped.
         ///
         /// typedef void (wcall_media_stopped_h)(const char *convid, void *arg);
 
-        typealias MediaStoppedChange = @convention(c) (StringPointer, ContextRef) -> Void
+        typealias MediaStoppedChange = @convention(c) (StringPtr, ContextRef) -> Void
 
         /// Callback used to inform the user of a change in network quality for a participant.
         ///
@@ -208,14 +166,7 @@ extension AVSWrapper {
         ///                                        int downloss, /* dnstream pkt loss % */
         ///                                        void *arg);
 
-        typealias NetworkQualityChange = @convention(c) (StringPointer,
-            StringPointer,
-            StringPointer,
-            Int32,
-            Int32,
-            Int32,
-            Int32,
-            ContextRef) -> Void
+        typealias NetworkQualityChange = @convention(c) (StringPtr, StringPtr, StringPtr, Int32, Int32, Int32, Int32, ContextRef) -> Void
 
         /// Callback used to inform the user when the mute state changes.
         ///
@@ -227,6 +178,6 @@ extension AVSWrapper {
         ///
         /// typedef void (wcall_req_clients_h)(const char *convid, void *arg);
 
-        typealias RequestClients = @convention(c) (StringPointer, ContextRef) -> Void
+        typealias RequestClients = @convention(c) (StringPtr, ContextRef) -> Void
     }
 }
