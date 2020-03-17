@@ -222,5 +222,11 @@ extension AVSWrapper {
         /// typedef void (wcall_mute_h)(int muted, void *arg);
 
         typealias MuteChange = @convention(c) (Int32, ContextRef) -> Void
+
+        /// Callback used to request a the list of clients in a conversation.
+        ///
+        /// typedef void (wcall_req_clients_h)(const char *convid, void *arg);
+
+        typealias RequestClients = @convention(c) (StringPointer, ContextRef) -> Void
     }
 }
