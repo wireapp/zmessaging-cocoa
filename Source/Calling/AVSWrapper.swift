@@ -171,13 +171,17 @@ public class AVSWrapper: AVSWrapperType {
 
     private let videoStateChangeHandler: Handler.VideoStateChange = { conversationId, userId, clientId, state, contextRef in
         AVSWrapper.withCallCenter(contextRef, userId, clientId, state) {
-            $0.handleVideoStateChange(userId: $1, clientId: $2, newState: $3)
+            $0.handleVideoStateChange(client: AVSClient(userId: $1, clientId: $2), newState: $3)
         }
     }
 
     private let incomingCallHandler: Handler.IncomingCall = { conversationId, messageTime, userId, clientId, isVideoCall, shouldRing, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, clientId, isVideoCall, shouldRing) {
-            $0.handleIncomingCall(conversationId: $1, messageTime: $2, userId: $3, clientId: $4, isVideoCall: $5, shouldRing: $6)
+            $0.handleIncomingCall(conversationId: $1,
+                                  messageTime: $2,
+                                  client: AVSClient(userId: $3, clientId: $4),
+                                  isVideoCall: $5,
+                                  shouldRing: $6)
         }
     }
 
@@ -198,13 +202,13 @@ public class AVSWrapper: AVSWrapperType {
 
     private let dataChannelEstablishedHandler: Handler.DataChannelEstablished = { conversationId, userId, clientId, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationId, userId, clientId) {
-            $0.handleDataChannelEstablishement(conversationId: $1, userId: $2, clientId: $3)
+            $0.handleDataChannelEstablishement(conversationId: $1, client: AVSClient(userId: $2, clientId: $3))
         }
     }
 
     private let establishedCallHandler: Handler.CallEstablished = { conversationId, userId, clientId, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationId, userId, clientId) {
-            $0.handleEstablishedCall(conversationId: $1, userId: $2, clientId: $3)
+            $0.handleEstablishedCall(conversationId: $1, client: AVSClient(userId: $2, clientId: $3))
         }
     }
 
@@ -262,8 +266,10 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     private let networkQualityHandler: Handler.NetworkQualityChange = { conversationIdRef, userIdRef, clientIdRef, quality, rtt, uplinkLoss, downlinkLoss, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationIdRef, userIdRef, clientIdRef, quality) { (callCenter, conversationId, userId, clientId, quality) in
-            callCenter.handleNetworkQualityChange(conversationId: conversationId, userId: userId, clientId: clientId, quality: quality)
+        AVSWrapper.withCallCenter(contextRef, conversationIdRef, userIdRef, clientIdRef, quality) {
+            $0.handleNetworkQualityChange(conversationId: $1,
+                                                  client: AVSClient(userId: $2, clientId: $3),
+                                                  quality: $4)
         }
     }
 

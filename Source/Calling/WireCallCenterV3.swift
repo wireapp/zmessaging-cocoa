@@ -305,7 +305,7 @@ extension WireCallCenterV3 {
         else { return [] }
         
         return callParticipants.members.map {
-            CallParticipant(user: ZMUser(remoteID: $0.remoteId, createIfNeeded: false, in: context)!, state: $0.callParticipantState)
+            CallParticipant(user: ZMUser(remoteID: $0.client.userId, createIfNeeded: false, in: context)!, state: $0.callParticipantState)
         }
     }
 
@@ -320,28 +320,22 @@ extension WireCallCenterV3 {
     }
 
     /// Call this method when the video state of a participant changes and avs calls the `wcall_video_state_change_h`.
-    func callParticipantVideoStateChanged(conversationId: UUID,
-                                          userId: UUID,
-                                          clientId: String,
-                                          videoState: VideoState) {
+    func callParticipantVideoStateChanged(conversationId: UUID, client: AVSClient, videoState: VideoState) {
 
         let snapshot = callSnapshots[conversationId]?.callParticipants
-        snapshot?.callParticipantVideoStateChanged(userId: userId, clientId: clientId, videoState: videoState)
+        snapshot?.callParticipantVideoStateChanged(client: client, videoState: videoState)
     }
 
     /// Call this method when the client established an audio connection with another user, and avs calls the `wcall_estab_h`.
-    func callParticipantAudioEstablished(conversationId: UUID, userId: UUID, clientId: String) {
-        callSnapshots[conversationId]?.callParticipants.callParticipantAudioEstablished(userId: userId, clientId: clientId)
+    func callParticipantAudioEstablished(conversationId: UUID, client: AVSClient) {
+        callSnapshots[conversationId]?.callParticipants.callParticipantAudioEstablished(client: client)
     }
 
     /// Call this method when the network quality of a participant changes and avs calls the `wcall_network_quality_h`.
-    func callParticipantNetworkQualityChanged(conversationId: UUID,
-                                              userId: UUID,
-                                              clientId: String,
-                                              quality: NetworkQuality) {
+    func callParticipantNetworkQualityChanged(conversationId: UUID, client: AVSClient, quality: NetworkQuality) {
 
         let snapshot = callSnapshots[conversationId]?.callParticipants
-        snapshot?.callParticipantNetworkQualityChanged(userId: userId, clientId: clientId, networkQuality: quality)
+        snapshot?.callParticipantNetworkQualityChanged(client: client, networkQuality: quality)
     }
     
 }

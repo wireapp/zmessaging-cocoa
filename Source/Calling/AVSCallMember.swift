@@ -37,8 +37,7 @@ public struct AVSParticipantsChange: Codable {
 extension AVSCallMember {
 
     init(member: AVSParticipantsChange.Member) {
-        remoteId = member.userid
-        clientId = member.clientid
+        client = AVSClient(userId: member.userid, clientId: member.clientid)
         audioState = member.aestab
         videoState = member.vrecv
         networkQuality = .normal
@@ -51,11 +50,8 @@ extension AVSCallMember {
 
 public struct AVSCallMember: Hashable {
 
-    /// The remote identifier of the user.
-    public let remoteId: UUID
-    
-    /// The client identifier of the user.
-    public let clientId: String
+    /// The client used in the call.
+    public let client: AVSClient
 
     /// The state of the audio connection.
     public let audioState: AudioState
@@ -70,21 +66,18 @@ public struct AVSCallMember: Hashable {
 
     /**
      * Creates the call member from its values.
-     * - parameter userId: The remote identifier of the user.
-     * - parameter clientId: The client identifier of the user. Default to `nil`
+     * - parameter client: The client used in the call.
      * - parameter audioState: The state of the audio connection. Defaults to `.connecting`.
      * - parameter videoState: The state of video connection. Defaults to `stopped`.
      * - parameter networkQuality: The quality of the network connection. Defaults to `.normal`.
      */
 
-    public init(userId: UUID,
-                clientId: String,
+    public init(client: AVSClient,
                 audioState: AudioState = .connecting,
                 videoState: VideoState = .stopped,
                 networkQuality: NetworkQuality = .normal)
     {
-        self.remoteId = userId
-        self.clientId = clientId
+        self.client = client
         self.audioState = audioState
         self.videoState = videoState
         self.networkQuality = networkQuality
@@ -98,7 +91,7 @@ public struct AVSCallMember: Hashable {
         case .connecting:
             return .connecting
         case .established:
-            return .connected(videoState: videoState, clientId: clientId)
+            return .connected(videoState: videoState, clientId: client.clientId)
         case .networkProblem:
             return .unconnectedButMayConnect
 
@@ -108,11 +101,39 @@ public struct AVSCallMember: Hashable {
     // MARK: - Hashable
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(remoteId)
-        hasher.combine(clientId)
+        hasher.combine(client)
     }
     
     public static func == (lhs: AVSCallMember, rhs: AVSCallMember) -> Bool {
         return lhs.hashValue == rhs.hashValue
+    }
+}
+
+
+/// Used to identify a participant in a call.
+
+public struct AVSClient: Hashable {
+
+    public let userId: UUID
+    public let clientId: String
+
+}
+
+extension AVSClient {
+
+    struct CodingData: Codable {
+
+        var client: AVSClient {
+            return AVSClient(userId: clientData.userid, clientId: clientData.clientid)
+        }
+
+        let clientData: Container
+
+        struct Container: Codable {
+
+            let userid: UUID
+            let clientid: String
+
+        }
     }
 }
