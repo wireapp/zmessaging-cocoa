@@ -94,6 +94,7 @@ public class AVSWrapper: AVSWrapperType {
         wcall_set_media_stopped_handler(handle, mediaStoppedChangeHandler)
         wcall_set_mute_handler(handle, muteChangeHandler, observer)
         wcall_set_participant_changed_handler(handle, callParticipantHandler, observer)
+        wcall_set_req_clients_handler(handle, requestClientsHandler)
     }
 
     // MARK: - Convenience Methods
@@ -278,4 +279,13 @@ public class AVSWrapper: AVSWrapperType {
             $0.handleMuteChange(muted: $1)
         }
     }
+
+    private let requestClientsHandler: Handler.RequestClients = { handle, conversationIdRef, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationIdRef) {
+            $0.handleClientsRequest(conversationId: $1) { (clients: String) in
+                wcall_set_clients_for_conv(handle, conversationIdRef, clients)
+            }
+        }
+    }
+
 }

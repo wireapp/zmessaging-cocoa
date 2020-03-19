@@ -117,23 +117,55 @@ public struct AVSClient: Hashable {
     public let userId: UUID
     public let clientId: String
 
+    public init(userId: UUID, clientId: String) {
+        self.userId = userId
+        self.clientId = clientId
+    }
+
+    init?(userClient: UserClient) {
+        guard
+            let userId = userClient.user?.remoteIdentifier,
+            let clientId = userClient.remoteIdentifier
+        else {
+            return nil
+        }
+
+        self.init(userId: userId, clientId: clientId)
+    }
+
 }
 
-extension AVSClient {
+extension AVSClient: Codable {
 
-    struct CodingData: Codable {
+    enum CodingKeys: String, CodingKey {
+        
+        case userid
+        case clientid
 
-        var client: AVSClient {
-            return AVSClient(userId: clientData.userid, clientId: clientData.clientid)
-        }
-
-        let clientData: Container
-
-        struct Container: Codable {
-
-            let userid: UUID
-            let clientid: String
-
-        }
     }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        userId = try container.decode(UUID.self, forKey: .userid)
+        clientId = try container.decode(String.self, forKey: .clientid)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(userId, forKey: .userid)
+        try container.encode(clientId, forKey: .clientid)
+    }
+
+}
+
+
+struct AVSClientList: Codable {
+
+    let clients: [AVSClient]
+
+    var json: String? {
+        guard let data = try? JSONEncoder().encode(self) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
 }

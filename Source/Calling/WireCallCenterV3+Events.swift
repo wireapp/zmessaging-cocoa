@@ -285,4 +285,38 @@ extension WireCallCenterV3 {
             WireCallCenterMutedNotification(muted: muted).post(in: $0.notificationContext)
         }
     }
+
+    // TODO: Test
+
+    func handleClientsRequest(conversationId: UUID, completion: @escaping (_ clients: String) -> Void) {
+        handleEventInContext("request-clients") { context in
+            guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: context) else {
+                zmLog.error("Could not handle clients request, conversation does not exist: \(conversationId)")
+                return
+            }
+
+            var clients = conversation.localParticipants.avsClients
+
+            if let selfClient = ZMUser.selfUser(in: context).selfClient().flatMap(AVSClient.init) {
+                clients.remove(selfClient)
+            }
+
+            guard let json = AVSClientList(clients: Array(clients)).json else {
+                zmLog.error("Could not encode client list to JSON")
+                return
+            }
+
+            completion(json)
+        }
+    }
 }
+
+private extension Set where Element == ZMUser {
+
+    var avsClients: Set<AVSClient> {
+        return reduce(Set<AVSClient>()) { result, user in
+            return result.union(user.clients.compactMap(AVSClient.init))
+        }
+    }
+}
+
