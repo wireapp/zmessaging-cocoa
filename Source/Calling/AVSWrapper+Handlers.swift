@@ -176,8 +176,8 @@ extension AVSWrapper {
 
         /// Callback used to request a the list of clients in a conversation.
         ///
-        /// typedef void (wcall_req_clients_h)(const char *convid, void *arg);
+        /// typedef void (wcall_req_clients_h)(WUSER_HANDLE wuser, const char *convid, void *arg);
 
-        typealias RequestClients = @convention(c) (StringPtr, ContextRef) -> Void
+        typealias RequestClients = @convention(c) (UInt32, StringPtr, ContextRef) -> Void
     }
 }
