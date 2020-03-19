@@ -286,8 +286,6 @@ extension WireCallCenterV3 {
         }
     }
 
-    // TODO: Test
-
     func handleClientsRequest(conversationId: UUID, completion: @escaping (_ clients: String) -> Void) {
         handleEventInContext("request-clients") { context in
             guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: context) else {
