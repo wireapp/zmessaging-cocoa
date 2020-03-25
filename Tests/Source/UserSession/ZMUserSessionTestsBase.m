@@ -69,28 +69,9 @@
     self.thirdPartyServices = [[ThirdPartyServices alloc] init];
     self.dataChangeNotificationsCount = 0;
     self.baseURL = [NSURL URLWithString:@"http://bar.example.com"];
-    self.transportSession = [OCMockObject niceMockForClass:[ZMTransportSession class]];
     self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com" userIdentifier:NSUUID.createUUID];
-
-    [[[self.transportSession stub] andReturn:self.cookieStorage] cookieStorage];
-    ZM_WEAK(self);
-    [[self.transportSession stub] setAccessTokenRenewalFailureHandler:[OCMArg checkWithBlock:^BOOL(ZMCompletionHandlerBlock obj) {
-        ZM_STRONG(self);
-        self.authFailHandler = obj;
-        return YES;
-    }]];
-    [[self.transportSession stub] setAccessTokenRenewalSuccessHandler:[OCMArg checkWithBlock:^BOOL(ZMAccessTokenHandlerBlock obj) {
-        ZM_STRONG(self);
-        self.tokenSuccessHandler = obj;
-        return YES;
-    }]];
-    [[self.transportSession stub] setNetworkStateDelegate:OCMOCK_ANY];
-    [[self.transportSession stub] enqueueOneTimeRequest:[OCMArg checkWithBlock:^BOOL(ZMTransportRequest *obj) {
-        self.lastEnqueuedRequest = obj;
-        return YES;
-    }]];
-    
-    
+    self.mockPushChannel = [[MockPushChannel alloc] init];
+    self.transportSession = [[RecordingMockTransportSession alloc] initWithCookieStorage:self.cookieStorage pushChannel:self.mockPushChannel];
     self.mockSessionManager = [[MockSessionManager alloc] init];
     self.mediaManager = [[MockMediaManager alloc] init];
     self.flowManagerMock = [[FlowManagerMock alloc] init];
@@ -127,12 +108,11 @@
                                            showContentDelegate:nil];
         
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
-    self.sut.sessionManager = (id<SessionManagerType>)self.mockSessionManager; // TODO jacob fix by converting this class to Swift
+    self.sut.sessionManager = (id<SessionManagerType>)self.mockSessionManager;
     
     WaitForAllGroupsToBeEmpty(0.5);
     
     self.validCookie = [@"valid-cookie" dataUsingEncoding:NSUTF8StringEncoding];
-    [self verifyMockLater:self.transportSession];
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.operationLoop];
 }
@@ -158,17 +138,13 @@
     }
     
     self.storeProvider = nil;
-    
-    self.authFailHandler = nil;
-    self.tokenSuccessHandler = nil;
+
     self.baseURL = nil;
     self.cookieStorage = nil;
     self.validCookie = nil;
     self.thirdPartyServices = nil;
     self.sut.thirdPartyServicesDelegate = nil;
     self.mockSessionManager = nil;
-
-    [self.transportSession stopMocking];
     self.transportSession = nil;
     
     [self.operationLoop stopMocking];

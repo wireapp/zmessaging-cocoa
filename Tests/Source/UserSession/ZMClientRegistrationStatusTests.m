@@ -405,19 +405,6 @@
     XCTAssertEqual(note.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
 }
 
-- (void)testThatItNotifiesTheUIIfTheClientWasAlreadyRegisteredBeforeFetchingTheSelfUser // TODO jacob rename (we no longer send this notification)
-{
-    // given
-    [self.syncMOC setPersistentStoreMetadata:@"brrrrr" forKey:ZMPersistedClientIdKey];
-    
-    // when
-    [self.sut didFetchSelfUser];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 0u);
-}
-
 - (void)testThatItNotifiesTheUIIfTheRegistrationFailsWithMissingEmailVerification
 {
     // given

@@ -180,8 +180,13 @@ public extension ServiceUser {
     }
     
     func createConversation(in userSession: ZMUserSession, completionHandler: @escaping (Result<ZMConversation>) -> Void) {
+        guard let eventProcessor = userSession.operationLoop?.syncStrategy else {
+            completionHandler(.failure(AddBotError.general))
+            return
+        }
+        
         createConversation(transportSession: userSession.transportSession,
-                           eventProcessor: userSession.operationLoop.syncStrategy,
+                           eventProcessor: eventProcessor,
                            contextProvider: userSession,
                            completionHandler: completionHandler)
     }
@@ -283,7 +288,7 @@ public extension ZMConversation {
     func add(serviceUser serviceUserData: ServiceUserData, in userSession: ZMUserSession, completionHandler: @escaping (VoidResult) -> Void) {
         add(serviceUser: serviceUserData,
             transportSession: userSession.transportSession,
-            eventProcessor: userSession.operationLoop.syncStrategy,
+            eventProcessor: userSession.operationLoop!.syncStrategy,
             contextProvider: userSession,
             completionHandler: completionHandler)
     }

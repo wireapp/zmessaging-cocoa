@@ -140,7 +140,7 @@ extension VoiceChannelV3 : CallActions {
         userSession.syncManagedObjectContext.performGroupedBlock {
             let conversationId = conversation.objectID
             if let syncConversation = (try? userSession.syncManagedObjectContext.existingObject(with: conversationId)) as? ZMConversation {
-                userSession.callingStrategy.dropPendingCallMessages(for: syncConversation)
+                userSession.syncStrategy?.callingRequestStrategy.dropPendingCallMessages(for: syncConversation)
             }
         }
         leave(userSession: userSession, completion: nil)
@@ -228,7 +228,7 @@ extension VoiceChannelV3 : CallObservers {
     
     /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.
     public class func addCallStateObserver(_ observer: WireCallCenterCallStateObserver, userSession: ZMUserSession) -> Any {
-        return WireCallCenterV3.addCallStateObserver(observer: observer, context: userSession.managedObjectContext!)
+        return WireCallCenterV3.addCallStateObserver(observer: observer, context: userSession.managedObjectContext)
     }
     
     /// Add observer of the mute state. Returns a token which needs to be retained as long as the observer should be active.

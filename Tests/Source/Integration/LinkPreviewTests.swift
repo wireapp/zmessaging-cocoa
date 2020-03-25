@@ -71,7 +71,7 @@ class LinkPreviewTests: ConversationTestsBase {
         let conversation = self.conversation(for: selfToUser1Conversation)
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             conversation?.append(text: MockLinkPreviewDetector.LinkPreviewURL.article.rawValue)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -88,7 +88,7 @@ class LinkPreviewTests: ConversationTestsBase {
         conversation?.messageDestructionTimeout = .local(10)
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             conversation?.append(text: MockLinkPreviewDetector.LinkPreviewURL.article.rawValue)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -104,7 +104,7 @@ class LinkPreviewTests: ConversationTestsBase {
         let conversation = self.conversation(for: selfToUser1Conversation)
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             conversation?.append(text: MockLinkPreviewDetector.LinkPreviewURL.articleWithPicture.rawValue)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -121,7 +121,7 @@ class LinkPreviewTests: ConversationTestsBase {
         let conversation = self.conversation(for: selfToUser1Conversation)
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             conversation?.append(text: MockLinkPreviewDetector.LinkPreviewURL.tweet.rawValue)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -137,7 +137,7 @@ class LinkPreviewTests: ConversationTestsBase {
         let conversation = self.conversation(for: selfToUser1Conversation)
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             conversation?.append(text: MockLinkPreviewDetector.LinkPreviewURL.tweetWithPicture.rawValue)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

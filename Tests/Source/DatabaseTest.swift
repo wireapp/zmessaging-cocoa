@@ -58,11 +58,11 @@ class DatabaseTest: ZMTBaseTest {
     }
     
     private func cleanUp() {
+        StorageStack.reset()
+        
         try? FileManager.default.contentsOfDirectory(at: sharedContainerURL!, includingPropertiesForKeys: nil, options: .skipsHiddenFiles).forEach {
             try? FileManager.default.removeItem(at: $0)
         }
-        
-        StorageStack.reset()
     }
     
     private func createDatabase() {

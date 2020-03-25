@@ -42,7 +42,7 @@ class OTRTests : IntegrationTest {
         
         // when
         var message: ZMConversationMessage?
-        userSession?.performChanges {
+        userSession?.perform {
             message = conversation.append(text: text)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -68,7 +68,7 @@ class OTRTests : IntegrationTest {
         
         // when
         var message: ZMConversationMessage? = nil
-        userSession?.performChanges {
+        userSession?.perform {
              message = conversation.append(imageFromData: imageData)
         }
         
@@ -102,7 +102,7 @@ class OTRTests : IntegrationTest {
         }
         
         // when
-        self.userSession?.performChanges {
+        self.userSession?.perform {
             UserClient.resetSignalingKeysInContext(self.userSession!.managedObjectContext)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -142,7 +142,7 @@ class OTRTests : IntegrationTest {
         }
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             UserClient.resetSignalingKeysInContext(self.userSession!.managedObjectContext)
         }
         

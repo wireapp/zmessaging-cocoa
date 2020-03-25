@@ -129,7 +129,7 @@ extension ZMUserSession {
 
     @objc public func registerCurrentPushToken() {
         managedObjectContext.performGroupedBlock {
-            self.sessionManager.updatePushToken(for: self)
+            self.sessionManager?.updatePushToken(for: self)
         }
     }
 
@@ -141,7 +141,7 @@ extension ZMUserSession {
             guard let selfClient = ZMUser.selfUser(in: syncMOC).selfClient() else { return }
             guard let pushToken = selfClient.pushToken else {
                 // If we don't have any push token, then try to register it again
-                self.sessionManager.updatePushToken(for: self)
+                self.sessionManager?.updatePushToken(for: self)
                 return
             }
             selfClient.pushToken = pushToken.markToDownload()
@@ -155,13 +155,9 @@ extension ZMUserSession {
     @objc public func receivedPushNotification(with payload: [AnyHashable: Any], completion: @escaping () -> Void) {
         Logging.network.debug("Received push notification with payload: \(payload)")
         
-        guard let syncMoc = self.syncManagedObjectContext else {
-            return
-        }
-
         let accountID = self.storeProvider.userIdentifier;
 
-        syncMoc.performGroupedBlock {
+        syncManagedObjectContext.performGroupedBlock {
             let notAuthenticated = !self.isAuthenticated
             
             if notAuthenticated {
@@ -173,11 +169,11 @@ extension ZMUserSession {
             // once notification processing is finished, it's safe to update the badge
             let completionHandler = {
                 completion()
-                let unreadCount = Int(ZMConversation.unreadConversationCount(in: syncMoc))
+                let unreadCount = Int(ZMConversation.unreadConversationCount(in: self.syncManagedObjectContext))
                 self.sessionManager?.updateAppIconBadge(accountID: accountID, unreadCount: unreadCount)
             }
             
-            self.operationLoop.fetchEvents(fromPushChannelPayload: payload, completionHandler: completionHandler)
+            self.operationLoop?.fetchEvents(fromPushChannelPayload: payload, completionHandler: completionHandler)
         }
     }
     
@@ -241,7 +237,7 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
         // foreground notification responder exists on the UI context, so we
         // need to switch to that context
         self.managedObjectContext.perform {
-            let responder = self.sessionManager.foregroundNotificationResponder
+            let responder = self.sessionManager?.foregroundNotificationResponder
             let shouldPresent = responder?.shouldPresentNotification(with: userInfo)
             
             var options = UNNotificationPresentationOptions()

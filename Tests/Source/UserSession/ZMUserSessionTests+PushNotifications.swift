@@ -85,7 +85,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         let conversation = userInfo.conversation(in: uiMOC)!
         
         simulateLoggedInUser()
-        sut.operationStatus.isInBackground = true
+        sut.applicationStatusDirectory?.operationStatus.isInBackground = true
 
         // when
         handle(conversationAction: .like, category: .conversation, userInfo: userInfo)
@@ -178,7 +178,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
     func testThatItDoesNotCallShowConversationAndAppendsAMessage_ForPushNotificationCategoryConversationWithDirectReplyAction() {
         // given
         simulateLoggedInUser()
-        sut.operationStatus.isInBackground = true
+        sut.applicationStatusDirectory?.operationStatus.isInBackground = true
         
         let userInfo = userInfoWithConversation()
         let conversation = userInfo.conversation(in: uiMOC)!
@@ -194,14 +194,20 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
     func testThatItAppendsReadReceipt_ForPushNotificationCategoryConversationWithDirectReplyAction() {
         // given
         self.simulateLoggedInUser()
-        self.sut.operationStatus.isInBackground = true
+        self.sut.applicationStatusDirectory?.operationStatus.isInBackground = true
         
         let userInfo = userInfoWithConversation(hasMessage: true)
         let conversation = userInfo.conversation(in: self.uiMOC)!
         
         guard let originalMessage = conversation.lastMessages().last as? ZMClientMessage else { return XCTFail() }
         ZMUser.selfUser(in: uiMOC).readReceiptsEnabled = true
-        originalMessage.genericMessage?.setExpectsReadConfirmation(true)?.data().apply(originalMessage.add)
+        var genericMessage = originalMessage.underlyingMessage!
+        genericMessage.setExpectsReadConfirmation(true)
+        do {
+            originalMessage.add(try genericMessage.serializedData())
+        } catch {
+            XCTFail("Error in adding data: \(error)")
+        }
         
         // when
         self.handle(conversationAction: .reply, category: .conversation, userInfo: userInfo, userText: "Hello World")
@@ -220,14 +226,20 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
     func testThatItAppendsReadReceipt_ForPushNotificationCategoryConversationWithLikeAction() {
         // given
         self.simulateLoggedInUser()
-        self.sut.operationStatus.isInBackground = true
+        self.sut.applicationStatusDirectory?.operationStatus.isInBackground = true
         
         let userInfo = userInfoWithConversation(hasMessage: true)
         let conversation = userInfo.conversation(in: self.uiMOC)!
         
         guard let originalMessage = conversation.lastMessages().last as? ZMClientMessage else { return XCTFail() }
         ZMUser.selfUser(in: uiMOC).readReceiptsEnabled = true
-        originalMessage.genericMessage?.setExpectsReadConfirmation(true)?.data().apply(originalMessage.add)
+        var genericMessage = originalMessage.underlyingMessage!
+        genericMessage.setExpectsReadConfirmation(true)
+        do {
+            originalMessage.add(try genericMessage.serializedData())
+        } catch {
+            XCTFail("Error in adding data: \(error)")
+        }
         
         // when
         handle(conversationAction: .like, category: .conversation, userInfo: userInfo)

@@ -28,7 +28,7 @@
 #import "ZMSimpleListRequestPaginator.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
-static NSString* ZMLogTag ZM_UNUSED = @"Conversations";
+static NSString* ZMLogTag ZM_UNUSED = @"event-processing";
 
 NSString *const ConversationsPath = @"/conversations";
 static NSString *const ConversationIDsPath = @"/conversations/ids";
@@ -468,15 +468,15 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 {
     NSUUID *senderUUID = event.senderUUID;
     ZMUser *sender = [ZMUser userWithRemoteID:senderUUID createIfNeeded:YES inContext:self.managedObjectContext];
-    NSSet *users = [event usersFromUserIDsInManagedObjectContext:self.managedObjectContext createIfNeeded:YES];
+    NSSet *removedUsers = [event usersFromUserIDsInManagedObjectContext:self.managedObjectContext createIfNeeded:YES];
     
-    ZMLogDebug(@"processMemberLeaveEvent (%@) leaving users.count = %lu", conversation.remoteIdentifier.transportString, (unsigned long)users.count);
+    ZMLogDebug(@"processMemberLeaveEvent (%@) leaving users.count = %lu", conversation.remoteIdentifier.transportString, (unsigned long)removedUsers.count);
     
-    if ([users intersectsSet:conversation.localParticipants]) {
+    if ([removedUsers intersectsSet:conversation.localParticipants]) {
         [self appendSystemMessageForUpdateEvent:event inConversation:conversation];
     }
     
-    [conversation removeParticipantsAndUpdateConversationStateWithUsers:users initiatingUser:sender];
+    [conversation removeParticipantsAndUpdateConversationStateWithUsers:removedUsers initiatingUser:sender];
 }
 
 

@@ -44,7 +44,6 @@
 #import "ZMLastUpdateEventIDTranscoder.h"
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
-#import "ZMUserSession+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
@@ -253,7 +252,7 @@ static ZMReachability *sharedReachabilityMock = nil;
     [self tearDownUserInfoObjectsOfMOC:self.uiMOC];
     [self tearDownUserInfoObjectsOfMOC:self.testMOC];
     
-    [self.syncMOC performGroupedBlock:^{
+    [self.syncMOC performGroupedBlockAndWait:^{
         [self tearDownUserInfoObjectsOfMOC:self.syncMOC];
         [self.syncMOC zm_tearDownCryptKeyStore];
         [self.syncMOC.userInfo removeAllObjects];

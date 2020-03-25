@@ -100,7 +100,7 @@ extension IntegrationTest {
     
     @objc
     public func connect(withUser user: UserType) {
-        userSession?.performChanges {
+        userSession?.perform {
             user.connect(message: "Hola")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
