@@ -20,36 +20,35 @@
 import Foundation
 
 // Sign a PDF document
-@objc public final class SignatureRequestStrategy: AbstractRequestStrategy {
+@objc
+public final class SignatureRequestStrategy: AbstractRequestStrategy {
     
    weak var signatureStatus: SignatureStatus?
     
-//   private var requestSync: ZMSingleRequestSync!
-//   private let moc: NSManagedObjectContext
+   private var requestSync: ZMSingleRequestSync!
+   private let moc: NSManagedObjectContext
 
-    public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
-                         applicationStatus: ApplicationStatus,
-                         signatureStatus: SignatureStatus) {
+    @objc
+    public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus, signatureStatus: SignatureStatus) {
         
+        self.moc = managedObjectContext
+        self.signatureStatus = signatureStatus
         super.init(withManagedObjectContext: managedObjectContext,
                    applicationStatus: applicationStatus)
-        
-        self.signatureStatus = signatureStatus
-//        self.moc = moc
-//        self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
+        self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
     }
     
     @objc public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         guard let status = self.signatureStatus else { return nil }
-        
+
         switch status.state {
         case .initial:
             break
          case .waitingForURL:
-            // TO DO: post request (to get URL)
+            // TODO: post request (to get URL)
             break
         case .waitingForSignature:
-            // TO DO: get request (to get Signature)
+            // TODO: get request (to get Signature)
             break
         case .signatureInvalid:
             break
@@ -58,21 +57,26 @@ import Foundation
         }
         return nil
     }
-    
+
     func processResponse(_ response : ZMTransportResponse) {
 
     }
 }
 
-//extension SignatureRequestStrategy : ZMUpstreamTranscoder {
-//}
-
-
-
-
-@objc(ZMSignatureObserver)
-public protocol SignatureObserver: NSObjectProtocol {
-    func urlAvailable(_ url: URL)
-    func signatureAvailable(_ signature: Data) //FIX ME: type of the file
-    func signatureInvalid(_ error: Error)
+extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
+    public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
+        return nil
+    }
+    
+    public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
+        
+    }
+    
 }
+
+//@objc(ZMSignatureObserver)
+//public protocol SignatureObserver: NSObjectProtocol {
+//    func urlAvailable(_ url: URL)
+//    func signatureAvailable(_ signature: Data) //FIX ME: type of the file
+//    func signatureInvalid(_ error: Error)
+//}
