@@ -21,7 +21,11 @@ import Foundation
 
 // Sign a PDF document
 @objc public final class SignatureRequestStrategy: AbstractRequestStrategy {
+    
    weak var signatureStatus: SignatureStatus?
+    
+//   private var requestSync: ZMSingleRequestSync!
+//   private let moc: NSManagedObjectContext
 
     public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
                          applicationStatus: ApplicationStatus,
@@ -31,6 +35,8 @@ import Foundation
                    applicationStatus: applicationStatus)
         
         self.signatureStatus = signatureStatus
+//        self.moc = moc
+//        self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
     }
     
     @objc public override func nextRequestIfAllowed() -> ZMTransportRequest? {
