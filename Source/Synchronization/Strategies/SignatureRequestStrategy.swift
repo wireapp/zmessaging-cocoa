@@ -19,15 +19,54 @@
 
 import Foundation
 
-// Signing a PDF document.
-@objc
-public final class SignatureRequestStrategy: AbstractRequestStrategy {
-//   weak var signatureStatus: SignatureStatus?
-    
-    public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
+// Sign a PDF document
+@objc public final class SignatureRequestStrategy: AbstractRequestStrategy {
+   weak var signatureStatus: SignatureStatus?
+
+    public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
+                         applicationStatus: ApplicationStatus,
+                         signatureStatus: SignatureStatus) {
         
         super.init(withManagedObjectContext: managedObjectContext,
                    applicationStatus: applicationStatus)
+        
+        self.signatureStatus = signatureStatus
+    }
+    
+    @objc public override func nextRequestIfAllowed() -> ZMTransportRequest? {
+        guard let status = self.signatureStatus else { return nil }
+        
+        switch status.state {
+        case .initial:
+            break
+         case .waitingForURL:
+            // TO DO: post request (to get URL)
+            break
+        case .waitingForSignature:
+            // TO DO: get request (to get Signature)
+            break
+        case .signatureInvalid:
+            break
+        case .finished:
+            break
+        }
+        return nil
+    }
+    
+    func processResponse(_ response : ZMTransportResponse) {
+
     }
 }
 
+//extension SignatureRequestStrategy : ZMUpstreamTranscoder {
+//}
+
+
+
+
+@objc(ZMSignatureObserver)
+public protocol SignatureObserver: NSObjectProtocol {
+    func urlAvailable(_ url: URL)
+    func signatureAvailable(_ signature: Data) //FIX ME: type of the file
+    func signatureInvalid(_ error: Error)
+}

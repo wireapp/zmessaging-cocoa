@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		06B99C7B242B51A300FEAFDE /* SignatureRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06B99C7A242B51A300FEAFDE /* SignatureRequestStrategy.swift */; };
-		06B99C7D242B5FF900FEAFDE /* SignatureStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06B99C7C242B5FF900FEAFDE /* SignatureStatus.swift */; };
 		092083401BA95EE100F82B29 /* UserClientRequestFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0920833F1BA95EE100F82B29 /* UserClientRequestFactory.swift */; };
 		0920C4DA1B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0920C4D81B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift */; };
 		093694451BA9633300F36B3A /* UserClientRequestFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 093694441BA9633300F36B3A /* UserClientRequestFactoryTests.swift */; };
@@ -637,7 +636,6 @@
 
 /* Begin PBXFileReference section */
 		06B99C7A242B51A300FEAFDE /* SignatureRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignatureRequestStrategy.swift; sourceTree = "<group>"; };
-		06B99C7C242B5FF900FEAFDE /* SignatureStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignatureStatus.swift; sourceTree = "<group>"; };
 		06B99C7E242B6E7400FEAFDE /* WireDataModel.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = WireDataModel.xcodeproj; path = "../wire-ios-data-model/WireDataModel.xcodeproj"; sourceTree = "<group>"; };
 		0920833C1BA84F3100F82B29 /* UserClientRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserClientRequestStrategyTests.swift; sourceTree = "<group>"; };
 		0920833F1BA95EE100F82B29 /* UserClientRequestFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserClientRequestFactory.swift; sourceTree = "<group>"; };
@@ -1952,7 +1950,6 @@
 				F19F4F391E5F1AE400F4D8FF /* UserProfileImageUpdateStatus.swift */,
 				547E5B571DDB4B800038D936 /* UserProfileUpdateStatus.swift */,
 				168CF42620077C54009FCB89 /* TeamInvitationStatus.swift */,
-				06B99C7C242B5FF900FEAFDE /* SignatureStatus.swift */,
 				5478A1401DEC4048006F7268 /* UserProfile.swift */,
 				5467F1C31E0AE2EF008C1745 /* KeyValueStore.swift */,
 				5467F1C51E0AE421008C1745 /* KeyValueStore+AccessToken.swift */,
@@ -3123,7 +3120,6 @@
 				F1C1E70D21F74667007FBDA1 /* ZMUserSession+Timers.swift in Sources */,
 				7CD279842338B74600E638CD /* SessionManagerConfiguration.swift in Sources */,
 				54A170651B300696001B41A5 /* ProxiedRequestStrategy.swift in Sources */,
-				06B99C7D242B5FF900FEAFDE /* SignatureStatus.swift in Sources */,
 				160C31441E8049320012E4BC /* ApplicationStatusDirectory.swift in Sources */,
 				7CD279862338E31D00E638CD /* SessionManager+Authentication.swift in Sources */,
 				16FF474C1F0D54B20044C491 /* SessionManager+Logs.swift in Sources */,
