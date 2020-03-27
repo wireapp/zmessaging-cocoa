@@ -221,9 +221,9 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         notifyUserAboutChangesInAvailabilityBehaviourIfNeeded()
         
         //TODO: Remove or replace it
-        let _ = NotificationCenter.default.addObserver(forName: .willSignDocument, object: nil, queue: nil) { (signatureStatus) in
+        let _ = NotificationCenter.default.addObserver(forName: .willSignDocument, object: nil, queue: nil) { [weak self] (signatureStatus) in
             signatureStatusPublic = signatureStatus.object as? SignatureStatus
-            RequestAvailableNotification.notifyNewRequestsAvailable(self)
+            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
         
