@@ -19,6 +19,8 @@
 
 import Foundation
 
+public var signatureStatusPublic: SignatureStatus?
+
 // Sign a PDF document
 @objc
 public final class SignatureRequestStrategy: AbstractRequestStrategy {
@@ -29,16 +31,17 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
    private let moc: NSManagedObjectContext
 
     @objc
-    public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus, signatureStatus: SignatureStatus) {
+    public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus/*, signatureStatus: SignatureStatus*/) {
         
         self.moc = managedObjectContext
-        self.signatureStatus = signatureStatus
+//        self.signatureStatus = signatureStatus
         super.init(withManagedObjectContext: managedObjectContext,
                    applicationStatus: applicationStatus)
         self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
     }
     
     @objc public override func nextRequestIfAllowed() -> ZMTransportRequest? {
+        self.signatureStatus = signatureStatusPublic
         guard let status = self.signatureStatus else { return nil }
 
         switch status.state {

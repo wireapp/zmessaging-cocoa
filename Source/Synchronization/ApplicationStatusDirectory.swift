@@ -38,7 +38,6 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public let teamInvitationStatus: TeamInvitationStatus
     public let assetDeletionStatus: AssetDeletionStatus
     public let callEventStatus: CallEventStatus
-    public var signatureStatus: SignatureStatus
     
     fileprivate var callInProgressObserverToken : Any? = nil
     
@@ -47,7 +46,6 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
         self.apnsConfirmationStatus = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: managedObjectContext)
         self.operationStatus = OperationStatus()
         self.callEventStatus = CallEventStatus()
-        self.signatureStatus = SignatureStatus(asset: nil, managedObjectContext: managedObjectContext)
         self.analytics = analytics
         self.teamInvitationStatus = TeamInvitationStatus()
         self.operationStatus.isInBackground = application.applicationState == .background
@@ -70,13 +68,6 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
                     self?.operationStatus.hasOngoingCall = callInProgress
                 }
             }
-        }
-        
-        //TODO: Remove or replace it
-        let _ = NotificationCenter.default.addObserver(forName: .willSignDocument, object: nil, queue: nil) { (signatureStatus) in
-            self.signatureStatus = signatureStatus.object as! SignatureStatus
-            print(self.signatureStatus.state)
-            RequestAvailableNotification.notifyNewRequestsAvailable(self)
         }
     }
     
