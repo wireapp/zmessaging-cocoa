@@ -25,30 +25,41 @@ public var signatureStatusPublic: SignatureStatus?
 @objc
 public final class SignatureRequestStrategy: AbstractRequestStrategy {
     
-   weak var signatureStatus: SignatureStatus?
-    
-   private var requestSync: ZMSingleRequestSync!
-   private let moc: NSManagedObjectContext
+    private weak var signatureStatus: SignatureStatus?
+    private var requestSync: ZMSingleRequestSync?
+    private let moc: NSManagedObjectContext
+    private var consentURL: String?
+    private var responseId: String?
 
     @objc
-    public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus/*, signatureStatus: SignatureStatus*/) {
+    public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
+                         applicationStatus: ApplicationStatus
+                         /*, signatureStatus: SignatureStatus*/) {
         
         self.moc = managedObjectContext
-//        self.signatureStatus = signatureStatus
         super.init(withManagedObjectContext: managedObjectContext,
                    applicationStatus: applicationStatus)
-        self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
+        self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self,
+                                               groupQueue: moc)
     }
     
-    @objc public override func nextRequestIfAllowed() -> ZMTransportRequest? {
-        self.signatureStatus = signatureStatusPublic
-        guard let status = self.signatureStatus else { return nil }
-
+    @objc
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
+        signatureStatus = signatureStatusPublic
+        guard let status = signatureStatus else { return nil }
+        
         switch status.state {
         case .initial:
             break
          case .waitingForURL:
-            // TODO: post request (to get URL)
+            guard let requestSync = requestSync else {
+                return nil
+            }
+            signatureStatusPublic?.state = .pendingURL
+            requestSync.readyForNextRequestIfNotBusy()
+            return requestSync.nextRequest()
+        case .pendingURL:
+            // TODO:
             break
         case .waitingForSignature:
             // TODO: get request (to get Signature)
@@ -62,19 +73,57 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
     }
 
     func processResponse(_ response : ZMTransportResponse) {
-
+        
     }
 }
 
 extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
-        return nil
-    }
-    
-    public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
+        guard
+            let encodedHash = signatureStatus?.encodedHash,
+            let documentID = signatureStatus?.documentID,
+            let fileName = signatureStatus?.fileName
+        else {
+            return nil
+        }
         
+        let payload: [String: String] = [
+            "documentId": documentID,
+            "name": fileName,
+            "hash": encodedHash
+        ]
+
+        let path = "/signature/request"
+
+        return ZMTransportRequest(path: path,
+                                  method: .methodPOST,
+                                  payload: payload as ZMTransportData)
     }
     
+    public func didReceive(_ response: ZMTransportResponse,
+                           forSingleRequest sync: ZMSingleRequestSync) {
+        switch sync {
+        case requestSync:
+            switch (response.result) {
+                case .success:
+                    guard let responseDictionary = response.payload?.asDictionary() else {
+                        return
+                    }
+                    signatureStatusPublic?.state = .waitingForSignature
+                    consentURL = responseDictionary["consentURL"] as? String
+                    responseId = responseDictionary["responseId"] as? String
+                case .permanentError,
+                     .tryAgainLater,
+                     .expired,
+                     .temporaryError:
+                    signatureStatusPublic?.state = .signatureInvalid
+                default:
+                    signatureStatusPublic?.state = .signatureInvalid
+            }
+        default:
+            break
+        }
+    }
 }
 
 //@objc(ZMSignatureObserver)
