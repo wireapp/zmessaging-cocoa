@@ -220,7 +220,13 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         startEphemeralTimers()
         notifyUserAboutChangesInAvailabilityBehaviourIfNeeded()
         
+        //TODO: Remove or replace it
+        let _ = NotificationCenter.default.addObserver(forName: .willSignDocument, object: nil, queue: nil) { [weak self] (signatureStatus) in
+            signatureStatusPublic = signatureStatus.object as? SignatureStatus
+            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        }
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
+        
     }
     
     private func configureTransportSession() {

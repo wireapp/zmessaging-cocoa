@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		06B99C7B242B51A300FEAFDE /* SignatureRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06B99C7A242B51A300FEAFDE /* SignatureRequestStrategy.swift */; };
 		092083401BA95EE100F82B29 /* UserClientRequestFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0920833F1BA95EE100F82B29 /* UserClientRequestFactory.swift */; };
 		0920C4DA1B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0920C4D81B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift */; };
 		093694451BA9633300F36B3A /* UserClientRequestFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 093694441BA9633300F36B3A /* UserClientRequestFactoryTests.swift */; };
@@ -613,6 +614,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		06B99C7A242B51A300FEAFDE /* SignatureRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignatureRequestStrategy.swift; sourceTree = "<group>"; };
 		0920833C1BA84F3100F82B29 /* UserClientRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserClientRequestStrategyTests.swift; sourceTree = "<group>"; };
 		0920833F1BA95EE100F82B29 /* UserClientRequestFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserClientRequestFactory.swift; sourceTree = "<group>"; };
 		0920C4D81B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserSessionGiphyRequestStateTests.swift; sourceTree = "<group>"; };
@@ -1818,6 +1820,7 @@
 				1672A64423473EA100380537 /* LabelDownstreamRequestStrategy.swift */,
 				16D0A11C234C8CD700A83F87 /* LabelUpstreamRequestStrategy.swift */,
 				A938BDC723A7964100D4C208 /* ConversationRoleDownstreamRequestStrategy.swift */,
+				06B99C7A242B51A300FEAFDE /* SignatureRequestStrategy.swift */,
 				D5225721206261C100562561 /* Asset Deletion */,
 			);
 			path = Strategies;
@@ -3037,6 +3040,7 @@
 				EF2CB12722D5E58B00350B0A /* TeamImageAssetUpdateStrategy.swift in Sources */,
 				BF2ADA021F41A450000980E8 /* BackendEnvironmentProvider+Cookie.swift in Sources */,
 				EE1108B723D1B367005DC663 /* TypingUsers.swift in Sources */,
+				06B99C7B242B51A300FEAFDE /* SignatureRequestStrategy.swift in Sources */,
 				5EFE9C15212AB138007932A6 /* UnregisteredUser+Payload.swift in Sources */,
 				161ACB2D23F5BA0200ABFF33 /* DeepLinkURLActionProcessor.swift in Sources */,
 				160C31271E6434500012E4BC /* OperationStatus.swift in Sources */,
