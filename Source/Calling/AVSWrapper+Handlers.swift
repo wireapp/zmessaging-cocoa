@@ -20,28 +20,28 @@ import Foundation
 import avs
 
 /// Equivalent of `wcall_audio_cbr_change_h`.
-typealias ConstantBitRateChangeHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
+typealias ConstantBitRateChangeHandler = @convention(c) (UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
 
 /// Equivalent of `wcall_video_state_change_h`.
 typealias VideoStateChangeHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
 
 /// Equivalent of `wcall_incoming_h`.
-typealias IncomingCallHandler = @convention(c) (UnsafePointer<Int8>?, UInt32, UnsafePointer<Int8>?, UnsafePointer<Int8>?, Int32, Int32, UnsafeMutableRawPointer?) -> Void
+typealias IncomingCallHandler = @convention(c) (UnsafePointer<Int8>?, UInt32, UnsafePointer<Int8>?, Int32, Int32, UnsafeMutableRawPointer?) -> Void
 
 /// Equivalent of `wcall_missed_h`.
-typealias MissedCallHandler = @convention(c) (UnsafePointer<Int8>?, UInt32, UnsafePointer<Int8>?, UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
+typealias MissedCallHandler = @convention(c) (UnsafePointer<Int8>?, UInt32, UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
 
 /// Equivalent of `wcall_answered_h`.
 typealias AnsweredCallHandler = @convention(c) (UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
 
 /// Equivalent of `wcall_data_chan_estab_h`.
-typealias DataChannelEstablishedHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+typealias DataChannelEstablishedHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
 
 /// Equivalent of `wcall_estab_h`.
-typealias CallEstablishedHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+typealias CallEstablishedHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
 
 /// Equivalent of `wcall_close_h`.
-typealias CloseCallHandler = @convention(c) (Int32, UnsafePointer<Int8>?, UInt32, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+typealias CloseCallHandler = @convention(c) (Int32, UnsafePointer<Int8>?, UInt32, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
 
 /// Equivalent of `wcall_metrics_h`.
 typealias CallMetricsHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
@@ -65,7 +65,7 @@ typealias CallParticipantChangedHandler = @convention(c) (UnsafePointer<Int8>?, 
 typealias MediaStoppedChangeHandler = @convention(c) (UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
 
 /// Equivalent of `wcall_network_quality_h`.
-typealias NetworkQualityChangeHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, Int32, Int32, Int32, Int32, UnsafeMutableRawPointer?) -> Void
+typealias NetworkQualityChangeHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, Int32, Int32, Int32, Int32, UnsafeMutableRawPointer?) -> Void
 
 /// Equivalent of `wcall_set_mute_handler`.
 typealias MuteChangeHandler = @convention(c) (Int32, UnsafeMutableRawPointer?) -> Void
