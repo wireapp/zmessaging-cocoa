@@ -25,31 +25,36 @@ public var signatureStatusPublic: SignatureStatus?
 @objc
 public final class SignatureRequestStrategy: AbstractRequestStrategy {
     
-   weak var signatureStatus: SignatureStatus?
-    
-   private var requestSync: ZMSingleRequestSync!
-   private let moc: NSManagedObjectContext
+    private weak var signatureStatus: SignatureStatus?
+    private var requestSync: ZMSingleRequestSync?
+    private let moc: NSManagedObjectContext
+    private var signatureResponse: SignatureResponse?
 
     @objc
-    public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus/*, signatureStatus: SignatureStatus*/) {
+    public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
+                         applicationStatus: ApplicationStatus) {
         
         self.moc = managedObjectContext
-//        self.signatureStatus = signatureStatus
         super.init(withManagedObjectContext: managedObjectContext,
                    applicationStatus: applicationStatus)
-        self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: moc)
+        self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self,
+                                               groupQueue: moc)
     }
     
-    @objc public override func nextRequestIfAllowed() -> ZMTransportRequest? {
-        self.signatureStatus = signatureStatusPublic
-        guard let status = self.signatureStatus else { return nil }
-
+    @objc
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
+        signatureStatus = signatureStatusPublic
+        guard let status = signatureStatus else { return nil }
+        
         switch status.state {
         case .initial:
             break
          case .waitingForURL:
-            // TODO: post request (to get URL)
-            break
+            guard let requestSync = requestSync else {
+                return nil
+            }
+            requestSync.readyForNextRequestIfNotBusy()
+            return requestSync.nextRequest()
         case .waitingForSignature:
             // TODO: get request (to get Signature)
             break
@@ -62,19 +67,94 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
     }
 
     func processResponse(_ response : ZMTransportResponse) {
-
+        
     }
 }
 
 extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
-        return nil
-    }
-    
-    public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
+        guard
+            let encodedHash = signatureStatus?.encodedHash,
+            let documentID = signatureStatus?.documentID,
+            let fileName = signatureStatus?.fileName,
+            let payload = SignaturePayload(documentID: documentID,
+                                           fileName: fileName,
+                                           hash: encodedHash).jsonDictionary as NSDictionary?
+        else {
+            return nil
+        }
         
+        let path = "/signature/request"
+
+        return ZMTransportRequest(path: path,
+                                  method: .methodPOST,
+                                  payload: payload as ZMTransportData)
     }
     
+    public func didReceive(_ response: ZMTransportResponse,
+                           forSingleRequest sync: ZMSingleRequestSync) {
+        switch sync {
+        case requestSync:
+            switch (response.result) {
+                case .success:
+                    guard let responseData = response.rawData else {
+                        return
+                    }
+                    
+                    do {
+                        let decodedResponse = try JSONDecoder().decode(SignatureResponse.self, from: responseData)
+                        signatureStatusPublic?.state = .waitingForSignature
+                        signatureResponse = decodedResponse
+                    } catch {
+                        print(error)
+                    }
+                case .temporaryError,
+                     .tryAgainLater,
+                     .expired:
+                    break
+                case .permanentError:
+                    signatureStatusPublic?.state = .signatureInvalid
+                default:
+                    signatureStatusPublic?.state = .signatureInvalid
+            }
+        default:
+            break
+        }
+    }
+}
+
+private struct SignaturePayload: Codable, Equatable {
+    let documentID: String?
+    let fileName: String?
+    let hash: String?
+    var jsonDictionary: [String : String]? {
+        return makeJSONDictionary()
+    }
+    
+    private enum CodingKeys: String, CodingKey {
+        case documentID = "documentId"
+        case fileName = "name"
+        case hash = "hash"
+    }
+    
+    private func makeJSONDictionary() -> [String : String]? {
+        let signaturePayload = SignaturePayload(documentID: documentID,
+                                       fileName: fileName,
+                                       hash: hash)
+        
+        guard
+            let jsonData = try? JSONEncoder().encode(signaturePayload),
+            let payload = try? JSONDecoder().decode([String : String].self, from: jsonData)
+        else {
+            return nil
+        }
+        return payload
+    }
+}
+
+private struct SignatureResponse: Codable, Equatable {
+    let consentURL: String?
+    let responseId: String?
 }
 
 //@objc(ZMSignatureObserver)
