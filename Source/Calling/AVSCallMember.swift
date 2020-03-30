@@ -21,26 +21,22 @@ import avs
 
 
 public struct AVSParticipantsChange: Codable {
-
-    let convid: UUID
-    let members: [Member]
-
     public struct Member: Codable {
-
         let userid: UUID
         let clientid: String
-        let aestab: AudioState
-        let vrecv: VideoState
+        let aestab: Int32
+        let vrecv: Int32
     }
+    let convid: UUID
+    let members: [Member]
 }
 
 extension AVSCallMember {
-
     init(member: AVSParticipantsChange.Member) {
         remoteId = member.userid
         clientId = member.clientid
-        audioState = member.aestab
-        videoState = member.vrecv
+        audioEstablished = (member.aestab == 1)
+        videoState = VideoState(rawValue: member.vrecv) ?? .stopped
         networkQuality = .normal
     }
 }
@@ -54,11 +50,11 @@ public struct AVSCallMember: Hashable {
     /// The remote identifier of the user.
     public let remoteId: UUID
     
-    /// The client identifier of the user.
-    public let clientId: String
+    /// The client identifier of the user, this is only available after the call member has connected
+    public let clientId: String?
 
-    /// The state of the audio connection.
-    public let audioState: AudioState
+    /// Whether an audio connection was established.
+    public let audioEstablished: Bool
 
     /// The state of video connection.
     public let videoState: VideoState
@@ -72,20 +68,15 @@ public struct AVSCallMember: Hashable {
      * Creates the call member from its values.
      * - parameter userId: The remote identifier of the user.
      * - parameter clientId: The client identifier of the user. Default to `nil`
-     * - parameter audioState: The state of the audio connection. Defaults to `.connecting`.
+     * - parameter audioEstablished: Whether an audio connection was established. Defaults to `false`.
      * - parameter videoState: The state of video connection. Defaults to `stopped`.
      * - parameter networkQuality: The quality of the network connection. Defaults to `.normal`.
      */
 
-    public init(userId: UUID,
-                clientId: String,
-                audioState: AudioState = .connecting,
-                videoState: VideoState = .stopped,
-                networkQuality: NetworkQuality = .normal)
-    {
+    public init(userId : UUID, clientId: String? = nil, audioEstablished: Bool = false, videoState: VideoState = .stopped, networkQuality: NetworkQuality = .normal) {
         self.remoteId = userId
         self.clientId = clientId
-        self.audioState = audioState
+        self.audioEstablished = audioEstablished
         self.videoState = videoState
         self.networkQuality = networkQuality
     }
@@ -94,14 +85,10 @@ public struct AVSCallMember: Hashable {
 
     /// The state of the participant.
     var callParticipantState: CallParticipantState {
-        switch audioState {
-        case .connecting:
-            return .connecting
-        case .established:
+        if audioEstablished {
             return .connected(videoState: videoState, clientId: clientId)
-        case .networkProblem:
-            return .unconnectedButMayConnect
-
+        } else {
+            return .connecting
         }
     }
 
