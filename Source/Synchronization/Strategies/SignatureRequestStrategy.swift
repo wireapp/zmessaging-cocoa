@@ -28,8 +28,7 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
     private weak var signatureStatus: SignatureStatus?
     private var requestSync: ZMSingleRequestSync?
     private let moc: NSManagedObjectContext
-    private var consentURL: String?
-    private var responseId: String?
+    private var signaturePayload: SignaturePayload?
 
     @objc
     public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
@@ -55,12 +54,8 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
             guard let requestSync = requestSync else {
                 return nil
             }
-            signatureStatusPublic?.state = .pendingURL
             requestSync.readyForNextRequestIfNotBusy()
             return requestSync.nextRequest()
-        case .pendingURL:
-            // TODO:
-            break
         case .waitingForSignature:
             // TODO: get request (to get Signature)
             break
@@ -106,16 +101,22 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
         case requestSync:
             switch (response.result) {
                 case .success:
-                    guard let responseDictionary = response.payload?.asDictionary() else {
+                    guard let responseData = response.rawData else {
                         return
                     }
-                    signatureStatusPublic?.state = .waitingForSignature
-                    consentURL = responseDictionary["consentURL"] as? String
-                    responseId = responseDictionary["responseId"] as? String
+                    
+                    do {
+                        let payload = try JSONDecoder().decode(SignaturePayload.self, from: responseData)
+                        signatureStatusPublic?.state = .waitingForSignature
+                        signaturePayload = payload
+                    } catch {
+                        print(error)
+                    }
+                case .temporaryError:
+                    requestSync?.resetCompletionState()
                 case .permanentError,
                      .tryAgainLater,
-                     .expired,
-                     .temporaryError:
+                     .expired:
                     signatureStatusPublic?.state = .signatureInvalid
                 default:
                     signatureStatusPublic?.state = .signatureInvalid
@@ -124,6 +125,11 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             break
         }
     }
+}
+
+private struct SignaturePayload: Codable, Equatable {
+    let consentURL: String?
+    let responseId: String?
 }
 
 //@objc(ZMSignatureObserver)
