@@ -131,6 +131,12 @@ extension TeamSyncRequestStrategy: ZMSimpleListRequestPaginatorSync {
             
             let team = Team.fetchOrCreate(with: id, create: true, in: managedObjectContext, created: nil)
             team?.update(with: payload)
+            
+            if let team = team {
+                let selfUser = ZMUser.selfUser(in: managedObjectContext)
+                _ = Member.getOrCreateMember(for: selfUser, in: team, context: managedObjectContext)
+            }
+            
             return team
         }
         
