@@ -28,12 +28,11 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
     private weak var signatureStatus: SignatureStatus?
     private var requestSync: ZMSingleRequestSync?
     private let moc: NSManagedObjectContext
-    private var signaturePayload: SignaturePayload?
+    private var signatureResponse: SignatureResponse?
 
     @objc
     public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
-                         applicationStatus: ApplicationStatus
-                         /*, signatureStatus: SignatureStatus*/) {
+                         applicationStatus: ApplicationStatus) {
         
         self.moc = managedObjectContext
         super.init(withManagedObjectContext: managedObjectContext,
@@ -77,17 +76,14 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
         guard
             let encodedHash = signatureStatus?.encodedHash,
             let documentID = signatureStatus?.documentID,
-            let fileName = signatureStatus?.fileName
+            let fileName = signatureStatus?.fileName,
+            let payload = SignaturePayload(documentID: documentID,
+                                           fileName: fileName,
+                                           hash: encodedHash).jsonDictionary as NSDictionary?
         else {
             return nil
         }
         
-        let payload: [String: String] = [
-            "documentId": documentID,
-            "name": fileName,
-            "hash": encodedHash
-        ]
-
         let path = "/signature/request"
 
         return ZMTransportRequest(path: path,
@@ -106,17 +102,17 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
                     }
                     
                     do {
-                        let payload = try JSONDecoder().decode(SignaturePayload.self, from: responseData)
+                        let decodedResponse = try JSONDecoder().decode(SignatureResponse.self, from: responseData)
                         signatureStatusPublic?.state = .waitingForSignature
-                        signaturePayload = payload
+                        signatureResponse = decodedResponse
                     } catch {
                         print(error)
                     }
-                case .temporaryError:
-                    break
-                case .permanentError,
+                case .temporaryError,
                      .tryAgainLater,
                      .expired:
+                    break
+                case .permanentError:
                     signatureStatusPublic?.state = .signatureInvalid
                 default:
                     signatureStatusPublic?.state = .signatureInvalid
@@ -128,6 +124,35 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
 }
 
 private struct SignaturePayload: Codable, Equatable {
+    let documentID: String?
+    let fileName: String?
+    let hash: String?
+    var jsonDictionary: [String : String]? {
+        return makeJSONDictionary()
+    }
+    
+    private enum CodingKeys: String, CodingKey {
+        case documentID = "documentId"
+        case fileName = "name"
+        case hash = "hash"
+    }
+    
+    private func makeJSONDictionary() -> [String : String]? {
+        let signaturePayload = SignaturePayload(documentID: documentID,
+                                       fileName: fileName,
+                                       hash: hash)
+        
+        guard
+            let jsonData = try? JSONEncoder().encode(signaturePayload),
+            let payload = try? JSONDecoder().decode([String : String].self, from: jsonData)
+        else {
+            return nil
+        }
+        return payload
+    }
+}
+
+private struct SignatureResponse: Codable, Equatable {
     let consentURL: String?
     let responseId: String?
 }
