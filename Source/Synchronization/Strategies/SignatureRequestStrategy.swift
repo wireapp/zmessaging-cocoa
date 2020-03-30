@@ -113,7 +113,7 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
                         print(error)
                     }
                 case .temporaryError:
-                    requestSync?.resetCompletionState()
+                    break
                 case .permanentError,
                      .tryAgainLater,
                      .expired:
