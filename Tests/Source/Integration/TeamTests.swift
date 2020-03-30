@@ -156,52 +156,6 @@ extension TeamTests {
     
 }
 
-
-// MARK : Member adding
-
-extension TeamTests {
-    
-    func testThatOtherUserCanBeAddedRemotely(){
-        // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser])
-        XCTAssert(login())
-        
-        let user = self.user(for: user1)!
-        XCTAssertFalse(user.hasTeam)
-        
-        // when
-        mockTransportSession.performRemoteChanges { (session) in
-            session.insertMember(with: self.user1, in: mockTeam)
-        }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssert(user.hasTeam)
-    }
-    
-    func testThatItNotifiesAboutOtherUserAddedRemotely(){
-        // given
-        let mockTeam = remotelyInsertTeam(members: [self.selfUser])
-
-        XCTAssert(login())
-        let teamObserver = TestTeamObserver(team: nil, userSession: userSession!)
-        
-        // when
-        mockTransportSession.performRemoteChanges { (session) in
-            session.insertMember(with: self.user1, in: mockTeam)
-        }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertEqual(teamObserver.notifications.count, 1)
-        guard let memberChange = teamObserver.notifications.last else {
-            return XCTFail("no notification received")
-        }
-        XCTAssertTrue(memberChange.membersChanged)
-    }
-    
-}
-
 // MARK : Remotely Deleted Team
 
 extension TeamTests {
