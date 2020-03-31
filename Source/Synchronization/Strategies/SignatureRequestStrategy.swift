@@ -149,7 +149,6 @@ private struct SignaturePayload: Codable, Equatable {
         let signaturePayload = SignaturePayload(documentID: documentID,
                                                 fileName: fileName,
                                                 hash: hash)
-        
         guard
             let jsonData = try? JSONEncoder().encode(signaturePayload),
             let payload = try? JSONDecoder().decode([String : String].self, from: jsonData)
@@ -162,20 +161,25 @@ private struct SignaturePayload: Codable, Equatable {
 
 // MARK: - SignatureResponse
 private struct SignatureResponse: Codable, Equatable {
-    let consentURLString: String?
     let responseId: String?
-    var consentURL: URL? {
-        guard
-            let consentURLString = consentURLString,
-            let consentURL = URL(string: consentURLString)
-        else {
-            return nil
-        }
-        return consentURL
-    }
+    let consentURL: URL?
     
     private enum CodingKeys: String, CodingKey {
-        case consentURLString = "consentURL"
+        case consentURL = "consentURL"
         case responseId = "responseId"
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        responseId = try container.decodeIfPresent(String.self, forKey: .responseId)
+        guard
+            let consentURLString = try container.decodeIfPresent(String.self, forKey: .consentURL),
+            let url = URL(string: consentURLString)
+        else {
+            consentURL = nil
+            return
+        }
+        
+        consentURL = url
     }
 }
