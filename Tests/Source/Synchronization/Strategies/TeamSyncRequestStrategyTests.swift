@@ -143,79 +143,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         XCTAssertNil(team2)
     }
     
-    func testThatItDownloadsATeamsMembersOnceAllTeamsHaveBeenDownloaded() {
-        // given
-        mockSyncStatus.mockPhase = .fetchingTeams
-        mockApplicationStatus.mockSynchronizationState = .synchronizing
-        let teamId = UUID.create()
-        
-        // when fetching the teams
-        do {
-            guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
-            
-            // when
-            let payload: [String: Any] = [
-                "has_more": false,
-                "teams": [teamPayload(id: teamId, name: "Wire GmbH", isBound: true)]
-            ]
-            
-            let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
-            request.complete(with: response)
-            XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        }
-        
-        // then whe should fetch the teams members
-        do {
-            guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
-            XCTAssertEqual(request.path, "/teams/\(teamId.transportString())/members")
-            XCTAssertEqual(request.method, .methodGET)
-        }
-    }
-    
-    func testThatItResetsTheSyncWhenItReceivesAPermanentErrorDownloadingMembers() {
-        // given
-        mockSyncStatus.mockPhase = .fetchingTeams
-        mockApplicationStatus.mockSynchronizationState = .synchronizing
-        let team1Id = UUID.create()
-        
-        // when fetching the teams
-        do {
-            guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
-            
-            // when
-            let payload: [String: Any] = [
-                "has_more": false,
-                "teams": [
-                    teamPayload(id: team1Id, name: "Wire GmbH", isBound: true),
-                ]
-            ]
-            
-            let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
-            request.complete(with: response)
-            XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        }
-        
-        // then whe should fetch the team members of the first team
-        do {
-            guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
-            XCTAssertEqual(request.path, "/teams/\(team1Id.transportString())/members")
-            XCTAssertEqual(request.method, .methodGET)
-            
-            // when
-            request.complete(with: .init(payload: nil, httpStatus: 404, transportSessionError: nil))
-            XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-            
-            // then
-            let team = Team.fetchOrCreate(with: team1Id, create: false, in: syncMOC, created: nil)
-            guard let aTeam = team else { return XCTFail("no team")}
-            XCTAssertTrue(aTeam.needsToBeUpdatedFromBackend) // refetching the team from the BE should also result in a permanent error which should then delete the team
-
-            XCTAssertNil(sut.nextRequest())
-            XCTAssertTrue(mockSyncStatus.didCallFailCurrentSyncPhase)
-        }
-    }
-    
-    func testThatItCompletesTheSyncStateAfterDownloadingAllMembers() {
+    func testThatItCompletesTheSyncStateAfterDownloadingAllTeams() {
         // given
         mockSyncStatus.mockPhase = .fetchingTeams
         mockApplicationStatus.mockSynchronizationState = .synchronizing
@@ -228,23 +156,6 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         }
         
-        XCTAssertFalse(mockSyncStatus.didCallFinishCurrentSyncPhase)
-        
-        // fetch /teams/{id}/members
-        do {
-            guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
-            let payload: [String: Any] = [
-                "members": [
-                    ["user": UUID.create().transportString(), "permissions": NSNumber(value: Permissions.addRemoveConversationMember.rawValue)]
-                ]
-            ]
-            
-            request.complete(with: .init(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil))
-            XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        }
-        
-        // then
-        XCTAssertNil(sut.nextRequest())
         XCTAssertTrue(mockSyncStatus.didCallFinishCurrentSyncPhase)
     }
     
