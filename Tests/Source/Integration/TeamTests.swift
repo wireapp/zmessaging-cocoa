@@ -111,7 +111,8 @@ extension TeamTests {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertFalse(user.hasTeam)
+        XCTAssertNil(user.membership)
+        XCTAssertTrue(user.isAccountDeleted)
     }
     
     func testThatAccountIsDeletedWhenSelfUserIsRemovedFromTeam() {
