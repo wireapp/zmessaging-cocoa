@@ -190,6 +190,14 @@ final class DummyServiceUser: NSObject, ServiceUser {
     func refreshData() {
         
     }
+
+    func refreshRichProfile() {
+
+    }
+
+    func refreshMembership() {
+        
+    }
     
     func connect(message: String) {
         
