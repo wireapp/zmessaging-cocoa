@@ -25,11 +25,13 @@ public var signatureStatusPublic: SignatureStatus?
 @objc
 public final class SignatureRequestStrategy: AbstractRequestStrategy {
     
+    // MARK: - Private Property
     private weak var signatureStatus: SignatureStatus?
     private var requestSync: ZMSingleRequestSync?
     private let moc: NSManagedObjectContext
     private var signatureResponse: SignatureResponse?
 
+    // MARK: - AbstractRequestStrategy
     @objc
     public override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
                          applicationStatus: ApplicationStatus) {
@@ -65,12 +67,9 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
         }
         return nil
     }
-
-    func processResponse(_ response : ZMTransportResponse) {
-        
-    }
 }
 
+// MARK: - ZMSingleRequestTranscoder
 extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         guard
@@ -97,17 +96,7 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
         case requestSync:
             switch (response.result) {
                 case .success:
-                    guard let responseData = response.rawData else {
-                        return
-                    }
-                    
-                    do {
-                        let decodedResponse = try JSONDecoder().decode(SignatureResponse.self, from: responseData)
-                        signatureStatusPublic?.state = .waitingForSignature
-                        signatureResponse = decodedResponse
-                    } catch {
-                        print(error)
-                    }
+                    processSuccess(with: response.rawData)
                 case .temporaryError,
                      .tryAgainLater,
                      .expired:
@@ -121,8 +110,27 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             break
         }
     }
+    
+    // MARK: - Helpers
+    private func processSuccess(with data: Data?) {
+        guard let responseData = data else {
+            return
+        }
+        
+        do {
+            let decodedResponse = try JSONDecoder().decode(SignatureResponse.self, from: responseData)
+            signatureResponse = decodedResponse
+            guard let consentURL = signatureResponse?.consentURL else {
+                return
+            }
+            signatureStatus?.didReceiveURL(consentURL)
+        } catch {
+            print(error)
+        }
+    }
 }
 
+// MARK: - SignaturePayload
 private struct SignaturePayload: Codable, Equatable {
     let documentID: String?
     let fileName: String?
@@ -139,9 +147,8 @@ private struct SignaturePayload: Codable, Equatable {
     
     private func makeJSONDictionary() -> [String : String]? {
         let signaturePayload = SignaturePayload(documentID: documentID,
-                                       fileName: fileName,
-                                       hash: hash)
-        
+                                                fileName: fileName,
+                                                hash: hash)
         guard
             let jsonData = try? JSONEncoder().encode(signaturePayload),
             let payload = try? JSONDecoder().decode([String : String].self, from: jsonData)
@@ -152,14 +159,27 @@ private struct SignaturePayload: Codable, Equatable {
     }
 }
 
+// MARK: - SignatureResponse
 private struct SignatureResponse: Codable, Equatable {
-    let consentURL: String?
     let responseId: String?
+    let consentURL: URL?
+    
+    private enum CodingKeys: String, CodingKey {
+        case consentURL = "consentURL"
+        case responseId = "responseId"
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        responseId = try container.decodeIfPresent(String.self, forKey: .responseId)
+        guard
+            let consentURLString = try container.decodeIfPresent(String.self, forKey: .consentURL),
+            let url = URL(string: consentURLString)
+        else {
+            consentURL = nil
+            return
+        }
+        
+        consentURL = url
+    }
 }
-
-//@objc(ZMSignatureObserver)
-//public protocol SignatureObserver: NSObjectProtocol {
-//    func urlAvailable(_ url: URL)
-//    func signatureAvailable(_ signature: Data) //FIX ME: type of the file
-//    func signatureInvalid(_ error: Error)
-//}
