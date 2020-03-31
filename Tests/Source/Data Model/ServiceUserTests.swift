@@ -198,6 +198,10 @@ final class DummyServiceUser: NSObject, ServiceUser {
     func refreshMembership() {
         
     }
+
+    func refreshTeamData() {
+        
+    }
     
     func connect(message: String) {
         
