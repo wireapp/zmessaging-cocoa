@@ -147,7 +147,7 @@ class ZMHotFixTests_Integration: MessagingTest {
         
         syncMOC.performGroupedBlock {
             let selfUser = ZMUser.selfUser(in: self.syncMOC)
-            XCTAssertTrue(selfUser.team!.needsToRedownloadMembers)
+            XCTAssertTrue(selfUser.membership!.needsToBeUpdatedFromBackend)
         }
     }
     
