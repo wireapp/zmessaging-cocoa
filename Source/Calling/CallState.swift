@@ -66,17 +66,34 @@ public struct CallParticipant: Hashable {
 public enum CallParticipantState: Equatable {
     /// Participant is not in the call
     case unconnected
+    /// A network problem occured but the call may still connect
+    case unconnectedButMayConnect
     /// Participant is in the process of connecting to the call
     case connecting
-    /// Participant is connected to call and audio is flowing
-    case connected(videoState: VideoState, clientId: String?)
+    /// Participant is connected to the call and audio is flowing
+    case connected(videoState: VideoState, clientId: String)
 }
+
+
+/**
+ * The audio state of a participant in a call.
+ */
+
+public enum AudioState: Int32, Codable {
+    /// Audio is in the process of connecting.
+    case connecting = 0
+    /// Audio has been established and is flowing.
+    case established = 1
+    /// No relay candidate, though audio may still connect.
+    case networkProblem = 2
+}
+
 
 /**
  * The state of video in the call.
  */
 
-public enum VideoState: Int32 {
+public enum VideoState: Int32, Codable {
     /// Sender is not sending video
     case stopped = 0
     /// Sender is sending video
@@ -113,33 +130,6 @@ public enum CallState: Equatable {
     case terminating(reason: CallClosedReason)
     /// Unknown call state
     case unknown
-
-    /**
-     * Creates the call state from the given AVS flag.
-     * - parameter wcallState: The state of the call as represented in AVS.
-     */
-
-    init(wcallState: Int32) {
-        switch wcallState {
-        case WCALL_STATE_NONE:
-            self = .none
-        case WCALL_STATE_INCOMING:
-            self = .incoming(video: false, shouldRing: true, degraded: false)
-        case WCALL_STATE_OUTGOING:
-            self = .outgoing(degraded: false)
-        case WCALL_STATE_ANSWERED:
-            self = .answered(degraded: false)
-        case WCALL_STATE_MEDIA_ESTAB:
-            self = .established
-        case WCALL_STATE_TERM_LOCAL: fallthrough
-        case WCALL_STATE_TERM_REMOTE:
-            self = .terminating(reason: .unknown)
-        default:
-            // WCALL_STATE_UNKNOWN can happen when we check the call state of a
-            // conversation id that isn't in the list of calls
-            self = .none
-        }
-    }
 
     /**
      * Logs the current state to the calling logs.
