@@ -219,14 +219,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         observeChangesOnShareExtension()
         startEphemeralTimers()
         notifyUserAboutChangesInAvailabilityBehaviourIfNeeded()
-        
-        //TODO: Remove or replace it
-        let _ = NotificationCenter.default.addObserver(forName: .willSignDocument,
-                                                       object: nil,
-                                                       queue: nil) { signatureStatus in
-            signatureStatusPublic = signatureStatus.object as? SignatureStatus
-            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
-        }
+        registerForDigitalSignatureNotifications()
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
         
     }
@@ -326,6 +319,20 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     private func notifyUserAboutChangesInAvailabilityBehaviourIfNeeded() {
         syncManagedObjectContext.performGroupedBlock {
             self.localNotificationDispatcher?.notifyAvailabilityBehaviourChangedIfNeeded()
+        }
+    }
+    
+    private func registerForDigitalSignatureNotifications() {
+        let _ = NotificationCenter.default.addObserver(forName: .willSignDocument,
+                                                       object: nil,
+                                                       queue: nil) { signatureStatus in
+                    signatureStatusPublic = signatureStatus.object as? SignatureStatus
+                    RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        }
+        let _ = NotificationCenter.default.addObserver(forName: .willRetriveSignature,
+                                                       object: nil,
+                                                       queue: nil) { signatureStatus in
+                    RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
     }
     
