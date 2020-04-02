@@ -198,7 +198,9 @@ import Foundation
     }
     
     public static func refetchTeamMembers(_ context: NSManagedObjectContext) {
-        ZMUser.selfUser(in: context).team?.needsToRedownloadMembers = true
+        ZMUser.selfUser(in: context).team?.members.forEach({ member in
+            member.needsToBeUpdatedFromBackend = true
+        })
     }
     
     /// Marks all conversations to be refetched.

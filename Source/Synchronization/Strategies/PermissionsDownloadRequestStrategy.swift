@@ -68,8 +68,8 @@ extension PermissionsDownloadRequestStrategy: ZMDownstreamTranscoder {
     public func update(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
         guard downstreamSync as? ZMDownstreamObjectSync == sync, let member = object as? Member else { return }
         member.needsToBeUpdatedFromBackend = false
-        guard let payload = response.payload as? [String: Any] else { return }
-        member.updatePermissions(with: payload)
+        guard let payload = response.payload as? [String: Any], let team = member.team else { return }
+        Member.createOrUpdate(with: payload, in: team, context: managedObjectContext)
     }
 
     public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
