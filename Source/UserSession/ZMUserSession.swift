@@ -329,7 +329,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                     signatureStatusPublic = signatureStatus.object as? SignatureStatus
                     RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
-        let _ = NotificationCenter.default.addObserver(forName: .willRetriveSignature,
+        let _ = NotificationCenter.default.addObserver(forName: .willRetrieveSignature,
                                                        object: nil,
                                                        queue: nil) { signatureStatus in
                     RequestAvailableNotification.notifyNewRequestsAvailable(nil)

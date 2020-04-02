@@ -20,6 +20,7 @@
 import Foundation
 
 public var signatureStatusPublic: SignatureStatus?
+private let zmLog = ZMSLog(tag: "EventDecoder")
 
 // Sign a PDF document
 @objc
@@ -31,7 +32,7 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
     private var requestSync: ZMSingleRequestSync?
     private var retrieveSync: ZMSingleRequestSync?
     private var signatureResponse: SignatureResponse?
-    private var retriveResponse: SignatureRetriveResponse?
+    private var retrieveResponse: SignatureRetrieveResponse?
 
     // MARK: - AbstractRequestStrategy
     @objc
@@ -85,7 +86,7 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
         case requestSync:
             return makeSignatureRequest()
         case retrieveSync:
-            return makeRetriveSignatureRequest()
+            return makeRetrieveSignatureRequest()
         default:
             return nil
         }
@@ -99,7 +100,7 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             case requestSync:
                 processRequestSignatureSuccess(with: response.rawData)
             case retrieveSync:
-                processRetriveSignatureSuccess(with: response.rawData)
+                processRetrieveSignatureSuccess(with: response.rawData)
             default:
                 break
             }
@@ -132,7 +133,7 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
                                   payload: payload as ZMTransportData)
     }
     
-    private func makeRetriveSignatureRequest() -> ZMTransportRequest? {
+    private func makeRetrieveSignatureRequest() -> ZMTransportRequest? {
         guard let responseId = signatureResponse?.responseId else {
             return nil
         }
@@ -156,22 +157,22 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             }
             signatureStatus?.didReceiveConsentURL(consentURL)
         } catch {
-            print(error)
+            zmLog.error("Failed to decode SignatureResponse with \(error)")
         }
     }
     
-    private func processRetriveSignatureSuccess(with data: Data?) {
+    private func processRetrieveSignatureSuccess(with data: Data?) {
         guard let responseData = data else {
             return
         }
         
         do {
-            let decodedResponse = try JSONDecoder().decode(SignatureRetriveResponse.self,
+            let decodedResponse = try JSONDecoder().decode(SignatureRetrieveResponse.self,
                                                            from: responseData)
-            retriveResponse = decodedResponse
+            retrieveResponse = decodedResponse
             signatureStatus?.didReceiveSignature(data: nil) // Propagate the real data
         } catch {
-            print(error)
+            zmLog.error("Failed to decode SignatureRetrieveResponse with \(error)")
         }
     }
 }
@@ -230,8 +231,8 @@ private struct SignatureResponse: Codable, Equatable {
     }
 }
 
-// MARK: - SignatureRetriveResponse
-private struct SignatureRetriveResponse: Codable, Equatable {
+// MARK: - SignatureRetrieveResponse
+private struct SignatureRetrieveResponse: Codable, Equatable {
     let documentId: String?
     let cms: String?
 }
