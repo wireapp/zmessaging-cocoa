@@ -19,8 +19,8 @@
 import Foundation
 
 public struct SearchResult {
-    public let contacts:      [ZMUser]
-    public let teamMembers:   [Member]
+    public let contacts:      [ZMSearchUser]
+    public let teamMembers:   [ZMSearchUser]
     public let addressBook:   [ZMSearchUser]
     public let directory:     [ZMSearchUser]
     public let conversations: [ZMConversation]
@@ -49,7 +49,7 @@ extension SearchResult {
         contacts = []
         teamMembers = []
         addressBook = []
-        directory = searchUsers.filter({ !$0.isConnected && !$0.isTeamMember })
+        directory = searchUsers
         conversations = []
         services = []
     }
@@ -87,11 +87,9 @@ extension SearchResult {
     
     func copy(on context: NSManagedObjectContext) -> SearchResult {
         
-        let copiedContacts = contacts.compactMap { context.object(with: $0.objectID) as? ZMUser }
-        let copiedTeamMembers = teamMembers.compactMap { context.object(with: $0.objectID) as? Member }
         let copiedConversations = conversations.compactMap { context.object(with: $0.objectID) as? ZMConversation }
         
-        return SearchResult(contacts: copiedContacts, teamMembers: copiedTeamMembers, addressBook: addressBook, directory: directory, conversations: copiedConversations, services: services)
+        return SearchResult(contacts: contacts, teamMembers: teamMembers, addressBook: addressBook, directory: directory, conversations: copiedConversations, services: services)
     }
     
     func union(withLocalResult result: SearchResult) -> SearchResult {
@@ -108,10 +106,13 @@ extension SearchResult {
     }
     
     func union(withDirectoryResult result: SearchResult) -> SearchResult {
+        
+        let directoryTeamMembers = result.directory.filter({ $0.isTeamMember })
+        
         return SearchResult(contacts: contacts,
-                            teamMembers: teamMembers,
+                            teamMembers: Array(Set(teamMembers).union(directoryTeamMembers)),
                             addressBook: addressBook,
-                            directory: result.directory,
+                            directory: result.directory.filter({ !$0.isConnected && !$0.isTeamMember }),
                             conversations: conversations,
                             services: services)
     }

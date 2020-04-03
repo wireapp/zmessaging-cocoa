@@ -124,13 +124,17 @@ extension SearchTask {
             ///search for the local user with matching user ID and active
             let activeMembers = self.teamMembers(matchingQuery: "", team: selfUser.team, searchOptions: options)
             let teamMembers = activeMembers.filter({ $0.remoteIdentifier == userId})
-
             let connectedUsers = self.connectedUsers(matchingQuery: "").filter({ $0.remoteIdentifier == userId})
-            let result = SearchResult(contacts: connectedUsers,
-                                      teamMembers: teamMembers,
-                                      addressBook: [], directory: [], conversations: [], services: [])
-
+            
             self.contextProvider.managedObjectContext.performGroupedBlock {
+                
+                let copiedTeamMembers = teamMembers.compactMap(\.user).compactMap { self.contextProvider.managedObjectContext.object(with: $0.objectID) as? Member}
+                let copiedConnectedUsers = connectedUsers.compactMap { self.contextProvider.managedObjectContext.object(with: $0.objectID) as? ZMUser }
+                
+                let result = SearchResult(contacts: copiedConnectedUsers.map { ZMSearchUser(contextProvider: self.contextProvider, user: $0)},
+                                          teamMembers: copiedTeamMembers.compactMap(\.user).map { ZMSearchUser(contextProvider: self.contextProvider, user: $0)},
+                                          addressBook: [], directory: [], conversations: [], services: [])
+                
                 self.result = self.result.union(withLocalResult: result.copy(on: self.contextProvider.managedObjectContext))
 
                 self.tasksRemaining -= 1
@@ -153,9 +157,21 @@ extension SearchTask {
             let connectedUsers = request.searchOptions.contains(.contacts) ? self.connectedUsers(matchingQuery: request.normalizedQuery) : []
             let teamMembers = request.searchOptions.contains(.teamMembers) ? self.teamMembers(matchingQuery: request.normalizedQuery, team: team, searchOptions: request.searchOptions) : []
             let conversations = request.searchOptions.contains(.conversations) ? self.conversations(matchingQuery: request.query) : []
-            let result = SearchResult(contacts: connectedUsers, teamMembers: teamMembers, addressBook: [], directory: [], conversations: conversations, services: [])
             
             self.contextProvider.managedObjectContext.performGroupedBlock {
+                
+                let copiedConnectedUsers = connectedUsers.compactMap({ self.contextProvider.managedObjectContext.object(with: $0.objectID) as? ZMUser })
+                let searchConnectedUsers = copiedConnectedUsers.map { ZMSearchUser(contextProvider: self.contextProvider, user: $0) }
+                let copiedteamMembers = teamMembers.compactMap({ self.contextProvider.managedObjectContext.object(with: $0.objectID) as? Member })
+                let searchTeamMembers = copiedteamMembers.compactMap(\.user).map { ZMSearchUser(contextProvider: self.contextProvider, user: $0) }
+                
+                let result = SearchResult(contacts: searchConnectedUsers,
+                                          teamMembers: searchTeamMembers,
+                                          addressBook: [],
+                                          directory: [],
+                                          conversations: conversations,
+                                          services: [])
+                
                 self.result = self.result.union(withLocalResult: result.copy(on: self.contextProvider.managedObjectContext))
                 
                 if request.searchOptions.contains(.addressBook) {
@@ -283,7 +299,7 @@ extension SearchTask {
 extension SearchTask {
     
     func performRemoteSearch() {
-        guard case .search(let searchRequest) = task, searchRequest.searchOptions.contains(.directory) else { return }
+        guard case .search(let searchRequest) = task, !searchRequest.searchOptions.isDisjoint(with: [.directory, .teamMembers]) else { return }
         
         tasksRemaining += 1
         
