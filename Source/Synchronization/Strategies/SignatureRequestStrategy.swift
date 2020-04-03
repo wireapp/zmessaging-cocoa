@@ -27,9 +27,11 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
     
     // MARK: - Private Property
     private weak var signatureStatus: SignatureStatus?
-    private var requestSync: ZMSingleRequestSync?
     private let moc: NSManagedObjectContext
+    private var requestSync: ZMSingleRequestSync?
+    private var retrieveSync: ZMSingleRequestSync?
     private var signatureResponse: SignatureResponse?
+    private var retrieveResponse: SignatureRetrieveResponse?
 
     // MARK: - AbstractRequestStrategy
     @objc
@@ -41,6 +43,8 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
                    applicationStatus: applicationStatus)
         self.requestSync = ZMSingleRequestSync(singleRequestTranscoder: self,
                                                groupQueue: moc)
+        self.retrieveSync = ZMSingleRequestSync(singleRequestTranscoder: self,
+                                                groupQueue: moc)
     }
     
     @objc
@@ -51,15 +55,20 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
         switch status.state {
         case .initial:
             break
-         case .waitingForURL:
+         case .waitingForConsentURL:
             guard let requestSync = requestSync else {
                 return nil
             }
             requestSync.readyForNextRequestIfNotBusy()
             return requestSync.nextRequest()
-        case .waitingForSignature:
-            // TODO: get request (to get Signature)
+        case .waitingForCodeVerification:
             break
+        case .waitingForSignature:
+            guard let retrieveSync = retrieveSync else {
+                return nil
+            }
+            retrieveSync.readyForNextRequestIfNotBusy()
+            return retrieveSync.nextRequest()
         case .signatureInvalid:
             break
         case .finished:
@@ -72,6 +81,41 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
 // MARK: - ZMSingleRequestTranscoder
 extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
+        switch sync {
+        case requestSync:
+            return makeSignatureRequest()
+        case retrieveSync:
+            return makeRetrieveSignatureRequest()
+        default:
+            return nil
+        }
+    }
+    
+    public func didReceive(_ response: ZMTransportResponse,
+                           forSingleRequest sync: ZMSingleRequestSync) {
+        switch (response.result) {
+        case .success:
+            switch sync {
+            case requestSync:
+                processRequestSignatureSuccess(with: response.rawData)
+            case retrieveSync:
+                processRetrieveSignatureSuccess(with: response.rawData)
+            default:
+                break
+            }
+        case .temporaryError,
+             .tryAgainLater,
+             .expired:
+            break
+        case .permanentError:
+            signatureStatusPublic?.didReceiveError()
+        default:
+            signatureStatusPublic?.didReceiveError()
+        }
+    }
+    
+    // MARK: - Helpers
+    private func makeSignatureRequest() -> ZMTransportRequest? {
         guard
             let encodedHash = signatureStatus?.encodedHash,
             let documentID = signatureStatus?.documentID,
@@ -83,49 +127,51 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             return nil
         }
         
-        let path = "/signature/request"
-
-        return ZMTransportRequest(path: path,
+        return ZMTransportRequest(path: "/signature/request",
                                   method: .methodPOST,
                                   payload: payload as ZMTransportData)
     }
     
-    public func didReceive(_ response: ZMTransportResponse,
-                           forSingleRequest sync: ZMSingleRequestSync) {
-        switch sync {
-        case requestSync:
-            switch (response.result) {
-                case .success:
-                    processSuccess(with: response.rawData)
-                case .temporaryError,
-                     .tryAgainLater,
-                     .expired:
-                    break
-                case .permanentError:
-                    signatureStatusPublic?.state = .signatureInvalid
-                default:
-                    signatureStatusPublic?.state = .signatureInvalid
-            }
-        default:
-            break
+    private func makeRetrieveSignatureRequest() -> ZMTransportRequest? {
+        guard let responseId = signatureResponse?.responseId else {
+            return nil
         }
+        
+        return ZMTransportRequest(path: "/signature/pending/\(responseId)",
+                                  method: .methodGET,
+                                  payload: nil)
     }
     
-    // MARK: - Helpers
-    private func processSuccess(with data: Data?) {
+    private func processRequestSignatureSuccess(with data: Data?) {
         guard let responseData = data else {
             return
         }
         
         do {
-            let decodedResponse = try JSONDecoder().decode(SignatureResponse.self, from: responseData)
+            let decodedResponse = try JSONDecoder().decode(SignatureResponse.self,
+                                                           from: responseData)
             signatureResponse = decodedResponse
             guard let consentURL = signatureResponse?.consentURL else {
                 return
             }
-            signatureStatus?.didReceiveURL(consentURL)
+            signatureStatus?.didReceiveConsentURL(consentURL)
         } catch {
-            print(error)
+            Logging.network.debug("Failed to decode SignatureResponse with \(error)")
+        }
+    }
+    
+    private func processRetrieveSignatureSuccess(with data: Data?) {
+        guard let responseData = data else {
+            return
+        }
+        
+        do {
+            let decodedResponse = try JSONDecoder().decode(SignatureRetrieveResponse.self,
+                                                           from: responseData)
+            retrieveResponse = decodedResponse
+            signatureStatus?.didReceiveSignature(data: decodedResponse.cms?.data(using: .utf8))
+        } catch {
+            Logging.network.debug("Failed to decode SignatureRetrieveResponse with \(error)")
         }
     }
 }
@@ -182,4 +228,10 @@ private struct SignatureResponse: Codable, Equatable {
         
         consentURL = url
     }
+}
+
+// MARK: - SignatureRetrieveResponse
+private struct SignatureRetrieveResponse: Codable, Equatable {
+    let documentId: String?
+    let cms: String?
 }
