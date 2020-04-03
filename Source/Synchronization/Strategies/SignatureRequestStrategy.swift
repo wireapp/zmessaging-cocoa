@@ -157,7 +157,7 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             }
             signatureStatus?.didReceiveConsentURL(consentURL)
         } catch {
-            zmLog.error("Failed to decode SignatureResponse with \(error)")
+            Logging.network.debug("Failed to decode SignatureResponse with \(error)")
         }
     }
     
@@ -172,7 +172,7 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             retrieveResponse = decodedResponse
             signatureStatus?.didReceiveSignature(data: nil) // Propagate the real data
         } catch {
-            zmLog.error("Failed to decode SignatureRetrieveResponse with \(error)")
+            Logging.network.debug("Failed to decode SignatureResponse with \(error)")
         }
     }
 }
