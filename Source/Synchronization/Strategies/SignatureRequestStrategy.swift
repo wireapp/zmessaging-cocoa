@@ -170,7 +170,7 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             let decodedResponse = try JSONDecoder().decode(SignatureRetrieveResponse.self,
                                                            from: responseData)
             retrieveResponse = decodedResponse
-            signatureStatus?.didReceiveSignature(data: nil) // Propagate the real data
+            signatureStatus?.didReceiveSignature(data: decodedResponse.cms?.data(using: .utf8))
         } catch {
             Logging.network.debug("Failed to decode SignatureRetrieveResponse with \(error)")
         }
