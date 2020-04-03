@@ -20,7 +20,6 @@
 import Foundation
 
 public var signatureStatusPublic: SignatureStatus?
-private let zmLog = ZMSLog(tag: "EventDecoder")
 
 // Sign a PDF document
 @objc
