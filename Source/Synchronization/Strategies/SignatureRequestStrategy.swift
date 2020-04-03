@@ -172,7 +172,7 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             retrieveResponse = decodedResponse
             signatureStatus?.didReceiveSignature(data: nil) // Propagate the real data
         } catch {
-            Logging.network.debug("Failed to decode SignatureResponse with \(error)")
+            Logging.network.debug("Failed to decode SignatureRetrieveResponse with \(error)")
         }
     }
 }
