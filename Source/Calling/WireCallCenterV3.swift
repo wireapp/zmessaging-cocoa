@@ -390,23 +390,35 @@ extension WireCallCenterV3 {
         
         let conversationType: AVSConversationType = conversation.conversationType == .group ? .conference : .oneToOne
         let callType: AVSCallType
+
         if conversation.localParticipants.count > videoParticipantsLimit {
             callType = .audioOnly
         } else {
             callType = video ? .video : .normal
         }
         
-        let started = avsWrapper.startCall(conversationId: conversationId, callType: callType, conversationType: conversationType, useCBR: useConstantBitRateAudio)
-        if started {
-            let callState: CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
-            let previousCallState = callSnapshots[conversationId]?.callState
-            createSnapshot(callState: callState, members: [], callStarter: selfUserId, video: video, for: conversationId)
-            
-            if let context = uiMOC {
-                WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime: nil, previousCallState: previousCallState).post(in: context.notificationContext)
-            }
+        let started = avsWrapper.startCall(conversationId: conversationId,
+                                           callType: callType,
+                                           conversationType: conversationType,
+                                           useCBR: useConstantBitRateAudio)
+
+        guard started else { return false }
+        
+        let callState: CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
+        let previousCallState = callSnapshots[conversationId]?.callState
+
+        createSnapshot(callState: callState, members: [], callStarter: selfUserId, video: video, for: conversationId)
+
+        if let context = uiMOC {
+            WireCallCenterCallStateNotification(context: context,
+                                                callState: callState,
+                                                conversationId: conversationId,
+                                                callerId: selfUserId,
+                                                messageTime: nil,
+                                                previousCallState: previousCallState).post(in: context.notificationContext)
         }
-        return started
+
+        return true
     }
 
     /**
