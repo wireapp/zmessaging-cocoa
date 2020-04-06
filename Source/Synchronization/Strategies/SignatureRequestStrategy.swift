@@ -28,10 +28,11 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
     // MARK: - Private Property
     private weak var signatureStatus: SignatureStatus?
     private let moc: NSManagedObjectContext
-    private var requestSync: ZMSingleRequestSync?
-    private var retrieveSync: ZMSingleRequestSync?
     private var signatureResponse: SignatureResponse?
     private var retrieveResponse: SignatureRetrieveResponse?
+    
+    var requestSync: ZMSingleRequestSync?
+    var retrieveSync: ZMSingleRequestSync?
 
     // MARK: - AbstractRequestStrategy
     @objc
@@ -221,9 +222,9 @@ private struct SignatureResponse: Codable, Equatable {
         guard
             let consentURLString = try container.decodeIfPresent(String.self, forKey: .consentURL),
             let url = URL(string: consentURLString)
-        else {
-            consentURL = nil
-            return
+            else {
+                consentURL = nil
+                return
         }
         
         consentURL = url
