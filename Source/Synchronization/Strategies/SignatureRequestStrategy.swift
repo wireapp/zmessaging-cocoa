@@ -19,7 +19,6 @@
 
 import Foundation
 
-private let log = ZMSLog(tag: "Conversations")
 public var signatureStatusPublic: SignatureStatus?
 
 // Sign a PDF document
@@ -170,34 +169,10 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             let decodedResponse = try JSONDecoder().decode(SignatureRetrieveResponse.self,
                                                            from: responseData)
             retrieveResponse = decodedResponse
-            let cmsURLAndFileName = writeCMSSignatureFile(for: decodedResponse.cms)
-            signatureStatus?.didReceiveSignature(at: cmsURLAndFileName.url,
-                                                 fileName: cmsURLAndFileName.fileName)
+            signatureStatus?.didReceiveSignature(with: decodedResponse.cms)
         } catch {
             Logging.network.debug("Failed to decode SignatureRetrieveResponse with \(error)")
         }
-    }
-    
-    private func writeCMSSignatureFile(for data: Data?) -> CMSFileMetadataInfo {
-        guard
-            let cmsData = data,
-            let fileName = signatureStatus?.fileName?.replacingOccurrences(of: ".pdf", with: ""),
-            let assetID = signatureStatus?.documentID
-        else {
-            return CMSFileMetadataInfo()
-        }
-    
-        let temporaryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-        let cmsFileName = "\(fileName)(\(assetID))"
-        let cmsFileNameAndExtention = "\(cmsFileName).cms"
-        let cmsURL = temporaryURL.appendingPathComponent(cmsFileNameAndExtention)
-        do {
-            try cmsData.write(to: cmsURL)
-        } catch {
-            log.error("Unable to store cms file with error: \(error)")
-        }
-        
-        return CMSFileMetadataInfo(url: cmsURL, fileName: cmsFileName)
     }
 }
 
@@ -271,17 +246,6 @@ private struct SignatureRetrieveResponse: Codable, Equatable {
             return
         }
         cms = cmsEncodedData
-    }
-}
-
-// MARK: - CMSFileMetaDataInfo
-private struct CMSFileMetadataInfo {
-    let url: URL?
-    let fileName: String?
-    
-    public init(url: URL? = nil, fileName: String? = nil) {
-        self.url = url
-        self.fileName = fileName
     }
 }
 
