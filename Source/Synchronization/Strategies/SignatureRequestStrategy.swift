@@ -169,10 +169,35 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             let decodedResponse = try JSONDecoder().decode(SignatureRetrieveResponse.self,
                                                            from: responseData)
             retrieveResponse = decodedResponse
-            signatureStatus?.didReceiveSignature(data: decodedResponse.cms?.data(using: .utf8))
+            let cmsURLAndFileName = writeCMSSignatureFile(for: decodedResponse.cms)
+            signatureStatus?.didReceiveSignature(at: cmsURLAndFileName.url,
+                                                 fileName: cmsURLAndFileName.fileName)
         } catch {
             Logging.network.debug("Failed to decode SignatureRetrieveResponse with \(error)")
         }
+    }
+    
+    private func writeCMSSignatureFile(for data: Data?) -> CMSFileMetaDataInfo {
+        guard
+            let cmsData = data,
+            let docDirectory = FileManager.default.urls(for: .documentDirectory,
+                                                        in: .userDomainMask).first,
+            let fileName = signatureStatus?.fileName?.replacingOccurrences(of: ".pdf", with: ""),
+            let assetID = signatureStatus?.documentID
+        else {
+            return CMSFileMetaDataInfo()
+        }
+    
+        let cmsFileName = "\(fileName)(\(assetID))"
+        let cmsFileNameAndExtention = "\(cmsFileName).cms"
+        let cmsURL = docDirectory.appendingPathComponent(cmsFileNameAndExtention)
+        do {
+            try cmsData.write(to: cmsURL)
+        } catch {
+            // TO DO: Add logging
+        }
+        
+        return CMSFileMetaDataInfo(url: cmsURL, fileName: cmsFileName)
     }
 }
 
@@ -233,5 +258,30 @@ private struct SignatureResponse: Codable, Equatable {
 // MARK: - SignatureRetrieveResponse
 private struct SignatureRetrieveResponse: Codable, Equatable {
     let documentId: String?
-    let cms: String?
+    let cms: Data?
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        documentId = try container.decodeIfPresent(String.self, forKey: .documentId)
+        guard
+            let cmsBase64String = try container.decodeIfPresent(String.self, forKey: .cms),
+            let cmsEncodedData = Data(base64Encoded: cmsBase64String)
+        else {
+            cms = nil
+            return
+        }
+        cms = cmsEncodedData
+    }
 }
+
+// MARK: - CMSFileMetaDataInfo
+private struct CMSFileMetaDataInfo {
+    let url: URL?
+    let fileName: String?
+    
+    public init(url: URL? = nil, fileName: String? = nil) {
+        self.url = url
+        self.fileName = fileName
+    }
+}
+
