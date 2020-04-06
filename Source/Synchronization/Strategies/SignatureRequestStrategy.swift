@@ -19,6 +19,7 @@
 
 import Foundation
 
+private let log = ZMSLog(tag: "Conversations")
 public var signatureStatusPublic: SignatureStatus?
 
 // Sign a PDF document
@@ -194,7 +195,7 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
         do {
             try cmsData.write(to: cmsURL)
         } catch {
-            // TO DO: Add logging
+            log.error("Unable to store cms file with error: \(error)")
         }
         
         return CMSFileMetaDataInfo(url: cmsURL, fileName: cmsFileName)
@@ -240,7 +241,7 @@ private struct SignatureResponse: Codable, Equatable {
         case responseId = "responseId"
     }
     
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         responseId = try container.decodeIfPresent(String.self, forKey: .responseId)
         guard
@@ -260,7 +261,7 @@ private struct SignatureRetrieveResponse: Codable, Equatable {
     let documentId: String?
     let cms: Data?
     
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         documentId = try container.decodeIfPresent(String.self, forKey: .documentId)
         guard
