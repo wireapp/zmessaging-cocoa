@@ -388,7 +388,7 @@ extension WireCallCenterV3 {
         endAllCalls(exluding: conversationId)
         clearSnapshot(conversationId: conversationId) // make sure we don't have an old state for this conversation
         
-        let conversationType: AVSConversationType = conversation.conversationType == .group ? .group : .oneToOne
+        let conversationType: AVSConversationType = conversation.conversationType == .group ? .conference : .oneToOne
         let callType: AVSCallType
         if conversation.localParticipants.count > videoParticipantsLimit {
             callType = .audioOnly
