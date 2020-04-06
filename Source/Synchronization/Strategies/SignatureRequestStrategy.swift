@@ -178,27 +178,26 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
         }
     }
     
-    private func writeCMSSignatureFile(for data: Data?) -> CMSFileMetaDataInfo {
+    private func writeCMSSignatureFile(for data: Data?) -> CMSFileMetadataInfo {
         guard
             let cmsData = data,
-            let docDirectory = FileManager.default.urls(for: .documentDirectory,
-                                                        in: .userDomainMask).first,
             let fileName = signatureStatus?.fileName?.replacingOccurrences(of: ".pdf", with: ""),
             let assetID = signatureStatus?.documentID
         else {
-            return CMSFileMetaDataInfo()
+            return CMSFileMetadataInfo()
         }
     
+        let temporaryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
         let cmsFileName = "\(fileName)(\(assetID))"
         let cmsFileNameAndExtention = "\(cmsFileName).cms"
-        let cmsURL = docDirectory.appendingPathComponent(cmsFileNameAndExtention)
+        let cmsURL = temporaryURL.appendingPathComponent(cmsFileNameAndExtention)
         do {
             try cmsData.write(to: cmsURL)
         } catch {
             log.error("Unable to store cms file with error: \(error)")
         }
         
-        return CMSFileMetaDataInfo(url: cmsURL, fileName: cmsFileName)
+        return CMSFileMetadataInfo(url: cmsURL, fileName: cmsFileName)
     }
 }
 
@@ -276,7 +275,7 @@ private struct SignatureRetrieveResponse: Codable, Equatable {
 }
 
 // MARK: - CMSFileMetaDataInfo
-private struct CMSFileMetaDataInfo {
+private struct CMSFileMetadataInfo {
     let url: URL?
     let fileName: String?
     
