@@ -51,38 +51,20 @@ class CallParticipantsSnapshot {
         notifyChange()
     }
 
-    func callParticipantVideoStateChanged(client: AVSClient, videoState: VideoState) {
-        updateMember(client: client, videoState: videoState)
-    }
-
-    func callParticipantAudioEstablished(client: AVSClient) {
-        updateMember(client: client, audioState: .established)
-    }
-
     func callParticipantNetworkQualityChanged(client: AVSClient, networkQuality: NetworkQuality) {
-        updateMember(client: client, networkQuality: networkQuality)
-    }
-
-    // MARK: - Helpers
-
-    /// Updates the locally stored member for the given userId and clientId with the given non nil properties.
-
-    private func updateMember(client: AVSClient,
-                              audioState: AudioState? = nil,
-                              videoState: VideoState? = nil,
-                              networkQuality: NetworkQuality? = nil) {
-
         guard let localMember = findMember(with: client) else { return }
 
         let updatedMember = AVSCallMember(client: client,
-                                          audioState: audioState ?? localMember.audioState,
-                                          videoState: videoState ?? localMember.videoState,
-                                          networkQuality: networkQuality ?? localMember.networkQuality)
+                                          audioState: localMember.audioState,
+                                          videoState: localMember.videoState,
+                                          networkQuality: networkQuality)
 
         members = OrderedSetState(array: members.array.map({ member in
             member == localMember ? updatedMember : member
         }))
     }
+
+    // MARK: - Helpers
 
     /// Returns the member matching the given userId and clientId.
 
