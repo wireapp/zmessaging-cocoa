@@ -179,5 +179,11 @@ extension AVSWrapper {
         /// typedef void (wcall_req_clients_h)(WUSER_HANDLE wuser, const char *convid, void *arg);
 
         typealias RequestClients = @convention(c) (UInt32, StringPtr, ContextRef) -> Void
+
+        /// Callback used to request SFT communication.
+        ///
+        /// typedef int (wcall_sft_req_h)(void *ctx, const char *url, const uint8_t *data, size_t len, void *arg);
+
+        typealias SFTCallMessageSend = @convention(c) (VoidPtr, StringPtr, UnsafePointer<UInt8>?, Int, ContextRef) -> Int32
     }
 }

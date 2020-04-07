@@ -36,6 +36,7 @@ public protocol AVSWrapperType {
     func received(callEvent: CallEvent) -> CallError?
     func setVideoState(conversationId: UUID, videoState: VideoState)
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
+    func handleSFTResponse(data: Data?, context: WireCallMessageToken)
     func update(callConfig: String?, httpStatusCode: Int)
     var muted: Bool { get set }
 }
@@ -143,6 +144,24 @@ public class AVSWrapper: AVSWrapperType {
     /// Passes the response of the calling config request to AVS.
     public func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {
         wcall_resp(handle, Int32(httpStatus), "", context)
+    }
+
+    /// Passes the response of the SFT calling config request to AVS.
+    public func handleSFTResponse(data: Data?, context: WireCallMessageToken) {
+        let error: Int32
+        let buffer: Data
+
+        if let data = data {
+            error = 0
+            buffer = data
+        } else {
+            error = EPROTO
+            buffer = Data(count: 0)
+        }
+
+        buffer.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
+            wcall_sft_resp(handle, error, bytes, buffer.count, context)
+        }
     }
 
     /// Notifies AVS that we received a remote event.
@@ -283,6 +302,17 @@ public class AVSWrapper: AVSWrapperType {
             $0.handleClientsRequest(conversationId: $1) { (clients: String) in
                 wcall_set_clients_for_conv(handle, conversationIdRef, clients)
             }
+        }
+    }
+
+    private let sendSFTCallMessageHandler: Handler.SFTCallMessageSend = { token, url, data, dataLength, contextRef in
+        guard let token = token else { return EINVAL }
+
+        let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
+        let transformedData = Data(buffer: bytes)
+
+        return AVSWrapper.withCallCenter(contextRef, url) {
+            $0.handleSFTCallMessageRequest(token: token, url: $1, data: transformedData)
         }
     }
 

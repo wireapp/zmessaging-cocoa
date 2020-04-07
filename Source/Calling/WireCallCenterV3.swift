@@ -513,6 +513,28 @@ extension WireCallCenterV3 {
         })
     }
 
+    /// Sends an SFT call message when requested by AVS through `wcall_sft_req_h`.
+    func sendSFT(token: WireCallMessageToken, url: String, data: Data) {
+        zmLog.debug("\(self): send SFT call message, transport = \(String(describing: transport))")
+
+        guard let endpoint = URL(string: url) else {
+            zmLog.error("SFT request failed. Invalid url: \(url)")
+            avsWrapper.handleSFTResponse(data: nil, context: token)
+            return
+        }
+
+        transport?.sendSFT(data: data, url: endpoint) { [weak self] result in
+            switch result {
+            case let .failure(error):
+                zmLog.error("SFT request failed: \(error.localizedDescription)")
+                self?.avsWrapper.handleSFTResponse(data: nil, context: token)
+
+            case let .success(data):
+                self?.avsWrapper.handleSFTResponse(data: data, context: token)
+            }
+        }
+    }
+
     /// Sends the config request when requested by AVS through `wcall_config_req_h`.
     func requestCallConfig() {
         zmLog.debug("\(self): requestCallConfig(), transport = \(String(describing: transport))")

@@ -28,6 +28,10 @@ class WireCallCenterTransportMock : WireCallCenterTransport {
     func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((Int) -> Void)) {
         
     }
+
+    func sendSFT(data: Data, url: URL, completionHandler: @escaping ((Result<Data>) -> Void)) {
+        
+    }
     
     func requestCallConfig(completionHandler: @escaping CallConfigRequestCompletion) {
         if let mockCallConfigResponse = mockCallConfigResponse {

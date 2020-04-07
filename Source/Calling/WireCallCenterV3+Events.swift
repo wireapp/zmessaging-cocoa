@@ -296,6 +296,12 @@ extension WireCallCenterV3 {
             completion(json)
         }
     }
+
+    func handleSFTCallMessageRequest(token: WireCallMessageToken, url: String, data: Data) {
+        handleEvent("send-sft-call-message") {
+            self.sendSFT(token: token, url: url, data: data)
+        }
+    }
 }
 
 private extension Set where Element == ZMUser {
