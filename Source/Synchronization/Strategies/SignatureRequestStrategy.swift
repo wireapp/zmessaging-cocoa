@@ -170,7 +170,7 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             let decodedResponse = try JSONDecoder().decode(SignatureRetrieveResponse.self,
                                                            from: responseData)
             retrieveResponse = decodedResponse
-            signatureStatus?.didReceiveSignature(data: decodedResponse.cms?.data(using: .utf8))
+            signatureStatus?.didReceiveSignature(with: decodedResponse.cms)
         } catch {
             Logging.network.debug("Failed to decode SignatureRetrieveResponse with \(error)")
         }
@@ -216,7 +216,7 @@ private struct SignatureResponse: Codable, Equatable {
         case responseId = "responseId"
     }
     
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         responseId = try container.decodeIfPresent(String.self, forKey: .responseId)
         guard
@@ -234,5 +234,19 @@ private struct SignatureResponse: Codable, Equatable {
 // MARK: - SignatureRetrieveResponse
 private struct SignatureRetrieveResponse: Codable, Equatable {
     let documentId: String?
-    let cms: String?
+    let cms: Data?
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        documentId = try container.decodeIfPresent(String.self, forKey: .documentId)
+        guard
+            let cmsBase64String = try container.decodeIfPresent(String.self, forKey: .cms),
+            let cmsEncodedData = Data(base64Encoded: cmsBase64String)
+        else {
+            cms = nil
+            return
+        }
+        cms = cmsEncodedData
+    }
 }
+
