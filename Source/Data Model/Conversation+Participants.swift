@@ -64,11 +64,12 @@ extension ZMConversation {
                          eventProcessor: UpdateEventProcessor,
                          contextProvider: ZMManagedObjectContextProvider,
                          completion: @escaping (VoidResult) -> Void) {
+        let users = participants.materialize(in: contextProvider.managedObjectContext)
         
-        guard let users = participants as? [ZMUser],
-              conversationType == .group,
-              !users.isEmpty,
-              !users.contains(ZMUser.selfUser(in: contextProvider.managedObjectContext))
+        guard
+            conversationType == .group,
+            !users.isEmpty,
+            !users.contains(ZMUser.selfUser(in: contextProvider.managedObjectContext))
         else { return completion(.failure(ConversationAddParticipantsError.invalidOperation)) }
         
         let request = ConversationParticipantRequestFactory.requestForAddingParticipants(Set(users), conversation: self)
