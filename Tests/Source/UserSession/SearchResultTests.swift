@@ -45,7 +45,7 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "", contextProvider: contextDirectory!)
+        let result = SearchResult(payload: payload, query: "", searchOptions: [.directory], contextProvider: contextDirectory!)
         
         // then
         XCTAssertEqual(result?.directory.count, 1)
@@ -78,7 +78,7 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "", contextProvider: contextDirectory!)
+        let result = SearchResult(payload: payload, query: "", searchOptions: [.directory], contextProvider: contextDirectory!)
         
         // then
         XCTAssertEqual(result?.directory.count, 1)
@@ -99,7 +99,7 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: name, contextProvider: contextDirectory!)
+        let result = SearchResult(payload: payload, query: name, searchOptions: [.directory], contextProvider: contextDirectory!)
         
         // then
         XCTAssertEqual(result?.directory.count, 2)
@@ -121,7 +121,7 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "@\(name)", contextProvider: contextDirectory!)!
+        let result = SearchResult(payload: payload, query: "@\(name)", searchOptions: [.directory], contextProvider: contextDirectory!)!
         
         // then
         XCTAssertEqual(result.directory.count, 1)

@@ -29,7 +29,7 @@ public struct SearchResult {
 
 extension SearchResult {
     
-    public init?(payload: [AnyHashable : Any], query: String, contextProvider: ZMManagedObjectContextProvider) {
+    public init?(payload: [AnyHashable : Any], query: String, searchOptions: SearchOptions, contextProvider: ZMManagedObjectContextProvider) {
         guard let documents = payload["documents"] as? [[String : Any]] else {
             return nil
         }
@@ -47,11 +47,17 @@ extension SearchResult {
         let searchUsers = ZMSearchUser.searchUsers(from: filteredDocuments, contextProvider: contextProvider)
         
         contacts = []
-        teamMembers = []
         addressBook = []
-        directory = searchUsers
+        directory = searchUsers.filter({ !$0.isConnected && !$0.isTeamMember })
         conversations = []
         services = []
+        
+        if searchOptions.contains(.teamMembers) &&
+           searchOptions.isDisjoint(with: .excludeNonActiveTeamMembers) {
+            teamMembers = searchUsers.filter({ $0.isTeamMember })
+        } else {
+            teamMembers = []
+        }
     }
     
     public init?(servicesPayload servicesFullPayload: [AnyHashable : Any], query: String, contextProvider: ZMManagedObjectContextProvider) {
@@ -106,13 +112,10 @@ extension SearchResult {
     }
     
     func union(withDirectoryResult result: SearchResult) -> SearchResult {
-        
-        let directoryTeamMembers = result.directory.filter({ $0.isTeamMember })
-        
         return SearchResult(contacts: contacts,
-                            teamMembers: Array(Set(teamMembers).union(directoryTeamMembers)),
+                            teamMembers: Array(Set(teamMembers).union(result.teamMembers)),
                             addressBook: addressBook,
-                            directory: result.directory.filter({ !$0.isConnected && !$0.isTeamMember }),
+                            directory: result.directory,
                             conversations: conversations,
                             services: services)
     }

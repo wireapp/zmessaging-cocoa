@@ -315,7 +315,10 @@ extension SearchTask {
                 guard
                     let contextProvider = self?.contextProvider,
                     let payload = response.payload?.asDictionary(),
-                    let result = SearchResult(payload: payload, query: searchRequest.query, contextProvider: contextProvider)
+                    let result = SearchResult(payload: payload,
+                                              query: searchRequest.query,
+                                              searchOptions: searchRequest.searchOptions,
+                                              contextProvider: contextProvider)
                 else {
                     return
                 }
@@ -383,7 +386,10 @@ extension SearchTask {
                 
                 let document = ["handle": handle, "name": name, "id": id]
                 let documentPayload = ["documents": [document]]
-                guard let result = SearchResult(payload: documentPayload, query: searchRequest.query, contextProvider: contextProvider) else {
+                guard let result = SearchResult(payload: documentPayload,
+                                                query: searchRequest.query,
+                                                searchOptions: searchRequest.searchOptions,
+                                                contextProvider: contextProvider) else {
                     return
                 }
                 
