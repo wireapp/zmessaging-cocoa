@@ -51,32 +51,30 @@ class CallParticipantsSnapshot {
         notifyChange()
     }
 
-    func callParticipantVideoStateChanged(userId: UUID, clientId: String, videoState: VideoState) {
-        updateMember(userId: userId, clientId: clientId, videoState: videoState)
+    func callParticipantVideoStateChanged(client: AVSClient, videoState: VideoState) {
+        updateMember(client: client, videoState: videoState)
     }
 
-    func callParticipantAudioEstablished(userId: UUID, clientId: String) {
-        updateMember(userId: userId, clientId: clientId, audioState: .established)
+    func callParticipantAudioEstablished(client: AVSClient) {
+        updateMember(client: client, audioState: .established)
     }
 
-    func callParticipantNetworkQualityChanged(userId: UUID, clientId: String, networkQuality: NetworkQuality) {
-        updateMember(userId: userId, clientId: clientId, networkQuality: networkQuality)
+    func callParticipantNetworkQualityChanged(client: AVSClient, networkQuality: NetworkQuality) {
+        updateMember(client: client, networkQuality: networkQuality)
     }
 
     // MARK: - Helpers
 
     /// Updates the locally stored member for the given userId and clientId with the given non nil properties.
 
-    private func updateMember(userId: UUID,
-                              clientId: String,
+    private func updateMember(client: AVSClient,
                               audioState: AudioState? = nil,
                               videoState: VideoState? = nil,
                               networkQuality: NetworkQuality? = nil) {
 
-        guard let localMember = findMember(with: userId, clientId: clientId) else { return }
+        guard let localMember = findMember(with: client) else { return }
 
-        let updatedMember = AVSCallMember(userId: userId,
-                                          clientId: clientId,
+        let updatedMember = AVSCallMember(client: client,
                                           audioState: audioState ?? localMember.audioState,
                                           videoState: videoState ?? localMember.videoState,
                                           networkQuality: networkQuality ?? localMember.networkQuality)
@@ -88,8 +86,8 @@ class CallParticipantsSnapshot {
 
     /// Returns the member matching the given userId and clientId.
 
-    private func findMember(with userId: UUID, clientId: String) -> AVSCallMember? {
-        return members.array.first { $0.remoteId == userId && $0.clientId == clientId }
+    private func findMember(with client: AVSClient) -> AVSCallMember? {
+        return members.array.first { $0.client == client }
     }
 
     /// Notifies observers of a potential change in the participants set.

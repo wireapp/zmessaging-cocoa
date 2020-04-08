@@ -123,8 +123,7 @@ class WireCallCenterV3Tests: MessagingTest {
         checkThatItPostsNotification(expectedCallState: .incoming(video: true, shouldRing: false, degraded: false), expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
             sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                    messageTime: Date(),
-                                   userId: otherUserID,
-                                   clientId: otherUserClientID,
+                                   client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                    isVideoCall: true,
                                    shouldRing: false)
         }
@@ -134,8 +133,7 @@ class WireCallCenterV3Tests: MessagingTest {
         checkThatItPostsNotification(expectedCallState: .incoming(video: false, shouldRing: false, degraded: false), expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
             sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                    messageTime: Date(),
-                                   userId: otherUserID,
-                                   clientId: otherUserClientID,
+                                   client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                    isVideoCall: false,
                                    shouldRing: false)
         }
@@ -145,8 +143,7 @@ class WireCallCenterV3Tests: MessagingTest {
         checkThatItPostsNotification(expectedCallState: .incoming(video: true, shouldRing: true, degraded: false), expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
             sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                    messageTime: Date(),
-                                   userId: otherUserID,
-                                   clientId: otherUserClientID,
+                                   client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                    isVideoCall: true,
                                    shouldRing: true)
         }
@@ -156,8 +153,7 @@ class WireCallCenterV3Tests: MessagingTest {
         checkThatItPostsNotification(expectedCallState: .incoming(video: false, shouldRing: true, degraded: false), expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
             sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                    messageTime: Date(),
-                                   userId: otherUserID,
-                                   clientId: otherUserClientID,
+                                   client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                    isVideoCall: false,
                                    shouldRing: true)
         }
@@ -193,8 +189,7 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -209,15 +204,14 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         checkThatItPostsNotification(expectedCallState: .established, expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
-            sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID, clientId: otherUserClientID)
+            sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
         }
     }
     
@@ -225,8 +219,7 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -235,7 +228,7 @@ class WireCallCenterV3Tests: MessagingTest {
         
         // when
         checkThatItPostsNotification(expectedCallState: .established, expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
-            sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID, clientId: otherUserClientID)
+            sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
         }
         
         // then
@@ -246,8 +239,7 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -255,14 +247,14 @@ class WireCallCenterV3Tests: MessagingTest {
         XCTAssertNil(sut.establishedDate)
         
         // call is established
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID, clientId: otherUserClientID)
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNotNil(sut.establishedDate)
         let previousEstablishedDate = sut.establishedDate
         spinMainQueue(withTimeout: 0.1)
         
         // when
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID, clientId: otherUserClientID)
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -273,8 +265,7 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -289,8 +280,7 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -305,15 +295,13 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
         sut.handleIncomingCall(conversationId: groupConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -332,8 +320,7 @@ class WireCallCenterV3Tests: MessagingTest {
 
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -350,8 +337,7 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -368,8 +354,7 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: groupConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -397,8 +382,7 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -426,8 +410,7 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -453,8 +436,7 @@ class WireCallCenterV3Tests: MessagingTest {
 
         sut.handleIncomingCall(conversationId: groupConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -473,8 +455,7 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: true,
                                shouldRing: true)
 
@@ -494,8 +475,7 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: true,
                                shouldRing: true)
 
@@ -567,8 +547,7 @@ class WireCallCenterV3Tests: MessagingTest {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -582,7 +561,7 @@ class WireCallCenterV3Tests: MessagingTest {
         }
         
         // when
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID, clientId: otherUserClientID)
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
 
         // then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
@@ -741,13 +720,12 @@ extension WireCallCenterV3Tests {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID, clientId: otherUserClientID)
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
@@ -762,13 +740,12 @@ extension WireCallCenterV3Tests {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.handleDataChannelEstablishement(conversationId: oneOnOneConversationID, userId: otherUserID, clientId: otherUserClientID)
+        sut.handleDataChannelEstablishement(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // when
@@ -783,13 +760,12 @@ extension WireCallCenterV3Tests {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID, clientId: otherUserClientID)
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         sut.handleConstantBitRateChange(enabled: true)
@@ -808,8 +784,7 @@ extension WireCallCenterV3Tests {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -827,13 +802,12 @@ extension WireCallCenterV3Tests {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID, clientId: otherUserClientID)
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         sut.handleConstantBitRateChange(enabled: true)
@@ -855,8 +829,7 @@ extension WireCallCenterV3Tests {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -870,18 +843,17 @@ extension WireCallCenterV3Tests {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID, clientId: otherUserClientID)
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let quality = NetworkQuality.poor
 
         // when
-        sut.handleNetworkQualityChange(conversationId: oneOnOneConversationID, userId: otherUserID, clientId: otherUserClientID, quality: quality)
+        sut.handleNetworkQualityChange(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID), quality: quality)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
@@ -902,13 +874,12 @@ extension WireCallCenterV3Tests {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, userId: otherUserID, clientId: otherUserClientID)
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let observer = MuteObserver()
         let token = WireCallCenterV3.addMuteStateObserver(observer: observer, context: uiMOC)
@@ -934,8 +905,7 @@ extension WireCallCenterV3Tests {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -952,8 +922,7 @@ extension WireCallCenterV3Tests {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -970,8 +939,7 @@ extension WireCallCenterV3Tests {
         // given
         sut.handleIncomingCall(conversationId: groupConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -988,8 +956,7 @@ extension WireCallCenterV3Tests {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
@@ -1012,15 +979,16 @@ extension WireCallCenterV3Tests {
         // when
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        XCTAssertEqual(sut.callParticipants(conversationId: oneOnOneConversationID), [CallParticipant(user: otherUser, state: .connecting)])
+        let actual = sut.callParticipants(conversationId: oneOnOneConversationID)
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        XCTAssertEqual(actual, expected)
     }
 
     func callBackMemberHandler(conversationId: UUID, userId: UUID, clientId: String, audioEstablished: Bool) {
@@ -1042,7 +1010,9 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(sut.callParticipants(conversationId: oneOnOneConversationID), [CallParticipant(user: otherUser, state: .connecting)])
+        let actual = sut.callParticipants(conversationId: oneOnOneConversationID)
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        XCTAssertEqual(actual, expected)
     }
 
     func testThatItUpdatesTheParticipantsWhenGroupHandlerIsCalled() {
@@ -1052,29 +1022,34 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        XCTAssertEqual(sut.callParticipants(conversationId: groupConversationID), [CallParticipant(user: otherUser, state: .connecting)])
+        let actual = sut.callParticipants(conversationId: groupConversationID)
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        XCTAssertEqual(actual, expected)
     }
 
     func testThatItUpdatesTheStateForParticipant() {
         // when
         sut.handleIncomingCall(conversationId: groupConversationID,
                                messageTime: Date(),
-                               userId: otherUserID,
-                               clientId: otherUserClientID,
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
                                shouldRing: true)
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        XCTAssertEqual(sut.callParticipants(conversationId: groupConversationID), [CallParticipant(user: otherUser, state: .connecting)])
+        var actual = sut.callParticipants(conversationId: groupConversationID)
+        var expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        XCTAssertEqual(actual, expected)
 
         // when
         callBackMemberHandler(conversationId: groupConversationID, userId: otherUserID, clientId: otherUserClientID, audioEstablished: true)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        XCTAssertEqual(sut.callParticipants(conversationId: groupConversationID), [CallParticipant(user: otherUser, state: .connected(videoState: .stopped, clientId: otherUserClientID))])
+        actual = sut.callParticipants(conversationId: groupConversationID)
+        expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connected(videoState: .stopped))]
+        XCTAssertEqual(actual, expected)
     }
 }
 

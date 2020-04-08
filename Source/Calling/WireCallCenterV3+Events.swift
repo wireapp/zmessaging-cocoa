@@ -87,13 +87,13 @@ extension WireCallCenterV3 {
     }
 
     /// Handles incoming calls.
-    func handleIncomingCall(conversationId: UUID, messageTime: Date, userId: UUID, clientId: String, isVideoCall: Bool, shouldRing: Bool) {
+    func handleIncomingCall(conversationId: UUID, messageTime: Date, client: AVSClient, isVideoCall: Bool, shouldRing: Bool) {
         handleEvent("incoming-call") {
             let isDegraded = self.isDegraded(conversationId: conversationId)
             let callState = CallState.incoming(video: isVideoCall, shouldRing: shouldRing, degraded: isDegraded)
-            let members = [AVSCallMember(userId: userId, clientId: clientId)]
+            let members = [AVSCallMember(client: client)]
 
-            self.createSnapshot(callState: callState, members: members, callStarter: userId, video: isVideoCall, for: conversationId)
+            self.createSnapshot(callState: callState, members: members, callStarter: client.userId, video: isVideoCall, for: conversationId)
             self.handle(callState: callState, conversationId: conversationId)
         }
     }
@@ -114,7 +114,7 @@ extension WireCallCenterV3 {
     }
 
     /// Handles when data channel gets established.
-    func handleDataChannelEstablishement(conversationId: UUID, userId: UUID, clientId: String) {
+    func handleDataChannelEstablishement(conversationId: UUID, client: AVSClient) {
         handleEvent("data-channel-established") {
             // Ignore if data channel was established after audio
             if self.callState(conversationId: conversationId) != .established {
@@ -124,7 +124,7 @@ extension WireCallCenterV3 {
     }
 
     /// Handles established calls.
-    func handleEstablishedCall(conversationId: UUID, userId: UUID, clientId: String) {
+    func handleEstablishedCall(conversationId: UUID, client: AVSClient) {
         handleEvent("established-call") {
             // WORKAROUND: the call established handler will is called once for every participant in a
             // group call. Until that's no longer the case we must take care to only set establishedDate once.
@@ -132,7 +132,7 @@ extension WireCallCenterV3 {
                 self.establishedDate = Date()
             }
 
-            self.callParticipantAudioEstablished(conversationId: conversationId, userId: userId, clientId: clientId)
+            self.callParticipantAudioEstablished(conversationId: conversationId, client: client)
 
             if self.videoState(conversationId: conversationId) == .started {
                 self.avsWrapper.setVideoState(conversationId: conversationId, videoState: .started)
@@ -235,10 +235,10 @@ extension WireCallCenterV3 {
     }
 
     /// Handles video state changes.
-    func handleVideoStateChange(userId: UUID, clientId: String,  newState: VideoState) {
+    func handleVideoStateChange(client: AVSClient, newState: VideoState) {
         handleEvent("video-state-change") {
             self.nonIdleCalls.forEach {
-                self.callParticipantVideoStateChanged(conversationId: $0.key, userId: userId, clientId: clientId, videoState: newState)
+                self.callParticipantVideoStateChanged(conversationId: $0.key, client: client, videoState: newState)
             }
         }
     }
@@ -265,18 +265,15 @@ extension WireCallCenterV3 {
     }
 
     /// Handles network quality change
-    func handleNetworkQualityChange(conversationId: UUID, userId: UUID, clientId: String, quality: NetworkQuality) {
+    func handleNetworkQualityChange(conversationId: UUID, client: AVSClient, quality: NetworkQuality) {
         handleEventInContext("network-quality-change") {
-            self.callParticipantNetworkQualityChanged(conversationId: conversationId,
-                                                      userId: userId,
-                                                      clientId: clientId,
-                                                      quality: quality)
+            self.callParticipantNetworkQualityChanged(conversationId: conversationId, client: client, quality: quality)
 
             if let call = self.callSnapshots[conversationId] {
                 self.callSnapshots[conversationId] = call.updateNetworkQuality(quality)
                 let notification = WireCallCenterNetworkQualityNotification(conversationId: conversationId,
-                                                                            userId: userId,
-                                                                            clientId: clientId,
+                                                                            userId: client.userId,
+                                                                            clientId: client.clientId,
                                                                             networkQuality: quality)
                 notification.post(in: $0.notificationContext)
             }
