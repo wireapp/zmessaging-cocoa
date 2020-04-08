@@ -147,7 +147,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertTrue(result.contacts.contains(user))
+            XCTAssertTrue(result.contacts.compactMap(\.user).contains(user))
         }
         
         // when
@@ -185,7 +185,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertTrue(result.contacts.contains(user))
+            XCTAssertTrue(result.contacts.compactMap(\.user).contains(user))
         }
         
         // when
@@ -206,7 +206,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertEqual(result.contacts, [user1])
+            XCTAssertEqual(result.contacts.compactMap(\.user), [user1])
         }
         
         // when
@@ -227,7 +227,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertEqual(result.contacts, [user1, user2])
+            XCTAssertEqual(result.contacts.compactMap(\.user), [user1, user2])
         }
         
         // when
@@ -246,7 +246,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertEqual(result.contacts, [user1])
+            XCTAssertEqual(result.contacts.compactMap(\.user), [user1])
         }
         
         // when
@@ -265,7 +265,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertEqual(result.contacts, [user1])
+            XCTAssertEqual(result.contacts.compactMap(\.user), [user1])
         }
         
         // when
@@ -288,7 +288,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertEqual(result.contacts, [user3])
+            XCTAssertEqual(result.contacts.compactMap(\.user), [user3])
         }
         
         // when
@@ -309,7 +309,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertEqual(result.contacts, [user])
+            XCTAssertEqual(result.contacts.compactMap(\.user), [user])
         }
         
         // when
@@ -317,9 +317,9 @@ class SearchTaskTests : DatabaseTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
-    // MARK: Team Member search
+    // MARK: Team member local search
     
-    func testThatItCanSearchForTeamMembers() {
+    func testThatItCanSearchForTeamMembersLocally() {
         // given
         let resultArrived = expectation(description: "received result")
         let team = Team.insertNewObject(in: uiMOC)
@@ -339,7 +339,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertEqual(result.teamMembers, [member])
+            XCTAssertEqual(result.teamMembers.compactMap(\.user), [user])
         }
         
         // when
@@ -347,7 +347,7 @@ class SearchTaskTests : DatabaseTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
-    func testThatItCanExcludeNonActiveTeamMembers() {
+    func testThatItCanExcludeNonActiveTeamMembersLocally() {
         // given
         let resultArrived = expectation(description: "received result")
         let team = Team.insertNewObject(in: uiMOC)
@@ -378,7 +378,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertEqual(result.teamMembers, [memberA])
+            XCTAssertEqual(result.teamMembers.compactMap(\.user), [userA])
         }
         
         // when
@@ -386,7 +386,7 @@ class SearchTaskTests : DatabaseTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
-    func testThatItIncludesNonActiveTeamMembers_WhenSelfUserWasCreatedByThem() {
+    func testThatItIncludesNonActiveTeamMembersLocally_WhenSelfUserWasCreatedByThem() {
         // given
         let resultArrived = expectation(description: "received result")
         let team = Team.insertNewObject(in: uiMOC)
@@ -412,7 +412,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertEqual(result.teamMembers, [memberA])
+            XCTAssertEqual(result.teamMembers.compactMap(\.user), [userA])
         }
         
         // when
@@ -420,7 +420,7 @@ class SearchTaskTests : DatabaseTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
-    func testThatItCanExcludeNonActivePartners() {
+    func testThatItCanExcludeNonActivePartnersLocally() {
         // given
         let resultArrived = expectation(description: "received result")
         let team = Team.insertNewObject(in: uiMOC)
@@ -460,7 +460,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertEqual(result.teamMembers, [memberA, memberB])
+            XCTAssertEqual(result.teamMembers.compactMap(\.user), [userA, userB])
         }
         
         // when
@@ -468,7 +468,7 @@ class SearchTaskTests : DatabaseTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
-    func testThatItIncludesNonActivePartners_WhenSearchingWithExactHandle() {
+    func testThatItIncludesNonActivePartnersLocally_WhenSearchingWithExactHandle() {
         // given
         let resultArrived = expectation(description: "received result")
         let team = Team.insertNewObject(in: uiMOC)
@@ -490,7 +490,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertEqual(result.teamMembers, [memberA])
+            XCTAssertEqual(result.teamMembers.compactMap(\.user), [userA])
         }
         
         // when
@@ -498,7 +498,7 @@ class SearchTaskTests : DatabaseTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
-    func testThatItIncludesNonActivePartners_WhenSelfUserCreatedPartner() {
+    func testThatItIncludesNonActivePartnersLocally_WhenSelfUserCreatedPartner() {
         // given
         let resultArrived = expectation(description: "received result")
         let team = Team.insertNewObject(in: uiMOC)
@@ -521,7 +521,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             resultArrived.fulfill()
-            XCTAssertEqual(result.teamMembers, [memberA])
+            XCTAssertEqual(result.teamMembers.compactMap(\.user), [userA])
         }
         
         // when
@@ -675,7 +675,7 @@ class SearchTaskTests : DatabaseTest {
         task.onResult { (result, _) in
             resultArrived.fulfill()
             XCTAssertEqual(result.conversations, [conversation])
-            XCTAssertEqual(result.contacts, [user3])
+            XCTAssertEqual(result.contacts.compactMap(\.user), [user3])
         }
         
         // when
@@ -995,7 +995,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             localResultArrived.fulfill()
-            XCTAssertTrue(result.contacts.contains(user))
+            XCTAssertTrue(result.contacts.compactMap(\.user).contains(user))
         }
         
         // when
@@ -1008,7 +1008,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, _) in
             remoteResultArrived.fulfill()
-            XCTAssertTrue(result.contacts.contains(user))
+            XCTAssertTrue(result.contacts.compactMap(\.user).contains(user))
         }
         
         // when
@@ -1062,7 +1062,7 @@ class SearchTaskTests : DatabaseTest {
         // expect
         task.onResult { (result, completed) in
             localResultArrived.fulfill()
-            XCTAssertTrue(result.contacts.contains(user))
+            XCTAssertTrue(result.contacts.compactMap(\.user).contains(user))
             XCTAssertTrue(completed)
         }
         

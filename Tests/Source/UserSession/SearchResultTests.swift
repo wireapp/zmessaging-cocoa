@@ -45,14 +45,14 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "", contextProvider: contextDirectory!)
+        let result = SearchResult(payload: payload, query: "", searchOptions: [.directory], contextProvider: contextDirectory!)
         
         // then
         XCTAssertEqual(result?.directory.count, 1)
         XCTAssertEqual(result?.directory.first!.handle, handle)
     }
     
-    func testThatItFiltersTeamMembers() {
+    func testThatItFiltersTeamMembersFromDirectoryResults() {
         // given
         let team = Team.insertNewObject(in: uiMOC)
         let user = ZMUser.insertNewObject(in: uiMOC)
@@ -78,7 +78,7 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "", contextProvider: contextDirectory!)
+        let result = SearchResult(payload: payload, query: "", searchOptions: [.directory], contextProvider: contextDirectory!)
         
         // then
         XCTAssertEqual(result?.directory.count, 1)
@@ -99,7 +99,7 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: name, contextProvider: contextDirectory!)
+        let result = SearchResult(payload: payload, query: name, searchOptions: [.directory], contextProvider: contextDirectory!)
         
         // then
         XCTAssertEqual(result?.directory.count, 2)
@@ -121,11 +121,68 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "@\(name)", contextProvider: contextDirectory!)!
+        let result = SearchResult(payload: payload, query: "@\(name)", searchOptions: [.directory], contextProvider: contextDirectory!)!
         
         // then
         XCTAssertEqual(result.directory.count, 1)
         XCTAssertEqual(result.directory.first!.handle, expectedHandle)
     }
+    
+    func testThatItReturnsRemoteTeamMembers_WhenSearchOptionsIncludeTeamMembers() {
+        // given
+        let team = Team.insertNewObject(in: uiMOC)
+        team.remoteIdentifier = UUID()
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.teamIdentifier = team.remoteIdentifier
+        let member = Member.insertNewObject(in: uiMOC)
+        member.team = team
+        member.user = selfUser
+        let remoteTeamMemberID = UUID()
+        uiMOC.saveOrRollback()
         
+        let payload = ["documents": [
+            ["id": remoteTeamMemberID.transportString(),
+             "team": team.remoteIdentifier!.transportString(),
+             "name": "Member A",
+             "accent_id": 4]]]
+        
+        // when
+        let result = SearchResult(payload: payload,
+                                  query: "",
+                                  searchOptions: [.directory, .teamMembers],
+                                  contextProvider: contextDirectory!)
+        
+        // then
+        XCTAssertEqual(result?.teamMembers.count, 1)
+        XCTAssertEqual(result?.teamMembers.first!.remoteIdentifier, remoteTeamMemberID)
+    }
+    
+    func testThatItDoesNotReturnRemoteTeamMembers_WhenSearchOptionsIncludeExcludeNonActiveTeamMembers () {
+        // given
+        let team = Team.insertNewObject(in: uiMOC)
+        team.remoteIdentifier = UUID()
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.teamIdentifier = team.remoteIdentifier
+        let member = Member.insertNewObject(in: uiMOC)
+        member.team = team
+        member.user = selfUser
+        let remoteTeamMemberID = UUID()
+        uiMOC.saveOrRollback()
+        
+        let payload = ["documents": [
+            ["id": remoteTeamMemberID.transportString(),
+             "team": team.remoteIdentifier!.transportString(),
+             "name": "Member A",
+             "accent_id": 4]]]
+        
+        // when
+        let result = SearchResult(payload: payload,
+                                  query: "",
+                                  searchOptions: [.directory, .teamMembers, .excludeNonActiveTeamMembers],
+                                  contextProvider: contextDirectory!)
+        
+        // then
+        XCTAssertEqual(result?.teamMembers.count, 0)
+    }
+    
 }

@@ -95,7 +95,7 @@ extension IntegrationTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         XCTAssertNotNil(searchResult)
         
-        return searchResult?.contacts.first
+        return searchResult?.contacts.compactMap(\.user).first
     }
     
     @objc

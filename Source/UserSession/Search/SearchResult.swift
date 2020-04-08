@@ -19,8 +19,8 @@
 import Foundation
 
 public struct SearchResult {
-    public let contacts:      [ZMUser]
-    public let teamMembers:   [Member]
+    public let contacts:      [ZMSearchUser]
+    public let teamMembers:   [ZMSearchUser]
     public let addressBook:   [ZMSearchUser]
     public let directory:     [ZMSearchUser]
     public let conversations: [ZMConversation]
@@ -29,7 +29,7 @@ public struct SearchResult {
 
 extension SearchResult {
     
-    public init?(payload: [AnyHashable : Any], query: String, contextProvider: ZMManagedObjectContextProvider) {
+    public init?(payload: [AnyHashable : Any], query: String, searchOptions: SearchOptions, contextProvider: ZMManagedObjectContextProvider) {
         guard let documents = payload["documents"] as? [[String : Any]] else {
             return nil
         }
@@ -47,11 +47,17 @@ extension SearchResult {
         let searchUsers = ZMSearchUser.searchUsers(from: filteredDocuments, contextProvider: contextProvider)
         
         contacts = []
-        teamMembers = []
         addressBook = []
         directory = searchUsers.filter({ !$0.isConnected && !$0.isTeamMember })
         conversations = []
         services = []
+        
+        if searchOptions.contains(.teamMembers) &&
+           searchOptions.isDisjoint(with: .excludeNonActiveTeamMembers) {
+            teamMembers = searchUsers.filter({ $0.isTeamMember })
+        } else {
+            teamMembers = []
+        }
     }
     
     public init?(servicesPayload servicesFullPayload: [AnyHashable : Any], query: String, contextProvider: ZMManagedObjectContextProvider) {
@@ -87,11 +93,9 @@ extension SearchResult {
     
     func copy(on context: NSManagedObjectContext) -> SearchResult {
         
-        let copiedContacts = contacts.compactMap { context.object(with: $0.objectID) as? ZMUser }
-        let copiedTeamMembers = teamMembers.compactMap { context.object(with: $0.objectID) as? Member }
         let copiedConversations = conversations.compactMap { context.object(with: $0.objectID) as? ZMConversation }
         
-        return SearchResult(contacts: copiedContacts, teamMembers: copiedTeamMembers, addressBook: addressBook, directory: directory, conversations: copiedConversations, services: services)
+        return SearchResult(contacts: contacts, teamMembers: teamMembers, addressBook: addressBook, directory: directory, conversations: copiedConversations, services: services)
     }
     
     func union(withLocalResult result: SearchResult) -> SearchResult {
@@ -109,7 +113,7 @@ extension SearchResult {
     
     func union(withDirectoryResult result: SearchResult) -> SearchResult {
         return SearchResult(contacts: contacts,
-                            teamMembers: teamMembers,
+                            teamMembers: Array(Set(teamMembers).union(result.teamMembers)),
                             addressBook: addressBook,
                             directory: result.directory,
                             conversations: conversations,
