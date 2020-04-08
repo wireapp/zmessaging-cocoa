@@ -22,55 +22,53 @@ import XCTest
 class SignatureRequestStrategyTests: MessagingTest {
      var sut: SignatureRequestStrategy!
      var mockApplicationStatus: MockApplicationStatus!
-     var signatureStatus: SignatureStatus?
      var asset: ZMAsset?
     
     override func setUp() {
         super.setUp()
         mockApplicationStatus = MockApplicationStatus()
         asset = randomAsset()
-        signatureStatus = SignatureStatus(asset: asset, managedObjectContext: syncMOC)
-        sut = SignatureRequestStrategy(withManagedObjectContext: syncMOC, applicationStatus: mockApplicationStatus)
+        let signatureStatus = SignatureStatus(asset: asset,
+                                              managedObjectContext: syncMOC)
+        syncMOC.signatureStatus = signatureStatus
+        sut = SignatureRequestStrategy(withManagedObjectContext: syncMOC,
+                                       applicationStatus: mockApplicationStatus)
     }
     
     override func tearDown() {
         sut = nil
         mockApplicationStatus = nil
         asset = nil
-        signatureStatus = nil
-        signatureStatusPublic = nil
         super.tearDown()
     }
     
     func testThatItGeneratesCorrectRequestIfStateIsWaitingForConsentURL() {
         //given
-        signatureStatus?.state = .waitingForConsentURL
+        syncMOC.signatureStatus?.state = .waitingForConsentURL
 
         //when
-        signatureStatusPublic = signatureStatus
         let request = sut.nextRequestIfAllowed()
         
         //then
         XCTAssertNotNil(request)
         let payload = request?.payload?.asDictionary()
-        XCTAssertEqual(payload?["documentId"] as? String, signatureStatus?.documentID)
-        XCTAssertEqual(payload?["name"] as? String, signatureStatus?.fileName)
-        XCTAssertEqual(payload?["hash"] as? String, signatureStatus?.encodedHash)
+        XCTAssertEqual(payload?["documentId"] as? String, syncMOC.signatureStatus?.documentID)
+        XCTAssertEqual(payload?["name"] as? String, syncMOC.signatureStatus?.fileName)
+        XCTAssertEqual(payload?["hash"] as? String, syncMOC.signatureStatus?.encodedHash)
         XCTAssertEqual(request?.path, "/signature/request")
         XCTAssertEqual(request?.method, ZMTransportRequestMethod.methodPOST)
     }
     
     func testThatItGeneratesCorrectRequestIfStateIsWaitingForSignature() {
         //given
-        signatureStatus?.state = .waitingForSignature
         let responseId = "123123"
         let payload: [String : String] = ["consentURL": "http://test.com",
                                           "responseId" : responseId]
         let successResponse = ZMTransportResponse(payload: payload as NSDictionary, httpStatus: 200, transportSessionError: nil)
         
-        //when
+        //when user inserted correct OTP code
         sut.didReceive(successResponse, forSingleRequest: sut.requestSync!)
-        signatureStatusPublic = signatureStatus
+        syncMOC.signatureStatus?.state = .waitingForSignature
         let request = sut.nextRequestIfAllowed()
         
         //then
@@ -87,12 +85,11 @@ class SignatureRequestStrategyTests: MessagingTest {
         let successResponse = ZMTransportResponse(payload: payload as NSDictionary, httpStatus: 200, transportSessionError: nil)
 
         //when
-        signatureStatusPublic = signatureStatus
         let _ = sut.nextRequestIfAllowed()
         sut.didReceive(successResponse, forSingleRequest: sut.requestSync!)
 
         //then
-        XCTAssertEqual(signatureStatusPublic?.state, .waitingForCodeVerification)
+        XCTAssertEqual(syncMOC.signatureStatus?.state, .waitingForCodeVerification)
     }
     
     func testThatItNotifiesSignatureStatusAfterSuccessfulResponseToReceiveSignature() {
@@ -103,12 +100,11 @@ class SignatureRequestStrategyTests: MessagingTest {
         let successResponse = ZMTransportResponse(payload: payload as NSDictionary, httpStatus: 200, transportSessionError: nil)
         
         //when
-        signatureStatusPublic = signatureStatus
         let _ = sut.nextRequestIfAllowed()
         sut.didReceive(successResponse, forSingleRequest: sut.retrieveSync!)
         
         //then
-        XCTAssertEqual(signatureStatusPublic?.state, .finished)
+        XCTAssertEqual(syncMOC.signatureStatus?.state, .finished)
     }
     
     func testThatItNotifiesSignatureStatusAfterFailedResponseToReceiveConsentURL() {
@@ -116,12 +112,11 @@ class SignatureRequestStrategyTests: MessagingTest {
         let successResponse = ZMTransportResponse(payload: nil, httpStatus: 400, transportSessionError: nil)
         
         //when
-        signatureStatusPublic = signatureStatus
         let _ = sut.nextRequestIfAllowed()
         sut.didReceive(successResponse, forSingleRequest: sut.requestSync!)
         
         //then
-        XCTAssertEqual(signatureStatusPublic?.state, .signatureInvalid)
+        XCTAssertEqual(syncMOC.signatureStatus?.state, .signatureInvalid)
     }
 
     
@@ -130,12 +125,11 @@ class SignatureRequestStrategyTests: MessagingTest {
         let successResponse = ZMTransportResponse(payload: nil, httpStatus: 400, transportSessionError: nil)
         
         //when
-        signatureStatusPublic = signatureStatus
         let _ = sut.nextRequestIfAllowed()
         sut.didReceive(successResponse, forSingleRequest: sut.retrieveSync!)
         
         //then
-        XCTAssertEqual(signatureStatusPublic?.state, .signatureInvalid)
+        XCTAssertEqual(syncMOC.signatureStatus?.state, .signatureInvalid)
     }
     
     private func randomAsset() -> ZMAsset? {
