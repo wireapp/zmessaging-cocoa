@@ -28,25 +28,18 @@ private let zmLog = ZMSLog(tag: "calling")
 public struct CallParticipant: Hashable {
     
     public let user: ZMUser
+    public let clientId: String
     public let state: CallParticipantState
 
-    public init(user: ZMUser, state: CallParticipantState) {
+    public init(user: ZMUser, clientId: String, state: CallParticipantState) {
         self.user = user
+        self.clientId = clientId
         self.state = state
     }
 
     init?(member: AVSCallMember, context: NSManagedObjectContext) {
-        guard let user = ZMUser(remoteID: member.remoteId, createIfNeeded: false, in: context) else { return nil }
-        self.init(user: user, state: member.callParticipantState)
-    }
-
-    // MARK: - Computed Properties
-
-    private var clientId: String? {
-        switch state {
-        case .connected(_, let clientId): return clientId
-        default: return nil
-        }
+        guard let user = ZMUser(remoteID: member.client.userId, createIfNeeded: false, in: context) else { return nil }
+        self.init(user: user, clientId: member.client.clientId, state: member.callParticipantState)
     }
 
     // MARK: - Hashable
@@ -71,7 +64,7 @@ public enum CallParticipantState: Equatable {
     /// Participant is in the process of connecting to the call
     case connecting
     /// Participant is connected to the call and audio is flowing
-    case connected(videoState: VideoState, clientId: String)
+    case connected(videoState: VideoState)
 }
 
 
