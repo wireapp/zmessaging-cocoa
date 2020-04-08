@@ -49,7 +49,7 @@ public final class CompanyLoginRequestDetector: NSObject {
     
     private let pasteboard: Pasteboard
     private let processQueue = DispatchQueue(label: "WireSyncEngine.SharedIdentitySessionRequestDetector")
-    private var previousChangeCount: Int?
+    private var previouslyDetectedSSOCode: String?
     
     // MARK: - Initialization
 
@@ -72,19 +72,19 @@ public final class CompanyLoginRequestDetector: NSObject {
 
     public func detectCopiedRequestCode(_ completionHandler: @escaping (DetectorResult?) -> Void) {
         func complete(_ result: DetectorResult?) {
-            previousChangeCount = pasteboard.changeCount
+            previouslyDetectedSSOCode = result?.code
             DispatchQueue.main.async {
                 completionHandler(result)
             }
         }
 
-        processQueue.async { [pasteboard, previousChangeCount] in
+        processQueue.async { [pasteboard, previouslyDetectedSSOCode] in
             guard let text = pasteboard.text else { return complete(nil) }
             guard let code = CompanyLoginRequestDetector.requestCode(in: text) else { return complete(nil) }
 
-            let validText = "wire-" + code.uuidString
-            let isNew = pasteboard.changeCount != previousChangeCount
-            complete(.init(code: validText, isNew: isNew))
+            let validSSOCode = "wire-" + code.uuidString
+            let isNew = validSSOCode != previouslyDetectedSSOCode
+            complete(.init(code: validSSOCode, isNew: isNew))
         }
     }
 
