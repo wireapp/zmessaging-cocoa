@@ -325,14 +325,13 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     private func registerForDigitalSignatureNotifications() {
         let _ = NotificationCenter.default.addObserver(forName: .willSignDocument,
                                                        object: nil,
-                                                       queue: nil) { signatureStatus in
-                    signatureStatusPublic = signatureStatus.object as? SignatureStatus
-                    RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+                                                       queue: nil) { _ in
+                RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
         let _ = NotificationCenter.default.addObserver(forName: .willRetrieveSignature,
                                                        object: nil,
                                                        queue: nil) { signatureStatus in
-                    RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+                RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
     }
     
