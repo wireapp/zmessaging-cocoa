@@ -139,21 +139,9 @@ extension AVSClient: Codable {
 
     enum CodingKeys: String, CodingKey {
         
-        case userid
-        case clientid
+        case userId = "userid"
+        case clientId = "clientid"
 
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        userId = try container.decode(UUID.self, forKey: .userid)
-        clientId = try container.decode(String.self, forKey: .clientid)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(userId, forKey: .userid)
-        try container.encode(clientId, forKey: .clientid)
     }
 
 }
