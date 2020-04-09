@@ -166,6 +166,21 @@ class CallParticipantsSnapshotTests: MessagingTest {
         XCTAssertEqual(sut.networkQuality, .normal)
     }
 
+    func testThat_ItDoesNotUpdateNetworkQuality_WhenNoMatchFound() {
+        // Given
+        let member1 = AVSCallMember(client: aliceIphone, videoState: .stopped)
+        let member2 = AVSCallMember(client: bobIphone, videoState: .stopped)
+        let sut = createSut(members: [member1, member2])
+
+        // When
+        let unknownMember = AVSCallMember(client: aliceDesktop, videoState: .stopped)
+        sut.callParticipantNetworkQualityChanged(client: unknownMember.client, networkQuality: .problem)
+
+        // Then
+        XCTAssertEqual(sut.members.array, [member1, member2])
+    }
+
+
     func testThat_ItUpdatesAudioState_WhenItChangesForParticipant() {
         // Given
         let member1 = AVSCallMember(client: aliceIphone, audioState: .connecting)
@@ -173,10 +188,10 @@ class CallParticipantsSnapshotTests: MessagingTest {
         let sut = createSut(members: [member1, member2])
 
         // When
-        sut.callParticipantAudioEstablished(client: member1.client)
+        let updatedMember1 = member1.with(audioState: .established)
+        sut.callParticipantsChanged(participants: [updatedMember1, member2])
 
         // Then
-        let updatedMember1 = AVSCallMember(client: aliceIphone, audioState: .established)
         XCTAssertEqual(sut.members.array, [updatedMember1, member2])
     }
 
@@ -187,26 +202,29 @@ class CallParticipantsSnapshotTests: MessagingTest {
         let sut = createSut(members: [member1, member2])
 
         // When
-        sut.callParticipantVideoStateChanged(client: member1.client, videoState: .screenSharing)
+        let updatedMember1 = member1.with(videoState: .screenSharing)
+        sut.callParticipantsChanged(participants: [updatedMember1, member2])
 
         // Then
-        let updatedMember1 = AVSCallMember(client: aliceIphone, videoState: .screenSharing)
         XCTAssertEqual(sut.members.array, [updatedMember1, member2])
-    }
-
-    func testThat_ItDoesNotUpdateMember_WhenNoMatchFound() {
-        // Given
-        let member1 = AVSCallMember(client: aliceIphone, videoState: .stopped)
-        let member2 = AVSCallMember(client: bobIphone, videoState: .stopped)
-        let sut = createSut(members: [member1, member2])
-
-        // When
-        let unknownMember = AVSCallMember(client: aliceDesktop, videoState: .stopped)
-        sut.callParticipantVideoStateChanged(client: unknownMember.client, videoState: .screenSharing)
-
-        // Then
-        XCTAssertEqual(sut.members.array, [member1, member2])
     }
 
 }
 
+private extension AVSCallMember {
+
+    func with(audioState: AudioState) -> AVSCallMember {
+        return AVSCallMember(client: client,
+                             audioState: audioState,
+                             videoState: videoState,
+                             networkQuality: networkQuality)
+    }
+
+    func with(videoState: VideoState) -> AVSCallMember {
+        return AVSCallMember(client: client,
+                             audioState: audioState,
+                             videoState: videoState,
+                             networkQuality: networkQuality)
+    }
+
+}
