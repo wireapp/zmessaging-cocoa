@@ -82,6 +82,8 @@ class WireCallCenterV3Tests: MessagingTest {
         mockAVSWrapper = MockAVSWrapper(userId: selfUserID, clientId: clientID, observer: nil)
         mockTransport = WireCallCenterTransportMock()
         sut = WireCallCenterV3(userId: selfUserID, clientId: clientID, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: mockTransport)
+
+        try! uiMOC.save()
     }
     
     override func tearDown() {
@@ -1069,4 +1071,51 @@ extension WireCallCenterV3Tests {
         XCTAssertTrue(mockAVSWrapper.didUpdateCallConfig)
     }
     
+}
+
+// MARK: - Clients Request Handler
+
+extension WireCallCenterV3Tests {
+
+    func testThatClientsRequestHandlerSuccessfullyReturnsClientList() {
+        // given
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        let selfUserClients = createClients(for: selfUser, ids: "client1", "client2")
+        let otherUserClients = createClients(for: otherUser, ids: "client1", "client2")
+
+        setupSelfClient(inMoc: uiMOC)
+
+        guard let selfClient = selfUser.selfClient() else { return XCTFail("Expected a self client") }
+
+        groupConversation.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
+        groupConversation.addParticipantAndUpdateConversationState(user: otherUser, role: nil)
+
+        // when
+        sut.handleClientsRequest(conversationId: groupConversation.remoteIdentifier!) { json in
+            do {
+                // then
+                let data = json.data(using: .utf8)!
+                let clientList = try JSONDecoder().decode(WireSyncEngine.AVSClientList.self, from: data)
+
+                let actual = Set(clientList.clients)
+                let expected = Set((selfUserClients + otherUserClients).compactMap(AVSClient.init))
+
+                XCTAssertEqual(actual, expected)
+                XCTAssertFalse(actual.contains(AVSClient(userClient: selfClient)!))
+
+            } catch {
+                XCTFail()
+            }
+
+        }
+    }
+
+    private func createClients(for user: ZMUser, ids: String...) -> [UserClient] {
+        return ids.map {
+            let client = UserClient.insertNewObject(in: self.uiMOC)
+            client.remoteIdentifier = $0
+            client.user = user
+            return client
+        }
+    }
 }
