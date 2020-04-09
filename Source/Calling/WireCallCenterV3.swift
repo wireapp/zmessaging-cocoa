@@ -322,18 +322,6 @@ extension WireCallCenterV3 {
         callSnapshots[conversationId]?.callParticipants.callParticipantsChanged(participants: participants)
     }
 
-    /// Call this method when the video state of a participant changes and avs calls the `wcall_video_state_change_h`.
-    func callParticipantVideoStateChanged(conversationId: UUID, client: AVSClient, videoState: VideoState) {
-
-        let snapshot = callSnapshots[conversationId]?.callParticipants
-        snapshot?.callParticipantVideoStateChanged(client: client, videoState: videoState)
-    }
-
-    /// Call this method when the client established an audio connection with another user, and avs calls the `wcall_estab_h`.
-    func callParticipantAudioEstablished(conversationId: UUID, client: AVSClient) {
-        callSnapshots[conversationId]?.callParticipants.callParticipantAudioEstablished(client: client)
-    }
-
     /// Call this method when the network quality of a participant changes and avs calls the `wcall_network_quality_h`.
     func callParticipantNetworkQualityChanged(conversationId: UUID, client: AVSClient, quality: NetworkQuality) {
 

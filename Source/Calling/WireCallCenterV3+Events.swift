@@ -132,8 +132,6 @@ extension WireCallCenterV3 {
                 self.establishedDate = Date()
             }
 
-            self.callParticipantAudioEstablished(conversationId: conversationId, client: client)
-
             if self.videoState(conversationId: conversationId) == .started {
                 self.avsWrapper.setVideoState(conversationId: conversationId, videoState: .started)
             }
@@ -230,15 +228,6 @@ extension WireCallCenterV3 {
                 self.callParticipantsChanged(conversationId: change.convid, participants: members)
             } catch {
                 zmLog.safePublic("Cannot decode participant change JSON")
-            }
-        }
-    }
-
-    /// Handles video state changes.
-    func handleVideoStateChange(client: AVSClient, newState: VideoState) {
-        handleEvent("video-state-change") {
-            self.nonIdleCalls.forEach {
-                self.callParticipantVideoStateChanged(conversationId: $0.key, client: client, videoState: newState)
             }
         }
     }
