@@ -117,23 +117,43 @@ public struct AVSClient: Hashable {
     public let userId: UUID
     public let clientId: String
 
+    public init(userId: UUID, clientId: String) {
+        self.userId = userId
+        self.clientId = clientId
+    }
+
+    init?(userClient: UserClient) {
+        guard
+            let userId = userClient.user?.remoteIdentifier,
+            let clientId = userClient.remoteIdentifier
+        else {
+            return nil
+        }
+
+        self.init(userId: userId, clientId: clientId)
+    }
+
 }
 
-extension AVSClient {
+extension AVSClient: Codable {
 
-    struct CodingData: Codable {
+    enum CodingKeys: String, CodingKey {
+        
+        case userId = "userid"
+        case clientId = "clientid"
 
-        var client: AVSClient {
-            return AVSClient(userId: clientData.userid, clientId: clientData.clientid)
-        }
-
-        let clientData: Container
-
-        struct Container: Codable {
-
-            let userid: UUID
-            let clientid: String
-
-        }
     }
+
+}
+
+
+struct AVSClientList: Codable {
+
+    let clients: [AVSClient]
+
+    var json: String? {
+        guard let data = try? JSONEncoder().encode(self) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
 }
