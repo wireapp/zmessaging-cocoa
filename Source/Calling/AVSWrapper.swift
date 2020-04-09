@@ -78,6 +78,7 @@ public class AVSWrapper: AVSWrapperType {
                               clientId,
                               readyHandler,
                               sendCallMessageHandler,
+                              sendSFTCallMessageHandler,
                               incomingCallHandler,
                               missedCallHandler,
                               answeredCallHandler,
