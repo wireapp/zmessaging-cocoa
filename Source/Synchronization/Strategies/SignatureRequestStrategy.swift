@@ -159,10 +159,7 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             let decodedResponse = try JSONDecoder().decode(SignatureResponse.self,
                                                            from: responseData)
             signatureResponse = decodedResponse
-            guard let consentURL = signatureResponse?.consentURL else {
-                return
-            }
-            signatureStatus.didReceiveConsentURL(consentURL)
+            signatureStatus.didReceiveConsentURL(signatureResponse?.consentURL)
         } catch {
             Logging.network.debug("Failed to decode SignatureResponse with \(error)")
         }
