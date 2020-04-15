@@ -220,14 +220,14 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     private let dataChannelEstablishedHandler: Handler.DataChannelEstablished = { conversationId, userId, clientId, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationId, userId, clientId) {
-            $0.handleDataChannelEstablishement(conversationId: $1, client: AVSClient(userId: $2, clientId: $3))
+        AVSWrapper.withCallCenter(contextRef, conversationId) {
+            $0.handleDataChannelEstablishement(conversationId: $1)
         }
     }
 
     private let establishedCallHandler: Handler.CallEstablished = { conversationId, userId, clientId, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationId, userId, clientId) {
-            $0.handleEstablishedCall(conversationId: $1, client: AVSClient(userId: $2, clientId: $3))
+        AVSWrapper.withCallCenter(contextRef, conversationId) {
+            $0.handleEstablishedCall(conversationId: $1)
         }
     }
 
