@@ -58,11 +58,11 @@ class DatabaseTest: ZMTBaseTest {
     }
     
     private func cleanUp() {
+        StorageStack.reset()
+        
         try? FileManager.default.contentsOfDirectory(at: sharedContainerURL!, includingPropertiesForKeys: nil, options: .skipsHiddenFiles).forEach {
             try? FileManager.default.removeItem(at: $0)
         }
-        
-        StorageStack.reset()
     }
     
     private func createDatabase() {
@@ -77,18 +77,36 @@ class DatabaseTest: ZMTBaseTest {
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
     }
     
+    private func configureCaches() {
+        let fileAssetCache = FileAssetCache(location: nil)
+        let userImageCache = UserImageLocalCache(location: nil)
+        
+        uiMOC.zm_fileAssetCache = fileAssetCache
+        uiMOC.zm_userImageCache = userImageCache
+        
+        syncMOC.performGroupedBlockAndWait {
+            self.syncMOC.zm_fileAssetCache = fileAssetCache
+            self.uiMOC.zm_userImageCache = userImageCache
+        }
+    }
+    
     override func setUp() {
         super.setUp()
         
         createDatabase()
+        configureCaches()
     }
     
     override func tearDown() {
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
         cleanUp()
         contextDirectory = nil
         
         super.tearDown()
     }
+    
+    // MARK: - Helper methods
     
     func performPretendingUIMocIsSyncMoc(_ block: () -> Void) {
         uiMOC.resetContextType()
@@ -96,6 +114,23 @@ class DatabaseTest: ZMTBaseTest {
         block()
         uiMOC.resetContextType()
         uiMOC.markAsUIContext()
+    }
+    
+    func event(withPayload payload: [AnyHashable: Any]?, type: ZMUpdateEventType, in conversation: ZMConversation, user: ZMUser) -> ZMUpdateEvent {
+        return ZMUpdateEvent(uuid: nil, payload: eventPayload(content: payload, type: type, in: conversation, from: user), transient: false, decrypted: true, source: .download)!
+    }
+    
+    private func eventPayload(content: [AnyHashable: Any]?,
+                              type: ZMUpdateEventType,
+                              in conversation: ZMConversation,
+                              from user: ZMUser,
+                              timestamp: Date = Date()) -> [AnyHashable: Any] {
+        return [ "conversation": conversation.remoteIdentifier!.transportString(),
+                 "data": conversation,
+                 "from": user.remoteIdentifier!.transportString(),
+                 "time": timestamp.transportString(),
+                 "type": ZMUpdateEvent.eventTypeString(for: type)!
+        ]
     }
     
 }

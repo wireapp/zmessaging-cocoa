@@ -49,7 +49,7 @@ class AvailabilityTests: IntegrationTest {
         let client2 = user2.clients.anyObject() as! MockUserClient
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             selfUser.availability = .busy
         }
         XCTAssertTrue(selfUser.modifiedKeys!.contains(AvailabilityKey))
@@ -78,16 +78,16 @@ class AvailabilityTests: IntegrationTest {
         let selfUser = ZMUser.selfUser(inUserSession: self.userSession!)
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             selfUser.availability = .away
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
         let request = mockTransportSession.receivedRequests().last!
-        let message = ZMNewOtrMessage.parse(from: request.binaryData)
+        guard let data = request.binaryData, let message = try? NewOtrMessage(serializedData: data) else { return XCTFail() }
         let connectedAndTeamMemberUUIDs = [user1, user2, user3, user4].compactMap { user(for: $0)?.remoteIdentifier }
-        let recipientsUUIDs = message!.recipients.compactMap ({ UUID(data: $0.user.uuid) })
+        let recipientsUUIDs = message.recipients.compactMap ({ UUID(data: $0.user.uuid) })
         
         XCTAssertEqual(Set(connectedAndTeamMemberUUIDs), Set(recipientsUUIDs))
     }

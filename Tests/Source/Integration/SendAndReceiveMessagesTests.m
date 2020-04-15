@@ -21,7 +21,6 @@
 @import WireMockTransport;
 @import WireDataModel;
 
-#import "ZMUserSession+Internal.h"
 #import "ConversationTestsBase.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
@@ -848,7 +847,6 @@
     XCTAssertEqualObjects([(ZMSystemMessage *)lastMessages[1] text],  newName1);
     XCTAssertEqualObjects([(ZMSystemMessage *)lastMessages[0] text],  newName2);
 }
-
 
 - (void)testThatItExpiresAMessage
 {

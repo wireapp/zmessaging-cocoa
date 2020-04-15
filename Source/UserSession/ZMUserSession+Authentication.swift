@@ -29,7 +29,7 @@ extension ZMUserSession {
     
     @objc(setEmailCredentials:)
     func setEmailCredentials(_ emailCredentials: ZMEmailCredentials?) {
-        applicationStatusDirectory.clientRegistrationStatus.emailCredentials = emailCredentials
+        applicationStatusDirectory?.clientRegistrationStatus.emailCredentials = emailCredentials
     }
     
     /// Check whether the user is logged in
@@ -37,7 +37,7 @@ extension ZMUserSession {
     @objc(checkIfLoggedInWithCallback:)
     public func checkIfLoggedIn(_ completion: @escaping (_ loggedIn: Bool) -> Void) {
         syncManagedObjectContext.performGroupedBlock {
-            let result = self.isLoggedIn()
+            let result = self.isLoggedIn
             
             self.managedObjectContext.performGroupedBlock {
                 completion(result)
@@ -64,6 +64,11 @@ extension ZMUserSession {
         UserDefaults.standard.synchronize()
         UserDefaults.shared()?.synchronize()
         
+        // Clear all notifications associated with the account from the notification center
+        syncManagedObjectContext.performGroupedBlock {
+            self.localNotificationDispatcher?.cancelAllNotifications()
+        }
+        
         if deleteCookie {
             deleteUserKeychainItems()
         }
@@ -71,13 +76,13 @@ extension ZMUserSession {
         let uiMOC = managedObjectContext
         let syncMOC = syncManagedObjectContext
         
-        uiMOC?.performGroupedBlockAndWait {}
-        syncMOC?.performGroupedBlockAndWait {}
+        uiMOC.performGroupedBlockAndWait {}
+        syncMOC.performGroupedBlockAndWait {}
         
         tearDown()
         
-        uiMOC?.performGroupedBlockAndWait {}
-        syncMOC?.performGroupedBlockAndWait {}
+        uiMOC.performGroupedBlockAndWait {}
+        syncMOC.performGroupedBlockAndWait {}
     }
     
     public func logout(credentials: ZMEmailCredentials, _ completion: @escaping (VoidResult) -> Void) {

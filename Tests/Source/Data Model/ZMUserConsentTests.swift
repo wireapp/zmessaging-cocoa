@@ -20,7 +20,23 @@
 import XCTest
 @testable import WireSyncEngine
 
-final class ZMUserConsentTests: MessagingTest {
+final class ZMUserConsentTests: DatabaseTest {
+    
+    var mockTransportSession: MockTransportSession!
+    
+    override func setUp() {
+        super.setUp()
+        
+        mockTransportSession = MockTransportSession(dispatchGroup: dispatchGroup)
+    }
+    
+    override func tearDown() {
+        mockTransportSession.cleanUp()
+        mockTransportSession = nil
+        
+        super.tearDown()
+    }
+    
     var selfUser: ZMUser {
         let selfUser = ZMUser.selfUser(in: uiMOC)
         if selfUser.remoteIdentifier == nil {
@@ -90,8 +106,7 @@ final class ZMUserConsentTests: MessagingTest {
         let fetchedData = expectation(description: "fetched data")
         
         // when
-        
-        selfUser.fetchMarketingConsent(in: mockUserSession) { result in
+        selfUser.fetchConsent(for: .marketing, on: mockTransportSession) { result in
             switch result {
             case .failure(_):
                 XCTFail()
@@ -117,7 +132,7 @@ final class ZMUserConsentTests: MessagingTest {
         let receivedError = expectation(description: "received error")
         // when
         
-        selfUser.fetchMarketingConsent(in: mockUserSession) { result in
+        selfUser.fetchConsent(for: .marketing, on: mockTransportSession) { result in
             switch result {
             case .failure(let error):
                 XCTAssertEqual(error as! WireSyncEngine.ConsentRequestError, WireSyncEngine.ConsentRequestError.unknown)
@@ -141,9 +156,9 @@ final class ZMUserConsentTests: MessagingTest {
         }
         
         let successExpectation = expectation(description: "set is successful")
-        // when
         
-        selfUser.setMarketingConsent(to: true, in: self.mockUserSession) { result in
+        // when
+        selfUser.setConsent(to: true, for: .marketing, on: mockTransportSession) { result in
             switch result {
             case .failure(_):
                 XCTFail()
@@ -166,9 +181,9 @@ final class ZMUserConsentTests: MessagingTest {
         }
         
         let receivedError = expectation(description: "received error")
-        // when
         
-        selfUser.setMarketingConsent(to: true, in: self.mockUserSession) { result in
+        // when
+        selfUser.setConsent(to: true, for: .marketing, on: mockTransportSession) { result in
             switch result {
             case .failure(let error):
                 XCTAssertEqual(error as! WireSyncEngine.ConsentRequestError, WireSyncEngine.ConsentRequestError.unknown)

@@ -36,13 +36,13 @@ class CompanyLoginActionTests: XCTestCase {
         userDefaults = nil
     }
 
-    func testThatItParsesLoginSuccessResponse() {
+    func testThatItParsesLoginSuccessResponse() throws {
         // GIVEN
         let userID = UUID(uuidString: "0AEF17E9-BBA6-4F6D-BF79-6260AABB5457")!
         let url = URL(string: "wire-sso://login/success?userid=\(userID)&validation_token=\(currentToken.uuid)&cookie=\(testCookie)")!
 
         // WHEN
-        guard let action = URLAction(url: url, validatingIn: userDefaults) else {
+        guard let action = try URLAction(url: url, validatingIn: userDefaults) else {
             XCTFail("No action was returned.")
             return
         }
@@ -62,57 +62,30 @@ class CompanyLoginActionTests: XCTestCase {
         let userID = UUID(uuidString: "0AEF17E9-BBA6-4F6D-BF79-6260AABB5457")!
         let url = URL(string: "wire-sso://login/success?userid=\(userID)&validation_token=\(unverifiedToken.uuid)&cookie=\(testCookie)")!
 
-        // WHEN
-        guard let action = URLAction(url: url, validatingIn: userDefaults) else {
-            XCTFail("No action was returned.")
-            return
-        }
-
         // THEN
-        guard case let URLAction.companyLoginFailure(error) = action else {
-            XCTFail("The action was expected to be decoded as a failure.")
-            return
+        XCTAssertThrowsError(try URLAction(url: url, validatingIn: userDefaults)) { (error) in
+            XCTAssertEqual(error as? CompanyLoginError, .tokenNotFound)
         }
-
-        XCTAssertEqual(error, .tokenNotFound)
     }
 
     func testThatItDecodesKnownUserLabel() {
         // GIVEN
         let url = URL(string: "wire-sso://login/failure?label=bad-username&validation_token=\(currentToken.uuid)")!
 
-        // WHEN
-        guard let action = URLAction(url: url, validatingIn: userDefaults) else {
-            XCTFail("No action was returned.")
-            return
-        }
-
         // THEN
-        guard case let URLAction.companyLoginFailure(error) = action else {
-            XCTFail("The action was expected to be decoded as a failure.")
-            return
+        XCTAssertThrowsError(try URLAction(url: url, validatingIn: userDefaults)) { (error) in
+            XCTAssertEqual(error as? CompanyLoginError, .badUsername)
         }
-
-        XCTAssertEqual(error, .badUsername)
     }
 
     func testThatItFallbacksToZeroErrorCodeWhenDecodingUnknownUserLabel() {
         // GIVEN
         let url = URL(string: "wire-sso://login/failure?label=something_went_wrong&validation_token=\(currentToken.uuid)")!
 
-        // WHEN
-        guard let action = URLAction(url: url, validatingIn: userDefaults) else {
-            XCTFail("No action was returned.")
-            return
-        }
-
         // THEN
-        guard case let URLAction.companyLoginFailure(error) = action else {
-            XCTFail("The action was expected to be decoded as a failure.")
-            return
+        XCTAssertThrowsError(try URLAction(url: url, validatingIn: userDefaults)) { (error) in
+            XCTAssertEqual(error as? CompanyLoginError, .unknownLabel)
         }
-
-        XCTAssertEqual(error.displayCode, "0")
     }
     
     // MARK: - Utilities

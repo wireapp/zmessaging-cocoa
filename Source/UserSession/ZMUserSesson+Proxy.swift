@@ -31,7 +31,7 @@ extension ZMUserSession {
         let request = ProxyRequest(type: type, path: path, method: method, callback: callback)
         
         syncManagedObjectContext.performGroupedBlock {
-            self.proxiedRequestStatus.add(request: request)
+            self.applicationStatusDirectory?.proxiedRequestStatus.add(request: request)
             RequestAvailableNotification.notifyNewRequestsAvailable(self)
         }
         
@@ -41,7 +41,7 @@ extension ZMUserSession {
     @objc
     public func cancelProxiedRequest(_ request: ProxyRequest) {
         syncManagedObjectContext.performGroupedBlock {
-            self.proxiedRequestStatus.cancel(request: request)
+            self.applicationStatusDirectory?.proxiedRequestStatus.cancel(request: request)
         }
     }
     

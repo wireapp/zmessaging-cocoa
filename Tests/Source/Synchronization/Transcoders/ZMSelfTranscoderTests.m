@@ -24,7 +24,6 @@
 
 #import "ObjectTranscoderTests.h"
 #import "ZMSelfStrategy+Internal.h"
-#import "ZMUserSession+Internal.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
 @interface ZMSelfStrategyTests : ObjectTranscoderTests

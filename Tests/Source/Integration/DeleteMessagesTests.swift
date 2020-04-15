@@ -27,7 +27,7 @@ class DeleteMessagesTests: ConversationTestsBase {
         XCTAssertTrue(login())
         var message: ZMConversationMessage! = nil
         
-        userSession?.performChanges {
+        userSession?.perform {
             guard let conversation = self.conversation(for: self.selfToUser1Conversation) else {return XCTFail()}
             message = conversation.append(text: "Hello")
         }
@@ -37,7 +37,7 @@ class DeleteMessagesTests: ConversationTestsBase {
 
         // when
         mockTransportSession.resetReceivedRequests()
-        userSession?.performChanges {
+        userSession?.perform {
             ZMMessage.deleteForEveryone(message)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -129,7 +129,7 @@ class DeleteMessagesTests: ConversationTestsBase {
         XCTAssertTrue(login())
         var message: ZMConversationMessage! = nil
         
-        userSession?.performChanges {
+        userSession?.perform {
             guard let conversation = self.conversation(for: self.selfToUser1Conversation) else {return XCTFail()}
             message = conversation.append(text: "Hello")
         }
@@ -151,7 +151,7 @@ class DeleteMessagesTests: ConversationTestsBase {
             return nil
         }
         
-        userSession?.performChanges {
+        userSession?.perform {
             ZMMessage.deleteForEveryone(message)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

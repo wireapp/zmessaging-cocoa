@@ -12,5 +12,10 @@ trigger:
       - develop
       - refs/tags/*
 
+pr:
+  branches:
+    include:
+      - '*'
+
 jobs:
   - template: Azure/framework-pipelines.yml@wire-ios-shared-resources

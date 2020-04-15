@@ -132,6 +132,7 @@ public extension ServiceUserData {
 }
 
 public extension ServiceUser {
+    
     func fetchProvider(in userSession: ZMUserSession, completion: @escaping (ServiceProvider?)->()) {
         guard let serviceUserData = self.serviceUserData else {
             fatal("Not a service user")
@@ -177,6 +178,69 @@ public extension ServiceUser {
         
         userSession.transportSession.enqueueOneTime(request)
     }
+    
+    func createConversation(in userSession: ZMUserSession, completionHandler: @escaping (Result<ZMConversation>) -> Void) {
+        guard let eventProcessor = userSession.operationLoop?.syncStrategy else {
+            completionHandler(.failure(AddBotError.general))
+            return
+        }
+        
+        createConversation(transportSession: userSession.transportSession,
+                           eventProcessor: eventProcessor,
+                           contextProvider: userSession,
+                           completionHandler: completionHandler)
+    }
+    
+    internal func createConversation(transportSession: TransportSessionType,
+                                     eventProcessor: UpdateEventProcessor,
+                                     contextProvider: ZMManagedObjectContextProvider,
+                                     completionHandler: @escaping (Result<ZMConversation>) -> Void) {
+        
+        guard transportSession.reachability.mayBeReachable else {
+            completionHandler(.failure(AddBotError.offline))
+            return
+        }
+        
+        guard let serviceUserData = serviceUserData else {
+            completionHandler(.failure(AddBotError.general))
+            return
+        }
+        
+        let selfUser = ZMUser.selfUser(in: contextProvider.managedObjectContext)
+        let conversation = ZMConversation.insertNewObject(in: contextProvider.managedObjectContext)
+        
+        conversation.lastModifiedDate = Date()
+        conversation.conversationType = .group
+        conversation.creator = selfUser
+        conversation.team = selfUser.team
+        
+        var onCreatedRemotelyToken: NSObjectProtocol? = nil
+        _ = onCreatedRemotelyToken // remove warning
+        
+        onCreatedRemotelyToken = conversation.onCreatedRemotely { [weak contextProvider] in
+            guard let contextProvider = contextProvider else {
+                completionHandler(.failure(AddBotError.general))
+                return
+            }
+            
+            conversation.add(serviceUser: serviceUserData,
+                             transportSession: transportSession,
+                             eventProcessor: eventProcessor,
+                             contextProvider: contextProvider,
+                             completionHandler: { (result) in
+                                switch result {
+                                case .success:
+                                    completionHandler(.success(conversation))
+                                case .failure(let error):
+                                    completionHandler(.failure(error))
+                                }
+                                
+                                onCreatedRemotelyToken = nil
+            })
+        }
+        
+        contextProvider.managedObjectContext.saveOrRollback()
+    }
 }
 
 public enum AddBotError: Int, Error {
@@ -197,10 +261,8 @@ public enum AddBotResult {
 }
 
 extension AddBotError {
-    init?(response: ZMTransportResponse) {
+    init(response: ZMTransportResponse) {
         switch response.httpStatus {
-        case 201:
-            return nil
         case 403:
             self = .tooManyParticipants
         case 419:
@@ -215,82 +277,53 @@ extension AddBotError {
 
 public extension ZMConversation {
     
-    func add(serviceUser: ServiceUser, in userSession: ZMUserSession, completion: ((AddBotError?)->())?) {
+    func add(serviceUser: ServiceUser, in userSession: ZMUserSession, completionHandler: @escaping (VoidResult) -> Void) {
         guard let serviceUserData = serviceUser.serviceUserData else {
             fatal("Not a service user")
         }
         
-        add(serviceUser: serviceUserData, in: userSession, completion: completion)
+        add(serviceUser: serviceUserData, in: userSession, completionHandler: completionHandler)
     }
     
-    func add(serviceUser serviceUserData: ServiceUserData, in userSession: ZMUserSession, completion: ((AddBotError?)->())?) {
-        guard userSession.transportSession.reachability.mayBeReachable else {
-            completion?(AddBotError.offline)
+    func add(serviceUser serviceUserData: ServiceUserData, in userSession: ZMUserSession, completionHandler: @escaping (VoidResult) -> Void) {
+        add(serviceUser: serviceUserData,
+            transportSession: userSession.transportSession,
+            eventProcessor: userSession.operationLoop!.syncStrategy,
+            contextProvider: userSession,
+            completionHandler: completionHandler)
+    }
+    
+    internal func add(serviceUser serviceUserData: ServiceUserData,
+                      transportSession: TransportSessionType,
+                      eventProcessor: UpdateEventProcessor,
+                      contextProvider: ZMManagedObjectContextProvider,
+                      completionHandler: @escaping (VoidResult) -> Void) {
+        
+        guard transportSession.reachability.mayBeReachable else {
+            completionHandler(.failure(AddBotError.offline))
             return
         }
         
         let request = serviceUserData.requestToAddService(to: self)
         
-        request.add(ZMCompletionHandler(on: userSession.managedObjectContext, block: { (response) in
+        request.add(ZMCompletionHandler(on: contextProvider.managedObjectContext, block: { [weak contextProvider] (response) in
             
             guard response.httpStatus == 201,
                   let responseDictionary = response.payload?.asDictionary(),
                   let userAddEventPayload = responseDictionary["event"] as? ZMTransportData,
                   let event = ZMUpdateEvent(fromEventStreamPayload: userAddEventPayload, uuid: nil) else {
-                    zmLog.error("Wrong response for adding a bot: \(response)")
-                    completion?(AddBotError(response: response))
+                    completionHandler(.failure(AddBotError(response: response)))
                     return
             }
             
-            completion?(nil)
+            completionHandler(.success)
             
-            userSession.syncManagedObjectContext.performGroupedBlock {
-                // Process user added event
-                userSession.operationLoop.syncStrategy.process(updateEvents: [event], ignoreBuffer: true)
+            
+            contextProvider?.syncManagedObjectContext.performGroupedBlock {
+                eventProcessor.process(updateEvents: [event], ignoreBuffer: true)
             }
         }))
         
-        userSession.transportSession.enqueueOneTime(request)
-    }
-}
-
-public extension ZMUserSession {
-    func startConversation(with serviceUser: ServiceUser, completion: ((AddBotResult)->())?) {
-        guard let serviceUserData = serviceUser.serviceUserData else {
-            fatal("Not a service user")
-        }
-        startConversation(with: serviceUserData, completion: completion)
-    }
-    
-    func startConversation(with serviceUserData: ServiceUserData, completion: ((AddBotResult)->())?) {
-        guard self.transportSession.reachability.mayBeReachable else {
-            completion?(AddBotResult.failure(error: .offline))
-            return
-        }
-        
-        let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
-        
-        let conversation = ZMConversation.insertNewObject(in: self.managedObjectContext)
-        conversation.lastModifiedDate = Date()
-        conversation.conversationType = .group
-        conversation.creator = selfUser
-        conversation.team = selfUser.team
-        var onCreatedRemotelyToken: NSObjectProtocol? = nil
-        
-        _ = onCreatedRemotelyToken // remove warning
-        
-        onCreatedRemotelyToken = conversation.onCreatedRemotely {
-            conversation.add(serviceUser: serviceUserData, in: self) { error in
-                if let error = error {
-                    completion?(AddBotResult.failure(error: error))
-                }
-                else {
-                    completion?(AddBotResult.success(conversation: conversation))
-                }
-                onCreatedRemotelyToken = nil
-            }
-        }
-
-        self.managedObjectContext.saveOrRollback()
+        transportSession.enqueueOneTime(request)
     }
 }

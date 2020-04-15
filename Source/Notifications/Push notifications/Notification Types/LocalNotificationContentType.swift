@@ -54,6 +54,12 @@ public enum LocalNotificationContentType : Equatable {
             return .text(text, isMention: messageData.isMentioningSelf, isReply: messageData.isQuotingSelf)
         }
         
+        if let compositeData = (message as? ConversationCompositeMessage)?.compositeMessageData,
+            let textData = compositeData.items.compactMap({ $0.textData }).first,
+            let text = textData.messageText {
+            return .text(text, isMention: textData.isMentioningSelf, isReply: false)
+        }
+        
         if message.knockMessageData != nil {
             return .knock
         }

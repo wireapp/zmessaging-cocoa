@@ -21,8 +21,6 @@
 @import WireMockTransport;
 @import WireDataModel;
 
-#import "ZMUserSession.h"
-#import "ZMUserSession+Internal.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
 

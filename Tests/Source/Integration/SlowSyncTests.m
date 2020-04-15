@@ -24,8 +24,6 @@
 @import WireDataModel;
 
 #import "MessagingTest.h"
-#import "ZMUserSession+Internal.h"
-#import "ZMUserSession+Internal.h"
 #import "ZMLoginTranscoder+Internal.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMConversation+Testing.h"

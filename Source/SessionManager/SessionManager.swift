@@ -48,13 +48,6 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
     func sessionManagerDidBlacklistJailbrokenDevice()
 }
 
-@objc
-public protocol UserSessionSource: class {
-    var activeUserSession: ZMUserSession? { get }
-    var activeUnauthenticatedSession: UnauthenticatedSession { get }
-    var isSelectedAccountAuthenticated: Bool { get }
-}
-
 /// The public interface for the session manager.
 
 @objc
@@ -173,7 +166,12 @@ public protocol ForegroundNotificationResponder: class {
 ///
 
 
-@objcMembers public class SessionManager : NSObject, SessionManagerType, UserSessionSource {
+@objcMembers
+public final class SessionManager : NSObject, SessionManagerType {
+    
+    public enum AccountError: Error {
+        case accountLimitReached
+    }
 
     /// Maximum number of accounts which can be logged in simultanously
     public static let maxNumberAccounts = 3
@@ -183,7 +181,7 @@ public protocol ForegroundNotificationResponder: class {
     public weak var delegate: SessionManagerDelegate? = nil
     public let accountManager: AccountManager
     public fileprivate(set) var activeUserSession: ZMUserSession?
-    public var urlHandler: SessionManagerURLHandler!
+    public weak var urlActionDelegate: URLActionDelegate?
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public internal(set) var unauthenticatedSession: UnauthenticatedSession? {
@@ -214,6 +212,7 @@ public protocol ForegroundNotificationResponder: class {
     var pushRegistry: PushRegistry
     let notificationsTracker: NotificationsTracker?
     let configuration: SessionManagerConfiguration
+    var pendingURLAction: URLAction?
     
     var notificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()
     
@@ -250,6 +249,8 @@ public protocol ForegroundNotificationResponder: class {
         return unauthenticatedSession ?? createUnauthenticatedSession()
     }
     
+    private static var avsLogObserver: AVSLogObserver?
+
     /// The entry point for SessionManager; call this instead of the initializers.
     ///
     public static func create(
@@ -257,6 +258,7 @@ public protocol ForegroundNotificationResponder: class {
         mediaManager: MediaManagerType,
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
+        showContentDelegate: ShowContentDelegate?,
         application: ZMApplication,
         environment: BackendEnvironmentProvider,
         configuration: SessionManagerConfiguration,
@@ -270,6 +272,7 @@ public protocol ForegroundNotificationResponder: class {
                 mediaManager: mediaManager,
                 analytics: analytics,
                 delegate: delegate,
+                showContentDelegate: showContentDelegate,
                 application: application,
                 environment: environment,
                 configuration: configuration,
@@ -287,6 +290,7 @@ public protocol ForegroundNotificationResponder: class {
         mediaManager: MediaManagerType,
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
+        showContentDelegate: ShowContentDelegate?,
         application: ZMApplication,
         environment: BackendEnvironmentProvider,
         configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
@@ -306,7 +310,8 @@ public protocol ForegroundNotificationResponder: class {
             flowManager: flowManager,
             environment: environment,
             reachability: reachability,
-            analytics: analytics
+            analytics: analytics,
+            showContentDelegate: showContentDelegate
           )
 
         self.init(
@@ -425,7 +430,6 @@ public protocol ForegroundNotificationResponder: class {
         // register for voIP push notifications
         self.pushRegistry.delegate = self
         self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
-        self.urlHandler = SessionManagerURLHandler(userSessionSource: self)
 
         postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
@@ -462,7 +466,7 @@ public protocol ForegroundNotificationResponder: class {
 
     private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
         if let url = launchOptions[UIApplication.LaunchOptionsKey.url] as? URL {
-            if URLAction(url: url)?.causesLogout == true {
+            if (try? URLAction(url: url))?.causesLogout == true {
                 // Do not log in if the launch URL action causes a logout
                 return
             }
@@ -477,7 +481,6 @@ public protocol ForegroundNotificationResponder: class {
             guard let `self` = self, let session = session else { return }
             self.updateCurrentAccount(in: session.managedObjectContext)
             session.application(self.application, didFinishLaunching: launchOptions)
-            (launchOptions[.url] as? URL).apply(session.didLaunch)
         }
     }
     
@@ -625,10 +628,10 @@ public protocol ForegroundNotificationResponder: class {
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
             completion(session)
             self.delegate?.sessionManagerActivated(userSession: session)
-            self.urlHandler.sessionManagerActivated(userSession: session)
             
             // Configure user notifications if they weren't already previously configured.
             self.configureUserNotifications()
+            self.processPendingURLAction()
         }
     }
     
@@ -759,11 +762,13 @@ public protocol ForegroundNotificationResponder: class {
     
     // Tears down and releases all background user sessions.
     internal func tearDownAllBackgroundSessions() {
-        self.backgroundUserSessions.forEach { (accountId, session) in
-            if self.activeUserSession != session {
-                self.tearDownBackgroundSession(for: accountId)
-            }
+        let backgroundSessions = backgroundUserSessions.filter { (_, session) -> Bool in
+            return activeUserSession != session
         }
+        
+        backgroundSessions.keys.forEach({ sessionID in
+            tearDownBackgroundSession(for: sessionID)
+        })
     }
     
     fileprivate func tearDownObservers(account: UUID) {
@@ -784,8 +789,8 @@ public protocol ForegroundNotificationResponder: class {
     }
 
     func updateProfileImage(imageData: Data) {
-        activeUserSession?.enqueueChanges {
-            self.activeUserSession?.profileUpdate.updateImage(imageData: imageData)
+        activeUserSession?.enqueue {
+            self.activeUserSession?.userProfileImage?.updateImage(imageData: imageData)
         }
     }
 
@@ -936,6 +941,11 @@ extension SessionManager {
 }
 
 extension SessionManager: UnauthenticatedSessionDelegate {
+    
+    public func sessionIsAllowedToCreateNewAccount(_ session: UnauthenticatedSession) -> Bool {
+        return accountManager.accounts.count < SessionManager.maxNumberAccounts
+    }
+    
     public func session(session: UnauthenticatedSession, isExistingAccount account: Account) -> Bool {
         return accountManager.accounts.contains(account)
     }
@@ -970,7 +980,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
                 userSession.setEmailCredentials(emailCredentials)
                 userSession.syncManagedObjectContext.registeredOnThisDevice = registered
                 userSession.syncManagedObjectContext.registeredOnThisDeviceBeforeConversationInitialization = registered
-                userSession.accountStatus.didCompleteLogin()
+                userSession.applicationStatusDirectory?.accountStatus.didCompleteLogin()
                 ZMMessage.deleteOldEphemeralMessages(userSession.syncManagedObjectContext)
             }
         }
@@ -1213,7 +1223,7 @@ extension SessionManager {
         self.accountManager.accounts.forEach { account in
             group.enter()
             self.withSession(for: account) { userSession in
-                userSession.performChanges {
+                userSession.perform {
                     userSession.markAllConversationsAsRead()
                 }
                 
@@ -1240,4 +1250,15 @@ extension SessionManager {
         })
     }
     
+}
+
+// MARK: - AVS Logging
+extension SessionManager {
+    public static func startAVSLogging() {
+        avsLogObserver = AVSLogObserver()
+    }
+
+    public static func stopAVSLogging() {
+        avsLogObserver = nil
+    }
 }

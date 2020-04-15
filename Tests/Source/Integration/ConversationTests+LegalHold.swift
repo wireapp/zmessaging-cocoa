@@ -30,7 +30,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
         }
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             conversation?.append(text: "Hello")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -50,7 +50,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
             legalHoldClient = session.registerClient(for: self.user1, label: "Legal Hold", type: "legalhold", deviceClass: "legalhold")
         }
         
-        userSession?.performChanges {
+        userSession?.perform {
             conversation?.append(text: "Hello")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -65,7 +65,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
         }
         
         // when
-        userSession?.performChanges {
+        userSession?.perform {
             conversation?.append(text: "Hello")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -141,8 +141,14 @@ class ConversationTests_LegalHold: ConversationTestsBase {
         
         // when
         mockTransportSession.performRemoteChanges { (session) in
-            let genericMessage = ZMGenericMessage.message(content: ZMText.text(with: "Hello")).setLegalHoldStatus(.ENABLED)
-            self.selfToUser1Conversation.encryptAndInsertData(from: otherUserClient, to: selfUserClient, data: genericMessage!.data()!)
+            var genericMessage = GenericMessage(content: Text(content: "Hello"))
+            genericMessage.setLegalHoldStatus(.enabled)
+            do {
+                self.selfToUser1Conversation.encryptAndInsertData(from: otherUserClient, to: selfUserClient, data: try genericMessage.serializedData())
+            } catch {
+                XCTFail("Error in adding data: \(error)")
+            }
+            
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -171,8 +177,13 @@ class ConversationTests_LegalHold: ConversationTestsBase {
         // when
         mockTransportSession.performRemoteChanges { (session) in
             session.deleteUserClient(withIdentifier: legalHoldClient.identifier!, for: self.user1)
-            let genericMessage = ZMGenericMessage.message(content: ZMText.text(with: "Hello")).setLegalHoldStatus(.DISABLED)
-            self.selfToUser1Conversation.encryptAndInsertData(from: otherUserClient, to: selfUserClient, data: genericMessage!.data()!)
+            var genericMessage = GenericMessage(content: Text(content: "Hello"))
+            genericMessage.setLegalHoldStatus(.disabled)
+            do {
+                self.selfToUser1Conversation.encryptAndInsertData(from: otherUserClient, to: selfUserClient, data: try genericMessage.serializedData())
+            } catch {
+                XCTFail("Error in adding data: \(error)")
+            }
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -190,8 +201,13 @@ class ConversationTests_LegalHold: ConversationTestsBase {
         
         // when
         mockTransportSession.performRemoteChanges { (session) in
-            let genericMessage = ZMGenericMessage.message(content: ZMText.text(with: "Hello")).setLegalHoldStatus(.ENABLED)
-            self.selfToUser1Conversation.encryptAndInsertData(from: otherUserClient, to: selfUserClient, data: genericMessage!.data()!)
+            var genericMessage = GenericMessage(content: Text(content: "Hello"))
+            genericMessage.setLegalHoldStatus(.enabled)
+            do {
+                self.selfToUser1Conversation.encryptAndInsertData(from: otherUserClient, to: selfUserClient, data: try genericMessage.serializedData())
+            } catch {
+                XCTFail("Error in adding data: \(error)")
+            }
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -211,7 +227,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
             session.registerClient(for: self.user1, label: "Legal Hold", type: "legalhold", deviceClass: "legalhold")
         }
 
-        userSession?.performChanges {
+        userSession?.perform {
             conversation!.append(text: "This is the best group!")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -219,8 +235,13 @@ class ConversationTests_LegalHold: ConversationTestsBase {
 
         // when
         mockTransportSession.performRemoteChanges { (session) in
-            let genericMessage = ZMGenericMessage.message(content: ZMText.text(with: "Hello")).setLegalHoldStatus(.DISABLED)
-            self.selfToUser1Conversation.encryptAndInsertData(from: otherUserClient, to: selfUserClient, data: genericMessage!.data()!)
+            var genericMessage = GenericMessage(content: Text(content: "Hello"))
+            genericMessage.setLegalHoldStatus(.disabled)
+            do {
+                self.selfToUser1Conversation.encryptAndInsertData(from: otherUserClient, to: selfUserClient, data: try genericMessage.serializedData())
+            } catch {
+                XCTFail("Error in adding data: \(error)")
+            }
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         

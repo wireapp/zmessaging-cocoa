@@ -632,7 +632,7 @@ class CallingV3Tests : IntegrationTest {
         // Make conversation secure
         establishSession(with: user2)
         let selfClient = ZMUser.selfUser(inUserSession: userSession!).selfClient()!
-        userSession?.performChanges {
+        userSession?.perform {
             remoteUser.clients.forEach({ selfClient.trustClient($0) })
         }
         XCTAssertEqual(conversationUnderTest.securityLevel, .secure)
@@ -664,7 +664,7 @@ class CallingV3Tests : IntegrationTest {
 extension CallingV3Tests {
     
     func fetchAllClients(){
-        userSession?.performChanges {
+        userSession?.perform {
             self.conversationUnderTest.appendMessage(withText: "foo") // make sure we have all clients
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -704,7 +704,7 @@ extension CallingV3Tests {
         XCTAssertTrue(login())
         fetchAllClients()
 
-        self.userSession?.performChanges {
+        self.userSession?.perform {
             self.conversationUnderTest.isArchived = true
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -755,7 +755,7 @@ extension CallingV3Tests {
         fetchAllClients()
         let user = conversationUnderTest.connectedUser!
         
-        self.userSession?.performChanges {
+        self.userSession?.perform {
             self.conversationUnderTest.isArchived = true
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

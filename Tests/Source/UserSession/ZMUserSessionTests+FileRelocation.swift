@@ -17,6 +17,7 @@
 //
 
 import Foundation
+@testable import WireSyncEngine
 
 class ZMUserSessionRelocationTests : ZMUserSessionTestsBase {
 

@@ -56,16 +56,17 @@
     // expect
     id userAgent = [OCMockObject mockForClass:ZMUserAgent.class];
     [[[userAgent expect] classMethod] setWireAppVersion:version];
-
+    
     // when
-
-    ZMUserSession *session = [[ZMUserSession alloc] initWithMediaManager:nil
-                                                             flowManager:self.flowManagerMock
-                                                               analytics:nil
-                                                        transportSession:transportSession
-                                                             application:self.application
-                                                              appVersion:version
-                                                           storeProvider:self.storeProvider];
+    ZMUserSession *session = [[ZMUserSession alloc] initWithTransportSession:transportSession
+                                                                mediaManager:self.mediaManager
+                                                                 flowManager:self.flowManagerMock
+                                                                   analytics:nil
+                                                               operationLoop:nil
+                                                                 application:self.application
+                                                                  appVersion:version
+                                                               storeProvider:self.storeProvider
+                                                         showContentDelegate:nil];
     XCTAssertNotNil(session);
     
     // then
@@ -168,22 +169,6 @@
     XCTAssertNil(mocUI.zm_syncContext);
 }
 
-- (void)testThatIsLoggedInIsFalseAtStartup
-{
-    // then
-    XCTAssertFalse([self.sut isLoggedIn]);
-}
-
-
-- (void)testThatIsLoggedInIsTrueIfItHasACookieAndSelfUserRemoteIdAndRegisteredClientID
-{
-    // when
-    [self simulateLoggedInUser];
-    
-    // then
-    XCTAssertTrue([self.sut isLoggedIn]);
-}
-
 @end
 
 
@@ -211,7 +196,8 @@
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                                   storeProvider:self.storeProvider];
+                                                                   storeProvider:self.storeProvider
+                                                             showContentDelegate:nil];
     userSession.sessionManager = sessionManager;
     XCTAssertFalse([(MockSessionManager *)sessionManager updatePushTokenCalled]);
     [userSession didRegisterUserClient:userClient];
@@ -423,31 +409,12 @@
 - (void)testThatItSetsItselfAsADelegateOfTheTransportSessionAndForwardsUserClientID
 {
     // given
-    id transportSession = [OCMockObject mockForClass:ZMTransportSession.class];
-    id pushChannel = [OCMockObject mockForProtocol:@protocol(ZMPushChannel)];
+    UserClient *selfClient = [self createSelfClient];;
     
-    [[[transportSession stub] andReturn:pushChannel] pushChannel];
-
-    [[transportSession stub] configurePushChannelWithConsumer:OCMOCK_ANY groupQueue:OCMOCK_ANY];
+    self.mockPushChannel = [[MockPushChannel alloc] init];
     self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com" userIdentifier:NSUUID.createUUID];
+    RecordingMockTransportSession *transportSession = [[RecordingMockTransportSession alloc] initWithCookieStorage:self.cookieStorage pushChannel:self.mockPushChannel];
 
-    [[[transportSession stub] andReturn:self.cookieStorage] cookieStorage];
-    [[transportSession stub] setAccessTokenRenewalFailureHandler:[OCMArg checkWithBlock:^BOOL(ZMCompletionHandlerBlock obj) {
-        self.authFailHandler = obj;
-        return YES;
-    }]];
-    [[transportSession stub] setAccessTokenRenewalSuccessHandler:[OCMArg checkWithBlock:^BOOL(ZMAccessTokenHandlerBlock obj) {
-        self.tokenSuccessHandler = obj;
-        return YES;
-    }]];
-    
-    [[transportSession stub] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
-
-    // expect
-    [[transportSession expect] setNetworkStateDelegate:OCMOCK_ANY];
-    [[pushChannel expect] setKeepOpen:YES];
-    [[pushChannel expect] setClientID:OCMOCK_ANY];
-    
 
     // when
     ZMUserSession *testSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
@@ -457,12 +424,16 @@
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                                   storeProvider:self.storeProvider];
+                                                                   storeProvider:self.storeProvider
+                                                             showContentDelegate:nil];
     WaitForAllGroupsToBeEmpty(0.5);
-    
+
     // then
-    [pushChannel verify];
-    [transportSession verify];
+    XCTAssertTrue(self.transportSession.didCallSetNetworkStateDelegate);
+    XCTAssertEqual(self.mockPushChannel.keepOpen, YES);
+    XCTAssertEqualObjects(self.mockPushChannel.clientID, selfClient.remoteIdentifier);
+    
+    
     [testSession tearDown];
 }
 
@@ -745,43 +716,3 @@
 
 @end
 #endif
-
-
-
-@implementation ZMUserSessionTests (LaunchOptions)
-
-- (void)testThatItSendsNotificationIfLaunchedWithPhoneVerficationURL
-{
-    // given
-    NSURL *verificationURL = [NSURL URLWithString:@"wire://verify-phone/123456"];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didReceiveNotification:) name:ZMLaunchedWithPhoneVerificationCodeNotificationName object:nil];
-    
-    // when
-    [self.sut didLaunchWithURL:verificationURL];
-    
-    // then
-    XCTAssertEqualObjects(self.lastReceivedNotification.name, ZMLaunchedWithPhoneVerificationCodeNotificationName);
-    XCTAssertEqualObjects([self.lastReceivedNotification.userInfo objectForKey:ZMPhoneVerificationCodeKey], @"123456");
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:ZMLaunchedWithPhoneVerificationCodeNotificationName object:nil];
-}
-
-@end
-
-
-
-@implementation ZMUserSessionTests (Transport)
-
-- (void)testThatItCallsTheTransportSessionWithTheIdentifierAndHandlerIf_AddCompletionHandlerForBackgroundSessionWithIdentifier_IsCalled
-{
-    // given
-    dispatch_block_t handler = ^{};
-    NSString * const identifier = @"com.wearezeta.background_session";
-    
-    // expect
-    [[self.transportSession expect] addCompletionHandlerForBackgroundSessionWithIdentifier:identifier handler:handler];
-    
-    // when
-    [self.sut addCompletionHandlerForBackgroundURLSessionWithIdentifier:identifier handler:handler];
-}
-
-@end

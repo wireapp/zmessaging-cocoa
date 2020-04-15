@@ -19,12 +19,7 @@
 #import "NSError+ZMUserSession.h"
 #import "NSError+ZMUserSessionInternal.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
-
-#import "ZMUserSession.h"
-#import "ZMUserSession+Internal.h"
-
 #import "ZMClientRegistrationStatus+Internal.h"
-
 #import "ZMCredentials.h"
 
 

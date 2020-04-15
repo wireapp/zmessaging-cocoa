@@ -24,8 +24,6 @@
 @import WireTesting;
 
 #import "MessagingTest.h"
-#import "ZMUserSession.h"
-#import "ZMUserSession+Internal.h"
 #import "ZMConversationTranscoder+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "WireSyncEngine_iOS_Tests-Swift.h"

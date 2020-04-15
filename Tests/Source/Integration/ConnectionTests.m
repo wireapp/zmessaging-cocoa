@@ -21,7 +21,6 @@
 @import WireSyncEngine;
 @import WireDataModel;
 
-#import "ZMUserSession.h"
 #import "ZMConnectionTranscoder+Internal.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
@@ -134,7 +133,7 @@
     // then
     NSArray *allConversations = [ZMConversationList conversationsInUserSession:self.userSession];
     ZMConversation *foundConversation = [allConversations firstObjectMatchingWithBlock:^BOOL(ZMConversation *conv) {
-        if([conv.connectedUser.displayName isEqualToString:@"Karl"]) {
+        if([conv.connectedUser.name isEqualToString:@"Karl McUser"]) {
             return YES;
         }
         return NO;
