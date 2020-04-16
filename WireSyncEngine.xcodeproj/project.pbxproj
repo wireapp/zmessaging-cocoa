@@ -253,9 +253,6 @@
 		5498165A1A432BC800A7CE2E /* ZMUpdateEventsBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 54F7217919A611DE009A8AF5 /* ZMUpdateEventsBuffer.m */; };
 		54991D581DEDCF2B007E282F /* AddressBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54991D571DEDCF2B007E282F /* AddressBook.swift */; };
 		54991D5A1DEDD07E007E282F /* ContactAddressBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54991D591DEDD07E007E282F /* ContactAddressBook.swift */; };
-		549AEA3B1D6340BC003C0BEC /* AddressBookUploadRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549AEA3A1D6340BC003C0BEC /* AddressBookUploadRequestStrategy.swift */; };
-		549AEA3D1D6365C1003C0BEC /* ZMUserSession+AddressBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549AEA3C1D6365C1003C0BEC /* ZMUserSession+AddressBook.swift */; };
-		549AEA3F1D636EF3003C0BEC /* AddressBookUploadRequestStrategyTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549AEA3E1D636EF3003C0BEC /* AddressBookUploadRequestStrategyTest.swift */; };
 		54A0A6311BCE9864001A3A4C /* ZMHotFix.m in Sources */ = {isa = PBXBuildFile; fileRef = F95ECF4D1B94A553009F91BA /* ZMHotFix.m */; };
 		54A0A6321BCE9867001A3A4C /* ZMHotFixDirectory.m in Sources */ = {isa = PBXBuildFile; fileRef = 54DE26B21BC56E62002B5FBC /* ZMHotFixDirectory.m */; };
 		54A170651B300696001B41A5 /* ProxiedRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54A170631B300696001B41A5 /* ProxiedRequestStrategy.swift */; };
@@ -443,6 +440,7 @@
 		EE5BF6351F8F907C00B49D06 /* ZMLocalNotificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5BF6341F8F907C00B49D06 /* ZMLocalNotificationTests.swift */; };
 		EE5BF6371F8F9D6100B49D06 /* ZMLocalNotificationTests_Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5BF6361F8F9D6100B49D06 /* ZMLocalNotificationTests_Event.swift */; };
 		EE5FEF0521E8948F00E24F7F /* ZMUserSession+DarwinNotificationCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5FEF0421E8948F00E24F7F /* ZMUserSession+DarwinNotificationCenter.swift */; };
+		EE6654642445D4EE00CBF8D3 /* MockAddressBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6654632445D4EE00CBF8D3 /* MockAddressBook.swift */; };
 		EEA2773A211DCFF1004AF00F /* UserNotificationCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA27739211DCFF1004AF00F /* UserNotificationCenter.swift */; };
 		EEA2773D211DE4C9004AF00F /* UserNotificationCenterMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA2773C211DE4C9004AF00F /* UserNotificationCenterMock.swift */; };
 		EEEA75FA1F8A6142006D1070 /* ZMLocalNotification+Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEEA75F51F8A613F006D1070 /* ZMLocalNotification+Messages.swift */; };
@@ -867,9 +865,6 @@
 		549815961A43232400A7CE2E /* WireSyncEngine-ios-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "WireSyncEngine-ios-Info.plist"; sourceTree = "<group>"; };
 		54991D571DEDCF2B007E282F /* AddressBook.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBook.swift; sourceTree = "<group>"; };
 		54991D591DEDD07E007E282F /* ContactAddressBook.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContactAddressBook.swift; sourceTree = "<group>"; };
-		549AEA3A1D6340BC003C0BEC /* AddressBookUploadRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookUploadRequestStrategy.swift; sourceTree = "<group>"; };
-		549AEA3C1D6365C1003C0BEC /* ZMUserSession+AddressBook.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+AddressBook.swift"; sourceTree = "<group>"; };
-		549AEA3E1D636EF3003C0BEC /* AddressBookUploadRequestStrategyTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookUploadRequestStrategyTest.swift; sourceTree = "<group>"; };
 		54A170631B300696001B41A5 /* ProxiedRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProxiedRequestStrategy.swift; sourceTree = "<group>"; };
 		54A170671B300717001B41A5 /* ProxiedRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProxiedRequestStrategyTests.swift; sourceTree = "<group>"; };
 		54A227D51D6604A5009414C0 /* SynchronizationMocks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = SynchronizationMocks.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
@@ -1114,6 +1109,7 @@
 		EE5BF6341F8F907C00B49D06 /* ZMLocalNotificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ZMLocalNotificationTests.swift; path = Tests/Source/Notifications/PushNotifications/ZMLocalNotificationTests.swift; sourceTree = SOURCE_ROOT; };
 		EE5BF6361F8F9D6100B49D06 /* ZMLocalNotificationTests_Event.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ZMLocalNotificationTests_Event.swift; path = Tests/Source/Notifications/PushNotifications/ZMLocalNotificationTests_Event.swift; sourceTree = SOURCE_ROOT; };
 		EE5FEF0421E8948F00E24F7F /* ZMUserSession+DarwinNotificationCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+DarwinNotificationCenter.swift"; sourceTree = "<group>"; };
+		EE6654632445D4EE00CBF8D3 /* MockAddressBook.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockAddressBook.swift; sourceTree = "<group>"; };
 		EEA27739211DCFF1004AF00F /* UserNotificationCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserNotificationCenter.swift; sourceTree = "<group>"; };
 		EEA2773C211DE4C9004AF00F /* UserNotificationCenterMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserNotificationCenterMock.swift; sourceTree = "<group>"; };
 		EEB568181FA22FBE003ADA3A /* ZMLocalNotificationLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ZMLocalNotificationLocalizationTests.swift; path = Tests/Source/Notifications/PushNotifications/ZMLocalNotificationLocalizationTests.swift; sourceTree = SOURCE_ROOT; };
@@ -1696,6 +1692,7 @@
 				87AEA67B1EFBD27700C94BF3 /* DiskDatabaseTest.swift */,
 				5E8EE1FD20FDCD1300DB1F9B /* MockPasteboard.swift */,
 				5E0EB1F82100A46F00B5DC2B /* MockCompanyLoginRequesterDelegate.swift */,
+				EE6654632445D4EE00CBF8D3 /* MockAddressBook.swift */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -1806,7 +1803,6 @@
 				09C77C521BA6C77000E2163F /* UserClientRequestStrategy.swift */,
 				0920833F1BA95EE100F82B29 /* UserClientRequestFactory.swift */,
 				8798607A1C3D48A400218A3E /* DeleteAccountRequestStrategy.swift */,
-				549AEA3A1D6340BC003C0BEC /* AddressBookUploadRequestStrategy.swift */,
 				6387932E23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift */,
 				16DABFAD1DCF98D3001973E3 /* CallingRequestStrategy.swift */,
 				547E5B591DDB67390038D936 /* UserProfileUpdateRequestStrategy.swift */,
@@ -1840,7 +1836,6 @@
 				F95706581DE5F6D40087442C /* SearchUserImageStrategyTests.swift */,
 				54A170671B300717001B41A5 /* ProxiedRequestStrategyTests.swift */,
 				87D4625C1C3D526D00433469 /* DeleteAccountRequestStrategyTests.swift */,
-				549AEA3E1D636EF3003C0BEC /* AddressBookUploadRequestStrategyTest.swift */,
 				F170AF1F1E7800CF0033DC33 /* UserImageAssetUpdateStrategyTests.swift */,
 				EF2CB12822D5E5BB00350B0A /* TeamImageAssetUpdateStrategyTests.swift */,
 				F148F66A1FBAFAF600BD6909 /* RegistrationStatusTestHelper.swift */,
@@ -1877,7 +1872,6 @@
 				166B2B5D23E86522003E8581 /* ZMUserSession.swift */,
 				EEEED9A923F6BD75008C94CA /* ZMUserSession+SelfUserProvider.swift */,
 				636B716723BF46EA00B624D6 /* ZMUserSession+VerifyPassword.swift */,
-				549AEA3C1D6365C1003C0BEC /* ZMUserSession+AddressBook.swift */,
 				164EAF9B1F4455FA00B628C4 /* ZMUserSession+Actions.swift */,
 				16ED865923E2E91900CB1766 /* ZMUserSession+Background.swift */,
 				16E0FB86232F8933000E3235 /* ZMUserSession+Authentication.swift */,
@@ -2790,7 +2784,6 @@
 				161C886623FD248A00CB0B8E /* RecordingMockTransportSession.swift in Sources */,
 				F19F4F4D1E646C3C00F4D8FF /* UserProfileImageUpdateStatusTests.swift in Sources */,
 				1679D1CD1EF97387007B0DF5 /* ZMUserSessionTestsBase+Calling.swift in Sources */,
-				549AEA3F1D636EF3003C0BEC /* AddressBookUploadRequestStrategyTest.swift in Sources */,
 				F96C8E8A1D7F6F8C004B6D87 /* ZMLocalNotificationTests_SystemMessage.swift in Sources */,
 				167F383D23E04A93006B6AA9 /* UnauthenticatedSessionTests+SSO.swift in Sources */,
 				16519D6D231EAAF300C9D76D /* Conversation+DeletionTests.swift in Sources */,
@@ -2818,6 +2811,7 @@
 				BF2A9D551D6B5B9700FA7DBC /* EventDecoderTests.swift in Sources */,
 				5E0EB1F72100A14A00B5DC2B /* CompanyLoginRequesterTests.swift in Sources */,
 				1671F9FF1E2FAF50009F3150 /* ZMLocalNotificationForTests_CallState.swift in Sources */,
+				EE6654642445D4EE00CBF8D3 /* MockAddressBook.swift in Sources */,
 				161ACB3A23F6BAFE00ABFF33 /* URLActionTests.swift in Sources */,
 				16519D5C231EA13A00C9D76D /* ConversationTests+Deletion.swift in Sources */,
 				F9B171FA1C0F320200E6EEC6 /* ClientManagementTests.m in Sources */,
@@ -3090,7 +3084,6 @@
 				874F142D1C16FD9700C15118 /* Device.swift in Sources */,
 				CEF2DE7F1DB778F300451642 /* RequestLoopAnalyticsTracker.swift in Sources */,
 				F19E55A422B3A740005C792D /* PKPushPayload+SafeLogging.swift in Sources */,
-				549AEA3D1D6365C1003C0BEC /* ZMUserSession+AddressBook.swift in Sources */,
 				EE1108F923D1F945005DC663 /* TypingUsersTimeout.swift in Sources */,
 				16C4BDA020A309CD00BCDB17 /* CallParticipantSnapshot.swift in Sources */,
 				1639A8272260CE5000868AB9 /* ZMLocalNotification+AvailabilityAlert.swift in Sources */,
@@ -3111,7 +3104,6 @@
 				549816451A432BC800A7CE2E /* ZMOperationLoop.m in Sources */,
 				D5D10DA4203AE43200145497 /* Conversation+AccessMode.swift in Sources */,
 				7C1F4BF5203C4F67000537A8 /* Analytics+Push.swift in Sources */,
-				549AEA3B1D6340BC003C0BEC /* AddressBookUploadRequestStrategy.swift in Sources */,
 				F9AB00221F0CDAF00037B437 /* FileRelocator.swift in Sources */,
 				F1EB0E78200501C70040D73E /* NotificationsTracker.swift in Sources */,
 				166A8BF31E015F3B00F5EEEA /* WireCallCenterV3Factory.swift in Sources */,
