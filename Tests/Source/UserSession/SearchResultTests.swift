@@ -227,6 +227,7 @@ class SearchResultTests : DatabaseTest {
         let team = Team.insertNewObject(in: uiMOC)
         team.remoteIdentifier = UUID()
         let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.remoteIdentifier = UUID()
         selfUser.teamIdentifier = team.remoteIdentifier
         let member = Member.insertNewObject(in: uiMOC)
         member.team = team
