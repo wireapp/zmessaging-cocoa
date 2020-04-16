@@ -27,7 +27,6 @@ ARCHS[sdk=iphonesimulator*] = x86_64
 VALID_ARCHS[sdk=iphoneos*] = arm64 armv7
 SUPPORTED_PLATFORMS = iphoneos iphonesimulator
 
-
 // Code Signing
 //
 CODE_SIGN_IDENTITY[sdk=iphoneos*] = iPhone Developer
