@@ -19,12 +19,12 @@
 import Foundation
 
 public struct SearchResult {
-    public let contacts:      [ZMSearchUser]
-    public let teamMembers:   [ZMSearchUser]
-    public let addressBook:   [ZMSearchUser]
-    public let directory:     [ZMSearchUser]
-    public let conversations: [ZMConversation]
-    public let services:      [ServiceUser]
+    public var contacts:      [ZMSearchUser]
+    public var teamMembers:   [ZMSearchUser]
+    public var addressBook:   [ZMSearchUser]
+    public var directory:     [ZMSearchUser]
+    public var conversations: [ZMConversation]
+    public var services:      [ServiceUser]
 }
 
 extension SearchResult {
@@ -89,6 +89,30 @@ extension SearchResult {
         directory = [searchUser]
         conversations = []
         services = []
+    }
+    
+    mutating func extendWithMembershipPayload(payload: MembershipListPayload) {
+        payload.members.forEach { (membershipPayload) in
+            let searchUser = teamMembers.first(where: { $0.remoteIdentifier == membershipPayload.userID })
+            let permissions = Permissions(rawValue: membershipPayload.permissions.selfPermissions)
+            searchUser?.updateWithTeamMembership(permissions: permissions, createdBy: membershipPayload.createdBy)
+        }
+    }
+    
+    mutating func filterBy(searchOptions: SearchOptions,
+                           query: String,
+                           contextProvider: ZMManagedObjectContextProvider) {
+        let selfUser = ZMUser.selfUser(in: contextProvider.managedObjectContext)
+        let isHandleQuery = query.hasPrefix("@")
+        let queryWithoutAtSymbol = (isHandleQuery ? String(query[query.index(after: query.startIndex)...]) : query).lowercased()
+        
+        if searchOptions.contains(.excludeNonActivePartners) {
+            teamMembers = teamMembers.filter({
+                $0.teamRole != .partner ||
+                $0.teamCreatedBy == selfUser.remoteIdentifier ||
+                isHandleQuery && $0.handle == queryWithoutAtSymbol
+            })
+        }
     }
     
     func copy(on context: NSManagedObjectContext) -> SearchResult {

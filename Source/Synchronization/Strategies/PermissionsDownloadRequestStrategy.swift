@@ -19,12 +19,40 @@
 import WireUtilities
 import WireDataModel
 
+struct MembershipListPayload: Decodable {
+    let members: [MembershipPayload]
+}
+
+struct MembershipPayload: Decodable {
+    
+    struct PermissionsPayload: Decodable {
+        
+        private enum CodingKeys: String, CodingKey {
+            case copyPermissions = "copy"
+            case selfPermissions = "self"
+        }
+        
+        let copyPermissions: Int64
+        let selfPermissions: Int64
+    }
+    
+    private enum CodingKeys: String, CodingKey {
+        case userID = "user"
+        case createdBy = "created_by"
+        case permissions = "permissions"
+    }
+    
+    let userID: UUID
+    let createdBy: UUID?
+    let permissions: PermissionsPayload
+    
+}
+
 fileprivate extension Member {
 
     static let predicateForObjectsNeedingToBeUpdated = NSPredicate(format: "%K == YES", #keyPath(Member.needsToBeUpdatedFromBackend))
 
 }
-
 
 public final class PermissionsDownloadRequestStrategy: AbstractRequestStrategy, ZMContextChangeTrackerSource, ZMRequestGeneratorSource {
 
