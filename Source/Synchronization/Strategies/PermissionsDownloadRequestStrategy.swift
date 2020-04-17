@@ -20,6 +20,7 @@ import WireUtilities
 import WireDataModel
 
 struct MembershipListPayload: Decodable {
+    let hasMore: Bool
     let members: [MembershipPayload]
 }
 
@@ -45,6 +46,22 @@ struct MembershipPayload: Decodable {
     let userID: UUID
     let createdBy: UUID?
     let permissions: PermissionsPayload
+    
+}
+
+extension MembershipPayload {
+    
+    @discardableResult
+    func createOrUpdateMember(team: Team, in managedObjectContext: NSManagedObjectContext) -> Member? {
+        guard let user = ZMUser.fetchAndMerge(with: userID, createIfNeeded: true, in: managedObjectContext) else { return nil }
+        let member = Member.getOrCreateMember(for: user, in: team, context: managedObjectContext)
+        
+        member.createdBy = ZMUser.fetchAndMerge(with: userID, createIfNeeded: true, in: managedObjectContext)
+        member.permissions = Permissions(rawValue: permissions.selfPermissions)
+        member.needsToBeUpdatedFromBackend = false
+        
+        return member
+    }
     
 }
 
