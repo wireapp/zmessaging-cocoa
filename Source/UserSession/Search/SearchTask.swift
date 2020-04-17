@@ -34,6 +34,7 @@ public class SearchTask {
     fileprivate let task: Task
     fileprivate var userLookupTaskIdentifier: ZMTaskIdentifier?
     fileprivate var directoryTaskIdentifier: ZMTaskIdentifier?
+    fileprivate var teamMembershipTaskIdentifier: ZMTaskIdentifier?
     fileprivate var handleTaskIdentifier: ZMTaskIdentifier?
     fileprivate var servicesTaskIdentifier: ZMTaskIdentifier?
     fileprivate var resultHandlers: [ResultHandler] = []
@@ -83,6 +84,7 @@ public class SearchTask {
     public func cancel() {
         resultHandlers.removeAll()
         
+        teamMembershipTaskIdentifier.flatMap(transportSession.cancelTask)
         userLookupTaskIdentifier.flatMap(transportSession.cancelTask)
         directoryTaskIdentifier.flatMap(transportSession.cancelTask)
         servicesTaskIdentifier.flatMap(transportSession.cancelTask)
@@ -308,10 +310,6 @@ extension SearchTask {
             
             request.add(ZMCompletionHandler(on: self.contextProvider.managedObjectContext, block: { [weak self] (response) in
                 
-                defer {
-                    self?.tasksRemaining -= 1
-                }
-                
                 guard
                     let contextProvider = self?.contextProvider,
                     let payload = response.payload?.asDictionary(),
@@ -320,11 +318,14 @@ extension SearchTask {
                                               searchOptions: searchRequest.searchOptions,
                                               contextProvider: contextProvider)
                 else {
+                    self?.completeRemoteSearch()
                     return
                 }
                 
-                if let updatedResult = self?.result.union(withDirectoryResult: result) {
-                    self?.result = updatedResult
+                if searchRequest.searchOptions.contains(.teamMembers) {
+                    self?.performTeamMembershipLookup(on: result, searchRequest: searchRequest)
+                } else {
+                    self?.completeRemoteSearch(searchResult: result)
                 }
             }))
             
@@ -333,6 +334,54 @@ extension SearchTask {
             }))
             
             self.transportSession.enqueueOneTime(request)
+        }
+    }
+    
+    func performTeamMembershipLookup(on searchResult: SearchResult, searchRequest: SearchRequest) {
+        let teamMembersIDs = searchResult.teamMembers.compactMap(\.remoteIdentifier)
+        
+        guard
+            let teamID = ZMUser.selfUser(in: contextProvider.managedObjectContext).team?.remoteIdentifier,
+            !teamMembersIDs.isEmpty
+        else {
+            completeRemoteSearch(searchResult: searchResult)
+            return
+        }
+        
+        let request = type(of: self).fetchTeamMembershipRequest(teamID: teamID, teamMemberIDs: teamMembersIDs)
+        
+        request.add(ZMCompletionHandler(on: contextProvider.managedObjectContext, block: { [weak self] (response) in
+            guard
+                let contextProvider = self?.contextProvider,
+                let rawData = response.rawData,
+                let payload = MembershipListPayload(rawData)
+            else {
+                self?.completeRemoteSearch()
+                return
+            }
+            
+            var updatedResult = searchResult
+            updatedResult.extendWithMembershipPayload(payload: payload)
+            updatedResult.filterBy(searchOptions: searchRequest.searchOptions, query: searchRequest.query, contextProvider: contextProvider)
+            
+            self?.completeRemoteSearch(searchResult: updatedResult)
+            
+        }))
+        
+        request.add(ZMTaskCreatedHandler(on: self.searchContext, block: { [weak self] (taskIdentifier) in
+            self?.teamMembershipTaskIdentifier = taskIdentifier
+        }))
+        
+        self.transportSession.enqueueOneTime(request)
+    }
+    
+    func completeRemoteSearch(searchResult: SearchResult? = nil) {
+        defer {
+            tasksRemaining -= 1
+        }
+        
+        if let searchResult = searchResult {
+            result = result.union(withDirectoryResult: searchResult)
         }
     }
     
@@ -348,6 +397,14 @@ extension SearchTask {
         url.queryItems = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "size", value: String(fetchLimit))]
         let urlStr = url.string?.replacingOccurrences(of: "+", with: "%2B") ?? ""
         return ZMTransportRequest(getFromPath: urlStr)
+    }
+    
+    static func fetchTeamMembershipRequest(teamID: UUID, teamMemberIDs: [UUID]) -> ZMTransportRequest {
+        
+        let path = "/teams/\(teamID.transportString())/get-members-by-ids-using-post"
+        let payload = ["user_ids": teamMemberIDs.map{ $0.transportString() }]
+        
+        return ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
     }
     
 }
