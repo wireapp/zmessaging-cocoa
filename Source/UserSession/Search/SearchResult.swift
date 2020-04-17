@@ -102,17 +102,17 @@ extension SearchResult {
     mutating func filterBy(searchOptions: SearchOptions,
                            query: String,
                            contextProvider: ZMManagedObjectContextProvider) {
+        guard searchOptions.contains(.excludeNonActivePartners) else { return }
+        
         let selfUser = ZMUser.selfUser(in: contextProvider.managedObjectContext)
         let isHandleQuery = query.hasPrefix("@")
         let queryWithoutAtSymbol = (isHandleQuery ? String(query[query.index(after: query.startIndex)...]) : query).lowercased()
         
-        if searchOptions.contains(.excludeNonActivePartners) {
-            teamMembers = teamMembers.filter({
-                $0.teamRole != .partner ||
-                $0.teamCreatedBy == selfUser.remoteIdentifier ||
-                isHandleQuery && $0.handle == queryWithoutAtSymbol
-            })
-        }
+        teamMembers = teamMembers.filter({
+            $0.teamRole != .partner ||
+            $0.teamCreatedBy == selfUser.remoteIdentifier ||
+            isHandleQuery && $0.handle == queryWithoutAtSymbol
+        })
     }
     
     func copy(on context: NSManagedObjectContext) -> SearchResult {
