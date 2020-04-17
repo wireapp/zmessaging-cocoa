@@ -229,9 +229,9 @@ private struct SignatureResponse: Codable, Equatable {
         guard
             let consentURLString = try container.decodeIfPresent(String.self, forKey: .consentURL),
             let url = URL(string: consentURLString)
-            else {
-                consentURL = nil
-                return
+        else {
+            consentURL = nil
+            return
         }
         
         consentURL = url
