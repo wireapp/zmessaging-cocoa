@@ -21,14 +21,15 @@ import Foundation
 
 /// Downloads all team members during the slow sync.
 
-class TeamMembersDownloadRequestStrategy: AbstractRequestStrategy {
+@objc
+public final class TeamMembersDownloadRequestStrategy: AbstractRequestStrategy {
     
     let syncStatus: SyncStatus
     var sync: ZMSingleRequestSync!
     
-    init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
-         applicationStatus: ApplicationStatus,
-         syncStatus: SyncStatus) {
+    public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
+                applicationStatus: ApplicationStatus,
+                syncStatus: SyncStatus) {
         
         self.syncStatus = syncStatus
         
@@ -39,7 +40,7 @@ class TeamMembersDownloadRequestStrategy: AbstractRequestStrategy {
         sync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
     }
     
-    override func nextRequestIfAllowed() -> ZMTransportRequest? {
+    override public func nextRequestIfAllowed() -> ZMTransportRequest? {
         guard syncStatus.currentSyncPhase == .fetchingTeamMembers else { return nil }
         
         sync.readyForNextRequestIfNotBusy()
@@ -51,7 +52,7 @@ class TeamMembersDownloadRequestStrategy: AbstractRequestStrategy {
 
 extension TeamMembersDownloadRequestStrategy: ZMSingleRequestTranscoder {
     
-    func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
+    public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         guard let teamID = ZMUser.selfUser(in: managedObjectContext).teamIdentifier else {
             completeSyncPhase() // Skip sync phase if user doesn't belong to a team
             return nil
@@ -59,7 +60,7 @@ extension TeamMembersDownloadRequestStrategy: ZMSingleRequestTranscoder {
         return ZMTransportRequest(getFromPath: "/teams/\(teamID.transportString())/members")
     }
     
-    func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
+    public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
         guard
             response.result == .success,
             let team = ZMUser.selfUser(in: managedObjectContext).team,
