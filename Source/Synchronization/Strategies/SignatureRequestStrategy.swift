@@ -112,9 +112,23 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
              .expired:
             break
         case .permanentError:
-            signatureStatus.didReceiveError()
+            switch sync {
+            case requestSync:
+                signatureStatus.didReceiveError(.noConsentURL)
+            case retrieveSync:
+                signatureStatus.didReceiveError(.retrieveFailed)
+            default:
+                break
+            }
         default:
-            signatureStatus.didReceiveError()
+            switch sync {
+            case requestSync:
+                signatureStatus.didReceiveError(.noConsentURL)
+            case retrieveSync:
+                signatureStatus.didReceiveError(.retrieveFailed)
+            default:
+                break
+            }
         }
     }
     
