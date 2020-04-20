@@ -40,11 +40,13 @@ struct MembershipPayload: Decodable {
     private enum CodingKeys: String, CodingKey {
         case userID = "user"
         case createdBy = "created_by"
+        case createdAt = "created_at"
         case permissions = "permissions"
     }
     
     let userID: UUID
     let createdBy: UUID?
+    let createdAt: Date?
     let permissions: PermissionsPayload
     
 }
@@ -57,6 +59,7 @@ extension MembershipPayload {
         let member = Member.getOrCreateMember(for: user, in: team, context: managedObjectContext)
         
         member.createdBy = ZMUser.fetchAndMerge(with: userID, createIfNeeded: true, in: managedObjectContext)
+        member.createdAt = createdAt
         member.permissions = Permissions(rawValue: permissions.selfPermissions)
         member.needsToBeUpdatedFromBackend = false
         

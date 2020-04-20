@@ -209,7 +209,7 @@ class SearchResultTests : DatabaseTest {
                                   contextProvider: contextDirectory!)
         
         let membership = createMembershipPayload(userID: remoteTeamMemberID, createdBy: selfUser.remoteIdentifier, permissions: .partner)
-        let membershipListPayload = WireSyncEngine.MembershipListPayload.init(members: [membership])
+        let membershipListPayload = WireSyncEngine.MembershipListPayload.init(hasMore: false, members: [membership])
         
         // when
         result?.extendWithMembershipPayload(payload: membershipListPayload)
@@ -247,7 +247,7 @@ class SearchResultTests : DatabaseTest {
                                   contextProvider: contextDirectory!)
         
         let membership = createMembershipPayload(userID: remoteTeamMemberID, createdBy: nil, permissions: .partner)
-        let membershipListPayload = WireSyncEngine.MembershipListPayload.init(members: [membership])
+        let membershipListPayload = WireSyncEngine.MembershipListPayload.init(hasMore: false, members: [membership])
         
         result?.extendWithMembershipPayload(payload: membershipListPayload)
         
@@ -282,7 +282,7 @@ class SearchResultTests : DatabaseTest {
                                   contextProvider: contextDirectory!)
         
         let membership = createMembershipPayload(userID: remoteTeamMemberID, createdBy: selfUser.remoteIdentifier, permissions: .partner)
-        let membershipListPayload = WireSyncEngine.MembershipListPayload.init(members: [membership])
+        let membershipListPayload = WireSyncEngine.MembershipListPayload.init(hasMore: false, members: [membership])
         
         result?.extendWithMembershipPayload(payload: membershipListPayload)
         
@@ -318,7 +318,7 @@ class SearchResultTests : DatabaseTest {
                                   contextProvider: contextDirectory!)
         
         let membership = createMembershipPayload(userID: remoteTeamMemberID, createdBy: nil, permissions: .partner)
-        let membershipListPayload = WireSyncEngine.MembershipListPayload.init(members: [membership])
+        let membershipListPayload = WireSyncEngine.MembershipListPayload.init(hasMore: false, members: [membership])
         
         result?.extendWithMembershipPayload(payload: membershipListPayload)
         
@@ -338,6 +338,7 @@ class SearchResultTests : DatabaseTest {
                                                                                        selfPermissions: permissions.rawValue)
         let membershipPayload = WireSyncEngine.MembershipPayload.init(userID: userID,
                                                                       createdBy: createdBy,
+                                                                      createdAt: nil,
                                                                       permissions:  membershipPermissons)
         
         return membershipPayload

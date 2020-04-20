@@ -27,6 +27,17 @@ extension Decodable {
     
     init?(_ jsonData: Data) {
         let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom({ (decoder) -> Date in
+            let container = try decoder.singleValueContainer()
+            let rawDate = try container.decode(String.self)
+            
+            if let date = NSDate(transport: rawDate) {
+                return date as Date
+            } else {
+                throw DecodingError.dataCorruptedError(in: container,
+                                                       debugDescription: "Expected date string to be ISO8601-formatted with fractional seconds")
+            }
+        })
         
         do {
             self = try decoder.decode(Self.self, from: jsonData)
@@ -36,4 +47,15 @@ extension Decodable {
         }
     }
     
+}
+
+extension DateFormatter {
+    static let iso8601Full: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
+        formatter.calendar = Calendar(identifier: .iso8601)
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
 }
