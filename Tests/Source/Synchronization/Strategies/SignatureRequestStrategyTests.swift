@@ -29,7 +29,9 @@ class SignatureRequestStrategyTests: MessagingTest {
         mockApplicationStatus = MockApplicationStatus()
         asset = randomAsset()
         let signatureStatus = SignatureStatus(asset: asset,
+                                              data: Data(),
                                               managedObjectContext: syncMOC)
+        signatureStatus.documentID = "documentId"
         syncMOC.signatureStatus = signatureStatus
         sut = SignatureRequestStrategy(withManagedObjectContext: syncMOC,
                                        applicationStatus: mockApplicationStatus)
