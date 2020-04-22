@@ -20,6 +20,7 @@ import WireUtilities
 import WireDataModel
 
 struct MembershipListPayload: Decodable {
+    let hasMore: Bool
     let members: [MembershipPayload]
 }
 
@@ -39,12 +40,31 @@ struct MembershipPayload: Decodable {
     private enum CodingKeys: String, CodingKey {
         case userID = "user"
         case createdBy = "created_by"
+        case createdAt = "created_at"
         case permissions = "permissions"
     }
     
     let userID: UUID
     let createdBy: UUID?
+    let createdAt: Date?
     let permissions: PermissionsPayload
+    
+}
+
+extension MembershipPayload {
+    
+    @discardableResult
+    func createOrUpdateMember(team: Team, in managedObjectContext: NSManagedObjectContext) -> Member? {
+        guard let user = ZMUser.fetchAndMerge(with: userID, createIfNeeded: true, in: managedObjectContext) else { return nil }
+        let member = Member.getOrCreateMember(for: user, in: team, context: managedObjectContext)
+        
+        member.createdBy = ZMUser.fetchAndMerge(with: userID, createIfNeeded: true, in: managedObjectContext)
+        member.createdAt = createdAt
+        member.permissions = Permissions(rawValue: permissions.selfPermissions)
+        member.needsToBeUpdatedFromBackend = false
+        
+        return member
+    }
     
 }
 
@@ -84,7 +104,6 @@ public final class PermissionsDownloadRequestStrategy: AbstractRequestStrategy, 
 
 }
 
-
 extension PermissionsDownloadRequestStrategy: ZMDownstreamTranscoder {
 
     public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
@@ -94,10 +113,14 @@ extension PermissionsDownloadRequestStrategy: ZMDownstreamTranscoder {
     }
 
     public func update(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
-        guard downstreamSync as? ZMDownstreamObjectSync == sync, let member = object as? Member else { return }
-        member.needsToBeUpdatedFromBackend = false
-        guard let payload = response.payload as? [String: Any], let team = member.team else { return }
-        Member.createOrUpdate(with: payload, in: team, context: managedObjectContext)
+        guard
+            downstreamSync as? ZMDownstreamObjectSync == sync,
+            let team = (object as? Member)?.team,
+            let rawData = response.rawData,
+            let memberhipPayload = MembershipPayload(rawData)
+        else { return }
+        
+        memberhipPayload.createOrUpdateMember(team: team, in: managedObjectContext)
     }
 
     public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
