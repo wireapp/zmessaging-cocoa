@@ -94,7 +94,7 @@ extension SearchResult {
     mutating func extendWithMembershipPayload(payload: MembershipListPayload) {
         payload.members.forEach { (membershipPayload) in
             let searchUser = teamMembers.first(where: { $0.remoteIdentifier == membershipPayload.userID })
-            let permissions = Permissions(rawValue: membershipPayload.permissions.selfPermissions)
+            let permissions = membershipPayload.permissions.flatMap({ Permissions(rawValue: $0.selfPermissions) })
             searchUser?.updateWithTeamMembership(permissions: permissions, createdBy: membershipPayload.createdBy)
         }
     }

@@ -47,7 +47,7 @@ struct MembershipPayload: Decodable {
     let userID: UUID
     let createdBy: UUID?
     let createdAt: Date?
-    let permissions: PermissionsPayload
+    let permissions: PermissionsPayload?
     
 }
 
@@ -58,9 +58,12 @@ extension MembershipPayload {
         guard let user = ZMUser.fetchAndMerge(with: userID, createIfNeeded: true, in: managedObjectContext) else { return nil }
         let member = Member.getOrCreateMember(for: user, in: team, context: managedObjectContext)
         
+        if let permissions = permissions.flatMap({ Permissions(rawValue: $0.selfPermissions) }) {
+            member.permissions = permissions
+        }
+        
         member.createdBy = ZMUser.fetchAndMerge(with: userID, createIfNeeded: true, in: managedObjectContext)
         member.createdAt = createdAt
-        member.permissions = Permissions(rawValue: permissions.selfPermissions)
         member.needsToBeUpdatedFromBackend = false
         
         return member

@@ -177,7 +177,7 @@ class PermissionsDownloadRequestStrategyTests: MessagingTest {
     
     // MARK: - Payload decoding
     
-    func testMembershipPayloadDecoding() {
+    func testMembershipPayloadDecoding_AllFields() {
         // given
         let userID = UUID()
         let creatorID = UUID()
@@ -201,8 +201,24 @@ class PermissionsDownloadRequestStrategyTests: MessagingTest {
         XCTAssertEqual(membershipPayload?.userID, userID)
         XCTAssertEqual(membershipPayload?.createdBy, creatorID)
         XCTAssertEqual(membershipPayload?.createdAt?.transportString(), createdAt)
-        XCTAssertEqual(membershipPayload?.permissions.copyPermissions, 1587)
-        XCTAssertEqual(membershipPayload?.permissions.selfPermissions, 1587)
+        XCTAssertEqual(membershipPayload?.permissions?.copyPermissions, 1587)
+        XCTAssertEqual(membershipPayload?.permissions?.selfPermissions, 1587)
+    }
+    
+    func testMembershipPayloadDecoding_OnlyNonOptionalFields() {
+        // given
+        let userID = UUID()
+        
+        let payload: [String: Any] = [
+            "user": userID.transportString(),
+        ]
+        
+        // when
+        let membershipPayload = WireSyncEngine.MembershipPayload(payload.rawJSON)
+        
+        // then
+        XCTAssertNotNil(membershipPayload)
+        XCTAssertEqual(membershipPayload?.userID, userID)
     }
     
     // MARK: - Helper
