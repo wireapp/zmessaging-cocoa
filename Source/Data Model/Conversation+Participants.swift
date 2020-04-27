@@ -92,6 +92,13 @@ extension ZMConversation {
                 completion(.success) // users were already added to the conversation
             }
             else {
+                if response.httpStatus == 403 {
+                    // Refresh user data since this operation might have failed
+                    // due to a team member being removed/deleted from the team.
+                    users.filter(\.isTeamMember).forEach({ $0.refreshData() })
+                    contextProvider?.managedObjectContext.enqueueDelayedSave()
+                }
+                
                 let error = ConversationAddParticipantsError(response: response) ?? .unknown
                 zmLog.debug("Error adding participants: \(error)")
                 completion(.failure(error))

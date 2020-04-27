@@ -233,6 +233,59 @@ class Conversation_ParticipantsTests: DatabaseTest {
         mockTransportSession.resetReceivedRequests()
     }
     
+    func testThatAddParticipantsRefetchTeamUsersOnInvalidOperation() {
+        
+        // given
+        let team = Team.insertNewObject(in: self.uiMOC)
+        team.name = "Wire Amazing Team"
+        
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        
+        let teamUser = ZMUser.insertNewObject(in: uiMOC)
+        teamUser.remoteIdentifier = UUID()
+        teamUser.needsToBeUpdatedFromBackend = false
+        
+        let nonTeamUser = ZMUser.insertNewObject(in: uiMOC)
+        nonTeamUser.remoteIdentifier = UUID()
+        nonTeamUser.needsToBeUpdatedFromBackend = false
+        
+        self.performPretendingUIMocIsSyncMoc {
+            _ = Member.getOrCreateMember(for: selfUser, in: team, context: self.uiMOC)
+            _ = Member.getOrCreateMember(for: teamUser, in: team, context: self.uiMOC)
+        }
+        
+        let conversation = ZMConversation.insertGroupConversation(moc: uiMOC, participants: [])!
+        conversation.remoteIdentifier = UUID()
+        conversation.conversationType = .group
+        
+        mockTransportSession.responseGeneratorBlock = { request in
+            guard request.path == "/conversations/\(conversation.remoteIdentifier!.transportString())/members" else { return nil }
+            
+            return ZMTransportResponse(payload: ["label": "invalid-op"] as ZMTransportData, httpStatus: 403, transportSessionError: nil)
+        }
+        
+        let receivedError = expectation(description: "received error")
+        
+        // when
+        conversation.addParticipants([teamUser, nonTeamUser], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+            switch result {
+            case .failure(let error):
+                if case ConversationAddParticipantsError.invalidOperation = error {
+                    receivedError.fulfill()
+                }
+            default: break
+            }
+        }
+        
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        mockTransportSession.responseGeneratorBlock = nil
+        mockTransportSession.resetReceivedRequests()
+        
+        // then
+        XCTAssertTrue(teamUser.needsToBeUpdatedFromBackend)
+        XCTAssertFalse(nonTeamUser.needsToBeUpdatedFromBackend)
+    }
+    
     // MARK: - Removing participant
     
     func testThatItParsesAllKnownRemoveParticipantErrorResponses() {
