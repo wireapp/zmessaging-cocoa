@@ -66,10 +66,24 @@ public struct CallParticipant: Hashable {
 public enum CallParticipantState: Equatable {
     /// Participant is not in the call
     case unconnected
+    /// Participant is experiencing network issues
+    case unconnectButMayConnect
     /// Participant is in the process of connecting to the call
     case connecting
     /// Participant is connected to call and audio is flowing
     case connected(videoState: VideoState, clientId: String?)
+}
+
+/**
+ * The state of audio in the call.
+ */
+public enum AudioState: Int32 {
+    /// Audio is in the proess of connecting
+    case connecting = 0
+    /// Audio has been established -- audio media flowing
+    case established = 1
+    /// No relay candidate -- audio MAY still connect
+    case networkProblem = 2
 }
 
 /**

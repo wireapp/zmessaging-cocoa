@@ -35,7 +35,7 @@ extension AVSCallMember {
     init(member: AVSParticipantsChange.Member) {
         remoteId = member.userid
         clientId = member.clientid
-        audioEstablished = (member.aestab == 1)
+        audioState = AudioState(rawValue: member.aestab) ?? .connecting
         videoState = VideoState(rawValue: member.vrecv) ?? .stopped
         networkQuality = .normal
     }
@@ -53,8 +53,8 @@ public struct AVSCallMember: Hashable {
     /// The client identifier of the user, this is only available after the call member has connected
     public let clientId: String?
 
-    /// Whether an audio connection was established.
-    public let audioEstablished: Bool
+    /// The state of audio connection
+    public let audioState: AudioState
 
     /// The state of video connection.
     public let videoState: VideoState
@@ -73,10 +73,10 @@ public struct AVSCallMember: Hashable {
      * - parameter networkQuality: The quality of the network connection. Defaults to `.normal`.
      */
 
-    public init(userId : UUID, clientId: String? = nil, audioEstablished: Bool = false, videoState: VideoState = .stopped, networkQuality: NetworkQuality = .normal) {
+    public init(userId : UUID, clientId: String? = nil, audioState: AudioState = .connecting, videoState: VideoState = .stopped, networkQuality: NetworkQuality = .normal) {
         self.remoteId = userId
         self.clientId = clientId
-        self.audioEstablished = audioEstablished
+        self.audioState = audioState
         self.videoState = videoState
         self.networkQuality = networkQuality
     }
@@ -85,10 +85,13 @@ public struct AVSCallMember: Hashable {
 
     /// The state of the participant.
     var callParticipantState: CallParticipantState {
-        if audioEstablished {
-            return .connected(videoState: videoState, clientId: clientId)
-        } else {
+        switch audioState {
+        case .connecting:
             return .connecting
+        case .established:
+            return .connected(videoState: videoState, clientId: clientId)
+        case .networkProblem:
+            return .unconnectButMayConnect
         }
     }
 
