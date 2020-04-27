@@ -40,8 +40,8 @@ class CallParticipantsSnapshotTests : MessagingTest {
     func testThatItDoesNotCrashWhenInitializedWithDuplicateCallMembers(){
         // given
         let userId = UUID()
-        let callMember1 = AVSCallMember(userId: userId, audioEstablished: true)
-        let callMember2 = AVSCallMember(userId: userId, audioEstablished: false)
+        let callMember1 = AVSCallMember(userId: userId, audioState: .established)
+        let callMember2 = AVSCallMember(userId: userId, audioState: .connecting)
 
         // when
         let sut = WireSyncEngine.CallParticipantsSnapshot(conversationId: UUID(),
@@ -52,15 +52,15 @@ class CallParticipantsSnapshotTests : MessagingTest {
         // it does not crash and
         XCTAssertEqual(sut.members.array.count, 1)
         if let first = sut.members.array.first {
-            XCTAssertTrue(first.audioEstablished)
+            XCTAssertTrue(first.audioState == .established)
         }
     }
     
     func testThatItDoesNotCrashWhenUpdatedWithDuplicateCallMembers(){
         // given
         let userId = UUID()
-        let callMember1 = AVSCallMember(userId: userId, audioEstablished: true)
-        let callMember2 = AVSCallMember(userId: userId, audioEstablished: false)
+        let callMember1 = AVSCallMember(userId: userId, audioState: .established)
+        let callMember2 = AVSCallMember(userId: userId, audioState: .connecting)
         let sut = WireSyncEngine.CallParticipantsSnapshot(conversationId: UUID(),
                                                           members: [],
                                                           callCenter: mockWireCallCenterV3)
@@ -72,15 +72,15 @@ class CallParticipantsSnapshotTests : MessagingTest {
         // it does not crash and
         XCTAssertEqual(sut.members.array.count, 1)
         if let first = sut.members.array.first {
-            XCTAssertTrue(first.audioEstablished)
+            XCTAssertTrue(first.audioState == .established)
         }
     }
 
     func testThatItDoesNotConsiderAUserWithMultipleDevicesAsDuplicated() {
         // given
         let userId = UUID()
-        let callMember1 = AVSCallMember(userId: userId, clientId: "client1", audioEstablished: true)
-        let callMember2 = AVSCallMember(userId: userId, clientId: "client2", audioEstablished: false)
+        let callMember1 = AVSCallMember(userId: userId, clientId: "client1", audioState: .established)
+        let callMember2 = AVSCallMember(userId: userId, clientId: "client2", audioState: .connecting)
 
         // when
         let sut = WireSyncEngine.CallParticipantsSnapshot(conversationId: UUID(),
@@ -94,9 +94,10 @@ class CallParticipantsSnapshotTests : MessagingTest {
 
     func testThatItTakesTheWorstNetworkQualityFromParticipants() {
         // given
-        let normalQuality = AVSCallMember(userId: UUID(), audioEstablished: true, videoState: .started, networkQuality: .normal)
-        let mediumQuality = AVSCallMember(userId: UUID(), audioEstablished: true, videoState: .started, networkQuality: .medium)
-        let poorQuality = AVSCallMember(userId: UUID(), audioEstablished: true, videoState: .started, networkQuality: .poor)
+        let normalQuality = AVSCallMember(userId: UUID(), audioState: .established, videoState: .started, networkQuality: .normal)
+        let mediumQuality = AVSCallMember(userId: UUID(), audioState: .established, videoState: .started, networkQuality: .medium)
+        let poorQuality = AVSCallMember(userId: UUID(), audioState: .established, videoState: .started, networkQuality: .poor)
+        let problemQuality = AVSCallMember(userId: UUID(), audioState: .established, videoState: .started, networkQuality: .problem)
 
         let sut = WireSyncEngine.CallParticipantsSnapshot(conversationId: UUID(),
                                                           members: [],
@@ -122,12 +123,17 @@ class CallParticipantsSnapshotTests : MessagingTest {
         sut.callParticipantsChanged(participants: [mediumQuality, poorQuality])
         // then
         XCTAssertEqual(sut.networkQuality, .poor)
+
+        // when
+        sut.callParticipantsChanged(participants: [problemQuality, poorQuality])
+        // then
+        XCTAssertEqual(sut.networkQuality, .problem)
     }
 
     func testThatItUpdatesNetworkQualityWhenItChangesForParticipant() {
         // given
-        let callMember1 = AVSCallMember(userId: UUID(), audioEstablished: true, networkQuality: .normal)
-        let callMember2 = AVSCallMember(userId: UUID(), audioEstablished: true, networkQuality: .normal)
+        let callMember1 = AVSCallMember(userId: UUID(), audioState: .established, networkQuality: .normal)
+        let callMember2 = AVSCallMember(userId: UUID(), audioState: .established, networkQuality: .normal)
         let sut = WireSyncEngine.CallParticipantsSnapshot(conversationId: UUID(),
                                                           members: [callMember1, callMember2],
                                                           callCenter: mockWireCallCenterV3)

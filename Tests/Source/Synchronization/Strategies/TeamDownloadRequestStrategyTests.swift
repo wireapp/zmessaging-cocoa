@@ -151,7 +151,6 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             // then
             XCTAssertFalse(team.needsToBeUpdatedFromBackend)
-            XCTAssertTrue(team.needsToRedownloadMembers)
             XCTAssertEqual(team.name, "Wire GmbH")
             guard let creator = team.creator else { return XCTFail("No creator") }
             XCTAssertEqual(creator.remoteIdentifier, creatorId)

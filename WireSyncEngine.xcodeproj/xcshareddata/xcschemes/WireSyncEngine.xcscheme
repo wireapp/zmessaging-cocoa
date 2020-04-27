@@ -63,6 +63,9 @@
             </BuildableReference>
             <SkippedTests>
                <Test
+                  Identifier = "AvailabilityTests">
+               </Test>
+               <Test
                   Identifier = "SessionManagerTests/testThatSessionManagerSetsUpAPNSEnvironmentOnLaunch()">
                </Test>
             </SkippedTests>

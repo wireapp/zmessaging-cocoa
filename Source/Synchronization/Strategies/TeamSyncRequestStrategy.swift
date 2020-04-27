@@ -40,22 +40,17 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
     /// The sync used to fetch the teams and their metadata.
     /// The team ids will be stored in the memberSync to download.
     fileprivate var teamListSync: ZMSimpleListRequestPaginator!
-    
-    /// The sync used to fetch a teams members.
-    fileprivate var memberSync: ZMRemoteIdentifierObjectSync!
     fileprivate var remotelyDeletedIds = Set<UUID>()
 
-    public init(
-        withManagedObjectContext managedObjectContext: NSManagedObjectContext,
-        applicationStatus: ApplicationStatus,
-        syncStatus: SyncStatus,
-        syncConfiguration: SyncConfiguration) {
+    public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
+                applicationStatus: ApplicationStatus,
+                syncStatus: SyncStatus,
+                syncConfiguration: SyncConfiguration) {
         
         self.syncConfiguration = syncConfiguration
         self.syncStatus = syncStatus
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         configuration = [.allowsRequestsDuringSync]
-        memberSync = ZMRemoteIdentifierObjectSync(transcoder: self, managedObjectContext: managedObjectContext)
         
         teamListSync = ZMSimpleListRequestPaginator(
             basePath: syncConfiguration.basePath,
@@ -72,10 +67,9 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
     }
     
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
-        if isSyncing && teamListSync.status != .inProgress && memberSync.isDone {
+        if isSyncing && teamListSync.status != .inProgress {
             remotelyDeletedIds = fetchExistingTeamIds()
             teamListSync.resetFetching()
-            memberSync.setRemoteIdentifiersAsNeedingDownload([])
         }
         return requestGenerators.nextRequest()
     }
@@ -85,11 +79,11 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
     }
     
     public var requestGenerators: [ZMRequestGenerator] {
-        return [teamListSync, memberSync]
+        return [teamListSync]
     }
     
     fileprivate func finishSyncIfCompleted() {
-        guard isSyncing, memberSync.isDone, !teamListSync.hasMoreToFetch else { return }
+        guard isSyncing, !teamListSync.hasMoreToFetch else { return }
         syncStatus?.finishCurrentSyncPhase(phase: expectedSyncPhase)
         
         // if our local team didn't exist on the BE we assume it's been deleted
@@ -122,9 +116,7 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
     
 }
 
-
 // MARK: - ZMSimpleListRequestPaginatorSync
-
 
 extension TeamSyncRequestStrategy: ZMSimpleListRequestPaginatorSync {
     
@@ -139,12 +131,17 @@ extension TeamSyncRequestStrategy: ZMSimpleListRequestPaginatorSync {
             
             let team = Team.fetchOrCreate(with: id, create: true, in: managedObjectContext, created: nil)
             team?.update(with: payload)
+            
+            if let team = team {
+                let selfUser = ZMUser.selfUser(in: managedObjectContext)
+                _ = Member.getOrCreateMember(for: selfUser, in: team, context: managedObjectContext)
+            }
+            
             return team
         }
         
         let remoteIds = Set(teams?.map { $0.remoteIdentifier! } ?? [])
         remotelyDeletedIds.subtract(Set(remoteIds))
-        memberSync.addRemoteIdentifiersThatNeedDownload(remoteIds)
         
         if response.result == .permanentError && isSyncing {
             syncStatus?.failCurrentSyncPhase(phase: expectedSyncPhase)
@@ -161,50 +158,3 @@ extension TeamSyncRequestStrategy: ZMSimpleListRequestPaginatorSync {
     }
     
 }
-
-
-// MARK: - ZMRemoteIdentifierObjectTranscoder
-extension TeamSyncRequestStrategy: ZMRemoteIdentifierObjectTranscoder {
-    
-    public func maximumRemoteIdentifiersPerRequest(for sync: ZMRemoteIdentifierObjectSync!) -> UInt {
-        return syncConfiguration.remoteIdSyncSize
-    }
-    
-    public func request(for sync: ZMRemoteIdentifierObjectSync!, remoteIdentifiers identifiers: Set<UUID>!) -> ZMTransportRequest! {
-        return identifiers.first.map(TeamDownloadRequestFactory.getMembersRequest)
-    }
-    
-    public func didReceive(_ response: ZMTransportResponse!, remoteIdentifierObjectSync sync: ZMRemoteIdentifierObjectSync!, forRemoteIdentifiers remoteIdentifiers: Set<UUID>!) {
-        
-        if let identifier = remoteIdentifiers.first {
-            let payload = response.payload?.asDictionary() as? [String: Any]
-            let membersPayload = payload?["members"] as? [[String: Any]]
-            
-            if let team = Team.fetchOrCreate(with: identifier, create: true, in: managedObjectContext, created: nil) {
-                if response.result == .success, let membersDict = membersPayload {
-                    let existingMembers = team.members
-                    let newMembers = membersDict.compactMap { payload in
-                        Member.createOrUpdate(with: payload, in: team, context: managedObjectContext)
-                    }
-                    
-                    let membersToDelete = existingMembers.subtracting(newMembers)
-                    membersToDelete.forEach {
-                        managedObjectContext.delete($0)
-                    }
-                }
-                
-                if response.result == .permanentError {
-                    team.needsToBeUpdatedFromBackend = true
-                }
-            }
-        }
-        
-        if response.result == .permanentError && isSyncing {
-            syncStatus?.failCurrentSyncPhase(phase: expectedSyncPhase)
-        }
-        
-        finishSyncIfCompleted()
-    }
-    
-}
-
