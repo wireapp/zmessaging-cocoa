@@ -23,7 +23,6 @@
 @import WireDataModel;
 
 #import "ZMUserTranscoder+Internal.h"
-#import "ZMSyncStrategy.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *UsersPath = @"/users";
