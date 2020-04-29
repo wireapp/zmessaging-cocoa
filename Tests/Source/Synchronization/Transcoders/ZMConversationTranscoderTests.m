@@ -547,6 +547,30 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     XCTAssertNil(request);
 }
 
+- (void)testThatNoRequestIsGeneratedForAConversationIfAnyParticipantsNeedToBeUpdatedFromBackend
+{
+    // given
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
+        conversation.remoteIdentifier = [NSUUID createUUID];
+        conversation.needsToBeUpdatedFromBackend = YES;
+
+        ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
+        user.remoteIdentifier = [NSUUID createUUID];
+        user.needsToBeUpdatedFromBackend = YES;
+
+        ParticipantRole *role = [ParticipantRole insertNewObjectInManagedObjectContext:self.syncMOC];
+        role.user = user;
+        role.conversation = conversation;
+
+        [self.syncMOC saveOrRollback];
+
+        // Then
+        ZMTransportRequest *request = [self.sut nextRequest];
+        XCTAssertNil(request);
+    }];
+}
+
 
 
 - (void)testThatItDoesNotCreateTheSelfConversationWhenReceivingAssetOrMessageEvents;

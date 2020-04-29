@@ -96,15 +96,22 @@ static NSString *const ConversationTeamManagedKey = @"managed";
         self.localNotificationDispatcher = localNotificationDispatcher;
         self.syncStatus = syncStatus;
         self.lastSyncedActiveConversations = [[NSMutableOrderedSet alloc] init];
-        self.modifiedSync = [[ZMUpstreamModifiedObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName updatePredicate:nil filter:nil keysToSync:self.keysToSync managedObjectContext:self.managedObjectContext];
-        self.insertedSync = [[ZMUpstreamInsertedObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName managedObjectContext:self.managedObjectContext];
-        NSPredicate *conversationPredicate =
-        [NSPredicate predicateWithFormat:@"%K != %@ AND (connection == nil OR (connection.status != %d AND connection.status != %d) ) AND needsToBeUpdatedFromBackend == YES",
-         [ZMConversation remoteIdentifierDataKey], nil,
-         ZMConnectionStatusPending,  ZMConnectionStatusIgnored
-         ];
-         
-        self.downstreamSync = [[ZMDownstreamObjectSync alloc] initWithTranscoder:self entityName:ZMConversation.entityName predicateForObjectsToDownload:conversationPredicate managedObjectContext:self.managedObjectContext];
+
+        self.modifiedSync = [[ZMUpstreamModifiedObjectSync alloc] initWithTranscoder:self
+                                                                          entityName:ZMConversation.entityName
+                                                                     updatePredicate:nil
+                                                                              filter:nil
+                                                                          keysToSync:self.keysToSync managedObjectContext:self.managedObjectContext];
+
+        self.insertedSync = [[ZMUpstreamInsertedObjectSync alloc] initWithTranscoder:self
+                                                                          entityName:ZMConversation.entityName
+                                                                managedObjectContext:self.managedObjectContext];
+
+        self.downstreamSync = [[ZMDownstreamObjectSync alloc] initWithTranscoder:self
+                                                                      entityName:ZMConversation.entityName
+                                                   predicateForObjectsToDownload:ZMConversationTranscoder.predicateForDownstreamSync
+                                                            managedObjectContext:self.managedObjectContext];
+
         self.listPaginator = [[ZMSimpleListRequestPaginator alloc] initWithBasePath:ConversationIDsPath
                                                                            startKey:@"start"
                                                                            pageSize:ZMConversationTranscoderListPageSize
