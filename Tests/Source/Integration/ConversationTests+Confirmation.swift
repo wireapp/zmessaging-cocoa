@@ -30,7 +30,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             let textMessage = ZMGenericMessage.message(content: ZMText.text(with: "Hello"))
             let conversation = self.conversation(for: selfToUser1Conversation!)
             
-            let requestPath = "/conversations/\(conversation!.remoteIdentifier!.transportString())/otr/messages?report_missing=\(user1!.identifier)"
+            let requestPath = "/conversations/\(conversation!.remoteIdentifier!.transportString())/otr/messages"
             
             // expect
             mockTransportSession?.responseGeneratorBlock = { request in
@@ -72,7 +72,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             let fromClient = user1?.clients.anyObject() as! MockUserClient
             let toClient = selfUser?.clients.anyObject() as! MockUserClient
             let conversation = self.conversation(for: selfToUser1Conversation!)
-            let requestPath = "/conversations/\(conversation!.remoteIdentifier!.transportString())/otr/messages?report_missing=\(user1!.identifier)"
+            let requestPath = "/conversations/\(conversation!.remoteIdentifier!.transportString())/otr/messages"
             
             
             // expect

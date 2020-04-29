@@ -22,15 +22,15 @@ import AddressBook
 
 class AddressBookTests : XCTestCase {
     
-    fileprivate var addressBookFake : AddressBookFake!
+    fileprivate var addressBook : MockAddressBook!
     
     override func setUp() {
-        self.addressBookFake = AddressBookFake()
+        self.addressBook = MockAddressBook()
         super.setUp()
     }
     
     override func tearDown() {
-        self.addressBookFake = nil
+        self.addressBook = nil
         super.tearDown()
     }
 }
@@ -42,55 +42,55 @@ extension AddressBookTests {
     func testThatItReturnsAllContactsWhenTheyHaveValidEmailAndPhoneNumbers() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com", "janet@example.com"], phoneNumbers: ["+15550100"]),
-            FakeAddressBookContact(firstName: "สยาม", emailAddresses: ["siam@example.com"], phoneNumbers: ["+15550101", "+15550102"]),
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com", "janet@example.com"], phoneNumbers: ["+15550100"]),
+            MockAddressBookContact(firstName: "สยาม", emailAddresses: ["siam@example.com"], phoneNumbers: ["+15550101", "+15550102"]),
         ]
         
         // when
-        let contacts = Array(self.addressBookFake.contacts(range: 0..<100))
+        let contacts = Array(self.addressBook.contacts(range: 0..<100))
         
         // then
         XCTAssertEqual(contacts.count, 2)
-        for i in 0..<self.addressBookFake.fakeContacts.count {
-            XCTAssertEqual(contacts[i].emailAddresses, self.addressBookFake.fakeContacts[i].rawEmails)
-            XCTAssertEqual(contacts[i].phoneNumbers, self.addressBookFake.fakeContacts[i].rawPhoneNumbers)
+        for i in 0..<self.addressBook.contacts.count {
+            XCTAssertEqual(contacts[i].emailAddresses, self.addressBook.contacts[i].rawEmails)
+            XCTAssertEqual(contacts[i].phoneNumbers, self.addressBook.contacts[i].rawPhoneNumbers)
         }
     }
     
     func testThatItReturnsAllContactsWhenTheyHaveValidEmailOrPhoneNumbers() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: []),
-            FakeAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550101"]),
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: []),
+            MockAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550101"]),
         ]
         
         // when
-        let contacts = Array(self.addressBookFake.contacts(range: 0..<100))
+        let contacts = Array(self.addressBook.contacts(range: 0..<100))
         
         // then
         XCTAssertEqual(contacts.count, 2)
-        for i in 0..<self.addressBookFake.fakeContacts.count {
-            XCTAssertEqual(contacts[i].emailAddresses, self.addressBookFake.fakeContacts[i].rawEmails)
-            XCTAssertEqual(contacts[i].phoneNumbers, self.addressBookFake.fakeContacts[i].rawPhoneNumbers)
+        for i in 0..<self.addressBook.contacts.count {
+            XCTAssertEqual(contacts[i].emailAddresses, self.addressBook.contacts[i].rawEmails)
+            XCTAssertEqual(contacts[i].phoneNumbers, self.addressBook.contacts[i].rawPhoneNumbers)
         }
     }
     
     func testThatItFilterlContactsThatHaveNoEmailNorPhone() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550100"]),
-            FakeAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: []),
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550100"]),
+            MockAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: []),
         ]
         
         // when
-        let contacts = Array(self.addressBookFake.contacts(range: 0..<100))
+        let contacts = Array(self.addressBook.contacts(range: 0..<100))
         
         // then
         XCTAssertEqual(contacts.count, 1)
-        XCTAssertEqual(contacts[0].emailAddresses, self.addressBookFake.fakeContacts[0].rawEmails)
+        XCTAssertEqual(contacts[0].emailAddresses, self.addressBook.contacts[0].rawEmails)
     }
 }
 
@@ -100,12 +100,12 @@ extension AddressBookTests {
     func testThatItFilterlContactsThatHaveAnInvalidPhoneAndNoEmail() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: [], phoneNumbers: ["aabbccdd"]),
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: [], phoneNumbers: ["aabbccdd"]),
         ]
         
         // when
-        let contacts = Array(self.addressBookFake.contacts(range: 0..<100))
+        let contacts = Array(self.addressBook.contacts(range: 0..<100))
         
         // then
         XCTAssertEqual(contacts.count, 0)
@@ -114,28 +114,28 @@ extension AddressBookTests {
     func testThatIgnoresInvalidPhones() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: ["janet@example.com"], phoneNumbers: ["aabbccdd"]),
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: ["janet@example.com"], phoneNumbers: ["aabbccdd"]),
         ]
         
         // when
-        let contacts = Array(self.addressBookFake.contacts(range: 0..<100))
+        let contacts = Array(self.addressBook.contacts(range: 0..<100))
         
         // then
         XCTAssertEqual(contacts.count, 1)
-        XCTAssertEqual(contacts[0].emailAddresses, self.addressBookFake.fakeContacts[0].rawEmails)
+        XCTAssertEqual(contacts[0].emailAddresses, self.addressBook.contacts[0].rawEmails)
         XCTAssertEqual(contacts[0].phoneNumbers, [])
     }
     
     func testThatItFilterlContactsThatHaveNoPhoneAndInvalidEmail() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: ["janet"], phoneNumbers: []),
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: ["janet"], phoneNumbers: []),
         ]
         
         // when
-        let contacts = Array(self.addressBookFake.contacts(range: 0..<100))
+        let contacts = Array(self.addressBook.contacts(range: 0..<100))
         
         // then
         XCTAssertEqual(contacts.count, 0)
@@ -144,28 +144,28 @@ extension AddressBookTests {
     func testThatIgnoresInvalidEmails() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: ["janet"], phoneNumbers: ["+15550103"]),
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: ["janet"], phoneNumbers: ["+15550103"]),
         ]
         
         // when
-        let contacts = Array(self.addressBookFake.contacts(range: 0..<100))
+        let contacts = Array(self.addressBook.contacts(range: 0..<100))
         
         // then
         XCTAssertEqual(contacts.count, 1)
         XCTAssertEqual(contacts[0].emailAddresses, [])
-        XCTAssertEqual(contacts[0].phoneNumbers, self.addressBookFake.fakeContacts[0].rawPhoneNumbers)
+        XCTAssertEqual(contacts[0].phoneNumbers, self.addressBook.contacts[0].rawPhoneNumbers)
     }
     
     func testThatItNormalizesPhoneNumbers() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: [], phoneNumbers: ["+1 (555) 0103"]),
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: [], phoneNumbers: ["+1 (555) 0103"]),
         ]
         
         // when
-        let contacts = Array(self.addressBookFake.contacts(range: 0..<100))
+        let contacts = Array(self.addressBook.contacts(range: 0..<100))
         
         // then
         XCTAssertEqual(contacts.count, 1)
@@ -175,12 +175,12 @@ extension AddressBookTests {
     func testThatItNormalizesEmails() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: ["Olaf Karlsson <janet+1@example.com>"], phoneNumbers: []),
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: ["Olaf Karlsson <janet+1@example.com>"], phoneNumbers: []),
         ]
         
         // when
-        let contacts = Array(self.addressBookFake.contacts(range: 0..<100))
+        let contacts = Array(self.addressBook.contacts(range: 0..<100))
         
         // then
         XCTAssertEqual(contacts.count, 1)
@@ -190,12 +190,12 @@ extension AddressBookTests {
     func testThatItDoesNotIgnoresPhonesWithPlusZero() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: [], phoneNumbers: ["+012345678"]),
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: [], phoneNumbers: ["+012345678"]),
         ]
         
         // when
-        let contacts = Array(self.addressBookFake.contacts(range: 0..<100))
+        let contacts = Array(self.addressBook.contacts(range: 0..<100))
         
         // then
         XCTAssertEqual(contacts.count, 1)
@@ -209,10 +209,10 @@ extension AddressBookTests {
     func testThatItEncodesUsers() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
-            FakeAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
-            FakeAddressBookContact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
+            MockAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
+            MockAddressBookContact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
             
         ]
         let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
@@ -220,18 +220,18 @@ extension AddressBookTests {
         let expectation = self.expectation(description: "Callback invoked")
         
         // when
-        self.addressBookFake.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 100) { chunk in
+        self.addressBook.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 100) { chunk in
             
             // then
             if let chunk = chunk {
                 XCTAssertEqual(chunk.numberOfTotalContacts, 3)
                 XCTAssertEqual(chunk.includedContacts, UInt(0)..<UInt(3))
                 let expected = [
-                    self.addressBookFake.fakeContacts[0].localIdentifier : ["BSdmiT9F5EtQrsfcGm+VC7Ofb0ZRREtCGCFw4TCimqk=",
+                    self.addressBook.contacts[0].localIdentifier : ["BSdmiT9F5EtQrsfcGm+VC7Ofb0ZRREtCGCFw4TCimqk=",
                      "f9KRVqKI/n1886fb6FnP4oIORkG5S2HO0BoCYOxLFaA="],
-                    self.addressBookFake.fakeContacts[1].localIdentifier :
+                    self.addressBook.contacts[1].localIdentifier :
                     ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
-                    self.addressBookFake.fakeContacts[2].localIdentifier :
+                    self.addressBook.contacts[2].localIdentifier :
                     ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
                 ]
                 checkEqual(lhs: chunk.otherContactsHashes, rhs: expected)
@@ -249,13 +249,13 @@ extension AddressBookTests {
     func testThatItCallsCompletionHandlerWithNilIfNoContacts() {
         
         // given
-        self.addressBookFake.fakeContacts = []
+        self.addressBook.contacts = []
         let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         queue.createDispatchGroups()
         let expectation = self.expectation(description: "Callback invoked")
         
         // when
-        self.addressBookFake.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 100) { chunk in
+        self.addressBook.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 100) { chunk in
             
             // then
             XCTAssertNil(chunk)
@@ -270,10 +270,10 @@ extension AddressBookTests {
     func testThatItEncodesOnlyAMaximumNumberOfUsers() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
-            FakeAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
-            FakeAddressBookContact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
+            MockAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
+            MockAddressBookContact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
             
         ]
         let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
@@ -281,16 +281,16 @@ extension AddressBookTests {
         let expectation = self.expectation(description: "Callback invoked")
         
         // when
-        self.addressBookFake.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 2) { chunk in
+        self.addressBook.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 2) { chunk in
             
             // then
             if let chunk = chunk {
                 XCTAssertEqual(chunk.numberOfTotalContacts, 3)
                 XCTAssertEqual(chunk.includedContacts, UInt(0)..<UInt(2))
                 let expected = [
-                    self.addressBookFake.fakeContacts[0].localIdentifier : ["BSdmiT9F5EtQrsfcGm+VC7Ofb0ZRREtCGCFw4TCimqk=",
+                    self.addressBook.contacts[0].localIdentifier : ["BSdmiT9F5EtQrsfcGm+VC7Ofb0ZRREtCGCFw4TCimqk=",
                         "f9KRVqKI/n1886fb6FnP4oIORkG5S2HO0BoCYOxLFaA="],
-                    self.addressBookFake.fakeContacts[1].localIdentifier : ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="]
+                    self.addressBook.contacts[1].localIdentifier : ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="]
                     ]
                 checkEqual(lhs: chunk.otherContactsHashes, rhs: expected)
             } else {
@@ -307,11 +307,11 @@ extension AddressBookTests {
     func testThatItEncodesOnlyTheRequestedUsers() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
-            FakeAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
-            FakeAddressBookContact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"]),
-            FakeAddressBookContact(firstName: " أميرة", emailAddresses: ["a@example.com"], phoneNumbers: [])
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
+            MockAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
+            MockAddressBookContact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"]),
+            MockAddressBookContact(firstName: " أميرة", emailAddresses: ["a@example.com"], phoneNumbers: [])
         ]
         
         let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
@@ -319,15 +319,15 @@ extension AddressBookTests {
         let expectation = self.expectation(description: "Callback invoked")
         
         // when
-        self.addressBookFake.encodeWithCompletionHandler(queue, startingContactIndex: 1, maxNumberOfContacts: 2) { chunk in
+        self.addressBook.encodeWithCompletionHandler(queue, startingContactIndex: 1, maxNumberOfContacts: 2) { chunk in
             
             // then
             if let chunk = chunk {
                 XCTAssertEqual(chunk.numberOfTotalContacts, 4)
                 XCTAssertEqual(chunk.includedContacts, UInt(1)..<UInt(3))
                 let expected = [
-                    self.addressBookFake.fakeContacts[1].localIdentifier : ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
-                    self.addressBookFake.fakeContacts[2].localIdentifier : ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
+                    self.addressBook.contacts[1].localIdentifier : ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
+                    self.addressBook.contacts[2].localIdentifier : ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
                     ]
                 checkEqual(lhs: chunk.otherContactsHashes, rhs: expected)
             } else {
@@ -344,11 +344,11 @@ extension AddressBookTests {
     func testThatItEncodesAsManyContactsAsItCanIfAskedToEncodeTooMany() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
-            FakeAddressBookContact(firstName: " أميرة", emailAddresses: ["a@example.com"], phoneNumbers: []),
-            FakeAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
-            FakeAddressBookContact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
+            MockAddressBookContact(firstName: " أميرة", emailAddresses: ["a@example.com"], phoneNumbers: []),
+            MockAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
+            MockAddressBookContact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
         ]
         
         let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
@@ -356,15 +356,15 @@ extension AddressBookTests {
         let expectation = self.expectation(description: "Callback invoked")
         
         // when
-        self.addressBookFake.encodeWithCompletionHandler(queue, startingContactIndex: 2, maxNumberOfContacts: 20) { chunk in
+        self.addressBook.encodeWithCompletionHandler(queue, startingContactIndex: 2, maxNumberOfContacts: 20) { chunk in
             
             // then
             if let chunk = chunk {
                 XCTAssertEqual(chunk.numberOfTotalContacts, 4)
                 XCTAssertEqual(chunk.includedContacts, UInt(2)..<UInt(4))
                 let expected =  [
-                    self.addressBookFake.fakeContacts[2].localIdentifier : ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
-                    self.addressBookFake.fakeContacts[3].localIdentifier : ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
+                    self.addressBook.contacts[2].localIdentifier : ["YCzX+75BaI4tkCJLysNi2y8f8uK6dIfYWFyc4ibLbQA="],
+                    self.addressBook.contacts[3].localIdentifier : ["iJXG3rJ3vc8rrh7EgHzbWPZsWOHFJ7mYv/MD6DlY154="]
                     ]
                 checkEqual(lhs: chunk.otherContactsHashes, rhs: expected)
             } else {
@@ -381,10 +381,10 @@ extension AddressBookTests {
     func testThatItEncodesNoContactIfAskedToEncodePastTheLastContact() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
-            FakeAddressBookContact(firstName: " أميرة", emailAddresses: ["a@example.com"], phoneNumbers: []),
-            FakeAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
+            MockAddressBookContact(firstName: " أميرة", emailAddresses: ["a@example.com"], phoneNumbers: []),
+            MockAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
         ]
         
         let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
@@ -392,7 +392,7 @@ extension AddressBookTests {
         let expectation = self.expectation(description: "Callback invoked")
         
         // when
-        self.addressBookFake.encodeWithCompletionHandler(queue, startingContactIndex: 20, maxNumberOfContacts: 20) { chunk in
+        self.addressBook.encodeWithCompletionHandler(queue, startingContactIndex: 20, maxNumberOfContacts: 20) { chunk in
             
             // then
             if let chunk = chunk {
@@ -413,10 +413,10 @@ extension AddressBookTests {
     func testThatItEncodesTheSameAddressBookInTheSameWay() {
         
         // given
-        self.addressBookFake.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
-            FakeAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
-            FakeAddressBookContact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
+        self.addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olaf", emailAddresses: ["olaf@example.com"], phoneNumbers: ["+15550101"]),
+            MockAddressBookContact(firstName: "สยาม", emailAddresses: [], phoneNumbers: ["+15550100"]),
+            MockAddressBookContact(firstName: "Hadiya", emailAddresses: [], phoneNumbers: ["+15550102"])
             
         ]
         let queue = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
@@ -427,7 +427,7 @@ extension AddressBookTests {
         var chunk2 : [String: [String]]? = nil
         
         // when
-        self.addressBookFake.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 100) { chunk in
+        self.addressBook.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 100) { chunk in
             
             chunk1 = chunk?.otherContactsHashes
             expectation1.fulfill()
@@ -438,7 +438,7 @@ extension AddressBookTests {
         }
         
         let expectation2 = self.expectation(description: "Callback invoked twice")
-        self.addressBookFake.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 100) { chunk in
+        self.addressBook.encodeWithCompletionHandler(queue, startingContactIndex: 0, maxNumberOfContacts: 100) { chunk in
             
             chunk2 = chunk?.otherContactsHashes
             expectation2.fulfill()

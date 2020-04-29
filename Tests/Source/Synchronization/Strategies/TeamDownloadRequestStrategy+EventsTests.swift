@@ -621,7 +621,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             let user = ZMUser(remoteID: userId, createIfNeeded: true, in: self.syncMOC)!
             user.needsToBeUpdatedFromBackend = false
             let member = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
-            XCTAssertFalse(member.needsToBeUpdatedFromBackend)
+            member.needsToBeUpdatedFromBackend = false
             XCTAssert(self.syncMOC.saveOrRollback())
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))

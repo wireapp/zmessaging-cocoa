@@ -570,7 +570,7 @@
 {
     // given
     NSMutableString *text = @"Very Long Text!".mutableCopy;
-    while ([text dataUsingEncoding:NSUTF8StringEncoding].length < ZMClientMessageByteSizeExternalThreshold) {
+    while ([text dataUsingEncoding:NSUTF8StringEncoding].length < ZMClientMessage.byteSizeExternalThreshold) {
         [text appendString:text];
     }
     

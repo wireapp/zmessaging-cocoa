@@ -37,7 +37,7 @@ extension SearchResult {
         let addressBook = AddressBookSearch(addressBook: debug_searchResultAddressBookOverride)
         
         // I don't need to find the address book contacts of users that I already found
-        let identifiersOfAlreadyFoundUsers = contacts.compactMap { $0.addressBookEntry?.localIdentifier } + self.directory.compactMap { $0.user?.addressBookEntry?.localIdentifier }
+        let identifiersOfAlreadyFoundUsers = contacts.compactMap { $0.user?.addressBookEntry?.localIdentifier } + self.directory.compactMap { $0.user?.addressBookEntry?.localIdentifier }
         let allMatchingAddressBookContacts = addressBook.contactsMatchingQuery(query, identifiersToExclude: identifiersOfAlreadyFoundUsers)
         
         // There might also be contacts for which the local address book name match and which are also Wire users, but on Wire their name doesn't match,
@@ -55,11 +55,10 @@ extension SearchResult {
         let additionalNonConnectedUsers = additionalUsersFromAddressBook
             .filter { $0.connection == nil }
             .compactMap { ZMSearchUser(contextProvider: contextProvider, user: $0) }
-        let connectedUsers = contacts.compactMap { ZMSearchUser(contextProvider: contextProvider, user: $0) }
         
         return SearchResult(contacts: contacts,
                             teamMembers: teamMembers,
-                            addressBook: connectedUsers + additionalConnectedUsers + additionalNonConnectedUsers + searchUsersFromAddressBook,
+                            addressBook: contacts + additionalConnectedUsers + additionalNonConnectedUsers + searchUsersFromAddressBook,
                             directory: directory,
                             conversations: conversations,
                             services: services)

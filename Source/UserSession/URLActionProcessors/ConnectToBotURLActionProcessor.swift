@@ -39,6 +39,7 @@ class ConnectToBotURLActionProcessor: NSObject, URLActionProcessor, ZMManagedObj
                                            handle: nil,
                                            accentColor: .strongBlue,
                                            remoteIdentifier: serviceUserData.service,
+                                           teamIdentifier: nil,
                                            user: nil,
                                            contact: nil)
             serviceUser.providerIdentifier = serviceUserData.provider.transportString()

@@ -134,8 +134,8 @@ class ZMHotFixTests_Integration: MessagingTest {
             
             let selfUser = ZMUser.selfUser(in: self.syncMOC)
             let team = Team.fetchOrCreate(with: UUID(), create: true, in: self.syncMOC, created: nil)!
-            _ = Member.getOrCreateMember(for: selfUser, in: team, context: self.syncMOC)
-            team.needsToRedownloadMembers = false
+            let member = Member.getOrCreateMember(for: selfUser, in: team, context: self.syncMOC)
+            member.needsToBeUpdatedFromBackend = false
             
             // WHEN
             let sut = ZMHotFix(syncMOC: self.syncMOC)
@@ -146,8 +146,9 @@ class ZMHotFixTests_Integration: MessagingTest {
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         syncMOC.performGroupedBlock {
-            let selfUser = ZMUser.selfUser(in: self.syncMOC)
-            XCTAssertTrue(selfUser.team!.needsToRedownloadMembers)
+            ZMUser.selfUser(in: self.syncMOC).team?.members.forEach({ (member) in
+                XCTAssertTrue(member.needsToBeUpdatedFromBackend)
+            })
         }
     }
     

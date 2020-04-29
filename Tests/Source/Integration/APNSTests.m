@@ -225,7 +225,7 @@
         ZM_WEAK(self);
         self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
             ZM_STRONG(self);
-            NSString *confirmationPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages?report_missing=", self.selfToUser1Conversation.identifier];
+            NSString *confirmationPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", self.selfToUser1Conversation.identifier];
             if ([request.path hasPrefix:confirmationPath] && request.method == ZMMethodPOST) {
                 XCTAssertTrue(request.shouldUseVoipSession);
                 requestCount++;

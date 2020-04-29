@@ -23,11 +23,11 @@ import XCTest
 class AddressBookSearchTests : MessagingTest {
     
     var sut : WireSyncEngine.AddressBookSearch!
-    var addressBook : AddressBookFake!
+    var addressBook : MockAddressBook!
     
     override func setUp() {
         super.setUp()
-        self.addressBook = AddressBookFake()
+        self.addressBook = MockAddressBook()
         self.sut = WireSyncEngine.AddressBookSearch(addressBook: self.addressBook)
     }
     
@@ -44,9 +44,9 @@ extension AddressBookSearchTests {
     func testThatItSearchesByNameWithMatch() {
         
         // given
-        addressBook.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olivia", emailAddresses: ["oli@example.com"], phoneNumbers: []),
-            FakeAddressBookContact(firstName: "Ada", emailAddresses: [], phoneNumbers: ["+155505012"])
+        addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olivia", emailAddresses: ["oli@example.com"], phoneNumbers: []),
+            MockAddressBookContact(firstName: "Ada", emailAddresses: [], phoneNumbers: ["+155505012"])
         ]
         
         // when
@@ -62,9 +62,9 @@ extension AddressBookSearchTests {
         
         // given
         let identifier = "233124"
-        addressBook.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olivia 1", emailAddresses: ["oli@example.com"], phoneNumbers: [], identifier: identifier),
-            FakeAddressBookContact(firstName: "Olivia 2", emailAddresses: [], phoneNumbers: ["+155505012"])
+        addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olivia 1", emailAddresses: ["oli@example.com"], phoneNumbers: [], identifier: identifier),
+            MockAddressBookContact(firstName: "Olivia 2", emailAddresses: [], phoneNumbers: ["+155505012"])
         ]
         
         // when
@@ -79,9 +79,9 @@ extension AddressBookSearchTests {
     func testThatItSearchesByNameWithNoMatch() {
         
         // given
-        addressBook.fakeContacts = [
-            FakeAddressBookContact(firstName: "Olivia", emailAddresses: ["oli@example.com"], phoneNumbers: []),
-            FakeAddressBookContact(firstName: "Ada", emailAddresses: [], phoneNumbers: ["+155505012"])
+        addressBook.contacts = [
+            MockAddressBookContact(firstName: "Olivia", emailAddresses: ["oli@example.com"], phoneNumbers: []),
+            MockAddressBookContact(firstName: "Ada", emailAddresses: [], phoneNumbers: ["+155505012"])
         ]
         
         // when
