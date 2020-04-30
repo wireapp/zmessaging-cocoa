@@ -21,6 +21,28 @@ import Foundation
 private let log = ZMSLog(tag: "ConversationTranscoder")
 
 extension ZMConversationTranscoder {
+
+    @objc
+    static public let predicateForDownstreamSync: NSPredicate = {
+        let needsToBeSynced = NSPredicate(
+            format: "%K != nil AND needsToBeUpdatedFromBackend == YES",
+            argumentArray: [ZMConversation.remoteIdentifierDataKey()!]
+        )
+
+        let hasNoPendingOrIgnoredConnection = NSPredicate(
+            format: "connection == nil OR (connection.status != %d AND connection.status != %d)",
+            argumentArray: [ZMConnectionStatus.pending.rawValue, ZMConnectionStatus.ignored.rawValue]
+        )
+
+        // Some of the participants may have been deleted on the backend, so we should first let them sync
+        // before syncing the conversation.
+        let hasNoParticipantsWaitingToBeSynced = NSPredicate(
+            format: "SUBQUERY(participantRoles, $role, $role.user.needsToBeUpdatedFromBackend == YES).@count == 0"
+        )
+
+        let predicates = [needsToBeSynced, hasNoPendingOrIgnoredConnection, hasNoParticipantsWaitingToBeSynced]
+        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+    }()
     
     @objc(appendSystemMessageForUpdateEvent:inConversation:)
     public func appendSystemMessage(for event: ZMUpdateEvent, conversation: ZMConversation) {
