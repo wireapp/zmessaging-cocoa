@@ -371,7 +371,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.remoteIdentifier = [NSUUID createUUID];
         remoteID = conversation.remoteIdentifier;
         conversation.needsToBeUpdatedFromBackend = YES;
-        
+
         ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
         connection.status = status;
         connection.conversation = conversation;
@@ -3165,6 +3165,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         // given
         ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
         selfUser.remoteIdentifier = [NSUUID createUUID];
+        selfUser.needsToBeUpdatedFromBackend = NO;
         
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeGroup;
@@ -3201,6 +3202,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         // given
         ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
         selfUser.remoteIdentifier = [NSUUID createUUID];
+        selfUser.needsToBeUpdatedFromBackend = NO;
         
         conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
         conversation.conversationType = ZMConversationTypeGroup;
@@ -3208,7 +3210,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         conversation.needsToBeUpdatedFromBackend = YES;
         [conversation addParticipantAndUpdateConversationStateWithUser:[ZMUser selfUserInContext:self.syncMOC] role: nil];
         [self.syncMOC saveOrRollback];
-        
+
         for (id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
             [tracker objectsDidChange:[NSSet setWithObject:conversation]];
         }

@@ -26,12 +26,12 @@ extension ZMConversationTranscoder {
     static public let predicateForDownstreamSync: NSPredicate = {
         let needsToBeSynced = NSPredicate(
             format: "%K != nil AND needsToBeUpdatedFromBackend == YES",
-            ZMConversation.remoteIdentifierDataKey()!
+            argumentArray: [ZMConversation.remoteIdentifierDataKey()!]
         )
 
         let hasNoPendingOrIgnoredConnection = NSPredicate(
             format: "connection == nil OR (connection.status != %d AND connection.status != %d)",
-            [ZMConnectionStatus.pending, ZMConnectionStatus.ignored]
+            argumentArray: [ZMConnectionStatus.pending.rawValue, ZMConnectionStatus.ignored.rawValue]
         )
 
         // Some of the participants may have been deleted on the backend, so we should first let them sync
