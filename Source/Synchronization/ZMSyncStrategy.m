@@ -366,6 +366,12 @@ ZM_EMPTY_ASSERTING_INIT()
                 [eventConsumers addObject:objectStrategy];
             }
         }
+        
+    ApplicationStatusDirectory *statusDirectory = self.applicationStatusDirectory;
+        
+    [eventConsumers addObject:[[UserClientEventConsumer alloc] initWithManagedObjectContext:self.syncMOC
+                                                                   clientRegistrationStatus:statusDirectory.clientRegistrationStatus
+                                                                         clientUpdateStatus:statusDirectory.clientUpdateStatus]];
 
         _eventConsumers = eventConsumers;
     }
