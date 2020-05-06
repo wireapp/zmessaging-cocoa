@@ -32,6 +32,8 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     fileprivate var callConfigRequestSync   : ZMSingleRequestSync! = nil
     fileprivate var callConfigCompletion    : CallConfigRequestCompletion? = nil
     fileprivate let callEventStatus         : CallEventStatus
+
+    private let ephemeralURLSession = URLSession(configuration: .ephemeral)
     
     public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType, callEventStatus: CallEventStatus) {
         self.managedObjectContext = managedObjectContext
@@ -198,7 +200,7 @@ extension CallingRequestStrategy : WireCallCenterTransport {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.httpBody = data
 
-        URLSession(configuration: .ephemeral).task(with: request) { data, response, error in
+        ephemeralURLSession.task(with: request) { data, response, error in
             if let error = error {
                 completionHandler(.failure(SFTResponseError.transport(error: error)))
                 return
