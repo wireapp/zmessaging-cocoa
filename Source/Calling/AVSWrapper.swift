@@ -302,10 +302,16 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     private let requestClientsHandler: Handler.RequestClients = { handle, conversationIdRef, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationIdRef) {
-            $0.handleClientsRequest(conversationId: $1) { (clients: String) in
+        AVSWrapper.withCallCenter(contextRef, conversationIdRef) { (callCenter, conversationId: UUID) in
+            let completion: (String) -> Void = { (clients: String) in
                 wcall_set_clients_for_conv(handle, conversationIdRef, clients)
             }
+
+            // This handler is called once per call, but the participants may be added or removed from the
+            // conversation during this time. Therefore we store the completion so that it can be re-invoked
+            // with an updated client list.
+            callCenter.clientsRequestCompletionsByConversationId[conversationId] = completion
+            callCenter.handleClientsRequest(conversationId: conversationId, completion: completion)
         }
     }
 

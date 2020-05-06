@@ -26,6 +26,11 @@ private let zmLog = ZMSLog(tag: "calling")
 extension WireCallCenterV3 : ZMConversationObserver {
 
     public func conversationDidChange(_ changeInfo: ConversationChangeInfo) {
+        handleSecurityLevelChange(changeInfo)
+        handleActiveParticipantsChange(changeInfo)
+    }
+
+    private func handleSecurityLevelChange(_ changeInfo: ConversationChangeInfo) {
         guard
             changeInfo.securityLevelChanged,
             let conversationId = changeInfo.conversation.remoteIdentifier,
@@ -54,6 +59,18 @@ extension WireCallCenterV3 : ZMConversationObserver {
                 notification.post(in: context.notificationContext)
             }
         }
+    }
+
+    private func handleActiveParticipantsChange(_ changeInfo: ConversationChangeInfo) {
+        guard
+            changeInfo.activeParticipantsChanged,
+            let conversationId = changeInfo.conversation.remoteIdentifier,
+            let completion = clientsRequestCompletionsByConversationId[conversationId]
+        else {
+            return
+        }
+
+        handleClientsRequest(conversationId: conversationId, completion: completion)
     }
 
 }
