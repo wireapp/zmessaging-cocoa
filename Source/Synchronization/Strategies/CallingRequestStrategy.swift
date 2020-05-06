@@ -198,7 +198,7 @@ extension CallingRequestStrategy : WireCallCenterTransport {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.httpBody = data
 
-        URLSession.shared.task(with: request) { data, response, error in
+        URLSession(configuration: .ephemeral).task(with: request) { data, response, error in
             if let error = error {
                 completionHandler(.failure(SFTResponseError.transport(error: error)))
                 return
