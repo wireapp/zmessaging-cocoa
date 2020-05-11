@@ -45,6 +45,10 @@ protocol AVSEnum: RawRepresentable, AVSValue {}
 
 // MARK: - AVS Types
 
+extension AVSConversationType: AVSEnum {
+    typealias AVSType = RawValue
+}
+
 extension VideoState: AVSEnum {
     typealias AVSType = RawValue
 }

@@ -197,7 +197,7 @@ public class AVSWrapper: AVSWrapperType {
         // Video state changes are now communicated through the json payload of the call participant handler.
     }
 
-    private let incomingCallHandler: Handler.IncomingCall = { conversationId, messageTime, userId, clientId, isVideoCall, shouldRing, contextRef in
+    private let incomingCallHandler: Handler.IncomingCall = { conversationId, messageTime, userId, clientId, isVideoCall, shouldRing, conversationType, contextRef in
         AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, clientId, isVideoCall, shouldRing) {
             $0.handleIncomingCall(conversationId: $1,
                                   messageTime: $2,
