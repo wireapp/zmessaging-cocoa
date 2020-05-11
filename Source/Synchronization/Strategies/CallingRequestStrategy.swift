@@ -32,6 +32,8 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     fileprivate var callConfigRequestSync   : ZMSingleRequestSync! = nil
     fileprivate var callConfigCompletion    : CallConfigRequestCompletion? = nil
     fileprivate let callEventStatus         : CallEventStatus
+
+    private let ephemeralURLSession = URLSession(configuration: .ephemeral)
     
     public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType, callEventStatus: CallEventStatus) {
         self.managedObjectContext = managedObjectContext
@@ -190,7 +192,37 @@ extension CallingRequestStrategy : WireCallCenterTransport {
             }
         }
     }
-    
+
+    public func sendSFT(data: Data, url: URL, completionHandler: @escaping ((Result<Data>) -> Void)) {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpBody = data
+
+        ephemeralURLSession.task(with: request) { data, response, error in
+            if let error = error {
+                completionHandler(.failure(SFTResponseError.transport(error: error)))
+                return
+            }
+
+            guard
+                let response = response as? HTTPURLResponse,
+                let data = data
+            else {
+                completionHandler(.failure(SFTResponseError.missingData))
+                return
+            }
+
+            guard (200...299).contains(response.statusCode) else {
+                completionHandler(.failure(SFTResponseError.server(status: response.statusCode)))
+                return
+            }
+
+            completionHandler(.success(data))
+        }.resume()
+    }
+
     public func requestCallConfig(completionHandler: @escaping CallConfigRequestCompletion) {
         self.zmLog.debug("requestCallConfig() called, moc = \(managedObjectContext)")
         managedObjectContext.performGroupedBlock { [unowned self] in
@@ -200,6 +232,25 @@ extension CallingRequestStrategy : WireCallCenterTransport {
             self.callConfigRequestSync.readyForNextRequestIfNotBusy()
             RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
+    }
+
+    enum SFTResponseError: LocalizedError {
+
+        case server(status: Int)
+        case transport(error: Error)
+        case missingData
+
+        var errorDescription: String? {
+            switch self {
+            case let .server(status: status):
+                return "Server http status code: \(status)"
+            case let .transport(error: error):
+                return "Transport error: \(error.localizedDescription)"
+            case .missingData:
+                return "Response body missing data"
+            }
+        }
+
     }
     
 }

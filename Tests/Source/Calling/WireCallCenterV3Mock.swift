@@ -78,6 +78,10 @@ public class MockAVSWrapper : AVSWrapperType {
     public func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken) {
         // do nothing
     }
+
+    public func handleSFTResponse(data: Data?, context: WireCallMessageToken) {
+        // do nothing
+    }
     
     public func update(callConfig: String?, httpStatusCode: Int) {
         didUpdateCallConfig = true

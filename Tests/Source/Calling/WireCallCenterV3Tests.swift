@@ -28,6 +28,10 @@ class WireCallCenterTransportMock : WireCallCenterTransport {
     func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((Int) -> Void)) {
         
     }
+
+    func sendSFT(data: Data, url: URL, completionHandler: @escaping ((Result<Data>) -> Void)) {
+        
+    }
     
     func requestCallConfig(completionHandler: @escaping CallConfigRequestCompletion) {
         if let mockCallConfigResponse = mockCallConfigResponse {
@@ -510,7 +514,7 @@ class WireCallCenterV3Tests: MessagingTest {
             _ = sut.startCall(conversation: groupConversation, video: false)
             
             // then
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.group)
+            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.conference)
             XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.normal)
         }
     }
@@ -521,7 +525,7 @@ class WireCallCenterV3Tests: MessagingTest {
             _ = sut.startCall(conversation: groupConversation, video: true)
             
             // then
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.group)
+            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.conference)
             XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.video)
         }
     }
@@ -540,7 +544,7 @@ class WireCallCenterV3Tests: MessagingTest {
             _ = sut.startCall(conversation: groupConversation, video: true)
             
             // then
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.group)
+            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.conference)
             XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.audioOnly)
         }
     }

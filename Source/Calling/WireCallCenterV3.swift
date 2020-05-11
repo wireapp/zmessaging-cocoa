@@ -388,25 +388,37 @@ extension WireCallCenterV3 {
         endAllCalls(exluding: conversationId)
         clearSnapshot(conversationId: conversationId) // make sure we don't have an old state for this conversation
         
-        let conversationType: AVSConversationType = conversation.conversationType == .group ? .group : .oneToOne
+        let conversationType: AVSConversationType = conversation.conversationType == .group ? .conference : .oneToOne
         let callType: AVSCallType
+
         if conversation.localParticipants.count > videoParticipantsLimit {
             callType = .audioOnly
         } else {
             callType = video ? .video : .normal
         }
         
-        let started = avsWrapper.startCall(conversationId: conversationId, callType: callType, conversationType: conversationType, useCBR: useConstantBitRateAudio)
-        if started {
-            let callState: CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
-            let previousCallState = callSnapshots[conversationId]?.callState
-            createSnapshot(callState: callState, members: [], callStarter: selfUserId, video: video, for: conversationId)
-            
-            if let context = uiMOC {
-                WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: selfUserId, messageTime: nil, previousCallState: previousCallState).post(in: context.notificationContext)
-            }
+        let started = avsWrapper.startCall(conversationId: conversationId,
+                                           callType: callType,
+                                           conversationType: conversationType,
+                                           useCBR: useConstantBitRateAudio)
+
+        guard started else { return false }
+        
+        let callState: CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
+        let previousCallState = callSnapshots[conversationId]?.callState
+
+        createSnapshot(callState: callState, members: [], callStarter: selfUserId, video: video, for: conversationId)
+
+        if let context = uiMOC {
+            WireCallCenterCallStateNotification(context: context,
+                                                callState: callState,
+                                                conversationId: conversationId,
+                                                callerId: selfUserId,
+                                                messageTime: nil,
+                                                previousCallState: previousCallState).post(in: context.notificationContext)
         }
-        return started
+
+        return true
     }
 
     /**
@@ -499,6 +511,28 @@ extension WireCallCenterV3 {
         transport?.send(data: data, conversationId: conversationId, userId: userId, completionHandler: { [weak self] status in
             self?.avsWrapper.handleResponse(httpStatus: status, reason: "", context: token)
         })
+    }
+
+    /// Sends an SFT call message when requested by AVS through `wcall_sft_req_h`.
+    func sendSFT(token: WireCallMessageToken, url: String, data: Data) {
+        zmLog.debug("\(self): send SFT call message, transport = \(String(describing: transport))")
+
+        guard let endpoint = URL(string: url) else {
+            zmLog.error("SFT request failed. Invalid url: \(url)")
+            avsWrapper.handleSFTResponse(data: nil, context: token)
+            return
+        }
+
+        transport?.sendSFT(data: data, url: endpoint) { [weak self] result in
+            switch result {
+            case let .failure(error):
+                zmLog.error("SFT request failed: \(error.localizedDescription)")
+                self?.avsWrapper.handleSFTResponse(data: nil, context: token)
+
+            case let .success(data):
+                self?.avsWrapper.handleSFTResponse(data: data, context: token)
+            }
+        }
     }
 
     /// Sends the config request when requested by AVS through `wcall_config_req_h`.
