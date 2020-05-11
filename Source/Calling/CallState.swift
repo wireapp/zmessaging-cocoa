@@ -83,19 +83,6 @@ public enum AudioState: Int32, Codable {
 
 
 /**
- * The state of audio in the call.
- */
-public enum AudioState: Int32 {
-    /// Audio is in the proess of connecting
-    case connecting = 0
-    /// Audio has been established -- audio media flowing
-    case established = 1
-    /// No relay candidate -- audio MAY still connect
-    case networkProblem = 2
-}
-
-
-/**
  * The state of video in the call.
  */
 
