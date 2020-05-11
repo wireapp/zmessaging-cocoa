@@ -55,9 +55,10 @@ extension AVSWrapper {
         ///                                 const char *clientid,
         ///                                 int video_call /*bool*/,
         ///                                 int should_ring /*bool*/,
+        ///                                 int conv_type /*WCALL_CONV_TYPE...*/,
         ///                                 void *arg);
 
-        typealias IncomingCall = @convention(c) (StringPtr, UInt32, StringPtr, StringPtr, Int32, Int32, ContextRef) -> Void
+        typealias IncomingCall = @convention(c) (StringPtr, UInt32, StringPtr, StringPtr, Int32, Int32, Int32, ContextRef) -> Void
 
         /// Callback used to inform the user of a missed call.
         ///
