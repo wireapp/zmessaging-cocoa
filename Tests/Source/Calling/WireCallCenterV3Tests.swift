@@ -217,7 +217,7 @@ class WireCallCenterV3Tests: MessagingTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         checkThatItPostsNotification(expectedCallState: .established, expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
-            sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
+            sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
         }
     }
     
@@ -234,7 +234,7 @@ class WireCallCenterV3Tests: MessagingTest {
         
         // when
         checkThatItPostsNotification(expectedCallState: .established, expectedCallerId: otherUserID, expectedConversationId: oneOnOneConversationID) {
-            sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
+            sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
         }
         
         // then
@@ -253,14 +253,14 @@ class WireCallCenterV3Tests: MessagingTest {
         XCTAssertNil(sut.establishedDate)
         
         // call is established
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNotNil(sut.establishedDate)
         let previousEstablishedDate = sut.establishedDate
         spinMainQueue(withTimeout: 0.1)
         
         // when
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -567,7 +567,7 @@ class WireCallCenterV3Tests: MessagingTest {
         }
         
         // when
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
 
         // then
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
@@ -731,7 +731,7 @@ extension WireCallCenterV3Tests {
                                shouldRing: true)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // when
@@ -751,7 +751,7 @@ extension WireCallCenterV3Tests {
                                shouldRing: true)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.handleDataChannelEstablishement(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
+        sut.handleDataChannelEstablishement(conversationId: oneOnOneConversationID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // when
@@ -771,7 +771,7 @@ extension WireCallCenterV3Tests {
                                shouldRing: true)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         sut.handleConstantBitRateChange(enabled: true)
@@ -813,7 +813,7 @@ extension WireCallCenterV3Tests {
                                shouldRing: true)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         sut.handleConstantBitRateChange(enabled: true)
@@ -854,7 +854,7 @@ extension WireCallCenterV3Tests {
                                shouldRing: true)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let quality = NetworkQuality.poor
 
@@ -885,7 +885,7 @@ extension WireCallCenterV3Tests {
                                shouldRing: true)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        sut.handleEstablishedCall(conversationId: oneOnOneConversationID, client: AVSClient(userId: otherUserID, clientId: otherUserClientID))
+        sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let observer = MuteObserver()
         let token = WireCallCenterV3.addMuteStateObserver(observer: observer, context: uiMOC)

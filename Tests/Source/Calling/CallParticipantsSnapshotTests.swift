@@ -88,10 +88,6 @@ class CallParticipantsSnapshotTests: MessagingTest {
         XCTAssertEqual(sut.members.array, [member1])
     }
 
-        // when
-        let sut = WireSyncEngine.CallParticipantsSnapshot(conversationId: UUID(),
-                                                          members: [callMember1, callMember2],
-                                                          callCenter: mockWireCallCenterV3)
     func testThat_ItDoesNotConsider_AUserWithMultipleDevices_AsDuplicated() {
         // Given
         let member1 = AVSCallMember(client: aliceIphone, audioState: .established)
