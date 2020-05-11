@@ -309,4 +309,15 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
+    private let sendSFTCallMessageHandler: Handler.SFTCallMessageSend = { token, url, data, dataLength, contextRef in
+        guard let token = token else { return EINVAL }
+
+        let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
+        let transformedData = Data(buffer: bytes)
+
+        return AVSWrapper.withCallCenter(contextRef, url) {
+            $0.handleSFTCallMessageRequest(token: token, url: $1, data: transformedData)
+        }
+    }
+
 }
