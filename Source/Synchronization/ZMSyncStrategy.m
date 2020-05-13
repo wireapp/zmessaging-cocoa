@@ -210,7 +210,14 @@ ZM_EMPTY_ASSERTING_INIT()
     self.selfStrategy = [[ZMSelfStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory clientRegistrationStatus:applicationStatusDirectory.clientRegistrationStatus syncStatus:applicationStatusDirectory.syncStatus];
     self.conversationTranscoder = [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory localNotificationDispatcher:self.localNotificationDispatcher syncStatus:applicationStatusDirectory.syncStatus];
     self.clientMessageTranscoder = [[ClientMessageTranscoder alloc] initIn:self.syncMOC localNotificationDispatcher:localNotificationsDispatcher applicationStatus:applicationStatusDirectory];
-    self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self previouslyReceivedEventIDsCollection:self.eventDecoder application:self.application applicationStatus:applicationStatusDirectory];
+    self.missingUpdateEventsTranscoder = [[ZMMissingUpdateEventsTranscoder alloc] initWithManagedObjectContext:self.syncMOC
+                                                                                          notificationsTracker:nil
+                                                                                                eventProcessor:self
+                                                                          previouslyReceivedEventIDsCollection:self.eventDecoder
+                                                                                             applicationStatus:applicationStatusDirectory
+                                                                                        pushNotificationStatus:applicationStatusDirectory.pushNotificationStatus
+                                                                                                    syncStatus:applicationStatusDirectory.syncStatus
+                                                                                               operationStatus:applicationStatusDirectory.operationStatus];
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory syncStatus:applicationStatusDirectory.syncStatus objectDirectory:self];
     self.callingRequestStrategy = [[CallingRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:applicationStatusDirectory.clientRegistrationStatus flowManager:flowManager callEventStatus:applicationStatusDirectory.callEventStatus];
     self.conversationStatusSync = [[ConversationStatusStrategy alloc] initWithManagedObjectContext:self.syncMOC];
@@ -359,6 +366,12 @@ ZM_EMPTY_ASSERTING_INIT()
                 [eventConsumers addObject:objectStrategy];
             }
         }
+        
+    ApplicationStatusDirectory *statusDirectory = self.applicationStatusDirectory;
+        
+    [eventConsumers addObject:[[UserClientEventConsumer alloc] initWithManagedObjectContext:self.syncMOC
+                                                                   clientRegistrationStatus:statusDirectory.clientRegistrationStatus
+                                                                         clientUpdateStatus:statusDirectory.clientUpdateStatus]];
 
         _eventConsumers = eventConsumers;
     }

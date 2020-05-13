@@ -20,7 +20,7 @@ import Foundation
 import WireUtilities
 
 @objc
-protocol UpdateEventProcessor: class {
+public protocol UpdateEventProcessor: class {
     
     @objc(processUpdateEvents:ignoreBuffer:)
     func process(updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool)

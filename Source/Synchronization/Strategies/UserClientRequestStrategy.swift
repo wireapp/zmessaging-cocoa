@@ -27,7 +27,14 @@ import WireDataModel
 private let zmLog = ZMSLog(tag: "userClientRS")
 
 
-// Register new client, update it with new keys, deletes clients.
+/// Performs actions on the self clients
+///
+/// Actions:
+/// - Register a new client
+/// - Update an existing client with prekeys
+/// - Delete an existing client
+/// - Fetch all self clients
+
 @objcMembers
 public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStrategy, ZMUpstreamTranscoder, ZMSingleRequestTranscoder {
     
@@ -377,46 +384,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
     }
     
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
-        events.forEach(processUpdateEvent)
+        // Events are processed by the UserClientEventConsumer
     }
-            
-    fileprivate func processUpdateEvent(_ event: ZMUpdateEvent) {
-        switch event.type {
-        case .userClientAdd, .userClientRemove:
-            processClientListUpdateEvent(event)
-        default:
-            break
-        }
-    }
-
-    fileprivate func processClientListUpdateEvent(_ event: ZMUpdateEvent) {
-        guard let clientInfo = event.payload["client"] as? [String: AnyObject] else {
-            zmLog.error("Client info has unexpected payload")
-            return
-        }
-        guard let moc = self.managedObjectContext else { return }
-
-        let selfUser = ZMUser.selfUser(in: moc)
-
-        switch event.type {
-        case .userClientAdd:
-            if let client = UserClient.createOrUpdateSelfUserClient(clientInfo, context: moc) {
-                selfUser.selfClient()?.addNewClientToIgnored(client)
-                selfUser.selfClient()?.updateSecurityLevelAfterDiscovering(Set(arrayLiteral: client))
-            }
-        case .userClientRemove:
-            let selfClientId = selfUser.selfClient()?.remoteIdentifier
-            guard let clientId = clientInfo["id"] as? String else { return }
-
-            if selfClientId != clientId {
-                if let clientToDelete = selfUser.clients.filter({ $0.remoteIdentifier == clientId }).first {
-                    clientToDelete.deleteClientAndEndSession()
-                }
-            } else {
-                clientRegistrationStatus?.didDetectCurrentClientDeletion()
-                clientUpdateStatus?.didDetectCurrentClientDeletion()
-            }
-        default: break
-        }
-    }
+    
 }
