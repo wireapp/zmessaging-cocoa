@@ -97,6 +97,10 @@ private let zmLog = ZMSLog(tag: "calling")
         }
     }
 
+    /// Used to store AVS completions for the clients requests. AVS will only request the list of clients
+    /// once, but we may need to provide AVS with an updated list during the call.
+    var clientsRequestCompletionsByConversationId = [UUID: (String) -> Void]()
+
     // MARK: - Initialization
     
     deinit {
@@ -137,6 +141,7 @@ extension WireCallCenterV3 {
     /// Removes the participantSnapshot and remove the conversation from the list of ignored conversations.
     func clearSnapshot(conversationId: UUID) {
         callSnapshots.removeValue(forKey: conversationId)
+        clientsRequestCompletionsByConversationId.removeValue(forKey: conversationId)
     }
 
     /**
