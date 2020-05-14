@@ -219,8 +219,8 @@ extension EventDecoder {
         
         return events.filter { event in
             // The only message we process arriving in the self conversation from other users is availability updates
-            if event.conversationUUID() == selfConversation.remoteIdentifier, event.senderUUID() != selfUser.remoteIdentifier, let genericMessage = ZMGenericMessage(from: event) {
-                return genericMessage.hasAvailability()
+            if event.conversationUUID() == selfConversation.remoteIdentifier, event.senderUUID() != selfUser.remoteIdentifier, let genericMessage = GenericMessage(from: event) {
+                return genericMessage.hasAvailability
             }
             
             return true

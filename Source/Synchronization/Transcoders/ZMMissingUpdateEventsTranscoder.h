@@ -29,6 +29,8 @@
 @protocol PreviouslyReceivedEventIDsCollection;
 @protocol UpdateEventProcessor;
 
+extern NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize;
+
 @interface ZMMissingUpdateEventsTranscoder : ZMAbstractRequestStrategy <ZMObjectStrategy>
 
 @property (nonatomic, readonly) BOOL hasLastUpdateEventID;

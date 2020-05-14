@@ -235,8 +235,8 @@ extension TypingStrategy : ZMEventConsumer {
             processIsTypingUpdateEvent(for: user, in: conversation, with: status)
         } else if event.type == .conversationOtrMessageAdd {
             
-            if let message = ZMGenericMessage(from: event),
-                message.hasText() || message.hasEdited() || (message.hasEphemeral() && message.ephemeral.hasText())  {
+            if let message = GenericMessage(from: event),
+                message.hasText || message.hasEdited || (message.hasEphemeral && message.ephemeral.hasText)  {
                 typing.setIsTyping(false, for: user, in: conversation)
             }
         } else if event.type == .conversationMemberLeave {

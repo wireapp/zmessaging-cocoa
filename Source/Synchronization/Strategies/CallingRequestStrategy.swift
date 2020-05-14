@@ -128,7 +128,7 @@ extension CallingRequestStrategy : ZMEventConsumer {
         for event in events {
             guard event.type == .conversationOtrMessageAdd else { continue }
             
-            if let genericMessage = ZMGenericMessage(from: event), genericMessage.hasCalling() {
+            if let genericMessage = GenericMessage(from: event), genericMessage.hasCalling {
                 
                 guard
                     let payload = genericMessage.calling.content.data(using: .utf8, allowLossyConversion: false),
