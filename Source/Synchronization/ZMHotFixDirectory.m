@@ -220,33 +220,4 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
     [[NSFileManager defaultManager] removeItemAtURL:conversationUrl error:nil];
 }
 
-+ (void)removeDeliveryReceiptsForDeletedMessages:(NSManagedObjectContext *)context {
-    NSFetchRequest *requestForInsertedMessages = [ZMClientMessage sortedFetchRequestWithPredicate:[ZMClientMessage predicateForObjectsThatNeedToBeInsertedUpstream]];
-    NSArray *possibleMatches = [context executeFetchRequestOrAssert:requestForInsertedMessages];
-    
-    NSArray *confirmationReceiptsForDeletedMessages = [possibleMatches filterWithBlock:^BOOL(ZMClientMessage *candidateConfirmationReceipt) {
-        if (candidateConfirmationReceipt.genericMessage.hasConfirmation &&
-            candidateConfirmationReceipt.genericMessage.confirmation.firstMessageId) {
-            ZMClientMessage *confirmationReceipt = candidateConfirmationReceipt;
-            
-            NSUUID *originalMessageUUID = [NSUUID uuidWithTransportString:confirmationReceipt.genericMessage.confirmation.firstMessageId];
-            
-            ZMMessage *originalConfirmedMessage = [ZMMessage fetchMessageWithNonce:originalMessageUUID
-                                                                   forConversation:confirmationReceipt.conversation
-                                                            inManagedObjectContext:context];
-            
-            if (nil != originalConfirmedMessage && (originalConfirmedMessage.hasBeenDeleted || originalConfirmedMessage.sender == nil)) {
-                return YES;
-            }
-        }
-        return NO;
-    }];
-    
-    for (ZMClientMessage *message in confirmationReceiptsForDeletedMessages) {
-        [context deleteObject:message];
-    }
-    
-    [context saveOrRollback];
-}
-
 @end
