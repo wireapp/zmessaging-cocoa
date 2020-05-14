@@ -228,7 +228,6 @@
 		54764B9C1C930AEB00BD25E3 /* Lorem Ipsum.txt in Resources */ = {isa = PBXBuildFile; fileRef = 54764B9B1C930AEB00BD25E3 /* Lorem Ipsum.txt */; };
 		54764B9F1C931E9400BD25E3 /* animated.gif in Resources */ = {isa = PBXBuildFile; fileRef = 54764B9D1C931E9400BD25E3 /* animated.gif */; };
 		54764BA01C931E9400BD25E3 /* not_animated.gif in Resources */ = {isa = PBXBuildFile; fileRef = 54764B9E1C931E9400BD25E3 /* not_animated.gif */; };
-		5476E3BD19A77C6900E68BAD /* PushChannelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5476E3BB19A77C6900E68BAD /* PushChannelTests.m */; };
 		5478A1411DEC4048006F7268 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5478A1401DEC4048006F7268 /* UserProfile.swift */; };
 		547E5B581DDB4B800038D936 /* UserProfileUpdateStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547E5B571DDB4B800038D936 /* UserProfileUpdateStatus.swift */; };
 		547E5B5A1DDB67390038D936 /* UserProfileUpdateRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547E5B591DDB67390038D936 /* UserProfileUpdateRequestStrategy.swift */; };
@@ -329,6 +328,7 @@
 		636B716223ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 636B716123ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift */; };
 		636B716823BF46EB00B624D6 /* ZMUserSession+VerifyPassword.swift in Sources */ = {isa = PBXBuildFile; fileRef = 636B716723BF46EA00B624D6 /* ZMUserSession+VerifyPassword.swift */; };
 		6387932F23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6387932E23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift */; };
+		63F65F03246D5A9600534A69 /* PushChannelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F65F02246D5A9600534A69 /* PushChannelTests.swift */; };
 		7C1F4BF5203C4F67000537A8 /* Analytics+Push.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1F4BF4203C4F67000537A8 /* Analytics+Push.swift */; };
 		7C26879D21F7193800570AA9 /* EventProcessingTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C26879C21F7193800570AA9 /* EventProcessingTracker.swift */; };
 		7C419ED821F8D81D00B95770 /* EventProcessingTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C419ED621F8D7EB00B95770 /* EventProcessingTrackerTests.swift */; };
@@ -855,7 +855,6 @@
 		54764B9B1C930AEB00BD25E3 /* Lorem Ipsum.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Lorem Ipsum.txt"; sourceTree = "<group>"; };
 		54764B9D1C931E9400BD25E3 /* animated.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = animated.gif; sourceTree = "<group>"; };
 		54764B9E1C931E9400BD25E3 /* not_animated.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = not_animated.gif; sourceTree = "<group>"; };
-		5476E3BB19A77C6900E68BAD /* PushChannelTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PushChannelTests.m; sourceTree = "<group>"; };
 		5478A1401DEC4048006F7268 /* UserProfile.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		547E5B571DDB4B800038D936 /* UserProfileUpdateStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileUpdateStatus.swift; sourceTree = "<group>"; };
 		547E5B591DDB67390038D936 /* UserProfileUpdateRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserProfileUpdateRequestStrategy.swift; sourceTree = "<group>"; };
@@ -965,6 +964,7 @@
 		636B716123ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyPasswordRequestStrategyTests.swift; sourceTree = "<group>"; };
 		636B716723BF46EA00B624D6 /* ZMUserSession+VerifyPassword.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+VerifyPassword.swift"; sourceTree = "<group>"; };
 		6387932E23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyPasswordRequestStrategy.swift; sourceTree = "<group>"; };
+		63F65F02246D5A9600534A69 /* PushChannelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushChannelTests.swift; sourceTree = "<group>"; };
 		7C1F4BF4203C4F67000537A8 /* Analytics+Push.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Analytics+Push.swift"; sourceTree = "<group>"; };
 		7C26879C21F7193800570AA9 /* EventProcessingTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventProcessingTracker.swift; sourceTree = "<group>"; };
 		7C419ED621F8D7EB00B95770 /* EventProcessingTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventProcessingTrackerTests.swift; sourceTree = "<group>"; };
@@ -2069,7 +2069,7 @@
 				3EEA678A199D079600AF7665 /* UserTests.m */,
 				168E96DC220C6EB700FC92FA /* UserTests+AccountDeletion.swift */,
 				54E4DD0D1DE4A9A200FEF192 /* UserHandleTests.swift */,
-				5476E3BB19A77C6900E68BAD /* PushChannelTests.m */,
+				63F65F02246D5A9600534A69 /* PushChannelTests.swift */,
 				545F3DBA1AAF64FB00BF817B /* APNSTests.m */,
 				F1F3FE8620F36DEC00B0BAF3 /* PushNotificationTokenTests.swift */,
 				5492C6C319ACCCA8008F41E2 /* ConnectionTests.m */,
@@ -2828,7 +2828,6 @@
 				163BB8131EE1A6EE00DF9384 /* IntegrationTest+Search.swift in Sources */,
 				16849B1C23EDA1FD00C025A8 /* MockUpdateEventProcessor.swift in Sources */,
 				545F601C1D6C336D00C2C55B /* AddressBookSearchTests.swift in Sources */,
-				5476E3BD19A77C6900E68BAD /* PushChannelTests.m in Sources */,
 				162A81D6202B5BC600F6200C /* SessionManagerAVSTests.swift in Sources */,
 				164CB466207CC47700A2010F /* Conversation+ParticipantsTests.swift in Sources */,
 				5474C80C1921309400185A3A /* MessagingTestTests.m in Sources */,
@@ -2910,6 +2909,7 @@
 				168CF42F2007BCD9009FCB89 /* TeamInvitationStatusTests.swift in Sources */,
 				874A174A205812B6001C6760 /* ZMUserSessionTests.swift in Sources */,
 				7CE017172317D72A00144905 /* ZMCredentialsTests.swift in Sources */,
+				63F65F03246D5A9600534A69 /* PushChannelTests.swift in Sources */,
 				546F815C1E685F6E00775059 /* LocalNotificationDispatcherTests.swift in Sources */,
 				F1AE5F6F21F73388009CDBBC /* ZMUserSessionTests+Timers.swift in Sources */,
 				161ACB4323F6EE4800ABFF33 /* CompanyLoginURLActionProcessorTests.swift in Sources */,
