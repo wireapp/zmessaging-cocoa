@@ -23,6 +23,7 @@ import avs
 class WireCallCenterTransportMock : WireCallCenterTransport {
     
     var mockCallConfigResponse : (String, Int)?
+    var mockClientsRequestResponse: [String: [String]]?
     
     
     func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((Int) -> Void)) {
@@ -36,6 +37,12 @@ class WireCallCenterTransportMock : WireCallCenterTransport {
     func requestCallConfig(completionHandler: @escaping CallConfigRequestCompletion) {
         if let mockCallConfigResponse = mockCallConfigResponse {
             completionHandler(mockCallConfigResponse.0, mockCallConfigResponse.1)
+        }
+    }
+
+    func requestClientsList(conversationId: UUID, completionHandler: @escaping ClientDiscoveryRequestStrategy.RequestCompletion) {
+        if let mockClientsRequestResponse = mockClientsRequestResponse {
+            completionHandler(mockClientsRequestResponse)
         }
     }
     
@@ -1083,16 +1090,13 @@ extension WireCallCenterV3Tests {
 
     func testThatClientsRequestHandlerSuccessfullyReturnsClientList() {
         // given
-        let selfUser = ZMUser.selfUser(in: uiMOC)
-        let selfUserClients = createClients(for: selfUser, ids: "client1", "client2")
-        let otherUserClients = createClients(for: otherUser, ids: "client1", "client2")
+        let userId1 = UUID.create()
+        let userId2 = UUID.create()
 
-        setupSelfClient(inMoc: uiMOC)
-
-        guard let selfClient = selfUser.selfClient() else { return XCTFail("Expected a self client") }
-
-        groupConversation.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
-        groupConversation.addParticipantAndUpdateConversationState(user: otherUser, role: nil)
+        mockTransport.mockClientsRequestResponse = [
+            userId1.transportString(): ["client1", "client2"],
+            userId2.transportString(): ["client1", "client2"],
+        ]
 
         // when
         sut.handleClientsRequest(conversationId: groupConversation.remoteIdentifier!) { json in
@@ -1102,11 +1106,14 @@ extension WireCallCenterV3Tests {
                 let clientList = try JSONDecoder().decode(WireSyncEngine.AVSClientList.self, from: data)
 
                 let actual = Set(clientList.clients)
-                let expected = Set((selfUserClients + otherUserClients).compactMap(AVSClient.init))
+                let expected: Set<AVSClient> = [
+                    AVSClient(userId: userId1, clientId: "client1"),
+                    AVSClient(userId: userId1, clientId: "client2"),
+                    AVSClient(userId: userId2, clientId: "client1"),
+                    AVSClient(userId: userId2, clientId: "client2"),
+                ]
 
                 XCTAssertEqual(actual, expected)
-                XCTAssertFalse(actual.contains(AVSClient(userClient: selfClient)!))
-
             } catch {
                 XCTFail()
             }

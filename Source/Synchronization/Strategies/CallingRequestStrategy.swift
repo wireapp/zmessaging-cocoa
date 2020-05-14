@@ -25,14 +25,14 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     
     fileprivate let zmLog = ZMSLog(tag: "calling")
     
-    fileprivate var callCenter              : WireCallCenterV3?
-    fileprivate let managedObjectContext    : NSManagedObjectContext
-    fileprivate let genericMessageStrategy  : GenericMessageRequestStrategy
-    fileprivate let flowManager             : FlowManagerType
-    fileprivate var callConfigRequestSync   : ZMSingleRequestSync! = nil
-    fileprivate var callConfigCompletion    : CallConfigRequestCompletion? = nil
-    fileprivate let callEventStatus         : CallEventStatus
-
+    private var callCenter: WireCallCenterV3?
+    private let managedObjectContext: NSManagedObjectContext
+    private let genericMessageStrategy: GenericMessageRequestStrategy
+    private let flowManager: FlowManagerType
+    private var callConfigRequestSync: ZMSingleRequestSync! = nil
+    private var callConfigCompletion: CallConfigRequestCompletion? = nil
+    private let callEventStatus: CallEventStatus
+    private let clientDiscoveryStrategy: ClientDiscoveryRequestStrategy
     private let ephemeralURLSession = URLSession(configuration: .ephemeral)
     
     public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType, callEventStatus: CallEventStatus) {
@@ -40,6 +40,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
         self.genericMessageStrategy = GenericMessageRequestStrategy(context: managedObjectContext, clientRegistrationDelegate: clientRegistrationDelegate)
         self.flowManager = flowManager
         self.callEventStatus = callEventStatus
+        self.clientDiscoveryStrategy = ClientDiscoveryRequestStrategy(withManagedObjectContext: managedObjectContext)
         
         super.init()
         
@@ -53,10 +54,11 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     }
     
     public func nextRequest() -> ZMTransportRequest? {
-        let request = self.callConfigRequestSync.nextRequest() ?? genericMessageStrategy.nextRequest()
+        let request = callConfigRequestSync.nextRequest() ??
+                        genericMessageStrategy.nextRequest() ??
+                        clientDiscoveryStrategy.nextRequest()
         
         request?.forceToVoipSession()
-       
         return request
     }
     
@@ -232,6 +234,13 @@ extension CallingRequestStrategy : WireCallCenterTransport {
             self.callConfigRequestSync.readyForNextRequestIfNotBusy()
             RequestAvailableNotification.notifyNewRequestsAvailable(nil)
         }
+    }
+
+    public func requestClientsList(conversationId: UUID,
+                                   completionHandler: @escaping ClientDiscoveryRequestStrategy.RequestCompletion) {
+
+        clientDiscoveryStrategy.requestClientList(conversationId: conversationId,
+                                                  completion: completionHandler)
     }
 
     enum SFTResponseError: LocalizedError {
