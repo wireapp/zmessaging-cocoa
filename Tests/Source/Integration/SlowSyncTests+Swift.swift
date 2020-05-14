@@ -27,3 +27,79 @@ public extension AssetRequestFactory {
         return upstreamRequestForAsset(withData: data, shareable: true, retention: .eternal)
     }
 }
+
+class SlowSyncTests_Swift: IntegrationTest {
+    func testThatItDoesAQuickSyncOnStarTupIfItHasReceivedNotificationsEarlier() {
+        // GIVEN
+        XCTAssertTrue(login())
+        
+        mockTransportSession.performRemoteChanges { _ in
+            let message = GenericMessage(content: Text(content: "Hello, Test!"), nonce: .create())
+            guard
+                let client = self.user1.clients.anyObject() as? MockUserClient,
+                let selfClient = self.selfUser.clients.anyObject() as? MockUserClient,
+                let data = try? message.serializedData() else {
+                    return XCTFail()
+            }
+            self.groupConversation.encryptAndInsertData(from: client, to: selfClient, data: data)
+        }
+        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+        
+        mockTransportSession.resetReceivedRequests()
+        
+        // WHEN
+        recreateSessionManager()
+        
+        // THEN
+        var hasNotificationsRequest = false
+        for request in mockTransportSession.receivedRequests() {
+            if request.path.hasPrefix("/notifications") {
+                hasNotificationsRequest = true
+            }
+            
+            XCTAssertFalse(request.path.hasPrefix("/conversations"))
+            XCTAssertFalse(request.path.hasPrefix("/connections"))
+        }
+        
+        XCTAssertTrue(hasNotificationsRequest)
+    }
+    
+    func testThatItDoesAQuickSyncAfterTheWebSocketWentDown() {
+        // GIVEN
+        XCTAssertTrue(login())
+        
+        mockTransportSession.performRemoteChanges { _ in
+            let message = GenericMessage(content: Text(content: "Hello, Test!"), nonce: .create())
+            guard
+                let client = self.user1.clients.anyObject() as? MockUserClient,
+                let selfClient = self.selfUser.clients.anyObject() as? MockUserClient,
+                let data = try? message.serializedData() else {
+                    return XCTFail()
+            }
+            self.groupConversation.encryptAndInsertData(from: client, to: selfClient, data: data)
+        }
+        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+        
+        mockTransportSession.resetReceivedRequests()
+        
+        // WHEN
+        mockTransportSession.performRemoteChanges { session in
+            session.simulatePushChannelClosed()
+            session.simulatePushChannelOpened()
+        }
+        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+        
+        // THEN
+        var hasNotificationsRequest = false
+        for request in mockTransportSession.receivedRequests() {
+            if request.path.hasPrefix("/notifications") {
+                hasNotificationsRequest = true
+            }
+            
+            XCTAssertFalse(request.path.hasPrefix("/conversations"))
+            XCTAssertFalse(request.path.hasPrefix("/connections"))
+        }
+              
+        XCTAssertTrue(hasNotificationsRequest)
+    }
+}
