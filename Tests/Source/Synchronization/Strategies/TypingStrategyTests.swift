@@ -201,7 +201,7 @@ extension TypingStrategyTests {
         // given
         
         //edit message is an allowed type that can fire a otr-message-add notification
-        let message = ZMGenericMessage.message(content: ZMMessageEdit.edit(with: ZMText.text(with: "demo"), replacingMessageId: UUID.create()))
+        let message = GenericMessage(content: MessageEdit(replacingMessageID: .create(), text: Text(content: "demo")))
         let payload = payloadForOTRMessageAdd(with: message) as ZMTransportData
         let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
         
@@ -218,7 +218,7 @@ extension TypingStrategyTests {
     func testThatDoesntForwardOTRMessageAddEventsForNonTextTypes() {
         // given
         // delete-message should not fire an Add Events notification
-        let message = ZMGenericMessage.message(content: ZMMessageDelete(messageID: UUID.create()))
+        let message = GenericMessage(content: MessageDelete(messageId: UUID.create()))
         tryToForwardOTRMessageWithoutReply(with: message)
     }
     
@@ -226,11 +226,11 @@ extension TypingStrategyTests {
         
         // given
         // confirmations should not fire an Add Events notification
-        let message = ZMGenericMessage.message(content: ZMConfirmation.confirm(messageId: UUID.create()))
+        let message = GenericMessage(content: Confirmation(messageId: UUID.create()))
         tryToForwardOTRMessageWithoutReply(with: message)
     }
     
-    func tryToForwardOTRMessageWithoutReply(with message: ZMGenericMessage) {
+    func tryToForwardOTRMessageWithoutReply(with message: GenericMessage) {
         let payload = payloadForOTRMessageAdd(with: message) as ZMTransportData
         let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil)!
         
@@ -244,9 +244,10 @@ extension TypingStrategyTests {
         XCTAssertTrue(typing.isUserTyping(user: userA, in: conversationA)) //user is still typing
     }
     
-    func payloadForOTRMessageAdd(with message: ZMGenericMessage) -> [String:Any] {
+    func payloadForOTRMessageAdd(with message: GenericMessage) -> [String:Any] {
+        let data = try? message.serializedData().base64String()
         return ["conversation": conversationA.remoteIdentifier!.transportString(),
-                       "data": ["text":message.data().base64String()],
+                       "data": ["text":data],
                        "from": userA.remoteIdentifier!.transportString(),
                        "time": Date().transportString(),
                        "type": "conversation.otr-message-add",

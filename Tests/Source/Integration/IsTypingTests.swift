@@ -100,12 +100,19 @@ class IsTypingTests: IntegrationTest, ZMTypingChangeObserver {
 
         // When
         mockTransportSession.performRemoteChanges { _ in
-            let content = ZMText.text(with: "text text", mentions: [], linkPreviews: [], replyingTo: nil)
-            let message = ZMGenericMessage.message(content: content, nonce: .create())
+            let content = Text(content: "text text", mentions: [], linkPreviews: [], replyingTo: nil)
+            let message = GenericMessage(content: content, nonce: .create())
 
-            self.groupConversation.encryptAndInsertData(from: self.user1.clients.anyObject() as! MockUserClient,
-                                                        to: self.selfUser.clients.anyObject() as! MockUserClient,
-                                                        data: message.data())
+            do {
+                self.groupConversation.encryptAndInsertData(
+                    from: self.user1.clients.anyObject() as! MockUserClient,
+                    to: self.selfUser.clients.anyObject() as! MockUserClient,
+                    data: try message.serializedData())
+            } catch {
+                XCTFail()
+            }
+            
+            
         }
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -134,12 +141,17 @@ class IsTypingTests: IntegrationTest, ZMTypingChangeObserver {
 
         // When
         mockTransportSession.performRemoteChanges { _ in
-            let content = ZMText.text(with: "text text", mentions: [], linkPreviews: [], replyingTo: nil)
-            let message = ZMGenericMessage.message(content: content, nonce: .create())
+            let content = Text(content: "text text", mentions: [], linkPreviews: [], replyingTo: nil)
+            let message = GenericMessage(content: content, nonce: .create())
 
-            self.groupConversation.encryptAndInsertData(from: self.user1.clients.anyObject() as! MockUserClient,
-                                                        to: self.selfUser.clients.anyObject() as! MockUserClient,
-                                                        data: message.data())
+            do {
+                self.groupConversation.encryptAndInsertData(
+                    from: self.user1.clients.anyObject() as! MockUserClient,
+                    to: self.selfUser.clients.anyObject() as! MockUserClient,
+                    data: try message.serializedData())
+            } catch {
+                XCTFail()
+            }
         }
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

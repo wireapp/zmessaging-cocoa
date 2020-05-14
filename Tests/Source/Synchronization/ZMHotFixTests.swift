@@ -72,8 +72,8 @@ class ZMHotFixTests_Integration: MessagingTest {
             otherUser.remoteIdentifier = UUID()
             
             let incomingMessage = oneOnOneConversation.append(text: "Test") as! ZMClientMessage
-            let confirmation = ZMConfirmation.confirm(messageId: incomingMessage.nonce!, type: .DELIVERED)
-            confirmationMessage = oneOnOneConversation.appendClientMessage(with: ZMGenericMessage.message(content: confirmation), expires: false, hidden: true)
+            let confirmation = Confirmation(messageId: incomingMessage.nonce!, type: .delivered)
+            confirmationMessage = oneOnOneConversation.appendClientMessage(with: GenericMessage(content: confirmation), expires: false, hidden: true)
             
             self.syncMOC.saveOrRollback()
             

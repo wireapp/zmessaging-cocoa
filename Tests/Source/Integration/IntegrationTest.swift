@@ -585,17 +585,25 @@ extension IntegrationTest {
 extension IntegrationTest {
     @objc(remotelyAppendSelfConversationWithZMClearedForMockConversation:atTime:)
     func remotelyAppendSelfConversationWithZMCleared(for mockConversation: MockConversation, at time: Date) {
-        let genericMessage = ZMGenericMessage.message(content: ZMCleared(timestamp: time, conversationRemoteID: UUID(uuidString: mockConversation.identifier)!))
+        let genericMessage = GenericMessage(content: Cleared(timestamp: time, conversationID: UUID(uuidString: mockConversation.identifier)!))
         mockTransportSession.performRemoteChanges { session in
-            self.selfConversation.insertClientMessage(from: self.selfUser, data: genericMessage.data())
+            do {
+                self.selfConversation.insertClientMessage(from: self.selfUser, data: try genericMessage.serializedData())
+            } catch {
+                XCTFail()
+            }
         }
     }
     
     @objc(remotelyAppendSelfConversationWithZMLastReadForMockConversation:atTime:)
     func remotelyAppendSelfConversationWithZMLastRead(for mockConversation: MockConversation, at time: Date) {
-        let genericMessage = ZMGenericMessage.message(content: ZMLastRead(timestamp: time, conversationRemoteID: UUID(uuidString: mockConversation.identifier)!))
+        let genericMessage = GenericMessage(content: LastRead(conversationID: UUID(uuidString: mockConversation.identifier)!, lastReadTimestamp: time))
         mockTransportSession.performRemoteChanges { session in
-            self.selfConversation.insertClientMessage(from: self.selfUser, data: genericMessage.data())
+            do {
+                self.selfConversation.insertClientMessage(from: self.selfUser, data: try genericMessage.serializedData())
+            } catch {
+                XCTFail()
+            }
         }
     }
 }
