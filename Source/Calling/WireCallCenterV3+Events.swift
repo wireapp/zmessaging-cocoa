@@ -294,20 +294,9 @@ extension WireCallCenterV3 {
 
     func handleClientsRequest(conversationId: UUID, completion: @escaping (_ clients: String) -> Void) {
         handleEventInContext("request-clients") { context in
-            self.transport?.requestClientsList(conversationId: conversationId) { clientsByUserId in
-                var clients = Set<AVSClient>()
+            self.transport?.requestClientsList(conversationId: conversationId) { clients in
 
-                for (userIdString, clientIdStrings) in clientsByUserId {
-                    guard let userId = UUID(uuidString: userIdString) else { continue }
-
-                    let avsClients = clientIdStrings.map {
-                        AVSClient(userId: userId, clientId: $0)
-                    }
-
-                    clients.formUnion(avsClients)
-                }
-
-                guard let json = AVSClientList(clients: Array(clients)).json else {
+                guard let json = AVSClientList(clients: clients).json else {
                     zmLog.error("Could not encode client list to JSON")
                     return
                 }

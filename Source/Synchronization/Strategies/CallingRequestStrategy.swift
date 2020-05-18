@@ -29,10 +29,16 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     private let managedObjectContext: NSManagedObjectContext
     private let genericMessageStrategy: GenericMessageRequestStrategy
     private let flowManager: FlowManagerType
+
+    private let callEventStatus: CallEventStatus
+
     private var callConfigRequestSync: ZMSingleRequestSync! = nil
     private var callConfigCompletion: CallConfigRequestCompletion? = nil
-    private let callEventStatus: CallEventStatus
-    private let clientDiscoveryStrategy: ClientDiscoveryRequestStrategy
+
+    private var clientDiscoverySync: ZMSingleRequestSync! = nil
+    private var clientDiscoveryRequest: ClientDiscoveryRequest?
+
+
     private let ephemeralURLSession = URLSession(configuration: .ephemeral)
     
     public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType, callEventStatus: CallEventStatus) {
@@ -40,13 +46,14 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
         self.genericMessageStrategy = GenericMessageRequestStrategy(context: managedObjectContext, clientRegistrationDelegate: clientRegistrationDelegate)
         self.flowManager = flowManager
         self.callEventStatus = callEventStatus
-        self.clientDiscoveryStrategy = ClientDiscoveryRequestStrategy(withManagedObjectContext: managedObjectContext)
-        
+
         super.init()
         
+        callConfigRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
+        clientDiscoverySync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
+
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
-        self.callConfigRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: self.managedObjectContext)
-        
+
         if let userId = selfUser.remoteIdentifier, let clientId = selfUser.selfClient()?.remoteIdentifier {
             zmLog.debug("Creating callCenter from init")
             callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, flowManager: flowManager, analytics: managedObjectContext.analytics, transport: self)
@@ -55,8 +62,8 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     
     public func nextRequest() -> ZMTransportRequest? {
         let request = callConfigRequestSync.nextRequest() ??
-                        genericMessageStrategy.nextRequest() ??
-                        clientDiscoveryStrategy.nextRequest()
+                        clientDiscoverySync.nextRequest() ??
+                        genericMessageStrategy.nextRequest()
         
         request?.forceToVoipSession()
         return request
@@ -70,22 +77,82 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
 
 
 extension CallingRequestStrategy : ZMSingleRequestTranscoder {
+
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
-        zmLog.debug("Scheduling request to '/calls/config/v2'")
-        return ZMTransportRequest(path: "/calls/config/v2", method: .methodGET, binaryData: nil, type: "application/json", contentDisposition: nil, shouldCompress: true)
+        switch sync {
+        case callConfigRequestSync:
+            zmLog.debug("Scheduling request to '/calls/config/v2'")
+
+            return ZMTransportRequest(path: "/calls/config/v2",
+                                      method: .methodGET,
+                                      binaryData: nil,
+                                      type: "application/json",
+                                      contentDisposition: nil,
+                                      shouldCompress: true)
+
+        case clientDiscoverySync:
+            guard
+                let request = clientDiscoveryRequest,
+                let selfClient = ZMUser.selfUser(in: managedObjectContext).selfClient()
+            else {
+                return nil
+            }
+
+            zmLog.debug("Scheduling request to discover clients")
+
+            let factory = ClientMessageRequestFactory()
+            return factory.upstreamRequestForFetchingClients(conversationId: request.conversationId, selfClient: selfClient)
+
+        default:
+            return nil
+        }
+
     }
     
     public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
-        
-        zmLog.debug("Received response for \(self): \(response)")
-        if response.httpStatus == 200 {
-            var payloadAsString : String? = nil
-            if let payload = response.payload, let data = try? JSONSerialization.data(withJSONObject: payload, options: []) {
-                payloadAsString = String(data: data, encoding: .utf8)
+        switch sync {
+        case callConfigRequestSync:
+            zmLog.debug("Received call config response for \(self): \(response)")
+            if response.httpStatus == 200 {
+                var payloadAsString : String? = nil
+                if let payload = response.payload, let data = try? JSONSerialization.data(withJSONObject: payload, options: []) {
+                    payloadAsString = String(data: data, encoding: .utf8)
+                }
+                zmLog.debug("Callback: \(String(describing: self.callConfigCompletion))")
+                self.callConfigCompletion?(payloadAsString, response.httpStatus)
+                self.callConfigCompletion = nil
             }
-            zmLog.debug("Callback: \(String(describing: self.callConfigCompletion))")
-            self.callConfigCompletion?(payloadAsString, response.httpStatus)
-            self.callConfigCompletion = nil
+
+        case clientDiscoverySync:
+            zmLog.debug("Received client discovery response for \(self): \(response)")
+
+            defer {
+                clientDiscoveryRequest = nil
+            }
+
+            guard response.httpStatus == 412 else {
+                zmLog.warn("Expected 412 response: missing clients")
+                return
+            }
+
+            guard let jsonData = response.rawData else { return }
+
+            let decoder = JSONDecoder()
+
+            do {
+                let payload = try decoder.decode(ClientDiscoveryResponsePayload.self, from: jsonData)
+
+                let clients = payload.clients.flatMap { clients in
+                    clients.clientIds.map { AVSClient(userId: clients.userId, clientId: $0) }
+                }
+
+                clientDiscoveryRequest?.completion(clients)
+            } catch {
+                zmLog.error("Could not parse client discovery response: \(error.localizedDescription)")
+            }
+
+        default:
+            break
         }
     }
 }
@@ -236,11 +303,13 @@ extension CallingRequestStrategy : WireCallCenterTransport {
         }
     }
 
-    public func requestClientsList(conversationId: UUID,
-                                   completionHandler: @escaping ClientDiscoveryRequestStrategy.RequestCompletion) {
-
-        clientDiscoveryStrategy.requestClientList(conversationId: conversationId,
-                                                  completion: completionHandler)
+    public func requestClientsList(conversationId: UUID, completionHandler: @escaping ([AVSClient]) -> Void) {
+        self.zmLog.debug("requestClientList() called, moc = \(managedObjectContext)")
+        managedObjectContext.performGroupedBlock { [unowned self] in
+            self.clientDiscoveryRequest = ClientDiscoveryRequest(conversationId: conversationId, completion: completionHandler)
+            self.clientDiscoverySync.readyForNextRequestIfNotBusy()
+            RequestAvailableNotification.notifyNewRequestsAvailable(nil)
+        }
     }
 
     enum SFTResponseError: LocalizedError {
@@ -262,4 +331,72 @@ extension CallingRequestStrategy : WireCallCenterTransport {
 
     }
     
+}
+
+extension CallingRequestStrategy {
+
+    struct ClientDiscoveryRequest {
+
+        let conversationId: UUID
+        let completion: ([AVSClient]) -> Void
+
+    }
+
+    struct ClientDiscoveryResponsePayload: Decodable {
+
+        let clients: [Clients]
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let nestedContainer = try container.nestedContainer(keyedBy: Clients.CodingKeys.self, forKey: .missing)
+
+            let userIds = nestedContainer.allKeys.compactMap { UUID(uuidString: $0.stringValue) }
+
+            clients = try userIds.map { userId in
+                let userIdKey = Clients.CodingKeys.userId(userId)
+                let clientIds = try nestedContainer.decode([String].self, forKey: userIdKey)
+                return Clients(userId: userId, clientIds: clientIds)
+            }
+        }
+
+        enum CodingKeys: String, CodingKey {
+
+            case missing
+
+        }
+
+        struct Clients {
+
+            let userId: UUID
+            let clientIds: [String]
+
+            enum CodingKeys: CodingKey {
+
+                case userId(UUID)
+
+                var stringValue: String {
+                    switch self {
+                    case .userId(let uuid):
+                        return uuid.transportString()
+                    }
+                }
+
+                init?(stringValue: String) {
+                    guard let uuid = UUID(uuidString: stringValue) else { return nil }
+                    self = .userId(uuid)
+                }
+
+                var intValue: Int? {
+                    return nil
+                }
+
+                init?(intValue: Int) {
+                    return nil
+                }
+
+            }
+
+        }
+    }
+
 }
