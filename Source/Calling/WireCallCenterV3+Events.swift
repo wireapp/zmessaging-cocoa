@@ -294,23 +294,15 @@ extension WireCallCenterV3 {
 
     func handleClientsRequest(conversationId: UUID, completion: @escaping (_ clients: String) -> Void) {
         handleEventInContext("request-clients") { context in
-            guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: context) else {
-                zmLog.error("Could not handle clients request, conversation does not exist: \(conversationId)")
-                return
+            self.transport?.requestClientsList(conversationId: conversationId) { clients in
+
+                guard let json = AVSClientList(clients: clients).json else {
+                    zmLog.error("Could not encode client list to JSON")
+                    return
+                }
+
+                completion(json)
             }
-
-            var clients = conversation.localParticipants.avsClients
-
-            if let selfClient = ZMUser.selfUser(in: context).selfClient().flatMap(AVSClient.init) {
-                clients.remove(selfClient)
-            }
-
-            guard let json = AVSClientList(clients: Array(clients)).json else {
-                zmLog.error("Could not encode client list to JSON")
-                return
-            }
-
-            completion(json)
         }
     }
 
