@@ -22,8 +22,10 @@ import WireDataModel
 
 @objcMembers
 public final class CallingRequestStrategy : NSObject, RequestStrategy {
+
+    // MARK: - Private Properties
     
-    fileprivate let zmLog = ZMSLog(tag: "calling")
+    private let zmLog = ZMSLog(tag: "calling")
     
     private var callCenter: WireCallCenterV3?
     private let managedObjectContext: NSManagedObjectContext
@@ -38,8 +40,9 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     private var clientDiscoverySync: ZMSingleRequestSync! = nil
     private var clientDiscoveryRequest: ClientDiscoveryRequest?
 
-
     private let ephemeralURLSession = URLSession(configuration: .ephemeral)
+
+    // MARK: - Init
     
     public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType, callEventStatus: CallEventStatus) {
         self.managedObjectContext = managedObjectContext
@@ -59,6 +62,8 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
             callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, flowManager: flowManager, analytics: managedObjectContext.analytics, transport: self)
         }
     }
+
+    // MARK: - Methods
     
     public func nextRequest() -> ZMTransportRequest? {
         let request = callConfigRequestSync.nextRequest() ??
@@ -75,8 +80,9 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     
 }
 
+// MARK: - Single Request Transcoder
 
-extension CallingRequestStrategy : ZMSingleRequestTranscoder {
+extension CallingRequestStrategy: ZMSingleRequestTranscoder {
 
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         switch sync {
@@ -157,8 +163,9 @@ extension CallingRequestStrategy : ZMSingleRequestTranscoder {
     }
 }
 
+// MARK: - Context Change Tracker
 
-extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTrackerSource {
+extension CallingRequestStrategy: ZMContextChangeTracker, ZMContextChangeTrackerSource {
     
     public var contextChangeTrackers: [ZMContextChangeTracker] {
         return [self, self.genericMessageStrategy]
@@ -190,7 +197,9 @@ extension CallingRequestStrategy : ZMContextChangeTracker, ZMContextChangeTracke
     
 }
 
-extension CallingRequestStrategy : ZMEventConsumer {
+// MARK: - Event Consumer
+
+extension CallingRequestStrategy: ZMEventConsumer {
     
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
         
@@ -233,7 +242,9 @@ extension CallingRequestStrategy : ZMEventConsumer {
     
 }
 
-extension CallingRequestStrategy : WireCallCenterTransport {
+// MARK: - Wire Call Center Transport
+
+extension CallingRequestStrategy: WireCallCenterTransport {
     
     public func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((Int) -> Void)) {
         
@@ -332,6 +343,8 @@ extension CallingRequestStrategy : WireCallCenterTransport {
     }
     
 }
+
+// MARK: - Client Discovery Request
 
 extension CallingRequestStrategy {
 
