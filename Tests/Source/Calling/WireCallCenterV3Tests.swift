@@ -22,8 +22,8 @@ import avs
 
 class WireCallCenterTransportMock : WireCallCenterTransport {
     
-    var mockCallConfigResponse : (String, Int)?
-    var mockClientsRequestResponse: [String: [String]]?
+    var mockCallConfigResponse: (String, Int)?
+    var mockClientsRequestResponse: [AVSClient]?
     
     
     func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((Int) -> Void)) {
@@ -40,7 +40,7 @@ class WireCallCenterTransportMock : WireCallCenterTransport {
         }
     }
 
-    func requestClientsList(conversationId: UUID, completionHandler: @escaping ClientDiscoveryRequestStrategy.RequestCompletion) {
+    func requestClientsList(conversationId: UUID, completionHandler: @escaping ([AVSClient]) -> Void) {
         if let mockClientsRequestResponse = mockClientsRequestResponse {
             completionHandler(mockClientsRequestResponse)
         }
@@ -1094,8 +1094,10 @@ extension WireCallCenterV3Tests {
         let userId2 = UUID.create()
 
         mockTransport.mockClientsRequestResponse = [
-            userId1.transportString(): ["client1", "client2"],
-            userId2.transportString(): ["client1", "client2"],
+            AVSClient(userId: userId1, clientId: "client1"),
+            AVSClient(userId: userId1, clientId: "client2"),
+            AVSClient(userId: userId2, clientId: "client1"),
+            AVSClient(userId: userId2, clientId: "client2")
         ]
 
         // when
@@ -1117,7 +1119,6 @@ extension WireCallCenterV3Tests {
             } catch {
                 XCTFail()
             }
-
         }
     }
 
