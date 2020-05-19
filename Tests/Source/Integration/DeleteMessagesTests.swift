@@ -80,7 +80,7 @@ class DeleteMessagesTests: ConversationTestsBase {
         // when
         mockTransportSession.performRemoteChanges { session in
             do {
-                self.selfToUser1Conversation.encryptAndInsertData(from: fromClient, to: toClient, data: try textMessage.serializedData())
+                self.selfToUser1Conversation.encryptAndInsertData(from: fromClient, to: toClient, data: try genericMessage.serializedData())
             } catch {
                 XCTFail()
             }
@@ -106,9 +106,9 @@ class DeleteMessagesTests: ConversationTestsBase {
         let textMessage = GenericMessage(content: Text(content: "Hello"))
         
         // when
-        mockTransportSession.performRemoteChanges { session in
+        self.mockTransportSession.performRemoteChanges { session in
             do {
-                self.selfToUser1Conversation.encryptAndInsertData(from: firstClient, to: selfClient, data: try textMessage.serializedData())
+                self.groupConversation.encryptAndInsertData(from: firstClient, to: selfClient, data: try textMessage.serializedData())
             } catch {
                 XCTFail()
             }
@@ -123,10 +123,9 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         let genericMessage = GenericMessage(content: MessageDelete(messageId: message.nonce!))
         
-        // when
-        mockTransportSession.performRemoteChanges { session in
+        self.mockTransportSession.performRemoteChanges { session in
             do {
-                self.selfToUser1Conversation.encryptAndInsertData(from: secondClient, to: selfClient, data: try genericMessage.serializedData())
+                self.groupConversation.encryptAndInsertData(from: secondClient, to: selfClient, data: try genericMessage.serializedData())
             } catch {
                 XCTFail()
             }

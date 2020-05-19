@@ -18,6 +18,7 @@
 
 import Foundation
 import WireRequestStrategy
+import XCTest
 
 public extension AssetRequestFactory {
     // We need this method for visibility in ObjC
@@ -28,7 +29,7 @@ public extension AssetRequestFactory {
     }
 }
 
-class SlowSyncTests_Swift: IntegrationTest {
+class SlowSyncTests_Swift: ConversationTestsBase {
     func testThatItDoesAQuickSyncOnStarTupIfItHasReceivedNotificationsEarlier() {
         // GIVEN
         XCTAssertTrue(login())
@@ -43,7 +44,7 @@ class SlowSyncTests_Swift: IntegrationTest {
             }
             self.groupConversation.encryptAndInsertData(from: client, to: selfClient, data: data)
         }
-        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         mockTransportSession.resetReceivedRequests()
         
@@ -66,7 +67,7 @@ class SlowSyncTests_Swift: IntegrationTest {
     
     func testThatItDoesAQuickSyncAfterTheWebSocketWentDown() {
         // GIVEN
-        XCTAssertTrue(login())
+        XCTAssertTrue(self.login())
         
         mockTransportSession.performRemoteChanges { _ in
             let message = GenericMessage(content: Text(content: "Hello, Test!"), nonce: .create())
@@ -78,7 +79,7 @@ class SlowSyncTests_Swift: IntegrationTest {
             }
             self.groupConversation.encryptAndInsertData(from: client, to: selfClient, data: data)
         }
-        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         mockTransportSession.resetReceivedRequests()
         
@@ -87,7 +88,7 @@ class SlowSyncTests_Swift: IntegrationTest {
             session.simulatePushChannelClosed()
             session.simulatePushChannelOpened()
         }
-        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
         var hasNotificationsRequest = false
