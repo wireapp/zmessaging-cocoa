@@ -287,11 +287,13 @@ public class MockSyncStatus : SyncStatus {
         processedMessages.append(message)
     }
     
-    public func process(_ genericMessage: ZMGenericMessage) {
-        processedGenericMessages.append(genericMessage)
+    public func process(_ event: ZMUpdateEvent) {
+        if let genericMessage = GenericMessage(from: event) {
+            processedGenericMessages.append(genericMessage)
+        }
     }
     
     fileprivate(set) var failedToSend: [ZMMessage] = []
     fileprivate(set) var processedMessages: [ZMMessage] = []
-    fileprivate(set) var processedGenericMessages: [ZMGenericMessage] = []
+    fileprivate(set) var processedGenericMessages: [GenericMessage] = []
 }

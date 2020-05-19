@@ -108,4 +108,33 @@ class ConversationTests_Participants: ConversationTestsBase {
         XCTAssertFalse(self.conversation(for: groupConversation)!.localParticipants.contains(user(for: self.user2)!))
     }
     
+    func testThatNotificationsAreReceivedWhenConversationsAreFaulted() {
+        // given
+        XCTAssertTrue(login())
+        
+        // I am faulting conversation, will maintain the "message" relations as faulted
+        let conversationList = ZMConversationList.conversations(inUserSession: userSession!)
+        let conversation1 = conversation(for: self.selfToUser1Conversation)
+        let previousIndex = conversationList.index(of: conversation1)
+
+        XCTAssertEqual(conversationList.count, 5)
+
+        let observer = ConversationListChangeObserver.init(conversationList: conversationList)
+
+        // when
+        self.mockTransportSession.performRemoteChanges { (session) in
+            let message = GenericMessage(content: Text(content: "some message", mentions: [], linkPreviews: [], replyingTo: nil), nonce: UUID.create())
+            self.selfToUser1Conversation.encryptAndInsertData(from: self.user1.clients.anyObject() as! MockUserClient,
+                                                              to: self.selfUser.clients.anyObject() as! MockUserClient,
+                                                              data: try! message.serializedData())
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // then
+        XCTAssertEqual(observer?.notifications.count, 1)
+        let note1 = observer?.notifications.lastObject as! ConversationListChangeInfo
+        XCTAssertEqual(note1.zm_movedIndexPairs.first, ZMMovedIndex.init(from: UInt(previousIndex), to: 0))
+    }
+
+    
 }

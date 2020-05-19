@@ -44,11 +44,13 @@ extension LocalNotificationDispatcher: PushMessageHandler {
     }
     
     // Process ZMGenericMessage that have "invisible" as in they don't create a message themselves
-    @objc(processGenericMessage:) public func process(_ genericMessage: ZMGenericMessage) {
+    @objc(processEvent:) public func process(_ event: ZMUpdateEvent) {
         // hidden, deleted and reaction do not create messages on their own
-        if genericMessage.hasEdited() || genericMessage.hasHidden() || genericMessage.hasDeleted() {
-            // Cancel notification for message that was edited, deleted or hidden
-            cancelMessageForEditingMessage(genericMessage)
+        if let genericMessage = GenericMessage(from: event) {
+            if genericMessage.hasEdited || genericMessage.hasHidden || genericMessage.hasDeleted {
+                // Cancel notification for message that was edited, deleted or hidden
+                cancelMessageForEditingMessage(genericMessage)
+            }
         }
     }
 }
@@ -56,16 +58,19 @@ extension LocalNotificationDispatcher: PushMessageHandler {
 // MARK: ZMOTRMessage
 extension LocalNotificationDispatcher {
     
-    fileprivate func cancelMessageForEditingMessage(_ genericMessage: ZMGenericMessage) {
+    fileprivate func cancelMessageForEditingMessage(_ genericMessage: GenericMessage) {
         var idToDelete : UUID?
         
-        if genericMessage.hasEdited(), let replacingID = genericMessage.edited.replacingMessageId {
+        if genericMessage.hasEdited {
+            let replacingID = genericMessage.edited.replacingMessageID
             idToDelete = UUID(uuidString: replacingID)
         }
-        else if genericMessage.hasDeleted(), let deleted = genericMessage.deleted.messageId {
+        else if genericMessage.hasDeleted {
+            let deleted = genericMessage.deleted.messageID
             idToDelete = UUID(uuidString: deleted)
         }
-        else if genericMessage.hasHidden(), let hidden = genericMessage.hidden.messageId {
+        else if genericMessage.hasHidden {
+            let hidden = genericMessage.hidden.messageID
             idToDelete = UUID(uuidString: hidden)
         }
         
