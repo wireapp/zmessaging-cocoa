@@ -219,7 +219,7 @@ extension NotificationUserInfo {
         addSelfUserInfo(using: conversation)
         self.conversationID = conversation.remoteIdentifier
         self.senderID = event.senderUUID()
-        self.messageNonce = event.messageNonce()
+        self.messageNonce = event.messageNonce
         self.eventTime = event.timeStamp()
     }
 

@@ -123,10 +123,6 @@ typedef BOOL (^SaveExpectationHandler)(ZMManagedObject *);
 - (UserClient *)setupSelfClientInMoc:(NSManagedObjectContext *)moc;
 - (UserClient *)createSelfClient;
 
-
-- (ZMClientMessage *)createClientTextMessage;
-- (ZMClientMessage *)createClientTextMessageWithText:(NSString *)text;
-
 @end
 
 

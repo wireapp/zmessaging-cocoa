@@ -112,7 +112,7 @@ fileprivate class EventNotificationBuilder: NotificationBuilder {
         userInfo.selfUserID = selfUserRemoteID
         userInfo.senderID = event.senderUUID()
         userInfo.conversationID = conversation?.remoteIdentifier
-        userInfo.messageNonce = event.messageNonce()
+        userInfo.messageNonce = event.messageNonce
         userInfo.eventTime = event.timeStamp()
         userInfo.conversationName = conversation?.meaningfulDisplayName
         userInfo.teamName = selfUser.team?.name
