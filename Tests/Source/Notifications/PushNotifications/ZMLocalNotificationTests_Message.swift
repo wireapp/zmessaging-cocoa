@@ -545,24 +545,6 @@ enum FileType {
 extension ZMLocalNotificationTests_Message {
     
     // MARK: Helpers
-    
-    func messageForFile(_ mimeType: String, nonce: NSUUID){
-        let dataBuilder = ZMAssetRemoteDataBuilder()
-        dataBuilder.setSha256(Data.secureRandomData(length: 32))
-        dataBuilder.setOtrKey(Data.secureRandomData(length: 32))
-
-        let originalBuilder = ZMAssetOriginalBuilder()
-        originalBuilder.setMimeType(mimeType)
-        originalBuilder.setSize(0)
-
-        let assetBuilder = ZMAssetBuilder()
-        assetBuilder.setUploaded(dataBuilder.build())
-        assetBuilder.setOriginal(originalBuilder.build())
-
-        let genericAssetMessageBuilder = ZMGenericMessageBuilder()
-        genericAssetMessageBuilder.setAsset(assetBuilder.build())
-        genericAssetMessageBuilder.setMessageId(nonce.transportString())
-    }
 
     func assetNote(_ fileType: FileType, conversation: ZMConversation, sender: ZMUser, isEphemeral: Bool = false) -> ZMLocalNotification? {
         if isEphemeral {
