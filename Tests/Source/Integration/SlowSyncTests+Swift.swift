@@ -67,7 +67,7 @@ class SlowSyncTests_Swift: ConversationTestsBase {
     
     func testThatItDoesAQuickSyncAfterTheWebSocketWentDown() {
         // GIVEN
-        XCTAssertTrue(self.login())
+        XCTAssertTrue(login())
         
         mockTransportSession.performRemoteChanges { _ in
             let message = GenericMessage(content: Text(content: "Hello, Test!"), nonce: .create())
