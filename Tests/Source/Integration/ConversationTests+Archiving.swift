@@ -49,7 +49,7 @@ class ConversationTests_Archiving: ConversationTestsBase {
         // then
         shouldUnarchive
             ? XCTAssertFalse(conversation!.isArchived)
-            :  XCTAssertTrue(conversation!.isArchived)
+            : XCTAssertTrue(conversation!.isArchived)
     }
 
     func testThatAddingAMessageToAnArchivedConversation_Unarchives_ThisConversation() {
