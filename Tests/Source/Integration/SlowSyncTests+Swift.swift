@@ -29,7 +29,14 @@ public extension AssetRequestFactory {
     }
 }
 
-class SlowSyncTests_Swift: ConversationTestsBase {
+class SlowSyncTests_Swift: IntegrationTest {
+    
+    override func setUp() {
+        super.setUp()
+        createSelfUserAndConversation()
+        createExtraUsersAndConversations()
+    }
+    
     func testThatItDoesAQuickSyncOnStarTupIfItHasReceivedNotificationsEarlier() {
         // GIVEN
         XCTAssertTrue(login())
