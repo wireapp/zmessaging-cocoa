@@ -72,6 +72,73 @@
     return fileURL;
 }
 
+- (void)makeConversationSecured:(ZMConversation *)conversation
+{
+    NSArray *participants = [[conversation localParticipants] allObjects];
+    NSArray *allClients = [participants flattenWithBlock:^id(ZMUser *user) {
+        return [user clients].allObjects;
+    }];
+    UserClient *selfClient = [ZMUser selfUserInUserSession:self.userSession].selfClient;
+    
+    [self.userSession performChanges:^{
+        for (UserClient *client in allClients) {
+            [selfClient trustClient:client];
+        }
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    XCTAssertTrue(conversation.allUsersTrusted);
+    XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
+}
+
+- (void)makeConversationSecuredWithIgnored:(ZMConversation *)conversation
+{
+    ZMUser *selfUser = [self userForMockUser:self.selfUser];
+    NSArray *participants = [[conversation localParticipants] allObjects];
+    NSArray *allClients = [participants flattenWithBlock:^id(ZMUser *user) {
+        return [user clients].allObjects;
+    }];
+    
+    NSMutableSet *allClientsSet = [NSMutableSet setWithArray:allClients];
+    [allClientsSet minusSet:[NSSet setWithObject:selfUser.selfClient]];
+    
+    [self.userSession performChanges:^{
+        [selfUser.selfClient trustClients:allClientsSet];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
+    
+    [self.userSession performChanges:^{
+        [selfUser.selfClient ignoreClients:allClientsSet];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+    XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
+}
+
+- (void)setupInitialSecurityLevel:(ZMConversationSecurityLevel)initialSecurityLevel inConversation:(ZMConversation *)conversation
+{
+    if(conversation.securityLevel == initialSecurityLevel) {
+        return;
+    }
+    switch (initialSecurityLevel) {
+        case ZMConversationSecurityLevelSecure:
+        {
+            [self makeConversationSecured:conversation];
+            XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
+        }
+            break;
+            
+        case ZMConversationSecurityLevelSecureWithIgnored:
+        {
+            [self makeConversationSecuredWithIgnored:conversation];
+            XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
+        }
+            break;
+        default:
+            break;
+    }
+}
+
 - (void)setDate:(NSDate *)date forAllEventsInMockConversation:(MockConversation *)conversation
 {
     for(MockEvent *event in conversation.events) {

@@ -48,6 +48,8 @@
                                 verifyWithObserver:(void(^)(ZMConversation *, ConversationChangeObserver *))verifyConversation;
 
 - (NSURL *)createTestFile:(NSString *)name;
+- (void)makeConversationSecured:(ZMConversation *)conversation;
+- (void)setupInitialSecurityLevel:(ZMConversationSecurityLevel)initialSecurityLevel inConversation:(ZMConversation *)conversation;
 
 @property (nonatomic) MockConversation *groupConversationWithOnlyConnected;
 @property (nonatomic) MockConversation *emptyGroupConversation;
