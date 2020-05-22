@@ -35,7 +35,7 @@ class APNSTests_Swift: APNSTestsBase {
         mockTransportSession.performRemoteChanges { session in
             guard
                 let fromClient = self.user1.clients.anyObject() as? MockUserClient,
-                let toClient = self.user1.clients.anyObject() as? MockUserClient,
+                let toClient = self.selfUser.clients.anyObject() as? MockUserClient,
                 let data = try? textMessage.serializedData() else {
                     return XCTFail()
             }
