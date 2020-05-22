@@ -26,6 +26,8 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     // MARK: - Private Properties
     
     private let zmLog = ZMSLog(tag: "calling")
+
+    private let configuration: WireCallCenterConfiguration
     
     private var callCenter: WireCallCenterV3?
     private let managedObjectContext: NSManagedObjectContext
@@ -44,12 +46,17 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
 
     // MARK: - Init
     
-    public init(managedObjectContext: NSManagedObjectContext, clientRegistrationDelegate: ClientRegistrationDelegate, flowManager: FlowManagerType, callEventStatus: CallEventStatus) {
+    public init(managedObjectContext: NSManagedObjectContext,
+                clientRegistrationDelegate: ClientRegistrationDelegate,
+                flowManager: FlowManagerType,
+                callEventStatus: CallEventStatus,
+                configuration: WireCallCenterConfiguration) {
+        
         self.managedObjectContext = managedObjectContext
         self.genericMessageStrategy = GenericMessageRequestStrategy(context: managedObjectContext, clientRegistrationDelegate: clientRegistrationDelegate)
         self.flowManager = flowManager
         self.callEventStatus = callEventStatus
-
+        self.configuration = configuration
         super.init()
         
         callConfigRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
@@ -59,7 +66,13 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
 
         if let userId = selfUser.remoteIdentifier, let clientId = selfUser.selfClient()?.remoteIdentifier {
             zmLog.debug("Creating callCenter from init")
-            callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: managedObjectContext.zm_userInterface, flowManager: flowManager, analytics: managedObjectContext.analytics, transport: self)
+            callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId,
+                                                            clientId: clientId,
+                                                            uiMOC: managedObjectContext.zm_userInterface,
+                                                            flowManager: flowManager,
+                                                            analytics: managedObjectContext.analytics,
+                                                            transport: self,
+                                                            configuration: configuration)
         }
     }
 
@@ -188,7 +201,13 @@ extension CallingRequestStrategy: ZMContextChangeTracker, ZMContextChangeTracker
                 let uiContext = managedObjectContext.zm_userInterface!
                 let analytics = managedObjectContext.analytics
                 uiContext.performGroupedBlock {
-                    self.callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId, clientId: clientId, uiMOC: uiContext.zm_userInterface, flowManager: self.flowManager, analytics: analytics, transport: self)
+                    self.callCenter = WireCallCenterV3Factory.callCenter(withUserId: userId,
+                                                                         clientId: clientId,
+                                                                         uiMOC: uiContext.zm_userInterface,
+                                                                         flowManager: self.flowManager,
+                                                                         analytics: analytics,
+                                                                         transport: self,
+                                                                         configuration: self.configuration)
                 }
                 break
             }

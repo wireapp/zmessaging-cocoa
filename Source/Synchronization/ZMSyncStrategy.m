@@ -112,6 +112,7 @@ ZM_EMPTY_ASSERTING_INIT()
               notificationsDispatcher:(NotificationDispatcher *)notificationsDispatcher
            applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
                           application:(id<ZMApplication>)application
+              callCenterConfiguration:(WireCallCenterConfiguration *)callCenterConfiguration
 {
     self = [super init];
     if (self) {
@@ -127,7 +128,10 @@ ZM_EMPTY_ASSERTING_INIT()
         [self.eventMOC addGroup:self.syncMOC.dispatchGroup];
         self.applicationStatusDirectory = applicationStatusDirectory;
 
-        [self createTranscodersWithLocalNotificationsDispatcher:localNotificationsDispatcher flowManager:flowManager applicationStatusDirectory:applicationStatusDirectory];
+        [self createTranscodersWithLocalNotificationsDispatcher:localNotificationsDispatcher
+                                                    flowManager:flowManager
+                                     applicationStatusDirectory:applicationStatusDirectory
+                                        callCenterConfiguration:callCenterConfiguration];
 
         self.eventsBuffer = [[ZMUpdateEventsBuffer alloc] initWithUpdateEventConsumer:self];
         self.userClientRequestStrategy = [[UserClientRequestStrategy alloc] initWithClientRegistrationStatus:applicationStatusDirectory.clientRegistrationStatus
@@ -203,6 +207,7 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)createTranscodersWithLocalNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
                                               flowManager:(id<FlowManagerType>)flowManager
                                applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
+                                  callCenterConfiguration:(WireCallCenterConfiguration *)callCenterConfiguration
 {
     self.eventDecoder = [[EventDecoder alloc] initWithEventMOC:self.eventMOC syncMOC:self.syncMOC];
     self.connectionTranscoder = [[ZMConnectionTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory syncStatus:applicationStatusDirectory.syncStatus];
@@ -219,7 +224,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                                                                                     syncStatus:applicationStatusDirectory.syncStatus
                                                                                                operationStatus:applicationStatusDirectory.operationStatus];
     self.lastUpdateEventIDTranscoder = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory syncStatus:applicationStatusDirectory.syncStatus objectDirectory:self];
-    self.callingRequestStrategy = [[CallingRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:applicationStatusDirectory.clientRegistrationStatus flowManager:flowManager callEventStatus:applicationStatusDirectory.callEventStatus];
+    self.callingRequestStrategy = [[CallingRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC clientRegistrationDelegate:applicationStatusDirectory.clientRegistrationStatus flowManager:flowManager callEventStatus:applicationStatusDirectory.callEventStatus configuration: callCenterConfiguration];
     self.conversationStatusSync = [[ConversationStatusStrategy alloc] initWithManagedObjectContext:self.syncMOC];
     self.linkPreviewAssetDownloadRequestStrategy = [[LinkPreviewAssetDownloadRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory];
     self.linkPreviewAssetUploadRequestStrategy = [LinkPreviewAssetUploadRequestStrategy createWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory];

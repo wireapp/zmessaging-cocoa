@@ -37,6 +37,7 @@
 @class ApplicationStatusDirectory;
 @class CallingRequestStrategy;
 @class EventDecoder;
+@class WireCallCenterConfiguration;
 
 @protocol ZMTransportData;
 @protocol ZMSyncStateDelegate;
@@ -55,7 +56,8 @@
                    localNotificationsDispatcher:(LocalNotificationDispatcher * _Nonnull)localNotificationsDispatcher
                         notificationsDispatcher:(NotificationDispatcher * _Nonnull)notificationsDispatcher
                      applicationStatusDirectory:(ApplicationStatusDirectory * _Nonnull)applicationStatusDirectory
-                                    application:(id<ZMApplication> _Nonnull)application;
+                                    application:(id<ZMApplication> _Nonnull)application
+                        callCenterConfiguration:(WireCallCenterConfiguration * _Nonnull)callCenterConfiguration;
 
 - (void)didInterruptUpdateEventsStream;
 - (void)didEstablishUpdateEventsStream;

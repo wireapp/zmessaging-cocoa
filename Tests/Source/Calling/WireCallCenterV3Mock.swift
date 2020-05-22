@@ -92,9 +92,9 @@ public class WireCallCenterV3IntegrationMock : WireCallCenterV3 {
     
     public let mockAVSWrapper : MockAVSWrapper
     
-    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport) {
+    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport, configuration: WireCallCenterConfiguration = .init()) {
         mockAVSWrapper = MockAVSWrapper(userId: userId, clientId: clientId, observer: nil)
-        super.init(userId: userId, clientId: clientId, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: transport)
+        super.init(userId: userId, clientId: clientId, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: transport, configuration: configuration)
     }
     
 }
@@ -115,9 +115,9 @@ public class WireCallCenterV3Mock: WireCallCenterV3 {
 
     // MARK: Initialization
 
-    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport) {
+    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport, configuration: WireCallCenterConfiguration = .init()) {
         mockAVSWrapper = MockAVSWrapper(userId: userId, clientId: clientId, observer: nil)
-        super.init(userId: userId, clientId: clientId, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: transport)
+        super.init(userId: userId, clientId: clientId, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: transport, configuration: configuration)
     }
 
     // MARK: AVS Integration

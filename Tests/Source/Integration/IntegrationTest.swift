@@ -60,13 +60,14 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     let transportSession: TransportSessionType
 
-    init(application: ZMApplication, mediaManager: MediaManagerType, flowManager: FlowManagerType, transportSession: TransportSessionType, environment: BackendEnvironmentProvider, reachability: ReachabilityProvider & TearDownCapable) {
+    init(application: ZMApplication, mediaManager: MediaManagerType, flowManager: FlowManagerType, callCenterConfiguration: WireCallCenterConfiguration, transportSession: TransportSessionType, environment: BackendEnvironmentProvider, reachability: ReachabilityProvider & TearDownCapable) {
         self.transportSession = transportSession
         super.init(
             appVersion: "0.0.0",
             application: application,
             mediaManager: mediaManager,
             flowManager: flowManager,
+            callCenterConfiguration: callCenterConfiguration,
             environment: environment,
             reachability: reachability,
             analytics: nil
@@ -78,6 +79,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
             transportSession: transportSession,
             mediaManager: mediaManager,
             flowManager: flowManager,
+            callCenterConfiguration: callCenterConfiguration,
             analytics: analytics,
             application: application,
             appVersion: appVersion,
@@ -238,6 +240,7 @@ extension IntegrationTest {
             application: application,
             mediaManager: mockMediaManager,
             flowManager: FlowManagerMock(),
+            callCenterConfiguration: sessionManagerConfiguration.callCenterConfiguration,
             transportSession: transportSession,
             environment: mockEnvironment,
             reachability: reachability

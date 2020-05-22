@@ -41,6 +41,7 @@ final class SessionManagerTests: IntegrationTest {
             application: application,
             mediaManager: mockMediaManager,
             flowManager: FlowManagerMock(),
+            callCenterConfiguration: sessionManagerConfiguration.callCenterConfiguration,
             transportSession: mockTransportSession,
             environment: environment,
             reachability: reachability
@@ -149,6 +150,7 @@ final class SessionManagerTests: IntegrationTest {
                                     application: application,
                                     mediaManager: MockMediaManager(),
                                     flowManager: FlowManagerMock(),
+                                    callCenterConfiguration: self.sessionManagerConfiguration.callCenterConfiguration,
                                     transportSession: self.mockTransportSession,
                                     environment: environment,
                                     reachability: reachability
@@ -237,6 +239,7 @@ final class SessionManagerTests: IntegrationTest {
                                     application: application,
                                     mediaManager: MockMediaManager(),
                                     flowManager: FlowManagerMock(),
+                                    callCenterConfiguration: self.sessionManagerConfiguration.callCenterConfiguration,
                                     transportSession: self.mockTransportSession,
                                     environment: environment,
                                     reachability: reachability
@@ -887,6 +890,7 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
                                     application: application,
                                     mediaManager: MockMediaManager(),
                                     flowManager: FlowManagerMock(),
+                                    callCenterConfiguration: self.sessionManagerConfiguration.callCenterConfiguration,
                                     transportSession: self.mockTransportSession,
                                     environment: environment,
                                     reachability: reachability
@@ -943,6 +947,7 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
                             application: application,
                             mediaManager: MockMediaManager(),
                             flowManager: FlowManagerMock(),
+                            callCenterConfiguration: self.sessionManagerConfiguration.callCenterConfiguration,
                             transportSession: self.mockTransportSession,
                             environment: environment,
                             reachability: reachability
