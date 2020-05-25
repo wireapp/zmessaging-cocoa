@@ -35,7 +35,7 @@ private let zmLog = ZMSLog(tag: "calling")
 
     /// Whether conference calling is enabled.
 
-    let useConferenceCalling: Bool
+    var useConferenceCalling: Bool
 
     // MARK: - Properties
 
@@ -408,7 +408,17 @@ extension WireCallCenterV3 {
         endAllCalls(exluding: conversationId)
         clearSnapshot(conversationId: conversationId) // make sure we don't have an old state for this conversation
         
-        let conversationType: AVSConversationType = conversation.conversationType == .group ? .conference : .oneToOne
+        let conversationType: AVSConversationType
+
+        switch (conversation.conversationType, useConferenceCalling) {
+        case (.group, false):
+            conversationType = .group
+        case (.group, true):
+            conversationType = .conference
+        default:
+            conversationType = .oneToOne
+        }
+
         let callType: AVSCallType
 
         if conversation.localParticipants.count > videoParticipantsLimit {
