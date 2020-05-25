@@ -65,6 +65,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
 
     /// The `callCenterConfiguration` contains fields to customize the behavior of calls.
     ///
+    /// The default value is specified in `WireCallCenterConfiguration()`.
     public let callCenterConfiguration: WireCallCenterConfiguration
 
     // MARK: - Init
