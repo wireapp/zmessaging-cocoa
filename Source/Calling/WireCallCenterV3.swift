@@ -35,7 +35,7 @@ private let zmLog = ZMSLog(tag: "calling")
 
     /// Whether conference calling is enabled.
 
-    let useConferenceCalling: Bool
+    var useConferenceCalling: Bool
 
     // MARK: - Properties
 
