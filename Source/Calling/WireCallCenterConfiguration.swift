@@ -23,12 +23,29 @@ import Foundation
 @objcMembers
 public class WireCallCenterConfiguration: NSObject, Codable {
 
-    /// The maximum number of participants allowed in a group video call.
+    // MARK: - Properties
 
-    public let videoParticipantsLimit = 4
+    /// The maximum number of participants allowed in a group video call.
+    ///
+    /// Defaults to `4`.
+
+    public let videoParticipantsLimit: Int
 
     /// Whether conference (SFT) calling is enabled.
+    ///
+    /// Defaults to `false`.
 
-    public let useConferenceCalling = false
+    public let useConferenceCalling: Bool
+
+    // MARK: - Init
+
+    public convenience override init() {
+        self.init(videoParticipantsLimit: 4, useConferenceCalling: false)
+    }
+
+    public init(videoParticipantsLimit: Int, useConferenceCalling: Bool) {
+        self.videoParticipantsLimit = videoParticipantsLimit
+        self.useConferenceCalling = useConferenceCalling
+    }
 
 }
