@@ -31,7 +31,11 @@ private let zmLog = ZMSLog(tag: "calling")
 @objc public class WireCallCenterV3: NSObject {
 
     /// The maximum number of participants for a video call.
-    let videoParticipantsLimit = 4
+    let videoParticipantsLimit: Int
+
+    /// Whether conference calling is enabled.
+
+    let useConferenceCalling: Bool
 
     // MARK: - Properties
 
@@ -117,14 +121,25 @@ private let zmLog = ZMSLog(tag: "calling")
      * - parameter flowManager: The object that controls media flow.
      * - parameter analytics: The object to use to record stats about the call. Defaults to `nil`.
      * - parameter transport: The object that performs network requests when the call center requests them.
+     * - parameter configuration: The object specifying customizable behavior.
      */
     
-    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport) {
+    public required init(userId: UUID,
+                         clientId: String,
+                         avsWrapper: AVSWrapperType? = nil,
+                         uiMOC: NSManagedObjectContext,
+                         flowManager: FlowManagerType,
+                         analytics: AnalyticsType? = nil,
+                         transport: WireCallCenterTransport,
+                         configuration: WireCallCenterConfiguration) {
+
         self.selfUserId = userId
         self.uiMOC = uiMOC
         self.flowManager = flowManager
         self.analytics = analytics
         self.transport = transport
+        self.videoParticipantsLimit = configuration.videoParticipantsLimit
+        self.useConferenceCalling = configuration.useConferenceCalling
         
         super.init()
         

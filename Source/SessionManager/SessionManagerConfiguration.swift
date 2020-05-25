@@ -60,6 +60,8 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     ///
     /// The default value of this property is `nil`, i.e. threshold is ignored
     public var failedPasswordThresholdBeforeWipe: Int?
+
+    public let callCenterConfiguration: WireCallCenterConfiguration
     
     public init(wipeOnCookieInvalid: Bool = false,
                 blacklistDownloadInterval: TimeInterval = 6 * 60 * 60,
@@ -67,7 +69,8 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                 wipeOnJailbreakOrRoot: Bool = false,
                 messageRetentionInterval: TimeInterval? = nil,
                 authenticateAfterReboot: Bool = false,
-                failedPasswordThresholdBeforeWipe: Int? = nil) {
+                failedPasswordThresholdBeforeWipe: Int? = nil,
+                callCenterConfiguration: WireCallCenterConfiguration = .init()) {
         self.wipeOnCookieInvalid = wipeOnCookieInvalid
         self.blacklistDownloadInterval = blacklistDownloadInterval
         self.blockOnJailbreakOrRoot = blockOnJailbreakOrRoot
@@ -75,6 +78,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         self.messageRetentionInterval = messageRetentionInterval
         self.authenticateAfterReboot = authenticateAfterReboot
         self.failedPasswordThresholdBeforeWipe = failedPasswordThresholdBeforeWipe
+        self.callCenterConfiguration = callCenterConfiguration
     }
     
     public func copy(with zone: NSZone? = nil) -> Any {
@@ -84,7 +88,8 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                                                wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot,
                                                messageRetentionInterval: messageRetentionInterval,
                                                authenticateAfterReboot: authenticateAfterReboot,
-                                               failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe)
+                                               failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe,
+                                               callCenterConfiguration: callCenterConfiguration)
         
         return copy
     }

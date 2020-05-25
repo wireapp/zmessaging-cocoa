@@ -26,7 +26,7 @@ extension ZMUserSessionTestsBase {
     @objc
     public func createCallCenter() -> WireCallCenterV3Mock {
         let selfUser = ZMUser.selfUser(in: self.syncMOC)
-        return WireCallCenterV3Factory.callCenter(withUserId: selfUser.remoteIdentifier!, clientId: selfUser.selfClient()!.remoteIdentifier!, uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock()) as! WireCallCenterV3Mock
+        return WireCallCenterV3Factory.callCenter(withUserId: selfUser.remoteIdentifier!, clientId: selfUser.selfClient()!.remoteIdentifier!, uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock(), configuration: .init()) as! WireCallCenterV3Mock
     }
     
     @objc
