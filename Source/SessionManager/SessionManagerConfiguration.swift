@@ -94,7 +94,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         blacklistDownloadInterval = try container.decode(TimeInterval.self, forKey: .blacklistDownloadInterval)
         blockOnJailbreakOrRoot = try container.decode(Bool.self, forKey: .blockOnJailbreakOrRoot)
         wipeOnJailbreakOrRoot = try container.decode(Bool.self, forKey: .wipeOnJailbreakOrRoot)
-        messageRetentionInterval = try container.decode(TimeInterval.self, forKey: .messageRetentionInterval)
+        messageRetentionInterval = try container.decodeIfPresent(TimeInterval.self, forKey: .messageRetentionInterval)
         authenticateAfterReboot = try container.decode(Bool.self, forKey: .authenticateAfterReboot)
         failedPasswordThresholdBeforeWipe = try container.decodeIfPresent(Int.self, forKey: .failedPasswordThresholdBeforeWipe)
         callCenterConfiguration = try container.decodeIfPresent(WireCallCenterConfiguration.self, forKey: .callCenterConfiguration) ?? .init()
