@@ -133,7 +133,9 @@ extension ConversationTests_Ephemeral {
         let toClient = selfUser?.clients.anyObject() as! MockUserClient
         let genericMessage = GenericMessage(content: Text(content: "foo"), expiresAfter: 0.1)
         XCTAssertEqual(genericMessage.ephemeral.expireAfterMillis, 100)
-        XCTAssertTrue(genericMessage.hasEphemeral)
+        guard case .ephemeral? = genericMessage.content else {
+            return XCTFail()
+        }
         
         mockTransportSession?.performRemoteChanges { session in
             do {
@@ -155,9 +157,9 @@ extension ConversationTests_Ephemeral {
         // the other  user inserts an ephemeral message
         remotelyInsertEphemeralMessage(conversation: selfToUser1Conversation!)
         guard let ephemeral = conversation.lastMessage as? ZMClientMessage,
-              let genMessage = ephemeral.underlyingMessage, genMessage.hasEphemeral
-        else {
-            return XCTFail()
+            let genMessage = ephemeral.underlyingMessage,
+            case .ephemeral? = genMessage.content else {
+                return XCTFail()
         }
         XCTAssertEqual(genMessage.ephemeral.expireAfterMillis, 100)
         XCTAssertEqual(conversation.allMessages.count, messageCount+1)
