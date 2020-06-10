@@ -16,26 +16,26 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import Foundation
+//import Foundation
 
 
-public extension NSManagedObjectContext {
-    
-    private static let ServerTimeDeltaKey = "ServerTimeDeltaKey"
-    
-    @objc
-    var serverTimeDelta : TimeInterval {
-        
-        get {
-            precondition(zm_isSyncContext, "serverTimeDelta can only be accessed on the sync context")
-            return userInfo[NSManagedObjectContext.ServerTimeDeltaKey] as? TimeInterval ?? 0
-        }
-        
-        set {
-            precondition(zm_isSyncContext, "serverTimeDelta can only be accessed on the sync context")
-            userInfo[NSManagedObjectContext.ServerTimeDeltaKey] = newValue
-        }
-        
-    }
-        
-}
+//public extension NSManagedObjectContext {
+//    
+//    private static let ServerTimeDeltaKey = "ServerTimeDeltaKey"
+//    
+//    @objc
+//    var serverTimeDelta : TimeInterval {
+//        
+//        get {
+//            precondition(zm_isSyncContext, "serverTimeDelta can only be accessed on the sync context")
+//            return userInfo[NSManagedObjectContext.ServerTimeDeltaKey] as? TimeInterval ?? 0
+//        }
+//        
+//        set {
+//            precondition(zm_isSyncContext, "serverTimeDelta can only be accessed on the sync context")
+//            userInfo[NSManagedObjectContext.ServerTimeDeltaKey] = newValue
+//        }
+//        
+//    }
+//        
+//}

@@ -18,7 +18,8 @@
 
 
 @import WireTransport;
-@import WireSyncEngine;
+//@import WireSyncEngine;
+@import WireRequestStrategy;
 
 #import <Foundation/Foundation.h>
 

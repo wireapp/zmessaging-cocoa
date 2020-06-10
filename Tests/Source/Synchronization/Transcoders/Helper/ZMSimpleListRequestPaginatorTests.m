@@ -18,6 +18,7 @@
 
 
 @import WireTransport;
+@import WireRequestStrategy;
 
 #import "MessagingTest.h"
 #import "ZMSimpleListRequestPaginator+Internal.h"
