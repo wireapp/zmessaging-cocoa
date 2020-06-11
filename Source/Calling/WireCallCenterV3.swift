@@ -540,11 +540,14 @@ extension WireCallCenterV3 {
     }
     
     fileprivate func handleCallEvent(_ callEvent: CallEvent, completionHandler: @escaping () -> Void) {
-        
         let result = avsWrapper.received(callEvent: callEvent)
         
         if let context = uiMOC, let error = result {
-            WireCallCenterCallErrorNotification(context: context, error: error).post(in: context.notificationContext)
+            WireCallCenterCallErrorNotification(
+                context: context,
+                error: error,
+                conversationId: callEvent.conversationId
+            ).post(in: context.notificationContext)
         }
         
         completionHandler()
