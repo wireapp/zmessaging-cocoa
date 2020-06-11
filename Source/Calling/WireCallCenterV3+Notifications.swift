@@ -116,10 +116,10 @@ public protocol WireCallCenterCallErrorObserver: class {
     func callCenterDidReceiveCallError(_ error: CallError, conversationId: UUID)
 }
 
-public struct WireCallCenterCallErrorNotification : SelfPostingNotification {
+public struct WireCallCenterCallErrorNotification: SelfPostingNotification {
     static let notificationName = Notification.Name("WireCallCenterCallErrorNotification")
     
-    weak var context : NSManagedObjectContext?
+    weak var context: NSManagedObjectContext?
 
     let error: CallError
     let conversationId: UUID
