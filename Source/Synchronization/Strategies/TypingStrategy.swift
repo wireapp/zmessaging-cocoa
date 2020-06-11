@@ -230,13 +230,12 @@ extension TypingStrategy : ZMEventConsumer {
         
         if event.type == .conversationTyping {
             guard let payloadData = event.payload["data"] as? [String: String],
-                  let status = payloadData[StatusKey]
-            else { return }
+                let status = payloadData[StatusKey]
+                else { return }
             processIsTypingUpdateEvent(for: user, in: conversation, with: status)
         } else if event.type == .conversationOtrMessageAdd {
-            
-            if let message = ZMGenericMessage(from: event),
-                message.hasText() || message.hasEdited() || (message.hasEphemeral() && message.ephemeral.hasText())  {
+            if let message = GenericMessage(from: event), message.hasText
+                || message.hasEdited {
                 typing.setIsTyping(false, for: user, in: conversation)
             }
         } else if event.type == .conversationMemberLeave {

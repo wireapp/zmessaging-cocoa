@@ -27,7 +27,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             
             let fromClient = user1?.clients.anyObject() as! MockUserClient
             let toClient = selfUser?.clients.anyObject() as! MockUserClient
-            let textMessage = ZMGenericMessage.message(content: ZMText.text(with: "Hello"))
+            let textMessage = GenericMessage(content: Text(content: "Hello"))
             let conversation = self.conversation(for: selfToUser1Conversation!)
             
             let requestPath = "/conversations/\(conversation!.remoteIdentifier!.transportString())/otr/messages"
@@ -41,15 +41,19 @@ class ConversationTests_Confirmation: ConversationTestsBase {
                             XCTFail("Did not insert confirmation message.")
                             return nil
                     }
-                    XCTAssertTrue(hiddenMessage.genericMessage!.hasConfirmation())
-                    XCTAssertEqual(hiddenMessage.genericMessage!.confirmation.firstMessageId, message.nonce!.transportString())
+                    XCTAssertTrue(hiddenMessage.underlyingMessage!.hasConfirmation)
+                    XCTAssertEqual(hiddenMessage.underlyingMessage!.confirmation.firstMessageID, message.nonce!.transportString())
                 }
                 return nil
             }
             
             // when
             mockTransportSession?.performRemoteChanges { session in
-                self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: textMessage.data())
+                do {
+                    self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: try textMessage.serializedData())
+                } catch {
+                    XCTFail()
+                }
             }
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
             
@@ -80,14 +84,14 @@ class ConversationTests_Confirmation: ConversationTestsBase {
                 if (request.path == requestPath) {
 
                     guard let conversation = conversation, let hiddenMessage = conversation.hiddenMessages.first(where: { (item) -> Bool in
-                            return (item as? ZMClientMessage)?.genericMessage!.confirmation.moreMessageIds != nil
+                            return (item as? ZMClientMessage)?.underlyingMessage!.confirmation.moreMessageIds != nil
                     }) as? ZMClientMessage else { return nil }
                     
                     var nonces = Set(conversation.allMessages.compactMap { $0.nonce?.transportString() })
-                    XCTAssertTrue(hiddenMessage.genericMessage!.hasConfirmation())
-                    XCTAssertNotNil(nonces.remove(hiddenMessage.genericMessage!.confirmation.firstMessageId))
-                    XCTAssertNotNil(hiddenMessage.genericMessage!.confirmation.moreMessageIds)
-                    let moreMessageIds = Set(hiddenMessage.genericMessage!.confirmation.moreMessageIds! as! [String])
+                    XCTAssertTrue(hiddenMessage.underlyingMessage!.hasConfirmation)
+                    XCTAssertNotNil(nonces.remove(hiddenMessage.underlyingMessage!.confirmation.firstMessageID))
+                    XCTAssertNotNil(hiddenMessage.underlyingMessage!.confirmation.moreMessageIds)
+                    let moreMessageIds = Set(hiddenMessage.underlyingMessage!.confirmation.moreMessageIds)
                     XCTAssertTrue(moreMessageIds.isSubset(of: nonces))
                     
                 }
@@ -98,13 +102,18 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             performIgnoringZMLogError {
              
                 self.mockTransportSession?.performRemoteChanges { session in
-                    session.simulatePushChannelClosed()
-                    let textMessage1 = ZMGenericMessage.message(content: ZMText.text(with: "Hello!"), nonce: UUID())
-                    self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: textMessage1.data())
-                    self.spinMainQueue(withTimeout: 0.2)
-                    let textMessage2 = ZMGenericMessage.message(content: ZMText.text(with: "It's me!"), nonce: UUID())
-                    self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: textMessage2.data())
-                    session.simulatePushChannelOpened()
+                    do {
+                        session.simulatePushChannelClosed()
+                        let textMessage1 = GenericMessage(content: Text(content: "Hello!"), nonce: UUID())
+                        self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: try textMessage1.serializedData())
+                        self.spinMainQueue(withTimeout: 0.2)
+                        let textMessage2 = GenericMessage(content: Text(content: "It's me!"), nonce: UUID())
+                        self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: try textMessage2.serializedData())
+                        session.simulatePushChannelOpened()
+                    }
+                    catch {
+                        XCTFail()
+                    }
                 }
                 XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             }
@@ -138,11 +147,15 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             
             let fromClient = user1?.clients.anyObject() as! MockUserClient
             let toClient = selfUser?.clients.anyObject() as! MockUserClient
-            let confirmationMessage = ZMGenericMessage.message(content: ZMConfirmation.confirm(messageId: message.nonce!))
+            let confirmationMessage = GenericMessage(content: Confirmation(messageId: message.nonce!))
             
             // when
             mockTransportSession?.performRemoteChanges { session in
-                self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: confirmationMessage.data())
+                do {
+                    self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: try confirmationMessage.serializedData())
+                } catch {
+                    XCTFail()
+                }
             }
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
             
@@ -171,7 +184,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
 
         let fromClient = user1!.clients.anyObject() as! MockUserClient
         let toClient = selfUser!.clients.anyObject() as! MockUserClient
-        let confirmationMessage = ZMGenericMessage.message(content: ZMConfirmation.confirm(messageId: message.nonce!))
+        let confirmationMessage = GenericMessage(content: Confirmation(messageId: message.nonce!, type: .init()))
 
         let convObserver = ConversationChangeObserver(conversation: conversation)
 
@@ -179,7 +192,11 @@ class ConversationTests_Confirmation: ConversationTestsBase {
 
         // when
         mockTransportSession?.performRemoteChanges { session in
-            self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: confirmationMessage.data())
+            do {
+                self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: try confirmationMessage.serializedData())
+            } catch {
+                XCTFail()
+            }
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
 

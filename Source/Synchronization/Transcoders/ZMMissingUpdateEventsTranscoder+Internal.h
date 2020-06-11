@@ -21,8 +21,6 @@
 @import WireRequestStrategy;
 #import "ZMMissingUpdateEventsTranscoder.h"
 
-extern NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize;
-
 @class ZMSimpleListRequestPaginator;
 
 @interface ZMMissingUpdateEventsTranscoder ()

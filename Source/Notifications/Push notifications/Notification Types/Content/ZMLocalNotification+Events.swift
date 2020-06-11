@@ -112,7 +112,7 @@ fileprivate class EventNotificationBuilder: NotificationBuilder {
         userInfo.selfUserID = selfUserRemoteID
         userInfo.senderID = event.senderUUID()
         userInfo.conversationID = conversation?.remoteIdentifier
-        userInfo.messageNonce = event.messageNonce()
+        userInfo.messageNonce = event.messageNonce
         userInfo.eventTime = event.timeStamp()
         userInfo.conversationName = conversation?.meaningfulDisplayName
         userInfo.teamName = selfUser.team?.name
@@ -128,7 +128,7 @@ private class ReactionEventNotificationBuilder: EventNotificationBuilder {
     
     private let emoji: String
     private let nonce: UUID
-    private let message: ZMGenericMessage
+    private let message: GenericMessage
     
     override var notificationType: LocalNotificationType {
         if LocalNotificationDispatcher.shouldHideNotificationContent(moc: self.moc) {
@@ -139,11 +139,11 @@ private class ReactionEventNotificationBuilder: EventNotificationBuilder {
     }
     
     override init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
-        guard let message = ZMGenericMessage(from: event), message.hasReaction() else {
+        guard let message = GenericMessage(from: event), message.hasReaction else {
             return nil
         }
 
-        guard let nonce = UUID(uuidString: message.reaction.messageId) else {
+        guard let nonce = UUID(uuidString: message.reaction.messageID) else {
             return nil
         }
         
@@ -157,7 +157,7 @@ private class ReactionEventNotificationBuilder: EventNotificationBuilder {
     override func shouldCreateNotification() -> Bool {
         guard super.shouldCreateNotification() else { return false }
         
-        guard let receivedMessage = ZMGenericMessage(from: event), receivedMessage.hasReaction() else {
+        guard let receivedMessage = GenericMessage(from: event), receivedMessage.hasReaction else {
             return false
         }
         
@@ -166,7 +166,7 @@ private class ReactionEventNotificationBuilder: EventNotificationBuilder {
         
         // fetch message that was reacted to and make sure the sender of the original message is the selfUser
         guard let conversation = conversation,
-              let reactionMessage = ZMMessage.fetch(withNonce: UUID(uuidString: message.reaction.messageId), for: conversation, in: moc),
+              let reactionMessage = ZMMessage.fetch(withNonce: UUID(uuidString: message.reaction.messageID), for: conversation, in: moc),
             reactionMessage.sender == ZMUser.selfUser(in: moc) else { return false }
         
         return true

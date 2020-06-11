@@ -95,7 +95,7 @@ class SearchTests : IntegrationTest {
             user?.phone = ""
             user?.identifier = remoteIdentifier.transportString()
             
-            let connection = changes.createConnectionRequest(from: user!, to: self.selfUser, message: "Holo")
+            let connection = changes.createConnectionRequest(from: self.selfUser, to:user! , message: "Holo")
             connection.status = "pending"
             
         }

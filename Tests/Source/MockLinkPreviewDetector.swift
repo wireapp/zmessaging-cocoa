@@ -34,30 +34,30 @@ class MockLinkPreviewDetector: LinkPreviewDetectorType {
     func downloadLinkPreviews(inText text: String, excluding: [NSRange], completion: @escaping ([LinkMetadata]) -> Void) {
         guard let linkPreviewURL = LinkPreviewURL(rawValue: text) else { return completion([]) }
         
-        completion([linkPreview(linkPreviewURL)])
+        completion([linkMetaData(linkPreviewURL)])
     }
         
-    func linkPreview(_ linkPreviewURL: LinkPreviewURL) -> LinkMetadata {
+    func linkMetaData(_ linkPreviewURL: LinkPreviewURL) -> LinkMetadata {
         
         switch linkPreviewURL {
         case .article:
-            let buffer = ZMLinkPreview.linkPreview(withOriginalURL: linkPreviewURL.rawValue,
-                                                   permanentURL: linkPreviewURL.rawValue,
-                                                   offset: 0,
-                                                   title: "ClickHole: You won't believe what THIS CAT can do!",
-                                                   summary: "Wasting your time",
-                                                   imageAsset: nil)
+            let buffer = LinkPreview(withOriginalURL: linkPreviewURL.rawValue,
+                                     permanentURL: linkPreviewURL.rawValue,
+                                     offset: 0,
+                                     title: "ClickHole: You won't believe what THIS CAT can do!",
+                                     summary: "Wasting your time",
+                                     imageAsset: nil)
             
             let article = ArticleMetadata(protocolBuffer: buffer)
             
             return article
         case .articleWithPicture:
-            let buffer = ZMLinkPreview.linkPreview(withOriginalURL: linkPreviewURL.rawValue,
-                                             permanentURL: linkPreviewURL.rawValue,
-                                             offset: 0,
-                                             title: "ClickHole: You won't believe what THIS CAT can do!",
-                                             summary: "Wasting your time",
-                                             imageAsset: randomAsset())
+            let buffer = LinkPreview(withOriginalURL: linkPreviewURL.rawValue,
+                                     permanentURL: linkPreviewURL.rawValue,
+                                     offset: 0,
+                                     title: "ClickHole: You won't believe what THIS CAT can do!",
+                                     summary: "Wasting your time",
+                                     imageAsset: randomAsset())
             
             let article = ArticleMetadata(protocolBuffer: buffer)
             article.imageData = [mockImageData]
@@ -65,25 +65,25 @@ class MockLinkPreviewDetector: LinkPreviewDetectorType {
             
             return article
         case .tweet:
-            let buffer = ZMLinkPreview.linkPreview(withOriginalURL: linkPreviewURL.rawValue,
-                                                   permanentURL: linkPreviewURL.rawValue,
-                                                   offset: 0,
-                                                   title: "1 + 1 = 1, or 11, a that's beautiful.",
-                                                   summary: nil,
-                                                   imageAsset: nil,
-                                                   tweet: ZMTweet.tweet(withAuthor: "Jean-Claude Van Damme", username: "JCVDG05U"))
-            
+            let buffer = LinkPreview(withOriginalURL: linkPreviewURL.rawValue,
+                                     permanentURL: linkPreviewURL.rawValue,
+                                     offset: 0,
+                                     title: "1 + 1 = 1, or 11, a that's beautiful.",
+                                     summary: nil,
+                                     imageAsset: nil,
+                                     tweet: Tweet(author: "Jean-Claude Van Damme", username: "JCVDG05U"))
+
             let tweet = TwitterStatusMetadata(protocolBuffer: buffer)
             
             return tweet
         case .tweetWithPicture:
-            let buffer = ZMLinkPreview.linkPreview(withOriginalURL: linkPreviewURL.rawValue,
-                                                   permanentURL: linkPreviewURL.rawValue,
-                                                   offset: 0,
-                                                   title: "1 + 1 = 1, or 11, a that's beautiful.",
-                                                   summary: nil,
-                                                   imageAsset: randomAsset(),
-                                                   tweet: ZMTweet.tweet(withAuthor: "Jean-Claude Van Damme", username: "JCVDG05U"))
+            let buffer = LinkPreview(withOriginalURL: linkPreviewURL.rawValue,
+                                     permanentURL: linkPreviewURL.rawValue,
+                                     offset: 0,
+                                     title: "1 + 1 = 1, or 11, a that's beautiful.",
+                                     summary: nil,
+                                     imageAsset: randomAsset(),
+                                     tweet: Tweet(author: "Jean-Claude Van Damme", username: "JCVDG05U"))
             
             let twitterStatus = TwitterStatusMetadata(protocolBuffer: buffer)
             twitterStatus.imageData = [mockImageData]
@@ -94,8 +94,8 @@ class MockLinkPreviewDetector: LinkPreviewDetectorType {
         
     }
     
-    fileprivate func randomAsset() -> ZMAsset {
-        return ZMAsset.asset(withUploadedOTRKey: .randomEncryptionKey(), sha256: .zmRandomSHA256Key())
+    fileprivate func randomAsset() -> WireProtos.Asset {
+        return WireProtos.Asset(withUploadedOTRKey: .randomEncryptionKey(), sha256: .zmRandomSHA256Key())
     }
 }
 

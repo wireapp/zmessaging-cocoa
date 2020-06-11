@@ -110,10 +110,14 @@ extension ConversationTests_Ephemeral {
         // other client deletes ephemeral message
         let fromClient = user1?.clients.anyObject() as! MockUserClient
         let toClient = selfUser?.clients.anyObject() as! MockUserClient
-        let deleteMessage = ZMGenericMessage.message(content: ZMMessageDelete(messageID: ephemeral.nonce!))
+        let deleteMessage = GenericMessage(content: MessageDelete(messageId: ephemeral.nonce!))
         
         mockTransportSession?.performRemoteChanges { session in
-            self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: deleteMessage.data())
+            do {
+                self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: try deleteMessage.serializedData())
+            } catch {
+                XCTFail()
+            }
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         
@@ -127,13 +131,18 @@ extension ConversationTests_Ephemeral {
     func remotelyInsertEphemeralMessage(conversation: MockConversation) {
         let fromClient = user1?.clients.anyObject() as! MockUserClient
         let toClient = selfUser?.clients.anyObject() as! MockUserClient
-        let text = ZMText.text(with: "foo")
-        let genericMessage = ZMGenericMessage.message(content: text, expiresAfter: 0.1)
+        let genericMessage = GenericMessage(content: Text(content: "foo"), expiresAfter: 0.1)
         XCTAssertEqual(genericMessage.ephemeral.expireAfterMillis, 100)
-        XCTAssertTrue(genericMessage.hasEphemeral())
+        guard case .ephemeral? = genericMessage.content else {
+            return XCTFail()
+        }
         
         mockTransportSession?.performRemoteChanges { session in
-            conversation.encryptAndInsertData(from: fromClient, to: toClient, data: genericMessage.data())
+            do {
+                conversation.encryptAndInsertData(from: fromClient, to: toClient, data: try genericMessage.serializedData())
+            } catch {
+                XCTFail()
+            }
         }
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
     }
@@ -148,9 +157,9 @@ extension ConversationTests_Ephemeral {
         // the other  user inserts an ephemeral message
         remotelyInsertEphemeralMessage(conversation: selfToUser1Conversation!)
         guard let ephemeral = conversation.lastMessage as? ZMClientMessage,
-              let genMessage = ephemeral.genericMessage, genMessage.hasEphemeral()
-        else {
-            return XCTFail()
+            let genMessage = ephemeral.underlyingMessage,
+            case .ephemeral? = genMessage.content else {
+                return XCTFail()
         }
         XCTAssertEqual(genMessage.ephemeral.expireAfterMillis, 100)
         XCTAssertEqual(conversation.allMessages.count, messageCount+1)
@@ -176,8 +185,8 @@ extension ConversationTests_Ephemeral {
 
         guard let _ = conversation.hiddenMessages.first(where: {
             if let message = $0 as? ZMClientMessage,
-                    let deleteMessage = message.genericMessage, deleteMessage.hasDeleted(),
-                deleteMessage.deleted.messageId == ephemeral.nonce!.transportString() {
+                    let deleteMessage = message.underlyingMessage, deleteMessage.hasDeleted,
+                deleteMessage.deleted.messageID == ephemeral.nonce!.transportString() {
                 return true
             }
             else {

@@ -22,21 +22,12 @@
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "APNSTestsBase.h"
 
-
-@interface APNSTests : IntegrationTest
-
+@interface APNSTests : APNSTestsBase
 @end
 
 @implementation APNSTests
-
-- (void)setUp
-{
-    [super setUp];
-    
-    [self createSelfUserAndConversation];
-    [self createExtraUsersAndConversations];
-}
 
 - (void)testThatAConversationIsCreatedFromAnAPNS
 {
@@ -194,61 +185,6 @@
     XCTAssertNotNil(conversation);
 }
 
-- (void)testThatItSendsAConfirmationMessageWhenReceivingATextMessage
-{
-    if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
-        // given
-        XCTAssertTrue([self login]);
-
-        ZMGenericMessage *textMessage = [ZMGenericMessage messageWithContent:[ZMText textWith:@"Hello" mentions:@[] linkPreviews:@[] replyingTo:nil] nonce:NSUUID.createUUID];
-        
-        [self closePushChannelAndWaitUntilClosed]; // do not use websocket
-        
-        __block MockEvent *event;
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-            // insert message on "backend"
-            event = [self.selfToUser1Conversation encryptAndInsertDataFromClient:self.user1.clients.anyObject toClient:self.selfUser.clients.anyObject data:textMessage.data];
-            
-            // register new client
-            [session registerClientForUser:self.user1];
-        }];
-        WaitForAllGroupsToBeEmpty(0.2);
-        
-        [self.application setBackground];
-        [self.application simulateApplicationDidEnterBackground];
-        WaitForAllGroupsToBeEmpty(0.2);
-        
-        XCTestExpectation *confirmationExpectation = [self expectationWithDescription:@"Did send confirmation"];
-        XCTestExpectation *missingClientsExpectation = [self expectationWithDescription:@"Did fetch missing client"];
-        __block NSUInteger requestCount = 0;
-        
-        ZM_WEAK(self);
-        self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-            ZM_STRONG(self);
-            NSString *confirmationPath = [NSString stringWithFormat:@"/conversations/%@/otr/messages", self.selfToUser1Conversation.identifier];
-            if ([request.path hasPrefix:confirmationPath] && request.method == ZMMethodPOST) {
-                XCTAssertTrue(request.shouldUseVoipSession);
-                requestCount++;
-                if (requestCount == 2) {
-                    [confirmationExpectation fulfill];
-                }
-            }
-            NSString *clientsPath = [NSString stringWithFormat:@"/users/prekeys"];
-            if ([request.path isEqualToString:clientsPath]) {
-                XCTAssertTrue(request.shouldUseVoipSession);
-                XCTAssertEqual(requestCount, 1u);
-                [missingClientsExpectation fulfill];
-            }
-            return nil;
-        };
-        
-        // when
-        [self.userSession receivedPushNotificationWith:[self noticePayloadForLastEvent] completion:^{}];
-        XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
-        WaitForAllGroupsToBeEmpty(0.2);
-    }
-}
-
 #pragma mark - Helper
 
 - (NSDictionary *)conversationCreatePayloadWithNotificationID:(NSUUID *)notificationID
@@ -278,23 +214,6 @@
              };
 }
 
-- (NSDictionary *)noticePayloadForLastEvent
-{
-    ZMUpdateEvent *lastEvent = self.mockTransportSession.updateEvents.lastObject;
-    return [self noticePayloadWithIdentifier:lastEvent.uuid];
-}
-
-- (NSDictionary *)noticePayloadWithIdentifier:(NSUUID *)uuid
-{
-    return @{
-             @"aps" : @{},
-             @"data" : @{
-                     @"data" : @{ @"id" : uuid.transportString },
-                     @"type" : @"notice"
-                     }
-             };
-}
-
 - (NSDictionary *)APNSPayloadForNotificationPayload:(NSDictionary *)notificationPayload identifier:(NSUUID *)identifier {
     
     return @{ @"aps" :
@@ -321,13 +240,6 @@
     
 }
 
-- (void)closePushChannelAndWaitUntilClosed
-{
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        session.pushChannel.keepOpen = NO;
-        [session simulatePushChannelClosed];
-    }];
-    WaitForAllGroupsToBeEmpty(0.2);
-}
+
 
 @end

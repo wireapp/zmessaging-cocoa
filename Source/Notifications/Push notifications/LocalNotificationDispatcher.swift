@@ -83,8 +83,8 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
             }
 
             // if it's an "unlike" reaction event, cancel the previous "like" notification for this message
-            if let receivedMessage = ZMGenericMessage(from: event), receivedMessage.hasReaction(), receivedMessage.reaction.emoji.isEmpty {
-                UUID(uuidString: receivedMessage.reaction.messageId).apply(eventNotifications.cancelCurrentNotifications(messageNonce:))
+            if let receivedMessage = GenericMessage(from: event), receivedMessage.hasReaction, receivedMessage.reaction.emoji.isEmpty {
+                UUID(uuidString: receivedMessage.reaction.messageID).apply(eventNotifications.cancelCurrentNotifications(messageNonce:))
             }
             
             let note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
