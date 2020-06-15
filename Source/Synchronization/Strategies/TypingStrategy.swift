@@ -52,7 +52,9 @@ public struct TypingEvent {
     }
     
     func isEqual(other: TypingEvent) -> Bool {
-        return isTyping == other.isTyping && objectID.isEqual(other.objectID) && fabs(date.timeIntervalSince(other.date)) < (Typing.defaultTimeout / Typing.relativeSendTimeout)
+        return isTyping == other.isTyping &&
+               objectID.isEqual(other.objectID) &&
+               fabs(date.timeIntervalSince(other.date)) < Typing.defaultTimeout
     }
     
 }
@@ -90,6 +92,7 @@ class TypingEventQueue {
     /// Returns the next typing event that is different from the last sent typing event
     func nextEvent() -> TypingEvent? {
         var event : TypingEvent?
+                
         while event == nil, let (convObjectID, isTyping) = conversations.popFirst() {
             event = TypingEvent.typingEvent(with: convObjectID, isTyping: isTyping, ifDifferentFrom: lastSentTypingEvent)
         }
