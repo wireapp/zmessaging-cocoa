@@ -15,4 +15,4 @@ github "wireapp/wire-ios-request-strategy" "refactor/decoupling-MissingUpdateEve
 github "wireapp/wire-ios-system" "31.0.1"
 github "wireapp/wire-ios-testing" "22.0.0"
 github "wireapp/wire-ios-transport" "69.0.0"
-github "wireapp/wire-ios-utilities" "37.0.0"
+github "wireapp/wire-ios-utilities" "refactor/move-extension-UUID-from-se"
