@@ -21,12 +21,13 @@ public final class PushNotificationStrategy: AbstractRequestStrategy, ZMRequestG
     private var sync: NotificationStreamSync!
     private var pushNotificationStatus: PushNotificationStatus!
     private var eventProcessor: UpdateEventProcessor!
+    private var previouslyReceivedEventIDsCollection: PreviouslyReceivedEventIDsCollection?
     
     public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
                 applicationStatus: ApplicationStatus,
                 pushNotificationStatus: PushNotificationStatus,
                 notificationsTracker: NotificationsTracker,
-                eventIDsCollection: PreviouslyReceivedEventIDsCollection,
+                eventIDsCollection: PreviouslyReceivedEventIDsCollection?,
                 eventProcessor: UpdateEventProcessor) {
         
         super.init(withManagedObjectContext: managedObjectContext,
@@ -34,9 +35,9 @@ public final class PushNotificationStrategy: AbstractRequestStrategy, ZMRequestG
         
         sync = NotificationStreamSync(moc: managedObjectContext,
                                       notificationsTracker: notificationsTracker,
-                                      eventIDsCollection: eventIDsCollection,
                                       delegate: self)
         self.eventProcessor = eventProcessor
+        previouslyReceivedEventIDsCollection = eventIDsCollection
     }
     
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
@@ -64,8 +65,8 @@ extension PushNotificationStrategy: NotificationStreamSyncDelegate {
             }
         }
         eventProcessor.process(updateEvents: parsedEvents, ignoreBuffer: true)
+        previouslyReceivedEventIDsCollection?.discardListOfAlreadyReceivedPushEventIDs()
         pushNotificationStatus.didFetch(eventIds: eventIds, lastEventId: latestEventId, finished: hasMoreToFetch)
-        
     }
     
     public func failedFetchingEvents() {
