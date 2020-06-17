@@ -586,6 +586,27 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		06B9866E2492721F0016AC72 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 06B986682492721F0016AC72 /* WireRequestStrategy.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1669016A1D707509000FE4AF;
+			remoteInfo = WireRequestStrategy;
+		};
+		06B986702492721F0016AC72 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 06B986682492721F0016AC72 /* WireRequestStrategy.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 166901741D707509000FE4AF;
+			remoteInfo = WireRequestStrategyTests;
+		};
+		06B986722492721F0016AC72 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 06B986682492721F0016AC72 /* WireRequestStrategy.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = F154EDC41F447B6C00CB8184;
+			remoteInfo = WireRequestStrategyTestHost;
+		};
 		3E1860D0191A649D000FE027 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 540029AB1918CA8500578793 /* Project object */;
@@ -625,6 +646,7 @@
 
 /* Begin PBXFileReference section */
 		06025663248E5BC700E060E1 /* PushNotificationStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationStrategy.swift; sourceTree = "<group>"; };
+		06B986682492721F0016AC72 /* WireRequestStrategy.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = WireRequestStrategy.xcodeproj; path = "../wire-ios-request-strategy/WireRequestStrategy.xcodeproj"; sourceTree = "<group>"; };
 		06BBF6EC246EB56B00A26626 /* ConversationTests+List.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+List.swift"; sourceTree = "<group>"; };
 		06BBF6EF246ECB2400A26626 /* ConversationTests+Archiving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+Archiving.swift"; sourceTree = "<group>"; };
 		06BBF6F2246EF28800A26626 /* ConversationTests+LastRead.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+LastRead.swift"; sourceTree = "<group>"; };
@@ -1362,6 +1384,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		06B986692492721F0016AC72 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				06B9866F2492721F0016AC72 /* WireRequestStrategy.framework */,
+				06B986712492721F0016AC72 /* WireRequestStrategyTests.xctest */,
+				06B986732492721F0016AC72 /* WireRequestStrategyTestHost.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		0928E38F1BA2CFF60057232E /* E2EE */ = {
 			isa = PBXGroup;
 			children = (
@@ -1601,6 +1633,7 @@
 		540029AA1918CA8500578793 = {
 			isa = PBXGroup;
 			children = (
+				06B986682492721F0016AC72 /* WireRequestStrategy.xcodeproj */,
 				09284B6A1B8272C300EEE10E /* WireSyncEngine Test Host.entitlements */,
 				09CC4AB71B7CB8B700201C63 /* Cartfile */,
 				F93C4C6F1E1E8B77007E9CEE /* Cartfile.resolved */,
@@ -2661,6 +2694,12 @@
 			mainGroup = 540029AA1918CA8500578793;
 			productRefGroup = 540029B51918CA8500578793 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 06B986692492721F0016AC72 /* Products */;
+					ProjectRef = 06B986682492721F0016AC72 /* WireRequestStrategy.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				549815921A43232400A7CE2E /* WireSyncEngine-ios */,
@@ -2669,6 +2708,30 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		06B9866F2492721F0016AC72 /* WireRequestStrategy.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = WireRequestStrategy.framework;
+			remoteRef = 06B9866E2492721F0016AC72 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		06B986712492721F0016AC72 /* WireRequestStrategyTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = WireRequestStrategyTests.xctest;
+			remoteRef = 06B986702492721F0016AC72 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		06B986732492721F0016AC72 /* WireRequestStrategyTestHost.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = WireRequestStrategyTestHost.app;
+			remoteRef = 06B986722492721F0016AC72 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		3E186086191A56F6000FE027 /* Resources */ = {
