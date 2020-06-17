@@ -112,15 +112,17 @@ public struct WireCallCenterMissedCallNotification : SelfPostingNotification {
 
 // MARK:- Received call observer
 
-public protocol WireCallCenterCallErrorObserver : class {
-    func callCenterDidReceiveCallError(_ error: CallError)
+public protocol WireCallCenterCallErrorObserver: class {
+    func callCenterDidReceiveCallError(_ error: CallError, conversationId: UUID)
 }
 
-public struct WireCallCenterCallErrorNotification : SelfPostingNotification {
+public struct WireCallCenterCallErrorNotification: SelfPostingNotification {
     static let notificationName = Notification.Name("WireCallCenterCallErrorNotification")
     
-    weak var context : NSManagedObjectContext?
+    weak var context: NSManagedObjectContext?
+
     let error: CallError
+    let conversationId: UUID
 }
 
 // MARK:- CallParticipantObserver
@@ -187,7 +189,7 @@ extension WireCallCenterV3 {
     public class func addCallErrorObserver(observer: WireCallCenterCallErrorObserver, userSession: ZMUserSession) -> Any {
         return NotificationInContext.addObserver(name: WireCallCenterCallErrorNotification.notificationName, context: userSession.managedObjectContext.notificationContext, queue: .main) { [weak observer] note in
             if let note = note.userInfo[WireCallCenterCallErrorNotification.userInfoKey] as? WireCallCenterCallErrorNotification  {
-                observer?.callCenterDidReceiveCallError(note.error)
+                observer?.callCenterDidReceiveCallError(note.error, conversationId: note.conversationId)
             }
         }
     }

@@ -584,6 +584,7 @@ class WireCallCenterV3Tests: MessagingTest {
         expectation(forNotification: WireCallCenterCallErrorNotification.notificationName, object: nil) { wrappedNote in
             guard let note = wrappedNote.userInfo?[WireCallCenterCallErrorNotification.userInfoKey] as? WireCallCenterCallErrorNotification else { return false }
             XCTAssertEqual(note.error, self.mockAVSWrapper.callError)
+            XCTAssertEqual(note.conversationId, self.oneOnOneConversationID)
             return true
         }
         
