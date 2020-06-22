@@ -166,11 +166,10 @@ class CompanyLoginRequestDetectorTests: XCTestCase {
         XCTAssertNil(detectedCode)
     }
     
-    func testThatItSetsIsNewOnTheResultIfTheChangeCountIncreased() {
+    func testThatItSetsIsNewOnTheResultIfTheCodeHasChanged() {
         // GIVEN
         let code = "wire-81DD91BA-B3D0-46F0-BC29-E491938F0A54"
         pasteboard.text = code
-        pasteboard.changeCount = 41
         
         do {
             let detectionExpectation = expectation(description: "Detector returns a result")
@@ -197,7 +196,8 @@ class CompanyLoginRequestDetectorTests: XCTestCase {
         }
 
         // WHEN
-        pasteboard.changeCount = 42
+        let changedCode = "wire-81DD91BA-B3D0-46F0-BC29-E491938F0A55"
+        pasteboard.text = changedCode
         
         // THEN
         do {
@@ -205,7 +205,7 @@ class CompanyLoginRequestDetectorTests: XCTestCase {
             
             detector.detectCopiedRequestCode {
                 XCTAssertEqual($0?.isNew, true)
-                XCTAssertEqual($0?.code, code)
+                XCTAssertEqual($0?.code, changedCode)
                 detectionExpectation.fulfill()
             }
             
@@ -213,11 +213,10 @@ class CompanyLoginRequestDetectorTests: XCTestCase {
         }
     }
     
-    func testThatItDoesNotSetIsNewOnTheResultIfTheChangeCountDidNotIncrease() {
+    func testThatItDoesNotSetIsNewOnTheResultIfTheCodeHasChanged() {
         // GIVEN
         let code = "wire-81DD91BA-B3D0-46F0-BC29-E491938F0A54"
         pasteboard.text = code
-        pasteboard.changeCount = 42
         
         // WHEN
         do {

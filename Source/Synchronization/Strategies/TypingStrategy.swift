@@ -52,7 +52,9 @@ public struct TypingEvent {
     }
     
     func isEqual(other: TypingEvent) -> Bool {
-        return isTyping == other.isTyping && objectID.isEqual(other.objectID) && fabs(date.timeIntervalSince(other.date)) < (Typing.defaultTimeout / Typing.relativeSendTimeout)
+        return isTyping == other.isTyping &&
+               objectID.isEqual(other.objectID) &&
+               fabs(date.timeIntervalSince(other.date)) < Typing.defaultTimeout
     }
     
 }
@@ -90,6 +92,7 @@ class TypingEventQueue {
     /// Returns the next typing event that is different from the last sent typing event
     func nextEvent() -> TypingEvent? {
         var event : TypingEvent?
+                
         while event == nil, let (convObjectID, isTyping) = conversations.popFirst() {
             event = TypingEvent.typingEvent(with: convObjectID, isTyping: isTyping, ifDifferentFrom: lastSentTypingEvent)
         }
@@ -230,13 +233,12 @@ extension TypingStrategy : ZMEventConsumer {
         
         if event.type == .conversationTyping {
             guard let payloadData = event.payload["data"] as? [String: String],
-                  let status = payloadData[StatusKey]
-            else { return }
+                let status = payloadData[StatusKey]
+                else { return }
             processIsTypingUpdateEvent(for: user, in: conversation, with: status)
         } else if event.type == .conversationOtrMessageAdd {
-            
-            if let message = ZMGenericMessage(from: event),
-                message.hasText() || message.hasEdited() || (message.hasEphemeral() && message.ephemeral.hasText())  {
+            if let message = GenericMessage(from: event), message.hasText
+                || message.hasEdited {
                 typing.setIsTyping(false, for: user, in: conversation)
             }
         } else if event.type == .conversationMemberLeave {

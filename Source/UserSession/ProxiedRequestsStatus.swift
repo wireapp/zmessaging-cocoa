@@ -53,12 +53,10 @@ public class ProxyRequest : NSObject {
         self.requestCancellation = requestCancellation
     }
     
-    @objc(addRequest:)
     public func add(request: ProxyRequest) {
         pendingRequests.insert(request)
     }
     
-    @objc(cancelRequest:)
     public func cancel(request: ProxyRequest) {
         pendingRequests.remove(request)
         

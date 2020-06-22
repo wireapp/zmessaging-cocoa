@@ -45,14 +45,14 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "", contextProvider: contextDirectory!)
+        let result = SearchResult(payload: payload, query: "", searchOptions: [.directory], contextProvider: contextDirectory!)
         
         // then
         XCTAssertEqual(result?.directory.count, 1)
         XCTAssertEqual(result?.directory.first!.handle, handle)
     }
     
-    func testThatItFiltersTeamMembers() {
+    func testThatItFiltersTeamMembersFromDirectoryResults() {
         // given
         let team = Team.insertNewObject(in: uiMOC)
         let user = ZMUser.insertNewObject(in: uiMOC)
@@ -78,7 +78,7 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "", contextProvider: contextDirectory!)
+        let result = SearchResult(payload: payload, query: "", searchOptions: [.directory], contextProvider: contextDirectory!)
         
         // then
         XCTAssertEqual(result?.directory.count, 1)
@@ -99,7 +99,7 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: name, contextProvider: contextDirectory!)
+        let result = SearchResult(payload: payload, query: name, searchOptions: [.directory], contextProvider: contextDirectory!)
         
         // then
         XCTAssertEqual(result?.directory.count, 2)
@@ -121,11 +121,227 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "@\(name)", contextProvider: contextDirectory!)!
+        let result = SearchResult(payload: payload, query: "@\(name)", searchOptions: [.directory], contextProvider: contextDirectory!)!
         
         // then
         XCTAssertEqual(result.directory.count, 1)
         XCTAssertEqual(result.directory.first!.handle, expectedHandle)
     }
+    
+    func testThatItReturnsRemoteTeamMembers_WhenSearchOptionsIncludeTeamMembers() {
+        // given
+        let team = Team.insertNewObject(in: uiMOC)
+        team.remoteIdentifier = UUID()
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.teamIdentifier = team.remoteIdentifier
+        let member = Member.insertNewObject(in: uiMOC)
+        member.team = team
+        member.user = selfUser
+        let remoteTeamMemberID = UUID()
+        uiMOC.saveOrRollback()
         
+        let payload = ["documents": [
+            ["id": remoteTeamMemberID.transportString(),
+             "team": team.remoteIdentifier!.transportString(),
+             "name": "Member A",
+             "accent_id": 4]]]
+        
+        // when
+        let result = SearchResult(payload: payload,
+                                  query: "",
+                                  searchOptions: [.directory, .teamMembers],
+                                  contextProvider: contextDirectory!)
+        
+        // then
+        XCTAssertEqual(result?.teamMembers.count, 1)
+        XCTAssertEqual(result?.teamMembers.first!.remoteIdentifier, remoteTeamMemberID)
+    }
+    
+    func testThatItDoesNotReturnRemoteTeamMembers_WhenSearchOptionsIncludeExcludeNonActiveTeamMembers () {
+        // given
+        let team = Team.insertNewObject(in: uiMOC)
+        team.remoteIdentifier = UUID()
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.teamIdentifier = team.remoteIdentifier
+        let member = Member.insertNewObject(in: uiMOC)
+        member.team = team
+        member.user = selfUser
+        let remoteTeamMemberID = UUID()
+        uiMOC.saveOrRollback()
+        
+        let payload = ["documents": [
+            ["id": remoteTeamMemberID.transportString(),
+             "team": team.remoteIdentifier!.transportString(),
+             "name": "Member A",
+             "accent_id": 4]]]
+        
+        // when
+        let result = SearchResult(payload: payload,
+                                  query: "",
+                                  searchOptions: [.directory, .teamMembers, .excludeNonActiveTeamMembers],
+                                  contextProvider: contextDirectory!)
+        
+        // then
+        XCTAssertEqual(result?.teamMembers.count, 0)
+    }
+    
+    func testThatThatTeamMemberSearchResultsCanBeExtendedWithMembershipPayload() {
+        // given
+        let team = Team.insertNewObject(in: uiMOC)
+        team.remoteIdentifier = UUID()
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.teamIdentifier = team.remoteIdentifier
+        let member = Member.insertNewObject(in: uiMOC)
+        member.team = team
+        member.user = selfUser
+        let remoteTeamMemberID = UUID()
+        uiMOC.saveOrRollback()
+        
+        let payload = ["documents": [
+            ["id": remoteTeamMemberID.transportString(),
+             "team": team.remoteIdentifier!.transportString(),
+             "name": "Member A",
+             "accent_id": 4]]]
+        
+        var result = SearchResult(payload: payload,
+                                  query: "",
+                                  searchOptions: [.directory, .teamMembers],
+                                  contextProvider: contextDirectory!)
+        
+        let membership = createMembershipPayload(userID: remoteTeamMemberID, createdBy: selfUser.remoteIdentifier, permissions: .partner)
+        let membershipListPayload = WireSyncEngine.MembershipListPayload.init(hasMore: false, members: [membership])
+        
+        // when
+        result?.extendWithMembershipPayload(payload: membershipListPayload)
+        
+        // then
+        XCTAssertEqual(result?.teamMembers.count, 1)
+        XCTAssertEqual(result?.teamMembers.first!.teamRole, .partner)
+        XCTAssertEqual(result?.teamMembers.first!.teamCreatedBy, selfUser.remoteIdentifier)
+    }
+    
+    // MARK: - Team member results filtering
+    
+    func testThatWhenFilteringTeamMemberSearchResults_PartnerCanNotBeFound() {
+        // given
+        let team = Team.insertNewObject(in: uiMOC)
+        team.remoteIdentifier = UUID()
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.remoteIdentifier = UUID()
+        selfUser.teamIdentifier = team.remoteIdentifier
+        let member = Member.insertNewObject(in: uiMOC)
+        member.team = team
+        member.user = selfUser
+        let remoteTeamMemberID = UUID()
+        uiMOC.saveOrRollback()
+        
+        let payload = ["documents": [
+            ["id": remoteTeamMemberID.transportString(),
+             "team": team.remoteIdentifier!.transportString(),
+             "name": "Member A",
+             "accent_id": 4]]]
+        
+        var result = SearchResult(payload: payload,
+                                  query: "",
+                                  searchOptions: [.directory, .teamMembers],
+                                  contextProvider: contextDirectory!)
+        
+        let membership = createMembershipPayload(userID: remoteTeamMemberID, createdBy: nil, permissions: .partner)
+        let membershipListPayload = WireSyncEngine.MembershipListPayload.init(hasMore: false, members: [membership])
+        
+        result?.extendWithMembershipPayload(payload: membershipListPayload)
+        
+        // when
+        result?.filterBy(searchOptions: .excludeNonActivePartners, query: "", contextProvider: contextDirectory!)
+        
+        // then
+        XCTAssertEqual(result?.teamMembers.count, 0)
+    }
+    
+    func testThatWhenFilteringTeamMemberSearchResults_PartnerCanBeFoundByItsCreator() {
+        // given
+        let team = Team.insertNewObject(in: uiMOC)
+        team.remoteIdentifier = UUID()
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.teamIdentifier = team.remoteIdentifier
+        let member = Member.insertNewObject(in: uiMOC)
+        member.team = team
+        member.user = selfUser
+        let remoteTeamMemberID = UUID()
+        uiMOC.saveOrRollback()
+        
+        let payload = ["documents": [
+            ["id": remoteTeamMemberID.transportString(),
+             "team": team.remoteIdentifier!.transportString(),
+             "name": "Member A",
+             "accent_id": 4]]]
+        
+        var result = SearchResult(payload: payload,
+                                  query: "",
+                                  searchOptions: [.directory, .teamMembers],
+                                  contextProvider: contextDirectory!)
+        
+        let membership = createMembershipPayload(userID: remoteTeamMemberID, createdBy: selfUser.remoteIdentifier, permissions: .partner)
+        let membershipListPayload = WireSyncEngine.MembershipListPayload.init(hasMore: false, members: [membership])
+        
+        result?.extendWithMembershipPayload(payload: membershipListPayload)
+        
+        // when
+        result?.filterBy(searchOptions: .excludeNonActivePartners, query: "", contextProvider: contextDirectory!)
+        
+        // then
+        XCTAssertEqual(result?.teamMembers.count, 1)
+    }
+    
+    func testThatWhenFilteringTeamMemberSearchResults_PartnerCanBeFoundByExactHandleSearch() {
+        // given
+        let team = Team.insertNewObject(in: uiMOC)
+        team.remoteIdentifier = UUID()
+        let selfUser = ZMUser.selfUser(in: uiMOC)
+        selfUser.teamIdentifier = team.remoteIdentifier
+        let member = Member.insertNewObject(in: uiMOC)
+        member.team = team
+        member.user = selfUser
+        let remoteTeamMemberID = UUID()
+        uiMOC.saveOrRollback()
+        
+        let payload = ["documents": [
+            ["id": remoteTeamMemberID.transportString(),
+             "team": team.remoteIdentifier!.transportString(),
+             "handle": "aaa",
+             "name": "Member A",
+             "accent_id": 4]]]
+        
+        var result = SearchResult(payload: payload,
+                                  query: "",
+                                  searchOptions: [.directory, .teamMembers],
+                                  contextProvider: contextDirectory!)
+        
+        let membership = createMembershipPayload(userID: remoteTeamMemberID, createdBy: nil, permissions: .partner)
+        let membershipListPayload = WireSyncEngine.MembershipListPayload.init(hasMore: false, members: [membership])
+        
+        result?.extendWithMembershipPayload(payload: membershipListPayload)
+        
+        // when
+        result?.filterBy(searchOptions: .excludeNonActivePartners, query: "@aaa", contextProvider: contextDirectory!)
+        
+        // then
+        XCTAssertEqual(result?.teamMembers.count, 1)
+    }
+    
+    // MARK: - Helpers
+    
+    func createMembershipPayload(userID: UUID,
+                                 createdBy: UUID?,
+                                 permissions: Permissions) -> WireSyncEngine.MembershipPayload {
+        let membershipPermissons = WireSyncEngine.MembershipPayload.PermissionsPayload(copyPermissions: permissions.rawValue,
+                                                                                       selfPermissions: permissions.rawValue)
+        let membershipPayload = WireSyncEngine.MembershipPayload.init(userID: userID,
+                                                                      createdBy: createdBy,
+                                                                      createdAt: nil,
+                                                                      permissions:  membershipPermissons)
+        
+        return membershipPayload
+    }
+    
 }

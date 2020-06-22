@@ -147,12 +147,15 @@ public class AVSWrapper: AVSWrapperType {
     /// Notifies AVS that we received a remote event.
     public func received(callEvent: CallEvent) -> CallError? {
         var result: CallError? = nil
-        callEvent.data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
+
+        callEvent.data.withUnsafeBytes { (pointer: UnsafeRawBufferPointer) in
+            guard let bytes = pointer.baseAddress?.assumingMemoryBound(to: UInt8.self) else { return }
             let currentTime = UInt32(callEvent.currentTimestamp.timeIntervalSince1970)
             let serverTime = UInt32(callEvent.serverTimestamp.timeIntervalSince1970)
             zmLog.debug("wcall_recv_msg: currentTime = \(currentTime), serverTime = \(serverTime)")
             result = CallError(wcall_error: wcall_recv_msg(handle, bytes, callEvent.data.count, currentTime, serverTime, callEvent.conversationId.transportString(), callEvent.userId.transportString(), callEvent.clientId))
         }
+
         return result
     }
 
@@ -163,7 +166,7 @@ public class AVSWrapper: AVSWrapperType {
 
     // MARK: - C Callback Handlers
 
-    private let constantBitRateChangeHandler: ConstantBitRateChangeHandler = { userId, clientId, enabledFlag, contextRef in
+    private let constantBitRateChangeHandler: ConstantBitRateChangeHandler = { _, _, enabledFlag, contextRef in
         AVSWrapper.withCallCenter(contextRef, enabledFlag) {
             $0.handleConstantBitRateChange(enabled: $1)
         }
@@ -176,8 +179,8 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     private let incomingCallHandler: IncomingCallHandler = { conversationId, messageTime, userId, clientId, isVideoCall, shouldRing, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, clientId, isVideoCall, shouldRing) {
-            $0.handleIncomingCall(conversationId: $1, messageTime: $2, userId: $3, clientId: $4, isVideoCall: $5, shouldRing: $6)
+        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, isVideoCall, shouldRing) {
+            $0.handleIncomingCall(conversationId: $1, messageTime: $2, userId: $3, isVideoCall: $4, shouldRing: $5)
         }
     }
 
@@ -197,14 +200,14 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     private let dataChannelEstablishedHandler: DataChannelEstablishedHandler = { conversationId, userId, clientId, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationId, userId, clientId) {
-            $0.handleDataChannelEstablishement(conversationId: $1, userId: $2, clientId: $3)
+        AVSWrapper.withCallCenter(contextRef, conversationId, userId) {
+            $0.handleDataChannelEstablishement(conversationId: $1, userId: $2)
         }
     }
 
     private let establishedCallHandler: CallEstablishedHandler = { conversationId, userId, clientId, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationId, userId, clientId) {
-            $0.handleEstablishedCall(conversationId: $1, userId: $2, clientId: $3)
+        AVSWrapper.withCallCenter(contextRef, conversationId, userId) {
+            $0.handleEstablishedCall(conversationId: $1, userId: $2)
         }
     }
 
@@ -212,8 +215,8 @@ public class AVSWrapper: AVSWrapperType {
         zmLog.debug("closedCallHandler: messageTime = \(messageTime)")
         let nonZeroMessageTime: UInt32 = messageTime != 0 ? messageTime : UInt32(Date().timeIntervalSince1970)
 
-        AVSWrapper.withCallCenter(contextRef, reason, conversationId, nonZeroMessageTime, userId) {
-            $0.handleCallEnd(reason: $1, conversationId: $2, messageTime: $3, userId: $4)
+        AVSWrapper.withCallCenter(contextRef, reason, conversationId, nonZeroMessageTime) {
+            $0.handleCallEnd(reason: $1, conversationId: $2, messageTime: $3, userId: UUID(rawValue: userId))
         }
     }
 
@@ -261,10 +264,10 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    private let networkQualityHandler: NetworkQualityChangeHandler = { conversationIdRef, userIdRef, clientIdRef, quality, rtt, uplinkLoss, downlinkLoss, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationIdRef, userIdRef, clientIdRef, quality) { (callCenter, conversationId, userId, clientId, quality) in
-            callCenter.handleNetworkQualityChange(conversationId: conversationId, userId: userId, clientId: clientId, quality: quality)
-        }
+    private let networkQualityHandler: NetworkQualityChangeHandler = { conversationIdRef, userIdRef, clientId, quality, rtt, uplinkLoss, downlinkLoss, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationIdRef, userIdRef, quality, { (callCenter, conversationId, userId, quality) in
+            callCenter.handleNetworkQualityChange(conversationId: conversationId, userId: userId, quality: quality)
+        })
     }
 
     private let muteChangeHandler: MuteChangeHandler = { muted, contextRef in

@@ -22,7 +22,7 @@ import XCTest
 class SignatureRequestStrategyTests: MessagingTest {
      var sut: SignatureRequestStrategy!
      var mockApplicationStatus: MockApplicationStatus!
-     var asset: ZMAsset?
+    var asset: WireProtos.Asset?
     
     override func setUp() {
         super.setUp()
@@ -134,13 +134,21 @@ class SignatureRequestStrategyTests: MessagingTest {
         XCTAssertEqual(syncMOC.signatureStatus?.state, .signatureInvalid)
     }
     
-    private func randomAsset() -> ZMAsset? {
-        let imageMetaData = ZMAssetImageMetaData.imageMetaData(withWidth: 30, height: 40)
-        let imageMetaDataBuilder = imageMetaData.toBuilder()!
-        let original  = ZMAssetOriginal.original(withSize: 200, mimeType: "application/pdf", name: "PDF test", imageMetaData: imageMetaData)
-        let remoteData = ZMAssetRemoteData.remoteData(withOTRKey: Data(), sha256: Data(), assetId: "id", assetToken: "token")
-        let preview = ZMAssetPreview.preview(withSize: 200, mimeType: "application/pdf", remoteData: remoteData, imageMetadata: imageMetaDataBuilder.build())
+    private func randomAsset() -> WireProtos.Asset? {
+        let imageMetaData = WireProtos.Asset.ImageMetaData(width: 30, height: 40)
+        let original = WireProtos.Asset.Original(withSize: 200,
+                                                 mimeType: "application/pdf",
+                                                 name: "PDF test",
+                                                 imageMetaData: imageMetaData)
+        let remoteData = WireProtos.Asset.RemoteData(withOTRKey: Data(),
+                                                     sha256: Data(),
+                                                     assetId: "id",
+                                                     assetToken: "token")
+        let preview = WireProtos.Asset.Preview(size: 200,
+                                               mimeType: "application/pdf",
+                                               remoteData: remoteData,
+                                               imageMetadata: imageMetaData)
 
-        return ZMAsset.asset(withOriginal: original, preview: preview)
+        return WireProtos.Asset(original: original, preview: preview)
     }
 }

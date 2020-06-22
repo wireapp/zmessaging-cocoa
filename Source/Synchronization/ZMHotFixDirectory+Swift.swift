@@ -198,7 +198,9 @@ import Foundation
     }
     
     public static func refetchTeamMembers(_ context: NSManagedObjectContext) {
-        ZMUser.selfUser(in: context).team?.needsToRedownloadMembers = true
+        ZMUser.selfUser(in: context).team?.members.forEach({ member in
+            member.needsToBeUpdatedFromBackend = true
+        })
     }
     
     /// Marks all conversations to be refetched.
@@ -222,5 +224,41 @@ import Foundation
         guard let sharedUserDefaults = UserDefaults.shared() else { return }
         
         BackendEnvironment.migrate(from: .standard, to: sharedUserDefaults)
+    }
+    
+    public static func removeDeliveryReceiptsForDeletedMessages(_ context: NSManagedObjectContext) {
+        guard let predicate = ZMClientMessage.predicateForObjectsThatNeedToBeInsertedUpstream() else {
+            return
+        }
+        
+        let requestForInsertedMessages = ZMClientMessage.sortedFetchRequest(with: predicate)
+        
+        guard let possibleMatches = context.executeFetchRequestOrAssert(requestForInsertedMessages) as? [ZMClientMessage] else {
+            return
+        }
+        
+        let confirmationReceiptsForDeletedMessages = possibleMatches.filter({ candidate in
+            guard
+                let conversation = candidate.conversation,
+                let underlyingMessage = candidate.underlyingMessage,
+                underlyingMessage.hasConfirmation else {
+                    return false
+            }
+            
+            let originalMessageUUID = UUID(uuidString: underlyingMessage.confirmation.firstMessageID)
+            let originalConfirmedMessage = ZMMessage.fetch(withNonce: originalMessageUUID, for: conversation, in: context)
+            guard
+                let message = originalConfirmedMessage,
+                message.hasBeenDeleted || message.sender == nil else {
+                    return false
+            }
+            return true
+        })
+        
+        for message in confirmationReceiptsForDeletedMessages {
+            context.delete(message)
+        }
+        
+        context.saveOrRollback()
     }
 }

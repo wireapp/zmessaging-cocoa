@@ -20,9 +20,16 @@
 @import Foundation;
 @import WireRequestStrategy;
 
-@class ApplicationStatusDirectory;
+@class SyncStatus;
+@class OperationStatus;
+@class PushNotificationStatus;
+@class NotificationsTracker;
+@class NSManagedObjectContext;
+@protocol ZMApplicationStatus;
 @protocol PreviouslyReceivedEventIDsCollection;
-@protocol ZMApplication;
+@protocol UpdateEventProcessor;
+
+extern NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize;
 
 @interface ZMMissingUpdateEventsTranscoder : ZMAbstractRequestStrategy <ZMObjectStrategy>
 
@@ -30,14 +37,15 @@
 @property (nonatomic, readonly) BOOL isDownloadingMissingNotifications;
 @property (nonatomic, readonly) NSUUID *lastUpdateEventID;
 
-- (instancetype)initWithSyncStrategy:(ZMSyncStrategy *)strategy
-previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
-                         application:(id <ZMApplication>)application
-                   applicationStatus:(ApplicationStatusDirectory *)applicationStatus;
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
+                        notificationsTracker:(NotificationsTracker *)notificationsTracker
+                              eventProcessor:(id<UpdateEventProcessor>)eventProcessor
+        previouslyReceivedEventIDsCollection:(id<PreviouslyReceivedEventIDsCollection>)eventIDsCollection
+                           applicationStatus:(id<ZMApplicationStatus>)applicationStatus
+                      pushNotificationStatus:(PushNotificationStatus *)pushNotificationStatus
+                                  syncStatus:(SyncStatus *)syncStatus
+                             operationStatus:(OperationStatus *)operationStatus;
 
 - (void)startDownloadingMissingNotifications;
-
-- (NSUUID *)processUpdateEventsAndReturnLastNotificationIDFromPayload:(id<ZMTransportData>)payload syncStrategy:(ZMSyncStrategy *)syncStrategy;
-
 
 @end

@@ -48,13 +48,13 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         return note
     }
     
-    func createUpdateEvent(_ nonce: UUID, conversationID: UUID, genericMessage: ZMGenericMessage, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+    func createUpdateEvent(_ nonce: UUID, conversationID: UUID, genericMessage: GenericMessage, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
         let payload : [String : Any] = [
             "id": UUID.create().transportString(),
             "conversation": conversationID.transportString(),
             "from": senderID.transportString(),
             "time": Date().transportString(),
-            "data": ["text": genericMessage.data().base64String()],
+            "data": ["text": try? genericMessage.serializedData().base64String()],
             "type": "conversation.otr-message-add"
         ]
         
@@ -63,7 +63,7 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     
     func reactionEventInOneOnOneConversation() -> ZMUpdateEvent {
         let message = oneOnOneConversation.append(text: "text") as! ZMClientMessage
-        let reaction = ZMGenericMessage.message(content: ZMReaction(emoji: "❤️", messageID: message.nonce!))
+        let reaction = GenericMessage(content: WireProtos.Reaction(emoji: "❤️", messageID: message.nonce!))
         let event = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction, senderID: sender.remoteIdentifier!)
         return event
     }
@@ -72,7 +72,7 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         
         // given
         let message = conversation.append(text: "text") as! ZMClientMessage
-        let reaction = ZMGenericMessage.message(content: ZMReaction(emoji: "❤️", messageID: message.nonce!))
+        let reaction = GenericMessage(content: WireProtos.Reaction(emoji: "❤️", messageID: message.nonce!))
         let event = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction, senderID: aSender.remoteIdentifier!)
         
         // when
@@ -87,7 +87,7 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         
         // given
         let message = conversation.append(text: "text") as! ZMClientMessage
-        let reaction = ZMGenericMessage.message(content: ZMReaction(emoji: "❤️", messageID: message.nonce!))
+        let reaction = GenericMessage(content: WireProtos.Reaction(emoji: "❤️", messageID: message.nonce!))
         let event = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: reaction, senderID: aSender.remoteIdentifier!)
         
         // when
@@ -288,7 +288,7 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         
         // given
         let message = oneOnOneConversation.append(text: "text") as! ZMClientMessage
-        let reaction = ZMGenericMessage.message(content: ZMReaction(emoji: "liked", messageID: message.nonce!))
+        let reaction = GenericMessage(content: WireProtos.Reaction(emoji: "liked", messageID: message.nonce!))
         let eventNonce = UUID.create()
         let event = createUpdateEvent(eventNonce, conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction, senderID: sender.remoteIdentifier!)
         
@@ -332,7 +332,7 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         
         // given
         let message = oneOnOneConversation.append(text: "text") as! ZMClientMessage
-        let reaction = ZMGenericMessage.message(content: ZMReaction(emoji: "", messageID: message.nonce!))
+        let reaction = GenericMessage(content: WireProtos.Reaction(emoji: "", messageID: message.nonce!))
         let event = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction, senderID: sender.remoteIdentifier!)
         
         // when
@@ -346,7 +346,7 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
 
         // given
         let message = oneOnOneConversation.append(text: "text") as! ZMClientMessage
-        let reaction = ZMGenericMessage.message(content: ZMReaction(emoji: "❤️", messageID: message.nonce!))
+        let reaction = GenericMessage(content: WireProtos.Reaction(emoji: "❤️", messageID: message.nonce!))
         let event = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction, senderID: selfUser.remoteIdentifier!)
         
         // when
@@ -362,7 +362,7 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         let message = oneOnOneConversation.append(text: "text") as! ZMClientMessage
         message.sender = otherUser1
         
-        let reaction = ZMGenericMessage.message(content: ZMReaction(emoji: "❤️", messageID: message.nonce!))
+        let reaction = GenericMessage(content: WireProtos.Reaction(emoji: "❤️", messageID: message.nonce!))
         let event = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: reaction, senderID: sender.remoteIdentifier!)
         
         // when

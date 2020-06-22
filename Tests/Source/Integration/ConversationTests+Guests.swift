@@ -18,10 +18,13 @@
 
 import Foundation
 
-class ConversationTests_Guests : TeamTests {
+class ConversationTests_Guests: IntegrationTest {
 
     override func setUp() {
         super.setUp()
+        
+        createSelfUserAndConversation()
+        createExtraUsersAndConversations()
         createTeamAndConversations()
     }
     

@@ -39,12 +39,11 @@ class LinkPreviewTests: ConversationTestsBase {
     }
     
     func assertMessageContainsLinkPreview(_ message: ZMClientMessage, linkPreviewURL: MockLinkPreviewDetector.LinkPreviewURL, file: StaticString = #file, line: UInt = #line) {
-        if let linkPreview = message.genericMessage?.linkPreviews.first {
-            let expectedLinkPreview = mockLinkPreviewDetector.linkPreview(linkPreviewURL).protocolBuffer
-            
+        if let linkPreview = message.underlyingMessage?.linkPreviews.first {
+            let expectedLinkPreview = LinkPreview(mockLinkPreviewDetector.linkMetaData(linkPreviewURL))
             switch linkPreviewURL {
             case .articleWithPicture, .tweetWithPicture:
-                XCTAssertTrue(linkPreview.image.hasUploaded(), "Link preview with image didn't contain uploaded asset", file: file, line: line)
+                XCTAssertTrue(linkPreview.image.hasUploaded, "Link preview with image didn't contain uploaded asset", file: file, line: line)
                 
                 // We don't compare the whole proto buffer since the mock one won't have the uploaded image
                 XCTAssertEqual(linkPreview.urlOffset, expectedLinkPreview.urlOffset)
@@ -160,21 +159,29 @@ class LinkPreviewTests: ConversationTestsBase {
         
         let nonce = UUID.create()
         let messageText = MockLinkPreviewDetector.LinkPreviewURL.article.rawValue
-        let messageWithoutLinkPreview = ZMGenericMessage.message(content: ZMText.text(with: messageText), nonce: nonce)
+        let messageWithoutLinkPreview = GenericMessage(content: Text(content: messageText), nonce: nonce)
         
         // when - receiving initial message without the link preview
         mockTransportSession.performRemoteChanges { _ in
-            mockConversation.encryptAndInsertData(from: senderClient, to: selfClient, data: messageWithoutLinkPreview.data())
+            do {
+                mockConversation.encryptAndInsertData(from: senderClient, to: selfClient, data: try messageWithoutLinkPreview.serializedData())
+            } catch {
+                XCTFail()
+            }
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         
-        let linkPreview = mockLinkPreviewDetector.linkPreview(.article).protocolBuffer
-        let messageWithLinkPreview = ZMGenericMessage.message(content: ZMText.text(with: messageText, linkPreviews: [linkPreview]), nonce: nonce)
+        let linkMetaData = mockLinkPreviewDetector.linkMetaData(.article)
+        let messageWithLinkPreview = GenericMessage(content: Text(content: messageText, linkPreviews: [linkMetaData]), nonce: nonce)
         
         // when - receiving update message with the link preview
         mockTransportSession.performRemoteChanges { _ in
-            mockConversation.encryptAndInsertData(from: senderClient, to: selfClient, data: messageWithLinkPreview.data())
+            do {
+                mockConversation.encryptAndInsertData(from: senderClient, to: selfClient, data: try messageWithLinkPreview.serializedData())
+            } catch {
+                XCTFail()
+            }
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         

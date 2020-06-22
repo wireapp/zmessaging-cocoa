@@ -23,7 +23,6 @@
 
 #import "ObjectTranscoderTests.h"
 #import "ZMUserTranscoder+Internal.h"
-#import "ZMSyncStrategy.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
 

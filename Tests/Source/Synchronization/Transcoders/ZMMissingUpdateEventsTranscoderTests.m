@@ -78,10 +78,14 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.mockPushNotificationStatus];
     
-    _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy
-                                    previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
-                                                             application:(id)self.application
-                                                       applicationStatus:self.mockApplicationDirectory];
+    _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithManagedObjectContext:self.uiMOC
+                                                            notificationsTracker:nil
+                                                                  eventProcessor:self.syncStrategy
+                                            previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
+                                                               applicationStatus:self.mockApplicationDirectory
+                                                          pushNotificationStatus:self.mockPushNotificationStatus
+                                                                      syncStatus:self.mockSyncStatus
+                                                                 operationStatus:self.mockOperationStatus];
 }
 
 - (void)tearDown {
@@ -400,10 +404,15 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     WaitForAllGroupsToBeEmpty(0.5);
 
     // when
-    ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithSyncStrategy:self.syncStrategy
-                                                                    previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
-                                                                                             application:(id)self.application
-                                                                                       applicationStatus:self.mockApplicationDirectory];
+    ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithManagedObjectContext:self.syncMOC
+                                                                                            notificationsTracker:nil
+                                                                                                  eventProcessor:self.syncStrategy
+                                                                            previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
+                                                                                               applicationStatus:self.mockApplicationDirectory
+                                                                                          pushNotificationStatus:self.mockPushNotificationStatus
+                                                                                                      syncStatus:self.mockSyncStatus
+                                                                                                 operationStatus:self.mockOperationStatus];
+    
     WaitForAllGroupsToBeEmpty(0.5);
     [sut.listPaginator resetFetching];
     ZMTransportRequest *request = [sut.listPaginator nextRequest];

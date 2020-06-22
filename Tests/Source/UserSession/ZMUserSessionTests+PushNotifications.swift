@@ -220,7 +220,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         XCTAssertTrue(originalMessage.isText)
         XCTAssertTrue(replyMessage.isText)
         XCTAssertFalse(confirmationMessage.isText)
-        XCTAssertTrue(confirmationMessage.genericMessage?.hasConfirmation() ?? false)
+        XCTAssertTrue(confirmationMessage.underlyingMessage?.hasConfirmation ?? false)
     }
 
     func testThatItAppendsReadReceipt_ForPushNotificationCategoryConversationWithLikeAction() {
@@ -249,7 +249,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         XCTAssertEqual(conversation.allMessages.count, 2)
         XCTAssertFalse(confirmationMessage.isText)
         XCTAssertEqual(originalMessage.reactions.count, 1)
-        XCTAssertTrue(confirmationMessage.genericMessage?.hasConfirmation() ?? false)
+        XCTAssertTrue(confirmationMessage.underlyingMessage?.hasConfirmation ?? false)
     }
     
     func testThatOnLaunchItCallsShowConversationList_ForPushNotificationCategoryConversationWithoutConversation() {
