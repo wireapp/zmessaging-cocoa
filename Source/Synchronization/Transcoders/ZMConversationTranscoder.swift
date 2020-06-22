@@ -44,14 +44,12 @@ extension ZMConversationTranscoder {
         return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
     }()
     
-    @objc(appendSystemMessageForUpdateEvent:inConversation:)
     public func appendSystemMessage(for event: ZMUpdateEvent, conversation: ZMConversation) {
         if let systemMessage = ZMSystemMessage.createOrUpdate(from: event, in: self.managedObjectContext) {
             self.localNotificationDispatcher.process(systemMessage)
         }
     }
     
-    @objc(processMemberUpdateEvent:forConversation:previousLastServerTimeStamp:)
     public func processMemberUpdateEvent(
         _ event: ZMUpdateEvent,
         for conversation: ZMConversation?,
@@ -68,7 +66,6 @@ extension ZMConversationTranscoder {
         }
     }
 
-    @objc(createConversationFromEvent:)
     public func createConversation(from event: ZMUpdateEvent) {
         guard let payloadData = (event.payload as NSDictionary).dictionary(forKey: "data") else {
             log.error("Missing conversation payload in ZMUpdateEventConversationCreate")
@@ -104,7 +101,6 @@ extension ZMConversationTranscoder {
         }
     }
 
-    @objc(createGroupOrSelfConversationFromTransportData:serverTimeStamp:source:)
     public func createGroupOrSelfConversation(from transportData: NSDictionary,
                                        serverTimeStamp: Date,
                                        source: ZMConversationSource) -> ZMConversation? {

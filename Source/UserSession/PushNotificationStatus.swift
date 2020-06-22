@@ -58,7 +58,6 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
     ///
     /// - parameter eventId: UUID of the event to fetch
     /// - parameter completionHandler: The completion handler will be run when event has been downloaded and when there's no more events to fetch
-    @objc(fetchEventId:completionHandler:)
     public func fetch(eventId: UUID, completionHandler: @escaping () -> Void) {
         guard eventId.isType1UUID else {
             return zmLog.error("Attempt to fetch event id not conforming to UUID type1: \(eventId)")
@@ -82,7 +81,6 @@ open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusPr
     ///
     /// - parameter eventIds: List of UUIDs for events that been downloaded
     /// - parameter finished: True when when all available events have been downloaded
-    @objc(didFetchEventIds:lastEventId:finished:)
     public func didFetch(eventIds: [UUID], lastEventId: UUID?, finished: Bool) {
         let highestRankingEventId = eventIdRanking.firstObject as? UUID
         

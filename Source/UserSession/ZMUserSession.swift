@@ -341,7 +341,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         managedObjectContext.saveOrRollback()
     }
     
-    @objc(performChanges:)
     public func perform(_ changes: @escaping () -> Void) {
         managedObjectContext.performGroupedBlockAndWait { [weak self] in
             changes()
@@ -349,12 +348,10 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         }
     }
     
-    @objc(enqueueChanges:)
     public func enqueue(_ changes: @escaping () -> Void) {
         enqueue(changes, completionHandler: nil)
     }
     
-    @objc(enqueueChanges:completionHandler:)
     public func enqueue(_ changes: @escaping () -> Void, completionHandler: (() -> Void)?) {
         managedObjectContext.performGroupedBlock { [weak self] in
             changes()
@@ -363,7 +360,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         }
     }
     
-    @objc(enqueueDelayedChanges:completionHandler:)
     public func enqueueDelayed(_ changes: @escaping () -> Void, completionHandler: (() -> Void)?) {
         managedObjectContext.performGroupedBlock { [weak self] in
             changes()

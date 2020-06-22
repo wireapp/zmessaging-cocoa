@@ -50,7 +50,6 @@ extension ZMUserSession {
     
     /// Deletes selfUser clients from the backend
     
-    @objc(deleteClient:withCredentials:)
     public func deleteClient(_ client: UserClient, credentials: ZMEmailCredentials?) {
         client.markForDeletion()
         client.managedObjectContext?.saveOrRollback()
@@ -65,7 +64,6 @@ extension ZMUserSession {
     ///
     /// - Returns: Token that needs to be stored as long the observer should be active.
     
-    @objc(addClientUpdateObserver:)
     public func addClientUpdateObserver(_ observer: ClientUpdateObserver) -> Any {
         
         return ZMClientUpdateNotification.addObserver(context: managedObjectContext) { [weak self] (type, clientObjectIDs, error) in

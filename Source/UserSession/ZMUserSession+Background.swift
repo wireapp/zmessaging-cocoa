@@ -25,7 +25,6 @@ extension ZMUserSession {
         startEphemeralTimers()
     }
     
-    @objc(application:performFetchWithCompletionHandler:)
     public func application(_ application: ZMApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void ) {
         BackgroundActivityFactory.shared.resume()
         
