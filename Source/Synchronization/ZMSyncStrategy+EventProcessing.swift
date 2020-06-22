@@ -71,7 +71,8 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer, UpdateEventProcessor {
         }
         
     }
-    
+     
+    @objc(prefetchRequestForUpdateEvents:)
     public func prefetchRequest(updateEvents: [ZMUpdateEvent]) -> ZMFetchRequestBatch {
         var messageNounces: Set<UUID> = Set()
         var conversationNounces: Set<UUID> = Set()
