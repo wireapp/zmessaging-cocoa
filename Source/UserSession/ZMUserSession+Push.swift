@@ -97,7 +97,7 @@ extension ZMUserSession {
 
     @objc public static let registerCurrentPushTokenNotificationName = Notification.Name(rawValue: "ZMUserSessionResetPushTokensNotification")
 
-    @objc public func registerForRegisteringPushTokenNotification() {
+    public func registerForRegisteringPushTokenNotification() {
         NotificationCenter.default.addObserver(self, selector: #selector(ZMUserSession.registerCurrentPushToken), name: ZMUserSession.registerCurrentPushTokenNotificationName, object: nil)
     }
 
@@ -127,7 +127,7 @@ extension ZMUserSession {
         }
     }
 
-    @objc public func registerCurrentPushToken() {
+    public func registerCurrentPushToken() {
         managedObjectContext.performGroupedBlock {
             self.sessionManager?.updatePushToken(for: self)
         }
@@ -152,7 +152,7 @@ extension ZMUserSession {
 
 extension ZMUserSession {
     
-    @objc public func receivedPushNotification(with payload: [AnyHashable: Any], completion: @escaping () -> Void) {
+    public func receivedPushNotification(with payload: [AnyHashable: Any], completion: @escaping () -> Void) {
         Logging.network.debug("Received push notification with payload: \(payload)")
         
         let accountID = self.storeProvider.userIdentifier;

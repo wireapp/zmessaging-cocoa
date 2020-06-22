@@ -52,23 +52,23 @@ import WireDataModel
         super.init()
     }
     
-    @objc public func registerEventProcessed() {
+    public func registerEventProcessed() {
         increment(attribute: .processedEvents)
     }
     
-    @objc public func registerSavePerformed() {
+    public func registerSavePerformed() {
         increment(attribute: .savesPerformed)
     }
     
-    @objc public func registerDataInsertionPerformed(amount: UInt = 1) {
+    public func registerDataInsertionPerformed(amount: UInt = 1) {
         increment(attribute: .dataInsertionPerformed)
     }
     
-    @objc public func registerDataUpdatePerformed(amount: UInt = 1) {
+    public func registerDataUpdatePerformed(amount: UInt = 1) {
         increment(attribute: .dataUpdatePerformed)
     }
     
-    @objc public func registerDataDeletionPerformed(amount: UInt = 1) {
+    public func registerDataDeletionPerformed(amount: UInt = 1) {
         increment(attribute: .dataDeletionPerformed)
     }
     

@@ -34,7 +34,7 @@ public final class MockKVStore : NSObject, ZMSynchonizableKeyValueStore {
         return keysAndValues[key]
     }
     
-    @objc public func enqueueDelayedSave() {
+    public func enqueueDelayedSave() {
         // no op
     }
     

@@ -55,19 +55,19 @@ import WireDataModel
         increment(attribute: .finishedFetchingStream)
     }
 
-    @objc public func registerStartStreamFetching() {
+    public func registerStartStreamFetching() {
         increment(attribute: .startedFetchingStream)
     }
 
-    @objc public func registerProcessingExpired() {
+    public func registerProcessingExpired() {
         increment(attribute: .processingExpired)
     }
     
-    @objc public func registerProcessingAborted() {
+    public func registerProcessingAborted() {
         increment(attribute: .abortedProcessing)
     }
 
-    @objc public func registerTokenMismatch() {
+    public func registerTokenMismatch() {
         increment(attribute: .tokenMismatch)
     }
 
