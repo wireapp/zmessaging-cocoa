@@ -539,7 +539,7 @@ extension TypingStrategyTests {
             TypingStrategy.notifyTranscoderThatUser(isTyping: $0, in: conversation)
             XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             if delay == .delay {
-                let interval = (MockTyping.defaultTimeout / (MockTyping.relativeSendTimeout - 1.0))
+                let interval = (MockTyping.defaultTimeout + 0.5)
                 Thread.sleep(forTimeInterval: interval)
             }
             
@@ -767,7 +767,7 @@ class TypingEventTests : MessagingTest {
         let eventACopy = TypingEvent.typingEvent(with: conversation.objectID, isTyping: true, ifDifferentFrom: eventA)
         let eventBCopy = TypingEvent.typingEvent(with: conversation.objectID, isTyping: false, ifDifferentFrom: eventB)
         
-        let interval = MockTyping.defaultTimeout / (MockTyping.relativeSendTimeout - 1.0)
+        let interval = MockTyping.defaultTimeout + 1.0
         Thread.sleep(forTimeInterval: interval)
 
         let eventADifferent = TypingEvent.typingEvent(with: conversation.objectID, isTyping: true, ifDifferentFrom: eventA)

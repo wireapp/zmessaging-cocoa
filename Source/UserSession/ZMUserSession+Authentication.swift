@@ -34,7 +34,6 @@ extension ZMUserSession {
     
     /// Check whether the user is logged in
     
-    @objc(checkIfLoggedInWithCallback:)
     public func checkIfLoggedIn(_ completion: @escaping (_ loggedIn: Bool) -> Void) {
         syncManagedObjectContext.performGroupedBlock {
             let result = self.isLoggedIn

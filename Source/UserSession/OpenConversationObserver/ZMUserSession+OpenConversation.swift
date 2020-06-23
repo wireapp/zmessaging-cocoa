@@ -24,11 +24,11 @@ public protocol OpenConversationObserver {
 }
 
 extension ZMUserSession: OpenConversationObserver {
-    @objc public func didOpen(conversation: ZMConversation) {
+    public func didOpen(conversation: ZMConversation) {
         self.userExpirationObserver.check(usersIn: conversation)
     }
     
-    @objc public func didClose(conversation: ZMConversation) {
+    public func didClose(conversation: ZMConversation) {
         // no-op
     }
 }

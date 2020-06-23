@@ -57,27 +57,27 @@ extension ApplicationMock : ZMApplication {
 // MARK: - Observers
 extension ApplicationMock {
     
-    @objc public func registerObserverForDidBecomeActive(_ object: NSObject, selector: Selector) {
+    public func registerObserverForDidBecomeActive(_ object: NSObject, selector: Selector) {
         NotificationCenter.default.addObserver(object, selector: selector, name: UIApplication.didBecomeActiveNotification, object: nil)
     }
     
-    @objc public func registerObserverForWillResignActive(_ object: NSObject, selector: Selector) {
+    public func registerObserverForWillResignActive(_ object: NSObject, selector: Selector) {
         NotificationCenter.default.addObserver(object, selector: selector, name: UIApplication.willResignActiveNotification, object: nil)
     }
     
-    @objc public func registerObserverForWillEnterForeground(_ object: NSObject, selector: Selector) {
+    public func registerObserverForWillEnterForeground(_ object: NSObject, selector: Selector) {
         NotificationCenter.default.addObserver(object, selector: selector, name: UIApplication.willEnterForegroundNotification, object: nil)
     }
     
-    @objc public func registerObserverForDidEnterBackground(_ object: NSObject, selector: Selector) {
+    public func registerObserverForDidEnterBackground(_ object: NSObject, selector: Selector) {
         NotificationCenter.default.addObserver(object, selector: selector, name: UIApplication.didEnterBackgroundNotification, object: nil)
     }
     
-    @objc public func registerObserverForApplicationWillTerminate(_ object: NSObject, selector: Selector) {
+    public func registerObserverForApplicationWillTerminate(_ object: NSObject, selector: Selector) {
         NotificationCenter.default.addObserver(object, selector: selector, name: UIApplication.willTerminateNotification, object: nil)
     }
     
-    @objc public func unregisterObserverForStateChange(_ object: NSObject) {
+    public func unregisterObserverForStateChange(_ object: NSObject) {
         NotificationCenter.default.removeObserver(object, name: UIApplication.willResignActiveNotification, object: nil)
         NotificationCenter.default.removeObserver(object, name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.removeObserver(object, name: UIApplication.willEnterForegroundNotification, object: nil)
@@ -89,23 +89,23 @@ extension ApplicationMock {
 // MARK: - Simulate application state change
 extension ApplicationMock {
     
-    @objc public func simulateApplicationDidBecomeActive() {
+    public func simulateApplicationDidBecomeActive() {
         NotificationCenter.default.post(name: UIApplication.didBecomeActiveNotification, object: nil)
     }
     
-    @objc public func simulateApplicationWillResignActive() {
+    public func simulateApplicationWillResignActive() {
         NotificationCenter.default.post(name: UIApplication.willResignActiveNotification, object: nil)
     }
     
-    @objc public func simulateApplicationWillEnterForeground() {
+    public func simulateApplicationWillEnterForeground() {
         NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
     }
     
-    @objc public func simulateApplicationDidEnterBackground() {
+    public func simulateApplicationDidEnterBackground() {
         NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
     }
     
-    @objc public func simulateApplicationWillTerminate() {
+    public func simulateApplicationWillTerminate() {
         NotificationCenter.default.post(name: UIApplication.willTerminateNotification, object: nil)
     }
     

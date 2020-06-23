@@ -19,12 +19,10 @@
 @testable import WireSyncEngine
 
 extension MessagingTest {
-    @objc(createClientTextMessage)
     public func createClientTextMessage() -> ZMClientMessage? {
         return createClientTextMessageWith(text: self.name)
     }
     
-    @objc(createClientTextMessageWithText:)
     public func createClientTextMessageWith(text: String) -> ZMClientMessage? {
         let nonce = UUID.create()
         let message = ZMClientMessage.init(nonce: nonce, managedObjectContext: self.syncMOC)

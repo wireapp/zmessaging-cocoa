@@ -26,9 +26,6 @@ class Typing {
     public static let defaultTimeout: TimeInterval = 60
     #endif
 
-    /// We only send typing events to the backend every ZMTypingDefaultTimeout / ZMTypingRelativeSendTimeout seconds.
-    public static let relativeSendTimeout: TimeInterval = 5
-
     // MARK: - Properties
 
     var timeout: TimeInterval = 0

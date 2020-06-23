@@ -90,10 +90,14 @@ public class SearchUserImageStrategy : AbstractRequestStrategy {
     }
     
     func fetchAssetRequest() -> ZMTransportRequest? {
-        let previewAssetRequestA = requestedPreviewAssets.lazy.filter({ !self.requestedPreviewAssetsInProgress.contains($0.key) && $0.value != nil }).first
-        let completeAssetRequestA = requestedCompleteAssets.lazy.filter({ !self.requestedCompleteAssetsInProgress.contains($0.key) && $0.value != nil}).first
+        let previewAssetRequestA = requestedPreviewAssets.first(where: {
+            !(self.requestedPreviewAssetsInProgress.contains($0.key) ||
+                $0.value == nil)
+        })
         
-        if let previewAssetRequest = previewAssetRequestA, let assetKeys = previewAssetRequest.value, let request = request(for: assetKeys, size: .preview, user: previewAssetRequest.key) {
+        if let previewAssetRequest = previewAssetRequestA,
+           let assetKeys = previewAssetRequest.value,
+           let request = request(for: assetKeys, size: .preview, user: previewAssetRequest.key) {
             requestedPreviewAssetsInProgress.insert(previewAssetRequest.key)
             
             request.add(ZMCompletionHandler(on: syncContext, block: { [weak self] (response) in
@@ -103,7 +107,14 @@ public class SearchUserImageStrategy : AbstractRequestStrategy {
             return request
         }
         
-        if let completeAssetRequest = completeAssetRequestA, let assetKeys = completeAssetRequest.value, let request = request(for: assetKeys, size: .complete, user: completeAssetRequest.key) {
+        let completeAssetRequestA = requestedCompleteAssets.first(where: {
+            !(self.requestedCompleteAssetsInProgress.contains($0.key) ||
+                $0.value == nil)
+        })
+        
+        if let completeAssetRequest = completeAssetRequestA,
+           let assetKeys = completeAssetRequest.value,
+           let request = request(for: assetKeys, size: .complete, user: completeAssetRequest.key) {
             requestedCompleteAssetsInProgress.insert(completeAssetRequest.key)
             
             request.add(ZMCompletionHandler(on: syncContext, block: { [weak self] (response) in

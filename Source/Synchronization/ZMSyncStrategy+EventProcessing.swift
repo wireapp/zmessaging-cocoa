@@ -21,7 +21,6 @@ import WireUtilities
 
 extension ZMSyncStrategy: ZMUpdateEventConsumer, UpdateEventProcessor {
 
-    @objc(processUpdateEvents:ignoreBuffer:)
     public func process(updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
         if ignoreBuffer || isReadyToProcessEvents {
             consume(updateEvents: updateEvents)
@@ -31,7 +30,6 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer, UpdateEventProcessor {
         }
     }
     
-    @objc(consumeUpdateEvents:)
     public func consume(updateEvents: [ZMUpdateEvent]) {
         eventDecoder.processEvents(updateEvents) { [weak self] (decryptedUpdateEvents) in
             guard let `self` = self else { return }
@@ -65,7 +63,7 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer, UpdateEventProcessor {
         }
         
     }
-    
+     
     @objc(prefetchRequestForUpdateEvents:)
     public func prefetchRequest(updateEvents: [ZMUpdateEvent]) -> ZMFetchRequestBatch {
         var messageNounces: Set<UUID> = Set()

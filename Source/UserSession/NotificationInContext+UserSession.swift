@@ -35,7 +35,7 @@ extension ZMUserSession {
         NotificationInContext(name: initialSyncCompletionNotificationName, context: context.notificationContext).post()
     }
     
-    @objc public func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver) -> Any {
+    public func addInitialSyncCompletionObserver(_ observer: ZMInitialSyncCompletionObserver) -> Any {
         return ZMUserSession.addInitialSyncCompletionObserver(observer, context: managedObjectContext)
     }
     
