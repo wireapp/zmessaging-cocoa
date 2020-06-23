@@ -20,7 +20,7 @@
 import WireTransport
 import WireDataModel
 
-@objc public enum AccountState : UInt {
+public enum AccountState : UInt {
     case activated
     case newDevice // we want to show "you are using a new device"
     case deactivated // we want to show "you are using this device again"

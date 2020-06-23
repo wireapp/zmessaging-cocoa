@@ -84,7 +84,7 @@ public class MockAVSWrapper : AVSWrapperType {
     }
 }
 
-public class WireCallCenterV3IntegrationMock : WireCallCenterV3 {
+final class WireCallCenterV3IntegrationMock : WireCallCenterV3 {
     
     public let mockAVSWrapper : MockAVSWrapper
     

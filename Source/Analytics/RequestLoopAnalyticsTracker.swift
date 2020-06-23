@@ -19,7 +19,7 @@
 import Foundation
 
 
-@objc public class RequestLoopAnalyticsTracker : NSObject {
+final class RequestLoopAnalyticsTracker {
 
     private let ignoredSuffixes = [
         "/typing"

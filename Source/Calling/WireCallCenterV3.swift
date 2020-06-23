@@ -28,7 +28,7 @@ private let zmLog = ZMSLog(tag: "calling")
  * Thread safety: WireCallCenter instance methods should only be called from the main thread, class method can be
  * called from any thread.
  */
-@objc public class WireCallCenterV3: NSObject {
+public class WireCallCenterV3: NSObject {
 
     /// The maximum number of participants for a video call.
     let videoParticipantsLimit = 4
