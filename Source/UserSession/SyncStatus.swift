@@ -28,6 +28,7 @@
     case fetchingLegalHoldStatus
     case fetchingLabels
     case fetchingMissedEvents
+    case fetchingFeatureFlag
     case done
     
     var isLastSlowSyncPhase : Bool {
@@ -66,6 +67,8 @@
             return "fetchingLabels"
         case .fetchingMissedEvents:
             return "fetchingMissedEvents"
+        case .fetchingFeatureFlag:
+            return "fetchingFeatureFlag"
         case .done:
             return "done"
         }
