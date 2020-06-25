@@ -119,6 +119,7 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
         FeatureFlag.insert(with: response.status,
                            team: team,
                            context: syncContext)
+        syncContext.saveOrRollback()
     }
 }
 
