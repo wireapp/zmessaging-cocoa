@@ -128,10 +128,6 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
 private struct SignatureFeatureFlagResponse: Codable, Equatable {
     let status: Bool
     
-    private enum CodingKeys: String, CodingKey {
-        case status = "status"
-    }
-    
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let statusStr = try container.decodeIfPresent(String.self, forKey: .status)
