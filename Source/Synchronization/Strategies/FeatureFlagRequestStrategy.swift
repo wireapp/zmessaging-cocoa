@@ -116,7 +116,8 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
             return
         }
         
-        FeatureFlag.insert(with: response.status,
+        FeatureFlag.insert(with: .digitalSignature,
+                           value: response.status,
                            team: team,
                            context: syncContext)
         syncContext.saveOrRollback()
