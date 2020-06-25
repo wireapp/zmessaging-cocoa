@@ -63,7 +63,7 @@ extension ZMConversationType {
     }
 }
 
-@objc public enum ConversationMediaAction: UInt {
+public enum ConversationMediaAction: UInt {
     case text, photo, audioCall, videoCall, gif, ping, fileTransfer, videoMessage, audioMessage, location
     
     public var attributeValue: String {

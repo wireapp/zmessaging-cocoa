@@ -63,27 +63,27 @@ import UIKit
 
 extension UIApplication : ZMApplication {
     
-    @objc public func registerObserverForDidBecomeActive(_ object: NSObject, selector: Selector) {
+    public func registerObserverForDidBecomeActive(_ object: NSObject, selector: Selector) {
         NotificationCenter.default.addObserver(object, selector: selector, name: UIApplication.didBecomeActiveNotification, object: nil)
     }
     
-    @objc public func registerObserverForWillResignActive(_ object: NSObject, selector: Selector) {
+    public func registerObserverForWillResignActive(_ object: NSObject, selector: Selector) {
         NotificationCenter.default.addObserver(object, selector: selector, name: UIApplication.willResignActiveNotification, object: nil)
     }
     
-    @objc public func registerObserverForWillEnterForeground(_ object: NSObject, selector: Selector) {
+    public func registerObserverForWillEnterForeground(_ object: NSObject, selector: Selector) {
         NotificationCenter.default.addObserver(object, selector: selector, name: UIApplication.willEnterForegroundNotification, object: nil)
     }
     
-    @objc public func registerObserverForDidEnterBackground(_ object: NSObject, selector: Selector) {
+    public func registerObserverForDidEnterBackground(_ object: NSObject, selector: Selector) {
         NotificationCenter.default.addObserver(object, selector: selector, name: UIApplication.didEnterBackgroundNotification, object: nil)
     }
     
-    @objc public func registerObserverForApplicationWillTerminate(_ object: NSObject, selector: Selector) {
+    public func registerObserverForApplicationWillTerminate(_ object: NSObject, selector: Selector) {
         NotificationCenter.default.addObserver(object, selector: selector, name: UIApplication.willTerminateNotification, object: nil)
     }
     
-    @objc public func unregisterObserverForStateChange(_ object: NSObject) {
+    public func unregisterObserverForStateChange(_ object: NSObject) {
         NotificationCenter.default.removeObserver(object, name: UIApplication.willResignActiveNotification, object: nil)
         NotificationCenter.default.removeObserver(object, name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.removeObserver(object, name: UIApplication.willEnterForegroundNotification, object: nil)
@@ -91,7 +91,7 @@ extension UIApplication : ZMApplication {
         NotificationCenter.default.removeObserver(object, name: UIApplication.willTerminateNotification, object: nil)
     }
     
-    @objc public func executeWhenFileSystemIsAccessible(_ block: @escaping () -> Void) {
+    public func executeWhenFileSystemIsAccessible(_ block: @escaping () -> Void) {
         if isProtectedDataAvailable || ZMPersistentCookieStorage.hasAccessibleAuthenticationCookieData() {
             block()
         } else {

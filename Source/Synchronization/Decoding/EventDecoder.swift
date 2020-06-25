@@ -69,7 +69,7 @@ extension EventDecoder {
     /// Decrypts passed in events and stores them in chronological order in a persisted database. It then saves the database and cryptobox
     /// It then calls the passed in block (multiple times if necessary), returning the decrypted events
     /// If the app crashes while processing the events, they can be recovered from the database
-    @objc public func processEvents(_ events: [ZMUpdateEvent], block: ConsumeBlock) {
+    public func processEvents(_ events: [ZMUpdateEvent], block: ConsumeBlock) {
         var lastIndex: Int64?
         
         eventMOC.performGroupedBlockAndWait {

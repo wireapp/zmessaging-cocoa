@@ -803,7 +803,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         }
     }
     
-    @objc public func updateCallKitConfiguration() {
+    public func updateCallKitConfiguration() {
         callKitManager?.updateConfiguration()
     }
     
@@ -932,7 +932,7 @@ extension SessionManager: ZMUserObserver {
 extension SessionManager {
 
     /// Needs to be called before we try to register another device because API requires password
-    @objc public func update(credentials: ZMCredentials) -> Bool {
+    public func update(credentials: ZMCredentials) -> Bool {
         guard let userSession = activeUserSession, let emailCredentials = credentials as? ZMEmailCredentials else { return false }
 
         userSession.setEmailCredentials(emailCredentials)
@@ -992,7 +992,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
 
 extension SessionManager: PostLoginAuthenticationObserver {
 
-    @objc public func clientRegistrationDidSucceed(accountId: UUID) {
+    public func clientRegistrationDidSucceed(accountId: UUID) {
         log.debug("Client registration was successful")
     }
     
@@ -1143,7 +1143,7 @@ extension SessionManager {
 
 extension SessionManager : PreLoginAuthenticationObserver {
     
-    @objc public func authenticationDidSucceed() {
+    public func authenticationDidSucceed() {
         if nil != activeUserSession {
             return RequestAvailableNotification.notifyNewRequestsAvailable(self)
         }
@@ -1187,21 +1187,21 @@ private let sessionManagerDestroyedSessionNotificationName = Notification.Name(r
 
 extension SessionManager: NotificationContext {
 
-    @objc public func addUnauthenticatedSessionManagerCreatedSessionObserver(_ observer: SessionManagerCreatedSessionObserver) -> Any {
+    public func addUnauthenticatedSessionManagerCreatedSessionObserver(_ observer: SessionManagerCreatedSessionObserver) -> Any {
         return NotificationInContext.addObserver(
             name: sessionManagerCreatedUnauthenticatedSessionNotificationName,
             context: self)
         { [weak observer] note in observer?.sessionManagerCreated(unauthenticatedSession: note.object as! UnauthenticatedSession) }
     }
 
-    @objc public func addSessionManagerCreatedSessionObserver(_ observer: SessionManagerCreatedSessionObserver) -> Any {
+    public func addSessionManagerCreatedSessionObserver(_ observer: SessionManagerCreatedSessionObserver) -> Any {
         return NotificationInContext.addObserver(
             name: sessionManagerCreatedSessionNotificationName,
             context: self)
         { [weak observer] note in observer?.sessionManagerCreated(userSession: note.object as! ZMUserSession) }
     }
     
-    @objc public func addSessionManagerDestroyedSessionObserver(_ observer: SessionManagerDestroyedSessionObserver) -> Any {
+    public func addSessionManagerDestroyedSessionObserver(_ observer: SessionManagerDestroyedSessionObserver) -> Any {
         return NotificationInContext.addObserver(
         name: sessionManagerDestroyedSessionNotificationName,
         context: self)

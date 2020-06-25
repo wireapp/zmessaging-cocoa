@@ -429,7 +429,7 @@ extension UserProfileUpdateStatus {
 // MARK: - Helpers
 
 /// Errors
-@objc public enum UserProfileUpdateError: Int, Error {
+public enum UserProfileUpdateError: Int, Error {
     case missingArgument
     case emailAlreadySet
     case emailNotSet

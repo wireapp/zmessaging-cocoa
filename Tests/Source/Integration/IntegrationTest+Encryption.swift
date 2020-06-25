@@ -55,7 +55,6 @@ extension IntegrationTest {
     
     /// Creates a session between the self client to the given user, if it does not
     /// exists already
-    @objc(establishSessionFromSelfToClient:)
     public func establishSessionFromSelf(to client: UserClient) {
         
         // this makes sure the client has remote identifier
@@ -79,7 +78,6 @@ extension IntegrationTest {
     
     /// Creates a session between the self client, and a client matching a remote client.
     /// If no such client exists locally, it creates it (and the user associated with it).
-    @objc(establishSessionFromSelfToRemoteClient:)
     public func establishSessionFromSelf(toRemote remoteClient: MockUserClient) {
         
         guard let remoteUserIdentifierString = remoteClient.user?.identifier,

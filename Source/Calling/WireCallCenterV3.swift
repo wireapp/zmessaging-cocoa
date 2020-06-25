@@ -28,7 +28,7 @@ private let zmLog = ZMSLog(tag: "calling")
  * Thread safety: WireCallCenter instance methods should only be called from the main thread, class method can be
  * called from any thread.
  */
-@objc public class WireCallCenterV3: NSObject {
+public class WireCallCenterV3: NSObject {
 
     /// The maximum number of participants for a video call.
     let videoParticipantsLimit: Int
@@ -222,7 +222,6 @@ extension WireCallCenterV3 {
      * - returns: Whether the conversation hosts a video call.
      */
 
-    @objc(isVideoCallForConversationID:)
     public func isVideoCall(conversationId: UUID) -> Bool {
         return callSnapshots[conversationId]?.isVideo ?? false
     }
@@ -233,7 +232,6 @@ extension WireCallCenterV3 {
      * - returns: Whether the call is being made with a constant bitrate.
      */
 
-    @objc(isConstantBitRateInConversationID:)
     public func isContantBitRate(conversationId: UUID) -> Bool {
         return callSnapshots[conversationId]?.isConstantBitRate ?? false
     }
@@ -361,7 +359,6 @@ extension WireCallCenterV3 {
      * - parameter video: Whether to join the call with video.
      */
 
-    @objc(answerCallForConversationID:video:)
     public func answerCall(conversation: ZMConversation, video: Bool) -> Bool {
         guard let conversationId = conversation.remoteIdentifier else { return false }
         
@@ -401,7 +398,6 @@ extension WireCallCenterV3 {
      * - parameter video: Whether to start the call as a video call.
      */
     
-    @objc(startCallForConversationID:video:)
     public func startCall(conversation: ZMConversation, video: Bool) -> Bool {
         guard let conversationId = conversation.remoteIdentifier else { return false }
         
@@ -474,7 +470,6 @@ extension WireCallCenterV3 {
      * - parameter conversationId: The ID of the conversation where the incoming call is hosted.
      */
     
-    @objc(rejectCallForConversationID:)
     public func rejectCall(conversationId: UUID) {
         avsWrapper.rejectCall(conversationId: conversationId)
         
