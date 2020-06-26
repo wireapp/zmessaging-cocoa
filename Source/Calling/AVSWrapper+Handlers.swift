@@ -34,7 +34,7 @@ extension AVSWrapper {
         ///                                         int enabled,
         ///                                         void *arg);
 
-        typealias ConstantBitRateChange = @convention(c)(StringPtr, StringPtr, Int32, ContextRef) -> Void
+        typealias ConstantBitRateChange = @convention(c) (StringPtr, StringPtr, Int32, ContextRef) -> Void
 
 
         /// Callback used to inform user that received video has started or stopped.
