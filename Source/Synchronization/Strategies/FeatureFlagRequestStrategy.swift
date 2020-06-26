@@ -26,6 +26,14 @@ public final class FeatureFlagRequestStrategy: AbstractRequestStrategy {
     private let syncContext: NSManagedObjectContext
     private let syncStatus: SyncStatus
     
+    private var needsFeatureFlagsRefresh: Bool {
+        guard let thresholdDate = getSignatureFlagThresholdUpdateDate() else {
+            return true
+        }
+        let now = Date()
+        return now > thresholdDate
+    }
+    
     // MARK: - Public Property
     var singleRequestSync: ZMSingleRequestSync?
 
@@ -48,7 +56,7 @@ public final class FeatureFlagRequestStrategy: AbstractRequestStrategy {
     @objc
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         guard
-            syncStatus.currentSyncPhase == .fetchingFeatureFlags,
+            syncStatus.currentSyncPhase == .fetchingFeatureFlags || needsFeatureFlagsRefresh,
             let singleRequestSync = singleRequestSync
         else {
             return nil
@@ -121,6 +129,19 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
                                   team: team,
                                   context: syncContext)
         syncContext.saveOrRollback()
+    }
+    
+    private func getSignatureFlagThresholdUpdateDate() -> Date? {
+        guard
+            let digitalSignatureFlag = ZMUser.selfUser(in: syncContext).team?
+            .fetchFeatureFlag(with: .digitalSignature) else {
+            return nil
+        }
+        
+        let calendar = Calendar.current
+        return calendar.date(byAdding: .day,
+                             value: 1,
+                             to: digitalSignatureFlag.updatedTimestamp)
     }
 }
 
