@@ -143,7 +143,7 @@ extension WireCallCenterV3 {
     /// Handles established calls.
     func handleEstablishedCall(conversationId: UUID) {
         handleEvent("established-call") {
-            // WORKAROUND: the call established handler will is called once for every participant in a
+            // WORKAROUND: the call established handler is called once for every participant in a
             // group call. Until that's no longer the case we must take care to only set establishedDate once.
             if self.callState(conversationId: conversationId) != .established {
                 self.establishedDate = Date()
