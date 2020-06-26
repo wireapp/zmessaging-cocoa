@@ -27,7 +27,7 @@ public final class FeatureFlagRequestStrategy: AbstractRequestStrategy {
     private let syncStatus: SyncStatus
     
     private var needsFeatureFlagsRefresh: Bool {
-        guard let thresholdDate = getSignatureFlagThresholdUpdateDate() else {
+        guard let thresholdDate = calculateDigitalSignatureFlagRefreshDate() else {
             return true
         }
         let now = Date()
@@ -131,17 +131,18 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
         syncContext.saveOrRollback()
     }
     
-    private func getSignatureFlagThresholdUpdateDate() -> Date? {
+    private func calculateDigitalSignatureFlagRefreshDate() -> Date? {
         guard
-            let digitalSignatureFlag = ZMUser.selfUser(in: syncContext).team?
-            .fetchFeatureFlag(with: .digitalSignature) else {
+            let team = ZMUser.selfUser(in: syncContext).team,
+            let flag = team.fetchFeatureFlag(with: .digitalSignature)
+        else {
             return nil
         }
         
         let calendar = Calendar.current
         return calendar.date(byAdding: .day,
                              value: 1,
-                             to: digitalSignatureFlag.updatedTimestamp)
+                             to: flag.updatedTimestamp)
     }
 }
 
