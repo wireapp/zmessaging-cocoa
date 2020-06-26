@@ -48,7 +48,7 @@ public final class FeatureFlagRequestStrategy: AbstractRequestStrategy {
     @objc
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         guard
-            syncStatus.currentSyncPhase == .fetchingFeatureFlag,
+            syncStatus.currentSyncPhase == .fetchingFeatureFlags,
             let singleRequestSync = singleRequestSync
         else {
             return nil
@@ -81,8 +81,8 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
             processDigitalSignatureFlagSuccess(with: rawData)
         }
         
-        if syncStatus.currentSyncPhase == .fetchingFeatureFlag {
-            syncStatus.finishCurrentSyncPhase(phase: .fetchingFeatureFlag)
+        if syncStatus.currentSyncPhase == .fetchingFeatureFlags {
+            syncStatus.finishCurrentSyncPhase(phase: .fetchingFeatureFlags)
         }
     }
     
@@ -116,10 +116,10 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
             return
         }
         
-        FeatureFlag.insert(with: .digitalSignature,
-                           value: response.status,
-                           team: team,
-                           context: syncContext)
+        FeatureFlag.fetchOrCreate(with: .digitalSignature,
+                                  value: response.status,
+                                  team: team,
+                                  context: syncContext)
         syncContext.saveOrRollback()
     }
 }
