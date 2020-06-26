@@ -124,7 +124,7 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
             return
         }
         
-        FeatureFlag.fetchOrCreate(with: .digitalSignature,
+        FeatureFlag.updateOrCreate(with: .digitalSignature,
                                   value: response.status,
                                   team: team,
                                   context: syncContext)
