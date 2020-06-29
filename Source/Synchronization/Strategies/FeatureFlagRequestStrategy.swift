@@ -86,10 +86,10 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
             response.result == .permanentError || response.result == .success,
             let team = ZMUser.selfUser(in: syncContext).team
         else {
-            FeatureFlag.insert(with: .digitalSignature,
-                               value: false,
-                               team: team,
-                               context: syncContext)
+            FeatureFlag.updateOrCreate(with: .digitalSignature,
+                                       value: false,
+                                       team: team,
+                                       context: syncContext)
             syncContext.saveOrRollback()
             return
         }
