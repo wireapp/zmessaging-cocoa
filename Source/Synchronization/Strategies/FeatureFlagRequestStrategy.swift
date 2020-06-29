@@ -82,14 +82,14 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
     public func didReceive(_ response: ZMTransportResponse,
                            forSingleRequest sync: ZMSingleRequestSync) {
         
-        guard
-            response.result == .permanentError || response.result == .success,
-            let team = ZMUser.selfUser(in: syncContext).team
-        else {
-            FeatureFlag.updateOrCreate(with: .digitalSignature,
-                                       value: false,
-                                       team: team,
-                                       context: syncContext)
+        guard response.result == .permanentError || response.result == .success else {
+            if let teams = ZMUser.selfUser(in: syncContext).team {
+                FeatureFlag.updateOrCreate(with: .digitalSignature,
+                                           value: false,
+                                           team: teams,
+                                           context: syncContext)
+                
+            }
             syncContext.saveOrRollback()
             return
         }
