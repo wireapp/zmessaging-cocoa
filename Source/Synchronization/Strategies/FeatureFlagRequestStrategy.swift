@@ -48,7 +48,8 @@ public final class FeatureFlagRequestStrategy: AbstractRequestStrategy {
         super.init(withManagedObjectContext: managedObjectContext,
                    applicationStatus: applicationStatus)
         
-        self.configuration = [.allowsRequestsDuringSync]
+        self.configuration = [.allowsRequestsDuringSync,
+                              .allowsRequestsDuringEventProcessing]
         self.singleRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self,
                                                      groupQueue: managedObjectContext)
     }

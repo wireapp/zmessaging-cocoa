@@ -138,6 +138,32 @@ class FeatureFlagRequestStrategyTests: MessagingTest {
         }
     }
     
+    func testThatItGeneratesCorrectRequestIfFeatureFlagUpdatedMoreThan24HoursAgo() {
+        let calendar = Calendar.current
+        guard
+            let lastUpdateDate = calendar.date(byAdding: .day, value: -2, to: Date()),
+            let teamId = self.selfUser.teamIdentifier?.uuidString
+        else {
+            return XCTFail()
+        }
+        
+        syncMOC.performGroupedBlockAndWait {
+            // GIVEN
+            let featureFlag = FeatureFlag.updateOrCreate(with: .digitalSignature,
+                                                         value: true,
+                                                         team: self.team,
+                                                         context: self.syncMOC)
+            featureFlag.updatedTimestamp = lastUpdateDate
+            self.syncMOC.saveOrRollback()
+        }
+        
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        let request = sut.nextRequestIfAllowed()
+        XCTAssertNotNil(request)
+        XCTAssertEqual(request?.path, "/teams/\(teamId)/features/digital-signatures")
+        XCTAssertEqual(request?.method, .methodGET)
+    }
+    
     func testThatItItUpdatesSignatureFeatureFlag() {
         let updatedValue = true
         
