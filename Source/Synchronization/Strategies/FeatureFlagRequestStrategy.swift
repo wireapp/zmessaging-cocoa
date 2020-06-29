@@ -83,14 +83,7 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
                            forSingleRequest sync: ZMSingleRequestSync) {
         
         guard response.result == .permanentError || response.result == .success else {
-            if let teams = ZMUser.selfUser(in: syncContext).team {
-                FeatureFlag.updateOrCreate(with: .digitalSignature,
-                                           value: false,
-                                           team: teams,
-                                           context: syncContext)
-                
-            }
-            syncContext.saveOrRollback()
+            saveInitialDigitalSignatureFlag()
             return
         }
         
@@ -149,6 +142,7 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
             let team = ZMUser.selfUser(in: syncContext).team,
             let flag = team.fetchFeatureFlag(with: .digitalSignature)
         else {
+            saveInitialDigitalSignatureFlag()
             return nil
         }
         
@@ -156,6 +150,16 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
         return calendar.date(byAdding: .day,
                              value: 1,
                              to: flag.updatedTimestamp)
+    }
+    
+    private func saveInitialDigitalSignatureFlag() {
+        if let teams = ZMUser.selfUser(in: syncContext).team {
+            FeatureFlag.updateOrCreate(with: .digitalSignature,
+                                       value: false,
+                                       team: teams,
+                                       context: syncContext)
+            syncContext.saveOrRollback()
+        }
     }
 }
 
