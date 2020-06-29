@@ -204,6 +204,20 @@ class CallParticipantsSnapshotTests: MessagingTest {
         // Then
         XCTAssertEqual(sut.members.array, [updatedMember1, member2])
     }
+    
+    func testThat_ItUpdateMicrophoneState_WhenItChangesForParticipant() {
+        // Given
+        let member1 = AVSCallMember(client: aliceIphone, microphoneState: .unmuted)
+        let member2 = AVSCallMember(client: bobIphone, microphoneState: .unmuted)
+        let sut = createSut(members: [member1, member2])
+        
+        // When
+        let updatedMember1 = member1.with(microphoneState: .muted)
+        sut.callParticipantsChanged(participants: [updatedMember1, member2])
+        
+        // Then
+        XCTAssertEqual(sut.members.array, [updatedMember1, member2])
+    }
 
 }
 
@@ -213,6 +227,7 @@ private extension AVSCallMember {
         return AVSCallMember(client: client,
                              audioState: audioState,
                              videoState: videoState,
+                             microphoneState: microphoneState,
                              networkQuality: networkQuality)
     }
 
@@ -220,6 +235,15 @@ private extension AVSCallMember {
         return AVSCallMember(client: client,
                              audioState: audioState,
                              videoState: videoState,
+                             microphoneState: microphoneState,
+                             networkQuality: networkQuality)
+    }
+    
+    func with(microphoneState: MicrophoneState) -> AVSCallMember {
+        return AVSCallMember(client: client,
+                             audioState: audioState,
+                             videoState: videoState,
+                             microphoneState: microphoneState,
                              networkQuality: networkQuality)
     }
 
