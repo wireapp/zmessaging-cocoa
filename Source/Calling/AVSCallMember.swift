@@ -19,7 +19,6 @@
 import Foundation
 import avs
 
-
 public struct AVSParticipantsChange: Codable {
 
     let convid: UUID
@@ -31,6 +30,7 @@ public struct AVSParticipantsChange: Codable {
         let clientid: String
         let aestab: AudioState
         let vrecv: VideoState
+        let muted: MicrophoneState
     }
 }
 
@@ -40,6 +40,7 @@ extension AVSCallMember {
         client = AVSClient(userId: member.userid, clientId: member.clientid)
         audioState = member.aestab
         videoState = member.vrecv
+        microphoneState = member.muted
         networkQuality = .normal
     }
 }
@@ -59,6 +60,9 @@ public struct AVSCallMember: Hashable {
     /// The state of video connection.
     public let videoState: VideoState
 
+    /// The state of microphone
+    public let microphoneState: MicrophoneState
+    
     /// Netwok quality of this leg
     public let networkQuality: NetworkQuality
 
@@ -69,17 +73,20 @@ public struct AVSCallMember: Hashable {
      * - parameter client: The client used in the call.
      * - parameter audioState: The state of the audio connection. Defaults to `.connecting`.
      * - parameter videoState: The state of video connection. Defaults to `stopped`.
+     * - parameter microphoneState: The state of microphone. Defaults to `unmuted`.
      * - parameter networkQuality: The quality of the network connection. Defaults to `.normal`.
      */
 
     public init(client: AVSClient,
                 audioState: AudioState = .connecting,
                 videoState: VideoState = .stopped,
+                microphoneState: MicrophoneState = .unmuted,
                 networkQuality: NetworkQuality = .normal)
     {
         self.client = client
         self.audioState = audioState
         self.videoState = videoState
+        self.microphoneState = microphoneState
         self.networkQuality = networkQuality
     }
 
@@ -91,10 +98,9 @@ public struct AVSCallMember: Hashable {
         case .connecting:
             return .connecting
         case .established:
-            return .connected(videoState: videoState)
+            return .connected(videoState: videoState, microphoneState: microphoneState)
         case .networkProblem:
             return .unconnectedButMayConnect
-
         }
     }
 

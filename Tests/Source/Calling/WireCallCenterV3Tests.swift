@@ -1021,7 +1021,8 @@ extension WireCallCenterV3Tests {
     func callBackMemberHandler(conversationId: UUID, userId: UUID, clientId: String, audioEstablished: Bool) {
         let audioState = audioEstablished ? AudioState.established : .connecting
         let videoState = VideoState.stopped
-        let member = AVSParticipantsChange.Member(userid: userId, clientid: clientId, aestab: audioState, vrecv: videoState)
+        let microphoneState = MicrophoneState.unmuted
+        let member = AVSParticipantsChange.Member(userid: userId, clientid: clientId, aestab: audioState, vrecv: videoState, muted: microphoneState)
         let change = AVSParticipantsChange(convid: conversationId, members: [member])
         
         let encoded = try! JSONEncoder().encode(change)
@@ -1075,7 +1076,7 @@ extension WireCallCenterV3Tests {
 
         // then
         actual = sut.callParticipants(conversationId: groupConversationID)
-        expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connected(videoState: .stopped))]
+        expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connected(videoState: .stopped, microphoneState: .unmuted))]
         XCTAssertEqual(actual, expected)
     }
 }

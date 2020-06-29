@@ -64,7 +64,7 @@ public enum CallParticipantState: Equatable {
     /// Participant is in the process of connecting to the call
     case connecting
     /// Participant is connected to the call and audio is flowing
-    case connected(videoState: VideoState)
+    case connected(videoState: VideoState, microphoneState: MicrophoneState)
 }
 
 
@@ -97,6 +97,17 @@ public enum VideoState: Int32, Codable {
     case paused = 3
     /// Sender is sending a video of his/her desktop
     case screenSharing = 4
+}
+
+/**
+ * The state of microphone in the call
+ */
+
+public enum MicrophoneState: Int32, Codable {
+    /// Sender is unmuted
+    case unmuted = 0
+    /// Sender is muted
+    case muted = 1
 }
 
 /**

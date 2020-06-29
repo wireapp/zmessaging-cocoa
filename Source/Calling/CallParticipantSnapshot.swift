@@ -57,6 +57,7 @@ class CallParticipantsSnapshot {
         let updatedMember = AVSCallMember(client: client,
                                           audioState: localMember.audioState,
                                           videoState: localMember.videoState,
+                                          microphoneState: localMember.microphoneState,
                                           networkQuality: networkQuality)
 
         members = OrderedSetState(array: members.array.map({ member in
