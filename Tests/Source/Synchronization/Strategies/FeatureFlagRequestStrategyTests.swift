@@ -155,8 +155,8 @@ class FeatureFlagRequestStrategyTests: MessagingTest {
         // THEN
         syncMOC.performGroupedBlockAndWait {
             let featureFlag = FeatureFlag.fetch(with: .digitalSignature,
-                                          team: self.team,
-                                          context: self.syncMOC)
+                                                team: self.team,
+                                                context: self.syncMOC)
             XCTAssertEqual(featureFlag?.isEnabled, updatedValue)
         }
     }
