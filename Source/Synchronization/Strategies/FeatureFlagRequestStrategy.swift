@@ -97,6 +97,10 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
     // MARK: - Helpers
     private func makeDigitalSignatureFlagRequest() -> ZMTransportRequest? {
         guard let teamId = ZMUser.selfUser(in: syncContext).teamIdentifier?.uuidString else {
+            // Skip sync phase if the user doesn't belong to a team
+            if syncStatus.currentSyncPhase == .fetchingFeatureFlags {
+                syncStatus.finishCurrentSyncPhase(phase: .fetchingFeatureFlags)
+            }
             return nil
         }
         
