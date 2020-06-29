@@ -151,10 +151,14 @@ extension FeatureFlagRequestStrategy: ZMSingleRequestTranscoder {
 }
 
 // MARK: - SignatureFeatureFlagResponse
-private struct SignatureFeatureFlagResponse: Codable, Equatable {
-    let status: Bool
+public struct SignatureFeatureFlagResponse: Codable, Equatable {
+    public let status: Bool
     
-    init(from decoder: Decoder) throws {
+    public init(status: Bool) {
+        self.status = status
+    }
+    
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let statusStr = try container.decodeIfPresent(String.self, forKey: .status)
         switch statusStr {
