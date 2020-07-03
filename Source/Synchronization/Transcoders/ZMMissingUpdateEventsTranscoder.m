@@ -22,7 +22,7 @@
 @import WireRequestStrategy;
 
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
-#import <WireSyncEngine/WireSyncEngine-Swift.h>
+//#import <WireSyncEngine/WireSyncEngine-Swift.h>
 //#import <WireRequestStrategy/ZMSimpleListRequestPaginator.h>
 #import "WireSyncEngineLogs.h"
 
