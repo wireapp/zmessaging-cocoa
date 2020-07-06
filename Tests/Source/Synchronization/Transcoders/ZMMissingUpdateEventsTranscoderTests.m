@@ -24,7 +24,6 @@
 #import <Foundation/Foundation.h>
 
 #import "MessagingTest.h"
-#import "ZMSyncStateDelegate.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
 #import "ZMSimpleListRequestPaginator.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
