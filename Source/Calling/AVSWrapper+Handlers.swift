@@ -19,53 +19,172 @@
 import Foundation
 import avs
 
-/// Equivalent of `wcall_audio_cbr_change_h`.
-typealias ConstantBitRateChangeHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
+extension AVSWrapper {
 
-/// Equivalent of `wcall_video_state_change_h`.
-typealias VideoStateChangeHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
+    enum Handler {
 
-/// Equivalent of `wcall_incoming_h`.
-typealias IncomingCallHandler = @convention(c) (UnsafePointer<Int8>?, UInt32, UnsafePointer<Int8>?, UnsafePointer<Int8>?, Int32, Int32, UnsafeMutableRawPointer?) -> Void
+        typealias StringPtr = UnsafePointer<Int8>?
+        typealias VoidPtr = UnsafeMutableRawPointer?
+        typealias ContextRef = VoidPtr
 
-/// Equivalent of `wcall_missed_h`.
-typealias MissedCallHandler = @convention(c) (UnsafePointer<Int8>?, UInt32, UnsafePointer<Int8>?, UnsafePointer<Int8>?, Int32, UnsafeMutableRawPointer?) -> Void
+        /// Callback used to inform user that call uses CBR (in both directions).
+        ///
+        /// typedef void (wcall_audio_cbr_change_h)(const char *userid,
+        ///                                         const char *clientid,
+        ///                                         int enabled,
+        ///                                         void *arg);
 
-/// Equivalent of `wcall_answered_h`.
-typealias AnsweredCallHandler = @convention(c) (UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+        typealias ConstantBitRateChange = @convention(c) (StringPtr, StringPtr, Int32, ContextRef) -> Void
 
-/// Equivalent of `wcall_data_chan_estab_h`.
-typealias DataChannelEstablishedHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
 
-/// Equivalent of `wcall_estab_h`.
-typealias CallEstablishedHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+        /// Callback used to inform user that received video has started or stopped.
+        ///
+        /// typedef void (wcall_video_state_change_h)(const char *convid,
+        ///                                           const char *userid,
+        ///                                           const char *clientid,
+        ///                                           int state,
+        ///                                           void *arg);
 
-/// Equivalent of `wcall_close_h`.
-typealias CloseCallHandler = @convention(c) (Int32, UnsafePointer<Int8>?, UInt32, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+        typealias VideoStateChange = @convention(c) (StringPtr, StringPtr, StringPtr, Int32, ContextRef) -> Void
 
-/// Equivalent of `wcall_metrics_h`.
-typealias CallMetricsHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+        /// Callback used to inform the user of an incoming call.
+        ///
+        /// typedef void (wcall_incoming_h)(const char *convid,
+        ///                                 uint32_t msg_time,
+        ///                                 const char *userid,
+        ///                                 const char *clientid,
+        ///                                 int video_call /*bool*/,
+        ///                                 int should_ring /*bool*/,
+        ///                                 int conv_type /*WCALL_CONV_TYPE...*/,
+        ///                                 void *arg);
 
-/// Equivalent of `wcall_config_req_h`.
-typealias CallConfigRefreshHandler = @convention(c) (UInt32, UnsafeMutableRawPointer?) -> Int32
+        typealias IncomingCall = @convention(c) (StringPtr, UInt32, StringPtr, StringPtr, Int32, Int32, Int32, ContextRef) -> Void
 
-/// Equivalent of `wcall_ready_h`.
-typealias CallReadyHandler = @convention(c) (Int32, UnsafeMutableRawPointer?) -> Void
+        /// Callback used to inform the user of a missed call.
+        ///
+        /// typedef void (wcall_missed_h)(const char *convid,
+        ///                               uint32_t msg_time,
+        ///                               const char *userid,
+        ///                               const char *clientid,
+        ///                               int video_call /*bool*/,
+        ///                               void *arg);
 
-/// Equivalent of `wcall_send_h`.
-typealias CallMessageSendHandler = @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<UInt8>?, Int, Int32, UnsafeMutableRawPointer?) -> Int32
+        typealias MissedCall = @convention(c) (StringPtr, UInt32, StringPtr, StringPtr, Int32, ContextRef) -> Void
 
-/// Equivalent of `wcall_group_changed_h`.
-typealias CallGroupChangedHandler = @convention(c) (UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+        /// Callback used to inform user that a 1:1 call was answered.
+        ///
+        /// typedef void (wcall_answered_h)(const char *convid, void *arg);
 
-/// Equivalent of `wcall_participant_changed_h`.
-typealias CallParticipantChangedHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?,  UnsafeMutableRawPointer?) -> Void
+        typealias AnsweredCall = @convention(c) (StringPtr, ContextRef) -> Void
 
-/// Equivalent of `wcall_media_stopped_h`.
-typealias MediaStoppedChangeHandler = @convention(c) (UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void
+        /// Callback used to inform the user that a data channel was established.
+        ///
+        /// typedef void (wcall_data_chan_estab_h)(const char *convid,
+        ///                                        const char *userid,
+        ///                                        const char *clientid,
+        ///                                        void *arg);
 
-/// Equivalent of `wcall_network_quality_h`.
-typealias NetworkQualityChangeHandler = @convention(c) (UnsafePointer<Int8>?, UnsafePointer<Int8>?, UnsafePointer<Int8>?, Int32, Int32, Int32, Int32, UnsafeMutableRawPointer?) -> Void
+        typealias DataChannelEstablished = @convention(c) (StringPtr, StringPtr, StringPtr, ContextRef) -> Void
 
-/// Equivalent of `wcall_set_mute_handler`.
-typealias MuteChangeHandler = @convention(c) (Int32, UnsafeMutableRawPointer?) -> Void
+        /// Callback used to inform the user that a call was established (with media).
+        ///
+        /// typedef void (wcall_estab_h)(const char *convid,
+        ///                              const char *userid,
+        ///                              const char *clientid,
+        ///                              void *arg);
+
+        typealias CallEstablished = @convention(c) (StringPtr, StringPtr, StringPtr, ContextRef) -> Void
+
+        /// Callback used to inform the user that a call was terminated.
+        ///
+        /// typedef void (wcall_close_h)(int reason,
+        ///                              const char *convid,
+        ///                              uint32_t msg_time,
+        ///                              const char *userid,
+        ///                              const char *clientid,
+        ///                              void *arg);
+
+        typealias CloseCall = @convention(c) (Int32, StringPtr, UInt32, StringPtr, StringPtr, ContextRef) -> Void
+
+        /// Callback used to inform the user of call metrics.
+        ///
+        /// typedef void (wcall_metrics_h)(const char *convid,
+        ///                                const char *metrics_json,
+        ///                                void *arg);
+
+        typealias CallMetrics = @convention(c) (StringPtr, StringPtr, ContextRef) -> Void
+
+        /// Callback used to request a refresh of the call config.
+        ///
+        /// typedef int (wcall_config_req_h)(WUSER_HANDLE wuser, void *arg);
+
+        typealias CallConfigRefresh = @convention(c) (UInt32, ContextRef) -> Int32
+
+        /// Callback used when the calling system is ready for calling. The version parameter specifies the call config
+        /// version to use.
+        ///
+        /// typedef void (wcall_ready_h)(int version, void *arg);
+
+        typealias CallReady = @convention(c) (Int32, ContextRef) -> Void
+
+        /// Callback used to send an OTR call message.
+        ///
+        /// typedef int (wcall_send_h)(void *ctx,
+        ///                            const char *convid,
+        ///                            const char *userid_self,
+        ///                            const char *clientid_self,
+        ///                            const char *userid_dest /*optional*/,
+        ///                            const char *clientid_dest /*optional*/,
+        ///                            const uint8_t *data,
+        ///                            size_t len,
+        ///                            int transient /*bool*/,
+        ///                            void *arg);
+
+        typealias CallMessageSend = @convention(c) (VoidPtr, StringPtr, StringPtr, StringPtr, StringPtr, StringPtr, UnsafePointer<UInt8>?, Int, Int32, ContextRef) -> Int32
+
+        /// Callback used to inform the user when the list of participants in a call changes.
+        ///
+        /// typedef void (wcall_participant_changed_h)(const char *convid,
+        ///                                            const char *mjson,
+        ///                                            void *arg);
+
+        typealias CallParticipantChange = @convention(c) (StringPtr, StringPtr, ContextRef) -> Void
+
+        /// Callback used to inform the user that all media has stopped.
+        ///
+        /// typedef void (wcall_media_stopped_h)(const char *convid, void *arg);
+
+        typealias MediaStoppedChange = @convention(c) (StringPtr, ContextRef) -> Void
+
+        /// Callback used to inform the user of a change in network quality for a participant.
+        ///
+        /// typedef void (wcall_network_quality_h)(const char *convid,
+        ///                                        const char *userid,
+        ///                                        const char *clientid,
+        ///                                        int quality, /*  WCALL_QUALITY_ */
+        ///                                        int rtt, /* round trip time in ms */
+        ///                                        int uploss, /* upstream pkt loss % */
+        ///                                        int downloss, /* dnstream pkt loss % */
+        ///                                        void *arg);
+
+        typealias NetworkQualityChange = @convention(c) (StringPtr, StringPtr, StringPtr, Int32, Int32, Int32, Int32, ContextRef) -> Void
+
+        /// Callback used to inform the user when the mute state changes.
+        ///
+        /// typedef void (wcall_mute_h)(int muted, void *arg);
+
+        typealias MuteChange = @convention(c) (Int32, ContextRef) -> Void
+
+        /// Callback used to request a the list of clients in a conversation.
+        ///
+        /// typedef void (wcall_req_clients_h)(WUSER_HANDLE wuser, const char *convid, void *arg);
+
+        typealias RequestClients = @convention(c) (UInt32, StringPtr, ContextRef) -> Void
+
+        /// Callback used to request SFT communication.
+        ///
+        /// typedef int (wcall_sft_req_h)(void *ctx, const char *url, const uint8_t *data, size_t len, void *arg);
+
+        typealias SFTCallMessageSend = @convention(c) (VoidPtr, StringPtr, UnsafePointer<UInt8>?, Int, ContextRef) -> Int32
+    }
+}

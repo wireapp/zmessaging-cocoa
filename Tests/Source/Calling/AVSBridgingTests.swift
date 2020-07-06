@@ -50,7 +50,7 @@ class AVSBridgingTests: MessagingTest {
         userID = UUID()
         clientID = UUID().uuidString
         let avsWrapper = MockAVSWrapper(userId: userID, clientId: clientID, observer: nil)
-        callCenter = WireCallCenterV3(userId: userID, clientId: clientID, avsWrapper: avsWrapper, uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock())
+        callCenter = WireCallCenterV3(userId: userID, clientId: clientID, avsWrapper: avsWrapper, uiMOC: uiMOC, flowManager: FlowManagerMock(), transport: WireCallCenterTransportMock(), configuration: .init())
         callCenterRef = Unmanaged.passUnretained(callCenter).toOpaque()
     }
 

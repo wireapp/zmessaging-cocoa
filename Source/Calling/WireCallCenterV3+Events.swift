@@ -26,11 +26,18 @@ private let zmLog = ZMSLog(tag: "calling")
 extension WireCallCenterV3 : ZMConversationObserver {
 
     public func conversationDidChange(_ changeInfo: ConversationChangeInfo) {
+        handleSecurityLevelChange(changeInfo)
+        handleActiveParticipantsChange(changeInfo)
+    }
+
+    private func handleSecurityLevelChange(_ changeInfo: ConversationChangeInfo) {
         guard
             changeInfo.securityLevelChanged,
             let conversationId = changeInfo.conversation.remoteIdentifier,
             let previousSnapshot = callSnapshots[conversationId]
-        else { return }
+        else {
+            return
+        }
 
         if changeInfo.conversation.securityLevel == .secureWithIgnored, isActive(conversationId: conversationId) {
             // If an active call degrades we end it immediately
@@ -43,9 +50,27 @@ extension WireCallCenterV3 : ZMConversationObserver {
             callSnapshots[conversationId] = previousSnapshot.update(with: updatedCallState)
 
             if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId) {
-                WireCallCenterCallStateNotification(context: context, callState: updatedCallState, conversationId: conversationId, callerId: callerId, messageTime: Date(), previousCallState: previousSnapshot.callState).post(in: context.notificationContext)
+                let notification = WireCallCenterCallStateNotification(context: context,
+                                                                       callState: updatedCallState,
+                                                                       conversationId: conversationId,
+                                                                       callerId: callerId,
+                                                                       messageTime: Date(),
+                                                                       previousCallState: previousSnapshot.callState)
+                notification.post(in: context.notificationContext)
             }
         }
+    }
+
+    private func handleActiveParticipantsChange(_ changeInfo: ConversationChangeInfo) {
+        guard
+            changeInfo.activeParticipantsChanged,
+            let conversationId = changeInfo.conversation.remoteIdentifier,
+            let completion = clientsRequestCompletionsByConversationId[conversationId]
+        else {
+            return
+        }
+
+        handleClientsRequest(conversationId: conversationId, completion: completion)
     }
 
 }
@@ -79,10 +104,14 @@ extension WireCallCenterV3 {
     }
 
     /// Handles incoming calls.
-    func handleIncomingCall(conversationId: UUID, messageTime: Date, userId: UUID, isVideoCall: Bool, shouldRing: Bool) {
+    func handleIncomingCall(conversationId: UUID, messageTime: Date, client: AVSClient, isVideoCall: Bool, shouldRing: Bool) {
         handleEvent("incoming-call") {
-            let callState : CallState = .incoming(video: isVideoCall, shouldRing: shouldRing, degraded: self.isDegraded(conversationId: conversationId))
-            self.handleCallState(callState: callState, conversationId: conversationId, userId: userId, messageTime: messageTime)
+            let isDegraded = self.isDegraded(conversationId: conversationId)
+            let callState = CallState.incoming(video: isVideoCall, shouldRing: shouldRing, degraded: isDegraded)
+            let members = [AVSCallMember(client: client)]
+
+            self.createSnapshot(callState: callState, members: members, callStarter: client.userId, video: isVideoCall, for: conversationId)
+            self.handle(callState: callState, conversationId: conversationId)
         }
     }
 
@@ -96,22 +125,35 @@ extension WireCallCenterV3 {
     /// Handles answered calls.
     func handleAnsweredCall(conversationId: UUID) {
         handleEvent("answered-call") {
-            self.handleCallState(callState: .answered(degraded: self.isDegraded(conversationId: conversationId)),
-                                 conversationId: conversationId, userId: nil)
+            let callState = CallState.answered(degraded: self.isDegraded(conversationId: conversationId))
+            self.handle(callState: callState, conversationId: conversationId)
         }
     }
 
     /// Handles when data channel gets established.
-    func handleDataChannelEstablishement(conversationId: UUID, userId: UUID) {
+    func handleDataChannelEstablishement(conversationId: UUID) {
         handleEvent("data-channel-established") {
-            self.handleCallState(callState: .establishedDataChannel, conversationId: conversationId, userId: userId)
+            // Ignore if data channel was established after audio
+            if self.callState(conversationId: conversationId) != .established {
+                self.handle(callState: .establishedDataChannel, conversationId: conversationId)
+            }
         }
     }
 
     /// Handles established calls.
-    func handleEstablishedCall(conversationId: UUID, userId: UUID) {
+    func handleEstablishedCall(conversationId: UUID) {
         handleEvent("established-call") {
-            self.handleCallState(callState: .established, conversationId: conversationId, userId: userId)
+            // WORKAROUND: the call established handler is called once for every participant in a
+            // group call. Until that's no longer the case we must take care to only set establishedDate once.
+            if self.callState(conversationId: conversationId) != .established {
+                self.establishedDate = Date()
+            }
+
+            if self.videoState(conversationId: conversationId) == .started {
+                self.avsWrapper.setVideoState(conversationId: conversationId, videoState: .started)
+            }
+
+            self.handle(callState: .established, conversationId: conversationId)
         }
     }
 
@@ -126,9 +168,9 @@ extension WireCallCenterV3 {
      * If messageTime is set to 0, the event wasn't caused by a message therefore we don't have a serverTimestamp.
      */
 
-    func handleCallEnd(reason: CallClosedReason, conversationId: UUID, messageTime: Date?, userId: UUID?) {
+    func handleCallEnd(reason: CallClosedReason, conversationId: UUID, messageTime: Date?, userId: UUID) {
         handleEvent("closed-call") {
-            self.handleCallState(callState: .terminating(reason: reason), conversationId: conversationId, userId: userId, messageTime: messageTime)
+            self.handle(callState: .terminating(reason: reason), conversationId: conversationId, messageTime: messageTime)
         }
     }
 
@@ -136,7 +178,8 @@ extension WireCallCenterV3 {
     func handleCallMetrics(conversationId: UUID, metrics: String) {
         do {
             let metricsData = Data(metrics.utf8)
-            guard let attributes = try JSONSerialization.jsonObject(with: metricsData, options: .mutableContainers) as? [String: NSObject] else { return }
+            let jsonObject = try JSONSerialization.jsonObject(with: metricsData, options: .mutableContainers)
+            guard let attributes = jsonObject as? [String: NSObject] else { return }
             analytics?.tagEvent("calling.avs_metrics_ended_call", attributes: attributes)
         } catch {
             zmLog.error("Unable to parse call metrics JSON: \(error)")
@@ -151,8 +194,11 @@ extension WireCallCenterV3 {
     }
 
     /// Handles sending call messages
-    internal func handleCallMessageRequest(token: WireCallMessageToken, conversationId: UUID, senderUserId: UUID, senderClientId: String, data: Data)
-    {
+    internal func handleCallMessageRequest(token: WireCallMessageToken,
+                                           conversationId: UUID,
+                                           senderUserId: UUID,
+                                           senderClientId: String,
+                                           data: Data) {
         handleEvent("send-call-message") {
             self.send(
                 token: token,
@@ -179,6 +225,7 @@ extension WireCallCenterV3 {
                 zmLog.safePublic("Invalid participant change data")
                 return
             }
+
             // Example of `data`
             //  {
             //      "convid": "df371578-65cf-4f07-9f49-c72a49877ae7",
@@ -187,10 +234,12 @@ extension WireCallCenterV3 {
             //              "userid": "3f49da1d-0d52-4696-9ef3-0dd181383e8a",
             //              "clientid": "24cc758f602fb1f4",
             //              "aestab": 1,
-            //              "vrecv": 0
+            //              "vrecv": 0,
+            //              "muted": 0 // 0 = false, 1 = true
             //          }
             //      ]
             //}
+
             do {
                 let change = try JSONDecoder().decode(AVSParticipantsChange.self, from: data)
                 let members = change.members.map(AVSCallMember.init)
@@ -201,19 +250,14 @@ extension WireCallCenterV3 {
         }
     }
 
-    /// Handles video state changes.
-    func handleVideoStateChange(userId: UUID, clientId: String,  newState: VideoState) {
-        handleEvent("video-state-change") {
-            self.nonIdleCalls.forEach {
-                self.callParticipantVideoStateChanged(conversationId: $0.key, userId: userId, clientId: clientId, videoState: newState)
-            }
-        }
-    }
-
     /// Handles audio CBR mode enabling.
     func handleConstantBitRateChange(enabled: Bool) {
         handleEventInContext("cbr-change") {
-            if let establishedCall = self.callSnapshots.first(where: { $0.value.callState == .established || $0.value.callState == .establishedDataChannel }) {
+            let firstEstablishedCall = self.callSnapshots.first {
+                $0.value.callState == .established || $0.value.callState == .establishedDataChannel
+            }
+
+            if let establishedCall = firstEstablishedCall {
                 self.callSnapshots[establishedCall.key] = establishedCall.value.updateConstantBitrate(enabled)
                 WireCallCenterCBRNotification(enabled: enabled).post(in: $0.notificationContext)
             }
@@ -223,16 +267,22 @@ extension WireCallCenterV3 {
     /// Stopped when the media stream of a call was ended.
     func handleMediaStopped(conversationId: UUID) {
         handleEvent("media-stopped") {
-            self.handleCallState(callState: .mediaStopped, conversationId: conversationId, userId: nil)
+            self.handle(callState: .mediaStopped, conversationId: conversationId)
         }
     }
 
     /// Handles network quality change
-    func handleNetworkQualityChange(conversationId: UUID, userId: UUID, quality: NetworkQuality) {
+    func handleNetworkQualityChange(conversationId: UUID, client: AVSClient, quality: NetworkQuality) {
         handleEventInContext("network-quality-change") {
+            self.callParticipantNetworkQualityChanged(conversationId: conversationId, client: client, quality: quality)
+
             if let call = self.callSnapshots[conversationId] {
                 self.callSnapshots[conversationId] = call.updateNetworkQuality(quality)
-                WireCallCenterNetworkQualityNotification(conversationId: conversationId, userId: userId, networkQuality: quality).post(in: $0.notificationContext)
+                let notification = WireCallCenterNetworkQualityNotification(conversationId: conversationId,
+                                                                            userId: client.userId,
+                                                                            clientId: client.clientId,
+                                                                            networkQuality: quality)
+                notification.post(in: $0.notificationContext)
             }
         }
     }
@@ -242,4 +292,34 @@ extension WireCallCenterV3 {
             WireCallCenterMutedNotification(muted: muted).post(in: $0.notificationContext)
         }
     }
+
+    func handleClientsRequest(conversationId: UUID, completion: @escaping (_ clients: String) -> Void) {
+        handleEventInContext("request-clients") { context in
+            self.transport?.requestClientsList(conversationId: conversationId) { clients in
+
+                guard let json = AVSClientList(clients: clients).json else {
+                    zmLog.error("Could not encode client list to JSON")
+                    return
+                }
+
+                completion(json)
+            }
+        }
+    }
+
+    func handleSFTCallMessageRequest(token: WireCallMessageToken, url: String, data: Data) {
+        handleEvent("send-sft-call-message") {
+            self.sendSFT(token: token, url: url, data: data)
+        }
+    }
 }
+
+private extension Set where Element == ZMUser {
+
+    var avsClients: Set<AVSClient> {
+        return reduce(Set<AVSClient>()) { result, user in
+            return result.union(user.clients.compactMap(AVSClient.init))
+        }
+    }
+}
+

@@ -210,7 +210,8 @@
                                 localNotificationsDispatcher:self.mockDispatcher
                                      notificationsDispatcher:[[NotificationDispatcher alloc] initWithManagedObjectContext:self.contextDirectory.uiContext]
                                   applicationStatusDirectory:self.applicationStatusDirectory
-                                                 application:self.application];
+                                                 application:self.application
+                                     callCenterConfiguration:[[WireCallCenterConfiguration alloc] init]];
     
     self.application.applicationState = UIApplicationStateBackground;
     XCTAssertEqual(self.sut.userTranscoder, self.userTranscoder);

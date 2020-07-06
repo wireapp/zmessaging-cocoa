@@ -24,9 +24,10 @@ open class AuthenticatedSessionFactory {
 
     let appVersion: String
     let mediaManager: MediaManagerType
-    let flowManager : FlowManagerType
+    let flowManager: FlowManagerType
+    let callCenterConfiguration: WireCallCenterConfiguration
     var analytics: AnalyticsType?
-    let application : ZMApplication
+    let application: ZMApplication
     var environment: BackendEnvironmentProvider
     let reachability: ReachabilityProvider & TearDownCapable
     weak var showContentDelegate: ShowContentDelegate?
@@ -36,6 +37,7 @@ open class AuthenticatedSessionFactory {
         application: ZMApplication,
         mediaManager: MediaManagerType,
         flowManager: FlowManagerType,
+        callCenterConfiguration: WireCallCenterConfiguration,
         environment: BackendEnvironmentProvider,
         reachability: ReachabilityProvider & TearDownCapable,
         analytics: AnalyticsType? = nil,
@@ -44,6 +46,7 @@ open class AuthenticatedSessionFactory {
         self.appVersion = appVersion
         self.mediaManager = mediaManager
         self.flowManager = flowManager
+        self.callCenterConfiguration = callCenterConfiguration
         self.analytics = analytics
         self.application = application
         self.environment = environment
@@ -64,6 +67,7 @@ open class AuthenticatedSessionFactory {
             transportSession: transportSession,
             mediaManager: mediaManager,
             flowManager:flowManager,
+            callCenterConfiguration: callCenterConfiguration,
             analytics: analytics,
             application: application,
             appVersion: appVersion,

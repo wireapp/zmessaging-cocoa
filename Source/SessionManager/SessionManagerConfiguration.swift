@@ -23,6 +23,8 @@ import UIKit
 
 @objcMembers
 public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
+
+    // MARK: - Properties
     
     /// If set to true then the session manager will delete account data instead of just asking the user to re-authenticate when the cookie or client gets invalidated.
     ///
@@ -60,6 +62,13 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     ///
     /// The default value of this property is `nil`, i.e. threshold is ignored
     public var failedPasswordThresholdBeforeWipe: Int?
+
+    /// The `callCenterConfiguration` contains fields to customize the behavior of calls.
+    ///
+    /// The default value is specified in `WireCallCenterConfiguration()`.
+    public let callCenterConfiguration: WireCallCenterConfiguration
+
+    // MARK: - Init
     
     public init(wipeOnCookieInvalid: Bool = false,
                 blacklistDownloadInterval: TimeInterval = 6 * 60 * 60,
@@ -67,7 +76,8 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                 wipeOnJailbreakOrRoot: Bool = false,
                 messageRetentionInterval: TimeInterval? = nil,
                 authenticateAfterReboot: Bool = false,
-                failedPasswordThresholdBeforeWipe: Int? = nil) {
+                failedPasswordThresholdBeforeWipe: Int? = nil,
+                callCenterConfiguration: WireCallCenterConfiguration = .init()) {
         self.wipeOnCookieInvalid = wipeOnCookieInvalid
         self.blacklistDownloadInterval = blacklistDownloadInterval
         self.blockOnJailbreakOrRoot = blockOnJailbreakOrRoot
@@ -75,7 +85,22 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         self.messageRetentionInterval = messageRetentionInterval
         self.authenticateAfterReboot = authenticateAfterReboot
         self.failedPasswordThresholdBeforeWipe = failedPasswordThresholdBeforeWipe
+        self.callCenterConfiguration = callCenterConfiguration
     }
+
+    required public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        wipeOnCookieInvalid = try container.decode(Bool.self, forKey: .wipeOnCookieInvalid)
+        blacklistDownloadInterval = try container.decode(TimeInterval.self, forKey: .blacklistDownloadInterval)
+        blockOnJailbreakOrRoot = try container.decode(Bool.self, forKey: .blockOnJailbreakOrRoot)
+        wipeOnJailbreakOrRoot = try container.decode(Bool.self, forKey: .wipeOnJailbreakOrRoot)
+        messageRetentionInterval = try container.decodeIfPresent(TimeInterval.self, forKey: .messageRetentionInterval)
+        authenticateAfterReboot = try container.decode(Bool.self, forKey: .authenticateAfterReboot)
+        failedPasswordThresholdBeforeWipe = try container.decodeIfPresent(Int.self, forKey: .failedPasswordThresholdBeforeWipe)
+        callCenterConfiguration = try container.decodeIfPresent(WireCallCenterConfiguration.self, forKey: .callCenterConfiguration) ?? .init()
+    }
+
+    // MARK: - Methods
     
     public func copy(with zone: NSZone? = nil) -> Any {
         let copy = SessionManagerConfiguration(wipeOnCookieInvalid: wipeOnCookieInvalid,
@@ -84,7 +109,8 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                                                wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot,
                                                messageRetentionInterval: messageRetentionInterval,
                                                authenticateAfterReboot: authenticateAfterReboot,
-                                               failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe)
+                                               failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe,
+                                               callCenterConfiguration: callCenterConfiguration)
         
         return copy
     }
@@ -100,4 +126,22 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         
         return  try? decoder.decode(SessionManagerConfiguration.self, from: data)
     }
+}
+
+// MARK: - Coding Key
+
+extension SessionManagerConfiguration {
+
+    enum CodingKeys: String, CodingKey {
+
+        case wipeOnCookieInvalid
+        case blacklistDownloadInterval
+        case blockOnJailbreakOrRoot
+        case wipeOnJailbreakOrRoot
+        case messageRetentionInterval
+        case authenticateAfterReboot
+        case failedPasswordThresholdBeforeWipe
+        case callCenterConfiguration
+    }
+
 }

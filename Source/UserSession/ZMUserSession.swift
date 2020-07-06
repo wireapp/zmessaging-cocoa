@@ -43,6 +43,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     let application: ZMApplication
     let flowManager: FlowManagerType
     var mediaManager: MediaManagerType
+    let callCenterConfiguration: WireCallCenterConfiguration
     var analytics: AnalyticsType?
     var transportSession: TransportSessionType
     let storedDidSaveNotifications: ContextDidSaveNotificationPersistence
@@ -170,6 +171,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     public init(transportSession: TransportSessionType,
                 mediaManager: MediaManagerType,
                 flowManager: FlowManagerType,
+                callCenterConfiguration: WireCallCenterConfiguration,
                 analytics: AnalyticsType?,
                 operationLoop: ZMOperationLoop? = nil,
                 application: ZMApplication,
@@ -187,6 +189,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.appVersion = appVersion
         self.flowManager = flowManager
         self.mediaManager = mediaManager
+        self.callCenterConfiguration = callCenterConfiguration
         self.analytics = analytics
         self.storeProvider = storeProvider
         self.transportSession = transportSession
@@ -277,7 +280,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                                           localNotificationsDispatcher: localNotificationDispatcher!,
                                           notificationsDispatcher: notificationDispatcher,
                                           applicationStatusDirectory: applicationStatusDirectory!,
-                                          application: application)
+                                          application: application,
+                                          callCenterConfiguration: callCenterConfiguration)
         self.syncStrategy = syncStrategy
 
         return ZMOperationLoop(transportSession: transportSession,
