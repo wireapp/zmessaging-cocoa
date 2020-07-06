@@ -28,6 +28,19 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
     private var signatureResponse: SignatureResponse?
     private var retrieveResponse: SignatureRetrieveResponse?
     
+    // The key is the documentID we are signing
+    private var signatureLoadingStateForDocumentId: [String: Bool] = [:]
+    
+    private var isCurrentDocumentSignatureLoading: Bool {
+        guard
+            let signatureStatus = syncContext.signatureStatus,
+            let documentID = signatureStatus.documentID
+        else {
+            return false
+        }
+        return signatureLoadingStateForDocumentId[documentID] ?? false
+    }
+    
     // MARK: - Public Property
     var requestSync: ZMSingleRequestSync?
     var retrieveSync: ZMSingleRequestSync?
@@ -97,6 +110,10 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             return
         }
         
+        if retrieveSync === sync {
+            setIsLoadingForDocumentId(isLoading: false)
+        }
+        
         switch (response.result) {
         case .success:
             switch sync {
@@ -152,11 +169,16 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
     }
     
     private func makeRetrieveSignatureRequest() -> ZMTransportRequest? {
-        guard let responseId = signatureResponse?.responseId else {
+        guard
+            let responseID = signatureResponse?.responseID,
+            isCurrentDocumentSignatureLoading == false
+        else {
             return nil
         }
+    
+        setIsLoadingForDocumentId(isLoading: true)
         
-        return ZMTransportRequest(path: "/signature/pending/\(responseId)",
+        return ZMTransportRequest(path: "/signature/pending/\(responseID)",
                                   method: .methodGET,
                                   payload: nil)
     }
@@ -196,6 +218,16 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
             Logging.network.debug("Failed to decode SignatureRetrieveResponse with \(error)")
         }
     }
+    
+    private func setIsLoadingForDocumentId(isLoading: Bool) {
+        guard
+            let signatureStatus = syncContext.signatureStatus,
+            let documentID = signatureStatus.documentID
+        else {
+            return
+        }
+        signatureLoadingStateForDocumentId[documentID] = isLoading
+    }
 }
 
 // MARK: - SignaturePayload
@@ -229,17 +261,17 @@ private struct SignaturePayload: Codable, Equatable {
 
 // MARK: - SignatureResponse
 private struct SignatureResponse: Codable, Equatable {
-    let responseId: String?
+    let responseID: String?
     let consentURL: URL?
     
     private enum CodingKeys: String, CodingKey {
         case consentURL = "consentURL"
-        case responseId = "responseId"
+        case responseID = "responseId"
     }
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        responseId = try container.decodeIfPresent(String.self, forKey: .responseId)
+        responseID = try container.decodeIfPresent(String.self, forKey: .responseID)
         guard
             let consentURLString = try container.decodeIfPresent(String.self, forKey: .consentURL),
             let url = URL(string: consentURLString)
