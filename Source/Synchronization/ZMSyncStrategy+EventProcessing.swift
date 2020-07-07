@@ -18,6 +18,7 @@
 
 import Foundation
 import WireUtilities
+import WireRequestStrategy
 
 extension ZMSyncStrategy: ZMUpdateEventConsumer, UpdateEventProcessor {
 
