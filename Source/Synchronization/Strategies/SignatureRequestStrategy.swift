@@ -87,12 +87,6 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
         case requestSync:
             return makeSignatureRequest()
         case retrieveSync:
-            guard
-                let signatureStatus = syncContext.signatureStatus,
-                case .waitingForSignature = signatureStatus.state
-            else {
-                return nil
-            }
             return makeRetrieveSignatureRequest()
         default:
             return nil
