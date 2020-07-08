@@ -28,19 +28,6 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
     private var signatureResponse: SignatureResponse?
     private var retrieveResponse: SignatureRetrieveResponse?
     
-    // The key is the documentID we are signing
-    private var signatureLoadingStateForDocumentId: [String: Bool] = [:]
-    
-    private var isCurrentDocumentSignatureLoading: Bool {
-        guard
-            let signatureStatus = syncContext.signatureStatus,
-            let documentID = signatureStatus.documentID
-        else {
-            return false
-        }
-        return signatureLoadingStateForDocumentId[documentID] ?? false
-    }
-    
     // MARK: - Public Property
     var requestSync: ZMSingleRequestSync?
     var retrieveSync: ZMSingleRequestSync?
@@ -82,6 +69,8 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
             }
             retrieveSync.readyForNextRequestIfNotBusy()
             return retrieveSync.nextRequest()
+        case .loadingSignature:
+            break
         case .signatureInvalid:
             break
         case .finished:
@@ -98,6 +87,12 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
         case requestSync:
             return makeSignatureRequest()
         case retrieveSync:
+            guard
+                let signatureStatus = syncContext.signatureStatus,
+                case .waitingForSignature = signatureStatus.state
+            else {
+                return nil
+            }
             return makeRetrieveSignatureRequest()
         default:
             return nil
@@ -108,10 +103,6 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
                            forSingleRequest sync: ZMSingleRequestSync) {
         guard let signatureStatus = syncContext.signatureStatus else {
             return
-        }
-        
-        if retrieveSync === sync {
-            setIsLoadingForDocumentId(isLoading: false)
         }
         
         switch (response.result) {
@@ -169,14 +160,15 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
     }
     
     private func makeRetrieveSignatureRequest() -> ZMTransportRequest? {
+        
         guard
             let responseID = signatureResponse?.responseID,
-            isCurrentDocumentSignatureLoading == false
+            let signatureStatus = syncContext.signatureStatus
         else {
             return nil
         }
     
-        setIsLoadingForDocumentId(isLoading: true)
+        signatureStatus.updateLoadingSignatureState()
         
         return ZMTransportRequest(path: "/signature/pending/\(responseID)",
                                   method: .methodGET,
@@ -217,16 +209,6 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
         } catch {
             Logging.network.debug("Failed to decode SignatureRetrieveResponse with \(error)")
         }
-    }
-    
-    private func setIsLoadingForDocumentId(isLoading: Bool) {
-        guard
-            let signatureStatus = syncContext.signatureStatus,
-            let documentID = signatureStatus.documentID
-        else {
-            return
-        }
-        signatureLoadingStateForDocumentId[documentID] = isLoading
     }
 }
 
