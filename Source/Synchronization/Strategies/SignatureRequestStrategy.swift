@@ -69,8 +69,6 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
             }
             retrieveSync.readyForNextRequestIfNotBusy()
             return retrieveSync.nextRequest()
-        case .loadingSignature:
-            break
         case .signatureInvalid:
             break
         case .finished:
