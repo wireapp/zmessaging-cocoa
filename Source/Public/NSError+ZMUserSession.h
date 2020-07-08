@@ -89,7 +89,7 @@ typedef NS_ENUM(NSUInteger, ZMUserSessionErrorCode) {
     ZMUserSessionBlacklistedEmail,
     /// Unauthorized e-mail address
     ZMUserSessionUnauthorizedEmail,
-    /// The email used in the registration is blacklisted
+    /// The email used in the registration is blocked
     ZMUserSessionDomainBlocked,
     /// User has rebooted the device
     ZMUserSessionNeedsAuthenticationAfterReboot
