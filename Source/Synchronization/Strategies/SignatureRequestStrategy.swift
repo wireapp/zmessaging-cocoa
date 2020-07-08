@@ -153,10 +153,7 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
     
     private func makeRetrieveSignatureRequest() -> ZMTransportRequest? {
         
-        guard
-            let responseID = signatureResponse?.responseID,
-            let signatureStatus = syncContext.signatureStatus
-        else {
+        guard let responseID = signatureResponse?.responseID else {
             return nil
         }
         
