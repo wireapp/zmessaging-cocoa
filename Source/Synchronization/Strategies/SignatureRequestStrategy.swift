@@ -161,8 +161,6 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
         else {
             return nil
         }
-    
-        signatureStatus.updateLoadingSignatureState()
         
         return ZMTransportRequest(path: "/signature/pending/\(responseID)",
                                   method: .methodGET,
