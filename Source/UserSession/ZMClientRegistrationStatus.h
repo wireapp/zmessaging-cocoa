@@ -17,6 +17,7 @@
 //
 
 @import WireRequestStrategy;
+#import "ZMSyncStateDelegate.h"
 
 @class ZMCredentials;
 @class UserClient;
