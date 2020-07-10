@@ -25,7 +25,6 @@
 
 #import "ZMConversationTranscoder.h"
 #import "ZMAuthenticationStatus.h"
-#import "ZMSimpleListRequestPaginator.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString* ZMLogTag ZM_UNUSED = @"event-processing";

@@ -18,14 +18,7 @@
 
 import Foundation
 import WireUtilities
-
-@objc
-public protocol UpdateEventProcessor: class {
-    
-    @objc(processUpdateEvents:ignoreBuffer:)
-    func process(updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool)
-    
-}
+import WireRequestStrategy
 
 extension ZMSyncStrategy: ZMUpdateEventConsumer, UpdateEventProcessor {
 

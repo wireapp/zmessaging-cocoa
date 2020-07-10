@@ -24,7 +24,6 @@
 #import "ZMConnectionTranscoder+Internal.h"
 #import "ZMSyncStrategy.h"
 #import "ZMOperationLoop.h"
-#import "ZMSimpleListRequestPaginator.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 static NSString *const PathConnections = @"/connections";

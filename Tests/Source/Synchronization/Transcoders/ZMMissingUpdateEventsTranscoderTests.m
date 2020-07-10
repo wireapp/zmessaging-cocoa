@@ -18,14 +18,12 @@
 
 
 @import WireTransport;
-@import WireSyncEngine;
+@import WireRequestStrategy;
 
 #import <Foundation/Foundation.h>
 
 #import "MessagingTest.h"
-#import "ZMSyncStateDelegate.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
-#import "ZMSimpleListRequestPaginator.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 

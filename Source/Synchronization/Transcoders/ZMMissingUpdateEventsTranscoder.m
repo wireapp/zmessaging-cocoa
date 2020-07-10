@@ -23,7 +23,6 @@
 
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
-#import "ZMSimpleListRequestPaginator.h"
 #import "WireSyncEngineLogs.h"
 
 

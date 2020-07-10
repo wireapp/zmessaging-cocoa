@@ -17,6 +17,7 @@
 //
 
 import XCTest
+import WireRequestStrategy
 @testable import WireSyncEngine
 
 final class NotificationsTrackerTests: XCTestCase {
@@ -122,7 +123,7 @@ final class NotificationsTrackerTests: XCTestCase {
 
         // WHEN
         sut.dispatchEvent()
-
+        
         // THEN
         let payload: [String : NSObject] = [
             NotificationsTracker.Attributes.startedProcessing.identifier: 1 as NSObject,

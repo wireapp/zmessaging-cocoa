@@ -233,6 +233,5 @@ extension SyncStatus {
             self.currentSyncPhase = .fetchingMissedEvents
         }
     }
-    
-}
 
+}
