@@ -101,7 +101,7 @@ extension Notification.Name {
     public internal (set) var isInBackground : Bool = false
     public internal (set) var needsToRestartQuickSync : Bool = false
     public internal (set) var pushChannelEstablishedDate : Date?
-
+    
     fileprivate var pushChannelIsOpen : Bool {
         return pushChannelEstablishedDate != nil
     }
@@ -118,7 +118,7 @@ extension Notification.Name {
         self.managedObjectContext = managedObjectContext
         self.syncStateDelegate = syncStateDelegate
         super.init()
-
+        
         currentSyncPhase = hasPersistedLastEventID ? .fetchingMissedEvents : .fetchingLastUpdateEventID
         notifySyncPhaseDidStart()
         
@@ -162,7 +162,7 @@ extension SyncStatus {
         }
         
         currentSyncPhase = phase.nextPhase
-
+        
         if currentSyncPhase == .done {
             if needsToRestartQuickSync && pushChannelIsOpen {
                 // If the push channel closed while fetching notifications
