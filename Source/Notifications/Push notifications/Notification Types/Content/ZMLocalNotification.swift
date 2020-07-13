@@ -22,7 +22,7 @@ import UserNotifications
 /// Defines the various types of local notifications, some of which
 /// have associated subtypes.
 ///
-enum LocalNotificationType {
+public enum LocalNotificationType {
     case event(LocalNotificationEventType)
     case calling(CallState)
     case message(LocalNotificationContentType)
@@ -33,7 +33,7 @@ enum LocalNotificationType {
 /// A notification builder provides the main components used to configure
 /// a local notification. 
 ///
-protocol NotificationBuilder {
+public protocol NotificationBuilder {
     var notificationType : LocalNotificationType { get }
     func shouldCreateNotification() -> Bool
     func titleText() -> String?
@@ -47,20 +47,20 @@ protocol NotificationBuilder {
 /// various notification types (message, calling, etc.) and includes
 /// information regarding the conversation, sender, and team name.
 ///
-class ZMLocalNotification: NSObject {
+public class ZMLocalNotification: NSObject {
     
     /// The unique identifier for this notification. Use it to later update
     /// or remove pending or scheduled notification requests.
-    let id: UUID
+    public let id: UUID
     
-    let type: LocalNotificationType
-    var title: String?
-    var body: String
-    var category: String
-    var sound: NotificationSound
-    var userInfo: NotificationUserInfo?
+    public let type: LocalNotificationType
+    public var title: String?
+    public var body: String
+    public var category: String
+    public var sound: NotificationSound
+    public var userInfo: NotificationUserInfo?
 
-    init?(conversation: ZMConversation?, builder: NotificationBuilder) {
+    public init?(conversation: ZMConversation?, builder: NotificationBuilder) {
         guard builder.shouldCreateNotification() else { return nil }
         self.type = builder.notificationType
         self.title = builder.titleText()
