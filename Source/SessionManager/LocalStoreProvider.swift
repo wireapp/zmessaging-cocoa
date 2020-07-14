@@ -34,7 +34,7 @@ public extension Bundle {
 
 /// Encapsulates all storage related data and methods. LocalStoreProviderProtocol protocol
 /// is used instead of concrete class to let us inject a custom implementation in tests
-@objc public class LocalStoreProvider: NSObject, LocalStoreProviderProtocol {
+public final class LocalStoreProvider: NSObject, LocalStoreProviderProtocol {
     public let userIdentifier: UUID
     public let applicationContainer: URL
     public let contextDirectory: ManagedObjectContextDirectory

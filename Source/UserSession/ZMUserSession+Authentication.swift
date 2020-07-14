@@ -72,7 +72,7 @@ extension ZMUserSession {
             deleteUserKeychainItems()
         }
         
-        let uiMOC = managedObjectContext
+        let uiMOC = managedObjectContext!
         let syncMOC = syncManagedObjectContext
         
         uiMOC.performGroupedBlockAndWait {}

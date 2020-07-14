@@ -62,8 +62,11 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     
     public var topConversationsDirectory: TopConversationsDirectory
     
-    public var managedObjectContext: NSManagedObjectContext { // TODO jacob we don't want this to be public
-        return storeProvider.contextDirectory.uiContext
+    public var managedObjectContext: NSManagedObjectContext! { // TODO jacob we don't want this to be public
+        guard let uiContext = storeProvider?.contextDirectory.uiContext else {
+            fatal("uiContext is nil")
+        }
+        return uiContext
     }
     
     public var syncManagedObjectContext: NSManagedObjectContext { // TODO jacob we don't want this to be public
