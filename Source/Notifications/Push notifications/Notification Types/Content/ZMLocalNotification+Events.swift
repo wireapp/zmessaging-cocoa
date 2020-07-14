@@ -17,7 +17,7 @@
 //
 
 
-extension ZMLocalNotification {
+public extension ZMLocalNotification {
     
     // for each supported event type, use the corresponding notification builder.
     //
