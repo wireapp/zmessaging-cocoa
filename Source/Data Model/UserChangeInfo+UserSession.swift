@@ -29,7 +29,9 @@ extension UserChangeInfo {
     public static func add(observer: ZMUserObserver,
                            for user: UserType,
                            in userSession: ZMUserSession) -> NSObjectProtocol? {
-        guard let managedObjectContext = userSession.managedObjectContext else { return nil }
+        guard let managedObjectContext = userSession.managedObjectContext else {
+            return nil            
+        }
         
         return add(observer: observer, for: user, in: managedObjectContext)
     }
