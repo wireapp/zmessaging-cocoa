@@ -71,7 +71,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         guard let url = result.value else { return XCTFail("\(result.error!)") }
         
         let decryptedURL = createTemporaryURL()
-        let moc = sessionManager!.activeUserSession!.managedObjectContext
+        let moc = sessionManager!.activeUserSession!.managedObjectContext!
         try SessionManager.decrypt(from: url, to: decryptedURL, password: "12345678", accountId: ZMUser.selfUser(in: moc).remoteIdentifier!)
         
         guard decryptedURL.unzip(to: unzippedURL) else { return XCTFail("Decompression failed") }
@@ -107,7 +107,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         guard let url = backupResult.value else { return XCTFail("\(backupResult.error!)") }
         
         let moc = sessionManager!.activeUserSession!.managedObjectContext
-        let userId = ZMUser.selfUser(in: moc).remoteIdentifier!
+        let userId = ZMUser.selfUser(in: moc!).remoteIdentifier!
         let accountFolder = StorageStack.accountFolder(accountIdentifier: userId, applicationContainer: sharedContainer)
         let fm = FileManager.default
         try fm.removeItem(at: accountFolder)
@@ -131,7 +131,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         let randomData = Data.secureRandomData(length: 1024)
         try randomData.write(to: dataURL)
         let encryptedURL = createTemporaryURL()
-        let moc = sessionManager!.activeUserSession!.managedObjectContext
+        let moc = sessionManager!.activeUserSession!.managedObjectContext!
         try SessionManager.encrypt(from: dataURL, to: encryptedURL, password: "notsorandom", accountId: ZMUser.selfUser(in: moc).remoteIdentifier!)
 
         // When
@@ -186,13 +186,13 @@ class SessionManagerTests_Backup: IntegrationTest {
             
             let message = conversation.append(text: "foo") as! ZMClientMessage
             message.nonce = nonce
-            message.sender = ZMUser.insertNewObject(in: moc)
+            message.sender = ZMUser.insertNewObject(in: moc!)
             message.sender?.remoteIdentifier = .create()
             XCTAssert(message.startSelfDestructionIfNeeded())
             XCTAssertNotNil(message.destructionDate)
             XCTAssertNotNil(message.textMessageData?.messageText)
             XCTAssertNotNil(message.sender)
-            XCTAssert(moc.saveOrRollback())
+            XCTAssert(moc!.saveOrRollback())
             XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         }
         
