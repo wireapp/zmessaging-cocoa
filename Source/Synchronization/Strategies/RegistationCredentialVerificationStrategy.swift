@@ -65,7 +65,8 @@ extension RegistationCredentialVerificationStrategy : ZMSingleRequestTranscoder 
                 let decodedError: NSError?
                 switch credentials {
                 case .email:
-                    decodedError = NSError.blacklistedEmail(with: response) ??
+                    decodedError = NSError.domainBlocked(with: response) ??
+                    NSError.blacklistedEmail(with: response) ??
                     NSError.emailAddressInUse(with: response) ??
                     NSError.invalidEmail(with: response)
 
