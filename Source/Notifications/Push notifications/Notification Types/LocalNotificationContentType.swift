@@ -103,6 +103,50 @@ public enum LocalNotificationContentType : Equatable {
         return .undefined
     }
     
+    static func typeForMessage(_ message: GenericMessage) -> LocalNotificationContentType? {
+        switch message.content {
+        case .location:
+            return .location
+        case .knock:
+            return .knock
+        case .image:
+            return .image
+        case .ephemeral:
+            if let messageData = message.textData { //Fix it
+                let isMention = !(message.textData?.mentions.isEmpty ?? true)
+                return .ephemeral(isMention: isMention, isReply: messageData.hasQuote)
+                //                // return .ephemeral(isMention: messageData.isMentioningSelf, isReply: messageData.isQuotingSelf)
+            } else {
+                return .ephemeral(isMention: false, isReply: false)
+            }
+        case .text:
+            if let text = message.textData?.content.removingExtremeCombiningCharacters, !text.isEmpty {
+                let isMention = !(message.textData?.mentions.isEmpty ?? true)
+                let isReply = message.textData?.hasQuote ?? false
+                return .text(text, isMention: isMention, isReply: isReply)
+                //                return .text(text, isMention: messageData.isMentioningSelf, isReply: messageData.isQuotingSelf)
+            } else {
+                return nil
+            }
+        case .composite: //FIX
+//            let textData = compositeData.items.compactMap({ $0.textData }).first,
+//            let text = textData.messageText {
+//            return .text(text, isMention: textData.isMentioningSelf, isReply: false)
+            return nil
+        case .asset(let assetData):
+            if assetData.original.audio.hasDurationInMillis {
+                return .audio
+            }
+            else if assetData.original.video.hasDurationInMillis {
+                return .video
+            } else {
+                return .fileUpload
+            }
+        default:
+            return nil
+        }
+    }
+    
 }
 
 public func ==(rhs: LocalNotificationContentType, lhs: LocalNotificationContentType) -> Bool {

@@ -26,7 +26,13 @@ public extension ZMLocalNotification {
         
         switch event.type {
         case .conversationOtrMessageAdd:
-            builder = ReactionEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
+            guard let message = GenericMessage(from: event) else {
+                return nil
+            }
+            
+            builder = message.hasReaction
+            ? ReactionEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
+            : NewMessageNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
             
         case .conversationCreate:
             builder = ConversationCreateEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
@@ -269,3 +275,50 @@ private class NewUserEventNotificationBuilder: EventNotificationBuilder {
     }
 }
 
+// MARK: - Message
+
+private class NewMessageNotificationBuilder: EventNotificationBuilder {
+    private let message: GenericMessage
+    private let contentType: LocalNotificationContentType
+    
+    override init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
+        guard let message = GenericMessage(from: event),
+            let contentType = LocalNotificationContentType.typeForMessage(message)
+            else {
+                return nil
+        }
+
+        self.message = message
+        self.contentType = contentType
+        super.init(event: event, conversation: conversation, managedObjectContext: managedObjectContext)
+    }
+    
+    override var notificationType: LocalNotificationType {
+        if case .ephemeral? = message.content, LocalNotificationDispatcher.shouldHideNotificationContent(moc: self.moc) {
+            return LocalNotificationType.message(.hidden)
+        } else {
+             return LocalNotificationType.message(contentType)
+        }
+    }
+    
+    override func shouldCreateNotification() -> Bool {
+//        guard
+//            !message.isSilenced else {
+//            Logging.push.safePublic("Not creating local notification for message with nonce = \(message.nonce) because conversation is silenced")
+//            return false
+//        }
+        
+//        if let timeStamp = message.serverTimestamp,
+//            let lastRead = conversation?.lastReadServerTimeStamp,
+//           lastRead.compare(timeStamp) != .orderedAscending
+//        {
+//            return false
+//        }
+        
+//        if let serverTimestamp = (payload as NSDictionary).optionalDate(forKey: "time") {
+//            updatedTimestamp = serverTimestamp
+//        }
+        
+        return true
+    }
+}

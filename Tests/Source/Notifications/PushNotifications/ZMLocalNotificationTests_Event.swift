@@ -514,4 +514,22 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         XCTAssertNotNil(note)
         XCTAssertEqual(note!.title, "Super User")
     }
+    
+    // MARK: - New
+    
+    func testThatItCreatesATextNotification() {
+        // given
+        let event = createUpdateEvent(UUID.create(), conversationID: UUID.create(), genericMessage: GenericMessage(content: Text(content: "Test")))
+        var note: ZMLocalNotification?
+
+        // when
+       
+        note = ZMLocalNotification(event: event, conversation: self.oneOnOneConversation, managedObjectContext: self.uiMOC)
+
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.title, "Super User")
+        XCTAssertEqual(note!.body, "New message: Test")
+       
+    }
 }
