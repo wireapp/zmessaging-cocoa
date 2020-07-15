@@ -152,11 +152,12 @@ extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
     }
     
     private func makeRetrieveSignatureRequest() -> ZMTransportRequest? {
-        guard let responseId = signatureResponse?.responseId else {
+        
+        guard let responseID = signatureResponse?.responseID else {
             return nil
         }
         
-        return ZMTransportRequest(path: "/signature/pending/\(responseId)",
+        return ZMTransportRequest(path: "/signature/pending/\(responseID)",
                                   method: .methodGET,
                                   payload: nil)
     }
@@ -229,17 +230,17 @@ private struct SignaturePayload: Codable, Equatable {
 
 // MARK: - SignatureResponse
 private struct SignatureResponse: Codable, Equatable {
-    let responseId: String?
+    let responseID: String?
     let consentURL: URL?
     
     private enum CodingKeys: String, CodingKey {
         case consentURL = "consentURL"
-        case responseId = "responseId"
+        case responseID = "responseId"
     }
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        responseId = try container.decodeIfPresent(String.self, forKey: .responseId)
+        responseID = try container.decodeIfPresent(String.self, forKey: .responseID)
         guard
             let consentURLString = try container.decodeIfPresent(String.self, forKey: .consentURL),
             let url = URL(string: consentURLString)
