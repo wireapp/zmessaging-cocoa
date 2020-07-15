@@ -19,24 +19,28 @@
 import Foundation
 import avs
 
-
 public struct AVSParticipantsChange: Codable {
-    public struct Member: Codable {
-        let userid: UUID
-        let clientid: String
-        let aestab: Int32
-        let vrecv: Int32
-    }
+
     let convid: UUID
     let members: [Member]
+
+    public struct Member: Codable {
+
+        let userid: UUID
+        let clientid: String
+        let aestab: AudioState
+        let vrecv: VideoState
+        let muted: MicrophoneState
+    }
 }
 
 extension AVSCallMember {
+
     init(member: AVSParticipantsChange.Member) {
-        remoteId = member.userid
-        clientId = member.clientid
-        audioState = AudioState(rawValue: member.aestab) ?? .connecting
-        videoState = VideoState(rawValue: member.vrecv) ?? .stopped
+        client = AVSClient(userId: member.userid, clientId: member.clientid)
+        audioState = member.aestab
+        videoState = member.vrecv
+        microphoneState = member.muted
         networkQuality = .normal
     }
 }
@@ -47,18 +51,18 @@ extension AVSCallMember {
 
 public struct AVSCallMember: Hashable {
 
-    /// The remote identifier of the user.
-    public let remoteId: UUID
-    
-    /// The client identifier of the user, this is only available after the call member has connected
-    public let clientId: String?
+    /// The client used in the call.
+    public let client: AVSClient
 
-    /// The state of audio connection
+    /// The state of the audio connection.
     public let audioState: AudioState
 
     /// The state of video connection.
     public let videoState: VideoState
 
+    /// The state of microphone
+    public let microphoneState: MicrophoneState
+    
     /// Netwok quality of this leg
     public let networkQuality: NetworkQuality
 
@@ -66,18 +70,23 @@ public struct AVSCallMember: Hashable {
 
     /**
      * Creates the call member from its values.
-     * - parameter userId: The remote identifier of the user.
-     * - parameter clientId: The client identifier of the user. Default to `nil`
-     * - parameter audioEstablished: Whether an audio connection was established. Defaults to `false`.
+     * - parameter client: The client used in the call.
+     * - parameter audioState: The state of the audio connection. Defaults to `.connecting`.
      * - parameter videoState: The state of video connection. Defaults to `stopped`.
+     * - parameter microphoneState: The state of microphone. Defaults to `unmuted`.
      * - parameter networkQuality: The quality of the network connection. Defaults to `.normal`.
      */
 
-    public init(userId : UUID, clientId: String? = nil, audioState: AudioState = .connecting, videoState: VideoState = .stopped, networkQuality: NetworkQuality = .normal) {
-        self.remoteId = userId
-        self.clientId = clientId
+    public init(client: AVSClient,
+                audioState: AudioState = .connecting,
+                videoState: VideoState = .stopped,
+                microphoneState: MicrophoneState = .unmuted,
+                networkQuality: NetworkQuality = .normal)
+    {
+        self.client = client
         self.audioState = audioState
         self.videoState = videoState
+        self.microphoneState = microphoneState
         self.networkQuality = networkQuality
     }
 
@@ -89,20 +98,68 @@ public struct AVSCallMember: Hashable {
         case .connecting:
             return .connecting
         case .established:
-            return .connected(videoState: videoState, clientId: clientId)
+            return .connected(videoState: videoState, microphoneState: microphoneState)
         case .networkProblem:
-            return .unconnectButMayConnect
+            return .unconnectedButMayConnect
         }
     }
 
     // MARK: - Hashable
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(remoteId)
-        hasher.combine(clientId)
+        hasher.combine(client)
     }
     
     public static func == (lhs: AVSCallMember, rhs: AVSCallMember) -> Bool {
         return lhs.hashValue == rhs.hashValue
     }
+}
+
+
+/// Used to identify a participant in a call.
+
+public struct AVSClient: Hashable {
+
+    public let userId: UUID
+    public let clientId: String
+
+    public init(userId: UUID, clientId: String) {
+        self.userId = userId
+        self.clientId = clientId
+    }
+
+    init?(userClient: UserClient) {
+        guard
+            let userId = userClient.user?.remoteIdentifier,
+            let clientId = userClient.remoteIdentifier
+        else {
+            return nil
+        }
+
+        self.init(userId: userId, clientId: clientId)
+    }
+
+}
+
+extension AVSClient: Codable {
+
+    enum CodingKeys: String, CodingKey {
+        
+        case userId = "userid"
+        case clientId = "clientid"
+
+    }
+
+}
+
+
+struct AVSClientList: Codable {
+
+    let clients: [AVSClient]
+
+    var json: String? {
+        guard let data = try? JSONEncoder().encode(self) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
 }

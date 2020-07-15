@@ -108,6 +108,14 @@ NSString * const ZMAccountDeletedReasonKey = @"account-deleted-reason";
     return nil;
 }
 
++ (instancetype)domainBlockedWithResponse:(ZMTransportResponse *)response
+{
+    if (response.HTTPStatus == 451 && [[response payloadLabel] isEqualToString:@"domain-blocked-for-registration"]) {
+        return [NSError userSessionErrorWithErrorCode:ZMUserSessionDomainBlocked userInfo:nil];
+    }
+    return nil;
+}
+
 + (instancetype)invalidEmailWithResponse:(ZMTransportResponse *)response
 {
     if (response.HTTPStatus == 400 && [[response payloadLabel] isEqualToString:@"invalid-email"]) {

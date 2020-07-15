@@ -63,7 +63,9 @@ public typealias CallConfigRequestCompletion = (String?, Int) -> Void
  * An object that can perform requests on behalf of the call center.
  */
 
-@objc public protocol WireCallCenterTransport: class {
+public protocol WireCallCenterTransport: class {
     func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((_ status: Int) -> Void))
+    func sendSFT(data: Data, url: URL, completionHandler: @escaping ((Result<Data>) -> Void))
     func requestCallConfig(completionHandler: @escaping CallConfigRequestCompletion)
+    func requestClientsList(conversationId: UUID, completionHandler: @escaping ([AVSClient]) -> Void)
 }

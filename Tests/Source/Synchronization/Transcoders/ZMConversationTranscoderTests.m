@@ -2957,6 +2957,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     WaitForAllGroupsToBeEmpty(conversation.lastReadTimestampSaveDelay + 0.2);
     
     // then
+    [self.uiMOC refreshObject:conversation mergeChanges:NO];
     XCTAssertEqual(conversation.lastReadServerTimeStamp, toMessage.serverTimestamp);
     XCTAssertTrue([conversation.keysThatHaveLocalModifications containsObject:@"lastReadServerTimeStamp"],
                   @"{%@}", [conversation.keysThatHaveLocalModifications.allObjects componentsJoinedByString:@", "]);

@@ -27,7 +27,7 @@ class CallingRequestStrategyTests : MessagingTest {
     override func setUp() {
         super.setUp()
         mockRegistrationDelegate = MockClientRegistrationDelegate()
-        sut = CallingRequestStrategy(managedObjectContext: uiMOC, clientRegistrationDelegate: mockRegistrationDelegate, flowManager: FlowManagerMock(), callEventStatus: CallEventStatus())
+        sut = CallingRequestStrategy(managedObjectContext: uiMOC, clientRegistrationDelegate: mockRegistrationDelegate, flowManager: FlowManagerMock(), callEventStatus: CallEventStatus(), configuration: .init())
     }
     
     override func tearDown() {
@@ -35,6 +35,8 @@ class CallingRequestStrategyTests : MessagingTest {
         mockRegistrationDelegate = nil
         super.tearDown()
     }
+
+    // MARK: - Misc
     
     func testThatItReturnsItselfAndTheGenericMessageStrategyAsContextChangeTracker(){
         // when
@@ -44,6 +46,8 @@ class CallingRequestStrategyTests : MessagingTest {
         XCTAssertTrue(trackers.first is CallingRequestStrategy)
         XCTAssertTrue(trackers.last is GenericMessageRequestStrategy)
     }
+
+    // MARK: - Call Config
     
     func testThatItGenerateCallConfigRequestAndCallsTheCompletionHandler() {
         
@@ -126,4 +130,67 @@ class CallingRequestStrategyTests : MessagingTest {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
 
     }
+
+    // MARK: - Client List
+
+    func testThatItGenerateClientListRequestAndCallsTheCompletionHandler() {
+        // Given
+        createSelfClient()
+
+        let conversationId = UUID.create()
+        let userId1 = UUID.create()
+        let userId2 = UUID.create()
+        let clientId1 = "client1"
+        let clientId2 = "client2"
+
+        let payload = """
+        {
+            "missing": {
+                "\(userId1.transportString())": ["\(clientId1)", "\(clientId2)"],
+                "\(userId2.transportString())": ["\(clientId1)"]
+            }
+        }
+        """
+
+        let receivedClientList = expectation(description: "Received client list")
+
+        // When
+        sut.requestClientsList(conversationId: conversationId) { clients in
+            // Then
+            XCTAssertEqual(clients.count, 3)
+            XCTAssertTrue(clients.contains(AVSClient(userId: userId1, clientId: clientId1)))
+            XCTAssertTrue(clients.contains(AVSClient(userId: userId1, clientId: clientId2)))
+            XCTAssertTrue(clients.contains(AVSClient(userId: userId2, clientId: clientId1)))
+            receivedClientList.fulfill()
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        let request = sut.nextRequest()
+        XCTAssertNotNil(request)
+        XCTAssertEqual(request?.path, "/conversations/\(conversationId.transportString())/otr/messages")
+
+        // When
+        request?.complete(with: ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 412, transportSessionError: nil))
+
+        // Then
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+
+    func testThatItGeneratesOnlyOneClientListRequest() {
+        // Given
+        createSelfClient()
+
+        // When
+        sut.requestClientsList(conversationId: .create()) { _ in }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // Then
+        let request = sut.nextRequest()
+        XCTAssertNotNil(request)
+
+        let secondRequest = sut.nextRequest()
+        XCTAssertNil(secondRequest)
+    }
+
 }

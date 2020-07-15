@@ -38,6 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (__nullable instancetype)emailAddressInUseErrorWithResponse:(ZMTransportResponse *)response;
 + (__nullable instancetype)blacklistedEmailWithResponse:(ZMTransportResponse *)response;
++ (__nullable instancetype)domainBlockedWithResponse:(ZMTransportResponse *)response;
 + (__nullable instancetype)invalidEmailWithResponse:(ZMTransportResponse *)response;
 + (__nullable instancetype)keyExistsErrorWithResponse:(ZMTransportResponse *)response;
 

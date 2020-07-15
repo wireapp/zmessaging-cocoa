@@ -123,11 +123,11 @@ public class RegistrationStatus: RegistrationStatusProtocol {
     // MARK: - Event Handling
 
     func handleError(_ error: Error) {
-        switch self.phase {
+        switch phase {
         case .sendActivationCode:
-            self.delegate?.activationCodeSendingFailed(with: error)
+            delegate?.activationCodeSendingFailed(with: error)
         case .checkActivationCode:
-            self.delegate?.activationCodeValidationFailed(with: error)
+            delegate?.activationCodeValidationFailed(with: error)
         case .createTeam:
             delegate?.teamRegistrationFailed(with: error)
         case .createUser:
@@ -139,16 +139,16 @@ public class RegistrationStatus: RegistrationStatusProtocol {
     }
 
     func success() {
-        switch self.phase {
+        switch phase {
         case .sendActivationCode:
-            self.delegate?.activationCodeSent()
+            delegate?.activationCodeSent()
         case .checkActivationCode:
-            self.delegate?.activationCodeValidated()
+            delegate?.activationCodeValidated()
         case .createTeam:
-            self.completedRegistration = true
+            completedRegistration = true
             delegate?.teamRegistered()
         case .createUser:
-            self.completedRegistration = true
+            completedRegistration = true
             delegate?.userRegistered()
         case .none:
             break
