@@ -200,7 +200,18 @@ extension WireCallCenterV3 {
                                            senderClientId: String,
                                            targets: AVSClientList?,
                                            data: Data) {
-        handleEvent("send-call-message") {
+
+        handleEventInContext("send-call-message") { managedObjectContext in
+            let selfUser = ZMUser.selfUser(in: managedObjectContext)
+
+            guard
+                selfUser.remoteIdentifier == senderUserId,
+                selfUser.selfClient()?.remoteIdentifier == senderClientId
+            else {
+                zmLog.warn("Received request to send calling message from non self user and/or client")
+                return
+            }
+
             self.send(
                 token: token,
                 conversationId: conversationId,
