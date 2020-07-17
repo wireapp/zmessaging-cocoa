@@ -17,19 +17,60 @@
 //
 
 import Foundation
+import LocalAuthentication
 
 extension ZMUserSession {
     
     public var encryptMessagesAtRest: Bool {
         
         set {
-            managedObjectContext.encryptMessagesAtRest = newValue
-            managedObjectContext.saveOrRollback()
+            do {
+                let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
+                
+                if newValue {
+                    let keys = try EncryptionKeys.createKeys(for: account)
+                    applicationStatusDirectory?.syncStatus.encryptionKeys = keys
+                } else {
+                    try EncryptionKeys.deleteKeys(for: account)
+                }
+                
+                managedObjectContext.encryptMessagesAtRest = newValue
+                managedObjectContext.saveOrRollback()
+            } catch {
+                Logging.EAR.error("Failed to enabling/disabling database encryption")
+            }
         }
         
         get {
             return managedObjectContext.encryptMessagesAtRest
         }
+    }
+    
+    public var isDatabaseLocked: Bool {
+        managedObjectContext.encryptMessagesAtRest && applicationStatusDirectory?.syncStatus.encryptionKeys == nil
+    }
+        
+    public func onDatabaseLockedChange(_ change: @escaping (_ isDatabaseLocked: Bool) -> Void) -> Any {
+        return NotificationInContext.addObserver(name: DatabaseEncryptionLockNotification.notificationName,
+                                                 context: managedObjectContext.notificationContext)
+        { note in
+            guard let note = note.userInfo[DatabaseEncryptionLockNotification.userInfoKey] as? DatabaseEncryptionLockNotification else { return }
+            
+            change(note.databaseIsEncrypted)
+        }
+    }
+    
+    func lockDatabase() {
+        guard managedObjectContext.encryptMessagesAtRest else { return }
+        
+        applicationStatusDirectory?.syncStatus.encryptionKeys = nil
+    }
+    
+    public func unlockDatabase(with context: LAContext) throws {
+        let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
+        let keys = try EncryptionKeys.init(account: account, context: context)
+        
+        applicationStatusDirectory?.syncStatus.encryptionKeys = keys
     }
     
 }

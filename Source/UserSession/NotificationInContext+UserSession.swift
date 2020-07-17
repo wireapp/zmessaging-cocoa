@@ -138,5 +138,16 @@ extension ZMConversation {
     }
 }
 
+// MARK: Encryption at rest
+
+public struct DatabaseEncryptionLockNotification: SelfPostingNotification {
+        
+    static var notificationName: Notification.Name = Notification.Name("DatabaseEncryptionLockNotification")
+    
+    var databaseIsEncrypted: Bool
+    
+}
+
+
 
 
