@@ -283,7 +283,7 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
     
     override init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
         guard let message = GenericMessage(from: event),
-            let contentType = LocalNotificationContentType.typeForMessage(message)
+            let contentType = LocalNotificationContentType.typeForMessage(message, conversation: conversation, in: managedObjectContext)
             else {
                 return nil
         }

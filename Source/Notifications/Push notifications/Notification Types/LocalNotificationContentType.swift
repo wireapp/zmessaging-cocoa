@@ -103,7 +103,17 @@ public enum LocalNotificationContentType : Equatable {
         return .undefined
     }
     
-    static func typeForMessage(_ message: GenericMessage) -> LocalNotificationContentType? {
+    static func typeForMessage(_ message: GenericMessage, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> LocalNotificationContentType? {
+        let selfUser = ZMUser.selfUser(in: moc)
+        
+        func getQuotedMessage(_ textMessageData: Text, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> ZMOTRMessage? {
+            guard let conversation = conversation else {
+                return nil
+            }
+            let quotedMessageId = UUID(uuidString: textMessageData.quote.quotedMessageID)
+            return ZMOTRMessage.fetch(withNonce: quotedMessageId, for: conversation, in: moc)
+        }
+        
         switch message.content {
         case .location:
             return .location
@@ -112,26 +122,26 @@ public enum LocalNotificationContentType : Equatable {
         case .image:
             return .image
         case .ephemeral:
-            if let messageData = message.textData { //Fix it
-                let isMention = !(message.textData?.mentions.isEmpty ?? true)
-                return .ephemeral(isMention: isMention, isReply: messageData.hasQuote)
-                //                // return .ephemeral(isMention: messageData.isMentioningSelf, isReply: messageData.isQuotingSelf)
+            if let textMessageData = message.textData,
+                let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc) {
+                
+                return .ephemeral(isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
             } else {
                 return .ephemeral(isMention: false, isReply: false)
             }
         case .text:
-            if let text = message.textData?.content.removingExtremeCombiningCharacters, !text.isEmpty {
-                let isMention = !(message.textData?.mentions.isEmpty ?? true)
-                let isReply = message.textData?.hasQuote ?? false
-                return .text(text, isMention: isMention, isReply: isReply)
-                //                return .text(text, isMention: messageData.isMentioningSelf, isReply: messageData.isQuotingSelf)
+            if let textMessageData = message.textData,
+                let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc),
+                let text = message.textData?.content.removingExtremeCombiningCharacters, !text.isEmpty {
+                
+                return .text(text, isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
             } else {
                 return nil
             }
-        case .composite: //FIX
-//            let textData = compositeData.items.compactMap({ $0.textData }).first,
-//            let text = textData.messageText {
-//            return .text(text, isMention: textData.isMentioningSelf, isReply: false)
+        case .composite:
+            if let textData = message.composite.items.compactMap({ $0.text }).first {
+                return .text(textData.content, isMention: textData.isMentioningSelf(selfUser), isReply: false)
+            }
             return nil
         case .asset(let assetData):
             switch assetData.original.metaData {
@@ -146,7 +156,6 @@ public enum LocalNotificationContentType : Equatable {
             return nil
         }
     }
-    
 }
 
 public func ==(rhs: LocalNotificationContentType, lhs: LocalNotificationContentType) -> Bool {
