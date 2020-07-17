@@ -302,23 +302,19 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
     }
     
     override func shouldCreateNotification() -> Bool {
-//        guard
-//            !message.isSilenced else {
-//            Logging.push.safePublic("Not creating local notification for message with nonce = \(message.nonce) because conversation is silenced")
-//            return false
-//        }
+        guard let conversation = conversation,
+            let senderUUID = event.senderUUID(),
+            conversation.isMessageSilenced(message, from: senderUUID, in: moc) else {
+                Logging.push.safePublic("Not creating local notification for message with nonce = \(event.messageNonce) because conversation is silenced")
+                return false
+        }
         
-//        if let timeStamp = message.serverTimestamp,
-//            let lastRead = conversation?.lastReadServerTimeStamp,
-//           lastRead.compare(timeStamp) != .orderedAscending
-//        {
-//            return false
-//        }
-        
-//        if let serverTimestamp = (payload as NSDictionary).optionalDate(forKey: "time") {
-//            updatedTimestamp = serverTimestamp
-//        }
-        
+        if let timeStamp = event.timeStamp(),
+            let lastRead = conversation.lastReadServerTimeStamp,
+            lastRead.compare(timeStamp) != .orderedAscending
+        {
+            return false
+        }
         return true
     }
 }

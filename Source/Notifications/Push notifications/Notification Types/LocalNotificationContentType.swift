@@ -134,12 +134,12 @@ public enum LocalNotificationContentType : Equatable {
 //            return .text(text, isMention: textData.isMentioningSelf, isReply: false)
             return nil
         case .asset(let assetData):
-            if assetData.original.audio.hasDurationInMillis {
+            switch assetData.original.metaData {
+            case .audio?:
                 return .audio
-            }
-            else if assetData.original.video.hasDurationInMillis {
+            case .video?:
                 return .video
-            } else {
+            default:
                 return .fileUpload
             }
         default:
