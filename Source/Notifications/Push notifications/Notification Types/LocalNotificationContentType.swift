@@ -122,18 +122,18 @@ public enum LocalNotificationContentType : Equatable {
         case .image:
             return .image
         case .ephemeral:
-            if let textMessageData = message.textData,
-                let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc) {
+            if let textMessageData = message.textData {
                 
+                let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc)
                 return .ephemeral(isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
             } else {
                 return .ephemeral(isMention: false, isReply: false)
             }
         case .text:
             if let textMessageData = message.textData,
-                let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc),
                 let text = message.textData?.content.removingExtremeCombiningCharacters, !text.isEmpty {
                 
+                let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc)
                 return .text(text, isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
             } else {
                 return nil
@@ -155,6 +155,23 @@ public enum LocalNotificationContentType : Equatable {
         default:
             return nil
         }
+        //        if let systemMessageData = message.systemMessageData {
+        //                   switch systemMessageData.systemMessageType {
+        //                   case .participantsAdded:
+        //                       return .participantsAdded
+        //                   case .participantsRemoved:
+        //                       return .participantsRemoved
+        //                   case .messageTimerUpdate:
+        //                       let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(systemMessageData.messageTimer?.doubleValue ?? 0))
+        //                       if value == .none {
+        //                           return .messageTimerUpdate(nil)
+        //                       } else {
+        //                           return .messageTimerUpdate(value.displayString)
+        //                       }
+        //                   default:
+        //                       return nil
+        //                   }
+        //               }
     }
 }
 
