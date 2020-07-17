@@ -26,7 +26,7 @@ class WireCallCenterTransportMock : WireCallCenterTransport {
     var mockClientsRequestResponse: [AVSClient]?
     
     
-    func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((Int) -> Void)) {
+    func send(data: Data, conversationId: UUID, targets: [AVSClient]?, completionHandler: @escaping ((Int) -> Void)) {
         
     }
 

@@ -198,13 +198,13 @@ extension WireCallCenterV3 {
                                            conversationId: UUID,
                                            senderUserId: UUID,
                                            senderClientId: String,
+                                           targets: AVSClientList?,
                                            data: Data) {
         handleEvent("send-call-message") {
             self.send(
                 token: token,
                 conversationId: conversationId,
-                userId: senderUserId,
-                clientId: senderClientId,
+                targets: targets,
                 data: data,
                 dataLength: data.count
             )

@@ -531,9 +531,9 @@ extension WireCallCenterV3 {
 extension WireCallCenterV3 {
 
     /// Sends a call OTR message when requested by AVS through `wcall_send_h`.
-    func send(token: WireCallMessageToken, conversationId: UUID, userId: UUID, clientId: String, data: Data, dataLength: Int) {
+    func send(token: WireCallMessageToken, conversationId: UUID, targets: AVSClientList?, data: Data, dataLength: Int) {
         zmLog.debug("\(self): send call message, transport = \(String(describing: transport))")
-        transport?.send(data: data, conversationId: conversationId, userId: userId, completionHandler: { [weak self] status in
+        transport?.send(data: data, conversationId: conversationId, targets: targets.map(\.clients), completionHandler: { [weak self] status in
             self?.avsWrapper.handleResponse(httpStatus: status, reason: "", context: token)
         })
     }
