@@ -294,11 +294,12 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
     }
     
     override var notificationType: LocalNotificationType {
-        if case .ephemeral? = message.content, LocalNotificationDispatcher.shouldHideNotificationContent(moc: self.moc) {
+        if case .ephemeral? = message.content {
             return LocalNotificationType.message(.hidden)
-        } else {
-             return LocalNotificationType.message(contentType)
         }
+        return LocalNotificationDispatcher.shouldHideNotificationContent(moc: self.moc)
+        ? LocalNotificationType.message(.hidden)
+        : LocalNotificationType.message(contentType)
     }
     
     override func shouldCreateNotification() -> Bool {
