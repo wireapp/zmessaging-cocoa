@@ -1344,7 +1344,7 @@ extension SessionManagerTests {
         
         // then
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
-        
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(conversations.filter { $0.firstUnreadMessage != nil }.count, 0)
         
         // cleanup
