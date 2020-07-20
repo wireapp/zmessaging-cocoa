@@ -50,13 +50,13 @@ extension ZMUserSession {
         managedObjectContext.encryptMessagesAtRest && applicationStatusDirectory?.syncStatus.encryptionKeys == nil
     }
         
-    public func onDatabaseLockedChange(_ change: @escaping (_ isDatabaseLocked: Bool) -> Void) -> Any {
+    public func registerDatabaseLockedHandler(_ handler: @escaping (_ isDatabaseLocked: Bool) -> Void) -> Any {
         return NotificationInContext.addObserver(name: DatabaseEncryptionLockNotification.notificationName,
                                                  context: managedObjectContext.notificationContext)
         { note in
             guard let note = note.userInfo[DatabaseEncryptionLockNotification.userInfoKey] as? DatabaseEncryptionLockNotification else { return }
             
-            change(note.databaseIsEncrypted)
+            handler(note.databaseIsEncrypted)
         }
     }
     
