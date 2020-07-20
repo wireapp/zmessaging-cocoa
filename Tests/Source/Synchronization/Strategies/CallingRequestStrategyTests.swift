@@ -249,7 +249,7 @@ class CallingRequestStrategyTests : MessagingTest {
 
         guard let request = nextRequest else { return XCTFail("Expected next request") }
 
-        // Then we told backend to ignore missing clients (the non targeted conversation participants)
+        // Then we tell backend to ignore missing clients (the non targeted conversation participants)
         XCTAssertEqual(request.path, "/conversations/\(conversation.remoteIdentifier!.transportString())/otr/messages?ignore_missing")
 
         guard
@@ -259,7 +259,7 @@ class CallingRequestStrategyTests : MessagingTest {
             return XCTFail("Expected OTR message")
         }
 
-        // Then we only sent the otr message to the targeted clients
+        // Then we send the message to the targeted clients
         XCTAssertEqual(otrMessage.recipients.count, 2)
 
         guard let recipient1 = otrMessage.recipients.first(where: { $0.user == user1.userId }) else {
@@ -318,7 +318,7 @@ class CallingRequestStrategyTests : MessagingTest {
 
         guard let request = nextRequest else { return XCTFail("Expected next request") }
 
-        // Then we did not tell backend to ignore missing clients
+        // Then we do not tell backend to ignore missing clients
         XCTAssertEqual(request.path, "/conversations/\(conversation.remoteIdentifier!.transportString())/otr/messages")
 
         guard
@@ -328,7 +328,7 @@ class CallingRequestStrategyTests : MessagingTest {
             return XCTFail("Expected OTR message")
         }
 
-        // Then we sent the otr message to all clients in the conversation
+        // Then we send the message to all clients in the conversation
         XCTAssertEqual(otrMessage.recipients.count, 2)
 
         guard let recipient1 = otrMessage.recipients.first(where: { $0.user == user1.userId }) else {

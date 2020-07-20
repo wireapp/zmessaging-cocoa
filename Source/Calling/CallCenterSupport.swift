@@ -66,7 +66,7 @@ public typealias CallConfigRequestCompletion = (String?, Int) -> Void
 
 public protocol WireCallCenterTransport: class {
 
-    /// Sends a calling OTR message.
+    /// Sends a calling message.
     ///
     /// - Parameters:
     ///     - data: The message payload.
@@ -76,7 +76,7 @@ public protocol WireCallCenterTransport: class {
 
     func send(data: Data, conversationId: UUID, targets: [AVSClient]?, completionHandler: @escaping ((_ status: Int) -> Void))
 
-    /// Send an calling message to the SFT server (for conference calling).
+    /// Send a calling message to the SFT server (for conference calling).
     ///
     /// - Parameters:
     ///     - data: The message payload.
