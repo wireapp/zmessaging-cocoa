@@ -35,7 +35,7 @@ public class WireCallCenterConfiguration: NSObject, Codable {
     ///
     /// Defaults to `false`.
 
-    public let useConferenceCalling: Bool
+    public var useConferenceCalling: Bool
 
     // MARK: - Init
 
