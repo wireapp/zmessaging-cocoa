@@ -305,7 +305,7 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
     override func shouldCreateNotification() -> Bool {
         guard let conversation = conversation,
             let senderUUID = event.senderUUID(),
-            conversation.isMessageSilenced(message, from: senderUUID, in: moc) else {
+            conversation.isMessageSilenced(message, senderID: senderUUID) else {
                 Logging.push.safePublic("Not creating local notification for message with nonce = \(event.messageNonce) because conversation is silenced")
                 return false
         }

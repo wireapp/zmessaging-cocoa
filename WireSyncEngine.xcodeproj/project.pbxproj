@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		06025664248E5BC700E060E1 /* PushNotificationStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06025663248E5BC700E060E1 /* PushNotificationStrategy.swift */; };
+		060972BB24C1D4910009C972 /* LocalNotificationContentTypeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 060972BA24C1D4910009C972 /* LocalNotificationContentTypeTest.swift */; };
 		06BBF6EE246EB5C100A26626 /* ConversationTests+List.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF6EC246EB56B00A26626 /* ConversationTests+List.swift */; };
 		06BBF6F1246ECB2800A26626 /* ConversationTests+Archiving.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF6EF246ECB2400A26626 /* ConversationTests+Archiving.swift */; };
 		06BBF6F4246EF28B00A26626 /* ConversationTests+LastRead.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF6F2246EF28800A26626 /* ConversationTests+LastRead.swift */; };
@@ -615,6 +616,7 @@
 
 /* Begin PBXFileReference section */
 		06025663248E5BC700E060E1 /* PushNotificationStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationStrategy.swift; sourceTree = "<group>"; };
+		060972BA24C1D4910009C972 /* LocalNotificationContentTypeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNotificationContentTypeTest.swift; sourceTree = "<group>"; };
 		06BBF6EC246EB56B00A26626 /* ConversationTests+List.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+List.swift"; sourceTree = "<group>"; };
 		06BBF6EF246ECB2400A26626 /* ConversationTests+Archiving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+Archiving.swift"; sourceTree = "<group>"; };
 		06BBF6F2246EF28800A26626 /* ConversationTests+LastRead.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+LastRead.swift"; sourceTree = "<group>"; };
@@ -1950,6 +1952,7 @@
 				1671F9FE1E2FAF50009F3150 /* ZMLocalNotificationForTests_CallState.swift */,
 				F96C8E891D7F6F8C004B6D87 /* ZMLocalNotificationTests_SystemMessage.swift */,
 				EEB568181FA22FBE003ADA3A /* ZMLocalNotificationLocalizationTests.swift */,
+				060972BA24C1D4910009C972 /* LocalNotificationContentTypeTest.swift */,
 			);
 			path = PushNotifications;
 			sourceTree = "<group>";
@@ -2972,6 +2975,7 @@
 				1632C4B31F0FD270007BE89D /* LoginFlowTests.m in Sources */,
 				63F65F1324729B4D00534A69 /* APNSTests+Swift.swift in Sources */,
 				166D191F23157EBF001288CD /* IntegrationTest+Messages.swift in Sources */,
+				060972BB24C1D4910009C972 /* LocalNotificationContentTypeTest.swift in Sources */,
 				5E9D32712109C54B0032FB06 /* CompanyLoginActionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
