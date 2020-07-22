@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		068E655A24C8223400403926 /* LocalNotificationContentTypeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 068E655924C8223400403926 /* LocalNotificationContentTypeTest.swift */; };
 		06BBF6EE246EB5C100A26626 /* ConversationTests+List.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF6EC246EB56B00A26626 /* ConversationTests+List.swift */; };
 		06BBF6F1246ECB2800A26626 /* ConversationTests+Archiving.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF6EF246ECB2400A26626 /* ConversationTests+Archiving.swift */; };
 		06BBF6F4246EF28B00A26626 /* ConversationTests+LastRead.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF6F2246EF28800A26626 /* ConversationTests+LastRead.swift */; };
@@ -626,6 +627,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		068E655924C8223400403926 /* LocalNotificationContentTypeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNotificationContentTypeTest.swift; sourceTree = "<group>"; };
 		06BBF6EC246EB56B00A26626 /* ConversationTests+List.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+List.swift"; sourceTree = "<group>"; };
 		06BBF6EF246ECB2400A26626 /* ConversationTests+Archiving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+Archiving.swift"; sourceTree = "<group>"; };
 		06BBF6F2246EF28800A26626 /* ConversationTests+LastRead.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+LastRead.swift"; sourceTree = "<group>"; };
@@ -1979,6 +1981,7 @@
 				1671F9FE1E2FAF50009F3150 /* ZMLocalNotificationForTests_CallState.swift */,
 				F96C8E891D7F6F8C004B6D87 /* ZMLocalNotificationTests_SystemMessage.swift */,
 				EEB568181FA22FBE003ADA3A /* ZMLocalNotificationLocalizationTests.swift */,
+				068E655924C8223400403926 /* LocalNotificationContentTypeTest.swift */,
 			);
 			path = PushNotifications;
 			sourceTree = "<group>";
@@ -2824,6 +2827,7 @@
 				06BBF7012473D51D00A26626 /* MessagingTest+Swift.swift in Sources */,
 				879634421F7BEC5100FC79BA /* DispatchQueueSerialAsyncTests.swift in Sources */,
 				54AB428E1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift in Sources */,
+				068E655A24C8223400403926 /* LocalNotificationContentTypeTest.swift in Sources */,
 				EEF4010323A8E1EF007B1A97 /* Conversation_RoleTests.swift in Sources */,
 				16A5FE21215B584200AEEBBD /* MockLinkPreviewDetector.swift in Sources */,
 				F96C8E821D7ECECF004B6D87 /* ZMLocalNotificationTests_Message.swift in Sources */,
