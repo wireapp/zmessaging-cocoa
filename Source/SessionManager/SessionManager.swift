@@ -825,6 +825,12 @@ public final class SessionManager : NSObject, SessionManagerType {
             activeUserSession?.useConstantBitRateAudio = useConstantBitRateAudio
         }
     }
+    
+    public var useConferenceCalling: Bool = false {
+        didSet {
+            activeUserSession?.useConferenceCalling = useConferenceCalling
+        }
+    }
 
     internal func checkJailbreakIfNeeded() {
         guard configuration.blockOnJailbreakOrRoot || configuration.wipeOnJailbreakOrRoot else { return }
