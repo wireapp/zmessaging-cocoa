@@ -50,17 +50,17 @@ class LocalNotificationContentTypeTest: ZMLocalNotificationTests {
         XCTAssertEqual(contentType, LocalNotificationContentType.knock)
     }
 
-//    func testThatItCreatesACorrectLocalNotificationContentTypeForTheEphemeralMessage() { //Failed ?
-//        // given
-//        let message = GenericMessage(content: Text(content: "Ephemeral Message"), nonce: UUID(), expiresAfter: 100)
-//        let event = createUpdateEvent(UUID.create(), conversationID: UUID.create(), genericMessage: message)
-//
-//        // when
-//        let contentType = LocalNotificationContentType.typeForMessage(event, conversation: groupConversation, in: self.syncMOC)
-//
-//        // then
-//        XCTAssertEqual(contentType!, LocalNotificationContentType.ephemeral(isMention: false, isReply: false))
-//    }
+    func testThatItCreatesACorrectLocalNotificationContentTypeForTheEphemeralMessage() {
+        // given
+        let message = GenericMessage(content: Text(content: "Ephemeral Message"), nonce: UUID(), expiresAfter: 100)
+        let event = createUpdateEvent(UUID.create(), conversationID: UUID.create(), genericMessage: message)
+
+        // when
+        let contentType = LocalNotificationContentType.typeForMessage(event, conversation: groupConversation, in: self.syncMOC)
+
+        // then
+        XCTAssertEqual(contentType, LocalNotificationContentType.ephemeral(isMention: false, isReply: false))
+    }
     
     func testThatItCreatesACorrectLocalNotificationContentTypeForTheTextMessage() {
            // given
@@ -113,6 +113,41 @@ class LocalNotificationContentTypeTest: ZMLocalNotificationTests {
         // then
         XCTAssertEqual(contentType!, LocalNotificationContentType.fileUpload)
     }
+    
+    func testThatItCreatesASystemMessageNotificationContentTypeForTheMemberJoinEvent() {
+        // given
+        let event = createMemberJoinUpdateEvent(UUID.create(), conversationID: UUID.create())
+
+        // when
+        let contentType = LocalNotificationContentType.typeForMessage(event, conversation: groupConversation, in: self.syncMOC)
+
+        // then
+        XCTAssertEqual(contentType, LocalNotificationContentType.participantsAdded)
+    }
+
+    
+    func testThatItCreatesASystemMessageNotificationContentTypeForTheMemberLeaveEvent() {
+        // given
+        let event = createMemberLeaveUpdateEvent(UUID.create(), conversationID: UUID.create())
+
+        // when
+        let contentType = LocalNotificationContentType.typeForMessage(event, conversation: groupConversation, in: self.syncMOC)
+
+        // then
+        XCTAssertEqual(contentType, LocalNotificationContentType.participantsRemoved)
+    }
+    
+    func testThatItCreatesASystemMessageNotificationContentTypeForTheMessageTimerUpdateEvent() {
+        // given
+        let event = createMessageTimerUpdateEvent(UUID.create(), conversationID: UUID.create())
+
+        // when
+        let contentType = LocalNotificationContentType.typeForMessage(event, conversation: groupConversation, in: self.syncMOC)
+
+        // then
+        XCTAssertEqual(contentType, LocalNotificationContentType.messageTimerUpdate("1 year"))
+    }
+
 
     private func createFileMetadata(filename: String? = nil) -> ZMFileMetadata {
         let fileURL: URL
@@ -140,16 +175,64 @@ class LocalNotificationContentTypeTest: ZMLocalNotificationTests {
         return data
     }
     
-    private func createUpdateEvent(_ nonce: UUID, conversationID: UUID, genericMessage: GenericMessage, senderID: UUID = UUID.create(), type: String = "conversation.otr-message-add") -> ZMUpdateEvent {
+    private func createUpdateEvent(_ nonce: UUID, conversationID: UUID, genericMessage: GenericMessage, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
            let payload : [String : Any] = [
                "id": UUID.create().transportString(),
                "conversation": conversationID.transportString(),
                "from": senderID.transportString(),
                "time": Date().transportString(),
                "data": ["text": try? genericMessage.serializedData().base64String()],
-               "type": type
+               "type": "conversation.otr-message-add"
            ]
            
+           return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
+       }
+    
+    private func createMemberJoinUpdateEvent(_ nonce: UUID, conversationID: UUID, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+        
+        let user2ID = UUID.create()
+        
+        let payload : [String : Any] = [
+            "from": senderID.transportString(),
+            "conversation": conversationID.transportString(),
+            "time": NSDate().transportString(),
+            "data": [
+                "user_ids": [user2ID.transportString()],
+                "users": [[
+                    "id": user2ID.transportString(),
+                    "conversation_role": "wire_admin"
+                    ]]
+            ],
+            "type": "conversation.member-join"
+            ]
+        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
+    }
+    
+    private func createMemberLeaveUpdateEvent(_ nonce: UUID, conversationID: UUID, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+        
+        let user2ID = UUID.create()
+        
+        let payload : [String : Any] = [
+            "from": senderID.transportString(),
+            "conversation": conversationID.transportString(),
+            "time": NSDate().transportString(),
+            "data": [
+                "user_ids": [user2ID.transportString()],
+            ],
+            "type": "conversation.member-leave"
+            ]
+        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
+    }
+    
+    private func createMessageTimerUpdateEvent(_ nonce: UUID, conversationID: UUID, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+                      
+          let payload: [String: Any] = [
+           "from": senderID.transportString(),
+           "conversation": conversationID.transportString(),
+           "time": NSDate().transportString(),
+           "data": ["message_timer": 31536000000],
+           "type": "conversation.message-timer-update"
+           ]
            return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
        }
 

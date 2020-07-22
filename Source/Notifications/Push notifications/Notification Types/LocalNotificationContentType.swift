@@ -105,9 +105,35 @@ public enum LocalNotificationContentType : Equatable {
     }
     
     static func typeForMessage(_ event: ZMUpdateEvent, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> LocalNotificationContentType? {
-        guard let message = GenericMessage(from: event) else {
+        
+        switch event.type {
+        case .conversationMemberJoin:
+            return .participantsAdded
+        case .conversationMemberLeave:
+            return .participantsRemoved
+        case .conversationMessageTimerUpdate:
+            guard let payload = event.payload["data"] as? [String : AnyHashable] else {
                 return nil
+            }
+            let timeoutIntegerValue = (payload["message_timer"] as? Int64) ?? 0
+            
+            let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue / 1000))
+            if value == .none {
+                return .messageTimerUpdate(nil)
+            } else {
+                return .messageTimerUpdate(value.displayString)
+            }
+        default:
+            guard let message = GenericMessage(from: event) else {
+                return nil
+            }
+            
+            return typeForMessage(message, conversation: conversation, in: moc)
         }
+    }
+    
+    static func typeForMessage(_ message: GenericMessage, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> LocalNotificationContentType? {
+        
         let selfUser = ZMUser.selfUser(in: moc)
 
         func getQuotedMessage(_ textMessageData: Text, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> ZMOTRMessage? {
@@ -157,26 +183,7 @@ public enum LocalNotificationContentType : Equatable {
                 return .fileUpload
             }
         default:
-            switch event.type {
-            case .conversationMemberJoin:
-                return .participantsAdded
-            case .conversationMemberLeave:
-                return .participantsRemoved
-            case .conversationMessageTimerUpdate:
-                guard let payload = event.payload["data"] as? [String : AnyHashable] else {
-                    return nil
-                }
-                let timeoutIntegerValue = (payload["message_timer"] as? Int64) ?? 0
-                    
-                let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue / 1000))
-                if value == .none {
-                    return .messageTimerUpdate(nil)
-                } else {
-                    return .messageTimerUpdate(value.displayString)
-                }
-            default:
-                return nil
-            }
+           return nil
         }
     }
     
@@ -186,7 +193,7 @@ public func ==(rhs: LocalNotificationContentType, lhs: LocalNotificationContentT
     switch (rhs, lhs) {
     case (.text(let left), .text(let right)):
         return left == right
-    case (.image, .image), (.video, .video), (.audio, .audio), (.location, .location), (.fileUpload, .fileUpload), (.knock, .knock), (.undefined, .undefined), (.reaction, .reaction), (.messageTimerUpdate, .messageTimerUpdate):
+    case (.image, .image), (.video, .video), (.audio, .audio), (.location, .location), (.fileUpload, .fileUpload), (.knock, .knock), (.undefined, .undefined), (.reaction, .reaction), (.messageTimerUpdate, .messageTimerUpdate), (.participantsAdded, .participantsAdded), (.participantsRemoved, .participantsRemoved), (.ephemeral, .ephemeral):
         return true
     default:
         return false
