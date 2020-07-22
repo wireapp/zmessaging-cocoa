@@ -160,4 +160,66 @@ class ZMLocalNotificationTests: MessagingTest {
             "time" : serverTimeStamp.transportString()
         ]).mutableCopy() as! NSMutableDictionary
     }
+    
+    func createUpdateEvent(_ nonce: UUID, conversationID: UUID, genericMessage: GenericMessage, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+        let payload : [String : Any] = [
+            "id": UUID.create().transportString(),
+            "conversation": conversationID.transportString(),
+            "from": senderID.transportString(),
+            "time": Date().transportString(),
+            "data": ["text": try? genericMessage.serializedData().base64String()],
+            "type": "conversation.otr-message-add"
+        ]
+        
+        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
+    }
+    
+    func createMemberJoinUpdateEvent(_ nonce: UUID, conversationID: UUID, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+        
+           let user2ID = UUID.create()
+           
+           let payload : [String : Any] = [
+               "from": senderID.transportString(),
+               "conversation": conversationID.transportString(),
+               "time": NSDate().transportString(),
+               "data": [
+                   "user_ids": [user2ID.transportString()],
+                   "users": [[
+                       "id": user2ID.transportString(),
+                       "conversation_role": "wire_admin"
+                       ]]
+               ],
+               "type": "conversation.member-join"
+               ]
+           return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
+       }
+
+    func createMemberLeaveUpdateEvent(_ nonce: UUID, conversationID: UUID, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+           
+//           let user2ID = UUID.create()
+           
+           let payload : [String : Any] = [
+               "from": senderID.transportString(),
+               "conversation": conversationID.transportString(),
+               "time": NSDate().transportString(),
+               "data": [
+                "user_ids": [selfUser.remoteIdentifier.transportString()],
+               ],
+               "type": "conversation.member-leave"
+               ]
+           return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
+       }
+    
+    func createMessageTimerUpdateEvent(_ nonce: UUID, conversationID: UUID, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+                   
+       let payload: [String: Any] = [
+        "from": senderID.transportString(),
+        "conversation": conversationID.transportString(),
+        "time": NSDate().transportString(),
+        "data": ["message_timer": 31536000000],
+        "type": "conversation.message-timer-update"
+        ]
+        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
+    }
+       
 }

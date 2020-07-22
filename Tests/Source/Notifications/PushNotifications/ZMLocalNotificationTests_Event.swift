@@ -48,19 +48,6 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         return note
     }
     
-    func createUpdateEvent(_ nonce: UUID, conversationID: UUID, genericMessage: GenericMessage, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
-        let payload : [String : Any] = [
-            "id": UUID.create().transportString(),
-            "conversation": conversationID.transportString(),
-            "from": senderID.transportString(),
-            "time": Date().transportString(),
-            "data": ["text": try? genericMessage.serializedData().base64String()],
-            "type": "conversation.otr-message-add"
-        ]
-        
-        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
-    }
-    
     func reactionEventInOneOnOneConversation() -> ZMUpdateEvent {
         let message = oneOnOneConversation.append(text: "text") as! ZMClientMessage
         let reaction = GenericMessage(content: WireProtos.Reaction(emoji: "❤️", messageID: message.nonce!))
@@ -515,21 +502,37 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         XCTAssertEqual(note!.title, "Super User")
     }
     
-    // MARK: - Create text messages from update events
+    // MARK: - Create text local notification from update events
     
     func testThatItCreatesATextNotification() {
         // given
-        let event = createUpdateEvent(UUID.create(), conversationID: UUID.create(), genericMessage: GenericMessage(content: Text(content: "Test")))
+        let event = createUpdateEvent(UUID.create(), conversationID: UUID.create(), genericMessage: GenericMessage(content: Text(content: "Stimpy just joined Wire")))
         var note: ZMLocalNotification?
 
         // when
-       
         note = ZMLocalNotification(event: event, conversation: self.oneOnOneConversation, managedObjectContext: self.uiMOC)
 
         // then
         XCTAssertNotNil(note)
         XCTAssertEqual(note!.title, "Super User")
-        XCTAssertEqual(note!.body, "New message: Test")
+        XCTAssertEqual(note!.body, "New message: Stimpy just joined Wire")
+        
+    }
+    
+    // MARK: - Create system local notification from update events
+    
+    func testThatItCreatesASystemLocalNotification() {
+        // given
+        let event = createMemberLeaveUpdateEvent(UUID.create(), conversationID: self.oneOnOneConversation.remoteIdentifier!)
+        var note: ZMLocalNotification?
+
+        // when
+        note = ZMLocalNotification(event: event, conversation: self.oneOnOneConversation, managedObjectContext: self.syncMOC)
+
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note?.title, "Super User")
+        XCTAssertEqual(note?.body, "%1$@ removed you")
 
     }
 }

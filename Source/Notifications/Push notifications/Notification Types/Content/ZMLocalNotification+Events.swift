@@ -297,6 +297,14 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
         super.init(event: event, conversation: conversation, managedObjectContext: managedObjectContext)
     }
 
+    override func titleText() -> String? {
+        return notificationType.titleText(selfUser: ZMUser.selfUser(in: moc), conversation: conversation)
+    }
+    
+    override func bodyText() -> String {
+        return notificationType.messageBodyText(sender: sender, conversation: conversation).trimmingCharacters(in: .whitespaces)
+    }
+    
     override var notificationType: LocalNotificationType {
         if case .ephemeral? = message.content {
             return LocalNotificationType.message(.hidden)
@@ -309,7 +317,7 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
     override func shouldCreateNotification() -> Bool {
         guard let conversation = conversation,
             let senderUUID = event.senderUUID(),
-            conversation.isMessageSilenced(message, senderID: senderUUID) else {
+            !conversation.isMessageSilenced(message, senderID: senderUUID) else {
                 Logging.push.safePublic("Not creating local notification for message with nonce = \(event.messageNonce) because conversation is silenced")
                 return false
         }
@@ -326,7 +334,27 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
 
 // MARK: - System Message
 
-private class NewSystemMessageNotificationBuilder : NewMessageNotificationBuilder {
+private class NewSystemMessageNotificationBuilder : EventNotificationBuilder {
+    let contentType: LocalNotificationContentType
+    
+    override init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
+        guard let contentType = LocalNotificationContentType.typeForMessage(event, conversation: conversation, in: managedObjectContext)
+            else {
+                return nil
+        }
+        
+        self.contentType = contentType
+        super.init(event: event, conversation: conversation, managedObjectContext: managedObjectContext)
+    }
+    
+    override func titleText() -> String? {
+        return notificationType.titleText(selfUser: ZMUser.selfUser(in: moc), conversation: conversation)
+    }
+    
+    override func bodyText() -> String {
+        return notificationType.messageBodyText(sender: sender, conversation: conversation).trimmingCharacters(in: .whitespaces)
+    }
+    
     override var notificationType: LocalNotificationType {
         return LocalNotificationType.message(contentType)
     }
