@@ -521,7 +521,7 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
     
     // MARK: - Create system local notification from update events
     
-    func testThatItCreatesASystemLocalNotification() {
+    func testThatItCreatesASystemLocalNotificationForRemovingTheSelfUserEvent() {
         // given
         let event = createMemberLeaveUpdateEvent(UUID.create(), conversationID: self.oneOnOneConversation.remoteIdentifier!)
         var note: ZMLocalNotification?
@@ -533,6 +533,34 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         XCTAssertNotNil(note)
         XCTAssertEqual(note?.title, "Super User")
         XCTAssertEqual(note?.body, "%1$@ removed you")
+
+    }
+    
+    func testThatItCreatesASystemLocalNotificationForAddingTheSelfUserEvent() {
+        // given
+        let event = createMemberJoinUpdateEvent(UUID.create(), conversationID: self.oneOnOneConversation.remoteIdentifier!)
+        var note: ZMLocalNotification?
+
+        // when
+        note = ZMLocalNotification(event: event, conversation: self.oneOnOneConversation, managedObjectContext: self.syncMOC)
+
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note?.title, "Super User")
+        XCTAssertEqual(note?.body, "%1$@ added you")
+
+    }
+    
+    func testThatItCreatesASystemLocalNotificationForMessageTimerUpdateEvent() {
+        // given
+        let event = createMessageTimerUpdateEvent(UUID.create(), conversationID: self.oneOnOneConversation.remoteIdentifier!)
+        var note: ZMLocalNotification?
+
+        // when
+        note = ZMLocalNotification(event: event, conversation: self.oneOnOneConversation, managedObjectContext: self.syncMOC)
+
+        // then
+        XCTAssertNil(note)
 
     }
 }

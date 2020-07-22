@@ -175,17 +175,15 @@ class ZMLocalNotificationTests: MessagingTest {
     }
     
     func createMemberJoinUpdateEvent(_ nonce: UUID, conversationID: UUID, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
-        
-           let user2ID = UUID.create()
-           
+                   
            let payload : [String : Any] = [
                "from": senderID.transportString(),
                "conversation": conversationID.transportString(),
                "time": NSDate().transportString(),
                "data": [
-                   "user_ids": [user2ID.transportString()],
+                   "user_ids": [selfUser.remoteIdentifier.transportString()],
                    "users": [[
-                       "id": user2ID.transportString(),
+                       "id": selfUser.remoteIdentifier.transportString(),
                        "conversation_role": "wire_admin"
                        ]]
                ],
@@ -195,9 +193,7 @@ class ZMLocalNotificationTests: MessagingTest {
        }
 
     func createMemberLeaveUpdateEvent(_ nonce: UUID, conversationID: UUID, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
-           
-//           let user2ID = UUID.create()
-           
+                      
            let payload : [String : Any] = [
                "from": senderID.transportString(),
                "conversation": conversationID.transportString(),

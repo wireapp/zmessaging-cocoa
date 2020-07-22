@@ -116,19 +116,18 @@ public enum LocalNotificationContentType : Equatable {
                 return nil
             }
             let timeoutIntegerValue = (payload["message_timer"] as? Int64) ?? 0
-            
             let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue / 1000))
-            if value == .none {
-                return .messageTimerUpdate(nil)
-            } else {
-                return .messageTimerUpdate(value.displayString)
-            }
-        default:
+            
+            return (value == .none)
+                ? .messageTimerUpdate(nil)
+                : .messageTimerUpdate(value.displayString)
+        case.conversationOtrMessageAdd:
             guard let message = GenericMessage(from: event) else {
                 return nil
             }
-            
             return typeForMessage(message, conversation: conversation, in: moc)
+        default:
+            return nil
         }
     }
     

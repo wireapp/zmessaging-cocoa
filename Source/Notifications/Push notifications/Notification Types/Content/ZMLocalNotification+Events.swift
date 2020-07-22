@@ -367,10 +367,13 @@ private class NewSystemMessageNotificationBuilder : EventNotificationBuilder {
         }
         let users = userIds.compactMap({ UUID.init(uuidString: $0)}).compactMap({ZMUser(remoteID: $0, createIfNeeded: true, in: moc)})
         let forSelf = users.count == 1 && users.first!.isSelfUser
-        if !forSelf && event.type != .conversationMessageTimerUpdate {
-            return false
+
+        switch contentType {
+        case .participantsAdded, .participantsRemoved:
+            return forSelf ? super.shouldCreateNotification() : false
+        default:
+            return super.shouldCreateNotification()
         }
         
-        return super.shouldCreateNotification()
     }
 }
