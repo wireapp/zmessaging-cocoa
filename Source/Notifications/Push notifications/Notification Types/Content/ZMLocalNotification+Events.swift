@@ -26,7 +26,13 @@ extension ZMLocalNotification {
         
         switch event.type {
         case .conversationOtrMessageAdd:
-            builder = ReactionEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
+            guard let message = GenericMessage(from: event) else {
+                return nil
+            }
+
+            builder = message.hasReaction
+            ? ReactionEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
+            : NewMessageNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
             
         case .conversationCreate:
             builder = ConversationCreateEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
@@ -39,7 +45,11 @@ extension ZMLocalNotification {
             
         case .userContactJoin:
             builder = NewUserEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
-            
+        case .conversationMemberJoin, .conversationMemberLeave, .conversationMessageTimerUpdate:
+            guard conversation?.remoteIdentifier != nil else {
+                return nil
+            }
+            builder = NewSystemMessageNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
         default:
             return nil
         }
@@ -269,3 +279,70 @@ private class NewUserEventNotificationBuilder: EventNotificationBuilder {
     }
 }
 
+// MARK: - Message
+
+private class NewMessageNotificationBuilder: EventNotificationBuilder {
+    private let message: GenericMessage
+    let contentType: LocalNotificationContentType
+
+    override init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
+        guard let message = GenericMessage(from: event),
+            let contentType = LocalNotificationContentType.typeForMessage(event, conversation: conversation, in: managedObjectContext)
+            else {
+                return nil
+        }
+
+        self.message = message
+        self.contentType = contentType
+        super.init(event: event, conversation: conversation, managedObjectContext: managedObjectContext)
+    }
+
+    override var notificationType: LocalNotificationType {
+        if case .ephemeral? = message.content {
+            return LocalNotificationType.message(.hidden)
+        }
+        return LocalNotificationDispatcher.shouldHideNotificationContent(moc: self.moc)
+        ? LocalNotificationType.message(.hidden)
+        : LocalNotificationType.message(contentType)
+    }
+
+    override func shouldCreateNotification() -> Bool {
+        guard let conversation = conversation,
+            let senderUUID = event.senderUUID(),
+            conversation.isMessageSilenced(message, senderID: senderUUID) else {
+                Logging.push.safePublic("Not creating local notification for message with nonce = \(event.messageNonce) because conversation is silenced")
+                return false
+        }
+        
+        if let timeStamp = event.timeStamp(),
+            let lastRead = conversation.lastReadServerTimeStamp,
+            lastRead.compare(timeStamp) != .orderedAscending
+        {
+            return false
+        }
+        return true
+    }
+}
+
+// MARK: - System Message
+
+private class NewSystemMessageNotificationBuilder : NewMessageNotificationBuilder {
+    override var notificationType: LocalNotificationType {
+        return LocalNotificationType.message(contentType)
+    }
+    
+    override func shouldCreateNotification() -> Bool {
+        // we don't want to create notifications when other people join or leave conversation
+        guard let dataPayload = (event.payload as NSDictionary).dictionary(forKey: "data"),
+            let userIds = dataPayload["user_ids"] as? [String] else {
+                return false
+        }
+        let users = userIds.compactMap({ UUID.init(uuidString: $0)}).compactMap({ZMUser(remoteID: $0, createIfNeeded: true, in: moc)})
+        let forSelf = users.count == 1 && users.first!.isSelfUser
+        if !forSelf && event.type != .conversationMessageTimerUpdate {
+            return false
+        }
+        
+        return super.shouldCreateNotification()
+    }
+}

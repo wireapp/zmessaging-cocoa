@@ -17,6 +17,7 @@
 //
 
 import Foundation
+import WireDataModel
 
 public enum LocalNotificationEventType {
     case connectionRequestAccepted, connectionRequestPending, newConnection, conversationCreated, conversationDeleted
@@ -101,6 +102,82 @@ public enum LocalNotificationContentType : Equatable {
         }
         
         return .undefined
+    }
+    
+    static func typeForMessage(_ event: ZMUpdateEvent, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> LocalNotificationContentType? {
+        guard let message = GenericMessage(from: event) else {
+                return nil
+        }
+        let selfUser = ZMUser.selfUser(in: moc)
+
+        func getQuotedMessage(_ textMessageData: Text, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> ZMOTRMessage? {
+            guard let conversation = conversation else {
+                return nil
+            }
+            let quotedMessageId = UUID(uuidString: textMessageData.quote.quotedMessageID)
+            return ZMOTRMessage.fetch(withNonce: quotedMessageId, for: conversation, in: moc)
+        }
+
+        switch message.content {
+        case .location:
+            return .location
+        case .knock:
+            return .knock
+        case .image:
+            return .image
+        case .ephemeral:
+            if let textMessageData = message.textData {
+
+                let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc)
+                return .ephemeral(isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
+            } else {
+                return .ephemeral(isMention: false, isReply: false)
+            }
+        case .text:
+            if let textMessageData = message.textData,
+                let text = message.textData?.content.removingExtremeCombiningCharacters, !text.isEmpty {
+
+                let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc)
+                return .text(text, isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
+            } else {
+                return nil
+            }
+        case .composite:
+            if let textData = message.composite.items.compactMap({ $0.text }).first {
+                return .text(textData.content, isMention: textData.isMentioningSelf(selfUser), isReply: false)
+            }
+            return nil
+        case .asset(let assetData):
+            switch assetData.original.metaData {
+            case .audio?:
+                return .audio
+            case .video?:
+                return .video
+            default:
+                return .fileUpload
+            }
+        default:
+            switch event.type {
+            case .conversationMemberJoin:
+                return .participantsAdded
+            case .conversationMemberLeave:
+                return .participantsRemoved
+            case .conversationMessageTimerUpdate:
+                guard let payload = event.payload["data"] as? [String : AnyHashable] else {
+                    return nil
+                }
+                let timeoutIntegerValue = (payload["message_timer"] as? Int64) ?? 0
+                    
+                let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue / 1000))
+                if value == .none {
+                    return .messageTimerUpdate(nil)
+                } else {
+                    return .messageTimerUpdate(value.displayString)
+                }
+            default:
+                return nil
+            }
+        }
     }
     
 }
