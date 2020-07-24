@@ -189,16 +189,3 @@ public enum LocalNotificationContentType : Equatable {
     }
     
 }
-
-public func ==(rhs: LocalNotificationContentType, lhs: LocalNotificationContentType) -> Bool {
-    switch (rhs, lhs) {
-    case (.text(let left), .text(let right)):
-        return left == right
-    case (.image, .image), (.video, .video), (.audio, .audio), (.location, .location), (.fileUpload, .fileUpload), (.knock, .knock), (.undefined, .undefined), (.reaction, .reaction), (.messageTimerUpdate, .messageTimerUpdate), (.participantsAdded, .participantsAdded), (.participantsRemoved, .participantsRemoved), (.ephemeral, .ephemeral):
-        return true
-    default:
-        return false
-    }
-}
-
-
