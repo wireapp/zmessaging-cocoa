@@ -29,7 +29,8 @@
 
 @implementation APNSTests
 
-- (void)testThatAConversationIsCreatedFromAnAPNS
+// TODO jacob disabled since we no longer process events when receiving an APNS
+- (void)_testThatAConversationIsCreatedFromAnAPNS
 {
     // given
     XCTAssertTrue([self login]);
@@ -89,7 +90,6 @@
     }];
     WaitForAllGroupsToBeEmpty(0.2);
     NSUUID *notificationID = NSUUID.timeBasedUUID;
-    NSUUID *conversationID = [NSUUID uuidWithTransportString:convIdentifier];
     
     NSDictionary *eventPayload = [self conversationCreatePayloadWithNotificationID:notificationID
                                                                     conversationID:convIdentifier
@@ -121,8 +121,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    ZMConversation *conversation = [ZMConversation fetchObjectWithRemoteIdentifier:conversationID inManagedObjectContext:self.userSession.managedObjectContext];
-    XCTAssertNotNil(conversation);
+    XCTAssertEqualObjects(self.userSession.managedObjectContext.zm_lastNotificationID, notificationID);
 }
 
 - (void)testThatItFetchesTheNotificationStreamWhenReceivingNotificationOfTypeNotice_TriesAgainWhenReceiving_401
@@ -144,7 +143,6 @@
     }];
     WaitForAllGroupsToBeEmpty(0.2);
     NSUUID *notificationID = NSUUID.timeBasedUUID;
-    NSUUID *conversationID = [NSUUID uuidWithTransportString:convIdentifier];
     
     NSDictionary *eventPayload = [self conversationCreatePayloadWithNotificationID:notificationID
                                                                     conversationID:convIdentifier
@@ -181,8 +179,7 @@
     
     // then
     XCTAssertEqual(requestCount, 2lu);
-    ZMConversation *conversation = [ZMConversation fetchObjectWithRemoteIdentifier:conversationID inManagedObjectContext:self.userSession.managedObjectContext];
-    XCTAssertNotNil(conversation);
+    XCTAssertEqualObjects(self.userSession.managedObjectContext.zm_lastNotificationID, notificationID);
 }
 
 #pragma mark - Helper

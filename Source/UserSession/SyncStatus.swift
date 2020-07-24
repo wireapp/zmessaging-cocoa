@@ -116,7 +116,7 @@ extension Notification.Name {
     
     var encryptionKeys: EncryptionKeys? { // TODO jacob move somewhere more appropriate
         didSet {
-            DatabaseEncryptionLockNotification(databaseIsEncrypted: encryptionKeys != nil).post(in: managedObjectContext.notificationContext)
+            DatabaseEncryptionLockNotification(databaseIsEncrypted: encryptionKeys == nil).post(in: managedObjectContext.notificationContext)
         }
     }
     

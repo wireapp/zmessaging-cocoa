@@ -241,7 +241,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:payload2]];
 
     // expect
-    [[(id)self.syncStrategy expect] processUpdateEvents:expectedEvents ignoreBuffer:YES];
+    [[(id)self.syncStrategy expect] storeUpdateEvents:expectedEvents ignoreBuffer:YES];
     
     // when
     [(id)self.sut.listPaginator didReceiveResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil] forSingleRequest:self.requestSync];
@@ -276,7 +276,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:payload2]];
     
     // expect
-    [[(id)self.syncStrategy expect] processUpdateEvents:expectedEvents ignoreBuffer:YES];
+    [[(id)self.syncStrategy expect] storeUpdateEvents:expectedEvents ignoreBuffer:YES];
     
     // when
     [(id)self.sut.listPaginator didReceiveResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:404 transportSessionError:nil] forSingleRequest:self.requestSync];

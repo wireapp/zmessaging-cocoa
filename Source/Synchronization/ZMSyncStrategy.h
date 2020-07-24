@@ -61,7 +61,7 @@
 
 - (void)didInterruptUpdateEventsStream;
 - (void)didEstablishUpdateEventsStream;
-- (void)didFinishSync;
+- (void)applyHotFixes;
 
 - (ZMTransportRequest *_Nullable)nextRequest;
 
