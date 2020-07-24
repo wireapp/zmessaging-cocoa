@@ -26,11 +26,8 @@ extension ZMLocalNotification {
         
         switch event.type {
         case .conversationOtrMessageAdd:
-            guard let message = GenericMessage(from: event) else {
-                return nil
-            }
-
-            builder = message.hasReaction
+            let message = GenericMessage(from: event)
+            builder = (message?.hasReaction ?? false)
             ? ReactionEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
             : NewMessageNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
             
@@ -282,17 +279,16 @@ private class NewUserEventNotificationBuilder: EventNotificationBuilder {
 // MARK: - Message
 
 private class NewMessageNotificationBuilder: EventNotificationBuilder {
-    private let message: GenericMessage
+    private let message: GenericMessage?
     let contentType: LocalNotificationContentType
 
     override init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
-        guard let message = GenericMessage(from: event),
-            let contentType = LocalNotificationContentType.typeForMessage(event, conversation: conversation, in: managedObjectContext)
+        guard let contentType = LocalNotificationContentType.typeForMessage(event, conversation: conversation, in: managedObjectContext)
             else {
                 return nil
         }
 
-        self.message = message
+        self.message = GenericMessage(from: event)
         self.contentType = contentType
         super.init(event: event, conversation: conversation, managedObjectContext: managedObjectContext)
     }
@@ -306,8 +302,8 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
     }
     
     override var notificationType: LocalNotificationType {
-        if case .ephemeral? = message.content {
-            return LocalNotificationType.message(.hidden)
+        if case .ephemeral? = message?.content {
+            return LocalNotificationType.message(contentType)
         }
         return LocalNotificationDispatcher.shouldHideNotificationContent(moc: self.moc)
         ? LocalNotificationType.message(.hidden)
@@ -315,6 +311,9 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
     }
 
     override func shouldCreateNotification() -> Bool {
+        guard let message = message else {
+            return true
+        }
         guard let conversation = conversation,
             let senderUUID = event.senderUUID(),
             !conversation.isMessageSilenced(message, senderID: senderUUID) else {
@@ -363,17 +362,17 @@ private class NewSystemMessageNotificationBuilder : EventNotificationBuilder {
         // we don't want to create notifications when other people join or leave conversation
         guard let dataPayload = (event.payload as NSDictionary).dictionary(forKey: "data"),
             let userIds = dataPayload["user_ids"] as? [String] else {
-                return false
+                return super.shouldCreateNotification()
         }
         let users = userIds.compactMap({ UUID.init(uuidString: $0)}).compactMap({ZMUser(remoteID: $0, createIfNeeded: true, in: moc)})
-        let forSelf = users.count == 1 && users.first!.isSelfUser
+        let concernsSelfUser = users.count == 1 && users.first!.isSelfUser
 
         switch contentType {
-        case .participantsAdded, .participantsRemoved:
-            return forSelf ? super.shouldCreateNotification() : false
+        case .participantsAdded where concernsSelfUser == false, .participantsRemoved where concernsSelfUser == false:
+            return false
         default:
-            return super.shouldCreateNotification()
+            break
         }
-        
+         return super.shouldCreateNotification()
     }
 }

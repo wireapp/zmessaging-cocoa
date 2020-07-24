@@ -174,45 +174,47 @@ class ZMLocalNotificationTests: MessagingTest {
         return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
     }
     
-    func createMemberJoinUpdateEvent(_ nonce: UUID, conversationID: UUID, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
-                   
-           let payload : [String : Any] = [
-               "from": senderID.transportString(),
-               "conversation": conversationID.transportString(),
-               "time": NSDate().transportString(),
-               "data": [
-                   "user_ids": [selfUser.remoteIdentifier.transportString()],
-                   "users": [[
-                       "id": selfUser.remoteIdentifier.transportString(),
-                       "conversation_role": "wire_admin"
-                       ]]
-               ],
-               "type": "conversation.member-join"
-               ]
-           return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
-       }
+    func createMemberJoinUpdateEvent(_ nonce: UUID, conversationID: UUID, users: [ZMUser], senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+        let userIds = users.map { $0.remoteIdentifier.transportString() }
+        let usersWithRoles = users.map { (user) -> [String : String] in
+            return ["id": user.remoteIdentifier.transportString(),
+                    "conversation_role": "wire_admin"]
+        }
+        
+        let payload : [String : Any] = [
+            "from": senderID.transportString(),
+            "conversation": conversationID.transportString(),
+            "time": NSDate().transportString(),
+            "data": [
+                "user_ids": userIds,
+                "users": usersWithRoles
+            ],
+            "type": "conversation.member-join"
+        ]
+        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
+    }
 
-    func createMemberLeaveUpdateEvent(_ nonce: UUID, conversationID: UUID, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
-                      
-           let payload : [String : Any] = [
-               "from": senderID.transportString(),
-               "conversation": conversationID.transportString(),
-               "time": NSDate().transportString(),
-               "data": [
-                "user_ids": [selfUser.remoteIdentifier.transportString()],
-               ],
-               "type": "conversation.member-leave"
-               ]
-           return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
-       }
+    func createMemberLeaveUpdateEvent(_ nonce: UUID, conversationID: UUID, users: [ZMUser], senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+        let userIds = users.map { $0.remoteIdentifier.transportString() }
+        let payload : [String : Any] = [
+            "from": senderID.transportString(),
+            "conversation": conversationID.transportString(),
+            "time": NSDate().transportString(),
+            "data": [
+                "user_ids": userIds,
+            ],
+            "type": "conversation.member-leave"
+        ]
+        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
+    }
     
-    func createMessageTimerUpdateEvent(_ nonce: UUID, conversationID: UUID, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+    func createMessageTimerUpdateEvent(_ nonce: UUID, conversationID: UUID, senderID: UUID = UUID.create(), timer: Int64 = 31536000, timestamp: Date = Date()) -> ZMUpdateEvent {
                    
        let payload: [String: Any] = [
         "from": senderID.transportString(),
         "conversation": conversationID.transportString(),
-        "time": NSDate().transportString(),
-        "data": ["message_timer": 31536000000],
+        "time": timestamp.transportString(),
+        "data": ["message_timer": timer],
         "type": "conversation.message-timer-update"
         ]
         return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!

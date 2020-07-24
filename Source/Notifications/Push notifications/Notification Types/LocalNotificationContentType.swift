@@ -116,14 +116,14 @@ public enum LocalNotificationContentType : Equatable {
                 return nil
             }
             let timeoutIntegerValue = (payload["message_timer"] as? Int64) ?? 0
-            let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue / 1000))
+            let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue))
             
             return (value == .none)
                 ? .messageTimerUpdate(nil)
                 : .messageTimerUpdate(value.displayString)
         case.conversationOtrMessageAdd:
             guard let message = GenericMessage(from: event) else {
-                return nil
+                return .undefined
             }
             return typeForMessage(message, conversation: conversation, in: moc)
         default:
@@ -158,7 +158,7 @@ public enum LocalNotificationContentType : Equatable {
             } else {
                 return .ephemeral(isMention: false, isReply: false)
             }
-        case .text:
+        case .text, .edited:
             if let textMessageData = message.textData,
                 let text = message.textData?.content.removingExtremeCombiningCharacters, !text.isEmpty {
 
@@ -178,11 +178,13 @@ public enum LocalNotificationContentType : Equatable {
                 return .audio
             case .video?:
                 return .video
+            case .image:
+                return .image
             default:
                 return .fileUpload
             }
         default:
-           return nil
+           return .undefined
         }
     }
     

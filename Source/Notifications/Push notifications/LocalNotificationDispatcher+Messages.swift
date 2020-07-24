@@ -23,35 +23,53 @@ extension LocalNotificationDispatcher: PushMessageHandler {
 
     // Processes ZMOTRMessages and ZMSystemMessages
     @objc(processMessage:) public func process(_ message: ZMMessage) {
-        Logging.push.safePublic("Process message with nonce=\(message.nonce)")
-        
-        // we don't want to create duplicate notifications
-        guard let nonce = message.nonce, !messageNotifications.hasNotification(for: nonce) else {
-            return Logging.push.safePublic("Ignore duplicate message with nonce = \(message.nonce)")
-        }
-        
-        var note: ZMLocalNotification?
-        
-        if let message = message as? ZMOTRMessage {
-            note = ZMLocalNotification(message: message)
-        }
-        else if let message = message as? ZMSystemMessage {
-            note = ZMLocalNotification(systemMessage: message)
-        }
-        
-        note.apply(scheduleLocalNotification)
-        note.apply(messageNotifications.addObject)
+        //        Logging.push.safePublic("Process message with nonce=\(message.nonce)")
+        //
+        //        // we don't want to create duplicate notifications
+        //        guard let nonce = message.nonce, !messageNotifications.hasNotification(for: nonce) else {
+        //            return Logging.push.safePublic("Ignore duplicate message with nonce = \(message.nonce)")
+        //        }
+        //
+        //                var note: ZMLocalNotification?
+        //
+        //                if let message = message as? ZMOTRMessage {
+        //                    note = ZMLocalNotification(message: message)
+        //                }
+        //                else if let message = message as? ZMSystemMessage {
+        //                    note = ZMLocalNotification(systemMessage: message)
+        //                }
+        //
+        //                note.apply(scheduleLocalNotification)
+        //                note.apply(messageNotifications.addObject)
     }
     
     // Process ZMGenericMessage that have "invisible" as in they don't create a message themselves
     @objc(processEvent:) public func process(_ event: ZMUpdateEvent) {
+        Logging.push.safePublic("Process message with nonce=\(event.messageNonce)")
+        
+        var note: ZMLocalNotification?
+        var conversation: ZMConversation?
+        if let conversationID = event.conversationUUID() {
+            conversation = ZMConversation.fetch(withRemoteIdentifier: conversationID, in: self.syncMOC)
+        }
+        
         // hidden, deleted and reaction do not create messages on their own
         if let genericMessage = GenericMessage(from: event) {
+            // we don't want to create duplicate notifications
+            guard let nonce = event.messageNonce,
+                !messageNotifications.hasNotification(for: nonce) else {
+                    return Logging.push.safePublic("Ignore duplicate message with nonce = \(event.messageNonce)")
+            }
+            
             if genericMessage.hasEdited || genericMessage.hasHidden || genericMessage.hasDeleted {
                 // Cancel notification for message that was edited, deleted or hidden
                 cancelMessageForEditingMessage(genericMessage)
             }
         }
+        
+        note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
+        note.apply(scheduleLocalNotification)
+        note.apply(messageNotifications.addObject)
     }
 }
 

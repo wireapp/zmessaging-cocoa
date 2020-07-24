@@ -116,7 +116,7 @@ class LocalNotificationContentTypeTest: ZMLocalNotificationTests {
     
     func testThatItCreatesASystemMessageNotificationContentTypeForTheMemberJoinEvent() {
         // given
-        let event = createMemberJoinUpdateEvent(UUID.create(), conversationID: UUID.create())
+        let event = createMemberJoinUpdateEvent(UUID.create(), conversationID: UUID.create(), users: [selfUser])
 
         // when
         let contentType = LocalNotificationContentType.typeForMessage(event, conversation: groupConversation, in: self.syncMOC)
@@ -128,7 +128,7 @@ class LocalNotificationContentTypeTest: ZMLocalNotificationTests {
     
     func testThatItCreatesASystemMessageNotificationContentTypeForTheMemberLeaveEvent() {
         // given
-        let event = createMemberLeaveUpdateEvent(UUID.create(), conversationID: UUID.create())
+        let event = createMemberLeaveUpdateEvent(UUID.create(), conversationID: UUID.create(), users: [selfUser])
 
         // when
         let contentType = LocalNotificationContentType.typeForMessage(event, conversation: groupConversation, in: self.syncMOC)
