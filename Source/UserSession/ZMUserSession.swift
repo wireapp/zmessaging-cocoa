@@ -414,7 +414,7 @@ extension ZMUserSession: ZMNetworkStateDelegate {
         }
     }
     
-    internal func updateNetworkState() {
+    func updateNetworkState() {
         let state: ZMNetworkState
         
         if isNetworkOnline {
