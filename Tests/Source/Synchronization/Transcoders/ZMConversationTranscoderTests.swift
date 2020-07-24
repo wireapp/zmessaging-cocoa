@@ -105,7 +105,6 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
                 return
             }
             XCTAssertEqual(message.systemMessageType, .participantsAdded)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
         }
     }
     
@@ -198,7 +197,6 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
                 return
             }
             XCTAssertEqual(message.systemMessageType, .participantsRemoved)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
         }
     }
     
@@ -252,7 +250,6 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
                 return
             }
             XCTAssertEqual(message.systemMessageType, .conversationNameChanged)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
         }
     }
     
@@ -284,7 +281,6 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
                 return
             }
             XCTAssertEqual(message.systemMessageType, .conversationNameChanged)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
         }
     }
     
@@ -663,7 +659,6 @@ extension ZMConversationTranscoderTests_Swift {
             XCTAssertEqual(self.conversation?.messageDestructionTimeout!, MessageDestructionTimeout.synced(31536000))
             guard let message = self.conversation?.lastMessage as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(message.systemMessageType, .messageTimerUpdate)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
         }
     }
     
@@ -689,7 +684,6 @@ extension ZMConversationTranscoderTests_Swift {
             XCTAssertNil(self.conversation.messageDestructionTimeout)
             guard let message = self.conversation.lastMessage as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(message.systemMessageType, .messageTimerUpdate)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
         }
     }
     
@@ -727,7 +721,6 @@ extension ZMConversationTranscoderTests_Swift {
             
             // but the system message timer reflects the update to the synced timeout
             XCTAssertEqual(0, message.messageTimer)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, message)
         }
     }
     
@@ -758,7 +751,6 @@ extension ZMConversationTranscoderTests_Swift {
             XCTAssertEqual(self.conversation?.messageDestructionTimeout!, MessageDestructionTimeout.synced(messageTimer))
             guard let firstMessage = self.conversation?.lastMessage as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(firstMessage.systemMessageType, .messageTimerUpdate)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, firstMessage)
             
             self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil) //Second duplicated event
             
@@ -812,7 +804,6 @@ extension ZMConversationTranscoderTests_Swift {
         
             guard let firstMessage = self.conversation?.lastMessage as? ZMSystemMessage else { return XCTFail() }
             XCTAssertEqual(firstMessage.systemMessageType, .messageTimerUpdate)
-            XCTAssertEqual(self.localNotificationDispatcher.processedMessages.last, firstMessage)
         
             //Third event with timer = nil
             self.sut?.processEvents([event], liveEvents: true, prefetchResult: nil)

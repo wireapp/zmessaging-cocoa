@@ -361,9 +361,6 @@ private class NewSystemMessageNotificationBuilder : EventNotificationBuilder {
     
     override func shouldCreateNotification() -> Bool {
         // we don't want to create notifications when other people join or leave conversation
-        if event.userIDs.isEmpty {
-            return super.shouldCreateNotification()
-        }
         let concernsSelfUser = event.userIDs.contains(ZMUser.selfUser(in: moc).remoteIdentifier)
 
         switch contentType {

@@ -35,7 +35,7 @@ class ZMLocalNotificationTests_SystemMessage : ZMLocalNotificationTests {
         return ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: syncMOC)
     }
     
-     // MARK: - Tests
+    // MARK: - Tests
     
     func testThatItDoesNotCreateANotificationForConversationRename() {
     
@@ -66,12 +66,15 @@ class ZMLocalNotificationTests_SystemMessage : ZMLocalNotificationTests {
         // given, when
         let note1 = noteForParticipantAdded(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: selfUser))
         let note2 = noteForParticipantAdded(groupConversationWithoutName, aSender: sender, otherUsers: Set(arrayLiteral: selfUser))
+        let note3 = noteForParticipantAdded(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: selfUser, otherUser1))
         
         // then
         XCTAssertNotNil(note1)
         XCTAssertNotNil(note2)
+        XCTAssertNotNil(note3)
         XCTAssertEqual(note1!.body, "Super User added you")
         XCTAssertEqual(note2!.body, "Super User added you to a conversation")
+        XCTAssertEqual(note3!.body, "Super User added you")
     }
     
     func testThatItDoesNotCreateANotificationForParticipantAdd_Other() {
@@ -79,7 +82,6 @@ class ZMLocalNotificationTests_SystemMessage : ZMLocalNotificationTests {
         XCTAssertNil(noteForParticipantAdded(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: otherUser1, otherUser2)))
         XCTAssertNil(noteForParticipantAdded(groupConversationWithoutName, aSender: sender, otherUsers: Set(arrayLiteral: otherUser1)))
         XCTAssertNil(noteForParticipantAdded(groupConversationWithoutName, aSender: sender, otherUsers: Set(arrayLiteral: otherUser1, otherUser2)))
-        XCTAssertNil(noteForParticipantAdded(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: selfUser, otherUser1)))
     }
 
     func testThatItDoesNotCreateANotificationWhenTheUserLeaves(){

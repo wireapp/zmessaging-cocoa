@@ -185,7 +185,6 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         let event = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: GenericMessage(content: Text(content: "Hello Hello!"), nonce: UUID.create()), senderID: sender.remoteIdentifier)
         
         let note = ZMLocalNotification(event: event, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
-        //(message: message)!
         
         // then
         XCTAssertEqual(note!.messageNonce, event.messageNonce)
