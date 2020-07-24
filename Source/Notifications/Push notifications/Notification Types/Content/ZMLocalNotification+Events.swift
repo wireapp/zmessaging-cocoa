@@ -16,6 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+import WireDataModel
 
 extension ZMLocalNotification {
     
@@ -360,12 +361,10 @@ private class NewSystemMessageNotificationBuilder : EventNotificationBuilder {
     
     override func shouldCreateNotification() -> Bool {
         // we don't want to create notifications when other people join or leave conversation
-        guard let dataPayload = (event.payload as NSDictionary).dictionary(forKey: "data"),
-            let userIds = dataPayload["user_ids"] as? [String] else {
-                return super.shouldCreateNotification()
+        if event.userIDs.isEmpty {
+            return super.shouldCreateNotification()
         }
-        let users = userIds.compactMap({ UUID.init(uuidString: $0)}).compactMap({ZMUser(remoteID: $0, createIfNeeded: true, in: moc)})
-        let concernsSelfUser = users.count == 1 && users.first!.isSelfUser
+        let concernsSelfUser = event.userIDs.contains(ZMUser.selfUser(in: moc).remoteIdentifier)
 
         switch contentType {
         case .participantsAdded where concernsSelfUser == false, .participantsRemoved where concernsSelfUser == false:
