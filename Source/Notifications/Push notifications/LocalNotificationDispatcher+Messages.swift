@@ -20,28 +20,6 @@ import Foundation
 import WireRequestStrategy
 
 extension LocalNotificationDispatcher: PushMessageHandler {
-
-    // Processes ZMOTRMessages and ZMSystemMessages
-    @objc(processMessage:) public func process(_ message: ZMMessage) {
-        //        Logging.push.safePublic("Process message with nonce=\(message.nonce)")
-        //
-        //        // we don't want to create duplicate notifications
-        //        guard let nonce = message.nonce, !messageNotifications.hasNotification(for: nonce) else {
-        //            return Logging.push.safePublic("Ignore duplicate message with nonce = \(message.nonce)")
-        //        }
-        //
-        //                var note: ZMLocalNotification?
-        //
-        //                if let message = message as? ZMOTRMessage {
-        //                    note = ZMLocalNotification(message: message)
-        //                }
-        //                else if let message = message as? ZMSystemMessage {
-        //                    note = ZMLocalNotification(systemMessage: message)
-        //                }
-        //
-        //                note.apply(scheduleLocalNotification)
-        //                note.apply(messageNotifications.addObject)
-    }
     
     // Process ZMGenericMessage that have "invisible" as in they don't create a message themselves
     @objc(processEvent:) public func process(_ event: ZMUpdateEvent) {
