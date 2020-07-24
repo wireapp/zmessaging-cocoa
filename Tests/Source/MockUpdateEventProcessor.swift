@@ -29,7 +29,7 @@ class MockUpdateEventProcessor: WireSyncEngine.UpdateEventProcessor {
     }
     
     func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
-        // TODO jacob this goes into a different array?
+        
     }
     
 }
