@@ -99,7 +99,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
     
     // MARK: - Database lock handler/observer
     
-    func testThatDatabaseLockedHandlerIsCalled_AfterEnteringBackground() {
+    func testThatDatabaseLockedHandlerIsCalled_AfterDatabaseIsLocked() {
         // given
         simulateLoggedInUser()
         syncMOC.saveOrRollback()
