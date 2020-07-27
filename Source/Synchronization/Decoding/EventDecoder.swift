@@ -71,8 +71,9 @@ extension EventDecoder {
     ///
     /// - Parameters:
     ///   - events: Encrypted events
-    public func storeEvents(_ events: [ZMUpdateEvent]) {
+    public func decryptAndStoreEvents(_ events: [ZMUpdateEvent], block: ConsumeBlock? = nil) {
         var lastIndex: Int64?
+        var decryptedEvents: [ZMUpdateEvent] = []
         
         eventMOC.performGroupedBlockAndWait {
             
@@ -83,12 +84,14 @@ extension EventDecoder {
             lastIndex = StoredUpdateEvent.highestIndex(self.eventMOC)
             
             guard let index = lastIndex else { return }
-            self.storeEvents(filteredEvents, startingAtIndex: index)
+            decryptedEvents = self.decryptAndStoreEvents(filteredEvents, startingAtIndex: index)
         }
         
         if !events.isEmpty {
             Logging.eventProcessing.info("Decrypted/Stored \( events.count) event(s)")
         }
+        
+        block?(decryptedEvents)
     }
     
     /// Process previously stored and decrypted events by repeatedly calling the the consume block until
@@ -106,11 +109,15 @@ extension EventDecoder {
     /// they can be decrypted again in case of a crash.
     /// - parameter events The new events that should be decrypted and stored in the database.
     /// - parameter startingAtIndex The startIndex to be used for the incrementing sortIndex of the stored events.
-    fileprivate func storeEvents(_ events: [ZMUpdateEvent], startingAtIndex startIndex: Int64) {
+    /// - Returns: Decrypted events
+    fileprivate func decryptAndStoreEvents(_ events: [ZMUpdateEvent], startingAtIndex startIndex: Int64) -> [ZMUpdateEvent] {
+        
+        var decryptedEvents: [ZMUpdateEvent] = []
+        
         syncMOC.zm_cryptKeyStore.encryptionContext.perform { [weak self] (sessionsDirectory) -> Void in
             guard let `self` = self else { return }
             
-            let newUpdateEvents = events.compactMap { event -> ZMUpdateEvent? in
+            decryptedEvents = events.compactMap { event -> ZMUpdateEvent? in
                 if event.type == .conversationOtrMessageAdd || event.type == .conversationOtrAssetAdd {
                     return sessionsDirectory.decryptAndAddClient(event, in: self.syncMOC)
                 } else {
@@ -120,17 +127,17 @@ extension EventDecoder {
             
             // This call has to be synchronous to ensure that we close the
             // encryption context only if we stored all events in the database
-            self.eventMOC.performGroupedBlockAndWait {
                 
-                // Insert the decryted events in the event database using a `storeIndex`
-                // incrementing from the highest index currently stored in the database
-                for (idx, event) in newUpdateEvents.enumerated() {
-                    _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: Int64(idx) + startIndex + 1)
-                }
-
-                self.eventMOC.saveOrRollback()
+            // Insert the decryted events in the event database using a `storeIndex`
+            // incrementing from the highest index currently stored in the database
+            for (idx, event) in decryptedEvents.enumerated() {
+                _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: Int64(idx) + startIndex + 1)
             }
+            
+            self.eventMOC.saveOrRollback()
         }
+        
+        return decryptedEvents
     }
     
     // Processes the stored events in the database in batches of size EventDecoder.BatchSize` and calls the `consumeBlock` for each batch.
