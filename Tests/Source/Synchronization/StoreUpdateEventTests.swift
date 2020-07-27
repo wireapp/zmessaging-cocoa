@@ -292,3 +292,85 @@ class StoreUpdateEventTests: MessagingTest {
         
     }
 }
+
+// MARK: - Encrypting events
+
+extension StoreUpdateEventTests {
+    func testThatItEncryptsEventIfThePublicKeyIsNotNill() throws {
+        
+        // given
+        let account = Account(userName: "John Doe", userIdentifier: UUID())
+        _ = try EncryptionKeys.createKeys(for: account)
+        let publicKey = try EncryptionKeys.publicKey(for: account)
+        
+        let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
+        conversation.remoteIdentifier = UUID.create()
+        let payload = self.payloadForMessage(in: conversation, type: EventConversationAdd, data: ["foo": "bar"])!
+        let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: UUID.create())!
+        event.appendDebugInformation("Highly informative description")
+        
+        // when
+        //        if let storedEvent = StoredUpdateEvent.create(event, managedObjectContext: eventMOC, index: 2) {
+        //
+        //            // then
+        //            XCTAssertEqual(storedEvent.debugInformation, event.debugInformation)
+        //            XCTAssertEqual(storedEvent.payload, event.payload as NSDictionary)
+        //            XCTAssertEqual(storedEvent.isTransient, event.isTransient)
+        //            XCTAssertEqual(storedEvent.source, Int16(event.source.rawValue))
+        //            XCTAssertEqual(storedEvent.sortIndex, 2)
+        //            XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
+        //        } else {
+        //            XCTFail("Did not create storedEvent")
+        //        }
+        
+        if let storedEvent = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC, index: 2, publicKey: publicKey) {
+            XCTAssertEqual(storedEvent.debugInformation, event.debugInformation)
+            XCTAssertEqual(storedEvent.payload, event.payload as NSDictionary)
+            XCTAssertEqual(storedEvent.isTransient, event.isTransient)
+            XCTAssertEqual(storedEvent.source, Int16(event.source.rawValue))
+            XCTAssertEqual(storedEvent.sortIndex, 2)
+            XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
+        } else {
+            XCTFail("Did not create storedEvent")
+        }
+    }
+    
+    func testThatItDoesNotEncryptEventIfThePublicKeyIsNill() throws {
+        
+        // given
+        let account = Account(userName: "John Doe", userIdentifier: UUID())
+        _ = try EncryptionKeys.createKeys(for: account)
+        let publicKey = try EncryptionKeys.publicKey(for: account)
+        
+        let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
+        conversation.remoteIdentifier = UUID.create()
+        let payload = self.payloadForMessage(in: conversation, type: EventConversationAdd, data: ["foo": "bar"])!
+        let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: UUID.create())!
+        event.appendDebugInformation("Highly informative description")
+        
+        // when
+        //        if let storedEvent = StoredUpdateEvent.create(event, managedObjectContext: eventMOC, index: 2) {
+        //
+        //            // then
+        //            XCTAssertEqual(storedEvent.debugInformation, event.debugInformation)
+        //            XCTAssertEqual(storedEvent.payload, event.payload as NSDictionary)
+        //            XCTAssertEqual(storedEvent.isTransient, event.isTransient)
+        //            XCTAssertEqual(storedEvent.source, Int16(event.source.rawValue))
+        //            XCTAssertEqual(storedEvent.sortIndex, 2)
+        //            XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
+        //        } else {
+        //            XCTFail("Did not create storedEvent")
+        //        }
+        
+        if let storedEvent = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC, index: 2, publicKey: publicKey) {
+            XCTAssertEqual(storedEvent.debugInformation, event.debugInformation)
+            XCTAssertEqual(storedEvent.payload, event.payload as NSDictionary)
+            XCTAssertEqual(storedEvent.isTransient, event.isTransient)
+            XCTAssertEqual(storedEvent.source, Int16(event.source.rawValue))
+            XCTAssertEqual(storedEvent.sortIndex, 2)
+            XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
+        } else {
+            XCTFail("Did not create storedEvent")
+        }
+    }
+}
