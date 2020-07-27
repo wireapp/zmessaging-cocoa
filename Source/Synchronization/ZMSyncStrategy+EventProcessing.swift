@@ -43,7 +43,8 @@ extension ZMSyncStrategy: UpdateEventProcessor {
     /// Process previously received events after unlocking the database.
     ///
     /// - Returns: **True** if there are still more events to process
-    func processEventsAfterUnlockingDatabase() -> Bool {
+    @objc
+    public func processEventsAfterUnlockingDatabase() -> Bool { // TODO jacob shouldn't be public
         return processEventsIfReady()
     }
         
