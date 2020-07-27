@@ -657,7 +657,7 @@
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     // expect
-    [[self.syncStrategy expect] processUpdateEvents:expectedEvents ignoreBuffer:NO];
+    [[self.syncStrategy expect] storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:NO];
     
     // when
     [(id<ZMPushChannelConsumer>)self.sut pushChannel:self.mockPushChannel didReceiveTransportData:eventData];
@@ -676,8 +676,8 @@
                                 };
     
     // expect
-    [[self.syncStrategy reject] processUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
-    [[self.syncStrategy reject] processUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
+    [[self.syncStrategy reject] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
+    [[self.syncStrategy reject] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
     
     // when
     [self performIgnoringZMLogError:^{
@@ -692,8 +692,8 @@
     NSArray *eventdata = @[ @{ @"id" : @"16be010d-c284-4fc0-b636-837bcebed654" } ];
     
     // expect
-    [[self.syncStrategy reject] processUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
-    [[self.syncStrategy reject] processUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
+    [[self.syncStrategy reject] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
+    [[self.syncStrategy reject] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
     
     // when
     [self performIgnoringZMLogError:^{

@@ -53,7 +53,8 @@ extension ZMUserSession {
         
     public func registerDatabaseLockedHandler(_ handler: @escaping (_ isDatabaseLocked: Bool) -> Void) -> Any {
         return NotificationInContext.addObserver(name: DatabaseEncryptionLockNotification.notificationName,
-                                                 context: managedObjectContext.notificationContext)
+                                                 context: managedObjectContext.notificationContext,
+                                                 queue: .main)
         { note in
             guard let note = note.userInfo[DatabaseEncryptionLockNotification.userInfoKey] as? DatabaseEncryptionLockNotification else { return }
             
@@ -64,14 +65,26 @@ extension ZMUserSession {
     func lockDatabase() {
         guard managedObjectContext.encryptMessagesAtRest else { return }
         
-        applicationStatusDirectory?.syncStatus.encryptionKeys = nil
+        syncManagedObjectContext.performGroupedBlock {
+            self.applicationStatusDirectory?.syncStatus.encryptionKeys = nil
+        }
     }
     
     public func unlockDatabase(with context: LAContext) throws {
         let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
         let keys = try EncryptionKeys.init(account: account, context: context)
         
-        applicationStatusDirectory?.syncStatus.encryptionKeys = keys
+        syncManagedObjectContext.performGroupedBlock {
+            guard let syncStrategy = self.syncStrategy else { return }
+            
+            self.applicationStatusDirectory?.syncStatus.encryptionKeys = keys
+            let hasMoreEventsToProcess = syncStrategy.processEventsAfterUnlockingDatabase()
+            
+            self.managedObjectContext.performGroupedBlock { [weak self] in
+                self?.isPerformingSync = hasMoreEventsToProcess
+                self?.updateNetworkState()
+            }
+        }
     }
     
 }

@@ -133,7 +133,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                      applicationStatusDirectory:applicationStatusDirectory
                                         callCenterConfiguration:callCenterConfiguration];
 
-        self.eventsBuffer = [[ZMUpdateEventsBuffer alloc] initWithUpdateEventConsumer:self];
+        self.eventsBuffer = [[ZMUpdateEventsBuffer alloc] initWithUpdateEventProcessor:self];
         self.userClientRequestStrategy = [[UserClientRequestStrategy alloc] initWithClientRegistrationStatus:applicationStatusDirectory.clientRegistrationStatus
                                                                                           clientUpdateStatus:applicationStatusDirectory.clientUpdateStatus
                                                                                                      context:self.syncMOC
@@ -283,9 +283,8 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.applicationStatusDirectory.syncStatus pushChannelDidClose];
 }
 
-- (void)didFinishSync
+- (void)applyHotFixes
 {
-    [self processAllEventsInBuffer];
     [self.hotFix applyPatches];
 }
 
@@ -335,7 +334,6 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)processAllEventsInBuffer
 {
     [self.eventsBuffer processAllEventsInBuffer];
-    [self.syncMOC enqueueDelayedSave];
 }
 
 

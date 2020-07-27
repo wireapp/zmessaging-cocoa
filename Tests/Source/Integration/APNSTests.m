@@ -29,47 +29,6 @@
 
 @implementation APNSTests
 
-- (void)testThatAConversationIsCreatedFromAnAPNS
-{
-    // given
-    XCTAssertTrue([self login]);
-    
-    [self closePushChannelAndWaitUntilClosed]; // do not use websocket
-    
-    NSString *conversationName = @"MYCONVO";
-    __block NSString *conversationID;
-    WaitForAllGroupsToBeEmpty(0.2);
-    __block NSDictionary *conversationTransportData;
-    
-    ZMConversationList *conversationsList = [ZMConversationList conversationsInUserSession:self.userSession];
-    NSUInteger oldCount = conversationsList.count;
-    
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
-        [conversation changeNameByUser:self.selfUser name:conversationName];
-        conversationID = conversation.identifier;
-        conversationTransportData = (NSDictionary *)conversation.transportData;
-    }];
-    WaitForAllGroupsToBeEmpty(0.2);
-        
-    [self.application setBackground];
-    
-    // when
-    [self.userSession receivedPushNotificationWith:[self noticePayloadForLastEvent] completion:^{}];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    ZMConversationList *convs = [ZMConversationList conversationsInUserSession:self.userSession];
-    XCTAssertEqual(convs.count, oldCount+1);
-    NSUInteger index = [conversationsList indexOfObjectPassingTest:^BOOL(ZMConversation *conversation, NSUInteger idx, BOOL *stop) {
-        NOT_USED(idx);
-        NOT_USED(stop);
-        return [conversation.displayName isEqualToString:conversationName];
-    }];
-    XCTAssertNotEqual(index, (NSUInteger) NSNotFound);
-    
-}
-
 - (void)testThatItFetchesTheNotificationStreamWhenReceivingNotificationOfTypeNotice
 {
     XCTAssertTrue([self login]);
@@ -89,7 +48,6 @@
     }];
     WaitForAllGroupsToBeEmpty(0.2);
     NSUUID *notificationID = NSUUID.timeBasedUUID;
-    NSUUID *conversationID = [NSUUID uuidWithTransportString:convIdentifier];
     
     NSDictionary *eventPayload = [self conversationCreatePayloadWithNotificationID:notificationID
                                                                     conversationID:convIdentifier
@@ -121,8 +79,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    ZMConversation *conversation = [ZMConversation fetchObjectWithRemoteIdentifier:conversationID inManagedObjectContext:self.userSession.managedObjectContext];
-    XCTAssertNotNil(conversation);
+    XCTAssertEqualObjects(self.userSession.managedObjectContext.zm_lastNotificationID, notificationID);
 }
 
 - (void)testThatItFetchesTheNotificationStreamWhenReceivingNotificationOfTypeNotice_TriesAgainWhenReceiving_401
@@ -144,7 +101,6 @@
     }];
     WaitForAllGroupsToBeEmpty(0.2);
     NSUUID *notificationID = NSUUID.timeBasedUUID;
-    NSUUID *conversationID = [NSUUID uuidWithTransportString:convIdentifier];
     
     NSDictionary *eventPayload = [self conversationCreatePayloadWithNotificationID:notificationID
                                                                     conversationID:convIdentifier
@@ -181,8 +137,7 @@
     
     // then
     XCTAssertEqual(requestCount, 2lu);
-    ZMConversation *conversation = [ZMConversation fetchObjectWithRemoteIdentifier:conversationID inManagedObjectContext:self.userSession.managedObjectContext];
-    XCTAssertNotNil(conversation);
+    XCTAssertEqualObjects(self.userSession.managedObjectContext.zm_lastNotificationID, notificationID);
 }
 
 #pragma mark - Helper

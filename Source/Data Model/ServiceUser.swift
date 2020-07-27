@@ -320,7 +320,7 @@ public extension ZMConversation {
             
             
             contextProvider?.syncManagedObjectContext.performGroupedBlock {
-                eventProcessor.process(updateEvents: [event], ignoreBuffer: true)
+                eventProcessor.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
             }
         }))
         

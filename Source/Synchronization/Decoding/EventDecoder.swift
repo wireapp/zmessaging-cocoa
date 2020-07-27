@@ -66,10 +66,12 @@ private let previouslyReceivedEventIDsKey = "zm_previouslyReceivedEventIDsKey"
 // MARK: - Process events
 extension EventDecoder {
     
-    /// Decrypts passed in events and stores them in chronological order in a persisted database. It then saves the database and cryptobox
-    /// It then calls the passed in block (multiple times if necessary), returning the decrypted events
-    /// If the app crashes while processing the events, they can be recovered from the database
-    public func processEvents(_ events: [ZMUpdateEvent], block: ConsumeBlock) {
+    /// Decrypts passed in events and stores them in chronological order in a persisted database,
+    /// it then saves the database and cryptobox
+    ///
+    /// - Parameters:
+    ///   - events: Encrypted events
+    public func storeEvents(_ events: [ZMUpdateEvent]) {
         var lastIndex: Int64?
         
         eventMOC.performGroupedBlockAndWait {
@@ -87,7 +89,15 @@ extension EventDecoder {
         if !events.isEmpty {
             Logging.eventProcessing.info("Decrypted/Stored \( events.count) event(s)")
         }
-        
+    }
+    
+    /// Process previously stored and decrypted events by repeatedly calling the the consume block until
+    /// all the stored events have been processed. If the app crashes while processing the events, they
+    /// can be recovered from the database.
+    ///
+    /// - Parameters:
+    ///   - block: Event consume block which is called once for every stored event.
+    public func processStoredEvents(_ block: ConsumeBlock) {
         process(block, firstCall: true)
     }
     

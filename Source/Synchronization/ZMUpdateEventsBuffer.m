@@ -18,10 +18,11 @@
 
 @import WireTransport;
 #import "ZMUpdateEventsBuffer.h"
+#import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @interface ZMUpdateEventsBuffer ()
 
-@property (nonatomic, readonly, weak) id<ZMUpdateEventConsumer> consumer;
+@property (nonatomic, readonly, weak) id<UpdateEventProcessor> updateEventProcessor;
 @property (nonatomic, readonly) NSMutableArray *bufferedEvents;
 
 @end
@@ -31,12 +32,12 @@
 
 @implementation ZMUpdateEventsBuffer
 
-- (instancetype)initWithUpdateEventConsumer:(id<ZMUpdateEventConsumer>)eventConsumer
+- (instancetype)initWithUpdateEventProcessor:(id<UpdateEventProcessor>)eventProcessor
 {
     self = [super self];
     if(self) {
         _bufferedEvents = [NSMutableArray array];
-        _consumer = eventConsumer;
+        _updateEventProcessor = eventProcessor;
     }
     return self;
 }
@@ -48,23 +49,8 @@
 
 - (void)processAllEventsInBuffer
 {
-    [self.consumer consumeUpdateEvents:self.bufferedEvents];
+    [self.updateEventProcessor storeUpdateEvents:self.bufferedEvents ignoreBuffer:YES];
     [self.bufferedEvents removeAllObjects];
-}
-
-- (void)discardAllUpdateEvents
-{
-    [self.bufferedEvents removeAllObjects];
-}
-
-- (void)discardUpdateEventWithIdentifier:(NSUUID *)eventIdentifier
-{
-    NSUInteger index = [self.bufferedEvents indexOfObjectPassingTest:^BOOL(ZMUpdateEvent *obj, NSUInteger __unused idx, BOOL * __unused stop) {
-        return [obj.uuid isEqual:eventIdentifier];
-    }];
-    if(index != NSNotFound) {
-        [self.bufferedEvents removeObjectAtIndex:index];
-    }
 }
 
 - (NSArray *)updateEvents
