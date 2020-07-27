@@ -24,38 +24,36 @@ class ZMLocalNotificationTests_SystemMessage : ZMLocalNotificationTests {
     // MARK: - Helpers
     
     func noteForParticipantAdded(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> ZMLocalNotification? {
-        let systemMessage = ZMSystemMessage(nonce: UUID(), managedObjectContext: uiMOC)
-        systemMessage.systemMessageType = .participantsAdded
-        systemMessage.users = otherUsers
-        systemMessage.sender = aSender
-        systemMessage.visibleInConversation = conversation
+        let event = createMemberJoinUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, users: Array(otherUsers), senderID: aSender.remoteIdentifier)
         
-        return ZMLocalNotification(systemMessage: systemMessage)
+        return ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: syncMOC)
     }
-    
+
     func noteForParticipantsRemoved(_ conversation: ZMConversation, aSender: ZMUser, otherUsers: Set<ZMUser>) -> ZMLocalNotification? {
-        let systemMessage = ZMSystemMessage(nonce: UUID(), managedObjectContext: uiMOC)
-        systemMessage.systemMessageType = .participantsRemoved
-        systemMessage.users = otherUsers
-        systemMessage.sender = aSender
-        systemMessage.visibleInConversation = conversation
-        return ZMLocalNotification(systemMessage: systemMessage)
+        let event = createMemberLeaveUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, users: Array(otherUsers), senderID: aSender.remoteIdentifier)
+        
+        return ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: syncMOC)
     }
     
     // MARK: - Tests
     
     func testThatItDoesNotCreateANotificationForConversationRename() {
-        
+    
         // given
-        let systemMessage = ZMSystemMessage(nonce: UUID(), managedObjectContext: uiMOC)
-        systemMessage.systemMessageType = .conversationNameChanged
-        systemMessage.text = "New Name"
-        systemMessage.sender = sender
-        systemMessage.visibleInConversation = groupConversation
-
+        let payload = [
+            "from": sender.remoteIdentifier!.transportString(),
+            "conversation": groupConversation.remoteIdentifier!.transportString(),
+            "time": NSDate().transportString(),
+            "data": [
+                "name": "New Name"
+            ],
+            "type": "conversation.rename"
+            ] as [String: Any]
+        let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nil)!
+        
         // when
-        let note = ZMLocalNotification(systemMessage: systemMessage)
-
+        let note = ZMLocalNotification(event: event, conversation: groupConversation, managedObjectContext: syncMOC)
+        
         // then
         XCTAssertNil(note)
     }
@@ -68,12 +66,15 @@ class ZMLocalNotificationTests_SystemMessage : ZMLocalNotificationTests {
         // given, when
         let note1 = noteForParticipantAdded(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: selfUser))
         let note2 = noteForParticipantAdded(groupConversationWithoutName, aSender: sender, otherUsers: Set(arrayLiteral: selfUser))
+        let note3 = noteForParticipantAdded(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: selfUser, otherUser1))
         
         // then
         XCTAssertNotNil(note1)
         XCTAssertNotNil(note2)
+        XCTAssertNotNil(note3)
         XCTAssertEqual(note1!.body, "Super User added you")
         XCTAssertEqual(note2!.body, "Super User added you to a conversation")
+        XCTAssertEqual(note3!.body, "Super User added you")
     }
     
     func testThatItDoesNotCreateANotificationForParticipantAdd_Other() {
@@ -81,21 +82,16 @@ class ZMLocalNotificationTests_SystemMessage : ZMLocalNotificationTests {
         XCTAssertNil(noteForParticipantAdded(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: otherUser1, otherUser2)))
         XCTAssertNil(noteForParticipantAdded(groupConversationWithoutName, aSender: sender, otherUsers: Set(arrayLiteral: otherUser1)))
         XCTAssertNil(noteForParticipantAdded(groupConversationWithoutName, aSender: sender, otherUsers: Set(arrayLiteral: otherUser1, otherUser2)))
-        XCTAssertNil(noteForParticipantAdded(groupConversation, aSender: sender, otherUsers: Set(arrayLiteral: selfUser, otherUser1)))
     }
 
     func testThatItDoesNotCreateANotificationWhenTheUserLeaves(){
         
         // given
-        let systemMessage = ZMSystemMessage(nonce: UUID(), managedObjectContext: uiMOC)
-        systemMessage.systemMessageType = .participantsRemoved
-        systemMessage.users = [otherUser1]
-        systemMessage.sender = otherUser1
-        systemMessage.visibleInConversation = groupConversation
-
+        let event = createMemberLeaveUpdateEvent(UUID.create(), conversationID: self.groupConversation.remoteIdentifier!, users: [otherUser1], senderID: otherUser1.remoteIdentifier)
+        
         // when
-        let note = ZMLocalNotification(systemMessage: systemMessage)
-
+        let note = ZMLocalNotification(event: event, conversation: groupConversation, managedObjectContext: syncMOC)
+        
         // then
         XCTAssertNil(note)
     }
