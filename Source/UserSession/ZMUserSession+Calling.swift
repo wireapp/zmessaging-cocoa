@@ -50,4 +50,15 @@ public protocol CallNotificationStyleProvider: class {
         }
     }
     
+    var useConferenceCalling: Bool {
+        set {
+            managedObjectContext.zm_useConferenceCalling = newValue
+            callCenter?.useConferenceCalling = newValue
+        }
+        
+        get {
+            return managedObjectContext.zm_useConferenceCalling
+        }
+    }
+    
 }

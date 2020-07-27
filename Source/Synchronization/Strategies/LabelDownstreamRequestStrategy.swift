@@ -46,6 +46,7 @@ struct LabelPayload: Codable, Equatable {
 public class LabelDownstreamRequestStrategy: AbstractRequestStrategy {
     
     fileprivate let syncStatus: SyncStatus
+    
     fileprivate var slowSync: ZMSingleRequestSync!
     fileprivate let jsonDecoder = JSONDecoder()
     

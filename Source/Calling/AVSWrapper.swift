@@ -262,7 +262,7 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    private let sendCallMessageHandler: Handler.CallMessageSend = { token, conversationId, senderUserId, senderClientId, _, _, data, dataLength, _, contextRef in
+    private let sendCallMessageHandler: Handler.CallMessageSend = { token, conversationId, senderUserId, senderClientId, targetsCString, _, data, dataLength, _, contextRef in
         guard let token = token else {
             return EINVAL
         }
@@ -270,8 +270,13 @@ public class AVSWrapper: AVSWrapperType {
         let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
         let transformedData = Data(buffer: bytes)
 
+        let targets = targetsCString
+            .flatMap { String(cString: $0)?.data(using: .utf8) }
+            .flatMap { AVSClientList($0) }
+
+
         return AVSWrapper.withCallCenter(contextRef, conversationId, senderUserId, senderClientId) {
-            $0.handleCallMessageRequest(token: token, conversationId: $1, senderUserId: $2, senderClientId: $3, data: transformedData)
+            $0.handleCallMessageRequest(token: token, conversationId: $1, senderUserId: $2, senderClientId: $3, targets: targets, data: transformedData)
         }
     }
     

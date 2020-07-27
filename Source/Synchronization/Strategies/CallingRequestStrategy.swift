@@ -264,8 +264,8 @@ extension CallingRequestStrategy: ZMEventConsumer {
 // MARK: - Wire Call Center Transport
 
 extension CallingRequestStrategy: WireCallCenterTransport {
-    
-    public func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((Int) -> Void)) {
+
+    public func send(data: Data, conversationId: UUID, targets: [AVSClient]?, completionHandler: @escaping ((Int) -> Void)) {
         
         guard let dataString = String(data: data, encoding: .utf8) else {
             zmLog.error("Not sending calling messsage since it's not UTF-8")
@@ -283,8 +283,10 @@ extension CallingRequestStrategy: WireCallCenterTransport {
             self.zmLog.debug("schedule calling message")
             
             let genericMessage = GenericMessage(content: Calling(content: dataString))
+            let recipients = targets.map { self.recipients(for: $0, in: self.managedObjectContext) } ?? .conversationParticipants
 
-            self.genericMessageStrategy.schedule(message: genericMessage, inConversation: conversation) { (response) in
+
+            self.genericMessageStrategy.schedule(message: genericMessage, inConversation: conversation, targetRecipients: recipients) { response in
                 if response.httpStatus == 201 {
                     completionHandler(response.httpStatus)
                 }
@@ -359,6 +361,15 @@ extension CallingRequestStrategy: WireCallCenterTransport {
             }
         }
 
+    }
+
+    private func recipients(for targets: [AVSClient], in managedObjectContext: NSManagedObjectContext) -> GenericMessageEntity.Recipients {
+        let clientsByUser = targets
+            .compactMap { UserClient.fetchExistingUserClient(with: $0.clientId, in: managedObjectContext) }
+            .partition(by: \.user)
+            .mapValues { Set($0) }
+
+        return .clients(clientsByUser)
     }
     
 }
