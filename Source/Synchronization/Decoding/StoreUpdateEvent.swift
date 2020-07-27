@@ -28,6 +28,7 @@ public final class StoredUpdateEvent: NSManagedObject {
     @NSManaged var debugInformation: String?
     @NSManaged var isTransient: Bool
     @NSManaged var payload: NSDictionary
+    @NSManaged var encryptedPayload: NSData?
     @NSManaged var source: Int16
     @NSManaged var sortIndex: Int64
     
@@ -45,6 +46,25 @@ public final class StoredUpdateEvent: NSManagedObject {
         storedEvent.source = Int16(event.source.rawValue)
         storedEvent.sortIndex = index
         storedEvent.uuidString = event.uuid?.transportString()
+        return storedEvent
+    }
+    
+    public static func encryptAndCreate(_ event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext, index: Int64, publicKey: SecKey?) -> StoredUpdateEvent? {
+        guard let storedEvent = StoredUpdateEvent.insertNewObject(managedObjectContext) else { return nil }
+        storedEvent.debugInformation = event.debugInformation
+        storedEvent.isTransient = event.isTransient
+        storedEvent.payload = event.payload as NSDictionary
+        storedEvent.source = Int16(event.source.rawValue)
+        storedEvent.sortIndex = index
+        storedEvent.uuidString = event.uuid?.transportString()
+        guard let publicKey = publicKey,
+            let data = try? JSONSerialization.data(withJSONObject: event.payload, options: []) else {
+                return storedEvent
+        }
+        storedEvent.encryptedPayload = SecKeyCreateEncryptedData(publicKey,
+                                                                 .eciesEncryptionCofactorX963SHA256AESGCM,
+                                                                 data as CFData,
+                                                                 nil)
         return storedEvent
     }
     

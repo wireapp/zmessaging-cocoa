@@ -107,6 +107,8 @@ extension EventDecoder {
     /// - parameter events The new events that should be decrypted and stored in the database.
     /// - parameter startingAtIndex The startIndex to be used for the incrementing sortIndex of the stored events.
     fileprivate func storeEvents(_ events: [ZMUpdateEvent], startingAtIndex startIndex: Int64) {
+        let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: self.syncMOC).remoteIdentifier)
+        let encryptionkeys = try? EncryptionKeys.createKeys(for: account)
         syncMOC.zm_cryptKeyStore.encryptionContext.perform { [weak self] (sessionsDirectory) -> Void in
             guard let `self` = self else { return }
             
@@ -125,7 +127,7 @@ extension EventDecoder {
                 // Insert the decryted events in the event database using a `storeIndex`
                 // incrementing from the highest index currently stored in the database
                 for (idx, event) in newUpdateEvents.enumerated() {
-                    _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: Int64(idx) + startIndex + 1)
+                    _ = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: self.eventMOC, index: Int64(idx) + startIndex + 1, publicKey: encryptionkeys?.publicKey)
                 }
 
                 self.eventMOC.saveOrRollback()
