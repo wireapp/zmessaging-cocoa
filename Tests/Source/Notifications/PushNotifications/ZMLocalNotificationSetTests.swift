@@ -92,63 +92,83 @@ class ZMLocalNotificationSetTests : MessagingTest {
     func testThatYouCanAddNAndRemoveNotifications(){
         
         // given
-        let note = ZMLocalNotification(message: createMessage(with: "Hello Hello", in: conversation1))!
+        let text = GenericMessage(content: WireProtos.Text(content: "Hello Hello"))
+        let event = createUpdateEvent(UUID.create(), conversationID: conversation1.remoteIdentifier!, genericMessage: text, senderID: sender.remoteIdentifier!)
+        let note = ZMLocalNotification(event: event, conversation: conversation1, managedObjectContext: self.uiMOC)
 
         // when
-        sut.addObject(note)
+        sut.addObject(note!)
 
         // then
         XCTAssertEqual(sut.notifications.count, 1)
 
         // and when
-        let _ = sut.remove(note)
+        let _ = sut.remove(note!)
 
         // then
         XCTAssertEqual(sut.notifications.count, 0)
     }
 
     func testThatItCancelsNotificationsOnlyForSpecificConversations(){
-        
+
         // given
-        let note1 = ZMLocalNotification(message: createMessage(with: "Hello Hello", in: conversation1))!
-        let note2 = ZMLocalNotification(message: createMessage(with: "Bye BYe", in: conversation2))!
+        let event1 = createUpdateEvent(UUID.create(), conversationID: conversation1.remoteIdentifier!, genericMessage: GenericMessage(content: WireProtos.Text(content: "Hello Hello")), senderID: sender.remoteIdentifier!)
+        let note1 = ZMLocalNotification(event: event1, conversation: conversation1, managedObjectContext: self.uiMOC)
         
+        let event2 = createUpdateEvent(UUID.create(), conversationID: conversation1.remoteIdentifier!, genericMessage: GenericMessage(content: WireProtos.Text(content: "Bye BYe")), senderID: sender.remoteIdentifier!)
+        let note2 = ZMLocalNotification(event: event2, conversation: conversation2, managedObjectContext: self.uiMOC)
+
         // when
-        sut.addObject(note1)
-        sut.addObject(note2)
+        sut.addObject(note1!)
+        sut.addObject(note2!)
         sut.cancelNotifications(conversation1)
 
         // then
-        XCTAssertFalse(sut.notifications.contains(note1))
-        XCTAssertTrue(notificationCenter.removedNotifications.contains(note1.id.uuidString))
+        XCTAssertFalse(sut.notifications.contains(note1!))
+        XCTAssertTrue(notificationCenter.removedNotifications.contains(note1!.id.uuidString))
 
-        XCTAssertTrue(sut.notifications.contains(note2))
-        XCTAssertFalse(notificationCenter.removedNotifications.contains(note2.id.uuidString))
+        XCTAssertTrue(sut.notifications.contains(note2!))
+        XCTAssertFalse(notificationCenter.removedNotifications.contains(note2!.id.uuidString))
     }
 
     func testThatItPersistsNotifications() {
-        
+
         // given
-        let note = ZMLocalNotification(message: createMessage(with: "Hello", in: conversation1))!
-        sut.addObject(note)
+        let event = createUpdateEvent(UUID.create(), conversationID: conversation1.remoteIdentifier!, genericMessage: GenericMessage(content: WireProtos.Text(content: "Hello")), senderID: sender.remoteIdentifier!)
+        let note = ZMLocalNotification(event: event, conversation: conversation1, managedObjectContext: self.uiMOC)
+        sut.addObject(note!)
 
         // when recreate sut to release non-persisted objects
         sut = ZMLocalNotificationSet(archivingKey: archivingKey, keyValueStore: keyValueStore)
 
         // then
-        XCTAssertTrue(sut.oldNotifications.contains(note.userInfo!))
+        XCTAssertTrue(sut.oldNotifications.contains(note!.userInfo!))
     }
 
     func testThatItResetsTheNotificationSetWhenCancellingAllNotifications(){
-        
+
         // given
-        let note = ZMLocalNotification(message: createMessage(with: "Hello", in: conversation1))!
-        sut.addObject(note)
-        
+        let event = createUpdateEvent(UUID.create(), conversationID: conversation1.remoteIdentifier!, genericMessage: GenericMessage(content: WireProtos.Text(content: "Hello")), senderID: sender.remoteIdentifier!)
+        let note = ZMLocalNotification(event: event, conversation: conversation1, managedObjectContext: self.uiMOC)
+        sut.addObject(note!)
+
         // when
         sut.cancelAllNotifications()
-        
+
         // then
         XCTAssertEqual(sut.notifications.count, 0)
+    }
+    
+    func createUpdateEvent(_ nonce: UUID, conversationID: UUID, genericMessage: GenericMessage, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+        let payload : [String : Any] = [
+            "id": UUID.create().transportString(),
+            "conversation": conversationID.transportString(),
+            "from": senderID.transportString(),
+            "time": Date().transportString(),
+            "data": ["text": try? genericMessage.serializedData().base64String()],
+            "type": "conversation.otr-message-add"
+        ]
+        
+        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
     }
 }
