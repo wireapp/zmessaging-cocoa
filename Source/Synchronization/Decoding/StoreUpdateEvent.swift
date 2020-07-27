@@ -49,6 +49,13 @@ public final class StoredUpdateEvent: NSManagedObject {
         return storedEvent
     }
     
+    /// Maps a passed in `ZMUpdateEvent` to a `StoredUpdateEvent` which is persisted in a database
+    /// - Parameters:
+    ///   - event: received events
+    ///   - managedObjectContext: current managedObjectContext
+    ///   - index: the passed in `index` is used to enumerate events to be able to fetch and sort them later on in the order they were received
+    ///   - publicKey: the publicKey which will be used to encrypt update events
+    /// - Returns: storedEvent which will be persisted in a database
     public static func encryptAndCreate(_ event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext, index: Int64, publicKey: SecKey?) -> StoredUpdateEvent? {
         guard let storedEvent = StoredUpdateEvent.insertNewObject(managedObjectContext) else { return nil }
         storedEvent.debugInformation = event.debugInformation
