@@ -61,7 +61,6 @@
     ZMUserSession *session = [[ZMUserSession alloc] initWithTransportSession:transportSession
                                                                 mediaManager:self.mediaManager
                                                                  flowManager:self.flowManagerMock
-                                                     callCenterConfiguration:self.callCenterConfiguration
                                                                    analytics:nil
                                                                operationLoop:nil
                                                                  application:self.application
@@ -193,7 +192,6 @@
     ZMUserSession *userSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
                                                                     mediaManager:self.mediaManager
                                                                      flowManager:self.flowManagerMock
-                                                         callCenterConfiguration:self.callCenterConfiguration
                                                                        analytics:nil
                                                                    operationLoop:nil
                                                                      application:self.application
@@ -422,7 +420,6 @@
     ZMUserSession *testSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
                                                                     mediaManager:self.mediaManager
                                                                      flowManager:self.flowManagerMock
-                                                         callCenterConfiguration:self.callCenterConfiguration
                                                                        analytics:nil
                                                                    operationLoop:nil
                                                                      application:self.application

@@ -37,7 +37,6 @@
 @class ApplicationStatusDirectory;
 @class CallingRequestStrategy;
 @class EventDecoder;
-@class WireCallCenterConfiguration;
 
 @protocol ZMTransportData;
 @protocol ZMSyncStateDelegate;

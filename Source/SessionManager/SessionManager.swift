@@ -308,7 +308,6 @@ public final class SessionManager : NSObject, SessionManagerType {
             application: application,
             mediaManager: mediaManager,
             flowManager: flowManager,
-            callCenterConfiguration: configuration.callCenterConfiguration,
             environment: environment,
             reachability: reachability,
             analytics: analytics,

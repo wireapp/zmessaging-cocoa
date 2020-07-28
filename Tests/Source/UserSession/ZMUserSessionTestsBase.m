@@ -75,7 +75,6 @@
     self.mockSessionManager = [[MockSessionManager alloc] init];
     self.mediaManager = [[MockMediaManager alloc] init];
     self.flowManagerMock = [[FlowManagerMock alloc] init];
-    self.callCenterConfiguration = [[WireCallCenterConfiguration alloc] init];
     self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
     
     self.clientRegistrationStatus = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:self.cookieStorage registrationStatusDelegate:nil];
@@ -101,7 +100,6 @@
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
                                                   mediaManager:self.mediaManager
                                                    flowManager:self.flowManagerMock
-                                       callCenterConfiguration:self.callCenterConfiguration
                                                      analytics:nil
                                                  operationLoop:self.operationLoop
                                                    application:self.application
