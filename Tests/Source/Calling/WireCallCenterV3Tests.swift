@@ -92,7 +92,7 @@ class WireCallCenterV3Tests: MessagingTest {
         flowManager = FlowManagerMock()
         mockAVSWrapper = MockAVSWrapper(userId: selfUserID, clientId: clientID, observer: nil)
         mockTransport = WireCallCenterTransportMock()
-        sut = WireCallCenterV3(userId: selfUserID, clientId: clientID, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: mockTransport, configuration: .init())
+        sut = WireCallCenterV3(userId: selfUserID, clientId: clientID, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: mockTransport)
 
         try! uiMOC.save()
     }

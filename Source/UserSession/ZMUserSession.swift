@@ -280,8 +280,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                                           localNotificationsDispatcher: localNotificationDispatcher!,
                                           notificationsDispatcher: notificationDispatcher,
                                           applicationStatusDirectory: applicationStatusDirectory!,
-                                          application: application,
-                                          callCenterConfiguration: callCenterConfiguration)
+                                          application: application)
         self.syncStrategy = syncStrategy
 
         return ZMOperationLoop(transportSession: transportSession,

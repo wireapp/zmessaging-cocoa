@@ -30,12 +30,13 @@ private let zmLog = ZMSLog(tag: "calling")
  */
 public class WireCallCenterV3: NSObject {
 
-    /// The maximum number of participants for a video call.
-    let videoParticipantsLimit: Int
+    /// The maximum number of participants for a legacy video call.
+
+    let legacyVideoParticipantsLimit = 4
 
     /// Whether conference calling is enabled.
 
-    var useConferenceCalling: Bool
+    var useConferenceCalling = false
 
     // MARK: - Properties
 
@@ -121,7 +122,6 @@ public class WireCallCenterV3: NSObject {
      * - parameter flowManager: The object that controls media flow.
      * - parameter analytics: The object to use to record stats about the call. Defaults to `nil`.
      * - parameter transport: The object that performs network requests when the call center requests them.
-     * - parameter configuration: The object specifying customizable behavior.
      */
     
     public required init(userId: UUID,
@@ -130,16 +130,13 @@ public class WireCallCenterV3: NSObject {
                          uiMOC: NSManagedObjectContext,
                          flowManager: FlowManagerType,
                          analytics: AnalyticsType? = nil,
-                         transport: WireCallCenterTransport,
-                         configuration: WireCallCenterConfiguration) {
+                         transport: WireCallCenterTransport) {
 
         self.selfUserId = userId
         self.uiMOC = uiMOC
         self.flowManager = flowManager
         self.analytics = analytics
         self.transport = transport
-        self.videoParticipantsLimit = configuration.videoParticipantsLimit
-        self.useConferenceCalling = configuration.useConferenceCalling
         
         super.init()
         
@@ -370,7 +367,7 @@ extension WireCallCenterV3 {
         endAllCalls(exluding: conversationId)
         
         let callType: AVSCallType
-        if conversation.localParticipants.count > videoParticipantsLimit {
+        if !useConferenceCalling && conversation.localParticipants.count > legacyVideoParticipantsLimit {
             callType = .audioOnly
         } else {
             callType = video ? .video : .normal
@@ -422,7 +419,7 @@ extension WireCallCenterV3 {
 
         let callType: AVSCallType
 
-        if conversation.localParticipants.count > videoParticipantsLimit {
+        if !useConferenceCalling && conversation.localParticipants.count > legacyVideoParticipantsLimit {
             callType = .audioOnly
         } else {
             callType = video ? .video : .normal

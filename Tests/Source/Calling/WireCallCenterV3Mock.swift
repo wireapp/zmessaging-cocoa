@@ -92,9 +92,9 @@ final class WireCallCenterV3IntegrationMock : WireCallCenterV3 {
     
     public let mockAVSWrapper : MockAVSWrapper
     
-    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport, configuration: WireCallCenterConfiguration = .init()) {
+    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport) {
         mockAVSWrapper = MockAVSWrapper(userId: userId, clientId: clientId, observer: nil)
-        super.init(userId: userId, clientId: clientId, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: transport, configuration: configuration)
+        super.init(userId: userId, clientId: clientId, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: transport)
     }
     
 }
@@ -115,9 +115,9 @@ public class WireCallCenterV3Mock: WireCallCenterV3 {
 
     // MARK: Initialization
 
-    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport, configuration: WireCallCenterConfiguration = .init()) {
+    public required init(userId: UUID, clientId: String, avsWrapper: AVSWrapperType? = nil, uiMOC: NSManagedObjectContext, flowManager: FlowManagerType, analytics: AnalyticsType? = nil, transport: WireCallCenterTransport) {
         mockAVSWrapper = MockAVSWrapper(userId: userId, clientId: clientId, observer: nil)
-        super.init(userId: userId, clientId: clientId, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: transport, configuration: configuration)
+        super.init(userId: userId, clientId: clientId, avsWrapper: mockAVSWrapper, uiMOC: uiMOC, flowManager: flowManager, transport: transport)
     }
 
     // MARK: AVS Integration
