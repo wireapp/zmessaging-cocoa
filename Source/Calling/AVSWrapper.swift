@@ -198,12 +198,14 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     private let incomingCallHandler: Handler.IncomingCall = { conversationId, messageTime, userId, clientId, isVideoCall, shouldRing, conversationType, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, clientId, isVideoCall, shouldRing) {
+
+        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, clientId, isVideoCall, shouldRing, conversationType) {
             $0.handleIncomingCall(conversationId: $1,
                                   messageTime: $2,
                                   client: AVSClient(userId: $3, clientId: $4),
                                   isVideoCall: $5,
-                                  shouldRing: $6)
+                                  shouldRing: $6,
+                                  conversationType: $7)
         }
     }
 

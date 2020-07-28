@@ -104,13 +104,14 @@ extension WireCallCenterV3 {
     }
 
     /// Handles incoming calls.
-    func handleIncomingCall(conversationId: UUID, messageTime: Date, client: AVSClient, isVideoCall: Bool, shouldRing: Bool) {
+    func handleIncomingCall(conversationId: UUID, messageTime: Date, client: AVSClient, isVideoCall: Bool, shouldRing: Bool, conversationType: AVSConversationType) {
         handleEvent("incoming-call") {
             let isDegraded = self.isDegraded(conversationId: conversationId)
             let callState = CallState.incoming(video: isVideoCall, shouldRing: shouldRing, degraded: isDegraded)
             let members = [AVSCallMember(client: client)]
+            let isConferenceCall = conversationType == .conference
 
-            self.createSnapshot(callState: callState, members: members, callStarter: client.userId, video: isVideoCall, for: conversationId)
+            self.createSnapshot(callState: callState, members: members, callStarter: client.userId, video: isVideoCall, for: conversationId, isConferenceCall: isConferenceCall)
             self.handle(callState: callState, conversationId: conversationId)
         }
     }

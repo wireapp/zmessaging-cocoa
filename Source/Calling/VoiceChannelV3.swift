@@ -116,6 +116,12 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
             callCenter?.muted = newValue
         }
     }
+
+    public var isConferenceCall: Bool {
+        guard let remoteIdentifier = conversation?.remoteIdentifier, let callCenter = self.callCenter else { return false }
+
+        return callCenter.isConferenceCall(conversationId: remoteIdentifier)
+    }
     
 }
 

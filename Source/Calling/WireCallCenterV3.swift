@@ -168,7 +168,7 @@ extension WireCallCenterV3 {
      * - parameter conversationId: The identifier of the conversation that hosts the call.
      */
 
-    func createSnapshot(callState : CallState, members: [AVSCallMember], callStarter: UUID?, video: Bool, for conversationId: UUID) {
+    func createSnapshot(callState : CallState, members: [AVSCallMember], callStarter: UUID?, video: Bool, for conversationId: UUID, isConferenceCall: Bool) {
         guard
             let moc = uiMOC,
             let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: moc)
@@ -189,6 +189,7 @@ extension WireCallCenterV3 {
             isConstantBitRate: false,
             videoState: video ? .started : .stopped,
             networkQuality: .normal,
+            isConferenceCall: isConferenceCall,
             conversationObserverToken: token
         )
     }
@@ -308,6 +309,10 @@ extension WireCallCenterV3 {
 
     public func networkQuality(conversationId: UUID) -> NetworkQuality {
         return callSnapshots[conversationId]?.networkQuality ?? .normal
+    }
+
+    public func isConferenceCall(conversationId: UUID) -> Bool {
+        return callSnapshots[conversationId]?.isConferenceCall ?? false
     }
 
 }
@@ -433,7 +438,7 @@ extension WireCallCenterV3 {
         let callState: CallState = .outgoing(degraded: isDegraded(conversationId: conversationId))
         let previousCallState = callSnapshots[conversationId]?.callState
 
-        createSnapshot(callState: callState, members: [], callStarter: selfUserId, video: video, for: conversationId)
+        createSnapshot(callState: callState, members: [], callStarter: selfUserId, video: video, for: conversationId, isConferenceCall: conversationType == .conference)
 
         if let context = uiMOC {
             WireCallCenterCallStateNotification(context: context,

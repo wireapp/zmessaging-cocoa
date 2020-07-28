@@ -149,7 +149,7 @@ public class WireCallCenterV3Mock: WireCallCenterV3 {
 
     func setMockCallState(_ state: CallState, conversationId: UUID, callerId: UUID, isVideo: Bool) {
         clearSnapshot(conversationId: conversationId)
-        createSnapshot(callState: state, members: [], callStarter: callerId, video: isVideo, for: conversationId)
+        createSnapshot(callState: state, members: [], callStarter: callerId, video: isVideo, for: conversationId, isConferenceCall: false)
     }
 
     func removeMockActiveCalls() {

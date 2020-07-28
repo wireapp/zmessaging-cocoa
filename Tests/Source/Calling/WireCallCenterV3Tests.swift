@@ -138,7 +138,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                    messageTime: Date(),
                                    client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                    isVideoCall: true,
-                                   shouldRing: false)
+                                   shouldRing: false,
+                                   conversationType: .oneToOne)
         }
     }
     
@@ -148,7 +149,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                    messageTime: Date(),
                                    client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                    isVideoCall: false,
-                                   shouldRing: false)
+                                   shouldRing: false,
+                                   conversationType: .oneToOne)
         }
     }
     
@@ -158,7 +160,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                    messageTime: Date(),
                                    client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                    isVideoCall: true,
-                                   shouldRing: true)
+                                   shouldRing: true,
+                                   conversationType: .oneToOne)
         }
     }
     
@@ -168,7 +171,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                    messageTime: Date(),
                                    client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                    isVideoCall: false,
-                                   shouldRing: true)
+                                   shouldRing: true,
+                                   conversationType: .oneToOne)
         }
     }
     
@@ -204,7 +208,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -219,7 +224,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -234,7 +240,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNil(sut.establishedDate)
@@ -254,7 +261,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNil(sut.establishedDate)
@@ -280,7 +288,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -295,7 +304,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -310,13 +320,15 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         sut.handleIncomingCall(conversationId: groupConversationID,
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .group)
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -335,7 +347,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -352,7 +365,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -369,7 +383,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .group)
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -397,7 +412,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -425,7 +441,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -451,7 +468,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .group)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -470,7 +488,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: true,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -490,7 +509,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: true,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -575,7 +595,8 @@ class WireCallCenterV3Tests: MessagingTest {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertNil(sut.establishedDate)
@@ -729,12 +750,12 @@ class WireCallCenterV3Tests: MessagingTest {
 
         // then
         for callState in nonActiveCallStates {
-            sut.createSnapshot(callState: callState, members: [], callStarter: nil, video: false, for: groupConversation.remoteIdentifier!)
+            sut.createSnapshot(callState: callState, members: [], callStarter: nil, video: false, for: groupConversation.remoteIdentifier!, isConferenceCall: false)
             XCTAssertEqual(sut.activeCalls.count, 0)
         }
 
         for callState in activeCallStates {
-            sut.createSnapshot(callState: callState, members: [], callStarter: nil, video: false, for: groupConversation.remoteIdentifier!)
+            sut.createSnapshot(callState: callState, members: [], callStarter: nil, video: false, for: groupConversation.remoteIdentifier!, isConferenceCall: false)
             XCTAssertEqual(sut.activeCalls.count, 1)
         }
     }
@@ -749,7 +770,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
@@ -769,7 +791,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         sut.handleDataChannelEstablishement(conversationId: oneOnOneConversationID)
@@ -789,7 +812,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
@@ -813,7 +837,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -831,7 +856,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
@@ -858,7 +884,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -872,7 +899,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
@@ -903,7 +931,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         sut.handleEstablishedCall(conversationId: oneOnOneConversationID)
@@ -934,7 +963,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -951,7 +981,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -968,7 +999,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .group)
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -985,7 +1017,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -1008,7 +1041,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .oneToOne)
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -1061,7 +1095,8 @@ extension WireCallCenterV3Tests {
                                messageTime: Date(),
                                client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
                                isVideoCall: false,
-                               shouldRing: true)
+                               shouldRing: true,
+                               conversationType: .group)
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
