@@ -21,8 +21,7 @@ import WireMockTransport
 
 class APNSTests_Swift: APNSTestsBase {
     
-    // TODO jacob disabled until we send confirmation message form update events (ZIOS-13585)
-    func _testThatItSendsAConfirmationMessageWhenReceivingATextMessage() {
+    func testThatItSendsAConfirmationMessageWhenReceivingATextMessage() {
         guard BackgroundAPNSConfirmationStatus.sendDeliveryReceipts else {
             return
         }
@@ -60,7 +59,6 @@ class APNSTests_Swift: APNSTestsBase {
         mockTransportSession.responseGeneratorBlock = { (request: ZMTransportRequest) in
             let confirmationPath = "/conversations/\(self.selfToUser1Conversation.identifier)/otr/messages"
             if request.path.hasPrefix(confirmationPath) && request.method == .methodPOST {
-                XCTAssertTrue(request.shouldUseVoipSession)
                 requestCount += 1
                 if requestCount == 2 {
                     confirmationExpectation.fulfill()
@@ -68,7 +66,6 @@ class APNSTests_Swift: APNSTestsBase {
             }
             let clientsPath = "/users/prekeys"
             if request.path == clientsPath {
-                XCTAssertTrue(request.shouldUseVoipSession)
                 XCTAssertEqual(requestCount, 1)
                 missingClientsExpectation.fulfill()
             }
