@@ -308,7 +308,7 @@ class StoreUpdateEventTests: MessagingTest {
 // MARK: - Encrypting / Decrypting events using public / private keys
 
 extension StoreUpdateEventTests {
-    func testThatItEncryptsEventIfThePublicKeyIsNotNill() throws {
+    func testThatItEncryptsEventIfThePublicKeyIsNotNil() throws {
         // given
         let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
         conversation.remoteIdentifier = UUID.create()
