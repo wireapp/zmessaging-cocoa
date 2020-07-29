@@ -61,7 +61,7 @@ extension EventDecoderTest {
             self.sut.storeEvents([event])
             
             // when
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 XCTAssertTrue(events.contains(event))
                 didCallBlock = true
             }
@@ -86,7 +86,7 @@ extension EventDecoderTest {
             
             // when
             self.sut.storeEvents([event2])
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 if callCount == 0 {
                     XCTAssertTrue(events.contains(event1))
                 } else if callCount == 1 {
@@ -120,7 +120,7 @@ extension EventDecoderTest {
             self.sut.storeEvents([event1, event2, event3, event4])
             
             // when
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 if callCount == 0 {
                     XCTAssertTrue(events.contains(event1))
                     XCTAssertTrue(events.contains(event2))
@@ -155,7 +155,7 @@ extension EventDecoderTest {
             
             self.sut.storeEvents([event1, event2])
                         
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 XCTAssert(events.contains(event1))
                 XCTAssert(events.contains(event2))
             }
@@ -163,7 +163,7 @@ extension EventDecoderTest {
             self.insert([event3, event4], startIndex: 1)
             
             // when
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 XCTAssertFalse(events.contains(event1))
                 XCTAssertFalse(events.contains(event2))
                 XCTAssertTrue(events.contains(event3))
@@ -185,7 +185,7 @@ extension EventDecoderTest {
             self.insert([event1, event2])
             
             // when
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 XCTAssertEqual(events, [event2])
                 didCallBlock = true
             }
@@ -210,7 +210,7 @@ extension EventDecoderTest {
             self.insert([event1, event2])
             
             // when
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 XCTAssertEqual(events, [event1, event2])
                 didCallBlock = true
             }
@@ -233,7 +233,7 @@ extension EventDecoderTest {
             self.insert([event1, event2])
             
             // when
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 XCTAssertEqual(events, [event1, event2])
                 didCallBlock = true
             }
@@ -261,7 +261,7 @@ extension EventDecoderTest {
             
             // when
             self.sut.storeEvents([pushEvent])
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 XCTAssertTrue(events.contains(pushEvent))
                 pushProcessed.fulfill()
             }
@@ -272,7 +272,7 @@ extension EventDecoderTest {
             // and when
             let streamProcessed = self.expectation(description: "Stream event processed")
             self.sut.storeEvents([streamEvent])
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 XCTAssertTrue(events.contains(streamEvent))
                 streamProcessed.fulfill()
             }
@@ -294,7 +294,7 @@ extension EventDecoderTest {
             
             // when
             self.sut.storeEvents([pushEvent])
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 XCTAssertTrue(events.contains(pushEvent))
                 pushProcessed.fulfill()
             }
@@ -305,7 +305,7 @@ extension EventDecoderTest {
             // and when
             let streamProcessed = self.expectation(description: "Stream event not processed")
             self.sut.storeEvents([streamEvent])
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 XCTAssertTrue(events.isEmpty)
                 streamProcessed.fulfill()
             }
@@ -327,7 +327,7 @@ extension EventDecoderTest {
             
             // when
             self.sut.storeEvents([pushEvent])
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 XCTAssertTrue(events.contains(pushEvent))
                 pushProcessed.fulfill()
             }
@@ -339,7 +339,7 @@ extension EventDecoderTest {
             // and when
             let streamProcessed = self.expectation(description: "Stream event processed")
             self.sut.storeEvents([streamEvent])
-            self.sut.processStoredEvents { (events) in
+            self.sut.processStoredEvents(with: nil) { (events) in
                 XCTAssertTrue(events.contains(streamEvent))
                 streamProcessed.fulfill()
             }

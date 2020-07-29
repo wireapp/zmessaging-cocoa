@@ -18,6 +18,7 @@
 
 
 import WireTesting
+import WireDataModel
 @testable import WireSyncEngine
 
 class UpdateEventsStoreMigrationTests: MessagingTest {
@@ -120,17 +121,28 @@ class UpdateEventsStoreMigrationTests: MessagingTest {
 class StoreUpdateEventTests: MessagingTest {
 
     var eventMOC: NSManagedObjectContext!
-
+    var account: Account!
+    var publicKey: SecKey?
+    var encryptionKeys: EncryptionKeys?
+    
     override func setUp() {
         super.setUp()
         eventMOC = NSManagedObjectContext.createEventContext(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
         eventMOC.add(self.dispatchGroup)
+        
+        account = Account(userName: "John Doe", userIdentifier: UUID())
+        encryptionKeys = try! EncryptionKeys.createKeys(for: account)
+        publicKey = try! EncryptionKeys.publicKey(for: account)
     }
     
     override func tearDown() {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         eventMOC.tearDownEventMOC()
         eventMOC = nil
+        
+        account = nil
+        publicKey = nil
+        encryptionKeys = nil
         super.tearDown()
     }
     
@@ -293,16 +305,11 @@ class StoreUpdateEventTests: MessagingTest {
     }
 }
 
-// MARK: - Encrypting events
+// MARK: - Encrypting / Decrypting events using public / private keys
 
 extension StoreUpdateEventTests {
     func testThatItEncryptsEventIfThePublicKeyIsNotNill() throws {
-        
         // given
-        let account = Account(userName: "John Doe", userIdentifier: UUID())
-        _ = try EncryptionKeys.createKeys(for: account)
-        let publicKey = try EncryptionKeys.publicKey(for: account)
-        
         let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
         conversation.remoteIdentifier = UUID.create()
         let payload = self.payloadForMessage(in: conversation, type: EventConversationAdd, data: ["foo": "bar"])!
@@ -310,37 +317,30 @@ extension StoreUpdateEventTests {
         event.appendDebugInformation("Highly informative description")
         
         // when
-        //        if let storedEvent = StoredUpdateEvent.create(event, managedObjectContext: eventMOC, index: 2) {
-        //
-        //            // then
-        //            XCTAssertEqual(storedEvent.debugInformation, event.debugInformation)
-        //            XCTAssertEqual(storedEvent.payload, event.payload as NSDictionary)
-        //            XCTAssertEqual(storedEvent.isTransient, event.isTransient)
-        //            XCTAssertEqual(storedEvent.source, Int16(event.source.rawValue))
-        //            XCTAssertEqual(storedEvent.sortIndex, 2)
-        //            XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
-        //        } else {
-        //            XCTFail("Did not create storedEvent")
-        //        }
-        
-        if let storedEvent = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC, index: 2, publicKey: publicKey) {
+        if let storedEvent = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC, index: 2, publicKey: self.publicKey) {
             XCTAssertEqual(storedEvent.debugInformation, event.debugInformation)
-            XCTAssertEqual(storedEvent.payload, event.payload as NSDictionary)
+            XCTAssertNil(storedEvent.payload)
             XCTAssertEqual(storedEvent.isTransient, event.isTransient)
             XCTAssertEqual(storedEvent.source, Int16(event.source.rawValue))
             XCTAssertEqual(storedEvent.sortIndex, 2)
             XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
+            
+            XCTAssertNotNil(storedEvent.encryptedPayload)
+            let decryptedData = SecKeyCreateDecryptedData(encryptionKeys!.privateKey,
+                                                 .eciesEncryptionCofactorX963SHA256AESGCM,
+                                                 storedEvent.encryptedPayload!,
+                                                 nil)
+            let payload: NSDictionary = try JSONSerialization.jsonObject(with: decryptedData! as Data, options: []) as! NSDictionary
+            XCTAssertEqual(payload, event.payload as NSDictionary)
+        
         } else {
             XCTFail("Did not create storedEvent")
         }
     }
     
     func testThatItDoesNotEncryptEventIfThePublicKeyIsNill() throws {
-        
         // given
-        let account = Account(userName: "John Doe", userIdentifier: UUID())
-        _ = try EncryptionKeys.createKeys(for: account)
-        let publicKey = try EncryptionKeys.publicKey(for: account)
+        publicKey = nil
         
         let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
         conversation.remoteIdentifier = UUID.create()
@@ -349,19 +349,6 @@ extension StoreUpdateEventTests {
         event.appendDebugInformation("Highly informative description")
         
         // when
-        //        if let storedEvent = StoredUpdateEvent.create(event, managedObjectContext: eventMOC, index: 2) {
-        //
-        //            // then
-        //            XCTAssertEqual(storedEvent.debugInformation, event.debugInformation)
-        //            XCTAssertEqual(storedEvent.payload, event.payload as NSDictionary)
-        //            XCTAssertEqual(storedEvent.isTransient, event.isTransient)
-        //            XCTAssertEqual(storedEvent.source, Int16(event.source.rawValue))
-        //            XCTAssertEqual(storedEvent.sortIndex, 2)
-        //            XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
-        //        } else {
-        //            XCTFail("Did not create storedEvent")
-        //        }
-        
         if let storedEvent = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC, index: 2, publicKey: publicKey) {
             XCTAssertEqual(storedEvent.debugInformation, event.debugInformation)
             XCTAssertEqual(storedEvent.payload, event.payload as NSDictionary)
@@ -369,6 +356,69 @@ extension StoreUpdateEventTests {
             XCTAssertEqual(storedEvent.source, Int16(event.source.rawValue))
             XCTAssertEqual(storedEvent.sortIndex, 2)
             XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
+            XCTAssertNil(storedEvent.encryptedPayload)
+        } else {
+            XCTFail("Did not create storedEvent")
+        }
+    }
+    
+    func testThatItDecryptsAndConvertsStoreEventToTheUpdateEventIfThePrivateKeyIsNotNill() throws {
+        // given
+        let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
+        conversation.remoteIdentifier = UUID.create()
+        let payload = self.payloadForMessage(in: conversation, type: EventConversationAdd, data: ["foo": "bar"])!
+        let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: UUID.create())!
+        event.appendDebugInformation("Highly informative description")
+        
+        // when
+        if let storedEvent = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC, index: 2, publicKey: publicKey) {
+            XCTAssertEqual(storedEvent.debugInformation, event.debugInformation)
+            XCTAssertNil(storedEvent.payload)
+            XCTAssertEqual(storedEvent.isTransient, event.isTransient)
+            XCTAssertEqual(storedEvent.source, Int16(event.source.rawValue))
+            XCTAssertEqual(storedEvent.sortIndex, 2)
+            XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
+            XCTAssertNotNil(storedEvent.encryptedPayload)
+            
+        // then
+            let convertedEvents = StoredUpdateEvent.eventsFromStoredEvents([storedEvent], encryptionKeys: encryptionKeys)
+            XCTAssertEqual(convertedEvents.first!.debugInformation, event.debugInformation)
+            XCTAssertEqual(convertedEvents.first!.payload as NSDictionary, event.payload as NSDictionary)
+            XCTAssertEqual(convertedEvents.first!.isTransient, event.isTransient)
+            XCTAssertEqual(convertedEvents.first!.source, event.source)
+            XCTAssertEqual(convertedEvents.first!.uuid?.transportString(), event.uuid?.transportString())
+            
+        } else {
+            XCTFail("Did not create storedEvent")
+        }
+    }
+    
+    func testThatItConvertsStoreEventToTheUpdateEventIfThePrivateKeyIsNill() throws {
+        // given
+        let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
+        conversation.remoteIdentifier = UUID.create()
+        let payload = self.payloadForMessage(in: conversation, type: EventConversationAdd, data: ["foo": "bar"])!
+        let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: UUID.create())!
+        event.appendDebugInformation("Highly informative description")
+        
+        // when
+        if let storedEvent = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC, index: 2, publicKey: nil) {
+            XCTAssertEqual(storedEvent.debugInformation, event.debugInformation)
+            XCTAssertEqual(storedEvent.payload, event.payload as NSDictionary)
+            XCTAssertEqual(storedEvent.isTransient, event.isTransient)
+            XCTAssertEqual(storedEvent.source, Int16(event.source.rawValue))
+            XCTAssertEqual(storedEvent.sortIndex, 2)
+            XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
+            XCTAssertNil(storedEvent.encryptedPayload)
+            
+        // then
+            let convertedEvents = StoredUpdateEvent.eventsFromStoredEvents([storedEvent], encryptionKeys: nil)
+            XCTAssertEqual(convertedEvents.first!.debugInformation, event.debugInformation)
+            XCTAssertEqual(convertedEvents.first!.payload as NSDictionary, event.payload as NSDictionary)
+            XCTAssertEqual(convertedEvents.first!.isTransient, event.isTransient)
+            XCTAssertEqual(convertedEvents.first!.source, event.source)
+            XCTAssertEqual(convertedEvents.first!.uuid?.transportString(), event.uuid?.transportString())
+            
         } else {
             XCTFail("Did not create storedEvent")
         }

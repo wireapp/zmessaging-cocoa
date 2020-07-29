@@ -27,7 +27,7 @@ public final class StoredUpdateEvent: NSManagedObject {
     @NSManaged var uuidString: String?
     @NSManaged var debugInformation: String?
     @NSManaged var isTransient: Bool
-    @NSManaged var payload: NSDictionary
+    @NSManaged var payload: NSDictionary?
     @NSManaged var encryptedPayload: NSData?
     @NSManaged var source: Int16
     @NSManaged var sortIndex: Int64
@@ -60,12 +60,12 @@ public final class StoredUpdateEvent: NSManagedObject {
         guard let storedEvent = StoredUpdateEvent.insertNewObject(managedObjectContext) else { return nil }
         storedEvent.debugInformation = event.debugInformation
         storedEvent.isTransient = event.isTransient
-        storedEvent.payload = event.payload as NSDictionary
         storedEvent.source = Int16(event.source.rawValue)
         storedEvent.sortIndex = index
         storedEvent.uuidString = event.uuid?.transportString()
         guard let publicKey = publicKey,
             let data = try? JSONSerialization.data(withJSONObject: event.payload, options: []) else {
+                storedEvent.payload = event.payload as NSDictionary
                 return storedEvent
         }
         storedEvent.encryptedPayload = SecKeyCreateEncryptedData(publicKey,
@@ -96,13 +96,28 @@ public final class StoredUpdateEvent: NSManagedObject {
     }
     
     /// Maps passed in objects of type `StoredUpdateEvent` to `ZMUpdateEvent`
-    public static func eventsFromStoredEvents(_ storedEvents: [StoredUpdateEvent]) -> [ZMUpdateEvent] {
+    public static func eventsFromStoredEvents(_ storedEvents: [StoredUpdateEvent], encryptionKeys: EncryptionKeys? = nil) -> [ZMUpdateEvent] {
         let events : [ZMUpdateEvent] = storedEvents.compactMap {
             var eventUUID : UUID?
+            var payload : NSDictionary?
             if let uuid = $0.uuidString {
                 eventUUID = UUID(uuidString: uuid)
             }
-            let decryptedEvent = ZMUpdateEvent.decryptedUpdateEvent(fromEventStreamPayload: $0.payload, uuid:eventUUID, transient: $0.isTransient, source: ZMUpdateEventSource(rawValue:Int($0.source))!)
+            if let encryptionKeys = encryptionKeys,
+                let encryptedPayload = $0.encryptedPayload {
+                let test = SecKeyCreateDecryptedData(encryptionKeys.privateKey,
+                                                     .eciesEncryptionCofactorX963SHA256AESGCM,
+                                                     encryptedPayload,
+                                                     nil)
+                payload = try? JSONSerialization.jsonObject(with: test! as Data, options: []) as? NSDictionary
+            } else {
+                payload = $0.payload
+            }
+            
+            guard let _ = payload else {
+                return nil
+            }
+            let decryptedEvent = ZMUpdateEvent.decryptedUpdateEvent(fromEventStreamPayload: payload!, uuid:eventUUID, transient: $0.isTransient, source: ZMUpdateEventSource(rawValue:Int($0.source))!)
             if let debugInfo = $0.debugInformation {
                 decryptedEvent?.appendDebugInformation(debugInfo)
             }
