@@ -73,6 +73,30 @@ extension EventDecoderTest {
         XCTAssertTrue(didCallBlock)
     }
     
+    func testThatItProcessesEventsWithEncryptionKeys() {
+        
+        var didCallBlock = false
+        let account = Account(userName: "John Doe", userIdentifier: UUID())
+        let encryptionKeys = try! EncryptionKeys.createKeys(for: account)
+        
+        syncMOC.performGroupedBlock {
+            // given
+            let event = self.eventStreamEvent()
+            self.sut.storeEvents([event], with: encryptionKeys)
+            
+            // when
+            self.sut.processStoredEvents(with: encryptionKeys) { (events) in
+                XCTAssertTrue(events.contains(event))
+                didCallBlock = true
+            }
+        }
+        
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertTrue(didCallBlock)
+    }
+    
     func testThatItProcessesPreviouslyStoredEventsFirst() {
         
         EventDecoder.testingBatchSize = 1

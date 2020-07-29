@@ -71,7 +71,8 @@ extension EventDecoder {
     ///
     /// - Parameters:
     ///   - events: Encrypted events
-    public func storeEvents(_ events: [ZMUpdateEvent]) {
+    ///   - encryptionKeys: The keys to be used to encrypt update events
+    public func storeEvents(_ events: [ZMUpdateEvent], with encryptionKeys: EncryptionKeys? = nil) {
         var lastIndex: Int64?
         
         eventMOC.performGroupedBlockAndWait {
@@ -83,7 +84,7 @@ extension EventDecoder {
             lastIndex = StoredUpdateEvent.highestIndex(self.eventMOC)
             
             guard let index = lastIndex else { return }
-            self.storeEvents(filteredEvents, startingAtIndex: index)
+            self.storeEvents(filteredEvents, startingAtIndex: index, with: encryptionKeys)
         }
         
         if !events.isEmpty {
@@ -107,11 +108,8 @@ extension EventDecoder {
     /// they can be decrypted again in case of a crash.
     /// - parameter events The new events that should be decrypted and stored in the database.
     /// - parameter startingAtIndex The startIndex to be used for the incrementing sortIndex of the stored events.
-    fileprivate func storeEvents(_ events: [ZMUpdateEvent], startingAtIndex startIndex: Int64) {
-        var publicKey: SecKey?
-        if let account = fetchSelectedAccount() {
-            publicKey = try? EncryptionKeys.publicKey(for: account)
-        }
+    /// - parameter encryptionKeys  The keys to be used to encrypt update events
+    fileprivate func storeEvents(_ events: [ZMUpdateEvent], startingAtIndex startIndex: Int64, with encryptionKeys: EncryptionKeys?) {
         
         syncMOC.zm_cryptKeyStore.encryptionContext.perform { [weak self] (sessionsDirectory) -> Void in
             guard let `self` = self else { return }
@@ -132,24 +130,12 @@ extension EventDecoder {
                 // incrementing from the highest index currently stored in the database
                 // The encryptedPayload property is encrypted using the public key
                 for (idx, event) in newUpdateEvents.enumerated() {
-                    if self.syncMOC.encryptMessagesAtRest {
-                        _ = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: self.eventMOC, index: Int64(idx) + startIndex + 1, publicKey: publicKey)
-                    } else {
-                        _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: Int64(idx) + startIndex + 1)
-                    }
+                    _ = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: self.eventMOC, index: Int64(idx) + startIndex + 1, publicKey: encryptionKeys?.publicKey)
                 }
-
+                
                 self.eventMOC.saveOrRollback()
             }
         }
-    }
-    
-    fileprivate func fetchSelectedAccount() -> Account? {
-        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory),
-            let account = AccountManager(sharedDirectory: sharedContainer).selectedAccount else {
-                return nil
-        }
-        return account
     }
     
     // Processes the stored events in the database in batches of size EventDecoder.BatchSize` and calls the `consumeBlock` for each batch.
