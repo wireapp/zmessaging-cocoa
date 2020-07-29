@@ -99,24 +99,23 @@ public final class StoredUpdateEvent: NSManagedObject {
     public static func eventsFromStoredEvents(_ storedEvents: [StoredUpdateEvent], encryptionKeys: EncryptionKeys? = nil) -> [ZMUpdateEvent] {
         let events : [ZMUpdateEvent] = storedEvents.compactMap {
             var eventUUID : UUID?
-            var payload : NSDictionary?
             if let uuid = $0.uuidString {
                 eventUUID = UUID(uuidString: uuid)
             }
+            var payload = $0.payload
             if let encryptionKeys = encryptionKeys,
-                let encryptedPayload = $0.encryptedPayload {
-                let test = SecKeyCreateDecryptedData(encryptionKeys.privateKey,
+                let encryptedPayload = $0.encryptedPayload,
+                let decryptedData = SecKeyCreateDecryptedData(encryptionKeys.privateKey,
                                                      .eciesEncryptionCofactorX963SHA256AESGCM,
                                                      encryptedPayload,
-                                                     nil)
-                payload = try? JSONSerialization.jsonObject(with: test! as Data, options: []) as? NSDictionary
-            } else {
-                payload = $0.payload
+                                                     nil) {
+                payload = try? JSONSerialization.jsonObject(with: decryptedData as Data, options: []) as? NSDictionary
             }
-            
+
             guard let _ = payload else {
                 return nil
             }
+            
             let decryptedEvent = ZMUpdateEvent.decryptedUpdateEvent(fromEventStreamPayload: payload!, uuid:eventUUID, transient: $0.isTransient, source: ZMUpdateEventSource(rawValue:Int($0.source))!)
             if let debugInfo = $0.debugInformation {
                 decryptedEvent?.appendDebugInformation(debugInfo)
