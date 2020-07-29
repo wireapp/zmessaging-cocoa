@@ -35,20 +35,7 @@ public final class StoredUpdateEvent: NSManagedObject {
     static func insertNewObject(_ context: NSManagedObjectContext) -> StoredUpdateEvent? {
         return NSEntityDescription.insertNewObject(forEntityName: self.entityName, into: context) as? StoredUpdateEvent
     }
-    
-    /// Maps a passed in `ZMUpdateEvent` to a `StoredUpdateEvent` which is persisted in a database
-    /// The passed in `index` is used to enumerate events to be able to fetch and sort them later on in the order they were received
-    public static func create(_ event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext, index: Int64) -> StoredUpdateEvent? {
-        guard let storedEvent = StoredUpdateEvent.insertNewObject(managedObjectContext) else { return nil }
-        storedEvent.debugInformation = event.debugInformation
-        storedEvent.isTransient = event.isTransient
-        storedEvent.payload = event.payload as NSDictionary
-        storedEvent.source = Int16(event.source.rawValue)
-        storedEvent.sortIndex = index
-        storedEvent.uuidString = event.uuid?.transportString()
-        return storedEvent
-    }
-    
+       
     /// Maps a passed in `ZMUpdateEvent` to a `StoredUpdateEvent` which is persisted in a database
     /// - Parameters:
     ///   - event: received events
@@ -56,7 +43,7 @@ public final class StoredUpdateEvent: NSManagedObject {
     ///   - index: the passed in `index` is used to enumerate events to be able to fetch and sort them later on in the order they were received
     ///   - publicKey: the publicKey which will be used to encrypt update events
     /// - Returns: storedEvent which will be persisted in a database
-    public static func encryptAndCreate(_ event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext, index: Int64, publicKey: SecKey?) -> StoredUpdateEvent? {
+    public static func encryptAndCreate(_ event: ZMUpdateEvent, managedObjectContext: NSManagedObjectContext, index: Int64, publicKey: SecKey? = nil) -> StoredUpdateEvent? {
         guard let storedEvent = StoredUpdateEvent.insertNewObject(managedObjectContext) else { return nil }
         storedEvent.debugInformation = event.debugInformation
         storedEvent.isTransient = event.isTransient

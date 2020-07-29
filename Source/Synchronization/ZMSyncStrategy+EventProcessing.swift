@@ -73,12 +73,7 @@ extension ZMSyncStrategy: UpdateEventProcessor {
     
     public func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
         if ignoreBuffer || isReadyToProcessEvents {
-            if syncMOC.encryptMessagesAtRest {
-                let encryptionKeys = applicationStatusDirectory?.syncStatus.encryptionKeys
-                eventDecoder.storeEvents(updateEvents, with: encryptionKeys)
-            } else {
-                eventDecoder.storeEvents(updateEvents)
-            }
+            eventDecoder.storeEvents(updateEvents)
         } else {
             Logging.eventProcessing.info("Buffering \(updateEvents.count) event(s)")
             updateEvents.forEach(eventsBuffer.addUpdateEvent)

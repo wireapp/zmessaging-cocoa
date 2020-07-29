@@ -73,7 +73,7 @@ extension EventDecoderTest {
         XCTAssertTrue(didCallBlock)
     }
     
-    func testThatItProcessesEventsWithEncryptionKeys() {
+    func testThatItProcessesEventsWithEncryptionKeys() { //TODO katerina
         
         var didCallBlock = false
         let account = Account(userName: "John Doe", userIdentifier: UUID())
@@ -82,7 +82,7 @@ extension EventDecoderTest {
         syncMOC.performGroupedBlock {
             // given
             let event = self.eventStreamEvent()
-            self.sut.storeEvents([event], with: encryptionKeys)
+            self.sut.storeEvents([event])
             
             // when
             self.sut.processStoredEvents(with: encryptionKeys) { (events) in
@@ -413,7 +413,7 @@ extension EventDecoderTest {
     func insert(_ events: [ZMUpdateEvent], startIndex: Int64 = 0) {
         eventMOC.performGroupedBlockAndWait {
             events.enumerated().forEach { index, event  in
-                let _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: Int64(startIndex) + Int64(index))
+                let _ = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: self.eventMOC, index: Int64(startIndex) + Int64(index))
             }
             
             XCTAssert(self.eventMOC.saveOrRollback())
