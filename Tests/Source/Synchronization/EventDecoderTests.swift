@@ -73,7 +73,7 @@ extension EventDecoderTest {
         XCTAssertTrue(didCallBlock)
     }
     
-    func testThatItProcessesEventsWithEncryptionKeys() { //TODO katerina
+    func testThatItProcessesEventsWithEncryptionKeys() {
         
         var didCallBlock = false
         let account = Account(userName: "John Doe", userIdentifier: UUID())

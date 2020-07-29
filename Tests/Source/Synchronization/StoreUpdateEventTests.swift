@@ -338,7 +338,7 @@ extension StoreUpdateEventTests {
         }
     }
     
-    func testThatItDoesNotEncryptEventIfThePublicKeyIsNill() throws {
+    func testThatItDoesNotEncryptEventIfThePublicKeyIsNil() throws {
         // given
         publicKey = nil
         
@@ -362,7 +362,7 @@ extension StoreUpdateEventTests {
         }
     }
     
-    func testThatItDecryptsAndConvertsStoreEventToTheUpdateEventIfThePrivateKeyIsNotNill() throws {
+    func testThatItDecryptsAndConvertsStoreEventToTheUpdateEventIfThePrivateKeyIsNotNil() throws {
         // given
         let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
         conversation.remoteIdentifier = UUID.create()
@@ -395,7 +395,7 @@ extension StoreUpdateEventTests {
         }
     }
     
-    func testThatItConvertsStoreEventToTheUpdateEventIfThePrivateKeyIsNill() throws {
+    func testThatItConvertsStoreEventToTheUpdateEventIfThePrivateKeyIsNil() throws {
         // given
         let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
         conversation.remoteIdentifier = UUID.create()
@@ -422,6 +422,33 @@ extension StoreUpdateEventTests {
             XCTAssertEqual(convertedEvents.first!.source, event.source)
             XCTAssertEqual(convertedEvents.first!.uuid?.transportString(), event.uuid?.transportString())
             
+        } else {
+            XCTFail("Did not create storedEvent")
+        }
+    }
+    
+    func testThatItCanNotConvertEncryptedStoredEventWithoutPrivateKey() throws {
+        // given
+        let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
+        conversation.remoteIdentifier = UUID.create()
+        let payload = self.payloadForMessage(in: conversation, type: EventConversationAdd, data: ["foo": "bar"])!
+        let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: UUID.create())!
+        event.appendDebugInformation("Highly informative description")
+        
+        if let storedEvent = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC, index: 2, publicKey: publicKey) {
+            XCTAssertEqual(storedEvent.debugInformation, event.debugInformation)
+            XCTAssertNil(storedEvent.payload)
+            XCTAssertEqual(storedEvent.isTransient, event.isTransient)
+            XCTAssertEqual(storedEvent.source, Int16(event.source.rawValue))
+            XCTAssertEqual(storedEvent.sortIndex, 2)
+            XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
+            XCTAssertNotNil(storedEvent.encryptedPayload)
+            
+            // when
+            let convertedEvents = StoredUpdateEvent.eventsFromStoredEvents([storedEvent], encryptionKeys: nil)
+            
+            // then
+            XCTAssertTrue(convertedEvents.isEmpty)
         } else {
             XCTFail("Did not create storedEvent")
         }
