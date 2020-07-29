@@ -380,6 +380,7 @@ extension StoreUpdateEventTests {
             XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
             XCTAssertNotNil(storedEvent.encryptedPayload)
             
+            
             // when
             let convertedEvents = StoredUpdateEvent.eventsFromStoredEvents([storedEvent], encryptionKeys: encryptionKeys)
             
