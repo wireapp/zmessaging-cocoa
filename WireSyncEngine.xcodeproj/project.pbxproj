@@ -632,6 +632,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0680BA0324D1C248007173F5 /* ZMEventModel2.0.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ZMEventModel2.0.xcdatamodel; sourceTree = "<group>"; };
 		068E655924C8223400403926 /* LocalNotificationContentTypeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNotificationContentTypeTest.swift; sourceTree = "<group>"; };
 		06B99C7A242B51A300FEAFDE /* SignatureRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignatureRequestStrategy.swift; sourceTree = "<group>"; };
 		06BBF6EC246EB56B00A26626 /* ConversationTests+List.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+List.swift"; sourceTree = "<group>"; };
@@ -3553,9 +3554,10 @@
 		BF2A9D5F1D6C70EA00FA7DBC /* ZMEventModel.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				0680BA0324D1C248007173F5 /* ZMEventModel2.0.xcdatamodel */,
 				BF2A9D601D6C70EA00FA7DBC /* ZMEventModel.xcdatamodel */,
 			);
-			currentVersion = BF2A9D601D6C70EA00FA7DBC /* ZMEventModel.xcdatamodel */;
+			currentVersion = 0680BA0324D1C248007173F5 /* ZMEventModel2.0.xcdatamodel */;
 			name = ZMEventModel.xcdatamodeld;
 			path = Decoding/ZMEventModel.xcdatamodeld;
 			sourceTree = "<group>";
