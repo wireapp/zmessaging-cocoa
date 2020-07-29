@@ -223,8 +223,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         observeChangesOnShareExtension()
         startEphemeralTimers()
         notifyUserAboutChangesInAvailabilityBehaviourIfNeeded()
-        
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
+        
     }
     
     private func configureTransportSession() {

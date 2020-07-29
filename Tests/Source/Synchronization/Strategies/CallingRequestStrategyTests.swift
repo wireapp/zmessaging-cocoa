@@ -27,7 +27,13 @@ class CallingRequestStrategyTests : MessagingTest {
     override func setUp() {
         super.setUp()
         mockRegistrationDelegate = MockClientRegistrationDelegate()
-        sut = CallingRequestStrategy(managedObjectContext: uiMOC, clientRegistrationDelegate: mockRegistrationDelegate, flowManager: FlowManagerMock(), callEventStatus: CallEventStatus(), configuration: .init())
+        sut = CallingRequestStrategy(
+            managedObjectContext: syncMOC,
+            clientRegistrationDelegate: mockRegistrationDelegate,
+            flowManager: FlowManagerMock(),
+            callEventStatus: CallEventStatus(),
+            configuration: .init()
+        )
     }
     
     override func tearDown() {
@@ -191,6 +197,162 @@ class CallingRequestStrategyTests : MessagingTest {
 
         let secondRequest = sut.nextRequest()
         XCTAssertNil(secondRequest)
+    }
+
+    // MARK: - Targeted Calling Messages
+
+    func testThatItTargetsCallMessagesIfTargetClientsAreSpecified() {
+        // Given
+        let selfClient = createSelfClient()
+
+        // One user with two clients connected to self
+        let user1 = ZMUser.insertNewObject(in: syncMOC)
+        user1.remoteIdentifier = .create()
+
+        let client1 = createClient(for: user1, connectedTo: selfClient)
+        createClient(for: user1, connectedTo: selfClient)
+
+        // Another user with two clients connected to self
+        let user2 = ZMUser.insertNewObject(in: syncMOC)
+        user2.remoteIdentifier = .create()
+
+        let client2 = createClient(for: user2, connectedTo: selfClient)
+        createClient(for: user2, connectedTo: selfClient)
+
+        // A conversation with both users and self
+        let conversation = ZMConversation.insertNewObject(in: syncMOC)
+        conversation.remoteIdentifier = .create()
+        conversation.addParticipantsAndUpdateConversationState(users: Set(arrayLiteral: ZMUser.selfUser(in: syncMOC), user1, user2), role: nil)
+        conversation.needsToBeUpdatedFromBackend = false
+
+        syncMOC.saveOrRollback()
+
+        // Targeting two specific clients
+        let avsClient1 = AVSClient(userId: user1.remoteIdentifier, clientId: client1.remoteIdentifier!)
+        let avsClient2 = AVSClient(userId: user2.remoteIdentifier, clientId: client2.remoteIdentifier!)
+        let targets = [avsClient1, avsClient2]
+
+        var nextRequest: ZMTransportRequest?
+
+        // When we schedule the targeted message
+        syncMOC.performGroupedBlock {
+            self.sut.send(data: Data(), conversationId: conversation.remoteIdentifier!, targets: targets) { _ in }
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        syncMOC.performGroupedBlock {
+            nextRequest = self.sut.nextRequest()
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        guard let request = nextRequest else { return XCTFail("Expected next request") }
+
+        // Then we tell backend to ignore missing clients (the non targeted conversation participants)
+        XCTAssertEqual(request.path, "/conversations/\(conversation.remoteIdentifier!.transportString())/otr/messages?ignore_missing")
+
+        guard
+            let data = request.binaryData,
+            let otrMessage = try? NewOtrMessage(serializedData: data)
+        else {
+            return XCTFail("Expected OTR message")
+        }
+
+        // Then we send the message to the targeted clients
+        XCTAssertEqual(otrMessage.recipients.count, 2)
+
+        guard let recipient1 = otrMessage.recipients.first(where: { $0.user == user1.userId }) else {
+            return XCTFail("Expected user1 to be recipient")
+        }
+
+        XCTAssertEqual(recipient1.clients.map(\.client), [client1.clientId])
+
+        guard let recipient2 = otrMessage.recipients.first(where: { $0.user == user2.userId }) else {
+            return XCTFail("Expected user2 to be recipient")
+        }
+
+        XCTAssertEqual(recipient2.clients.map(\.client), [client2.clientId])
+    }
+
+    func testThatItDoesNotTargetCallMessagesIfNoTargetClientsAreSpecified() {
+        // Given
+        let selfClient = createSelfClient()
+
+        // One user with two clients connected to self
+        let user1 = ZMUser.insertNewObject(in: syncMOC)
+        user1.remoteIdentifier = .create()
+
+        let client1 = createClient(for: user1, connectedTo: selfClient)
+        let client2 = createClient(for: user1, connectedTo: selfClient)
+
+        // Another user with two clients connected to self
+        let user2 = ZMUser.insertNewObject(in: syncMOC)
+        user2.remoteIdentifier = .create()
+
+        let client3 = createClient(for: user2, connectedTo: selfClient)
+        let client4 = createClient(for: user2, connectedTo: selfClient)
+
+        // A conversation with both users and self
+        let conversation = ZMConversation.insertNewObject(in: syncMOC)
+        conversation.remoteIdentifier = .create()
+        conversation.addParticipantsAndUpdateConversationState(users: Set(arrayLiteral: ZMUser.selfUser(in: syncMOC), user1, user2), role: nil)
+        conversation.needsToBeUpdatedFromBackend = false
+
+        syncMOC.saveOrRollback()
+
+        var nextRequest: ZMTransportRequest?
+
+        // When we schedule the message with no targets
+        syncMOC.performGroupedBlock {
+            self.sut.send(data: Data(), conversationId: conversation.remoteIdentifier!, targets: nil) { _ in }
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        syncMOC.performGroupedBlock {
+            nextRequest = self.sut.nextRequest()
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        guard let request = nextRequest else { return XCTFail("Expected next request") }
+
+        // Then we do not tell backend to ignore missing clients
+        XCTAssertEqual(request.path, "/conversations/\(conversation.remoteIdentifier!.transportString())/otr/messages")
+
+        guard
+            let data = request.binaryData,
+            let otrMessage = try? NewOtrMessage(serializedData: data)
+        else {
+            return XCTFail("Expected OTR message")
+        }
+
+        // Then we send the message to all clients in the conversation
+        XCTAssertEqual(otrMessage.recipients.count, 2)
+
+        guard let recipient1 = otrMessage.recipients.first(where: { $0.user == user1.userId }) else {
+            return XCTFail("Expected user1 to be recipient")
+        }
+
+        XCTAssertEqual(Set(recipient1.clients.map(\.client)), Set([client1, client2].map(\.clientId)))
+
+        guard let recipient2 = otrMessage.recipients.first(where: { $0.user == user2.userId }) else {
+            return XCTFail("Expected user2 to be recipient")
+        }
+
+        XCTAssertEqual(Set(recipient2.clients.map(\.client)), Set([client3, client4].map(\.clientId)))
+    }
+
+    @discardableResult
+    private func createClient(for user: ZMUser, connectedTo userClient: UserClient) -> UserClient {
+        let client = UserClient.insertNewObject(in: syncMOC)
+        client.remoteIdentifier = NSString.createAlphanumerical() as String
+        client.user = user
+
+        XCTAssertTrue(userClient.establishSessionWithClient(client, usingPreKey: try! userClient.keysStore.lastPreKey()))
+
+        return client
     }
 
 }
