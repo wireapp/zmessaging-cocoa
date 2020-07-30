@@ -109,7 +109,7 @@ extension EventDecoder {
     /// - parameter startingAtIndex The startIndex to be used for the incrementing sortIndex of the stored events.
     fileprivate func storeEvents(_ events: [ZMUpdateEvent], startingAtIndex startIndex: Int64) {
         var publicKey: SecKey?
-        if let account = fetchSelectedAccount() {
+        if let account = fetchAccount() {
             publicKey = try? EncryptionKeys.publicKey(for: account)
         }
         syncMOC.zm_cryptKeyStore.encryptionContext.perform { [weak self] (sessionsDirectory) -> Void in
@@ -139,9 +139,10 @@ extension EventDecoder {
         }
     }
     
-    fileprivate func fetchSelectedAccount() -> Account? {
+    fileprivate func fetchAccount() -> Account? {
+        let selfUser = ZMUser.selfUser(in: self.syncMOC)
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory),
-            let account = AccountManager(sharedDirectory: sharedContainer).selectedAccount else {
+            let account = AccountManager(sharedDirectory: sharedContainer).accounts.first(where: { $0.userIdentifier == selfUser.remoteIdentifier }) else {
                 return nil
         }
         return account
