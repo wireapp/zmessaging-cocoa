@@ -27,7 +27,7 @@ extension LocalNotificationDispatcher: PushMessageHandler {
         
         var note: ZMLocalNotification?
         var conversation: ZMConversation?
-        if let conversationID = event.conversationUUID() {
+        if let conversationID = event.conversationUUID {
             conversation = ZMConversation.fetch(withRemoteIdentifier: conversationID, in: self.syncMOC)
         }
         

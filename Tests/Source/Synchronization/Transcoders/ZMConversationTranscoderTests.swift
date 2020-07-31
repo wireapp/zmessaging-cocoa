@@ -593,7 +593,7 @@ extension ZMConversationTranscoderTests_Swift {
         self.syncMOC.performAndWait {
             // GIVEN
             let event = receiptModeUpdateEvent(enabled: true)
-            conversation.lastServerTimeStamp = event.timeStamp()
+            conversation.lastServerTimeStamp = event.timestamp
             
             // WHEN
             self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)

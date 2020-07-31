@@ -225,8 +225,8 @@ extension TypingStrategy : ZMEventConsumer {
                 event.type == .conversationMemberLeave
             else { return }
         
-        guard let userID = event.senderUUID(),
-              let conversationID = event.conversationUUID(),
+        guard let userID = event.senderUUID,
+              let conversationID = event.conversationUUID,
               let user = ZMUser(remoteID: userID, createIfNeeded: true, in: managedObjectContext),
               let conversation = conversationsByID?[conversationID] ?? ZMConversation(remoteID: conversationID, createIfNeeded: true, in: managedObjectContext)
         else { return }
