@@ -80,7 +80,7 @@ fileprivate class EventNotificationBuilder: NotificationBuilder {
         self.conversation = conversation
         self.moc = managedObjectContext
         
-        if let senderID = event.senderUUID() {
+        if let senderID = event.senderUUID {
             self.sender = ZMUser(remoteID: senderID, createIfNeeded: false, in: self.moc)
         }
     }
@@ -94,7 +94,7 @@ fileprivate class EventNotificationBuilder: NotificationBuilder {
                 return false
             }
             
-            if let timeStamp = event.timeStamp(),
+            if let timeStamp = event.timestamp,
                 let lastRead = conversation.lastReadServerTimeStamp , lastRead.compare(timeStamp) != .orderedAscending {
                 // don't show notifications that have already been read
                 return false
@@ -118,10 +118,10 @@ fileprivate class EventNotificationBuilder: NotificationBuilder {
         
         let userInfo = NotificationUserInfo()
         userInfo.selfUserID = selfUserRemoteID
-        userInfo.senderID = event.senderUUID()
+        userInfo.senderID = event.senderUUID
         userInfo.conversationID = conversation?.remoteIdentifier
         userInfo.messageNonce = event.messageNonce
-        userInfo.eventTime = event.timeStamp()
+        userInfo.eventTime = event.timestamp
         userInfo.conversationName = conversation?.meaningfulDisplayName
         userInfo.teamName = selfUser.team?.name
 
@@ -316,13 +316,13 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
             return true
         }
         guard let conversation = conversation,
-            let senderUUID = event.senderUUID(),
+            let senderUUID = event.senderUUID,
             !conversation.isMessageSilenced(message, senderID: senderUUID) else {
                 Logging.push.safePublic("Not creating local notification for message with nonce = \(event.messageNonce) because conversation is silenced")
                 return false
         }
         
-        if let timeStamp = event.timeStamp(),
+        if let timeStamp = event.timestamp,
             let lastRead = conversation.lastReadServerTimeStamp,
             lastRead.compare(timeStamp) != .orderedAscending
         {

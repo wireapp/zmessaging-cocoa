@@ -62,7 +62,7 @@ extension ZMConversationTranscoder {
         
         let id = (dataPayload["target"] as? String).flatMap({ UUID.init(uuidString: $0)})
         if id == nil || id == ZMUser.selfUser(in: self.managedObjectContext).remoteIdentifier {
-            conversation.updateSelfStatus(dictionary: dataPayload, timeStamp: event.timeStamp(), previousLastServerTimeStamp: previousLastServerTimestamp)
+            conversation.updateSelfStatus(dictionary: dataPayload, timeStamp: event.timestamp, previousLastServerTimeStamp: previousLastServerTimestamp)
         } else {
             conversation.updateRoleFromEventPayload(dataPayload, userId: id!)
         }
@@ -219,7 +219,7 @@ extension ZMConversationTranscoder {
     public func processDestructionTimerUpdate(event: ZMUpdateEvent, in conversation: ZMConversation?) {
         precondition(event.type == .conversationMessageTimerUpdate, "invalid update event type")
         guard let payload = event.payload["data"] as? [String : AnyHashable],
-            let senderUUID = event.senderUUID(),
+            let senderUUID = event.senderUUID,
             let user = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext) else { return }
         
         var timeout: MessageDestructionTimeout?
@@ -239,7 +239,7 @@ extension ZMConversationTranscoder {
 
         conversation?.messageDestructionTimeout = timeout
         
-        if let timestamp = event.timeStamp(), let conversation = conversation {
+        if let timestamp = event.timestamp, let conversation = conversation {
             // system message should reflect the synced timer value, not local
             let timer = conversation.hasSyncedDestructionTimeout ? conversation.messageDestructionTimeoutValue : 0
             let _ = conversation.appendMessageTimerUpdateMessage(fromUser: user, timer: timer, timestamp: timestamp)
@@ -255,8 +255,8 @@ extension ZMConversationTranscoder {
         
         guard let payload = event.payload["data"] as? [String : AnyHashable],
               let readReceiptMode = payload["receipt_mode"] as? Int,
-              let serverTimestamp = event.timeStamp(),
-              let senderUUID = event.senderUUID(),
+              let serverTimestamp = event.timestamp,
+              let senderUUID = event.senderUUID,
               let sender = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext)
         else { return }
         

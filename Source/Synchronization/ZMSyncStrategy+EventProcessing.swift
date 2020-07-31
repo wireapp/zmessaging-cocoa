@@ -73,7 +73,11 @@ extension ZMSyncStrategy: UpdateEventProcessor {
     
     public func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
         if ignoreBuffer || isReadyToProcessEvents {
-            eventDecoder.storeEvents(updateEvents)
+            eventDecoder.decryptAndStoreEvents(updateEvents) { (decryptedEvents) in
+                for eventConsumer in self.eventConsumers {
+                    eventConsumer.processEventsWhileInBackground?(decryptedEvents)
+                }
+            }
         } else {
             Logging.eventProcessing.info("Buffering \(updateEvents.count) event(s)")
             updateEvents.forEach(eventsBuffer.addUpdateEvent)
@@ -102,14 +106,6 @@ extension ZMSyncStrategy: UpdateEventProcessor {
                 self.eventProcessingTracker?.registerEventProcessed()
             }
             localNotificationDispatcher?.processEvents(decryptedUpdateEvents, liveEvents: true, prefetchResult: nil)
-            
-            if let messages = fetchRequest.noncesToFetch as? Set<UUID>,
-                let conversations = fetchRequest.remoteIdentifiersToFetch as? Set<UUID> {
-                let confirmationMessages = ZMConversation.confirmDeliveredMessages(messages, in: conversations, with: syncMOC)
-                for message in confirmationMessages {
-                    self.applicationStatusDirectory?.deliveryConfirmation.needsToConfirmMessage(message.nonce!)
-                }
-            }
             
             syncMOC.saveOrRollback()
             
