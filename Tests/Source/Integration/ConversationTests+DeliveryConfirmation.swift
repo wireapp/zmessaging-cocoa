@@ -18,9 +18,9 @@
 
 import XCTest
 
-class ConversationTests_Confirmation: ConversationTestsBase {
+class ConversationTests_DeliveryConfirmation: ConversationTestsBase {
     
-    func testThatItSendsAConfirmationWhenReceivingAMessageInAOneOnOneConversation() {
+    func testThatItSendsADeliveryConfirmationWhenReceivingAMessageInAOneOnOneConversation() {
         if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
             // given
             XCTAssert(login())
@@ -35,14 +35,22 @@ class ConversationTests_Confirmation: ConversationTestsBase {
             // expect
             mockTransportSession?.responseGeneratorBlock = { request in
                 if (request.path == requestPath) {
-                    guard let hiddenMessage = conversation?.hiddenMessages.first as? ZMClientMessage,
-                        let message = conversation?.lastMessage as? ZMClientMessage
-                        else {
-                            XCTFail("Did not insert confirmation message.")
-                            return nil
-                    }
-                    XCTAssertTrue(hiddenMessage.underlyingMessage!.hasConfirmation)
-                    XCTAssertEqual(hiddenMessage.underlyingMessage!.confirmation.firstMessageID, message.nonce!.transportString())
+                    guard
+                         let data = request.binaryData,
+                         let otrMessage = try? NewOtrMessage(serializedData: data)
+                     else {
+                        XCTFail("Expected OTR message")
+                        return nil
+                     }
+                                        
+                    XCTAssertEqual(otrMessage.recipients.count, 1)
+                    let recipient = try! XCTUnwrap(otrMessage.recipients.first)
+                    XCTAssertEqual(recipient.user, self.user(for: self.user1)!.userId)
+                    
+                    let encryptedData = recipient.clients.first!.text
+                    let decryptedData = MockUserClient.decryptMessage(data: encryptedData, from: toClient, to: fromClient)
+                    let genericMessage = try! GenericMessage(serializedData: decryptedData)
+                    XCTAssertEqual(genericMessage.confirmation.firstMessageID, textMessage.messageID)
                 }
                 return nil
             }
@@ -67,71 +75,7 @@ class ConversationTests_Confirmation: ConversationTestsBase {
         }
     }
     
-    func testThatItSetsAMessageToDeliveredWhenReceivingNewMessagesInAOneOnOneConversation() {
-        if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
-            // given
-            
-            XCTAssert(login())
-            
-            let fromClient = user1?.clients.anyObject() as! MockUserClient
-            let toClient = selfUser?.clients.anyObject() as! MockUserClient
-            let conversation = self.conversation(for: selfToUser1Conversation!)
-            let requestPath = "/conversations/\(conversation!.remoteIdentifier!.transportString())/otr/messages"
-            
-            
-            // expect
-            mockTransportSession?.responseGeneratorBlock = { request in
-                if (request.path == requestPath) {
-
-                    guard let conversation = conversation, let hiddenMessage = conversation.hiddenMessages.first(where: { (item) -> Bool in
-                            return (item as? ZMClientMessage)?.underlyingMessage!.confirmation.moreMessageIds != nil
-                    }) as? ZMClientMessage else { return nil }
-                    
-                    var nonces = Set(conversation.allMessages.compactMap { $0.nonce?.transportString() })
-                    XCTAssertTrue(hiddenMessage.underlyingMessage!.hasConfirmation)
-                    XCTAssertNotNil(nonces.remove(hiddenMessage.underlyingMessage!.confirmation.firstMessageID))
-                    XCTAssertNotNil(hiddenMessage.underlyingMessage!.confirmation.moreMessageIds)
-                    let moreMessageIds = Set(hiddenMessage.underlyingMessage!.confirmation.moreMessageIds)
-                    XCTAssertTrue(moreMessageIds.isSubset(of: nonces))
-                    
-                }
-                return nil
-            }
-            
-            // when
-            performIgnoringZMLogError {
-             
-                self.mockTransportSession?.performRemoteChanges { session in
-                    do {
-                        session.simulatePushChannelClosed()
-                        let textMessage1 = GenericMessage(content: Text(content: "Hello!"), nonce: UUID())
-                        self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: try textMessage1.serializedData())
-                        self.spinMainQueue(withTimeout: 0.2)
-                        let textMessage2 = GenericMessage(content: Text(content: "It's me!"), nonce: UUID())
-                        self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: try textMessage2.serializedData())
-                        session.simulatePushChannelOpened()
-                    }
-                    catch {
-                        XCTFail()
-                    }
-                }
-                XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-            }
-            
-            // then
-            XCTAssertEqual(conversation?.allMessages.count, 3) // system message & inserted message
-            
-            guard let request = mockTransportSession?.receivedRequests().last else {return XCTFail()}
-            XCTAssertEqual((request as AnyObject).path, requestPath)
-            
-            // We should confirm all message deliveries with one message
-            XCTAssertEqual(mockTransportSession.receivedRequests().filter({ $0.method == ZMTransportRequestMethod.methodPOST && $0.path.contains("conversations/")}).count, 1)
-            
-            XCTAssertEqual(conversation?.lastModifiedDate, conversation?.lastMessage?.serverTimestamp)
-        }
-    }
-    
-    func testThatItSetsAMessageToDeliveredWhenReceivingAConfirmationMessageInAOneOnOneConversation() {
+    func testThatItSetsAMessageToDeliveredWhenReceivingADeliveryConfirmationMessageInAOneOnOneConversation() {
         if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
             
             // given
