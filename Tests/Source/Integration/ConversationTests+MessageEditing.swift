@@ -77,8 +77,8 @@ class ConversationTests_MessageEditing_Swift: ConversationTestsBase {
         
         let receivedMessage = conversation?.lastMessage as? ZMClientMessage
         let messageNonce = receivedMessage?.nonce
-        
-        let observer = ConversationChangeObserver(conversation: conversation)
+            
+        let observer = MessageChangeObserver(message: receivedMessage)
         
         receivedMessage?.managedObjectContext?.processPendingChanges()
         let lastModifiedDate = conversation?.lastModifiedDate
@@ -98,21 +98,12 @@ class ConversationTests_MessageEditing_Swift: ConversationTestsBase {
         // THEN
         XCTAssertEqual(conversation?.lastModifiedDate, lastModifiedDate)
         XCTAssertNotEqual(conversation?.lastModifiedDate, editEvent?.time)
-        
+                
         XCTAssertEqual(observer?.notifications.count, 1)
         
-        guard let convInfo = observer?.notifications.firstObject as? ConversationChangeInfo else {
+        guard let messageInfo = observer?.notifications.firstObject as? MessageChangeInfo else {
             return XCTFail()
         }
-        XCTAssertTrue(convInfo.messagesChanged)
-        XCTAssertFalse(convInfo.participantsChanged)
-        XCTAssertFalse(convInfo.nameChanged)
-        XCTAssertFalse(convInfo.unreadCountChanged)
-        XCTAssertFalse(convInfo.lastModifiedDateChanged)
-        XCTAssertFalse(convInfo.connectionStateChanged)
-        XCTAssertFalse(convInfo.mutedMessageTypesChanged)
-        XCTAssertFalse(convInfo.conversationListIndicatorChanged)
-        XCTAssertFalse(convInfo.clearedChanged)
-        XCTAssertFalse(convInfo.securityLevelChanged)
+        XCTAssertTrue(messageInfo.underlyingMessageChanged)
     }
 }

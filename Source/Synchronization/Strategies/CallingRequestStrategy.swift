@@ -231,10 +231,10 @@ extension CallingRequestStrategy: ZMEventConsumer {
                 
                 guard
                     let payload = genericMessage.calling.content.data(using: .utf8, allowLossyConversion: false),
-                    let senderUUID = event.senderUUID(),
-                    let conversationUUID = event.conversationUUID(),
-                    let clientId = event.senderClientID(),
-                    let eventTimestamp = event.timeStamp()
+                    let senderUUID = event.senderUUID,
+                    let conversationUUID = event.conversationUUID,
+                    let clientId = event.senderClientID,
+                    let eventTimestamp = event.timestamp
                 else {
                     zmLog.error("ignoring calling message: \(genericMessage.debugDescription)")
                     continue
