@@ -25,12 +25,11 @@ import avs
 
 
 @objcMembers
-public class MockApplicationStatus : NSObject, ApplicationStatus, DeliveryConfirmationDelegate, ClientRegistrationDelegate, ZMRequestCancellation {
+public class MockApplicationStatus : NSObject, ApplicationStatus, ClientRegistrationDelegate, ZMRequestCancellation {
 
 
     public var notificationFetchStatus = BackgroundNotificationFetchStatus.done
 
-    public var confirmationDelegate : DeliveryConfirmationDelegate { return self }
     public var taskCancellationDelegate : ZMRequestCancellation { return self }
     public var clientRegistrationDelegate : ClientRegistrationDelegate { return self }
     
@@ -44,11 +43,7 @@ public class MockApplicationStatus : NSObject, ApplicationStatus, DeliveryConfir
     public var operationState: OperationState {
         return mockOperationState
     }
-    
-    public var deliveryConfirmation: DeliveryConfirmationDelegate {
-        return self
-    }
-    
+        
     public var requestCancellation: ZMRequestCancellation {
         return self
     }
@@ -72,27 +67,6 @@ public class MockApplicationStatus : NSObject, ApplicationStatus, DeliveryConfir
     /// Returns true if the client is registered
     public var clientIsReadyForRequests: Bool {
         return true
-    }
-    
-    
-    // MARK: DeliveryConfirmationDelegate
-    public private (set) var messagesToConfirm = Set<UUID>()
-    public private (set) var messagesConfirmed = Set<UUID>()
-    
-    public static var sendDeliveryReceipts: Bool {
-        return true
-    }
-    
-    public var needsToSyncMessages: Bool {
-        return true
-    }
-    
-    public func needsToConfirmMessage(_ messageNonce: UUID) {
-        messagesToConfirm.insert(messageNonce)
-    }
-    
-    public func didConfirmMessage(_ messageNonce: UUID) {
-        messagesConfirmed.insert(messageNonce)
     }
     
     public var didRequestSlowSync = false

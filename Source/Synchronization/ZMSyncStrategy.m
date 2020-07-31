@@ -95,9 +95,6 @@
 @interface LocalNotificationDispatcher (Push) <PushMessageHandler>
 @end
 
-@interface BackgroundAPNSConfirmationStatus (Protocol) <DeliveryConfirmationDelegate>
-@end
-
 @interface ZMClientRegistrationStatus (Protocol) <ClientRegistrationDelegate>
 @end
 

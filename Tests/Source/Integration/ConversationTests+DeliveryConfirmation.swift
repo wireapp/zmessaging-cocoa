@@ -21,99 +21,93 @@ import XCTest
 class ConversationTests_DeliveryConfirmation: ConversationTestsBase {
     
     func testThatItSendsADeliveryConfirmationWhenReceivingAMessageInAOneOnOneConversation() {
-        if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
-            // given
-            XCTAssert(login())
-            
-            let fromClient = user1?.clients.anyObject() as! MockUserClient
-            let toClient = selfUser?.clients.anyObject() as! MockUserClient
-            let textMessage = GenericMessage(content: Text(content: "Hello"))
-            let conversation = self.conversation(for: selfToUser1Conversation!)
-            
-            let requestPath = "/conversations/\(conversation!.remoteIdentifier!.transportString())/otr/messages"
-            
-            // expect
-            mockTransportSession?.responseGeneratorBlock = { request in
-                if (request.path == requestPath) {
-                    guard
-                         let data = request.binaryData,
-                         let otrMessage = try? NewOtrMessage(serializedData: data)
-                     else {
+        // given
+        XCTAssert(login())
+        
+        let fromClient = user1?.clients.anyObject() as! MockUserClient
+        let toClient = selfUser?.clients.anyObject() as! MockUserClient
+        let textMessage = GenericMessage(content: Text(content: "Hello"))
+        let conversation = self.conversation(for: selfToUser1Conversation!)
+        
+        let requestPath = "/conversations/\(conversation!.remoteIdentifier!.transportString())/otr/messages"
+        
+        // expect
+        mockTransportSession?.responseGeneratorBlock = { request in
+            if (request.path == requestPath) {
+                guard
+                    let data = request.binaryData,
+                    let otrMessage = try? NewOtrMessage(serializedData: data)
+                    else {
                         XCTFail("Expected OTR message")
                         return nil
-                     }
-                                        
-                    XCTAssertEqual(otrMessage.recipients.count, 1)
-                    let recipient = try! XCTUnwrap(otrMessage.recipients.first)
-                    XCTAssertEqual(recipient.user, self.user(for: self.user1)!.userId)
-                    
-                    let encryptedData = recipient.clients.first!.text
-                    let decryptedData = MockUserClient.decryptMessage(data: encryptedData, from: toClient, to: fromClient)
-                    let genericMessage = try! GenericMessage(serializedData: decryptedData)
-                    XCTAssertEqual(genericMessage.confirmation.firstMessageID, textMessage.messageID)
                 }
-                return nil
+                
+                XCTAssertEqual(otrMessage.recipients.count, 1)
+                let recipient = try! XCTUnwrap(otrMessage.recipients.first)
+                XCTAssertEqual(recipient.user, self.user(for: self.user1)!.userId)
+                
+                let encryptedData = recipient.clients.first!.text
+                let decryptedData = MockUserClient.decryptMessage(data: encryptedData, from: toClient, to: fromClient)
+                let genericMessage = try! GenericMessage(serializedData: decryptedData)
+                XCTAssertEqual(genericMessage.confirmation.firstMessageID, textMessage.messageID)
             }
-            
-            // when
-            mockTransportSession?.performRemoteChanges { session in
-                do {
-                    self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: try textMessage.serializedData())
-                } catch {
-                    XCTFail()
-                }
-            }
-            XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-            
-            // then
-            XCTAssertEqual(conversation?.allMessages.count, 2) // system message & inserted message
-            
-            guard let request = mockTransportSession?.receivedRequests().last else {return XCTFail()}
-            XCTAssertEqual((request as AnyObject).path, requestPath)
-            
-            XCTAssertEqual(conversation?.lastModifiedDate, conversation?.lastMessage?.serverTimestamp)
+            return nil
         }
+        
+        // when
+        mockTransportSession?.performRemoteChanges { session in
+            do {
+                self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: try textMessage.serializedData())
+            } catch {
+                XCTFail()
+            }
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
+        
+        // then
+        XCTAssertEqual(conversation?.allMessages.count, 2) // system message & inserted message
+        
+        guard let request = mockTransportSession?.receivedRequests().last else {return XCTFail()}
+        XCTAssertEqual((request as AnyObject).path, requestPath)
+        
+        XCTAssertEqual(conversation?.lastModifiedDate, conversation?.lastMessage?.serverTimestamp)
     }
     
     func testThatItSetsAMessageToDeliveredWhenReceivingADeliveryConfirmationMessageInAOneOnOneConversation() {
-        if (BackgroundAPNSConfirmationStatus.sendDeliveryReceipts) {
-            
-            // given
-            XCTAssert(login())
-            
-            let conversation = self.conversation(for: selfToUser1Conversation!)
-            var message : ZMClientMessage!
-            self.userSession?.perform {
-                message = conversation?.append(text: "Hello") as? ZMClientMessage
-            }
-            XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-            XCTAssertEqual(message.deliveryState, ZMDeliveryState.sent)
-            
-            let fromClient = user1?.clients.anyObject() as! MockUserClient
-            let toClient = selfUser?.clients.anyObject() as! MockUserClient
-            let confirmationMessage = GenericMessage(content: Confirmation(messageId: message.nonce!))
-            
-            // when
-            mockTransportSession?.performRemoteChanges { session in
-                do {
-                    self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: try confirmationMessage.serializedData())
-                } catch {
-                    XCTFail()
-                }
-            }
-            XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-            
-            // then
-            // The confirmation message is not inserted
-            XCTAssertEqual(conversation?.hiddenMessages.count, 0)
-            XCTAssertEqual(message.deliveryState, ZMDeliveryState.delivered)
-            
-            XCTAssertEqual(conversation?.lastModifiedDate, message.serverTimestamp)
+        // given
+        XCTAssert(login())
+        
+        let conversation = self.conversation(for: selfToUser1Conversation!)
+        var message : ZMClientMessage!
+        self.userSession?.perform {
+            message = conversation?.append(text: "Hello") as? ZMClientMessage
         }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
+        XCTAssertEqual(message.deliveryState, ZMDeliveryState.sent)
+        
+        let fromClient = user1?.clients.anyObject() as! MockUserClient
+        let toClient = selfUser?.clients.anyObject() as! MockUserClient
+        let confirmationMessage = GenericMessage(content: Confirmation(messageId: message.nonce!))
+        
+        // when
+        mockTransportSession?.performRemoteChanges { session in
+            do {
+                self.selfToUser1Conversation?.encryptAndInsertData(from: fromClient, to: toClient, data: try confirmationMessage.serializedData())
+            } catch {
+                XCTFail()
+            }
+        }
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
+        
+        // then
+        // The confirmation message is not inserted
+        XCTAssertEqual(conversation?.hiddenMessages.count, 0)
+        XCTAssertEqual(message.deliveryState, ZMDeliveryState.delivered)
+        
+        XCTAssertEqual(conversation?.lastModifiedDate, message.serverTimestamp)
     }
     
     func testThatItSendsANotificationWhenUpdatingTheDeliveryState() {
-        guard BackgroundAPNSConfirmationStatus.sendDeliveryReceipts else { return }
         // given
         XCTAssert(login())
 

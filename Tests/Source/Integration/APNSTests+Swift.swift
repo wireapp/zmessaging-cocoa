@@ -21,11 +21,7 @@ import WireMockTransport
 
 class APNSTests_Swift: APNSTestsBase {
     
-    func testThatItSendsAConfirmationMessageWhenReceivingATextMessage() {
-        guard BackgroundAPNSConfirmationStatus.sendDeliveryReceipts else {
-            return
-        }
-        
+    func testThatItSendsAConfirmationMessageWhenReceivingATextMessage() {        
         // GIVEN
         XCTAssertTrue(login())
 

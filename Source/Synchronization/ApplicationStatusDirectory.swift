@@ -23,7 +23,6 @@ import WireRequestStrategy
 @objcMembers
 public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
 
-    public let apnsConfirmationStatus : BackgroundAPNSConfirmationStatus
     public let userProfileImageUpdateStatus : UserProfileImageUpdateStatus
     public let userProfileUpdateStatus : UserProfileUpdateStatus
     public let clientRegistrationStatus : ZMClientRegistrationStatus
@@ -43,7 +42,6 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     
     public init(withManagedObjectContext managedObjectContext : NSManagedObjectContext, cookieStorage : ZMPersistentCookieStorage, requestCancellation: ZMRequestCancellation, application : ZMApplication, syncStateDelegate: ZMSyncStateDelegate, analytics: AnalyticsType? = nil) {
         self.requestCancellation = requestCancellation
-        self.apnsConfirmationStatus = BackgroundAPNSConfirmationStatus(application: application, managedObjectContext: managedObjectContext)
         self.operationStatus = OperationStatus()
         self.callEventStatus = CallEventStatus()
         self.analytics = analytics
@@ -72,12 +70,7 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     }
     
     deinit {
-        apnsConfirmationStatus.tearDown()
         clientRegistrationStatus.tearDown()
-    }
-    
-    public var deliveryConfirmation: DeliveryConfirmationDelegate {
-        return apnsConfirmationStatus
     }
     
     public var clientRegistrationDelegate: ClientRegistrationDelegate {
