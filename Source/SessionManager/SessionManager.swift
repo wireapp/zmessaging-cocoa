@@ -788,6 +788,10 @@ public final class SessionManager : NSObject, SessionManagerType {
     @objc public var isUserSessionActive: Bool {
         return activeUserSession != nil
     }
+    
+    public var isCopyAndPasteEnable: Bool {
+        return configuration.enableCopyAndPaste
+    }
 
     func updateProfileImage(imageData: Data) {
         activeUserSession?.enqueue {
@@ -820,7 +824,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         }
     }
     
-    public var useConstantBitRateAudio : Bool = false {
+    public var useConstantBitRateAudio: Bool = false {
         didSet {
             activeUserSession?.useConstantBitRateAudio = useConstantBitRateAudio
         }

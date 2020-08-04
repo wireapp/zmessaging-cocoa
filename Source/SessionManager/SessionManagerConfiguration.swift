@@ -62,6 +62,11 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     ///
     /// The default value of this property is `nil`, i.e. threshold is ignored
     public var failedPasswordThresholdBeforeWipe: Int?
+    
+    /// If `enableCopyAndPaste` is false the copy & pasting functionality is disabled in the conversation screen.
+    ///
+    /// The default value of this property is `true`.
+    public var enableCopyAndPaste: Bool
 
     // MARK: - Init
     
@@ -71,7 +76,8 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                 wipeOnJailbreakOrRoot: Bool = false,
                 messageRetentionInterval: TimeInterval? = nil,
                 authenticateAfterReboot: Bool = false,
-                failedPasswordThresholdBeforeWipe: Int? = nil) {
+                failedPasswordThresholdBeforeWipe: Int? = nil,
+                enableCopyAndPaste: Bool = true) {
         self.wipeOnCookieInvalid = wipeOnCookieInvalid
         self.blacklistDownloadInterval = blacklistDownloadInterval
         self.blockOnJailbreakOrRoot = blockOnJailbreakOrRoot
@@ -79,6 +85,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         self.messageRetentionInterval = messageRetentionInterval
         self.authenticateAfterReboot = authenticateAfterReboot
         self.failedPasswordThresholdBeforeWipe = failedPasswordThresholdBeforeWipe
+        self.enableCopyAndPaste = enableCopyAndPaste
     }
 
     required public init(from decoder: Decoder) throws {
@@ -90,6 +97,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         messageRetentionInterval = try container.decodeIfPresent(TimeInterval.self, forKey: .messageRetentionInterval)
         authenticateAfterReboot = try container.decode(Bool.self, forKey: .authenticateAfterReboot)
         failedPasswordThresholdBeforeWipe = try container.decodeIfPresent(Int.self, forKey: .failedPasswordThresholdBeforeWipe)
+        enableCopyAndPaste = try container.decode(Bool.self, forKey: .enableCopyAndPaste)
     }
 
     // MARK: - Methods
@@ -101,7 +109,8 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                                                wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot,
                                                messageRetentionInterval: messageRetentionInterval,
                                                authenticateAfterReboot: authenticateAfterReboot,
-                                               failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe)
+                                               failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe,
+                                               enableCopyAndPaste: enableCopyAndPaste)
         
         return copy
     }
@@ -132,6 +141,7 @@ extension SessionManagerConfiguration {
         case messageRetentionInterval
         case authenticateAfterReboot
         case failedPasswordThresholdBeforeWipe
+        case enableCopyAndPaste
     }
 
 }
