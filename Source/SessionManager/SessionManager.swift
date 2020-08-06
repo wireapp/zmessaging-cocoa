@@ -794,6 +794,10 @@ public final class SessionManager : NSObject, SessionManagerType {
             self.activeUserSession?.userProfileImage?.updateImage(imageData: imageData)
         }
     }
+    
+    public var isCameraRollOnUserProfileEnabled: Bool {
+        return configuration.showCameraRollOnUserProfile
+    }
 
     public var callNotificationStyle: CallNotificationStyle = .callKit {
         didSet {
