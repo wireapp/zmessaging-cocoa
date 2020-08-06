@@ -62,6 +62,11 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     ///
     /// The default value of this property is `nil`, i.e. threshold is ignored
     public var failedPasswordThresholdBeforeWipe: Int?
+    
+    /// If `showCameraRollOnUserProfile` is set to true then the camera roll button when setting the user profile picture is shown
+    ///
+    /// The default value of this property is `true`
+    public var showCameraRollOnUserProfile: Bool
 
     // MARK: - Init
     
@@ -71,7 +76,8 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                 wipeOnJailbreakOrRoot: Bool = false,
                 messageRetentionInterval: TimeInterval? = nil,
                 authenticateAfterReboot: Bool = false,
-                failedPasswordThresholdBeforeWipe: Int? = nil) {
+                failedPasswordThresholdBeforeWipe: Int? = nil,
+                showCameraRollOnUserProfile: Bool = true) {
         self.wipeOnCookieInvalid = wipeOnCookieInvalid
         self.blacklistDownloadInterval = blacklistDownloadInterval
         self.blockOnJailbreakOrRoot = blockOnJailbreakOrRoot
@@ -79,6 +85,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         self.messageRetentionInterval = messageRetentionInterval
         self.authenticateAfterReboot = authenticateAfterReboot
         self.failedPasswordThresholdBeforeWipe = failedPasswordThresholdBeforeWipe
+        self.showCameraRollOnUserProfile = showCameraRollOnUserProfile
     }
 
     required public init(from decoder: Decoder) throws {
@@ -90,6 +97,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         messageRetentionInterval = try container.decodeIfPresent(TimeInterval.self, forKey: .messageRetentionInterval)
         authenticateAfterReboot = try container.decode(Bool.self, forKey: .authenticateAfterReboot)
         failedPasswordThresholdBeforeWipe = try container.decodeIfPresent(Int.self, forKey: .failedPasswordThresholdBeforeWipe)
+        showCameraRollOnUserProfile = try container.decode(Bool.self, forKey: .showCameraRollOnUserProfile)
     }
 
     // MARK: - Methods
@@ -101,7 +109,8 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                                                wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot,
                                                messageRetentionInterval: messageRetentionInterval,
                                                authenticateAfterReboot: authenticateAfterReboot,
-                                               failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe)
+                                               failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe,
+                                               showCameraRollOnUserProfile: showCameraRollOnUserProfile)
         
         return copy
     }
@@ -114,7 +123,6 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         guard let data = try? Data(contentsOf: URL) else { return nil }
         
         let decoder = JSONDecoder()
-        
         return  try? decoder.decode(SessionManagerConfiguration.self, from: data)
     }
 }
@@ -132,6 +140,7 @@ extension SessionManagerConfiguration {
         case messageRetentionInterval
         case authenticateAfterReboot
         case failedPasswordThresholdBeforeWipe
+        case showCameraRollOnUserProfile
     }
 
 }
