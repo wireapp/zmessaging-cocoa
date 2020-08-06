@@ -52,7 +52,7 @@ class SessionManagerConfigurationTests: XCTestCase {
         XCTAssertEqual(result.messageRetentionInterval, 3600)
         XCTAssertEqual(result.authenticateAfterReboot, false)
         XCTAssertEqual(result.failedPasswordThresholdBeforeWipe, nil)
-        XCTAssertEqual(result.enableCopyAndPaste, true)
+        XCTAssertEqual(result.disableClipboard, true)
     }
 
 }

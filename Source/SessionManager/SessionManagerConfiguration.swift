@@ -63,10 +63,10 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     /// The default value of this property is `nil`, i.e. threshold is ignored
     public var failedPasswordThresholdBeforeWipe: Int?
     
-    /// If `enableCopyAndPaste` is false the copy & pasting functionality is disabled in the conversation screen.
+    /// If `disableClipboard` is true the cut, save, copy & paste functionality is disabled in the conversation screen.
     ///
-    /// The default value of this property is `true`.
-    public var enableCopyAndPaste: Bool
+    /// The default value of this property is `false`.
+    public var disableClipboard: Bool
 
     // MARK: - Init
     
@@ -77,7 +77,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                 messageRetentionInterval: TimeInterval? = nil,
                 authenticateAfterReboot: Bool = false,
                 failedPasswordThresholdBeforeWipe: Int? = nil,
-                enableCopyAndPaste: Bool = true) {
+                disableClipboard: Bool = false) {
         self.wipeOnCookieInvalid = wipeOnCookieInvalid
         self.blacklistDownloadInterval = blacklistDownloadInterval
         self.blockOnJailbreakOrRoot = blockOnJailbreakOrRoot
@@ -85,7 +85,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         self.messageRetentionInterval = messageRetentionInterval
         self.authenticateAfterReboot = authenticateAfterReboot
         self.failedPasswordThresholdBeforeWipe = failedPasswordThresholdBeforeWipe
-        self.enableCopyAndPaste = enableCopyAndPaste
+        self.disableClipboard = disableClipboard
     }
 
     required public init(from decoder: Decoder) throws {
@@ -97,7 +97,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         messageRetentionInterval = try container.decodeIfPresent(TimeInterval.self, forKey: .messageRetentionInterval)
         authenticateAfterReboot = try container.decode(Bool.self, forKey: .authenticateAfterReboot)
         failedPasswordThresholdBeforeWipe = try container.decodeIfPresent(Int.self, forKey: .failedPasswordThresholdBeforeWipe)
-        enableCopyAndPaste = try container.decode(Bool.self, forKey: .enableCopyAndPaste)
+        disableClipboard = try container.decode(Bool.self, forKey: .disableClipboard)
     }
 
     // MARK: - Methods
@@ -110,7 +110,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                                                messageRetentionInterval: messageRetentionInterval,
                                                authenticateAfterReboot: authenticateAfterReboot,
                                                failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe,
-                                               enableCopyAndPaste: enableCopyAndPaste)
+                                               disableClipboard: disableClipboard)
         
         return copy
     }
@@ -141,7 +141,7 @@ extension SessionManagerConfiguration {
         case messageRetentionInterval
         case authenticateAfterReboot
         case failedPasswordThresholdBeforeWipe
-        case enableCopyAndPaste
+        case disableClipboard
     }
 
 }

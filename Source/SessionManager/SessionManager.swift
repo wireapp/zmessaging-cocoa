@@ -789,8 +789,8 @@ public final class SessionManager : NSObject, SessionManagerType {
         return activeUserSession != nil
     }
     
-    public var isCopyAndPasteEnable: Bool {
-        return configuration.enableCopyAndPaste
+    public var isDisabledClipboard: Bool {
+        return configuration.disableClipboard
     }
 
     func updateProfileImage(imageData: Data) {
