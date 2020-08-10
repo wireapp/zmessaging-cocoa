@@ -1481,6 +1481,7 @@
 			isa = PBXGroup;
 			children = (
 				542049EF196AB84B000D8A94 /* WireSyncEngine.h */,
+				A9B53AA924E12E240066FCC6 /* ZMAccountDeletedReason.swift */,
 				3E05F247192A4F8900F22D80 /* NSError+ZMUserSession.h */,
 				54D9331C1AE1643A00C0B91C /* ZMCredentials.h */,
 				546D45FD19E29D92004C478D /* ZMNetworkState.h */,
@@ -2426,7 +2427,6 @@
 				7C5B94F522DC6BC500A6F8BB /* JailbreakDetector.swift */,
 				F159F4151F1E4C4C001B7D80 /* LocalStoreProvider.swift */,
 				BF2AD9FF1F41A3DF000980E8 /* SessionFactories.swift */,
-				A9B53AA924E12E240066FCC6 /* ZMAccountDeletedReason.swift */,
 				F19F1D371EFBF61800275E27 /* SessionManager.swift */,
 				16FF474B1F0D54B20044C491 /* SessionManager+Logs.swift */,
 				1634958A1F0254CB004E80DB /* SessionManager+ServerConnection.swift */,
