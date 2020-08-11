@@ -59,14 +59,21 @@ public final class StoredUpdateEvent: NSManagedObject {
         return storedEvent
     }
     
-    private static func encryptIfNeeded(eventPayload: NSDictionary, publicKey: SecKey?) -> NSDictionary {
-        guard let key = publicKey,
-            let data = try? JSONSerialization.data(withJSONObject: eventPayload, options: []),
+    /// Encrypts the passed payload if publicKey exists. Otherwise, returns the passed event payload
+    /// - Parameters:
+    ///   - eventPayload: the envent payload
+    ///   - publicKey: publicKey which will be used to encrypt eventPayload
+    /// - Returns: a dictionary which contains encrypted or unencrypted payload
+    private static func encryptIfNeeded(eventPayload: NSDictionary, publicKey: SecKey?) -> NSDictionary? {
+        guard let key = publicKey else {
+            return eventPayload
+        }
+        guard let data = try? JSONSerialization.data(withJSONObject: eventPayload, options: []),
             let encryptedData = SecKeyCreateEncryptedData(key,
                                                           .eciesEncryptionCofactorX963SHA256AESGCM,
                                                           data as CFData,
                                                           nil) else {
-                                                            return eventPayload
+                                                            return nil
         }
         return NSDictionary(dictionary: [encryptedPayloadKey: encryptedData])
     }
@@ -111,8 +118,13 @@ public final class StoredUpdateEvent: NSManagedObject {
         return events
     }
     
+    /// Decrypts the passed stored event payload if the isEncrypted property is true.
+    /// - Parameters:
+    ///   - storedEvent: the stored event
+    ///   - encryptionKeys: keys to be used to decrypt the stored event payload
+    /// - Returns: a dictionary which contains decrypted payload
     private static func decryptPayloadIfNeeded(storedEvent: StoredUpdateEvent, encryptionKeys: EncryptionKeys?) -> NSDictionary? {
-        if !storedEvent.isEncrypted  {
+        if !storedEvent.isEncrypted {
             return storedEvent.payload
         }
 
