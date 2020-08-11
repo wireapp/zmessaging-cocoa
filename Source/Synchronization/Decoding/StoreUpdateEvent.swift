@@ -24,6 +24,9 @@ public final class StoredUpdateEvent: NSManagedObject {
     
     static let entityName =  "StoredUpdateEvent"
     static let SortIndexKey = "sortIndex"
+    /// The key under which the event payload is encrypted by the public key.
+    static let encryptedPayloadKey = "encryptedPayload"
+    
     @NSManaged var uuidString: String?
     @NSManaged var debugInformation: String?
     @NSManaged var isTransient: Bool
@@ -65,7 +68,7 @@ public final class StoredUpdateEvent: NSManagedObject {
                                                           nil) else {
                                                             return eventPayload
         }
-        return NSDictionary(dictionary: ["encryptedPayload": encryptedData])
+        return NSDictionary(dictionary: [encryptedPayloadKey: encryptedData])
     }
     
     /// Returns stored events sorted by and up until (including) the defined `stopIndex`
@@ -114,7 +117,7 @@ public final class StoredUpdateEvent: NSManagedObject {
         }
 
         guard let keys = encryptionKeys,
-            let encryptedPayload = storedEvent.payload?["encryptedPayload"] as? Data,
+            let encryptedPayload = storedEvent.payload?[encryptedPayloadKey] as? Data,
             let decryptedData = SecKeyCreateDecryptedData(keys.privateKey,
                                                           .eciesEncryptionCofactorX963SHA256AESGCM,
                                                           encryptedPayload as CFData,

@@ -328,7 +328,7 @@ extension StoreUpdateEventTests {
             XCTAssertTrue(storedEvent.isEncrypted)
             let decryptedData = SecKeyCreateDecryptedData(encryptionKeys!.privateKey,
                                                  .eciesEncryptionCofactorX963SHA256AESGCM,
-                                                 storedEvent.payload!["encryptedPayload"] as! CFData,
+                                                 storedEvent.payload![StoredUpdateEvent.encryptedPayloadKey] as! CFData,
                                                  nil)
             let payload: NSDictionary = try JSONSerialization.jsonObject(with: decryptedData! as Data, options: []) as! NSDictionary
             XCTAssertEqual(payload, event.payload as NSDictionary)
