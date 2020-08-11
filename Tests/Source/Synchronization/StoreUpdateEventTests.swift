@@ -325,6 +325,7 @@ extension StoreUpdateEventTests {
             XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
             
             XCTAssertNotNil(storedEvent.payload)
+            XCTAssertTrue(storedEvent.isEncrypted)
             let decryptedData = SecKeyCreateDecryptedData(encryptionKeys!.privateKey,
                                                  .eciesEncryptionCofactorX963SHA256AESGCM,
                                                  storedEvent.payload!["encryptedPayload"] as! CFData,
@@ -356,6 +357,7 @@ extension StoreUpdateEventTests {
             XCTAssertEqual(storedEvent.sortIndex, 2)
             XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
             XCTAssertNotNil(storedEvent.payload)
+            XCTAssertFalse(storedEvent.isEncrypted)
         } else {
             XCTFail("Did not create storedEvent")
         }
@@ -377,6 +379,7 @@ extension StoreUpdateEventTests {
             XCTAssertEqual(storedEvent.sortIndex, 2)
             XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
             XCTAssertNotNil(storedEvent.payload)
+            XCTAssertTrue(storedEvent.isEncrypted)
             
             // when
             let convertedEvents = StoredUpdateEvent.eventsFromStoredEvents([storedEvent], encryptionKeys: encryptionKeys)
@@ -409,6 +412,7 @@ extension StoreUpdateEventTests {
             XCTAssertEqual(storedEvent.sortIndex, 2)
             XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
             XCTAssertNotNil(storedEvent.payload)
+            XCTAssertFalse(storedEvent.isEncrypted)
             
             // when
             let convertedEvents = StoredUpdateEvent.eventsFromStoredEvents([storedEvent], encryptionKeys: nil)
@@ -440,6 +444,7 @@ extension StoreUpdateEventTests {
             XCTAssertEqual(storedEvent.sortIndex, 2)
             XCTAssertEqual(storedEvent.uuidString, event.uuid?.transportString())
             XCTAssertNotNil(storedEvent.payload)
+            XCTAssertTrue(storedEvent.isEncrypted)
             
             // when
             let convertedEvents = StoredUpdateEvent.eventsFromStoredEvents([storedEvent], encryptionKeys: nil)
