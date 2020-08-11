@@ -99,9 +99,10 @@ extension EventDecoder {
     /// can be recovered from the database.
     ///
     /// - Parameters:
+    ///   - encryptionKeys: Keys to be used to decrypt events.
     ///   - block: Event consume block which is called once for every stored event.
-    public func processStoredEvents(_ block: ConsumeBlock) {
-        process(block, firstCall: true)
+    public func processStoredEvents(with encryptionKeys: EncryptionKeys? = nil, _ block: ConsumeBlock) {
+        process(with: encryptionKeys, block, firstCall: true)
     }
     
     /// Decrypts and stores the decrypted events as `StoreUpdateEvent` in the event database.
@@ -111,7 +112,8 @@ extension EventDecoder {
     /// - parameter startingAtIndex The startIndex to be used for the incrementing sortIndex of the stored events.
     /// - Returns: Decrypted events
     fileprivate func decryptAndStoreEvents(_ events: [ZMUpdateEvent], startingAtIndex startIndex: Int64) -> [ZMUpdateEvent] {
-        
+        let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: self.syncMOC).remoteIdentifier)
+        let publicKey = try? EncryptionKeys.publicKey(for: account)
         var decryptedEvents: [ZMUpdateEvent] = []
         
         syncMOC.zm_cryptKeyStore.encryptionContext.perform { [weak self] (sessionsDirectory) -> Void in
@@ -128,11 +130,13 @@ extension EventDecoder {
             // This call has to be synchronous to ensure that we close the
             // encryption context only if we stored all events in the database
                 
-            // Insert the decryted events in the event database using a `storeIndex`
+            // Insert the decrypted events in the event database using a `storeIndex`
             // incrementing from the highest index currently stored in the database
+            // The encryptedPayload property is encrypted using the public key
             for (idx, event) in decryptedEvents.enumerated() {
-                _ = StoredUpdateEvent.create(event, managedObjectContext: self.eventMOC, index: Int64(idx) + startIndex + 1)
+                _ = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: self.eventMOC, index: Int64(idx) + startIndex + 1, publicKey: publicKey)
             }
+                
             
             self.eventMOC.saveOrRollback()
         }
@@ -143,8 +147,8 @@ extension EventDecoder {
     // Processes the stored events in the database in batches of size EventDecoder.BatchSize` and calls the `consumeBlock` for each batch.
     // After the `consumeBlock` has been called the stored events are deleted from the database.
     // This method terminates when no more events are in the database.
-    private func process(_ consumeBlock: ConsumeBlock, firstCall: Bool) {
-        let events = fetchNextEventsBatch()
+    private func process(with encryptionKeys: EncryptionKeys?, _ consumeBlock: ConsumeBlock, firstCall: Bool) {
+        let events = fetchNextEventsBatch(with: encryptionKeys)
         guard events.storedEvents.count > 0 else {
             if firstCall {
                 consumeBlock([])
@@ -153,7 +157,7 @@ extension EventDecoder {
         }
 
         processBatch(events.updateEvents, storedEvents: events.storedEvents, block: consumeBlock)
-        process(consumeBlock, firstCall: false)
+        process(with: encryptionKeys, consumeBlock, firstCall: false)
     }
     
     /// Calls the `ComsumeBlock` and deletes the respective stored events subsequently.
@@ -172,12 +176,12 @@ extension EventDecoder {
     
     /// Fetches and returns the next batch of size `EventDecoder.BatchSize` 
     /// of `StoredEvents` and `ZMUpdateEvent`'s in a `EventsWithStoredEvents` tuple.
-    private func fetchNextEventsBatch() -> EventsWithStoredEvents {
+    private func fetchNextEventsBatch(with encryptionKeys: EncryptionKeys?) -> EventsWithStoredEvents {
         var (storedEvents, updateEvents)  = ([StoredUpdateEvent](), [ZMUpdateEvent]())
 
         eventMOC.performGroupedBlockAndWait {
             storedEvents = StoredUpdateEvent.nextEvents(self.eventMOC, batchSize: EventDecoder.BatchSize)
-            updateEvents = StoredUpdateEvent.eventsFromStoredEvents(storedEvents)
+            updateEvents = StoredUpdateEvent.eventsFromStoredEvents(storedEvents, encryptionKeys: encryptionKeys)
         }
         return (storedEvents: storedEvents, updateEvents: updateEvents)
     }

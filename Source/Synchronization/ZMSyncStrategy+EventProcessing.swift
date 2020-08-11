@@ -90,7 +90,7 @@ extension ZMSyncStrategy: UpdateEventProcessor {
     }
         
     private func processStoredUpdateEvents(with encryptionKeys: EncryptionKeys? = nil) {
-        eventDecoder.processStoredEvents() { [weak self] (decryptedUpdateEvents) in
+        eventDecoder.processStoredEvents(with: encryptionKeys) { [weak self] (decryptedUpdateEvents) in
             guard let `self` = self else { return }
             
             let date = Date()
