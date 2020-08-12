@@ -64,15 +64,20 @@ extension ZMUserSession {
     
     func lockDatabase() {
         guard managedObjectContext.encryptMessagesAtRest else { return }
+
+        storeProvider.contextDirectory.clearDatabaseKeyInAllContexts()
         
         syncManagedObjectContext.performGroupedBlock {
             self.applicationStatusDirectory?.syncStatus.encryptionKeys = nil
         }
+
     }
     
     public func unlockDatabase(with context: LAContext) throws {
         let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
         let keys = try EncryptionKeys.init(account: account, context: context)
+
+        storeProvider.contextDirectory.storeDatabaseKeyInAllContexts(databaseKey: keys.databaseKey)
         
         syncManagedObjectContext.performGroupedBlock {
             guard let syncStrategy = self.syncStrategy else { return }
