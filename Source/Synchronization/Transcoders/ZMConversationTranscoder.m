@@ -57,7 +57,6 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 @property (nonatomic) ZMSimpleListRequestPaginator *listPaginator;
 
 @property (nonatomic, weak) SyncStatus *syncStatus;
-@property (nonatomic, weak) id<PushMessageHandler> localNotificationDispatcher;
 @property (nonatomic) NSMutableOrderedSet<ZMConversation *> *lastSyncedActiveConversations;
 
 @end
@@ -88,12 +87,10 @@ static NSString *const ConversationTeamManagedKey = @"managed";
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
                            applicationStatus:(id<ZMApplicationStatus>)applicationStatus
-                 localNotificationDispatcher:(id<PushMessageHandler>)localNotificationDispatcher
                                   syncStatus:(SyncStatus *)syncStatus;
 {
     self = [super initWithManagedObjectContext:managedObjectContext applicationStatus:applicationStatus];
     if (self) {
-        self.localNotificationDispatcher = localNotificationDispatcher;
         self.syncStatus = syncStatus;
         self.lastSyncedActiveConversations = [[NSMutableOrderedSet alloc] init];
 
