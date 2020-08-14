@@ -27,14 +27,14 @@ extension ZMUserSession {
         set {
             do {
                 let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
-                
+
+                try EncryptionKeys.deleteKeys(for: account)
+                storeProvider.contextDirectory.clearDatabaseKeyInAllContexts()
+
                 if newValue {
                     let keys = try EncryptionKeys.createKeys(for: account)
                     applicationStatusDirectory?.syncStatus.encryptionKeys = keys
                     storeProvider.contextDirectory.storeDatabaseKeyInAllContexts(databaseKey: keys.databaseKey)
-                } else {
-                    try EncryptionKeys.deleteKeys(for: account)
-                    storeProvider.contextDirectory.clearDatabaseKeyInAllContexts()
                 }
                 
                 managedObjectContext.encryptMessagesAtRest = newValue

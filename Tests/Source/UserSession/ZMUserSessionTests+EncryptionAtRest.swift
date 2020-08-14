@@ -18,6 +18,7 @@
 
 import Foundation
 import LocalAuthentication
+@testable import WireSyncEngine
 
 class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
     
@@ -96,7 +97,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         // then
         XCTAssertTrue(sut.isDatabaseLocked)
     }
-    
+
     // MARK: - Database lock handler/observer
     
     func testThatDatabaseLockedHandlerIsCalled_AfterDatabaseIsLocked() {
@@ -146,6 +147,28 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         
         // cleanup
         token = nil
+    }
+
+    // MARK: - Misc
+
+    func testThatOldEncryptionKeysAreReplaced_AfterActivatingEncryptionAtRest() throws {
+        // given
+        simulateLoggedInUser()
+        syncMOC.saveOrRollback()
+
+        let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: syncMOC).remoteIdentifier)
+        let oldKeys = try EncryptionKeys.createKeys(for: account)
+
+        // when
+        sut.encryptMessagesAtRest = true
+
+        // then
+        let newKeys = sut.applicationStatusDirectory?.syncStatus.encryptionKeys
+
+        XCTAssertFalse(sut.isDatabaseLocked)
+        XCTAssertNotEqual(oldKeys.publicKey, newKeys?.publicKey)
+        XCTAssertNotEqual(oldKeys.privateKey, newKeys?.privateKey)
+        XCTAssertNotEqual(oldKeys.databaseKey, newKeys?.databaseKey)
     }
     
 }
