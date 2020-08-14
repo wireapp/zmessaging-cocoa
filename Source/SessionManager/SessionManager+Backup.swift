@@ -104,8 +104,10 @@ extension SessionManager {
                 try SessionManager.decrypt(from: location, to: decryptedURL, password: password, accountId: userId)
             } catch {
                 switch error {
-                case ChaCha20Encryption.EncryptionError.decryptionFailed: return complete(.failure(BackupError.decryptionError))
-                case ChaCha20Encryption.EncryptionError.keyGenerationFailed: return complete(.failure(BackupError.keyCreationFailed))
+                case ChaCha20Poly1305.StreamEncryption.EncryptionError.decryptionFailed:
+                    return complete(.failure(BackupError.decryptionError))
+                case ChaCha20Poly1305.StreamEncryption.EncryptionError.keyGenerationFailed:
+                    return complete(.failure(BackupError.keyCreationFailed))
                 default: return complete(.failure(error))
                 }
             }
@@ -127,13 +129,15 @@ extension SessionManager {
     static func encrypt(from input: URL, to output: URL, password: String, accountId: UUID) throws {
         guard let inputStream = InputStream(url: input) else { throw BackupError.unknown }
         guard let outputStream = OutputStream(url: output, append: false) else { throw BackupError.unknown }
-        try ChaCha20Encryption.encrypt(input: inputStream, output: outputStream, passphrase: ChaCha20Encryption.Passphrase(password: password, uuid: accountId))
+        let passphrase = ChaCha20Poly1305.StreamEncryption.Passphrase(password: password, uuid: accountId)
+        try ChaCha20Poly1305.StreamEncryption.encrypt(input: inputStream, output: outputStream, passphrase: passphrase)
     }
     
     static func decrypt(from input: URL, to output: URL, password: String, accountId: UUID) throws {
         guard let inputStream = InputStream(url: input) else { throw BackupError.unknown }
         guard let outputStream = OutputStream(url: output, append: false) else { throw BackupError.unknown }
-        try ChaCha20Encryption.decrypt(input: inputStream, output: outputStream, passphrase: ChaCha20Encryption.Passphrase(password: password, uuid: accountId))
+        let passphrase = ChaCha20Poly1305.StreamEncryption.Passphrase(password: password, uuid: accountId)
+        try ChaCha20Poly1305.StreamEncryption.decrypt(input: inputStream, output: outputStream, passphrase: passphrase)
     }
     
     // MARK: - Helper
