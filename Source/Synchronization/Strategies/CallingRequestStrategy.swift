@@ -26,8 +26,6 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     // MARK: - Private Properties
     
     private let zmLog = ZMSLog(tag: "calling")
-
-    private let configuration: WireCallCenterConfiguration
     
     private var callCenter: WireCallCenterV3?
     private let managedObjectContext: NSManagedObjectContext
@@ -49,14 +47,12 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     public init(managedObjectContext: NSManagedObjectContext,
                 clientRegistrationDelegate: ClientRegistrationDelegate,
                 flowManager: FlowManagerType,
-                callEventStatus: CallEventStatus,
-                configuration: WireCallCenterConfiguration) {
+                callEventStatus: CallEventStatus) {
         
         self.managedObjectContext = managedObjectContext
         self.genericMessageStrategy = GenericMessageRequestStrategy(context: managedObjectContext, clientRegistrationDelegate: clientRegistrationDelegate)
         self.flowManager = flowManager
         self.callEventStatus = callEventStatus
-        self.configuration = configuration
         super.init()
         
         callConfigRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
@@ -71,8 +67,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
                                                             uiMOC: managedObjectContext.zm_userInterface,
                                                             flowManager: flowManager,
                                                             analytics: managedObjectContext.analytics,
-                                                            transport: self,
-                                                            configuration: configuration)
+                                                            transport: self)
         }
     }
 
@@ -206,8 +201,7 @@ extension CallingRequestStrategy: ZMContextChangeTracker, ZMContextChangeTracker
                                                                          uiMOC: uiContext.zm_userInterface,
                                                                          flowManager: self.flowManager,
                                                                          analytics: analytics,
-                                                                         transport: self,
-                                                                         configuration: self.configuration)
+                                                                         transport: self)
                 }
                 break
             }

@@ -31,8 +31,7 @@ class CallingRequestStrategyTests : MessagingTest {
             managedObjectContext: syncMOC,
             clientRegistrationDelegate: mockRegistrationDelegate,
             flowManager: FlowManagerMock(),
-            callEventStatus: CallEventStatus(),
-            configuration: .init()
+            callEventStatus: CallEventStatus()
         )
     }
     

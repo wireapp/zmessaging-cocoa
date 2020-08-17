@@ -308,7 +308,6 @@ public final class SessionManager : NSObject, SessionManagerType {
             application: application,
             mediaManager: mediaManager,
             flowManager: flowManager,
-            callCenterConfiguration: configuration.callCenterConfiguration,
             environment: environment,
             reachability: reachability,
             analytics: analytics,
@@ -525,6 +524,10 @@ public final class SessionManager : NSObject, SessionManagerType {
         delete(account: account, reason: .userInitiated)
     }
     
+    public func wipeDatabase() {
+        deleteAllAccounts(reason: .databaseWiped)
+    }
+    
     fileprivate func deleteAllAccounts(reason: ZMAccountDeletedReason) {
         let inactiveAccounts = accountManager.accounts.filter({ $0 != accountManager.selectedAccount })
         inactiveAccounts.forEach({ delete(account: $0, reason: reason) })
@@ -717,6 +720,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         require(backgroundUserSessions[account.userIdentifier] == nil, "User session is already loaded")
         backgroundUserSessions[account.userIdentifier] = userSession
         userSession.useConstantBitRateAudio = useConstantBitRateAudio
+        userSession.useConferenceCalling = useConferenceCalling
         updatePushToken(for: userSession)
         registerObservers(account: account, session: userSession)
     }

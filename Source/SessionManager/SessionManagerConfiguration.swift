@@ -63,11 +63,6 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     /// The default value of this property is `nil`, i.e. threshold is ignored
     public var failedPasswordThresholdBeforeWipe: Int?
 
-    /// The `callCenterConfiguration` contains fields to customize the behavior of calls.
-    ///
-    /// The default value is specified in `WireCallCenterConfiguration()`.
-    public let callCenterConfiguration: WireCallCenterConfiguration
-
     // MARK: - Init
     
     public init(wipeOnCookieInvalid: Bool = false,
@@ -76,8 +71,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                 wipeOnJailbreakOrRoot: Bool = false,
                 messageRetentionInterval: TimeInterval? = nil,
                 authenticateAfterReboot: Bool = false,
-                failedPasswordThresholdBeforeWipe: Int? = nil,
-                callCenterConfiguration: WireCallCenterConfiguration = .init()) {
+                failedPasswordThresholdBeforeWipe: Int? = nil) {
         self.wipeOnCookieInvalid = wipeOnCookieInvalid
         self.blacklistDownloadInterval = blacklistDownloadInterval
         self.blockOnJailbreakOrRoot = blockOnJailbreakOrRoot
@@ -85,7 +79,6 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         self.messageRetentionInterval = messageRetentionInterval
         self.authenticateAfterReboot = authenticateAfterReboot
         self.failedPasswordThresholdBeforeWipe = failedPasswordThresholdBeforeWipe
-        self.callCenterConfiguration = callCenterConfiguration
     }
 
     required public init(from decoder: Decoder) throws {
@@ -97,7 +90,6 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         messageRetentionInterval = try container.decodeIfPresent(TimeInterval.self, forKey: .messageRetentionInterval)
         authenticateAfterReboot = try container.decode(Bool.self, forKey: .authenticateAfterReboot)
         failedPasswordThresholdBeforeWipe = try container.decodeIfPresent(Int.self, forKey: .failedPasswordThresholdBeforeWipe)
-        callCenterConfiguration = try container.decodeIfPresent(WireCallCenterConfiguration.self, forKey: .callCenterConfiguration) ?? .init()
     }
 
     // MARK: - Methods
@@ -109,8 +101,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
                                                wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot,
                                                messageRetentionInterval: messageRetentionInterval,
                                                authenticateAfterReboot: authenticateAfterReboot,
-                                               failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe,
-                                               callCenterConfiguration: callCenterConfiguration)
+                                               failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe)
         
         return copy
     }
@@ -141,7 +132,6 @@ extension SessionManagerConfiguration {
         case messageRetentionInterval
         case authenticateAfterReboot
         case failedPasswordThresholdBeforeWipe
-        case callCenterConfiguration
     }
 
 }
