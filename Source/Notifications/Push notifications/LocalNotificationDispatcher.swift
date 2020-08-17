@@ -79,9 +79,16 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
                 // Fetch the conversation here to avoid refetching every time we try to create a notification
                 conversation = conversationMap[conversationID] ?? ZMConversation.fetch(withRemoteIdentifier: conversationID, in: self.syncMOC)
             }
+            
+            if let messageNonce = event.messageNonce {
+                if eventNotifications.notifications.contains(where: { $0.messageNonce == messageNonce }) {
+                    // ignore events which we already scheduled a notification for
+                    return
+                }
+            }
 
             if let receivedMessage = GenericMessage(from: event) {
-            
+                
                 if receivedMessage.hasReaction,
                    receivedMessage.reaction.emoji.isEmpty,
                    let messageID = UUID(uuidString: receivedMessage.reaction.messageID) {

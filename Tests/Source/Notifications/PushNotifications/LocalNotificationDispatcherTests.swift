@@ -125,6 +125,7 @@ extension LocalNotificationDispatcherTests {
             "type": "conversation.message-timer-update"
         ]
         let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: UUID.create())!
+        event.source = .pushNotification
  
         // WHEN
         self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
@@ -312,6 +313,7 @@ extension LocalNotificationDispatcherTests {
             "type": "conversation.member-join"
         ]
         let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: UUID())!
+        event.source = .pushNotification
         
         // notification content
         let text = "\(self.user1.name!) added you"
@@ -339,6 +341,7 @@ extension LocalNotificationDispatcherTests {
             "type": "conversation.member-join"
         ]
         let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: UUID())!
+        event.source = .pushNotification
         
         // WHEN
         self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
@@ -440,7 +443,11 @@ extension LocalNotificationDispatcherTests {
             "type": "conversation.otr-message-add"
         ]
         
-        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
+        return ZMUpdateEvent(uuid: nonce,
+                             payload: payload,
+                             transient: false,
+                             decrypted: true,
+                             source: .pushNotification)!
     }
 }
 
