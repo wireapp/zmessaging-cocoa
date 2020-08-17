@@ -55,7 +55,6 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
             self.mockSyncStatus = MockSyncStatus(managedObjectContext: self.syncMOC, syncStateDelegate: self)
             self.mockSyncStatus.mockPhase = .done
             self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
-            self.localNotificationDispatcher = MockPushMessageHandler()
             self.sut = ZMConversationTranscoder(managedObjectContext: self.syncMOC, applicationStatus: self.mockApplicationStatus, syncStatus: self.mockSyncStatus)
             self.conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             self.conversation.remoteIdentifier = UUID.create()
