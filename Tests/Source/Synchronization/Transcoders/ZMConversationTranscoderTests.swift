@@ -43,7 +43,6 @@ extension ZMConversation {
 class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
     
     var sut: ZMConversationTranscoder!
-    var localNotificationDispatcher: MockPushMessageHandler!
     var conversation: ZMConversation!
     var user: ZMUser!
     var user2: ZMUser!
@@ -56,8 +55,7 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
             self.mockSyncStatus = MockSyncStatus(managedObjectContext: self.syncMOC, syncStateDelegate: self)
             self.mockSyncStatus.mockPhase = .done
             self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
-            self.localNotificationDispatcher = MockPushMessageHandler()
-            self.sut = ZMConversationTranscoder(managedObjectContext: self.syncMOC, applicationStatus: self.mockApplicationStatus, localNotificationDispatcher: self.localNotificationDispatcher, syncStatus: self.mockSyncStatus)
+            self.sut = ZMConversationTranscoder(managedObjectContext: self.syncMOC, applicationStatus: self.mockApplicationStatus, syncStatus: self.mockSyncStatus)
             self.conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             self.conversation.remoteIdentifier = UUID.create()
             self.conversation.conversationType = .group
@@ -72,7 +70,6 @@ class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
     
     override func tearDown() {
         self.sut = nil
-        self.localNotificationDispatcher = nil
         self.conversation = nil
         self.user = nil
         self.mockSyncStatus = nil

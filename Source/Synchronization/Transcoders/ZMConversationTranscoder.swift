@@ -46,9 +46,7 @@ extension ZMConversationTranscoder {
     
     @objc(appendSystemMessageForUpdateEvent:inConversation:)
     public func appendSystemMessage(for event: ZMUpdateEvent, conversation: ZMConversation) {
-        if let _ = ZMSystemMessage.createOrUpdate(from: event, in: self.managedObjectContext) {
-            self.localNotificationDispatcher.process(event)
-        }
+        _ = ZMSystemMessage.createOrUpdate(from: event, in: self.managedObjectContext)
     }
     
     @objc(processMemberUpdateEvent:forConversation:previousLastServerTimeStamp:)
@@ -242,8 +240,7 @@ extension ZMConversationTranscoder {
         if let timestamp = event.timestamp, let conversation = conversation {
             // system message should reflect the synced timer value, not local
             let timer = conversation.hasSyncedDestructionTimeout ? conversation.messageDestructionTimeoutValue : 0
-            let _ = conversation.appendMessageTimerUpdateMessage(fromUser: user, timer: timer, timestamp: timestamp)
-            localNotificationDispatcher.process(event)
+            _ = conversation.appendMessageTimerUpdateMessage(fromUser: user, timer: timer, timestamp: timestamp)
         }
     }
     
