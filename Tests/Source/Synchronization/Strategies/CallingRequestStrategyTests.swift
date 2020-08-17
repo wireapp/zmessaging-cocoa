@@ -249,7 +249,7 @@ class CallingRequestStrategyTests : MessagingTest {
         guard let request = nextRequest else { return XCTFail("Expected next request") }
 
         // Then we tell backend to ignore missing clients (the non targeted conversation participants)
-        XCTAssertEqual(request.path, "/conversations/\(conversation.remoteIdentifier!.transportString())/otr/messages?ignore_missing")
+        XCTAssertEqual(request.path, "/conversations/\(conversation.remoteIdentifier!.transportString())/otr/messages?ignore_missing=true")
 
         guard
             let data = request.binaryData,

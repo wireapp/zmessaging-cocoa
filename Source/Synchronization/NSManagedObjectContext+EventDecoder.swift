@@ -105,8 +105,12 @@ private let zmLog = ZMSLog(tag: "EventDecoder")
     
     fileprivate static func addPersistentStore(_ psc: NSPersistentStoreCoordinator, at location: URL, isSecondTry: Bool = false) {
         do {
+            let options: [String: Any] = [
+                NSMigratePersistentStoresAutomaticallyOption: true,
+                NSInferMappingModelAutomaticallyOption: true
+            ]
             let storeType = StorageStack.shared.createStorageAsInMemory ? NSInMemoryStoreType : NSSQLiteStoreType
-            try psc.addPersistentStore(ofType: storeType, configurationName: nil, at: location, options: nil)
+            try psc.addPersistentStore(ofType: storeType, configurationName: nil, at: location, options: options)
         } catch {
             if isSecondTry {
                 fatal("Error adding persistent store \(error)")
