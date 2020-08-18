@@ -116,13 +116,7 @@ extension Notification.Name {
     public var isSyncing : Bool {
         return currentSyncPhase.isSyncing
     }
-    
-    var encryptionKeys: EncryptionKeys? { // TODO jacob move somewhere more appropriate
-        didSet {
-            DatabaseEncryptionLockNotification(databaseIsEncrypted: encryptionKeys == nil).post(in: managedObjectContext.notificationContext)
-        }
-    }
-    
+        
     public init(managedObjectContext: NSManagedObjectContext, syncStateDelegate: ZMSyncStateDelegate) {
         self.managedObjectContext = managedObjectContext
         self.syncStateDelegate = syncStateDelegate

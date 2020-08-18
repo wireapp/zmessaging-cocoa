@@ -57,7 +57,7 @@ extension ZMSyncStrategy: UpdateEventProcessor {
         }
         
         if syncMOC.encryptMessagesAtRest {
-            guard let encryptionKeys = applicationStatusDirectory?.syncStatus.encryptionKeys else {
+            guard let encryptionKeys = syncMOC.encryptionKeys else {
                 return true
             }
             

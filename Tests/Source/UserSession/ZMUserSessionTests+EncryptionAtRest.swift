@@ -163,12 +163,10 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         sut.encryptMessagesAtRest = true
 
         // then
-        let newKeys = sut.applicationStatusDirectory?.syncStatus.encryptionKeys
+        let newKeys = syncMOC.encryptionKeys
 
         XCTAssertFalse(sut.isDatabaseLocked)
-        XCTAssertNotEqual(oldKeys.publicKey, newKeys?.publicKey)
-        XCTAssertNotEqual(oldKeys.privateKey, newKeys?.privateKey)
-        XCTAssertNotEqual(oldKeys.databaseKey, newKeys?.databaseKey)
+        XCTAssertNotEqual(oldKeys, newKeys)
     }
     
 }

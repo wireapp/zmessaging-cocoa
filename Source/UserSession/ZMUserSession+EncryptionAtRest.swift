@@ -29,12 +29,11 @@ extension ZMUserSession {
                 let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
 
                 try EncryptionKeys.deleteKeys(for: account)
-                storeProvider.contextDirectory.clearDatabaseKeyInAllContexts()
+                storeProvider.contextDirectory.clearEncryptionKeysInAllContexts()
 
                 if newValue {
                     let keys = try EncryptionKeys.createKeys(for: account)
-                    applicationStatusDirectory?.syncStatus.encryptionKeys = keys
-                    storeProvider.contextDirectory.storeDatabaseKeyInAllContexts(databaseKey: keys.databaseKey)
+                    storeProvider.contextDirectory.storeEncryptionKeysInAllContexts(encryptionKeys: keys)
                 }
                 
                 managedObjectContext.encryptMessagesAtRest = newValue
@@ -50,7 +49,7 @@ extension ZMUserSession {
     }
     
     public var isDatabaseLocked: Bool {
-        managedObjectContext.encryptMessagesAtRest && applicationStatusDirectory?.syncStatus.encryptionKeys == nil
+        managedObjectContext.encryptMessagesAtRest && managedObjectContext.encryptionKeys == nil
     }
         
     public func registerDatabaseLockedHandler(_ handler: @escaping (_ isDatabaseLocked: Bool) -> Void) -> Any {
@@ -67,24 +66,22 @@ extension ZMUserSession {
     func lockDatabase() {
         guard managedObjectContext.encryptMessagesAtRest else { return }
 
-        storeProvider.contextDirectory.clearDatabaseKeyInAllContexts()
+        storeProvider.contextDirectory.clearEncryptionKeysInAllContexts()
         
-        syncManagedObjectContext.performGroupedBlock {
-            self.applicationStatusDirectory?.syncStatus.encryptionKeys = nil
-        }
-
+        DatabaseEncryptionLockNotification(databaseIsEncrypted: true).post(in: managedObjectContext.notificationContext)
     }
     
     public func unlockDatabase(with context: LAContext) throws {
         let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
         let keys = try EncryptionKeys.init(account: account, context: context)
 
-        storeProvider.contextDirectory.storeDatabaseKeyInAllContexts(databaseKey: keys.databaseKey)
+        storeProvider.contextDirectory.storeEncryptionKeysInAllContexts(encryptionKeys: keys)
+        
+        DatabaseEncryptionLockNotification(databaseIsEncrypted: false).post(in: managedObjectContext.notificationContext)
         
         syncManagedObjectContext.performGroupedBlock {
             guard let syncStrategy = self.syncStrategy else { return }
             
-            self.applicationStatusDirectory?.syncStatus.encryptionKeys = keys
             let hasMoreEventsToProcess = syncStrategy.processEventsAfterUnlockingDatabase()
             
             self.managedObjectContext.performGroupedBlock { [weak self] in
