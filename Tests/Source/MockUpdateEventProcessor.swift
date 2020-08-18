@@ -23,9 +23,13 @@ import Foundation
 class MockUpdateEventProcessor: WireSyncEngine.UpdateEventProcessor {
     
     var processedEvents: [ZMUpdateEvent] = []
-    
-    func process(updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
+        
+    func storeAndProcessUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
         processedEvents.append(contentsOf: updateEvents)
+    }
+    
+    func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
+        
     }
     
 }

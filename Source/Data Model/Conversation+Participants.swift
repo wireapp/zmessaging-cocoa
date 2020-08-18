@@ -82,7 +82,7 @@ extension ZMConversation {
             if response.httpStatus == 200 {
                 if let payload = response.payload, let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
                     syncMOC.performGroupedBlock {
-                        eventProcessor.process(updateEvents: [event], ignoreBuffer: true)
+                        eventProcessor.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
                     }
                 }
                 
@@ -145,7 +145,7 @@ extension ZMConversation {
                             conversation?.updateCleared(fromPostPayloadEvent: event)
                         }
                         
-                        eventProcessor.process(updateEvents: [event], ignoreBuffer: true)
+                        eventProcessor.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
                     }
                 }
                 

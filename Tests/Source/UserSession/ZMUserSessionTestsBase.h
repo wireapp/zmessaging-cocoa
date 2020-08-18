@@ -38,7 +38,7 @@
 @class FlowManagerMock;
 @class MockSessionManager;
 @class RecordingMockTransportSession;
-@class WireCallCenterConfiguration;
+@class MockSyncStateDelegate;
 
 @interface ThirdPartyServices : NSObject <ZMThirdPartyServicesDelegate>
 
@@ -75,10 +75,11 @@
 @property (nonatomic) ThirdPartyServices *thirdPartyServices;
 @property (nonatomic) id requestAvailableNotification;
 @property (nonatomic) id operationLoop;
+@property (nonatomic) SyncStatus *mockSyncStatus;
+@property (nonatomic) MockSyncStateDelegate *mockSyncStateDelegate;
 @property (nonatomic) ZMClientRegistrationStatus * clientRegistrationStatus;
 @property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 @property (nonatomic) id<LocalStoreProviderProtocol> storeProvider;
-@property (nonatomic) WireCallCenterConfiguration *callCenterConfiguration;
 
 - (void)simulateLoggedInUser;
 

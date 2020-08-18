@@ -37,9 +37,8 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     }
     
     func textNotification(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, mentionedUser: UserType? = nil, quotedUser: ZMUser? = nil, isEphemeral: Bool = false) -> ZMLocalNotification? {
-        if isEphemeral { conversation.messageDestructionTimeout = .local(0.5) }
         
-        conversation.lastReadServerTimeStamp = Date()
+        let expiresAfter: TimeInterval = isEphemeral ? 200 : 0
         
         let mention = mentionedUser.map(papply(Mention.init, NSRange(location: 0, length: 8)))
         let mentions = mention.map { [$0] } ?? []
@@ -52,19 +51,23 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
             quotedMessage?.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(10)
         }
         
-        let message = conversation.append(text: text ?? "Hello Hello!", mentions: mentions, replyingTo: quotedMessage) as! ZMOTRMessage
-        message.sender = sender
-        message.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(20)
+        let event = createUpdateEvent(UUID.create(), conversationID: conversation.remoteIdentifier!, genericMessage: GenericMessage(content: Text(content: text ?? "Hello Hello!", mentions: mentions, linkPreviews: [], replyingTo: quotedMessage), nonce: UUID.create(), expiresAfter: expiresAfter), senderID: sender.remoteIdentifier)
         
-        return ZMLocalNotification(message: message)
+        return ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: uiMOC)
     }
     
     func unknownNotification(_ conversation: ZMConversation, sender: ZMUser) -> ZMLocalNotification? {
-        let message = ZMClientMessage(nonce: UUID(), managedObjectContext: uiMOC)
-        message.sender = sender;
-        message.visibleInConversation = conversation
-        message.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(20)
-        return ZMLocalNotification(message: message)
+        let payload : [String : Any] = [
+            "id": UUID.create().transportString(),
+            "conversation": conversation.remoteIdentifier!.transportString(),
+            "from": sender.remoteIdentifier.transportString(),
+            "time": conversation.lastReadServerTimeStamp!.addingTimeInterval(20).transportString(),
+            "data": ["text": ""],
+            "type": "conversation.otr-message-add"
+        ]
+        
+        let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: UUID())!
+        return ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: uiMOC)
     }
     
     func bodyForNote(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, isEphemeral: Bool = false) -> String {
@@ -179,15 +182,13 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     func testThatItSavesTheMessageNonce() {
         
         // given
-        let message = oneOnOneConversation.append(text: "Hello Hello!") as! ZMOTRMessage
-        message.serverTimestamp = Date.distantFuture
-        message.sender = sender
+        let event = createUpdateEvent(UUID.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: GenericMessage(content: Text(content: "Hello Hello!"), nonce: UUID.create()), senderID: sender.remoteIdentifier)
         
-        let note = ZMLocalNotification(message: message)!
+        let note = ZMLocalNotification(event: event, conversation: oneOnOneConversation, managedObjectContext: syncMOC)
         
         // then
-        XCTAssertEqual(note.messageNonce, message.nonce);
-        XCTAssertEqual(note.selfUserID, self.selfUser.remoteIdentifier);
+        XCTAssertEqual(note!.messageNonce, event.messageNonce)
+        XCTAssertEqual(note!.selfUserID, self.selfUser.remoteIdentifier)
     }
     
     func testThatItDoesNotCreateANotificationWhenTheConversationIsSilenced(){
@@ -483,11 +484,21 @@ extension ZMLocalNotificationTests_Message {
     // MARK: Helpers
     
     func imageNote(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, isEphemeral : Bool = false) -> ZMLocalNotification? {
-        if isEphemeral { conversation.messageDestructionTimeout = .local(10) }
-        let message = conversation.append(imageFromData: verySmallJPEGData()) as! ZMAssetClientMessage
-        message.serverTimestamp = Date.distantFuture
-        message.sender = sender
-        return ZMLocalNotification(message: message)
+        let expiresAfter: TimeInterval = isEphemeral ? 10 : 0
+        let imageData = verySmallJPEGData()
+        let assetMessage = GenericMessage(content: WireProtos.Asset(imageSize: .zero, mimeType: "image/jpeg", size: UInt64(imageData.count)), nonce: UUID.create(), expiresAfter: expiresAfter)
+        
+        let payload : [String : Any] = [
+            "id": UUID.create().transportString(),
+            "conversation": conversation.remoteIdentifier!.transportString(),
+            "from": sender.remoteIdentifier.transportString(),
+            "time": Date.distantFuture.transportString(),
+            "data": ["text": try? assetMessage.serializedData().base64String()],
+            "type": "conversation.otr-message-add"
+        ]
+        
+        let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: UUID())!
+        return ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: uiMOC)
     }
 
     func bodyForImageNote(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, isEphemeral: Bool = false) -> String {
@@ -547,21 +558,29 @@ extension ZMLocalNotificationTests_Message {
     // MARK: Helpers
 
     func assetNote(_ fileType: FileType, conversation: ZMConversation, sender: ZMUser, isEphemeral: Bool = false) -> ZMLocalNotification? {
-        if isEphemeral {
-            conversation.messageDestructionTimeout = .local(10)
+        var asset: WireProtos.Asset
+        switch fileType {
+        case .video:
+            asset = WireProtos.Asset(ZMVideoMetadata(fileURL: fileType.testURL))
+        case .audio:
+            asset = WireProtos.Asset(ZMAudioMetadata(fileURL: fileType.testURL))
+        default:
+            asset = WireProtos.Asset(ZMFileMetadata(fileURL: fileType.testURL))
         }
+        let expiresAfter: TimeInterval = isEphemeral ? 10 : 0
+        let assetMessage = GenericMessage(content: asset, nonce: UUID.create(), expiresAfter: expiresAfter)
+        let payload : [String : Any] = [
+            "id": UUID.create().transportString(),
+            "conversation": conversation.remoteIdentifier!.transportString(),
+            "from": sender.remoteIdentifier.transportString(),
+            "time": Date.distantFuture.transportString(),
+            "data": ["text": try? assetMessage.serializedData().base64String()],
+            "type": "conversation.otr-message-add"
+        ]
         
-        defer {
-            conversation.messageDestructionTimeout = nil
-        }
+        let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: UUID())!
+        return ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: uiMOC)
         
-        let metadata = ZMFileMetadata(fileURL: fileType.testURL)
-        let message = conversation.append(file: metadata) as! ZMAssetClientMessage
-        message.serverTimestamp = Date.distantFuture
-        message.sender = sender
-        message.delivered = true
-        
-        return ZMLocalNotification(message: message)
     }
 
     func bodyForAssetNote(_ fileType: FileType, conversation: ZMConversation, sender: ZMUser, isEphemeral: Bool = false) -> String {
@@ -620,11 +639,20 @@ extension ZMLocalNotificationTests_Message {
     // MARK: Helpers
     
     func knockNote(_ conversation: ZMConversation, sender: ZMUser, isEphemeral : Bool = false) -> ZMLocalNotification? {
-        if isEphemeral { conversation.messageDestructionTimeout = .local(10) }
-        let message = conversation.appendKnock() as! ZMClientMessage
-        message.serverTimestamp = Date.distantFuture
-        message.sender = sender
-        return ZMLocalNotification(message: message)
+        let expiresAfter: TimeInterval = isEphemeral ? 10 : 0
+        let knockMessage = GenericMessage(content: Knock.with { $0.hotKnock = false }, nonce: UUID.create(), expiresAfter: expiresAfter)
+        
+        let payload : [String : Any] = [
+            "id": UUID.create().transportString(),
+            "conversation": conversation.remoteIdentifier!.transportString(),
+            "from": sender.remoteIdentifier.transportString(),
+            "time": Date.distantFuture.transportString(),
+            "data": ["text": try? knockMessage.serializedData().base64String()],
+            "type": "conversation.otr-message-add"
+        ]
+        
+        let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: UUID())!
+        return ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: uiMOC)
     }
 
     func bodyForKnockNote(_ conversation: ZMConversation, sender: ZMUser, isEphemeral: Bool = false) -> String {
@@ -655,10 +683,19 @@ extension ZMLocalNotificationTests_Message {
 extension ZMLocalNotificationTests_Message {
 
     func editNote(_ message: ZMOTRMessage, sender: ZMUser, text: String) -> ZMLocalNotification? {
-        message.textMessageData?.editText(text, mentions: [], fetchLinkPreview: false)
-        message.serverTimestamp = Date.distantFuture
-        message.sender = sender
-        return ZMLocalNotification(message: message as! ZMClientMessage)
+        let editTextMessage = GenericMessage(content: MessageEdit(replacingMessageID: message.nonce!, text: Text(content: text)), nonce: UUID.create())
+        
+        let payload : [String : Any] = [
+            "id": UUID.create().transportString(),
+            "conversation": message.conversation!.remoteIdentifier!.transportString(),
+            "from": sender.remoteIdentifier.transportString(),
+            "time": Date.distantFuture.transportString(),
+            "data": ["text": try? editTextMessage.serializedData().base64String()],
+            "type": "conversation.otr-message-add"
+        ]
+        
+        let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: UUID())!
+        return ZMLocalNotification(event: event, conversation: message.conversation!, managedObjectContext: uiMOC)
     }
 
     func bodyForEditNote(_ conversation: ZMConversation, sender: ZMUser, text: String) -> String {

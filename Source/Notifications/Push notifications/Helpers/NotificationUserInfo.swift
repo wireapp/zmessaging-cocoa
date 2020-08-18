@@ -218,9 +218,9 @@ extension NotificationUserInfo {
     func setupUserInfo(for conversation: ZMConversation, event: ZMUpdateEvent) {
         addSelfUserInfo(using: conversation)
         self.conversationID = conversation.remoteIdentifier
-        self.senderID = event.senderUUID()
+        self.senderID = event.senderUUID
         self.messageNonce = event.messageNonce
-        self.eventTime = event.timeStamp()
+        self.eventTime = event.timestamp
     }
 
     func setupUserInfo(for message: ZMMessage) {

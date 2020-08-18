@@ -209,6 +209,10 @@ extension RegistrationCredentialVerificationStrategyTests: RegistrationStatusStr
     func testThatItNotifiesStatusAfterErrorToPhoneVerify_OtherError() {
         checkSendingPhoneCodeResponseError(with: .unknownError, errorLabel: "not-clear-what-happened", httpStatus: 414)
     }
+    
+    func testThatItNotifiesStatusAfterErrorToEmailVerify_DomainBlocked() {
+        checkSendingCodeResponseError(with: .domainBlocked, errorLabel: "domain-blocked-for-registration", httpStatus: 451)
+    }
 
     // MARK:- error tests for activation
 

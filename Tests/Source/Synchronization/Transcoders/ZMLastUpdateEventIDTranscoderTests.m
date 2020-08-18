@@ -176,8 +176,8 @@
 {
     // given
     NSUUID *uuid = [NSUUID createUUID];
-    [[(id) self.syncStrategy stub] processUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
-    [[(id) self.syncStrategy stub] processUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
+    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
+    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
     [self injectLastUpdateEventID:uuid.transportString];
     
     // expect
@@ -191,8 +191,8 @@
 {
     // given
     NSUUID *uuid = [NSUUID createUUID];
-    [[(id) self.syncStrategy stub] processUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
-    [[(id) self.syncStrategy stub] processUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
+    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
+    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
     [self injectLastUpdateEventID:uuid.transportString];
     
     // expect
@@ -208,8 +208,8 @@
 {
     // given
     NSUUID *uuid = [NSUUID createUUID];
-    [[(id) self.syncStrategy stub] processUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
-    [[(id) self.syncStrategy stub] processUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
+    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
+    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
     [self injectLastUpdateEventID:uuid.transportString];
     
     // expect
@@ -225,8 +225,8 @@
 - (void)testThatItTheLastUpdateEventIDIsNotPersistedIfTheResponseWasInvalid
 {
     // given
-    [[(id) self.syncStrategy stub] processUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
-    [[(id) self.syncStrategy stub] processUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
+    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
+    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
     [self performIgnoringZMLogError:^{
         [self injectLastUpdateEventID:@"foo"];
     }];

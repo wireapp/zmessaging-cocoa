@@ -31,6 +31,7 @@ struct CallSnapshot {
     let isConstantBitRate: Bool
     let videoState: VideoState
     let networkQuality: NetworkQuality
+    let isConferenceCall: Bool
     var conversationObserverToken : NSObjectProtocol?
 
     /**
@@ -47,6 +48,7 @@ struct CallSnapshot {
                             isConstantBitRate: isConstantBitRate,
                             videoState: videoState,
                             networkQuality: networkQuality,
+                            isConferenceCall: isConferenceCall,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -64,6 +66,7 @@ struct CallSnapshot {
                             isConstantBitRate: enabled,
                             videoState: videoState,
                             networkQuality: networkQuality,
+                            isConferenceCall: isConferenceCall,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -81,6 +84,7 @@ struct CallSnapshot {
                             isConstantBitRate: isConstantBitRate,
                             videoState: videoState,
                             networkQuality: networkQuality,
+                            isConferenceCall: isConferenceCall,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -98,6 +102,7 @@ struct CallSnapshot {
                             isConstantBitRate: isConstantBitRate,
                             videoState: videoState,
                             networkQuality: networkQuality,
+                            isConferenceCall: isConferenceCall,
                             conversationObserverToken: conversationObserverToken)
     }
 

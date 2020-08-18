@@ -39,7 +39,6 @@ import WireDataModel
      * - parameter flowManager: The object that controls media flow.
      * - parameter analytics: The object to use to record stats about the call. Defaults to `nil`.
      * - parameter transport: The object that performs network requests when the call center requests them.
-     * - parameter configuration: The object specifying customizable behavior.
      * - returns: The call center to use for the given configuration.
      */
 
@@ -48,8 +47,7 @@ import WireDataModel
                                  uiMOC: NSManagedObjectContext,
                                  flowManager: FlowManagerType,
                                  analytics: AnalyticsType? = nil,
-                                 transport: WireCallCenterTransport,
-                                 configuration: WireCallCenterConfiguration) -> WireCallCenterV3 {
+                                 transport: WireCallCenterTransport) -> WireCallCenterV3 {
 
         if let wireCallCenter = uiMOC.zm_callCenter {
             return wireCallCenter
@@ -59,8 +57,7 @@ import WireDataModel
                                                                                uiMOC: uiMOC,
                                                                                flowManager: flowManager,
                                                                                analytics: analytics,
-                                                                               transport: transport,
-                                                                               configuration: configuration)
+                                                                               transport: transport)
 
             newInstance.useConstantBitRateAudio = uiMOC.zm_useConstantBitRateAudio
             uiMOC.zm_callCenter = newInstance

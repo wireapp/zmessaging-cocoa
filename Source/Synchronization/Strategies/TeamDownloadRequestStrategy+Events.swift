@@ -93,7 +93,7 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
             if user.isSelfUser {
                 deleteAccount()
             } else {
-                user.markAccountAsDeleted(at: event.timeStamp() ?? Date())
+                user.markAccountAsDeleted(at: event.timestamp ?? Date())
             }
             managedObjectContext.delete(member)
         } else {

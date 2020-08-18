@@ -60,8 +60,9 @@ class ZMUserSessionSwiftTests: ZMUserSessionTestsBase {
         self.sut.markAllConversationsAsRead()
         
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
+    
         // then
+        self.uiMOC.refreshAllObjects()
         XCTAssertEqual(conversations.filter { $0.firstUnreadMessage != nil }.count, 0)
     }
 }

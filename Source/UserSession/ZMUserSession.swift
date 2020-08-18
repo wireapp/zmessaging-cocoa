@@ -43,7 +43,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     let application: ZMApplication
     let flowManager: FlowManagerType
     var mediaManager: MediaManagerType
-    let callCenterConfiguration: WireCallCenterConfiguration
     var analytics: AnalyticsType?
     var transportSession: TransportSessionType
     let storedDidSaveNotifications: ContextDidSaveNotificationPersistence
@@ -171,7 +170,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     public init(transportSession: TransportSessionType,
                 mediaManager: MediaManagerType,
                 flowManager: FlowManagerType,
-                callCenterConfiguration: WireCallCenterConfiguration,
                 analytics: AnalyticsType?,
                 operationLoop: ZMOperationLoop? = nil,
                 application: ZMApplication,
@@ -189,7 +187,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.appVersion = appVersion
         self.flowManager = flowManager
         self.mediaManager = mediaManager
-        self.callCenterConfiguration = callCenterConfiguration
         self.analytics = analytics
         self.storeProvider = storeProvider
         self.transportSession = transportSession
@@ -209,6 +206,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
             self.localNotificationDispatcher = LocalNotificationDispatcher(in: storeProvider.contextDirectory.syncContext)
             self.configureTransportSession()
             self.applicationStatusDirectory = self.createApplicationStatusDirectory()
+            self.syncStrategy = operationLoop?.syncStrategy
             self.operationLoop = operationLoop ?? self.createOperationLoop()
             self.urlActionProcessors = self.createURLActionProcessors()
             self.callStateObserver = CallStateObserver(localNotificationDispatcher: self.localNotificationDispatcher!,
@@ -222,8 +220,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         observeChangesOnShareExtension()
         startEphemeralTimers()
         notifyUserAboutChangesInAvailabilityBehaviourIfNeeded()
-        
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
+        
     }
     
     private func configureTransportSession() {
@@ -280,8 +278,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                                           localNotificationsDispatcher: localNotificationDispatcher!,
                                           notificationsDispatcher: notificationDispatcher,
                                           applicationStatusDirectory: applicationStatusDirectory!,
-                                          application: application,
-                                          callCenterConfiguration: callCenterConfiguration)
+                                          application: application)
         self.syncStrategy = syncStrategy
 
         return ZMOperationLoop(transportSession: transportSession,
@@ -413,7 +410,7 @@ extension ZMUserSession: ZMNetworkStateDelegate {
         }
     }
     
-    private func updateNetworkState() {
+    func updateNetworkState() {
         let state: ZMNetworkState
         
         if isNetworkOnline {
@@ -460,10 +457,13 @@ extension ZMUserSession: ZMSyncStateDelegate {
     }
     
     public func didFinishQuickSync() {
-        syncStrategy?.didFinishSync()
+        guard let syncStrategy = syncStrategy else { return }
+        
+        syncStrategy.processAllEventsInBuffer()
+        let hasMoreEventsToProcess = syncStrategy.processEventsAfterFinishingQuickSync()
         
         managedObjectContext.performGroupedBlock { [weak self] in
-            self?.isPerformingSync = false
+            self?.isPerformingSync = hasMoreEventsToProcess
             self?.updateNetworkState()
             self?.notifyThirdPartyServices()
         }
