@@ -183,6 +183,8 @@ public enum LocalNotificationContentType : Equatable {
             default:
                 return .fileUpload
             }
+        case .confirmation:
+            return nil
         default:
            return .undefined
         }
