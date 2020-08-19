@@ -313,7 +313,7 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
 
     override func shouldCreateNotification() -> Bool {
         guard let message = message else {
-            //We should create a notification for the ephemeral message, but we might not be able to create a generic message from the event payload.
+            // This is the case when we have an undefined message and we can't deserialize it.
             return true
         }
         guard let conversation = conversation,
