@@ -140,19 +140,3 @@ public final class StoredUpdateEvent: NSManagedObject {
       return try? JSONSerialization.jsonObject(with: decryptedData as Data , options: []) as? NSDictionary
     }
 }
-
-@available(iOS 12.0, *)
-@objc(NSDictionaryValueTransformer)
-public final class NSDictionaryValueTransformer: NSSecureUnarchiveFromDataTransformer {
-
-    static let name = NSValueTransformerName(rawValue: String(describing: NSDictionaryValueTransformer.self))
-
-    public override static var allowedTopLevelClasses: [AnyClass] {
-        return [NSDictionary.self]
-    }
-
-    public static func register() {
-        let transformer = NSDictionaryValueTransformer()
-        ValueTransformer.setValueTransformer(transformer, forName: name)
-    }
-}
