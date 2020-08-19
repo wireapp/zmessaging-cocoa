@@ -104,7 +104,6 @@ public enum LocalNotificationContentType : Equatable {
         return .undefined
     }
     
-
     static func typeForMessage(_ event: ZMUpdateEvent, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> LocalNotificationContentType? {
         
         switch event.type {

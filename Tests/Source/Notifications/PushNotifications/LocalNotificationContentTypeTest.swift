@@ -24,7 +24,6 @@ class LocalNotificationContentTypeTest: ZMLocalNotificationTests {
 
     func testThatItCreatesACorrectLocalNotificationContentTypeForTheLocationMessage() {
         // given
-
         let location = WireProtos.Location.with {
             $0.latitude = 0.0
             $0.longitude = 0.0
