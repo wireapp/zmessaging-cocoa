@@ -131,7 +131,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
             ZMUpdateEvent *event = [ZMUpdateEvent eventsArrayFromPushChannelData:eventsDictionaries.firstObject].firstObject;
             // In case we receive a payload together with the 404 we set the timestamp of the system message
             // to be 1/10th of a second older than the oldest received notification for it to appear above it.
-            timestamp = [event.timeStamp dateByAddingTimeInterval:-offset];
+            timestamp = [event.timestamp dateByAddingTimeInterval:-offset];
         }
         
         NSArray <ZMConversation *> *conversations = [self.managedObjectContext executeFetchRequestOrAssert:[ZMConversation sortedFetchRequest]];
@@ -183,7 +183,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
     
     ZMLogWithLevelAndTag(ZMLogLevelInfo, ZMTAG_EVENT_PROCESSING, @"Downloaded %lu event(s)", (unsigned long)parsedEvents.count);
     
-    [self.eventProcessor processUpdateEvents:parsedEvents ignoreBuffer:YES];
+    [self.eventProcessor storeUpdateEvents:parsedEvents ignoreBuffer:YES];
     [self.pushNotificationStatus didFetchEventIds:eventIds lastEventId:latestEventId finished:!self.listPaginator.hasMoreToFetch];
     
     [tp warnIfLongerThanInterval];

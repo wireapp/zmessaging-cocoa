@@ -198,12 +198,14 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     private let incomingCallHandler: Handler.IncomingCall = { conversationId, messageTime, userId, clientId, isVideoCall, shouldRing, conversationType, contextRef in
-        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, clientId, isVideoCall, shouldRing) {
+
+        AVSWrapper.withCallCenter(contextRef, conversationId, messageTime, userId, clientId, isVideoCall, shouldRing, conversationType) {
             $0.handleIncomingCall(conversationId: $1,
                                   messageTime: $2,
                                   client: AVSClient(userId: $3, clientId: $4),
                                   isVideoCall: $5,
-                                  shouldRing: $6)
+                                  shouldRing: $6,
+                                  conversationType: $7)
         }
     }
 
@@ -262,7 +264,7 @@ public class AVSWrapper: AVSWrapperType {
         }
     }
 
-    private let sendCallMessageHandler: Handler.CallMessageSend = { token, conversationId, senderUserId, senderClientId, _, _, data, dataLength, _, contextRef in
+    private let sendCallMessageHandler: Handler.CallMessageSend = { token, conversationId, senderUserId, senderClientId, targetsCString, _, data, dataLength, _, contextRef in
         guard let token = token else {
             return EINVAL
         }
@@ -270,8 +272,13 @@ public class AVSWrapper: AVSWrapperType {
         let bytes = UnsafeBufferPointer<UInt8>(start: data, count: dataLength)
         let transformedData = Data(buffer: bytes)
 
+        let targets = targetsCString
+            .flatMap { String(cString: $0)?.data(using: .utf8) }
+            .flatMap { AVSClientList($0) }
+
+
         return AVSWrapper.withCallCenter(contextRef, conversationId, senderUserId, senderClientId) {
-            $0.handleCallMessageRequest(token: token, conversationId: $1, senderUserId: $2, senderClientId: $3, data: transformedData)
+            $0.handleCallMessageRequest(token: token, conversationId: $1, senderUserId: $2, senderClientId: $3, targets: targets, data: transformedData)
         }
     }
     

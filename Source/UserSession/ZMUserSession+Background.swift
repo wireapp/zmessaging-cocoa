@@ -42,6 +42,7 @@ extension ZMUserSession {
     public func applicationDidEnterBackground(_ note: Notification?) {
         notifyThirdPartyServices()
         stopEphemeralTimers()
+        lockDatabase()
     }
     
     @objc

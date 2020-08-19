@@ -55,4 +55,19 @@ public extension NSManagedObjectContext {
         
     }
     
+    private static let ConferenceCallingKey = "ConferenceCallingKey"
+    
+    var zm_useConferenceCalling : Bool {
+        
+        get {
+            precondition(zm_isUserInterfaceContext, "zm_useConferenceCalling can only be accessed on the ui context")
+            return userInfo[NSManagedObjectContext.ConferenceCallingKey] as? Bool ?? false
+        }
+        
+        set {
+            precondition(zm_isUserInterfaceContext, "zm_useConferenceCalling can only be accessed on the ui context")
+            userInfo[NSManagedObjectContext.ConferenceCallingKey] = newValue
+        }
+        
+    }
 }

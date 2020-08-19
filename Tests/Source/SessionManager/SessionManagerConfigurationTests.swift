@@ -33,10 +33,6 @@ class SessionManagerConfigurationTests: XCTestCase {
             "authenticateAfterReboot": false,
             "useBiometricsOrAccountPassword": true,
             "messageRetentionInterval": 3600,
-            "callCenterConfiguration": {
-                "videoParticipantsLimit": 40,
-                "useConferenceCalling": true
-            }
         }
 
         """
@@ -55,36 +51,6 @@ class SessionManagerConfigurationTests: XCTestCase {
         XCTAssertEqual(result.messageRetentionInterval, 3600)
         XCTAssertEqual(result.authenticateAfterReboot, false)
         XCTAssertEqual(result.failedPasswordThresholdBeforeWipe, nil)
-        XCTAssertEqual(result.callCenterConfiguration.videoParticipantsLimit, 40)
-        XCTAssertEqual(result.callCenterConfiguration.useConferenceCalling, true)
-    }
-
-    func testItSetsDefaultCallCenterConfigurationIfNotPresent() throws {
-        // Given
-        let json = """
-        {
-            "wipeOnCookieInvalid": false,
-            "blacklistDownloadInterval": 21600,
-            "blockOnJailbreakOrRoot": false,
-            "wipeOnJailbreakOrRoot": true,
-            "forceAppLock": false,
-            "appLockTimeout": 10,
-            "authenticateAfterReboot": false,
-            "useBiometricsOrAccountPassword": true,
-            "messageRetentionInterval": 3600,
-        }
-
-        """
-
-        let decoder = JSONDecoder()
-        let data = json.data(using: .utf8)!
-
-        // When
-        let result = try decoder.decode(SessionManagerConfiguration.self, from: data)
-
-        // Then
-        XCTAssertEqual(result.callCenterConfiguration.videoParticipantsLimit, 4)
-        XCTAssertEqual(result.callCenterConfiguration.useConferenceCalling, false)
     }
 
 }

@@ -64,7 +64,7 @@ extension PushNotificationStrategy: NotificationStreamSyncDelegate {
                 latestEventId = event.uuid
             }
         }
-        eventProcessor.process(updateEvents: parsedEvents, ignoreBuffer: true)
+        eventProcessor.storeUpdateEvents(parsedEvents, ignoreBuffer: true)
         previouslyReceivedEventIDsCollection?.discardListOfAlreadyReceivedPushEventIDs()
         pushNotificationStatus.didFetch(eventIds: eventIds, lastEventId: latestEventId, finished: hasMoreToFetch)
     }

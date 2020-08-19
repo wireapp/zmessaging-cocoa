@@ -161,7 +161,7 @@
     
     self.conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
     [[[[self.conversationTranscoder expect] andReturn:self.conversationTranscoder] classMethod] alloc];
-    (void) [[[self.conversationTranscoder stub] andReturn:self.conversationTranscoder] initWithManagedObjectContext:OCMOCK_ANY applicationStatus:OCMOCK_ANY localNotificationDispatcher:OCMOCK_ANY syncStatus:OCMOCK_ANY];
+    (void) [[[self.conversationTranscoder stub] andReturn:self.conversationTranscoder] initWithManagedObjectContext:OCMOCK_ANY applicationStatus:OCMOCK_ANY syncStatus:OCMOCK_ANY];
 
     id clientMessageTranscoder = [OCMockObject mockForClass:ClientMessageTranscoder.class];
     [[[[clientMessageTranscoder expect] andReturn:clientMessageTranscoder] classMethod] alloc];
@@ -180,7 +180,7 @@
     
     self.updateEventsBuffer = [OCMockObject mockForClass:ZMUpdateEventsBuffer.class];
     [[[[self.updateEventsBuffer expect] andReturn:self.updateEventsBuffer] classMethod] alloc];
-    (void) [[[self.updateEventsBuffer stub] andReturn:self.updateEventsBuffer] initWithUpdateEventConsumer:OCMOCK_ANY];
+    (void) [[[self.updateEventsBuffer stub] andReturn:self.updateEventsBuffer] initWithUpdateEventProcessor:OCMOCK_ANY];
     [self verifyMockLater:self.updateEventsBuffer];
     
     self.syncObjects = @[
@@ -210,8 +210,7 @@
                                 localNotificationsDispatcher:self.mockDispatcher
                                      notificationsDispatcher:[[NotificationDispatcher alloc] initWithManagedObjectContext:self.contextDirectory.uiContext]
                                   applicationStatusDirectory:self.applicationStatusDirectory
-                                                 application:self.application
-                                     callCenterConfiguration:[[WireCallCenterConfiguration alloc] init]];
+                                                 application:self.application];
     
     self.application.applicationState = UIApplicationStateBackground;
     XCTAssertEqual(self.sut.userTranscoder, self.userTranscoder);
@@ -335,7 +334,7 @@
     }] processEvents:expectedEvents liveEvents:YES prefetchResult:OCMOCK_ANY];
     
     // when
-    [self.sut consumeUpdateEvents:@[expectedEvents.firstObject]];
+    [self.sut storeAndProcessUpdateEvents:@[expectedEvents.firstObject] ignoreBuffer:YES];
     
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -369,7 +368,7 @@
 
     // when
     for(id event in eventsArray) {
-        [self.sut consumeUpdateEvents:@[event]];
+        [self.sut storeAndProcessUpdateEvents:@[event] ignoreBuffer:YES];
         WaitForAllGroupsToBeEmpty(0.5);
     }
 }
@@ -397,7 +396,7 @@
                                 withEvents:eventsArray];
     
     // when
-    [self.sut processUpdateEvents:eventsArray ignoreBuffer:YES];
+    [self.sut storeAndProcessUpdateEvents:eventsArray ignoreBuffer:YES];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -426,7 +425,7 @@
                                 withEvents:expectedEvents];
     
     // when
-    [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
+    [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:NO];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -461,7 +460,7 @@
     }
     
     // when
-    [self.sut processUpdateEvents:expectedEvents ignoreBuffer:NO];
+    [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:NO];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -492,7 +491,7 @@
     [[self.updateEventsBuffer reject] addUpdateEvent:OCMOCK_ANY];
     
     // when
-    [self.sut processUpdateEvents:expectedEvents ignoreBuffer:YES];
+    [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:YES];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -522,7 +521,7 @@
                                 withEvents:expectedEvents];
     
     // when
-    [self.sut processUpdateEvents:expectedEvents ignoreBuffer:YES];
+    [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:YES];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -574,7 +573,7 @@
                                 withEvents:events];
     
     // when
-    [self.sut processUpdateEvents:events ignoreBuffer:YES];
+    [self.sut storeAndProcessUpdateEvents:events ignoreBuffer:YES];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
@@ -868,6 +867,8 @@
 - (void)expectSyncObjectsToProcessEvents:(BOOL)process liveEvents:(BOOL)liveEvents decryptEvents:(BOOL)decyptEvents returnIDsForPrefetching:(BOOL)returnIDs withEvents:(NSArray *)events;
 {
     NOT_USED(decyptEvents);
+    
+    [[self.syncStatusMock expect] isSyncing];
     
     for (id obj in self.syncObjects) {
         if (![obj conformsToProtocol:@protocol(ZMEventConsumer)]) {

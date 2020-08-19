@@ -26,8 +26,6 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     // MARK: - Private Properties
     
     private let zmLog = ZMSLog(tag: "calling")
-
-    private let configuration: WireCallCenterConfiguration
     
     private var callCenter: WireCallCenterV3?
     private let managedObjectContext: NSManagedObjectContext
@@ -49,14 +47,12 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     public init(managedObjectContext: NSManagedObjectContext,
                 clientRegistrationDelegate: ClientRegistrationDelegate,
                 flowManager: FlowManagerType,
-                callEventStatus: CallEventStatus,
-                configuration: WireCallCenterConfiguration) {
+                callEventStatus: CallEventStatus) {
         
         self.managedObjectContext = managedObjectContext
         self.genericMessageStrategy = GenericMessageRequestStrategy(context: managedObjectContext, clientRegistrationDelegate: clientRegistrationDelegate)
         self.flowManager = flowManager
         self.callEventStatus = callEventStatus
-        self.configuration = configuration
         super.init()
         
         callConfigRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
@@ -71,8 +67,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
                                                             uiMOC: managedObjectContext.zm_userInterface,
                                                             flowManager: flowManager,
                                                             analytics: managedObjectContext.analytics,
-                                                            transport: self,
-                                                            configuration: configuration)
+                                                            transport: self)
         }
     }
 
@@ -206,8 +201,7 @@ extension CallingRequestStrategy: ZMContextChangeTracker, ZMContextChangeTracker
                                                                          uiMOC: uiContext.zm_userInterface,
                                                                          flowManager: self.flowManager,
                                                                          analytics: analytics,
-                                                                         transport: self,
-                                                                         configuration: self.configuration)
+                                                                         transport: self)
                 }
                 break
             }
@@ -231,10 +225,10 @@ extension CallingRequestStrategy: ZMEventConsumer {
                 
                 guard
                     let payload = genericMessage.calling.content.data(using: .utf8, allowLossyConversion: false),
-                    let senderUUID = event.senderUUID(),
-                    let conversationUUID = event.conversationUUID(),
-                    let clientId = event.senderClientID(),
-                    let eventTimestamp = event.timeStamp()
+                    let senderUUID = event.senderUUID,
+                    let conversationUUID = event.conversationUUID,
+                    let clientId = event.senderClientID,
+                    let eventTimestamp = event.timestamp
                 else {
                     zmLog.error("ignoring calling message: \(genericMessage.debugDescription)")
                     continue
@@ -264,8 +258,8 @@ extension CallingRequestStrategy: ZMEventConsumer {
 // MARK: - Wire Call Center Transport
 
 extension CallingRequestStrategy: WireCallCenterTransport {
-    
-    public func send(data: Data, conversationId: UUID, userId: UUID, completionHandler: @escaping ((Int) -> Void)) {
+
+    public func send(data: Data, conversationId: UUID, targets: [AVSClient]?, completionHandler: @escaping ((Int) -> Void)) {
         
         guard let dataString = String(data: data, encoding: .utf8) else {
             zmLog.error("Not sending calling messsage since it's not UTF-8")
@@ -283,8 +277,10 @@ extension CallingRequestStrategy: WireCallCenterTransport {
             self.zmLog.debug("schedule calling message")
             
             let genericMessage = GenericMessage(content: Calling(content: dataString))
+            let recipients = targets.map { self.recipients(for: $0, in: self.managedObjectContext) } ?? .conversationParticipants
 
-            self.genericMessageStrategy.schedule(message: genericMessage, inConversation: conversation) { (response) in
+
+            self.genericMessageStrategy.schedule(message: genericMessage, inConversation: conversation, targetRecipients: recipients) { response in
                 if response.httpStatus == 201 {
                     completionHandler(response.httpStatus)
                 }
@@ -359,6 +355,15 @@ extension CallingRequestStrategy: WireCallCenterTransport {
             }
         }
 
+    }
+
+    private func recipients(for targets: [AVSClient], in managedObjectContext: NSManagedObjectContext) -> GenericMessageEntity.Recipients {
+        let clientsByUser = targets
+            .compactMap { UserClient.fetchExistingUserClient(with: $0.clientId, in: managedObjectContext) }
+            .partition(by: \.user)
+            .mapValues { Set($0) }
+
+        return .clients(clientsByUser)
     }
     
 }

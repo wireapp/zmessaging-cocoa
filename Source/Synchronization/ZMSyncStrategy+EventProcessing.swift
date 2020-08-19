@@ -20,19 +20,68 @@ import Foundation
 import WireUtilities
 import WireRequestStrategy
 
-extension ZMSyncStrategy: ZMUpdateEventConsumer, UpdateEventProcessor {
-
-    public func process(updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
+extension ZMSyncStrategy: UpdateEventProcessor {
+         
+    /// Process previously received events after finishing the quick sync.
+    ///
+    /// - Returns: **True** if there are still more events to process
+    @objc
+    public func processEventsAfterFinishingQuickSync() -> Bool { // TODO jacob shouldn't be public
+        processAllEventsInBuffer()
+        return processEventsIfReady()
+    }
+    
+    /// Process previously received events after unlocking the database.
+    ///
+    /// - Returns: **True** if there are still more events to process
+    @objc
+    public func processEventsAfterUnlockingDatabase() -> Bool { // TODO jacob shouldn't be public
+        return processEventsIfReady()
+    }
+        
+    /// Process previously received events if we are ready to process events.
+    ///
+    /// /// - Returns: **True** if there are still more events to process
+    func processEventsIfReady() -> Bool {
+        guard isReadyToProcessEvents else {
+            return  true
+        }
+        
+        if syncMOC.encryptMessagesAtRest {
+            guard let encryptionKeys = syncMOC.encryptionKeys else {
+                return true
+            }
+            
+            processStoredUpdateEvents(with: encryptionKeys)
+        } else {
+            processStoredUpdateEvents()
+        }
+        
+        applyHotFixes()
+        
+        return false
+    }
+    
+    public func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
         if ignoreBuffer || isReadyToProcessEvents {
-            consume(updateEvents: updateEvents)
+            eventDecoder.decryptAndStoreEvents(updateEvents) { (decryptedEvents) in
+                for eventConsumer in self.eventConsumers {
+                    eventConsumer.processEventsWhileInBackground?(decryptedEvents)
+                }
+            }
         } else {
             Logging.eventProcessing.info("Buffering \(updateEvents.count) event(s)")
             updateEvents.forEach(eventsBuffer.addUpdateEvent)
         }
     }
     
-    public func consume(updateEvents: [ZMUpdateEvent]) {
-        eventDecoder.processEvents(updateEvents) { [weak self] (decryptedUpdateEvents) in
+    public func storeAndProcessUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
+        storeUpdateEvents(updateEvents, ignoreBuffer: ignoreBuffer)
+        _ = processEventsIfReady()
+    }
+        
+    private func processStoredUpdateEvents(with encryptionKeys: EncryptionKeys? = nil) {
+        eventDecoder.processStoredEvents(with: encryptionKeys) { [weak self] (decryptedUpdateEvents) in
             guard let `self` = self else { return }
             
             let date = Date()
@@ -40,7 +89,7 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer, UpdateEventProcessor {
             let prefetchResult = syncMOC.executeFetchRequestBatchOrAssert(fetchRequest)
             
             Logging.eventProcessing.info("Consuming: [\n\(decryptedUpdateEvents.map({ "\tevent: \(ZMUpdateEvent.eventTypeString(for: $0.type) ?? "Unknown")" }).joined(separator: "\n"))\n]")
-        
+            
             for event in decryptedUpdateEvents {
                 for eventConsumer in self.eventConsumers {
                     eventConsumer.processEvents([event], liveEvents: true, prefetchResult: prefetchResult)
@@ -49,20 +98,10 @@ extension ZMSyncStrategy: ZMUpdateEventConsumer, UpdateEventProcessor {
             }
             localNotificationDispatcher?.processEvents(decryptedUpdateEvents, liveEvents: true, prefetchResult: nil)
             
-            if let messages = fetchRequest.noncesToFetch as? Set<UUID>,
-                let conversations = fetchRequest.remoteIdentifiersToFetch as? Set<UUID> {
-                let confirmationMessages = ZMConversation.confirmDeliveredMessages(messages, in: conversations, with: syncMOC)
-                for message in confirmationMessages {
-                    self.applicationStatusDirectory?.deliveryConfirmation.needsToConfirmMessage(message.nonce!)
-                }
-            }
-            
             syncMOC.saveOrRollback()
             
             Logging.eventProcessing.debug("Events processed in \(-date.timeIntervalSinceNow): \(self.eventProcessingTracker?.debugDescription ?? "")")
-            
         }
-        
     }
      
     @objc(prefetchRequestForUpdateEvents:)

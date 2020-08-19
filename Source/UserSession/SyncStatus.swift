@@ -26,6 +26,7 @@
     case fetchingUsers
     case fetchingSelfUser
     case fetchingLegalHoldStatus
+    case fetchingFeatureFlags
     case fetchingLabels
     case fetchingMissedEvents
     case done
@@ -62,6 +63,8 @@
             return "fetchingSelfUser"
         case .fetchingLegalHoldStatus:
             return "fetchingLegalHoldStatus"
+        case .fetchingFeatureFlags:
+            return "fetchingFeatureFlags"
         case .fetchingLabels:
             return "fetchingLabels"
         case .fetchingMissedEvents:
@@ -113,7 +116,7 @@ extension Notification.Name {
     public var isSyncing : Bool {
         return currentSyncPhase.isSyncing
     }
-    
+        
     public init(managedObjectContext: NSManagedObjectContext, syncStateDelegate: ZMSyncStateDelegate) {
         self.managedObjectContext = managedObjectContext
         self.syncStateDelegate = syncStateDelegate

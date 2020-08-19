@@ -57,7 +57,7 @@ extension ZMUserTranscoder {
         if user.isSelfUser {
             deleteAccount()
         } else {
-            user.markAccountAsDeleted(at: updateEvent.timeStamp() ?? Date())
+            user.markAccountAsDeleted(at: updateEvent.timestamp ?? Date())
         }
     }
     

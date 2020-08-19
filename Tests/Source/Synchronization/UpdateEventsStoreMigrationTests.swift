@@ -52,9 +52,9 @@ class UpdateEventsStoreMigrationTests: MessagingTest {
             let payload = self.payloadForMessage(in: conversation, type: EventConversationAdd, data: ["foo": "bar"])!
             let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: UUID.create())!
 
-            guard let storedEvent1 = StoredUpdateEvent.create(event, managedObjectContext: eventMOC_oldLocation, index: 0),
-                let storedEvent2 = StoredUpdateEvent.create(event, managedObjectContext: eventMOC_oldLocation, index: 1),
-                let storedEvent3 = StoredUpdateEvent.create(event, managedObjectContext: eventMOC_oldLocation, index: 2)
+            guard let storedEvent1 = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC_oldLocation, index: 0),
+                let storedEvent2 = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC_oldLocation, index: 1),
+                let storedEvent3 = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC_oldLocation, index: 2)
                 else {
                     return XCTFail("Could not create storedEvents")
             }
@@ -91,13 +91,14 @@ class UpdateEventsStoreMigrationTests: MessagingTest {
         conversation.remoteIdentifier = UUID.create()
         let payload = self.payloadForMessage(in: conversation, type: EventConversationAdd, data: ["foo": "bar"])!
         let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: UUID.create())!
-
-        guard let storedEvent1 = StoredUpdateEvent.create(event, managedObjectContext: eventMOC_sameLocation, index: 0),
-            let storedEvent2 = StoredUpdateEvent.create(event, managedObjectContext: eventMOC_sameLocation, index: 1),
-            let storedEvent3 = StoredUpdateEvent.create(event, managedObjectContext: eventMOC_sameLocation, index: 2)
+        
+        guard let storedEvent1 = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC_sameLocation, index: 0),
+            let storedEvent2 = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC_sameLocation, index: 1),
+            let storedEvent3 = StoredUpdateEvent.encryptAndCreate(event, managedObjectContext: eventMOC_sameLocation, index: 2)
             else {
                 return XCTFail("Could not create storedEvents")
         }
+        
         try eventMOC_sameLocation.save()
         let objectIDs = Set([storedEvent1, storedEvent2, storedEvent3].map { $0.objectID.uriRepresentation() })
         eventMOC_sameLocation.tearDownEventMOC()

@@ -17,6 +17,7 @@
 //
 
 import Foundation
+import WireDataModel
 
 public enum LocalNotificationEventType {
     case connectionRequestAccepted, connectionRequestPending, newConnection, conversationCreated, conversationDeleted
@@ -103,9 +104,38 @@ public enum LocalNotificationContentType : Equatable {
         return .undefined
     }
     
-    static func typeForMessage(_ message: GenericMessage, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> LocalNotificationContentType? {
-        let selfUser = ZMUser.selfUser(in: moc)
+
+    static func typeForMessage(_ event: ZMUpdateEvent, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> LocalNotificationContentType? {
         
+        switch event.type {
+        case .conversationMemberJoin:
+            return .participantsAdded
+        case .conversationMemberLeave:
+            return .participantsRemoved
+        case .conversationMessageTimerUpdate:
+            guard let payload = event.payload["data"] as? [String : AnyHashable] else {
+                return nil
+            }
+            let timeoutIntegerValue = (payload["message_timer"] as? Int64) ?? 0
+            let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue))
+            
+            return (value == .none)
+                ? .messageTimerUpdate(nil)
+                : .messageTimerUpdate(value.displayString)
+        case.conversationOtrMessageAdd:
+            guard let message = GenericMessage(from: event) else {
+                return .undefined
+            }
+            return typeForMessage(message, conversation: conversation, in: moc)
+        default:
+            return nil
+        }
+    }
+    
+    static func typeForMessage(_ message: GenericMessage, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> LocalNotificationContentType? {
+        
+        let selfUser = ZMUser.selfUser(in: moc)
+
         func getQuotedMessage(_ textMessageData: Text, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> ZMOTRMessage? {
             guard let conversation = conversation else {
                 return nil
@@ -113,7 +143,7 @@ public enum LocalNotificationContentType : Equatable {
             let quotedMessageId = UUID(uuidString: textMessageData.quote.quotedMessageID)
             return ZMOTRMessage.fetch(withNonce: quotedMessageId, for: conversation, in: moc)
         }
-        
+
         switch message.content {
         case .location:
             return .location
@@ -123,16 +153,16 @@ public enum LocalNotificationContentType : Equatable {
             return .image
         case .ephemeral:
             if let textMessageData = message.textData {
-                
+
                 let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc)
                 return .ephemeral(isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
             } else {
                 return .ephemeral(isMention: false, isReply: false)
             }
-        case .text:
+        case .text, .edited:
             if let textMessageData = message.textData,
                 let text = message.textData?.content.removingExtremeCombiningCharacters, !text.isEmpty {
-                
+
                 let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc)
                 return .text(text, isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
             } else {
@@ -149,41 +179,14 @@ public enum LocalNotificationContentType : Equatable {
                 return .audio
             case .video?:
                 return .video
+            case .image:
+                return .image
             default:
                 return .fileUpload
             }
         default:
-            return nil
+           return .undefined
         }
-        //        if let systemMessageData = message.systemMessageData {
-        //                   switch systemMessageData.systemMessageType {
-        //                   case .participantsAdded:
-        //                       return .participantsAdded
-        //                   case .participantsRemoved:
-        //                       return .participantsRemoved
-        //                   case .messageTimerUpdate:
-        //                       let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(systemMessageData.messageTimer?.doubleValue ?? 0))
-        //                       if value == .none {
-        //                           return .messageTimerUpdate(nil)
-        //                       } else {
-        //                           return .messageTimerUpdate(value.displayString)
-        //                       }
-        //                   default:
-        //                       return nil
-        //                   }
-        //               }
     }
+    
 }
-
-public func ==(rhs: LocalNotificationContentType, lhs: LocalNotificationContentType) -> Bool {
-    switch (rhs, lhs) {
-    case (.text(let left), .text(let right)):
-        return left == right
-    case (.image, .image), (.video, .video), (.audio, .audio), (.location, .location), (.fileUpload, .fileUpload), (.knock, .knock), (.undefined, .undefined), (.reaction, .reaction), (.messageTimerUpdate, .messageTimerUpdate):
-        return true
-    default:
-        return false
-    }
-}
-
-

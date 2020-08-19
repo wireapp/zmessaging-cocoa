@@ -104,13 +104,14 @@ extension WireCallCenterV3 {
     }
 
     /// Handles incoming calls.
-    func handleIncomingCall(conversationId: UUID, messageTime: Date, client: AVSClient, isVideoCall: Bool, shouldRing: Bool) {
+    func handleIncomingCall(conversationId: UUID, messageTime: Date, client: AVSClient, isVideoCall: Bool, shouldRing: Bool, conversationType: AVSConversationType) {
         handleEvent("incoming-call") {
             let isDegraded = self.isDegraded(conversationId: conversationId)
             let callState = CallState.incoming(video: isVideoCall, shouldRing: shouldRing, degraded: isDegraded)
             let members = [AVSCallMember(client: client)]
+            let isConferenceCall = conversationType == .conference
 
-            self.createSnapshot(callState: callState, members: members, callStarter: client.userId, video: isVideoCall, for: conversationId)
+            self.createSnapshot(callState: callState, members: members, callStarter: client.userId, video: isVideoCall, for: conversationId, isConferenceCall: isConferenceCall)
             self.handle(callState: callState, conversationId: conversationId)
         }
     }
@@ -198,13 +199,24 @@ extension WireCallCenterV3 {
                                            conversationId: UUID,
                                            senderUserId: UUID,
                                            senderClientId: String,
+                                           targets: AVSClientList?,
                                            data: Data) {
-        handleEvent("send-call-message") {
+
+        handleEventInContext("send-call-message") { managedObjectContext in
+            let selfUser = ZMUser.selfUser(in: managedObjectContext)
+
+            guard
+                selfUser.remoteIdentifier == senderUserId,
+                selfUser.selfClient()?.remoteIdentifier == senderClientId
+            else {
+                zmLog.warn("Received request to send calling message from non self user and/or client")
+                return
+            }
+
             self.send(
                 token: token,
                 conversationId: conversationId,
-                userId: senderUserId,
-                clientId: senderClientId,
+                targets: targets,
                 data: data,
                 dataLength: data.count
             )

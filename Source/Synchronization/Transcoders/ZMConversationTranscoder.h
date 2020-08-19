@@ -34,7 +34,6 @@ extern NSString * const ConversationsPath;
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
                            applicationStatus:(id<ZMApplicationStatus>)applicationStatus
-                 localNotificationDispatcher:(id<PushMessageHandler>)localNotificationDispatcher
                                   syncStatus:(SyncStatus *)syncStatus;
 
 - (ZMConversation *)createOneOnOneConversationFromTransportData:(NSDictionary *)transportData

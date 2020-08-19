@@ -58,6 +58,8 @@ public protocol CallProperties : NSObjectProtocol {
     var videoState: VideoState { get set }
     var networkQuality: NetworkQuality { get }
     var muted: Bool { get set }
+
+    var isConferenceCall: Bool { get }
     
     func setVideoCaptureDevice(_ device: CaptureDevice) throws
 }

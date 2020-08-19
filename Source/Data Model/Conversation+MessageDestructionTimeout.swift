@@ -57,7 +57,8 @@ extension ZMConversation {
             if response.httpStatus.isOne(of: 200, 204),  let event = response.updateEvent {
                 // Process `conversation.message-timer-update` event
                 userSession.syncManagedObjectContext.performGroupedBlock {
-                    userSession.operationLoop?.syncStrategy.process(updateEvents: [event], ignoreBuffer: true)
+                    // TODO jacob maybe skip the event decoder since we know these events will never be encrypted.
+                    userSession.operationLoop?.syncStrategy.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
                 }
                 completion(.success)
             } else {

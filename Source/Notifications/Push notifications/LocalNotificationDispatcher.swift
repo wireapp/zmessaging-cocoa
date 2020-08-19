@@ -25,7 +25,6 @@ import UserNotifications
     public static let ZMShouldHideNotificationContentKey = "ZMShouldHideNotificationContentKey"
 
     let eventNotifications: ZMLocalNotificationSet
-    let messageNotifications: ZMLocalNotificationSet
     let callingNotifications: ZMLocalNotificationSet
     let failedMessageNotifications: ZMLocalNotificationSet
 
@@ -42,7 +41,6 @@ import UserNotifications
         self.eventNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherEventNotificationsKey", keyValueStore: managedObjectContext)
         self.failedMessageNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherFailedNotificationsKey", keyValueStore: managedObjectContext)
         self.callingNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherCallingNotificationsKey", keyValueStore: managedObjectContext)
-        self.messageNotifications = ZMLocalNotificationSet(archivingKey: "ZMLocalNotificationDispatcherMessageNotificationsKey", keyValueStore: managedObjectContext)
         super.init()
         observers.append(
             NotificationInContext.addObserver(name: ZMConversation.lastReadDidChangeNotificationName,
@@ -77,16 +75,33 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
         events.forEach { event in
 
             var conversation: ZMConversation?
-            if let conversationID = event.conversationUUID() {
+            if let conversationID = event.conversationUUID {
                 // Fetch the conversation here to avoid refetching every time we try to create a notification
                 conversation = conversationMap[conversationID] ?? ZMConversation.fetch(withRemoteIdentifier: conversationID, in: self.syncMOC)
             }
-
-            // if it's an "unlike" reaction event, cancel the previous "like" notification for this message
-            if let receivedMessage = GenericMessage(from: event), receivedMessage.hasReaction, receivedMessage.reaction.emoji.isEmpty {
-                UUID(uuidString: receivedMessage.reaction.messageID).apply(eventNotifications.cancelCurrentNotifications(messageNonce:))
-            }
             
+            if let messageNonce = event.messageNonce {
+                if eventNotifications.notifications.contains(where: { $0.messageNonce == messageNonce }) {
+                    // ignore events which we already scheduled a notification for
+                    return
+                }
+            }
+
+            if let receivedMessage = GenericMessage(from: event) {
+                
+                if receivedMessage.hasReaction,
+                   receivedMessage.reaction.emoji.isEmpty,
+                   let messageID = UUID(uuidString: receivedMessage.reaction.messageID) {
+                    // if it's an "unlike" reaction event, cancel the previous "like" notification for this message
+                    eventNotifications.cancelCurrentNotifications(messageNonce: messageID)
+                }
+                
+                if receivedMessage.hasEdited || receivedMessage.hasHidden || receivedMessage.hasDeleted {
+                    // Cancel notification for message that was edited, deleted or hidden
+                    cancelMessageForEditingMessage(receivedMessage)
+                }
+            }
+                        
             let note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
             note.apply(eventNotifications.addObject)
             note.apply(scheduleLocalNotification)
@@ -142,7 +157,6 @@ extension LocalNotificationDispatcher {
     private var allNotificationSets: [ZMLocalNotificationSet] {
         return [self.eventNotifications,
                 self.failedMessageNotifications,
-                self.messageNotifications,
                 self.callingNotifications]
     }
 
@@ -156,6 +170,27 @@ extension LocalNotificationDispatcher {
     /// ZMConversationDidChangeVisibleWindowNotification is called
     public func cancelNotification(for conversation: ZMConversation) {
         self.allNotificationSets.forEach { $0.cancelNotifications(conversation) }
+    }
+    
+    func cancelMessageForEditingMessage(_ genericMessage: GenericMessage) {
+        var idToDelete : UUID?
+        
+        if genericMessage.hasEdited {
+            let replacingID = genericMessage.edited.replacingMessageID
+            idToDelete = UUID(uuidString: replacingID)
+        }
+        else if genericMessage.hasDeleted {
+            let deleted = genericMessage.deleted.messageID
+            idToDelete = UUID(uuidString: deleted)
+        }
+        else if genericMessage.hasHidden {
+            let hidden = genericMessage.hidden.messageID
+            idToDelete = UUID(uuidString: hidden)
+        }
+        
+        if let idToDelete = idToDelete {
+            eventNotifications.cancelCurrentNotifications(messageNonce: idToDelete)
+        }
     }
 
     /// Cancels all notification in the conversation that is speficied as object of the notification

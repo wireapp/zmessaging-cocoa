@@ -129,12 +129,25 @@ extension AVSWrapper {
 
         /// Callback used to send an OTR call message.
         ///
+        /// The `targets` argument contains a json payload listing the clients for which the message is targeted.
+        /// They payload has the following structure:
+        ///
+        /// ```
+        /// {
+        ///     "clients": [
+        ///         {"userid": "xxxx", "clientid" "xxxx"},
+        ///         {"userid": "xxxx", "clientid" "xxxx"},
+        ///         ...
+        ///     ]
+        /// }
+        /// ```
+        ///
         /// typedef int (wcall_send_h)(void *ctx,
         ///                            const char *convid,
         ///                            const char *userid_self,
         ///                            const char *clientid_self,
-        ///                            const char *userid_dest /*optional*/,
-        ///                            const char *clientid_dest /*optional*/,
+        ///                            const char *targets /*optional*/,
+        ///                            const char *clientid_dest /*deprecated - always null*/,
         ///                            const uint8_t *data,
         ///                            size_t len,
         ///                            int transient /*bool*/,

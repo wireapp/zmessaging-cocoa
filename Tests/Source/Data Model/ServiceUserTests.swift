@@ -22,7 +22,7 @@ import XCTest
 @testable import WireSyncEngine
 
 final class DummyServiceUser: NSObject, ServiceUser {
-
+    
     var hasLegalHoldRequest: Bool = false
     
     var needsRichProfileUpdate: Bool = false
@@ -156,6 +156,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     var imageMediumIdentifier: String! = ""
     
     var isTeamMember: Bool = false
+    
+    var hasDigitalSignatureEnabled: Bool = false
     
     var teamRole: TeamRole = .member
     
