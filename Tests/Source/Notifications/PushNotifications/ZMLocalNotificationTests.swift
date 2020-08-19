@@ -174,6 +174,19 @@ class ZMLocalNotificationTests: MessagingTest {
         return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
     }
     
+    func createUpdateEventForEphemeralMessage(_ nonce: UUID, conversationID: UUID, senderID: UUID = UUID.create()) -> ZMUpdateEvent {
+        let payload : [String : Any] = [
+            "id": UUID.create().transportString(),
+            "conversation": conversationID.transportString(),
+            "from": senderID.transportString(),
+            "time": Date().transportString(),
+            "data": ["text": ""],
+            "type": "conversation.otr-message-add"
+        ]
+        
+        return ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: nonce)!
+    }
+    
     func createMemberJoinUpdateEvent(_ nonce: UUID, conversationID: UUID, users: [ZMUser], senderID: UUID = UUID.create()) -> ZMUpdateEvent {
         let userIds = users.map { $0.remoteIdentifier.transportString() }
         let usersWithRoles = users.map { (user) -> [String : String] in

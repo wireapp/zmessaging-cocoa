@@ -510,6 +510,21 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         
     }
     
+    func testThatItCreatesAnObfuscatedNotification() {
+        // given
+        let event = createUpdateEventForEphemeralMessage(UUID.create(), conversationID: UUID.create())
+        var note: ZMLocalNotification?
+
+        // when
+        note = ZMLocalNotification(event: event, conversation: self.oneOnOneConversation, managedObjectContext: self.uiMOC)
+
+        // then
+        XCTAssertNotNil(note)
+        XCTAssertEqual(note!.title, "Super User")
+        XCTAssertEqual(note!.body, "New message")
+        
+    }
+    
     // MARK: - Create system local notifications from update events
     
     func testThatItCreatesASystemLocalNotificationForRemovingTheSelfUserEvent() {
