@@ -136,9 +136,7 @@ public enum LocalNotificationContentType : Equatable {
         let selfUser = ZMUser.selfUser(in: moc)
 
         func getQuotedMessage(_ textMessageData: Text, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> ZMOTRMessage? {
-            guard let conversation = conversation else {
-                return nil
-            }
+            guard let conversation = conversation else { return nil }
             let quotedMessageId = UUID(uuidString: textMessageData.quote.quotedMessageID)
             return ZMOTRMessage.fetch(withNonce: quotedMessageId, for: conversation, in: moc)
         }
@@ -146,32 +144,36 @@ public enum LocalNotificationContentType : Equatable {
         switch message.content {
         case .location:
             return .location
+
         case .knock:
             return .knock
+
         case .image:
             return .image
+
         case .ephemeral:
             if let textMessageData = message.textData {
-
                 let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc)
                 return .ephemeral(isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
             } else {
                 return .ephemeral(isMention: false, isReply: false)
             }
-        case .text, .edited:
-            if let textMessageData = message.textData,
-                let text = message.textData?.content.removingExtremeCombiningCharacters, !text.isEmpty {
 
-                let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc)
-                return .text(text, isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
-            } else {
+        case .text, .edited:
+            guard
+                let textMessageData = message.textData,
+                let text = message.textData?.content.removingExtremeCombiningCharacters, !text.isEmpty
+            else {
                 return nil
             }
+
+            let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc)
+            return .text(text, isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
+
         case .composite:
-            if let textData = message.composite.items.compactMap({ $0.text }).first {
-                return .text(textData.content, isMention: textData.isMentioningSelf(selfUser), isReply: false)
-            }
-            return nil
+            guard let textData = message.composite.items.compactMap({ $0.text }).first else { return nil }
+            return .text(textData.content, isMention: textData.isMentioningSelf(selfUser), isReply: false)
+
         case .asset(let assetData):
             switch assetData.original.metaData {
             case .audio?:
@@ -183,10 +185,9 @@ public enum LocalNotificationContentType : Equatable {
             default:
                 return .fileUpload
             }
-        case .confirmation:
-            return nil
+
         default:
-           return .undefined
+           return nil
         }
     }
     
