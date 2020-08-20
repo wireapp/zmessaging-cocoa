@@ -39,36 +39,31 @@ public enum LocalNotificationContentType : Equatable {
     case participantsRemoved
     case participantsAdded
     case messageTimerUpdate(String?)
-    
-    static func typeForMessage(_ event: ZMUpdateEvent, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> LocalNotificationContentType? {
-        
+
+    init?(event: ZMUpdateEvent, conversation: ZMConversation?, in moc: NSManagedObjectContext) {
         switch event.type {
         case .conversationMemberJoin:
-            return .participantsAdded
+            self = .participantsAdded
+
         case .conversationMemberLeave:
-            return .participantsRemoved
+            self = .participantsRemoved
+
         case .conversationMessageTimerUpdate:
-            guard let payload = event.payload["data"] as? [String : AnyHashable] else {
-                return nil
-            }
+            guard let payload = event.payload["data"] as? [String : AnyHashable] else { return nil }
             let timeoutIntegerValue = (payload["message_timer"] as? Int64) ?? 0
-            let value = MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue))
-            
-            return (value == .none)
-                ? .messageTimerUpdate(nil)
-                : .messageTimerUpdate(value.displayString)
-        case.conversationOtrMessageAdd:
-            guard let message = GenericMessage(from: event) else {
-                return .undefined
-            }
-            return typeForMessage(message, conversation: conversation, in: moc)
+            let timeoutValue = MessageDestructionTimeoutValue(rawValue: TimeInterval(timeoutIntegerValue))
+            self = timeoutValue == .none ? .messageTimerUpdate(nil) : .messageTimerUpdate(timeoutValue.displayString)
+
+        case .conversationOtrMessageAdd:
+            guard let message = GenericMessage(from: event) else { return nil }
+            self.init(message: message, conversation: conversation, in: moc)
+
         default:
             return nil
         }
     }
-    
-    static func typeForMessage(_ message: GenericMessage, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> LocalNotificationContentType? {
-        
+
+    init?(message: GenericMessage, conversation: ZMConversation?, in moc: NSManagedObjectContext) {
         let selfUser = ZMUser.selfUser(in: moc)
 
         func getQuotedMessage(_ textMessageData: Text, conversation: ZMConversation?, in moc: NSManagedObjectContext) -> ZMOTRMessage? {
@@ -79,20 +74,20 @@ public enum LocalNotificationContentType : Equatable {
 
         switch message.content {
         case .location:
-            return .location
+            self =  .location
 
         case .knock:
-            return .knock
+            self =  .knock
 
         case .image:
-            return .image
+            self = .image
 
         case .ephemeral:
             if let textMessageData = message.textData {
                 let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc)
-                return .ephemeral(isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
+                self = .ephemeral(isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
             } else {
-                return .ephemeral(isMention: false, isReply: false)
+                self = .ephemeral(isMention: false, isReply: false)
             }
 
         case .text, .edited:
@@ -104,27 +99,27 @@ public enum LocalNotificationContentType : Equatable {
             }
 
             let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc)
-            return .text(text, isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
+            self = .text(text, isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
 
         case .composite:
             guard let textData = message.composite.items.compactMap({ $0.text }).first else { return nil }
-            return .text(textData.content, isMention: textData.isMentioningSelf(selfUser), isReply: false)
+            self = .text(textData.content, isMention: textData.isMentioningSelf(selfUser), isReply: false)
 
         case .asset(let assetData):
             switch assetData.original.metaData {
             case .audio?:
-                return .audio
+                self = .audio
             case .video?:
-                return .video
+                self = .video
             case .image:
-                return .image
+                self = .image
             default:
-                return .fileUpload
+                self = .fileUpload
             }
 
         default:
-           return nil
+            return nil
         }
     }
-    
+
 }

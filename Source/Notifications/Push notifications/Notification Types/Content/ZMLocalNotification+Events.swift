@@ -280,7 +280,7 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
     required init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
         guard
             let message = GenericMessage(from: event),
-            let contentType = LocalNotificationContentType.typeForMessage(message, conversation: conversation, in: managedObjectContext)
+            let contentType = LocalNotificationContentType(message: message, conversation: conversation, in: managedObjectContext)
         else {
             return nil
         }
@@ -330,9 +330,8 @@ private class NewSystemMessageNotificationBuilder : EventNotificationBuilder {
     let contentType: LocalNotificationContentType
     
     required init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
-        guard let contentType = LocalNotificationContentType.typeForMessage(event, conversation: conversation, in: managedObjectContext)
-            else {
-                return nil
+        guard let contentType = LocalNotificationContentType(event: event, conversation: conversation, in: managedObjectContext) else {
+            return nil
         }
         
         self.contentType = contentType
