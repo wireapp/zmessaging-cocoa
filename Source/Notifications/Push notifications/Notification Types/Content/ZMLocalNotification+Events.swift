@@ -23,36 +23,34 @@ extension ZMLocalNotification {
     // for each supported event type, use the corresponding notification builder.
     //
     convenience init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext moc: NSManagedObjectContext) {
-        var builder: NotificationBuilder?
-        
+        var builderType: EventNotificationBuilder.Type?
+
         switch event.type {
         case .conversationOtrMessageAdd:
-            let message = GenericMessage(from: event)
-            builder = (message?.hasReaction ?? false)
-            ? ReactionEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
-            : NewMessageNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
-            
+            guard let message = GenericMessage(from: event) else { break }
+            builderType = message.hasReaction ? ReactionEventNotificationBuilder.self : NewMessageNotificationBuilder.self
+
         case .conversationCreate:
-            builder = ConversationCreateEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
+            builderType = ConversationCreateEventNotificationBuilder.self
             
         case .conversationDelete:
-            builder = ConversationDeleteEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
+            builderType = ConversationDeleteEventNotificationBuilder.self
             
         case .userConnection:
-            builder = UserConnectionEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
+            builderType = UserConnectionEventNotificationBuilder.self
             
         case .userContactJoin:
-            builder = NewUserEventNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
+            builderType = NewUserEventNotificationBuilder.self
+
         case .conversationMemberJoin, .conversationMemberLeave, .conversationMessageTimerUpdate:
-            guard conversation?.remoteIdentifier != nil else {
-                return nil
-            }
-            builder = NewSystemMessageNotificationBuilder(event: event, conversation: conversation, managedObjectContext: moc)
+            guard conversation?.remoteIdentifier != nil else { return nil }
+            builderType = NewSystemMessageNotificationBuilder.self
+
         default:
-            return nil
+            break
         }
-        
-        if let builder = builder {
+
+        if let builder = builderType?.init(event: event, conversation: conversation, managedObjectContext: moc) {
             self.init(conversation: conversation, builder: builder)
         } else {
             return nil
@@ -75,7 +73,7 @@ fileprivate class EventNotificationBuilder: NotificationBuilder {
         fatal("You must override this property in a subclass")
     }
     
-    init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
+    required init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
         self.event = event
         self.conversation = conversation
         self.moc = managedObjectContext
@@ -146,15 +144,14 @@ private class ReactionEventNotificationBuilder: EventNotificationBuilder {
         }
     }
     
-    override init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
-        guard let message = GenericMessage(from: event), message.hasReaction else {
+    required init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
+        guard
+            let message = GenericMessage(from: event), message.hasReaction,
+            let nonce = UUID(uuidString: message.reaction.messageID)
+        else {
             return nil
         }
 
-        guard let nonce = UUID(uuidString: message.reaction.messageID) else {
-            return nil
-        }
-        
         self.message = message
         self.emoji = message.reaction.emoji
         self.nonce = nonce
@@ -164,11 +161,7 @@ private class ReactionEventNotificationBuilder: EventNotificationBuilder {
     
     override func shouldCreateNotification() -> Bool {
         guard super.shouldCreateNotification() else { return false }
-        
-        guard let receivedMessage = GenericMessage(from: event), receivedMessage.hasReaction else {
-            return false
-        }
-        
+
         // If the message is an "unlike", we don't want to display a notification
         guard message.reaction.emoji != "" else { return false }
         
@@ -229,7 +222,7 @@ private class UserConnectionEventNotificationBuilder: EventNotificationBuilder {
         return LocalNotificationType.event(eventType)
     }
     
-    override init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
+    required init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
         
         if let status = (event.payload["connection"] as? [String: AnyObject] )?["status"] as? String {
             if status == "accepted" {
@@ -280,16 +273,19 @@ private class NewUserEventNotificationBuilder: EventNotificationBuilder {
 // MARK: - Message
 
 private class NewMessageNotificationBuilder: EventNotificationBuilder {
-    private let message: GenericMessage?
-    let contentType: LocalNotificationContentType
 
-    override init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
-        guard let contentType = LocalNotificationContentType.typeForMessage(event, conversation: conversation, in: managedObjectContext)
-            else {
-                return nil
+    private let message: GenericMessage
+    private let contentType: LocalNotificationContentType
+
+    required init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
+        guard
+            let message = GenericMessage(from: event),
+            let contentType = LocalNotificationContentType.typeForMessage(message, conversation: conversation, in: managedObjectContext)
+        else {
+            return nil
         }
 
-        self.message = GenericMessage(from: event)
+        self.message = message
         self.contentType = contentType
         super.init(event: event, conversation: conversation, managedObjectContext: managedObjectContext)
     }
@@ -303,23 +299,19 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
     }
     
     override var notificationType: LocalNotificationType {
-        if case .ephemeral? = message?.content {
-            return LocalNotificationType.message(contentType)
-        }
         return LocalNotificationDispatcher.shouldHideNotificationContent(moc: self.moc)
-        ? LocalNotificationType.message(.hidden)
-        : LocalNotificationType.message(contentType)
+            ? .message(.hidden)
+            : .message(contentType)
     }
 
     override func shouldCreateNotification() -> Bool {
-        guard let message = message else {
-            return true
-        }
-        guard let conversation = conversation,
+        guard
+            let conversation = conversation,
             let senderUUID = event.senderUUID,
-            !conversation.isMessageSilenced(message, senderID: senderUUID) else {
-                Logging.push.safePublic("Not creating local notification for message with nonce = \(event.messageNonce) because conversation is silenced")
-                return false
+            !conversation.isMessageSilenced(message, senderID: senderUUID)
+        else {
+            Logging.push.safePublic("Not creating local notification for message with nonce = \(event.messageNonce) because conversation is silenced")
+            return false
         }
         
         if let timeStamp = event.timestamp,
@@ -337,7 +329,7 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
 private class NewSystemMessageNotificationBuilder : EventNotificationBuilder {
     let contentType: LocalNotificationContentType
     
-    override init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
+    required init?(event: ZMUpdateEvent, conversation: ZMConversation?, managedObjectContext: NSManagedObjectContext) {
         guard let contentType = LocalNotificationContentType.typeForMessage(event, conversation: conversation, in: managedObjectContext)
             else {
                 return nil
