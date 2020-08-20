@@ -509,21 +509,6 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         XCTAssertEqual(note!.body, "New message: Stimpy just joined Wire")
     }
     
-    func testThatItCreatesAnObfuscatedNotification() {
-        // given
-        let event = createUpdateEventForEphemeralMessage(UUID.create(), conversationID: UUID.create())
-        var note: ZMLocalNotification?
-
-        // when
-        note = ZMLocalNotification(event: event, conversation: self.oneOnOneConversation, managedObjectContext: self.uiMOC)
-
-        // then
-        XCTAssertNotNil(note)
-        XCTAssertEqual(note!.title, "Super User")
-        XCTAssertEqual(note!.body, "New message")
-        
-    }
-    
     func testThatItDoesNotCreateANotificationForConfirmationEvents() {
         // given
         let confirmation = GenericMessage(content: Confirmation(messageId: .create()))
