@@ -49,15 +49,6 @@
 "push.notification.add.message.oneonone" = "%1$@";
 "push.notification.add.message.oneonone.nousername" = "Uusi viesti: %1$@";
 
-// UNKNOWN MESSAGE
-"push.notification.add.unknown.group" = "%1$@: new message";
-"push.notification.add.unknown.group.nousername" = "Uusi viesti";
-"push.notification.add.unknown.group.nousername.noconversationname" = "Uusi viesti";
-"push.notification.add.unknown.group.noconversationname" = "%1$@ lähetti viestin";
-
-"push.notification.add.unknown.oneonone" = "Uusi viesti";
-"push.notification.add.unknown.oneonone.nousername" = "Uusi viesti";
-
 // Message with mention
 // 2 Components: Sender, Message
 

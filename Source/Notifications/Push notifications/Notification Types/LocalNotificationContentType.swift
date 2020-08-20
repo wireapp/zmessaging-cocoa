@@ -25,7 +25,6 @@ public enum LocalNotificationEventType {
 
 public enum LocalNotificationContentType : Equatable {
     
-    case undefined
     case text(String, isMention: Bool, isReply: Bool)
     case image
     case video

@@ -37,7 +37,6 @@ private let ZMPushStringVideoAdd            = "add.video"            // "[sender
 private let ZMPushStringAudioAdd            = "add.audio"            // "[senderName] shared an audio message"
 private let ZMPushStringFileAdd             = "add.file"             // "[senderName] shared a file"
 private let ZMPushStringLocationAdd         = "add.location"         // "[senderName] shared a location"
-private let ZMPushStringUnknownAdd          = "add.unknown"          // "[senderName] sent a message"
 
 // currently disabled
 //public let ZMPushStringMessageAddMany      = "add.message.many"    // "x new messages in [conversationName] / from [senderName]"
@@ -83,8 +82,6 @@ extension LocalNotificationType {
         switch self {
         case .message(let contentType):
             switch contentType {
-            case .undefined:
-                return ZMPushStringUnknownAdd
             case .image:
                 return ZMPushStringImageAdd
             case .video:

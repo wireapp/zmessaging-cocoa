@@ -49,15 +49,6 @@
 "push.notification.add.message.oneonone" = "%1$@";
 "push.notification.add.message.oneonone.nousername" = "Нове повідомлення: %1$@";
 
-// UNKNOWN MESSAGE
-"push.notification.add.unknown.group" = "%1$@: нове повідомлення";
-"push.notification.add.unknown.group.nousername" = "Нове повідомлення";
-"push.notification.add.unknown.group.nousername.noconversationname" = "Нове повідомлення";
-"push.notification.add.unknown.group.noconversationname" = "%1$@ надіслав(-ла) повідомлення";
-
-"push.notification.add.unknown.oneonone" = "Нове повідомлення";
-"push.notification.add.unknown.oneonone.nousername" = "Нове повідомлення";
-
 // Message with mention
 // 2 Components: Sender, Message
 
