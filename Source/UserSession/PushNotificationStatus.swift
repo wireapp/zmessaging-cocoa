@@ -28,28 +28,17 @@ extension UUID {
     }
 }
 
-extension BackgroundNotificationFetchStatus: CustomStringConvertible {
-
-    public var description: String {
-        switch self {
-        case .done: return "done"
-        case .inProgress: return "inProgress"
-        }
-    }
-
-}
-
 @objcMembers
-open class PushNotificationStatus: NSObject, BackgroundNotificationFetchStatusProvider {
+open class PushNotificationStatus: NSObject {
 
     private var eventIdRanking = NSMutableOrderedSet()
     private var completionHandlers: [UUID: () -> Void] = [:]
     private let managedObjectContext: NSManagedObjectContext
     
-    public var status: BackgroundNotificationFetchStatus {
-        return eventIdRanking.count == 0 ? .done : .inProgress
+    public var hasEventsToFetch: Bool {
+        return eventIdRanking.count > 0
     }
-    
+        
     public init(managedObjectContext: NSManagedObjectContext) {
         self.managedObjectContext = managedObjectContext
     }

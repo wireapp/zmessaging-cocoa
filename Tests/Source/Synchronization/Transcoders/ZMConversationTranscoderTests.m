@@ -60,7 +60,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
-    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateEventProcessing;
+    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateOnline;
 
     self.sut = (id) [[ZMConversationTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);

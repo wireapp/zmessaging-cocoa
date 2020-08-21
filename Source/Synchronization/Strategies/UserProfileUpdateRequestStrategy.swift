@@ -51,8 +51,9 @@ import Foundation
         
         self.configuration = [
             .allowsRequestsWhileUnauthenticated,
-            .allowsRequestsDuringSync,
-            .allowsRequestsDuringEventProcessing,
+            .allowsRequestsWhileOnline,
+            .allowsRequestsDuringSlowSync,
+            .allowsRequestsDuringQuickSync,
             .allowsRequestsDuringNotificationStreamFetch
         ]
 

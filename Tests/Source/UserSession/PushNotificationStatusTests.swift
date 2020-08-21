@@ -63,7 +63,7 @@ class PushNotificationStatusTests: MessagingTest {
         sut.fetch(eventId: eventId) { }
         
         // then
-        XCTAssertEqual(sut.status, .inProgress)
+        XCTAssertTrue(sut.hasEventsToFetch)
     }
     
     func testThatStatusIsInProgressWhenNotAllEventsIdsHaveBeenFetched() {
@@ -78,7 +78,7 @@ class PushNotificationStatusTests: MessagingTest {
         sut.didFetch(eventIds: [eventId1], lastEventId: eventId1, finished: true)
         
         // then
-        XCTAssertEqual(sut.status, .inProgress)
+        XCTAssertTrue(sut.hasEventsToFetch)
     }
     
     func testThatStatusIsDoneAfterEventIdIsFetched() {
@@ -90,7 +90,7 @@ class PushNotificationStatusTests: MessagingTest {
         sut.didFetch(eventIds: [eventId], lastEventId: eventId, finished: true)
         
         // then
-        XCTAssertEqual(sut.status, .done)
+        XCTAssertFalse(sut.hasEventsToFetch)
     }
     
     func testThatStatusIsDoneAfterEventIdIsFetchedEvenIfMoreEventsWillBeFetched() {
@@ -102,7 +102,7 @@ class PushNotificationStatusTests: MessagingTest {
         sut.didFetch(eventIds: [eventId], lastEventId: eventId, finished: false)
         
         // then
-        XCTAssertEqual(sut.status, .done)
+        XCTAssertFalse(sut.hasEventsToFetch)
     }
     
     func testThatStatusIsDoneAfterEventIdIsFetchedEvenIfNoEventsWereDownloaded() {
@@ -114,7 +114,7 @@ class PushNotificationStatusTests: MessagingTest {
         sut.didFetch(eventIds: [], lastEventId: eventId, finished: true)
         
         // then
-        XCTAssertEqual(sut.status, .done)
+        XCTAssertFalse(sut.hasEventsToFetch)
     }
     
     func testThatStatusIsDoneIfEventsCantBeFetched() {
@@ -126,7 +126,7 @@ class PushNotificationStatusTests: MessagingTest {
         sut.didFailToFetchEvents()
         
         // then
-        XCTAssertEqual(sut.status, .done)
+        XCTAssertFalse(sut.hasEventsToFetch)
     }
     
     func testThatCompletionHandlerIsNotCalledIfAllEventsHaveNotBeenFetched() {
@@ -142,7 +142,7 @@ class PushNotificationStatusTests: MessagingTest {
         sut.didFetch(eventIds: [eventId], lastEventId: eventId, finished: false)
         
         // then
-        XCTAssertEqual(sut.status, .done)
+        XCTAssertFalse(sut.hasEventsToFetch)
     }
     
     func testThatCompletionHandlerIsCalledAfterAllEventsHaveBeenFetched() {
@@ -159,7 +159,7 @@ class PushNotificationStatusTests: MessagingTest {
         sut.didFetch(eventIds: [eventId], lastEventId: eventId, finished: true)
         
         // then
-        XCTAssertEqual(sut.status, .done)
+        XCTAssertFalse(sut.hasEventsToFetch)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
@@ -177,7 +177,7 @@ class PushNotificationStatusTests: MessagingTest {
         sut.didFetch(eventIds: [], lastEventId: eventId, finished: true)
         
         // then
-        XCTAssertEqual(sut.status, .done)
+        XCTAssertFalse(sut.hasEventsToFetch)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
@@ -193,7 +193,7 @@ class PushNotificationStatusTests: MessagingTest {
         }
         
         // then
-        XCTAssertEqual(sut.status, .done)
+        XCTAssertFalse(sut.hasEventsToFetch)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     

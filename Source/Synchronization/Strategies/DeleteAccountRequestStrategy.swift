@@ -32,9 +32,10 @@ import WireTransport
         self.cookieStorage = cookieStorage
         super.init(withManagedObjectContext: moc, applicationStatus: applicationStatus)
         self.configuration = [
-            .allowsRequestsDuringSync,
             .allowsRequestsWhileUnauthenticated,
-            .allowsRequestsDuringEventProcessing,
+            .allowsRequestsWhileOnline,
+            .allowsRequestsDuringSlowSync,
+            .allowsRequestsDuringQuickSync,
             .allowsRequestsDuringNotificationStreamFetch
         ]
         self.deleteSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: self.managedObjectContext)

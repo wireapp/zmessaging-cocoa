@@ -89,20 +89,17 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
     public var synchronizationState: SynchronizationState {
         if !clientRegistrationStatus.clientIsReadyForRequests() {
             return .unauthenticated
+        } else if syncStatus.isSlowSyncing {
+            return .slowSyncing
         } else if syncStatus.isSyncing {
-            return .synchronizing
+            return .quickSyncing
         } else {
-            return .eventProcessing
+            return .online
         }
     }
     
-    public var notificationFetchStatus: BackgroundNotificationFetchStatus {
-        switch pushNotificationStatus.status {
-        case .done:
-            return .done
-        case .inProgress:
-            return syncStatus.isSlowSyncing ? .done : .inProgress
-        }
+    public var notificationStreamFetchState: NotificationStreamFetchState {
+        return syncStatus.isFetchingNotificationStream ? .inProgress : .done
     }
     
     public func requestSlowSync() {

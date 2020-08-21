@@ -34,7 +34,7 @@ public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMConte
     public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus, syncStatus: SyncStatus) {
         self.syncStatus = syncStatus
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
-        configuration = [.allowsRequestsDuringEventProcessing]
+        configuration = [.allowsRequestsWhileOnline]
         downstreamSync = ZMDownstreamObjectSync(
             transcoder: self,
             entityName: Team.entityName(),

@@ -30,7 +30,7 @@ public class LegalHoldRequestStrategy: AbstractRequestStrategy {
         
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         
-        configuration = [.allowsRequestsDuringSync]
+        configuration = [.allowsRequestsDuringSlowSync]
         singleRequstSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
     }
     

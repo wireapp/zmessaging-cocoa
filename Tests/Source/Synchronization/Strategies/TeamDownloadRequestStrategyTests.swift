@@ -94,7 +94,7 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
             team.remoteIdentifier = .create()
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
 
             // when
             team.needsToBeUpdatedFromBackend = false
@@ -110,7 +110,7 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
             team.remoteIdentifier = .create()
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
 
             // when
             team.needsToBeUpdatedFromBackend = true
@@ -130,7 +130,7 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlock {
             // given
             team = Team.insertNewObject(in: self.syncMOC)
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             team.remoteIdentifier = .create()
 
 
@@ -165,7 +165,7 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlock {
             // given
             team = Team.insertNewObject(in: self.syncMOC)
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             team.remoteIdentifier = .create()
             
             
@@ -198,7 +198,7 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
             team = Team.insertNewObject(in: self.syncMOC)
             team.remoteIdentifier = .create()
             team.needsToBeUpdatedFromBackend = true
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             self.boostrapChangeTrackers(with: team)
 
             guard let request = self.sut.nextRequest() else { return XCTFail("No request generated") }
@@ -225,7 +225,7 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlock {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             team.remoteIdentifier = teamId
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.remoteIdentifier = conversationId
@@ -264,7 +264,7 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlock {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             team.remoteIdentifier = teamId
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.remoteIdentifier = conversationId
@@ -306,7 +306,7 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             team.remoteIdentifier = teamId
             
             let user = ZMUser.insertNewObject(in: self.syncMOC)
