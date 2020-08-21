@@ -299,9 +299,18 @@ private class NewMessageNotificationBuilder: EventNotificationBuilder {
     }
     
     override var notificationType: LocalNotificationType {
-        return LocalNotificationDispatcher.shouldHideNotificationContent(moc: self.moc)
+        return shouldHideNotificationContent
             ? .message(.hidden)
             : .message(contentType)
+    }
+
+    private var shouldHideNotificationContent: Bool {
+        switch contentType {
+        case .ephemeral:
+            return false
+        default:
+            return LocalNotificationDispatcher.shouldHideNotificationContent(moc: moc)
+        }
     }
 
     override func shouldCreateNotification() -> Bool {
