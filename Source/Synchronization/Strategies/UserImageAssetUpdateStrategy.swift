@@ -46,8 +46,10 @@ internal enum AssetTransportError: Error {
     
     fileprivate var observers: [Any] = []
     
-    @objc public convenience init(managedObjectContext: NSManagedObjectContext, applicationStatusDirectory: ApplicationStatusDirectory) {
-        self.init(managedObjectContext: managedObjectContext, applicationStatus: applicationStatusDirectory, imageUploadStatus: applicationStatusDirectory.userProfileImageUpdateStatus)
+    @objc public convenience init(managedObjectContext: NSManagedObjectContext,
+                                  applicationStatusDirectory: ApplicationStatusDirectory,
+                                  userProfileImageUpdateStatus: UserProfileImageUpdateStatus) {
+        self.init(managedObjectContext: managedObjectContext, applicationStatus: applicationStatusDirectory, imageUploadStatus: userProfileImageUpdateStatus)
     }
 
     internal init(managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus, imageUploadStatus: UserProfileImageUploadStatusProtocol) {

@@ -133,6 +133,7 @@
     
     self.mockDispatcher = [OCMockObject mockForClass:[LocalNotificationDispatcher class]];
     [(LocalNotificationDispatcher *)[self.mockDispatcher stub] processEvents:OCMOCK_ANY liveEvents:YES prefetchResult:OCMOCK_ANY];
+    [(LocalNotificationDispatcher *)[self.mockDispatcher stub] processEventsWhileInBackground:OCMOCK_ANY];
     self.mockUpstreamSync1 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     self.mockUpstreamSync2 = [OCMockObject mockForClass:[ZMUpstreamModifiedObjectSync class]];
     [self verifyMockLater:self.mockUpstreamSync1];
