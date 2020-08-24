@@ -49,15 +49,6 @@
 "push.notification.add.message.oneonone" = "%1$@";
 "push.notification.add.message.oneonone.nousername" = "Ny besked: %1$@";
 
-// UNKNOWN MESSAGE
-"push.notification.add.unknown.group" = "%1$@: new message";
-"push.notification.add.unknown.group.nousername" = "Ny besked";
-"push.notification.add.unknown.group.nousername.noconversationname" = "Ny besked";
-"push.notification.add.unknown.group.noconversationname" = "%1$@ sendte en besked";
-
-"push.notification.add.unknown.oneonone" = "Ny besked";
-"push.notification.add.unknown.oneonone.nousername" = "Ny besked";
-
 // Message with mention
 // 2 Components: Sender, Message
 

@@ -213,16 +213,15 @@ extension CallingRequestStrategy: ZMContextChangeTracker, ZMContextChangeTracker
 // MARK: - Event Consumer
 
 extension CallingRequestStrategy: ZMEventConsumer {
-    
-    public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
-        
+
+    public func processEventsWhileInBackground(_ events: [ZMUpdateEvent]) {
         let serverTimeDelta = managedObjectContext.serverTimeDelta
-        
+
         for event in events {
             guard event.type == .conversationOtrMessageAdd else { continue }
-            
+
             if let genericMessage = GenericMessage(from: event), genericMessage.hasCalling {
-                
+
                 guard
                     let payload = genericMessage.calling.content.data(using: .utf8, allowLossyConversion: false),
                     let senderUUID = event.senderUUID,
@@ -233,18 +232,18 @@ extension CallingRequestStrategy: ZMEventConsumer {
                     zmLog.error("ignoring calling message: \(genericMessage.debugDescription)")
                     continue
                 }
-                
+
                 self.zmLog.debug("received calling message, timestamp \(eventTimestamp), serverTimeDelta \(serverTimeDelta)")
-                
+
                 let callEvent = CallEvent(data: payload,
                                           currentTimestamp: Date().addingTimeInterval(serverTimeDelta),
                                           serverTimestamp: eventTimestamp,
                                           conversationId: conversationUUID,
                                           userId: senderUUID,
                                           clientId: clientId)
-                
+
                 callEventStatus.scheduledCallEventForProcessing()
-                
+
                 callCenter?.processCallEvent(callEvent, completionHandler: { [weak self] in
                     self?.zmLog.debug("processed calling message")
                     self?.callEventStatus.finishedProcessingCallEvent()
@@ -253,6 +252,10 @@ extension CallingRequestStrategy: ZMEventConsumer {
         }
     }
     
+    public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
+        // No op
+    }
+
 }
 
 // MARK: - Wire Call Center Transport

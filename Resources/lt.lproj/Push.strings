@@ -49,15 +49,6 @@
 "push.notification.add.message.oneonone" = "%1$@";
 "push.notification.add.message.oneonone.nousername" = "Nauja žinutė: %1$@";
 
-// UNKNOWN MESSAGE
-"push.notification.add.unknown.group" = "%1$@: nauja žinutė";
-"push.notification.add.unknown.group.nousername" = "Nauja žinutė";
-"push.notification.add.unknown.group.nousername.noconversationname" = "Nauja žinutė";
-"push.notification.add.unknown.group.noconversationname" = "%1$@ parašė žinutę";
-
-"push.notification.add.unknown.oneonone" = "Nauja žinutė";
-"push.notification.add.unknown.oneonone.nousername" = "Nauja žinutė";
-
 // Message with mention
 // 2 Components: Sender, Message
 

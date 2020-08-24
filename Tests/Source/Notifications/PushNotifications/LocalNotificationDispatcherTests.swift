@@ -96,7 +96,7 @@ extension LocalNotificationDispatcherTests {
         let event = createUpdateEvent(UUID.create(), conversationID: self.conversation1.remoteIdentifier!, genericMessage: GenericMessage(content: Text(content: text)), senderID: self.user1.remoteIdentifier)
         
         // WHEN
-        self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+        self.sut.processEventsWhileInBackground([event])
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -128,7 +128,7 @@ extension LocalNotificationDispatcherTests {
         event.source = .pushNotification
  
         // WHEN
-        self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+        self.sut.processEventsWhileInBackground([event])
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // THEN
@@ -151,7 +151,7 @@ extension LocalNotificationDispatcherTests {
         let event2 = createUpdateEvent(UUID.create(), conversationID: self.conversation2.remoteIdentifier!, genericMessage: GenericMessage(content: Text(content: "boo2")), senderID: self.user2.remoteIdentifier)
 
         // WHEN
-        self.sut.processEvents([event1, event2], liveEvents: true, prefetchResult: nil)
+        self.sut.processEventsWhileInBackground([event1, event2])
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // THEN
@@ -246,7 +246,7 @@ extension LocalNotificationDispatcherTests {
         let event = createUpdateEvent(UUID.create(), conversationID: self.conversation1.remoteIdentifier!, genericMessage: GenericMessage(content: Text(content: "foo")), senderID: self.user1.remoteIdentifier)
 
         // WHEN
-        self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+        self.sut.processEventsWhileInBackground([event])
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // THEN
@@ -260,7 +260,7 @@ extension LocalNotificationDispatcherTests {
         let event = createUpdateEvent(UUID.create(), conversationID: self.conversation1.remoteIdentifier!, genericMessage: GenericMessage(content: Text(content: "foobar")), senderID: self.user1.remoteIdentifier)
         
         // WHEN
-        self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+        self.sut.processEventsWhileInBackground([event])
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -268,7 +268,7 @@ extension LocalNotificationDispatcherTests {
         XCTAssertEqual(self.scheduledRequests.count, 1)
         
         // WHEN
-        self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+        self.sut.processEventsWhileInBackground([event])
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -283,7 +283,7 @@ extension LocalNotificationDispatcherTests {
         let event = createUpdateEvent(UUID.create(), conversationID: self.conversation1.remoteIdentifier!, genericMessage: GenericMessage(content: WireProtos.Asset(audioMetadata)), senderID: self.user1.remoteIdentifier)
 
         // WHEN
-        self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+        self.sut.processEventsWhileInBackground([event])
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // THEN
@@ -291,7 +291,7 @@ extension LocalNotificationDispatcherTests {
         XCTAssertEqual(self.scheduledRequests.count, 1)
 
         // WHEN
-        self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+        self.sut.processEventsWhileInBackground([event])
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // THEN
@@ -319,7 +319,7 @@ extension LocalNotificationDispatcherTests {
         let text = "\(self.user1.name!) added you"
         
         // WHEN
-        self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+        self.sut.processEventsWhileInBackground([event])
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -344,7 +344,7 @@ extension LocalNotificationDispatcherTests {
         event.source = .pushNotification
         
         // WHEN
-        self.sut.processEvents([event], liveEvents: true, prefetchResult: nil)
+        self.sut.processEventsWhileInBackground([event])
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN

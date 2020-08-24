@@ -362,19 +362,21 @@ ZM_EMPTY_ASSERTING_INIT()
 {
     if (_eventConsumers == nil) {
         NSMutableArray<id<ZMEventConsumer>> *eventConsumers = [NSMutableArray array];
-
+        
         for (id<ZMObjectStrategy> objectStrategy in self.requestStrategies) {
             if ([objectStrategy conformsToProtocol:@protocol(ZMEventConsumer)]) {
                 [eventConsumers addObject:objectStrategy];
             }
         }
         
-    ApplicationStatusDirectory *statusDirectory = self.applicationStatusDirectory;
+        ApplicationStatusDirectory *statusDirectory = self.applicationStatusDirectory;
         
-    [eventConsumers addObject:[[UserClientEventConsumer alloc] initWithManagedObjectContext:self.syncMOC
-                                                                   clientRegistrationStatus:statusDirectory.clientRegistrationStatus
-                                                                         clientUpdateStatus:statusDirectory.clientUpdateStatus]];
-
+        [eventConsumers addObject:[[UserClientEventConsumer alloc] initWithManagedObjectContext:self.syncMOC
+                                                                       clientRegistrationStatus:statusDirectory.clientRegistrationStatus
+                                                                             clientUpdateStatus:statusDirectory.clientUpdateStatus]];
+        
+        [eventConsumers addObject:self.localNotificationDispatcher];
+        
         _eventConsumers = eventConsumers;
     }
 

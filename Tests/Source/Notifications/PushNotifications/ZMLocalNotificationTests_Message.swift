@@ -55,33 +55,13 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         
         return ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: uiMOC)
     }
-    
-    func unknownNotification(_ conversation: ZMConversation, sender: ZMUser) -> ZMLocalNotification? {
-        let payload : [String : Any] = [
-            "id": UUID.create().transportString(),
-            "conversation": conversation.remoteIdentifier!.transportString(),
-            "from": sender.remoteIdentifier.transportString(),
-            "time": conversation.lastReadServerTimeStamp!.addingTimeInterval(20).transportString(),
-            "data": ["text": ""],
-            "type": "conversation.otr-message-add"
-        ]
-        
-        let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: UUID())!
-        return ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: uiMOC)
-    }
-    
+
     func bodyForNote(_ conversation: ZMConversation, sender: ZMUser, text: String? = nil, isEphemeral: Bool = false) -> String {
         let note = textNotification(conversation, sender: sender, text: text, isEphemeral: isEphemeral)
         XCTAssertNotNil(note)
         return note!.body
     }
-    
-    func bodyForUnknownNote(_ conversation: ZMConversation, sender: ZMUser) -> String {
-        let note = unknownNotification(conversation, sender: sender)
-        XCTAssertNotNil(note)
-        return note!.body
-    }
-    
+
     // MARK: Tests
     
     func testThatItShowsDefaultAlertBodyWhenHidePreviewSettingIsTrue() {
@@ -436,14 +416,6 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
     
     // MARK: Misc
     
-    func testThatItCreatesPushNotificationForMessageOfUnknownType() {
-        XCTAssertEqual(bodyForUnknownNote(oneOnOneConversation, sender: sender), "New message")
-        XCTAssertEqual(bodyForUnknownNote(groupConversation, sender: sender), "Super User: new message")
-        XCTAssertEqual(bodyForUnknownNote(groupConversationWithoutUserDefinedName, sender: sender), "Super User: new message")
-        XCTAssertEqual(bodyForUnknownNote(groupConversationWithoutName, sender: sender), "Super User sent a message")
-        XCTAssertEqual(bodyForUnknownNote(invalidConversation, sender: sender), "Super User sent a message")
-    }
-
     func testThatItAddsATitleIfTheUserIsPartOfATeam() {
         
         // given

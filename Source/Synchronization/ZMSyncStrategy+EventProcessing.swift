@@ -65,6 +65,7 @@ extension ZMSyncStrategy: UpdateEventProcessor {
     public func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
         if ignoreBuffer || isReadyToProcessEvents {
             eventDecoder.decryptAndStoreEvents(updateEvents) { (decryptedEvents) in
+                Logging.eventProcessing.info("Consuming events while in background")
                 for eventConsumer in self.eventConsumers {
                     eventConsumer.processEventsWhileInBackground?(decryptedEvents)
                 }
@@ -96,8 +97,6 @@ extension ZMSyncStrategy: UpdateEventProcessor {
                 }
                 self.eventProcessingTracker?.registerEventProcessed()
             }
-            localNotificationDispatcher?.processEvents(decryptedUpdateEvents, liveEvents: true, prefetchResult: nil)
-            
             syncMOC.saveOrRollback()
             
             Logging.eventProcessing.debug("Events processed in \(-date.timeIntervalSinceNow): \(self.eventProcessingTracker?.debugDescription ?? "")")

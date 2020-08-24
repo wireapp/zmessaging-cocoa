@@ -507,9 +507,20 @@ final class ZMLocalNotificationTests_Event: ZMLocalNotificationTests {
         XCTAssertNotNil(note)
         XCTAssertEqual(note!.title, "Super User")
         XCTAssertEqual(note!.body, "New message: Stimpy just joined Wire")
-        
     }
-    
+
+    func testThatItDoesNotCreateANotificationForConfirmationEvents() {
+        // given
+        let confirmation = GenericMessage(content: Confirmation(messageId: .create()))
+        let event = createUpdateEvent(.create(), conversationID: oneOnOneConversation.remoteIdentifier!, genericMessage: confirmation)
+
+        // when
+        let note = ZMLocalNotification(event: event, conversation: oneOnOneConversation, managedObjectContext: uiMOC)
+
+        // then
+        XCTAssertNil(note)
+    }
+
     // MARK: - Create system local notifications from update events
     
     func testThatItCreatesASystemLocalNotificationForRemovingTheSelfUserEvent() {
