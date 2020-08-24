@@ -91,17 +91,15 @@ public final class ApplicationStatusDirectory : NSObject, ApplicationStatus {
             return .unauthenticated
         } else if syncStatus.isSlowSyncing {
             return .slowSyncing
-        } else if syncStatus.isSyncing {
+        } else if syncStatus.isFetchingNotificationStream {
             return .quickSyncing
+        } else if syncStatus.isSyncing {
+            return .establishingWebsocket
         } else {
             return .online
         }
     }
-    
-    public var notificationStreamFetchState: NotificationStreamFetchState {
-        return syncStatus.isFetchingNotificationStream ? .inProgress : .done
-    }
-    
+        
     public func requestSlowSync() {
         syncStatus.forceSlowSync()
     }

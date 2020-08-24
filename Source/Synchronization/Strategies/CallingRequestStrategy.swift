@@ -57,7 +57,7 @@ public final class CallingRequestStrategy: AbstractRequestStrategy {
         
         configuration = [.allowsRequestsWhileInBackground,
                          .allowsRequestsWhileOnline,
-                         .allowsRequestsDuringQuickSync]
+                         .allowsRequestsWhileWaitingForWebsocket]
         
         callConfigRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
         clientDiscoverySync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)

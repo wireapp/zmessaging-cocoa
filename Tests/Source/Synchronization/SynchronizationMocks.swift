@@ -27,7 +27,6 @@ import avs
 @objcMembers
 public class MockApplicationStatus : NSObject, ApplicationStatus, ClientRegistrationDelegate, ZMRequestCancellation {
 
-    public var notificationStreamFetchState: NotificationStreamFetchState = .done
     public var taskCancellationDelegate: ZMRequestCancellation { return self }
     public var clientRegistrationDelegate: ClientRegistrationDelegate { return self }
     

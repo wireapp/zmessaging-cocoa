@@ -129,7 +129,7 @@ public class TypingStrategy : AbstractRequestStrategy {
         self.configuration = [
             .allowsRequestsWhileInBackground,
             .allowsRequestsWhileOnline,
-            .allowsRequestsDuringNotificationStreamFetch
+            .allowsRequestsDuringQuickSync
         ]
 
         observers.append(

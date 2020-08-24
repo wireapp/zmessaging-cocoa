@@ -89,7 +89,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
     return ZMStrategyConfigurationOptionAllowsRequestsDuringQuickSync
          | ZMStrategyConfigurationOptionAllowsRequestsWhileInBackground
          | ZMStrategyConfigurationOptionAllowsRequestsWhileOnline
-         | ZMStrategyConfigurationOptionAllowsRequestsDuringNotificationStreamFetch;
+         | ZMStrategyConfigurationOptionAllowsRequestsWhileWaitingForWebsocket;
 }
 
 - (BOOL)isDownloadingMissingNotifications

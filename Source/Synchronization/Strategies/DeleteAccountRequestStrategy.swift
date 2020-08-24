@@ -35,8 +35,7 @@ import WireTransport
             .allowsRequestsWhileUnauthenticated,
             .allowsRequestsWhileOnline,
             .allowsRequestsDuringSlowSync,
-            .allowsRequestsDuringQuickSync,
-            .allowsRequestsDuringNotificationStreamFetch
+            .allowsRequestsDuringQuickSync
         ]
         self.deleteSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: self.managedObjectContext)
     }

@@ -227,7 +227,7 @@ extension SyncStatus {
     }
     
     @objc(completedFetchingNotificationStreamFetchBeganAt:)
-    public func completedFetchingNotificationStream(fetchBeganAt: Date) {
+    public func completedFetchingNotificationStream(fetchBeganAt: Date?) {
         if currentSyncPhase == .fetchingMissedEvents &&
            pushChannelEstablishedDate < fetchBeganAt {
             
