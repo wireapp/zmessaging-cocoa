@@ -21,15 +21,14 @@
 
 extension ZMLocalNotification {
     
-    convenience init?(expiredMessage: ZMMessage) {
+    convenience init?(expiredMessage: ZMMessage, moc: NSManagedObjectContext) {
         guard let conversation = expiredMessage.conversation else { return nil }
-        self.init(expiredMessageIn: conversation)
+        self.init(expiredMessageIn: conversation, moc: moc)
     }
     
-    convenience init?(expiredMessageIn conversation: ZMConversation) {
+    convenience init?(expiredMessageIn conversation: ZMConversation, moc: NSManagedObjectContext) {
         guard let builder = FailedMessageNotificationBuilder(conversation: conversation) else { return nil }
-        
-        self.init(conversation: conversation, builder: builder)
+        self.init(builder: builder, moc: moc)
     }
     
     private class FailedMessageNotificationBuilder: NotificationBuilder {

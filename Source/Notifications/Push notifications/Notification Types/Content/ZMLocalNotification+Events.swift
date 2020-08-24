@@ -51,7 +51,7 @@ extension ZMLocalNotification {
         }
 
         if let builder = builderType?.init(event: event, conversation: conversation, managedObjectContext: moc) {
-            self.init(conversation: conversation, builder: builder)
+            self.init(builder: builder, moc: moc)
         } else {
             return nil
         }
