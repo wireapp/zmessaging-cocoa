@@ -17,7 +17,6 @@
 //
 
 import Foundation
-import WireRequestStrategy
 
 @objc(ZMThirdPartyServicesDelegate)
 public protocol ThirdPartyServicesDelegate: NSObjectProtocol {
