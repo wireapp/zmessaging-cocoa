@@ -56,6 +56,13 @@ class LabelDownstreamRequestStrategyTests: MessagingTest {
         super.tearDown()
     }
     
+    func successfullFolderResponse() -> ZMTransportResponse {
+        let encoder = JSONEncoder()
+        let data = try! encoder.encode(self.folderResponse(name: "folder", conversations: []))
+        let urlResponse = HTTPURLResponse(url: URL(string: "properties/labels")!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+        return ZMTransportResponse(httpurlResponse: urlResponse, data: data, error: nil)
+    }
+    
     func favoriteResponse(identifier: UUID = UUID(), favorites: [UUID]) -> WireSyncEngine.LabelPayload {
         let update = WireSyncEngine.LabelUpdate(id: identifier, type: Label.Kind.favorite.rawValue, name: "", conversations: favorites)
         let response = WireSyncEngine.LabelPayload(labels: [update])
@@ -109,6 +116,40 @@ class LabelDownstreamRequestStrategyTests: MessagingTest {
         }
     }
     
+    func testThatItResetsFlag_WhenLabelsExist() {
+        syncMOC.performGroupedBlockAndWait {
+            // GIVEN
+            ZMUser.selfUser(in: self.syncMOC).needsToRefetchLabels = true
+            guard let request = self.sut.nextRequest() else { return XCTFail() }
+            
+            // WHEN
+            request.complete(with: self.successfullFolderResponse())
+        }
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+          
+        // THEN
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertFalse(ZMUser.selfUser(in: self.syncMOC).needsToRefetchLabels)
+        }
+    }
+    
+    func testThatItResetsFlag_WhenLabelsDontExist() {
+        syncMOC.performGroupedBlockAndWait {
+            // GIVEN
+            ZMUser.selfUser(in: self.syncMOC).needsToRefetchLabels = true
+            guard let request = self.sut.nextRequest() else { return XCTFail() }
+            
+            // WHEN
+            request.complete(with: ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil))
+        }
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+          
+        // THEN
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertFalse(ZMUser.selfUser(in: self.syncMOC).needsToRefetchLabels)
+        }
+    }
+    
     func testThatItFinishSlowSyncPhase_WhenLabelsExist() {
         syncMOC.performGroupedBlockAndWait {
             // GIVEN
@@ -116,11 +157,7 @@ class LabelDownstreamRequestStrategyTests: MessagingTest {
             guard let request = self.sut.nextRequest() else { return XCTFail() }
             
             // WHEN
-            let encoder = JSONEncoder()
-            let data = try! encoder.encode(self.favoriteResponse(favorites: [UUID()]))
-            let urlResponse = HTTPURLResponse(url: URL(string: "properties/labels")!, statusCode: 200, httpVersion: nil, headerFields: nil)!
-            let response = ZMTransportResponse(httpurlResponse: urlResponse, data: data, error: nil)
-            request.complete(with: response)
+            request.complete(with: self.successfullFolderResponse())
         }
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             

@@ -148,6 +148,8 @@ extension LabelDownstreamRequestStrategy: ZMSingleRequestTranscoder {
         if syncStatus.currentSyncPhase == .fetchingLabels {
             syncStatus.finishCurrentSyncPhase(phase: .fetchingLabels)
         }
+        
+        ZMUser.selfUser(in: managedObjectContext).needsToRefetchLabels = false
     }
     
 }
