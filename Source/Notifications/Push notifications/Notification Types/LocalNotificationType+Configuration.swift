@@ -18,61 +18,13 @@
 
 import Foundation
 
-extension PushNotificationCategory {
-    func addMuteIfNeeded(hasTeam: Bool) -> PushNotificationCategory {
-        guard !hasTeam else {
-            return self
-        }
-        
-        switch self {
-        case .conversation:
-            return .conversationWithMute
-        case .conversationWithLike:
-            return .conversationWithLikeAndMute
-        default:
-            return self
-        }
-    }
-}
 
 extension LocalNotificationType {
-    
-    func category(hasTeam: Bool) -> String {
-        let category: PushNotificationCategory
-        
-        switch self {
-        case .calling(let callState):
-            switch (callState) {
-            case .incoming:
-                category = .incomingCall
-            case .terminating(reason: .timeout):
-                category = .missedCall
-            default :
-                category = PushNotificationCategory.conversation.addMuteIfNeeded(hasTeam: hasTeam)
-            }
-        case .event(let eventType):
-            switch eventType {
-            case .connectionRequestPending, .conversationCreated:
-                category = .connect
-            default:
-                category = PushNotificationCategory.conversation.addMuteIfNeeded(hasTeam: hasTeam)
-            }
-        case .message(let contentType):
-            switch contentType {
-            case .audio, .video, .fileUpload, .image, .text, .location:
-                category = PushNotificationCategory.conversationWithLike.addMuteIfNeeded(hasTeam: hasTeam)
-            case .hidden:
-                category = .alert
-            default:
-                category = PushNotificationCategory.conversation.addMuteIfNeeded(hasTeam: hasTeam)
-            }
-        case .failedMessage:
-            category = PushNotificationCategory.conversation.addMuteIfNeeded(hasTeam: hasTeam)
-        case .availabilityBehaviourChangeAlert:
-            category = PushNotificationCategory.alert
-        }
-        
-        return category.rawValue
+
+    func category(hasTeam: Bool, encryptionAtRestEnabled: Bool) -> PushNotificationCategory {
+        return PushNotificationCategory(notificationType: self)
+            .addEncryptionAtRestIfNeeded(encryptionAtRestEnabled: encryptionAtRestEnabled)
+            .addMuteIfNeeded(hasTeam: hasTeam)
     }
     
     var sound: NotificationSound {
@@ -98,4 +50,81 @@ extension LocalNotificationType {
         }
     }
     
+}
+
+private extension PushNotificationCategory {
+
+    init(notificationType: LocalNotificationType) {
+        switch notificationType {
+        case .calling(let callState):
+            self.init(callState: callState)
+        case .event(let eventType):
+            self.init(eventType: eventType)
+        case .message(let contentType):
+            self.init(contentType: contentType)
+        case .failedMessage:
+            self = .conversation
+        case .availabilityBehaviourChangeAlert:
+            self = .alert
+        }
+    }
+
+    init(callState: CallState) {
+        switch (callState) {
+        case .incoming:
+            self = .incomingCall
+        case .terminating(reason: .timeout):
+            self = .missedCall
+        default :
+            self = .conversation
+        }
+    }
+
+    init(eventType: LocalNotificationEventType) {
+        switch eventType {
+        case .connectionRequestPending, .conversationCreated:
+            self = .connect
+        default:
+            self = .conversation
+        }
+    }
+
+    init(contentType: LocalNotificationContentType) {
+        switch contentType {
+        case .audio, .video, .fileUpload, .image, .text, .location:
+            self = .conversationWithLike
+        case .hidden:
+            self = .alert
+        default:
+            self = .conversation
+        }
+    }
+
+    func addMuteIfNeeded(hasTeam: Bool) -> Self {
+        guard !hasTeam else { return self }
+
+        switch self {
+        case .conversation:
+            return .conversationWithMute
+        case .conversationWithLike:
+            return .conversationWithLikeAndMute
+        case .conversationUnderEncryptionAtRest:
+            return .conversationUnderEncryptionAtRestWithMute
+        default:
+            return self
+        }
+    }
+
+    func addEncryptionAtRestIfNeeded(encryptionAtRestEnabled: Bool) -> Self {
+        guard encryptionAtRestEnabled else { return self }
+
+        switch self {
+        case .conversation, .conversationWithLike:
+            return .conversationUnderEncryptionAtRest
+        case .conversationWithMute, .conversationWithLikeAndMute:
+            return .conversationUnderEncryptionAtRestWithMute
+        default:
+            return self
+        }
+    }
 }

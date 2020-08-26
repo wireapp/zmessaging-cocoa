@@ -188,8 +188,8 @@ extension LocalNotificationDispatcherTests {
 
     func testThatItCancelsAllNotificationsForFailingMessagesWhenCancelingAllNotifications() {
         // GIVEN
-        let note1 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
-        let note2 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
+        let note1 = ZMLocalNotification(expiredMessageIn: conversation1, moc: syncMOC)!
+        let note2 = ZMLocalNotification(expiredMessageIn: conversation1, moc: syncMOC)!
         self.sut.eventNotifications.addObject(note1)
         self.sut.failedMessageNotifications.addObject(note2)
 
@@ -202,10 +202,10 @@ extension LocalNotificationDispatcherTests {
 
     func testThatItCancelsNotificationsForFailingMessagesWhenCancelingNotificationsForASpecificConversation() {
         // GIVEN
-        let note1 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
-        let note2 = ZMLocalNotification(expiredMessageIn: self.conversation2)!
-        let note3 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
-        let note4 = ZMLocalNotification(expiredMessageIn: self.conversation2)!
+        let note1 = ZMLocalNotification(expiredMessageIn: conversation1, moc: syncMOC)!
+        let note2 = ZMLocalNotification(expiredMessageIn: conversation2, moc: syncMOC)!
+        let note3 = ZMLocalNotification(expiredMessageIn: conversation1, moc: syncMOC)!
+        let note4 = ZMLocalNotification(expiredMessageIn: conversation2, moc: syncMOC)!
         self.sut.eventNotifications.addObject(note1)
         self.sut.eventNotifications.addObject(note2)
         self.sut.failedMessageNotifications.addObject(note3)
@@ -222,8 +222,8 @@ extension LocalNotificationDispatcherTests {
         // GIVEN
         let message = conversation1.append(text: "foo") as! ZMClientMessage
         message.sender = user1
-        let note1 = ZMLocalNotification(expiredMessage: message)!
-        let note2 = ZMLocalNotification(expiredMessageIn: self.conversation1)!
+        let note1 = ZMLocalNotification(expiredMessage: message, moc: syncMOC)!
+        let note2 = ZMLocalNotification(expiredMessageIn: self.conversation1, moc: syncMOC)!
         sut.eventNotifications.addObject(note1)
         sut.eventNotifications.addObject(note2)
         conversation1.lastServerTimeStamp = Date.distantFuture

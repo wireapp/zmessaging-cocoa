@@ -48,7 +48,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
     }
     
     func note(for callState: CallState) -> ZMLocalNotification? {
-        return ZMLocalNotification(callState: callState, conversation: conversation, caller: sender)
+        return ZMLocalNotification(callState: callState, conversation: conversation, caller: sender, moc: syncMOC)
     }
     
     func testIncomingAudioCall() {
@@ -62,7 +62,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         // then
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "is calling")
-        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.incomingCall.rawValue)
+        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.incomingCall)
         XCTAssertEqual(note.sound, .call)
     }
     
@@ -113,7 +113,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         // then
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "is calling with video")
-        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.incomingCall.rawValue)
+        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.incomingCall)
         XCTAssertEqual(note.sound, .call)
     }
     
@@ -137,7 +137,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         // then
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "called")
-        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.conversationWithMute.rawValue)
+        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.conversationWithMute)
         XCTAssertEqual(note.sound, .newMessage)
     }
     
@@ -167,7 +167,7 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         // then
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "called")
-        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.missedCall.rawValue)
+        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.missedCall)
         XCTAssertEqual(note.sound, .newMessage)
     }
     
@@ -175,16 +175,16 @@ class ZMLocalNotificationTests_CallState : MessagingTest {
         
         // given
         let state: CallState = .terminating(reason: .timeout)
-        let caller = ZMUser.selfUser(in: uiMOC)
+        let caller = ZMUser.selfUser(in: syncMOC)
         caller.name = "SelfUser"
         
         // when
-        guard let note = ZMLocalNotification(callState: state, conversation: conversation, caller: caller) else { return XCTFail("Did not create notification") }
+        guard let note = ZMLocalNotification(callState: state, conversation: conversation, caller: caller, moc: syncMOC) else { return XCTFail("Did not create notification") }
         
         // then
         XCTAssertEqual(note.title, "Callie")
         XCTAssertEqual(note.body, "called")
-        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.missedCall.rawValue)
+        XCTAssertEqual(note.category, WireSyncEngine.PushNotificationCategory.missedCall)
         XCTAssertEqual(note.sound, .newMessage)
     }
     
