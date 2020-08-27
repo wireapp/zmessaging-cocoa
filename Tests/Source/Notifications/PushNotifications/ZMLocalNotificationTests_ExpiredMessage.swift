@@ -78,7 +78,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             self.oneOnOneConversation.mutableMessages.add(message)
             
             // when
-            let note = ZMLocalNotification(expiredMessage: message)
+            let note = ZMLocalNotification(expiredMessage: message, moc: self.syncMOC)
             
             // then
             XCTAssertNotNil(note)
@@ -95,7 +95,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             self.oneOnOneConversation.mutableMessages.add(message)
             
             // when
-            let note = ZMLocalNotification(expiredMessageIn: message.conversation!)
+            let note = ZMLocalNotification(expiredMessageIn: message.conversation!, moc: self.syncMOC)
             
             // then
             XCTAssertNotNil(note)
@@ -112,7 +112,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             self.groupConversation.mutableMessages.add(message)
             
             // when
-            let note = ZMLocalNotification(expiredMessage: message)
+            let note = ZMLocalNotification(expiredMessage: message, moc: self.syncMOC)
             
             // then
             XCTAssertNotNil(note)
@@ -129,7 +129,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             self.groupConversationWithoutName.mutableMessages.add(message)
             
             // when
-            let note = ZMLocalNotification(expiredMessage: message)
+            let note = ZMLocalNotification(expiredMessage: message, moc: self.syncMOC)
             
             // then
             XCTAssertNotNil(note)
@@ -149,7 +149,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             connection.to = self.userWithName
             
             // when
-            let note = ZMLocalNotification(expiredMessage: message)
+            let note = ZMLocalNotification(expiredMessage: message, moc: self.syncMOC)
             
             // then
             XCTAssertNotNil(note)
@@ -169,7 +169,7 @@ class ZMLocalNotificationTests_ExpiredMessage: MessagingTest {
             connection.to = self.userWithNoName
             
             // when
-            let note = ZMLocalNotification(expiredMessage: message)
+            let note = ZMLocalNotification(expiredMessage: message, moc: self.syncMOC)
             
             // then
             XCTAssertNotNil(note)

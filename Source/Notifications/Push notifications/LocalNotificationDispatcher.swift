@@ -141,14 +141,14 @@ extension LocalNotificationDispatcher {
         if message.visibleInConversation == nil || message.conversation?.conversationType == .self {
             return
         }
-        let note = ZMLocalNotification(expiredMessage: message)
+        let note = ZMLocalNotification(expiredMessage: message, moc: syncMOC)
         note.apply(scheduleLocalNotification)
         note.apply(failedMessageNotifications.addObject)
     }
 
     /// Informs the user that a message in a conversation failed to send
     public func didFailToSendMessage(in conversation: ZMConversation) {
-        let note = ZMLocalNotification(expiredMessageIn: conversation)
+        let note = ZMLocalNotification(expiredMessageIn: conversation, moc: syncMOC)
         note.apply(scheduleLocalNotification)
         note.apply(failedMessageNotifications.addObject)
     }
