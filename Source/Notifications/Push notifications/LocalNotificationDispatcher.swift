@@ -19,18 +19,18 @@
 import Foundation
 import UserNotifications
 
-// Creates and cancels local notifications
+/// Creates and cancels local notifications
 @objcMembers public class LocalNotificationDispatcher: NSObject {
     
     public static let ZMShouldHideNotificationContentKey = "ZMShouldHideNotificationContentKey"
 
-    public let eventNotifications: ZMLocalNotificationSet
-    public let callingNotifications: ZMLocalNotificationSet
-    public let failedMessageNotifications: ZMLocalNotificationSet
+    let eventNotifications: ZMLocalNotificationSet
+    let callingNotifications: ZMLocalNotificationSet
+    let failedMessageNotifications: ZMLocalNotificationSet
 
-    public var notificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()
+    var notificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()
 
-    public let syncMOC: NSManagedObjectContext
+    let syncMOC: NSManagedObjectContext
     fileprivate var observers: [Any] = []
 
     var localNotificationBuffer = [ZMLocalNotification]()
@@ -49,7 +49,7 @@ import UserNotifications
         )
     }
     
-    public func scheduleLocalNotification(_ note: ZMLocalNotification) {
+    func scheduleLocalNotification(_ note: ZMLocalNotification) {
         Logging.push.safePublic("Scheduling local notification with id=\(note.id)")
         
         notificationCenter.add(note.request, withCompletionHandler: nil)
@@ -58,7 +58,7 @@ import UserNotifications
     /// Determines if the notification content should be hidden as reflected in the store
     /// metatdata for the given managed object context.
     ///
-    public static func shouldHideNotificationContent(moc: NSManagedObjectContext?) -> Bool {
+    static func shouldHideNotificationContent(moc: NSManagedObjectContext?) -> Bool {
         let value = moc?.persistentStoreMetadata(forKey: ZMShouldHideNotificationContentKey) as? NSNumber
         return value?.boolValue ?? false
     }
@@ -176,7 +176,7 @@ extension LocalNotificationDispatcher {
         self.allNotificationSets.forEach { $0.cancelNotifications(conversation) }
     }
     
-    public func cancelMessageForEditingMessage(_ genericMessage: GenericMessage) {
+    func cancelMessageForEditingMessage(_ genericMessage: GenericMessage) {
         var idToDelete : UUID?
         
         if genericMessage.hasEdited {
