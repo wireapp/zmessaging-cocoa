@@ -21,7 +21,7 @@ import UserNotifications
 
 /// Creates and cancels local notifications
 @objcMembers public class LocalNotificationDispatcher: NSObject {
-    
+
     public static let ZMShouldHideNotificationContentKey = "ZMShouldHideNotificationContentKey"
 
     let eventNotifications: ZMLocalNotificationSet
@@ -105,7 +105,7 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
                     cancelMessageForEditingMessage(receivedMessage)
                 }
             }
-
+                        
             let note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
             note.apply(eventNotifications.addObject)
             note.apply(scheduleLocalNotification)
