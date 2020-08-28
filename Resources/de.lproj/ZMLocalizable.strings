@@ -21,8 +21,9 @@
 "conversation.username.groupingSeparator" = ", ";
 
 "user_session.error.blacklisted-email" = "Diese E-Mail-Adresse ist nicht zulässig";
+"user_session.error.domain-blocked" = "Diese E-Mail erfordert eine Team-Einladung. Kontaktieren Sie die IT-Administratoren Ihrer Organisation, um eine Einladung zu erhalten.";
 "user_session.error.email-exists" = "Mit dieser E-Mail-Adresse ist bereits ein Benutzerkonto registriert";
 "user_session.error.invalid-email" = "Diese E-Mail-Adresse ist ungültig";
-"user_session.error.invalid-code" = "Bitte gib einen gültigen Code ein";
-"user_session.error.unauthorized-email" = "Ein Fehler ist aufgetreten, bitte versuche es erneut";
-"user_session.error.unknown" = "Ein Fehler ist aufgetreten, bitte versuche es erneut";
+"user_session.error.invalid-code" = "Bitte einen gültigen Code eingeben";
+"user_session.error.unauthorized-email" = "Ein Fehler ist aufgetreten, bitte versuchen Sie es erneut";
+"user_session.error.unknown" = "Ein Fehler ist aufgetreten, bitte versuchen Sie es erneut";

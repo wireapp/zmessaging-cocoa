@@ -36,8 +36,8 @@
 // Ephemeral
 "push.notification.ephemeral.title" = "Jemand";
 "push.notification.ephemeral" = "Temporäre Nachricht";
-"push.notification.ephemeral.mention" = "Hat dich erwähnt";
-"push.notification.ephemeral.reply" = "Hat dir geantwortet";
+"push.notification.ephemeral.mention" = "Hat Sie erwähnt";
+"push.notification.ephemeral.reply" = "Hat Ihnen geantwortet";
 
 // 2 Components: Sender, Message
 "push.notification.add.message.group" = "%1$@: %2$@";
@@ -55,7 +55,7 @@
 "push.notification.add.message.group.mention" = "Erwähnung von %1$@: %2$@";
 "push.notification.add.message.group.nousername.mention" = "Neue Erwähnung: %1$@";
 "push.notification.add.message.group.nousername.noconversationname.mention" = "Neue Erwähnung: %1$@";
-"push.notification.add.message.group.noconversationname.mention" = "%1$@ hat dich in einer Unterhaltung erwähnt: %2$@";
+"push.notification.add.message.group.noconversationname.mention" = "%1$@ hat Sie in einer Unterhaltung erwähnt: %2$@";
 
 // 1 Component: Message
 "push.notification.add.message.oneonone.mention" = "Erwähnung: %1$@";
@@ -67,7 +67,7 @@
 "push.notification.add.message.group.reply" = "Antwort von %1$@: %2$@";
 "push.notification.add.message.group.nousername.reply" = "Neue Antwort: %1$@";
 "push.notification.add.message.group.nousername.noconversationname.reply" = "Neue Antwort: %1$@";
-"push.notification.add.message.group.noconversationname.reply" = "%1$@ hat dir in einer Unterhaltung geantwortet: %2$@";
+"push.notification.add.message.group.noconversationname.reply" = "%1$@ hat Ihnen in einer Unterhaltung geantwortet: %2$@";
 
 // 1 Component: Message
 "push.notification.add.message.oneonone.reply" = "Antwort: %1$@";
@@ -79,7 +79,7 @@
 "push.notification.add.image.group.nousername.noconversationname" = "Jemand hat ein Bild in einer Unterhaltung geteilt";
 "push.notification.add.image.group.noconversationname" = "%1$@ hat ein Bild in einer Unterhaltung geteilt";
 
-"push.notification.add.image.oneonone" = "hat ein Bild geteilt";
+"push.notification.add.image.oneonone" = "Hat ein Bild geteilt";
 "push.notification.add.image.oneonone.nousername" = "Jemand hat ein Bild in einer Unterhaltung geteilt";
 
 // VIDEO
@@ -97,7 +97,7 @@
 "push.notification.add.audio.group.nousername.noconversationname" = "Neue Audio-Nachricht in einer Unterhaltung";
 "push.notification.add.audio.group.noconversationname" = "%1$@ hat eine Audio-Nachricht in einer Unterhaltung geteilt";
 
-"push.notification.add.audio.oneonone" = "Hat eine Audio-Nachricht geteilt";
+"push.notification.add.audio.oneonone" = "Hat eine Audionachricht geteilt";
 "push.notification.add.audio.oneonone.nousername" = "Neue Audio-Nachricht in einer Unterhaltung";
 
 // FILE
@@ -119,15 +119,15 @@
 "push.notification.add.location.oneonone.nousername" = "Jemand hat einen Standort in einer Unterhaltung geteilt";
 
 // SELF ADDED/REMOVED TO GROUP
-"push.notification.member.join.self" = "%1$@ hat dich hinzugefügt";
-"push.notification.member.join.self.noconversationname" = "%1$@ hat dich zu einer Unterhaltung hinzugefügt";
-"push.notification.member.join.self.nousername.noconversationname" = "Du wurdest zu einer Unterhaltung hinzugefügt";
-"push.notification.member.join.self.nousername" = "Du wurdest hinzugefügt";
+"push.notification.member.join.self" = "%1$@ hat Sie hinzugefügt";
+"push.notification.member.join.self.noconversationname" = "%1$@ hat Sie zu einer Unterhaltung hinzugefügt";
+"push.notification.member.join.self.nousername.noconversationname" = "Sie wurden zu einer Unterhaltung hinzugefügt";
+"push.notification.member.join.self.nousername" = "Sie wurden hinzugefügt";
 
-"push.notification.member.leave.self" = "%1$@ hat dich entfernt";
-"push.notification.member.leave.self.noconversationname" = "%1$@ hat dich aus einer Unterhaltung entfernt";
-"push.notification.member.leave.self.nousername.noconversationname" = "Du wurdest aus einer Unterhaltung entfernt";
-"push.notification.member.leave.self.nousername" = "Du wurdest entfernt";
+"push.notification.member.leave.self" = "%1$@ hat Sie entfernt";
+"push.notification.member.leave.self.noconversationname" = "%1$@ hat Sie aus einer Unterhaltung entfernt";
+"push.notification.member.leave.self.nousername.noconversationname" = "Sie wurden aus einer Unterhaltung entfernt";
+"push.notification.member.leave.self.nousername" = "Sie wurden entfernt";
 
 // EPHEMERAL MESSAGE TIMER UPDATE
 "push.notification.message-timer.update" = "%@ hat temporäre Nachrichten auf %@ gestellt";
@@ -159,13 +159,13 @@
 "push.notification.call.started.group.nousername.noconversationname" = "Jemand ruft in einer Unterhaltung an";
 
 // MISSED CALLS
-"push.notification.call.missed.group" = "%1$@ hat versucht dich anzurufen";
-"push.notification.call.missed.group.nousername" = "Jemand hat versucht dich anzurufen";
-"push.notification.call.missed.group.nousername.noconversationname" = "Jemand hat versucht in einer Unterhaltung anzurufen";
-"push.notification.call.missed.group.noconversationname" = "%1$@ hat versucht in einer Unterhaltung anzurufen";
+"push.notification.call.missed.group" = "%1$@ hat angerufen";
+"push.notification.call.missed.group.nousername" = "Jemand hat angerufen";
+"push.notification.call.missed.group.nousername.noconversationname" = "Jemand hat in einer Unterhaltung angerufen";
+"push.notification.call.missed.group.noconversationname" = "%1$@ hat in einer Unterhaltung angerufen";
 
-"push.notification.call.missed.oneonone" = "hat versucht anzurufen";
-"push.notification.call.missed.oneonone.nousername" = "Jemand hat versucht dich anzurufen";
+"push.notification.call.missed.oneonone" = "hat angerufen";
+"push.notification.call.missed.oneonone.nousername" = "Jemand hat angerufen";
 
 // CALLKIT
 "push.notification.callkit.call.started.group" = "%1$@ in %2$@";
@@ -182,11 +182,11 @@
 "push.notification.conversation.delete.nousername" = "Jemand hat die Gruppe gelöscht";
 
 // CONNECTIONS (there should be no alert titles for these)
-"push.notification.connection.request" = "%@ möchte sich mit dir verbinden";
-"push.notification.connection.request.nousername" = "Jemand möchte dich als Kontakt hinzufügen";
+"push.notification.connection.request" = "%@ möchte sich mit Ihnen verbinden";
+"push.notification.connection.request.nousername" = "Jemand möchte Sie als Kontakt hinzufügen";
 
-"push.notification.connection.accepted" = "Du bist jetzt mit %@ verbunden";
-"push.notification.connection.accepted.nousername" = "Du hast einen neuen Kontakt";
+"push.notification.connection.accepted" = "Sie sind jetzt mit %@ verbunden";
+"push.notification.connection.accepted.nousername" = "Sie haben einen neuen Kontakt";
 
 // FAILED MESSAGE
 "push.notification.failed.message.oneonone" = "Kann keine Nachricht senden";
@@ -206,13 +206,13 @@
 "push.notification.alert.availability.busy.message" = "Status wirkt sich jetzt auf Benachrichtigungen aus. Beim aktuellen Status \"Beschäftigt\" werden nur Benachrichtigungen über Erwähnungen oder Antworten angezeigt.";
 
 // REACTIONS
-"push.notification.reaction.group" = "%1$@ %2$@ deine Nachricht";
-"push.notification.reaction.group.nousername.noconversationname" = "Jemand %@ deine Nachricht in einer Unterhaltung";
-"push.notification.reaction.group.nousername" = "Jemand %@ deine Nachricht";
-"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ deine Nachricht in einer Unterhaltung";
+"push.notification.reaction.group" = "%1$@ %2$@ Ihre Nachricht";
+"push.notification.reaction.group.nousername.noconversationname" = "Jemand %@ Ihre Nachricht in einer Unterhaltung";
+"push.notification.reaction.group.nousername" = "Jemand %@ Ihre Nachricht";
+"push.notification.reaction.group.noconversationname" = "%1$@ %2$@ Ihre Nachricht in einer Unterhaltung";
 
-"push.notification.reaction.oneonone" = "%1$@ deine Nachricht";
-"push.notification.reaction.oneonone.nousername" = "Jemand %@ deine Nachricht";
+"push.notification.reaction.oneonone" = "%1$@ Ihre Nachricht";
+"push.notification.reaction.oneonone.nousername" = "Jemand %@ Ihre Nachricht";
 
 // NEW USER (no alert title for this)
 "push.notification.new_user" = "%@ ist jetzt auch bei Wire";

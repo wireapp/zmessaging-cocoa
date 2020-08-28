@@ -21,6 +21,7 @@
 "conversation.username.groupingSeparator" = ", ";
 
 "user_session.error.blacklisted-email" = "Дана Email-адреса неприпустима";
+"user_session.error.domain-blocked" = "Цей емейл потребує запрошення в команду. Зверніться до ІТ-адміністраторів вашої організації для отримання запрошення.";
 "user_session.error.email-exists" = "Дана Email-адреса вже зареєстрована";
 "user_session.error.invalid-email" = "Невалідна Email-адреса";
 "user_session.error.invalid-code" = "Будь ласка, введіть правильний код";

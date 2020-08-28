@@ -21,6 +21,7 @@
 "conversation.username.groupingSeparator" = ", ";
 
 "user_session.error.blacklisted-email" = "Этот адрес электронной почты не разрешен";
+"user_session.error.domain-blocked" = "Это письмо требует приглашения от существующей команды. По вопросам получения приглашения, свяжитесь с ИТ-администраторами вашей организации.";
 "user_session.error.email-exists" = "Данный адрес email уже зарегистрирован";
 "user_session.error.invalid-email" = "Этот адрес электронной почты недействителен";
 "user_session.error.invalid-code" = "Пожалуйста, введите правильный код";

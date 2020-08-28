@@ -178,8 +178,8 @@
 "push.notification.conversation.create.nousername" = "Хтось створив групу";
 
 // CONVERSATION DELETE
-"push.notification.conversation.delete" = "%1$@ deleted the group";
-"push.notification.conversation.delete.nousername" = "Someone deleted the group";
+"push.notification.conversation.delete" = "%1$@ видалив(-ла) групу";
+"push.notification.conversation.delete.nousername" = "Хтось видалив групу";
 
 // CONNECTIONS (there should be no alert titles for these)
 "push.notification.connection.request" = "%@ хоче бути доданий(-а) до ваших контактів";
