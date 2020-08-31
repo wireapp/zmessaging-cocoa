@@ -30,7 +30,7 @@ class LegalHoldRequestStrategyTests: MessagingTest {
         mockSyncStateDelegate = MockSyncStateDelegate()
         mockSyncStatus = MockSyncStatus(managedObjectContext: syncMOC, syncStateDelegate: mockSyncStateDelegate)
         mockApplicationStatus = MockApplicationStatus()
-        mockApplicationStatus.mockSynchronizationState = .synchronizing
+        mockApplicationStatus.mockSynchronizationState = .slowSyncing
         sut = LegalHoldRequestStrategy(withManagedObjectContext: syncMOC, applicationStatus: mockApplicationStatus, syncStatus: mockSyncStatus)
         
         syncMOC.performGroupedBlockAndWait {

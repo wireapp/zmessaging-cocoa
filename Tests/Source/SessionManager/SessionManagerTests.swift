@@ -466,6 +466,21 @@ class SessionManagerTests_AuthenticationFailure: IntegrationTest {
         XCTAssertFalse(sessionManager!.isSelectedAccountAuthenticated)
     }
     
+    func testThatItDeletesAccount_IfRemoteClientIsDeleted() {
+        // given
+        XCTAssertTrue(login())
+        let account = sessionManager!.accountManager.selectedAccount!
+        
+        // when
+        sessionManager?.authenticationInvalidated(NSError(code: .clientDeletedRemotely, userInfo: nil), accountId: account.userIdentifier)
+        
+        // then
+        guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
+        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        
+        XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
+    }
+    
     func testThatItTearsDownActiveUserSession_OnAuthentictionFailure() {
         // given
         XCTAssert(login())

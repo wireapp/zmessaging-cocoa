@@ -30,7 +30,7 @@ final class TeamImageAssetUpdateStrategyTests : MessagingTest {
         super.setUp()
         
         self.mockApplicationStatus = MockApplicationStatus()
-        self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+        self.mockApplicationStatus.mockSynchronizationState = .online
         
         sut = TeamImageAssetUpdateStrategy(withManagedObjectContext: uiMOC, applicationStatus: mockApplicationStatus)
     }

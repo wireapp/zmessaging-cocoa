@@ -27,11 +27,8 @@ import avs
 @objcMembers
 public class MockApplicationStatus : NSObject, ApplicationStatus, ClientRegistrationDelegate, ZMRequestCancellation {
 
-
-    public var notificationFetchStatus = BackgroundNotificationFetchStatus.done
-
-    public var taskCancellationDelegate : ZMRequestCancellation { return self }
-    public var clientRegistrationDelegate : ClientRegistrationDelegate { return self }
+    public var taskCancellationDelegate: ZMRequestCancellation { return self }
+    public var clientRegistrationDelegate: ClientRegistrationDelegate { return self }
     
     public var mockSynchronizationState = SynchronizationState.unauthenticated
     public var synchronizationState: SynchronizationState {

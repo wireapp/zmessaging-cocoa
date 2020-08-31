@@ -48,7 +48,7 @@
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
-    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateSynchronizing;
+    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateSlowSyncing;
 
     self.sut = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus objectDirectory:self.directory];
     self.sut.lastUpdateEventIDSync = self.downstreamSync;

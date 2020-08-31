@@ -30,7 +30,7 @@ class ProxiedRequestStrategyTests: MessagingTest {
         super.setUp()
         self.requestsStatus = ProxiedRequestsStatus(requestCancellation: MockRequestCancellation())
         self.mockApplicationStatus = MockApplicationStatus()
-        self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+        self.mockApplicationStatus.mockSynchronizationState = .online
         self.sut = ProxiedRequestStrategy(withManagedObjectContext: self.uiMOC, applicationStatus: self.mockApplicationStatus, requestsStatus: self.requestsStatus)
     }
     

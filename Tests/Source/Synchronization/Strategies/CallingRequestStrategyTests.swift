@@ -22,13 +22,17 @@ import WireRequestStrategy
 class CallingRequestStrategyTests : MessagingTest {
 
     var sut: CallingRequestStrategy!
-    var mockRegistrationDelegate : ClientRegistrationDelegate!
+    var mockApplicationStatus: MockApplicationStatus!
+    var mockRegistrationDelegate: ClientRegistrationDelegate!
     
     override func setUp() {
         super.setUp()
+        mockApplicationStatus = MockApplicationStatus()
+        mockApplicationStatus.mockSynchronizationState = .online
         mockRegistrationDelegate = MockClientRegistrationDelegate()
         sut = CallingRequestStrategy(
             managedObjectContext: syncMOC,
+            applicationStatus: mockApplicationStatus,
             clientRegistrationDelegate: mockRegistrationDelegate,
             flowManager: FlowManagerMock(),
             callEventStatus: CallEventStatus()
@@ -38,6 +42,7 @@ class CallingRequestStrategyTests : MessagingTest {
     override func tearDown() {
         sut = nil
         mockRegistrationDelegate = nil
+        mockApplicationStatus = nil
         super.tearDown()
     }
 

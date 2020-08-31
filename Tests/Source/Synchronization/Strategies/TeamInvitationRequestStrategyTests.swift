@@ -34,7 +34,7 @@ class TeamInvitationRequestStrategyTests: MessagingTest {
         teamInvitationStatus = TeamInvitationStatus()
         sut = TeamInvitationRequestStrategy(withManagedObjectContext: syncMOC, applicationStatus: applicationStatus, teamInvitationStatus: teamInvitationStatus)
         applicationStatus.mockOperationState = .foreground
-        applicationStatus.mockSynchronizationState = .eventProcessing
+        applicationStatus.mockSynchronizationState = .online
     }
     
     override func tearDown() {

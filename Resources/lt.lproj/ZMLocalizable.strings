@@ -21,6 +21,7 @@
 "conversation.username.groupingSeparator" = ", ";
 
 "user_session.error.blacklisted-email" = "Šis el. pašto adresas neleidžiamas";
+"user_session.error.domain-blocked" = "Šiam el. pašto adresui būtinas komandos kvietimas. Susisiekite su savo įmonės IT administratoriumi, kad atsiųstų kvietimą.";
 "user_session.error.email-exists" = "Šis el. pašto adresas jau užregistruotas";
 "user_session.error.invalid-email" = "Šis el. pašto adresas yra neteisingas";
 "user_session.error.invalid-code" = "Įrašykite teisingą kodą";

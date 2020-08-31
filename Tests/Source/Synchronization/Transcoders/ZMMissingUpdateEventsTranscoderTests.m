@@ -36,8 +36,8 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 @property (nonatomic, readonly) id syncStrategy;
 @property (nonatomic, readonly) id<PreviouslyReceivedEventIDsCollection> mockEventIDsCollection;
 @property (nonatomic) id mockPushNotificationStatus;
-@property (nonatomic) BackgroundNotificationFetchStatus mockNotificationFetchStatus;
 @property (nonatomic) id requestSync;
+@property (nonatomic) BOOL mockHasPushNotificationEventsToFetch;
 @property (nonatomic) MockSyncStatus *mockSyncStatus;
 @property (nonatomic) OperationStatus *mockOperationStatus;
 @property (nonatomic) id syncStateDelegate;
@@ -52,7 +52,6 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     
     self.requestSync = [OCMockObject mockForClass:ZMSingleRequestSync.class];
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
-    self.mockNotificationFetchStatus = BackgroundNotificationFetchStatusDone;
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
     self.mockOperationStatus = [[OperationStatus alloc] init];
@@ -60,14 +59,14 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     self.mockPushNotificationStatus = [OCMockObject niceMockForClass:PushNotificationStatus.class];
     
     self.mockApplicationDirectory = [OCMockObject niceMockForClass:ApplicationStatusDirectory.class];
-    [[[self.mockApplicationDirectory stub] andReturnValue:@(ZMSynchronizationStateSynchronizing)] synchronizationState];
+    [[[self.mockApplicationDirectory stub] andReturnValue:@(ZMSynchronizationStateQuickSyncing)] synchronizationState];
     [[[self.mockApplicationDirectory stub] andReturn:self.mockOperationStatus] operationStatus];
     [[[self.mockApplicationDirectory stub] andReturn:self.mockSyncStatus] syncStatus];
     [[[self.mockApplicationDirectory stub] andReturn:self.mockPushNotificationStatus] pushNotificationStatus];
-    [[[self.mockApplicationDirectory stub] andDo:^(NSInvocation *invocation) {
-        BackgroundNotificationFetchStatus value = self.mockNotificationFetchStatus;
+    [[[self.mockPushNotificationStatus stub] andDo:^(NSInvocation *invocation) {
+        BOOL value = self.mockHasPushNotificationEventsToFetch;
         [invocation setReturnValue:&value];
-    }] notificationFetchStatus];
+    }] hasEventsToFetch];
     
     _syncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
     _mockEventIDsCollection = OCMProtocolMock(@protocol(PreviouslyReceivedEventIDsCollection));
@@ -163,7 +162,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)testThatItGetsRequestFromDownstreamSync
 {
     // given
-    self.mockNotificationFetchStatus = BackgroundNotificationFetchStatusInProgress;
+    self.mockHasPushNotificationEventsToFetch = YES;
     [self.application setBackground];
     
     id missingUpdateEventsTranscoder = [OCMockObject partialMockForObject:self.sut.listPaginator];
@@ -731,16 +730,17 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 
 @implementation ZMMissingUpdateEventsTranscoderTests (FallbackCancellation)
 
-- (void)expectMockPushNotificationStatus:(BackgroundNotificationFetchStatus)status inBackground:(BOOL)backgrounded
+- (void)expectMockPushNotificationStatusHasEventsToFetch:(BOOL)hasEventsToFetch
+                                            inBackground:(BOOL)backgrounded
 {
     self.application.applicationState = backgrounded ? UIApplicationStateBackground : UIApplicationStateActive;
-    self.mockNotificationFetchStatus = status;
+    self.mockHasPushNotificationEventsToFetch = hasEventsToFetch;
 }
 
 - (void)testThatItDoesNotReturnARequestItselfFromAPushWhenThePushNotificationStatusIsNotInProgress
 {
     // given
-    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusDone inBackground:YES];
+    [self expectMockPushNotificationStatusHasEventsToFetch:NO inBackground:YES];
 
     // then
     XCTAssertNil([self.sut nextRequest]);
@@ -749,7 +749,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)testThatItDoesReturnARequestItselfFromAPushWhen
 {
     // given
-    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
+    [self expectMockPushNotificationStatusHasEventsToFetch:YES inBackground:YES];
 
     // then
     XCTAssertNotNil([self.sut nextRequest]);
@@ -758,7 +758,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)testThatItForcesTheRequestToTheVoIPSession
 {
     // given
-    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
+    [self expectMockPushNotificationStatusHasEventsToFetch:YES inBackground:YES];
 
     // when
     ZMTransportRequest *request = [self.sut nextRequest];
@@ -771,7 +771,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)testThatItDoesNotifyThePushNotificationStatusWhenEventsAreFetched
 {
     // given
-    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
+    [self expectMockPushNotificationStatusHasEventsToFetch:YES inBackground:YES];
 
     // when
     ZMTransportResponse *response = [self responseForSettingLastUpdateEventID:NSUUID.createUUID hasMore:NO];
@@ -798,7 +798,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 {
     // first batch
     {
-        [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
+        [self expectMockPushNotificationStatusHasEventsToFetch:YES inBackground:YES];
 
         ZMTransportResponse *response = [self responseForSettingLastUpdateEventID:NSUUID.createUUID hasMore:YES];
         ZMTransportRequest *request = [self.sut nextRequest];
@@ -818,7 +818,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 
     // second batch
     {
-        [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
+        [self expectMockPushNotificationStatusHasEventsToFetch:YES inBackground:YES];
         ZMTransportResponse *response = [self responseForSettingLastUpdateEventID:NSUUID.createUUID hasMore:NO];
         ZMTransportRequest *request = [self.sut nextRequest];
         id <ZMTransportData> payload = response.payload.asDictionary[@"notifications"][0];
@@ -839,7 +839,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)testThatItUpdatesTheLastNotificationIdWhenStartedThroughAPush
 {
     // given
-    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
+    [self expectMockPushNotificationStatusHasEventsToFetch:YES inBackground:YES];
 
     // when
     NSUUID *expectedLastUpdateEventID = NSUUID.createUUID;
@@ -857,7 +857,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)testThatItReportsWhenItIsFetchingFromAPushNotification
 {
     // given
-    self.mockNotificationFetchStatus = BackgroundNotificationFetchStatusInProgress;
+    self.mockHasPushNotificationEventsToFetch = YES;
 
     // then
     XCTAssertTrue(self.sut.isFetchingStreamForAPNS);
@@ -875,7 +875,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)testThatItDoesNotReportThatItIsFetchingFromAPushNotificationWhenNoPushNotificationIsInProgress
 {
     // given
-    self.mockNotificationFetchStatus = BackgroundNotificationFetchStatusDone;
+    self.mockHasPushNotificationEventsToFetch = NO;
     self.application.applicationState = UIApplicationStateBackground;
 
     // then
@@ -885,7 +885,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 - (void)testThatItNotifiesThePushNotificationStatusInCaseOfAFailure
 {
     // given
-    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
+    [self expectMockPushNotificationStatusHasEventsToFetch:YES inBackground:YES];
 
     // when
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
@@ -902,7 +902,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     NSUUID *lastID = NSUUID.createUUID;
     // sync strategy is mocked to return the uiMOC when asked for the syncMOC
     self.uiMOC.zm_lastNotificationID = lastID;
-    [self expectMockPushNotificationStatus:BackgroundNotificationFetchStatusInProgress inBackground:YES];
+    [self expectMockPushNotificationStatusHasEventsToFetch:YES inBackground:YES];
 
     // when
     ZMTransportRequest *request = [self.sut nextRequest];

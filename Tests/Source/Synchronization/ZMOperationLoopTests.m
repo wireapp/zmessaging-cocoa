@@ -893,7 +893,7 @@
     WaitForAllGroupsToBeEmpty(1.0);
     
     // then
-    XCTAssertEqual(self.pushNotificationStatus.status, BackgroundNotificationFetchStatusInProgress);
+    XCTAssertTrue(self.pushNotificationStatus.hasEventsToFetch);
 }
 
 
@@ -908,7 +908,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.pushNotificationStatus.status, BackgroundNotificationFetchStatusInProgress);
+    XCTAssertTrue(self.pushNotificationStatus.hasEventsToFetch);
     [self clearKeyChainData];
 }
 
@@ -926,7 +926,7 @@
     WaitForAllGroupsToBeEmpty(1.0);
 
     // then
-    XCTAssertEqual(self.pushNotificationStatus.status, BackgroundNotificationFetchStatusInProgress);
+    XCTAssertTrue(self.pushNotificationStatus.hasEventsToFetch);
 }
 
 - (void)testThatItCallsCompletionHandlerWhenEventsAreDownloaded

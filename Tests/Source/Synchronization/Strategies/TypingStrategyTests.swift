@@ -76,7 +76,7 @@ class TypingStrategyTests : MessagingTest {
 
         self.typing = MockTyping(uiContext: uiMOC, syncContext: syncMOC)
         self.mockApplicationStatus = MockApplicationStatus()
-        self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+        self.mockApplicationStatus.mockSynchronizationState = .online
 
         self.sut = TypingStrategy(applicationStatus: mockApplicationStatus, syncContext: syncMOC, uiContext: uiMOC, typing: typing)
         
