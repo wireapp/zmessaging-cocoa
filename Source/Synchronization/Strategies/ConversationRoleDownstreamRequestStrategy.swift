@@ -54,7 +54,7 @@ public final class ConversationRoleDownstreamRequestStrategy: AbstractRequestStr
         super.init(withManagedObjectContext: managedObjectContext,
                    applicationStatus: applicationStatus)
         
-        configuration = [.allowsRequestsDuringEventProcessing]
+        configuration = [.allowsRequestsWhileOnline]
         
         downstreamSync = ZMDownstreamObjectSync(
             transcoder: self,

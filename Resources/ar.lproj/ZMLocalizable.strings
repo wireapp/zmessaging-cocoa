@@ -21,6 +21,7 @@
 "conversation.username.groupingSeparator" = ", ";
 
 "user_session.error.blacklisted-email" = "This email address is not allowed";
+"user_session.error.domain-blocked" = "This email requires a team invitation. Contact your organization's IT administrators to receive an invite.";
 "user_session.error.email-exists" = "This email address has already been registered";
 "user_session.error.invalid-email" = "عنوان بريد غير صحيح";
 "user_session.error.invalid-code" = "الرجاء ادخال رمز صحيح";

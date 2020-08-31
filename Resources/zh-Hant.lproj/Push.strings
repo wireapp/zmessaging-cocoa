@@ -178,7 +178,7 @@
 "push.notification.conversation.create.nousername" = "某人建立了一個群組";
 
 // CONVERSATION DELETE
-"push.notification.conversation.delete" = "%1$@ deleted the group";
+"push.notification.conversation.delete" = "%1$@刪除了群組";
 "push.notification.conversation.delete.nousername" = "某人刪除了群組";
 
 // CONNECTIONS (there should be no alert titles for these)
@@ -199,11 +199,11 @@
 
 "push.notification.alert.availability.away.title.team" = "通知已在%@停用";
 "push.notification.alert.availability.away.title" = "已停用通知";
-"push.notification.alert.availability.busy.title.team" = "Notifications have changed in %@";
+"push.notification.alert.availability.busy.title.team" = "%@的通知已更改";
 "push.notification.alert.availability.busy.title" = "通知已更改";
 
-"push.notification.alert.availability.away.message" = "Status affects notifications now. You’re set to “Away” and won’t receive any notifications.";
-"push.notification.alert.availability.busy.message" = "Status affects notifications now. You’re set to “Busy” and will only receive notifications when someone mentions you or replies to one of your messages.";
+"push.notification.alert.availability.away.message" = "狀態現在會影響通知。 您設置為「離開」，不會收到任何通知。";
+"push.notification.alert.availability.busy.message" = "狀態現在會影響通知。 您設置為「忙碌」，並且只有當有人提及您或回覆您的一封郵件時，您才會收到通知。";
 
 // REACTIONS
 "push.notification.reaction.group" = "%1$@%2$@您的訊息";

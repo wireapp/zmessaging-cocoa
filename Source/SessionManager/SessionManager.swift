@@ -1037,9 +1037,10 @@ extension SessionManager: PostLoginAuthenticationObserver {
         log.debug("Authentication invalidated for \(accountId): \(error.code)")
         
         switch userSessionErrorCode {
-        case .clientDeletedRemotely,
-             .accessTokenExpired:
+        case .clientDeletedRemotely:
+            delete(account: account, reason: .sessionExpired)
             
+        case .accessTokenExpired:
             if configuration.wipeOnCookieInvalid {
                 delete(account: account, reason: .sessionExpired)
             } else {

@@ -92,7 +92,7 @@ class TeamMembersDownloadRequestStrategyTests: MessagingTest {
         
         syncMOC.performGroupedBlockAndWait {
             // given
-            self.mockApplicationStatus.mockSynchronizationState = .synchronizing
+            self.mockApplicationStatus.mockSynchronizationState = .slowSyncing
             self.mockSyncStatus.mockPhase = .fetchingTeamMembers
             let selfUser = ZMUser.selfUser(in: self.syncMOC)
             let teamID = UUID()
@@ -111,7 +111,7 @@ class TeamMembersDownloadRequestStrategyTests: MessagingTest {
         
         syncMOC.performGroupedBlockAndWait {
             // given
-            self.mockApplicationStatus.mockSynchronizationState = .synchronizing
+            self.mockApplicationStatus.mockSynchronizationState = .slowSyncing
             self.mockSyncStatus.mockPhase = .fetchingTeamMembers
             
             // when
@@ -128,7 +128,7 @@ class TeamMembersDownloadRequestStrategyTests: MessagingTest {
         
         syncMOC.performGroupedBlockAndWait {
             // given
-            self.mockApplicationStatus.mockSynchronizationState = .synchronizing
+            self.mockApplicationStatus.mockSynchronizationState = .slowSyncing
             self.mockSyncStatus.mockPhase = .fetchingTeamMembers
             _ = self.createTeam()
             
@@ -153,7 +153,7 @@ class TeamMembersDownloadRequestStrategyTests: MessagingTest {
         
         syncMOC.performGroupedBlockAndWait {
             // given
-            self.mockApplicationStatus.mockSynchronizationState = .synchronizing
+            self.mockApplicationStatus.mockSynchronizationState = .slowSyncing
             self.mockSyncStatus.mockPhase = .fetchingTeamMembers
             team = self.createTeam()
             
@@ -177,7 +177,7 @@ class TeamMembersDownloadRequestStrategyTests: MessagingTest {
         
         syncMOC.performGroupedBlockAndWait {
             // given
-            self.mockApplicationStatus.mockSynchronizationState = .synchronizing
+            self.mockApplicationStatus.mockSynchronizationState = .slowSyncing
             self.mockSyncStatus.mockPhase = .fetchingTeamMembers
             team = self.createTeam()
             

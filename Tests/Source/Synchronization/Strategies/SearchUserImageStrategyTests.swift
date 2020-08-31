@@ -43,7 +43,7 @@ class SearchUserImageStrategyTests : MessagingTest {
         super.setUp()
         uiMOC.zm_searchUserCache = NSCache()
         mockApplicationStatus = MockApplicationStatus()
-        mockApplicationStatus.mockSynchronizationState = .eventProcessing
+        mockApplicationStatus.mockSynchronizationState = .online
         sut = SearchUserImageStrategy(applicationStatus: mockApplicationStatus, managedObjectContext: uiMOC)
     }
     

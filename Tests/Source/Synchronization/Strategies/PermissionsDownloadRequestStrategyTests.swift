@@ -45,7 +45,7 @@ class PermissionsDownloadRequestStrategyTests: MessagingTest {
     func testThatItDoesNotCreateARequestIfThereIsNoMemberToBeRedownloaded() {
         syncMOC.performGroupedBlockAndWait {
             // given
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             let member = Member.insertNewObject(in: self.syncMOC)
             member.remoteIdentifier = .create()
 
@@ -64,7 +64,7 @@ class PermissionsDownloadRequestStrategyTests: MessagingTest {
             let teamId = UUID.create(), userId = UUID.create()
             let team = Team.insertNewObject(in: self.syncMOC)
             team.remoteIdentifier = teamId
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             let user = ZMUser.insertNewObject(in: self.syncMOC)
             user.remoteIdentifier = userId
             let member = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
@@ -85,7 +85,7 @@ class PermissionsDownloadRequestStrategyTests: MessagingTest {
             // given
             let member = Member.insertNewObject(in: self.syncMOC)
             member.remoteIdentifier = .create()
-            self.mockApplicationStatus.mockSynchronizationState = .synchronizing
+            self.mockApplicationStatus.mockSynchronizationState = .slowSyncing
 
             // when
             member.needsToBeUpdatedFromBackend = true
@@ -102,7 +102,7 @@ class PermissionsDownloadRequestStrategyTests: MessagingTest {
 
         syncMOC.performGroupedBlock {
             // given
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             let team = Team.insertNewObject(in: self.syncMOC)
             team.remoteIdentifier = .create()
             user = ZMUser.insertNewObject(in: self.syncMOC)
@@ -150,7 +150,7 @@ class PermissionsDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlock {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             team.remoteIdentifier = .create()
             let user = ZMUser.insertNewObject(in: self.syncMOC)
             user.remoteIdentifier = userid

@@ -30,7 +30,7 @@
     case fetchingLabels
     case fetchingMissedEvents
     case done
-    
+        
     var isLastSlowSyncPhase : Bool {
         return self == .fetchingLabels
     }
@@ -101,6 +101,7 @@ extension Notification.Name {
     fileprivate unowned var syncStateDelegate: ZMSyncStateDelegate
     fileprivate var forceSlowSyncToken : Any?
     
+    public internal (set) var isFetchingNotificationStream: Bool = false
     public internal (set) var isInBackground : Bool = false
     public internal (set) var needsToRestartQuickSync : Bool = false
     public internal (set) var pushChannelEstablishedDate : Date?
@@ -212,6 +213,32 @@ extension SyncStatus {
 
 // MARK: Quick Sync
 extension SyncStatus {
+    
+    public func beganFetchingNotificationStream() {
+        isFetchingNotificationStream = true
+    }
+    
+    public func failedFetchingNotificationStream() {
+        if currentSyncPhase == .fetchingMissedEvents {
+            failCurrentSyncPhase(phase: .fetchingMissedEvents)
+        }
+        
+        isFetchingNotificationStream = false
+    }
+    
+    @objc(completedFetchingNotificationStreamFetchBeganAt:)
+    public func completedFetchingNotificationStream(fetchBeganAt: Date?) {
+        if currentSyncPhase == .fetchingMissedEvents &&
+           pushChannelEstablishedDate < fetchBeganAt {
+            
+            // Only complete the .fetchingMissedEvents phase if the push channel was
+            // established before we initiated the notification stream fetch.
+            // If the push channel disconnected in between we'll fetch the stream again
+            finishCurrentSyncPhase(phase: .fetchingMissedEvents)
+        }
+        
+        isFetchingNotificationStream = false
+    }
     
     public func pushChannelDidClose() {
         pushChannelEstablishedDate = nil

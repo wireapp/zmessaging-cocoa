@@ -55,7 +55,9 @@ public class LabelDownstreamRequestStrategy: AbstractRequestStrategy {
         
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         
-        self.configuration = [.allowsRequestsDuringSync]
+        self.configuration = [.allowsRequestsDuringSlowSync,
+                              .allowsRequestsDuringQuickSync,
+                              .allowsRequestsWhileOnline]
         self.slowSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
     }
     
@@ -148,6 +150,8 @@ extension LabelDownstreamRequestStrategy: ZMSingleRequestTranscoder {
         if syncStatus.currentSyncPhase == .fetchingLabels {
             syncStatus.finishCurrentSyncPhase(phase: .fetchingLabels)
         }
+        
+        ZMUser.selfUser(in: managedObjectContext).needsToRefetchLabels = false
     }
     
 }

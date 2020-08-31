@@ -36,7 +36,7 @@ public final class TeamMembersDownloadRequestStrategy: AbstractRequestStrategy {
         super.init(withManagedObjectContext: managedObjectContext,
                    applicationStatus: applicationStatus)
         
-        configuration = [.allowsRequestsDuringSync]
+        configuration = [.allowsRequestsDuringSlowSync]
         sync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
     }
     

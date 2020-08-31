@@ -51,7 +51,7 @@
     self.mockClientRegistrationStatus = [OCMockObject niceMockForClass:[ZMClientRegistrationStatus class]];
     self.syncStatus = [OCMockObject niceMockForClass:[SyncStatus class]];
     
-    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateEventProcessing;
+    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateOnline;
     self.upstreamObjectSync = [OCMockObject niceMockForClass:ZMUpstreamModifiedObjectSync.class];
     [self.syncMOC performBlockAndWait:^{
         [ZMUser selfUserInContext:self.syncMOC].needsToBeUpdatedFromBackend = NO;

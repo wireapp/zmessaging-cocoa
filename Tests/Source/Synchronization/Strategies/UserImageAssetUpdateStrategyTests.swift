@@ -65,7 +65,7 @@ class UserImageAssetUpdateStrategyTests : MessagingTest {
     override func setUp() {
         super.setUp()
         self.mockApplicationStatus = MockApplicationStatus()
-        self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+        self.mockApplicationStatus.mockSynchronizationState = .online
         self.updateStatus = MockImageUpdateStatus()
         
         sut = UserImageAssetUpdateStrategy(managedObjectContext: syncMOC,

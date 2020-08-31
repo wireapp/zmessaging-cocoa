@@ -46,7 +46,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
     func testThatItDoesNotGenerateARequestWhenInTheWrongSyncPhase() {
         // given
         var index = 0
-        mockApplicationStatus.mockSynchronizationState = .synchronizing
+        mockApplicationStatus.mockSynchronizationState = .slowSyncing
         
         while let phase = SyncPhase(rawValue: index) {
             defer { index += 1 }
@@ -76,7 +76,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         mockSyncStatus.mockPhase = .fetchingTeams
         
         // when
-        mockApplicationStatus.mockSynchronizationState = .eventProcessing
+        mockApplicationStatus.mockSynchronizationState = .online
         
         // then
         XCTAssertNil(sut.nextRequest())
@@ -85,7 +85,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
     func testThatItDownloadsAllTeams() {
         // given
         mockSyncStatus.mockPhase = .fetchingTeams
-        mockApplicationStatus.mockSynchronizationState = .synchronizing
+        mockApplicationStatus.mockSynchronizationState = .slowSyncing
         
         // when
         guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
@@ -98,7 +98,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
     func testThatItResetsTheSlowSyncWhenThereIsAPermanentError() {
         // given
         mockSyncStatus.mockPhase = .fetchingTeams
-        mockApplicationStatus.mockSynchronizationState = .synchronizing
+        mockApplicationStatus.mockSynchronizationState = .slowSyncing
         guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
         
         // when
@@ -113,7 +113,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
     func testThatItCreatesLocalTeamForBoundTeamFromTheResponsePayload() {
         // given
         mockSyncStatus.mockPhase = .fetchingTeams
-        mockApplicationStatus.mockSynchronizationState = .synchronizing
+        mockApplicationStatus.mockSynchronizationState = .slowSyncing
         guard let request = sut.nextRequest() else { return XCTFail("No request generated") }
         
         let team1Id = UUID.create(), team2Id = UUID.create()
@@ -146,7 +146,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
     func testThatItCompletesTheSyncStateAfterDownloadingAllTeams() {
         // given
         mockSyncStatus.mockPhase = .fetchingTeams
-        mockApplicationStatus.mockSynchronizationState = .synchronizing
+        mockApplicationStatus.mockSynchronizationState = .slowSyncing
         
         // fetch /teams
         do {
@@ -165,7 +165,7 @@ final class TeamSyncRequestStrategyTests: MessagingTest {
         selfUser.remoteIdentifier = userIdentifier
         uiMOC.saveOrRollback()
         mockSyncStatus.mockPhase = .fetchingTeams
-        mockApplicationStatus.mockSynchronizationState = .synchronizing
+        mockApplicationStatus.mockSynchronizationState = .slowSyncing
         let remotelyDeletedTeamId = UUID.create()
         
         syncMOC.performGroupedBlockAndWait {

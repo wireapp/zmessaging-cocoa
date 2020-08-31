@@ -85,10 +85,10 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringQuickSync
          | ZMStrategyConfigurationOptionAllowsRequestsWhileInBackground
-         | ZMStrategyConfigurationOptionAllowsRequestsDuringEventProcessing
-         | ZMStrategyConfigurationOptionAllowsRequestsDuringNotificationStreamFetch;
+         | ZMStrategyConfigurationOptionAllowsRequestsWhileOnline
+         | ZMStrategyConfigurationOptionAllowsRequestsWhileWaitingForWebsocket;
 }
 
 - (BOOL)isDownloadingMissingNotifications
@@ -98,7 +98,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
 
 - (BOOL)isFetchingStreamForAPNS
 {
-    return self.applicationStatus.notificationFetchStatus == BackgroundNotificationFetchStatusInProgress;
+    return self.pushNotificationStatus.hasEventsToFetch;
 }
 
 - (BOOL)isFetchingStreamInBackground
@@ -327,17 +327,10 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
     
     [self appendPotentialGapSystemMessageIfNeededWithResponse:response];
     
-    if (response.result == ZMTransportResponseStatusPermanentError && self.isSyncing){
-        [syncStatus failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
-    }
-    
-    if (!self.listPaginator.hasMoreToFetch && self.isSyncing) {
-        
-        // The fetch of the notification stream was initiated after the push channel was established
-        // so we must restart the fetching to be sure that we haven't missed any notifications.
-        if (syncStatus.pushChannelEstablishedDate.timeIntervalSinceReferenceDate < self.listPaginator.lastResetFetchDate.timeIntervalSinceReferenceDate) {
-            [syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
-        }
+    if (response.result == ZMTransportResponseStatusPermanentError) {
+        [syncStatus failedFetchingNotificationStream];
+    } else if (!self.listPaginator.hasMoreToFetch) {
+        [syncStatus completedFetchingNotificationStreamFetchBeganAt:self.listPaginator.lastResetFetchDate];
     }
     
     return self.lastUpdateEventID;

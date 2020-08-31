@@ -29,7 +29,7 @@ final class ConversationRoleDownstreamRequestStrategyTests: MessagingTest {
         mockSyncStateDelegate = MockSyncStateDelegate()
         mockSyncStatus = MockSyncStatus(managedObjectContext: syncMOC, syncStateDelegate: mockSyncStateDelegate)
         mockApplicationStatus = MockApplicationStatus()
-        mockApplicationStatus.mockSynchronizationState = .synchronizing
+        mockApplicationStatus.mockSynchronizationState = .slowSyncing
         sut = ConversationRoleDownstreamRequestStrategy(withManagedObjectContext: syncMOC, applicationStatus: mockApplicationStatus)
     }
     
@@ -70,7 +70,7 @@ final class ConversationRoleDownstreamRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             // given
             let convo1 = self.createConversationToDownload()
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             
             // when
             self.boostrapChangeTrackers(with: convo1)
@@ -86,7 +86,7 @@ final class ConversationRoleDownstreamRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             // given
             let convo1 = self.createConversationToDownload()
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             
             // when
             let objs:[ZMConversation] = self.sut.contextChangeTrackers.compactMap({$0.fetchRequestForTrackedObjects()}).flatMap({self.syncMOC.executeFetchRequestOrAssert($0) as! [ZMConversation] })
@@ -101,7 +101,7 @@ final class ConversationRoleDownstreamRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             // given
             let convo1 = self.createConversationToDownload()
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             convo1.needsToDownloadRoles = false
             self.boostrapChangeTrackers(with: convo1)
             
@@ -118,7 +118,7 @@ final class ConversationRoleDownstreamRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             // given
             convo1 = self.createConversationToDownload()
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             self.boostrapChangeTrackers(with: convo1!)
 
             // when
