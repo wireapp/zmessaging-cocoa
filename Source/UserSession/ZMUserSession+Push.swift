@@ -74,11 +74,10 @@ struct PushTokenMetadata {
      @sa https://github.com/zinfra/backend-wiki/wiki/Native-Push-Notifications
      */
     var transportType: String {
-        if isSandbox {
-            return "APNS_VOIP_SANDBOX"
-        }
-        else {
-            return "APNS_VOIP"
+         if #available(iOS 13.0, *) {
+             return isSandbox ? "APNS_SANDBOX" : "APNS"
+         } else {
+            return isSandbox ? "APNS_VOIP_SANDBOX" : "APNS_VOIP"
         }
     }
     

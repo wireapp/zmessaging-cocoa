@@ -201,6 +201,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     public weak var showContentDelegate: ShowContentDelegate?
     public weak var foregroundNotificationResponder: ForegroundNotificationResponder?
     public weak var switchingDelegate: SessionManagerSwitchingDelegate?
+    public var deviceAPNSToken: Data?
     public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
     
     let application: ZMApplication

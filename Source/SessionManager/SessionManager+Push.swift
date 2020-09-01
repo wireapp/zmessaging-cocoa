@@ -139,15 +139,28 @@ extension SessionManager: PKPushRegistryDelegate {
     public func configureUserNotifications() {
         guard application.shouldRegisterUserNotificationSettings ?? true else { return }
         notificationCenter.setNotificationCategories(PushNotificationCategory.allCategories)
-        notificationCenter.requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { _, _ in })
         notificationCenter.delegate = self
+        notificationCenter.requestAuthorization(options: [.alert, .badge, .sound]) { (granted, error) in
+            guard granted else {
+                return
+            }
+            DispatchQueue.main.async {
+                self.application.registerForRemoteNotifications()
+            }
+        }
     }
     
     public func updatePushToken(for session: ZMUserSession) {
         session.managedObjectContext.performGroupedBlock {
             // Refresh the tokens if needed
-            if let token = self.pushRegistry.pushToken(for: .voIP) {
-                session.setPushKitToken(token)
+            if #available(iOS 13.0, *) {
+                if let token = self.deviceAPNSToken {
+                    session.setPushKitToken(token)
+                }
+            } else {
+                if let token = self.pushRegistry.pushToken(for: .voIP) {
+                    session.setPushKitToken(token)
+                }
             }
         }
     }
