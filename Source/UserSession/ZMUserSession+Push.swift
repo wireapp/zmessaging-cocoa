@@ -141,7 +141,11 @@ extension ZMUserSession {
             guard let selfClient = ZMUser.selfUser(in: syncMOC).selfClient() else { return }
             guard let pushToken = selfClient.pushToken else {
                 // If we don't have any push token, then try to register it again
-                self.sessionManager?.updatePushToken(for: self)
+                if #available(iOS 13.0, *) {
+                    self.sessionManager?.reRegisterPushToken()
+                } else {
+                    self.sessionManager?.updatePushToken(for: self)
+                }
                 return
             }
             selfClient.pushToken = pushToken.markToDownload()

@@ -65,6 +65,9 @@ public protocol SessionManagerType: class {
     /// Will update the push token for the session if it has changed
     func updatePushToken(for session: ZMUserSession)
     
+    /// Will register new device APNS token
+    func reRegisterPushToken()
+    
     /// Configure user notification settings. This will ask the user for permission to display notifications.
     func configureUserNotifications()
     
@@ -168,6 +171,8 @@ public protocol ForegroundNotificationResponder: class {
 
 @objcMembers
 public final class SessionManager : NSObject, SessionManagerType {
+    
+    @objc public static let registerPushTokenNotificationName = Notification.Name(rawValue: "SessionManagerResetPushTokensNotification")
     
     public enum AccountError: Error {
         case accountLimitReached
@@ -427,15 +432,36 @@ public final class SessionManager : NSObject, SessionManagerType {
         
         super.init()
         
-        
-        // register for voIP push notifications
-        self.pushRegistry.delegate = self
-        self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
+        registerOrMigratePushToken()
 
         postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
         
         checkJailbreakIfNeeded()
+    }
+    
+    /// For iOS 13 or above we should use Non voIP push notifications. We should migrate the push token when upgrading the client OS or app version.
+    private func registerOrMigratePushToken() {
+        if #available(iOS 13.0, *) {
+            NotificationCenter.default.addObserver(forName: SessionManager.registerPushTokenNotificationName, object: nil, queue: nil) { (note) in
+                if let token = note.userInfo?["deviceToken"] as? Data  {
+                    self.deviceAPNSToken = token
+                    
+                    // give new push token to all running sessions
+                    self.backgroundUserSessions.values.forEach({ userSession in
+                        userSession.setPushKitToken(token)
+                    })
+                }
+            }
+            // register for Non voIP push notifications
+            if !application.isRegisteredForRemoteNotifications {
+                self.application.registerForRemoteNotifications()
+            }
+        } else {
+            // register for voIP push notifications
+            self.pushRegistry.delegate = self
+            self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
+        }
     }
     
     public func start(launchOptions: LaunchOptions) {

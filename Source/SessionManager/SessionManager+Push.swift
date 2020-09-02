@@ -139,15 +139,8 @@ extension SessionManager: PKPushRegistryDelegate {
     public func configureUserNotifications() {
         guard application.shouldRegisterUserNotificationSettings ?? true else { return }
         notificationCenter.setNotificationCategories(PushNotificationCategory.allCategories)
+        notificationCenter.requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { _, _ in })
         notificationCenter.delegate = self
-        notificationCenter.requestAuthorization(options: [.alert, .badge, .sound]) { (granted, error) in
-            guard granted else {
-                return
-            }
-            DispatchQueue.main.async {
-                self.application.registerForRemoteNotifications()
-            }
-        }
     }
     
     public func updatePushToken(for session: ZMUserSession) {
@@ -163,6 +156,11 @@ extension SessionManager: PKPushRegistryDelegate {
                 }
             }
         }
+    }
+    
+    public func reRegisterPushToken() {
+        application.unregisterForRemoteNotifications()
+        application.registerForRemoteNotifications()
     }
     
     func handleNotification(with userInfo: NotificationUserInfo, block: @escaping (ZMUserSession) -> Void) {
