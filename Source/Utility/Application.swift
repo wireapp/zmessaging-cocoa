@@ -109,6 +109,3 @@ extension UIApplication : ZMApplication {
         }
     }
 }
-extension UIApplication: UIApplicationDelegate {
-    
-}
