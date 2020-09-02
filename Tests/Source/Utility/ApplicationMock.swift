@@ -30,6 +30,9 @@ import WireSyncEngine
     /// The current badge icon number
     public var applicationIconBadgeNumber: Int = 0
     
+    // Returns YES if the application is currently registered for remote notifications
+    public var isRegisteredForRemoteNotifications: Bool = false
+    
     /// Records calls to `setMinimumBackgroundFetchInterval`
     public var minimumBackgroundFetchInverval : TimeInterval = UIApplication.backgroundFetchIntervalNever
     
@@ -51,6 +54,10 @@ extension ApplicationMock : ZMApplication {
     
     public func executeWhenFileSystemIsAccessible(_ block: @escaping () -> Void) {
         block()
+    }
+    
+    public func unregisterForRemoteNotifications() {
+        
     }
 }
 

@@ -57,6 +57,8 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
         lastRequestToShowConnectionRequest = userId
     }
     
+    func reRegisterPushToken() {
+    }
     
     @objc public var updatePushTokenCalled = false
     func updatePushToken(for session: ZMUserSession) {
