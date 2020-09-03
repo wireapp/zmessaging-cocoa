@@ -65,9 +65,6 @@ public protocol SessionManagerType: class {
     /// Will update the push token for the session if it has changed
     func updatePushToken(for session: ZMUserSession)
     
-    /// Will register for user notifications
-    func registerForRemoteNotifications()
-    
     /// Configure user notification settings. This will ask the user for permission to display notifications.
     func configureUserNotifications()
     
