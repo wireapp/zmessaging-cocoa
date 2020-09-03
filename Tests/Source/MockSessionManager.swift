@@ -57,7 +57,8 @@ class MockSessionManager : NSObject, WireSyncEngine.SessionManagerType {
         lastRequestToShowConnectionRequest = userId
     }
     
-    func reRegisterPushToken() {
+    func registerForRemoteNotifications() {
+        
     }
     
     @objc public var updatePushTokenCalled = false

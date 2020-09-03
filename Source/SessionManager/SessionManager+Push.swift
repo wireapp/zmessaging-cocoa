@@ -238,7 +238,6 @@ extension SessionManager {
     }
 }
 
-
 // MARK: - SessionManagerType
 extension SessionManager {
     public func registerForRemoteNotifications() {

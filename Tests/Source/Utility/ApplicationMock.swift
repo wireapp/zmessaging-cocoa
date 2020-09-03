@@ -55,7 +55,6 @@ extension ApplicationMock : ZMApplication {
     public func executeWhenFileSystemIsAccessible(_ block: @escaping () -> Void) {
         block()
     }
-    
 }
 
 // MARK: - Observers

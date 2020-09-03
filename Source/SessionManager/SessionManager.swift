@@ -65,7 +65,7 @@ public protocol SessionManagerType: class {
     /// Will update the push token for the session if it has changed
     func updatePushToken(for session: ZMUserSession)
     
-    /// Will register new device APNS token
+    /// Will register for user notifications
     func registerForRemoteNotifications()
     
     /// Configure user notification settings. This will ask the user for permission to display notifications.
@@ -171,8 +171,6 @@ public protocol ForegroundNotificationResponder: class {
 
 @objcMembers
 public final class SessionManager : NSObject, SessionManagerType {
-    
-    @objc public static let registerPushTokenNotificationName = Notification.Name(rawValue: "SessionManagerResetPushTokensNotification")
     
     public enum AccountError: Error {
         case accountLimitReached
