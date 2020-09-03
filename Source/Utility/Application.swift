@@ -38,9 +38,6 @@ import UIKit
     /// Register for remote notification
     func registerForRemoteNotifications()
     
-    /// Unregister for all remote notifications received via Apple Push Notification service.
-    func unregisterForRemoteNotifications()
-    
     /// Register for change in application state: didBecomeActive
     @objc func registerObserverForDidBecomeActive(_ object: NSObject, selector: Selector)
 

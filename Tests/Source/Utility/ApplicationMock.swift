@@ -56,9 +56,6 @@ extension ApplicationMock : ZMApplication {
         block()
     }
     
-    public func unregisterForRemoteNotifications() {
-        
-    }
 }
 
 // MARK: - Observers

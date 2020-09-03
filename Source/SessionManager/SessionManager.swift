@@ -66,7 +66,7 @@ public protocol SessionManagerType: class {
     func updatePushToken(for session: ZMUserSession)
     
     /// Will register new device APNS token
-    func reRegisterPushToken()
+    func registerForRemoteNotifications()
     
     /// Configure user notification settings. This will ask the user for permission to display notifications.
     func configureUserNotifications()
@@ -206,7 +206,6 @@ public final class SessionManager : NSObject, SessionManagerType {
     public weak var showContentDelegate: ShowContentDelegate?
     public weak var foregroundNotificationResponder: ForegroundNotificationResponder?
     public weak var switchingDelegate: SessionManagerSwitchingDelegate?
-    public var deviceAPNSToken: Data?
     public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
     
     let application: ZMApplication
@@ -443,16 +442,6 @@ public final class SessionManager : NSObject, SessionManagerType {
     /// For iOS 13 or above we should use Non voIP push notifications. We should migrate the push token when upgrading the client OS or app version.
     private func registerOrMigratePushToken() {
         if #available(iOS 13.0, *) {
-            NotificationCenter.default.addObserver(forName: SessionManager.registerPushTokenNotificationName, object: nil, queue: nil) { (note) in
-                if let token = note.userInfo?["deviceToken"] as? Data  {
-                    self.deviceAPNSToken = token
-                    
-                    // give new push token to all running sessions
-                    self.backgroundUserSessions.values.forEach({ userSession in
-                        userSession.setPushKitToken(token)
-                    })
-                }
-            }
             // register for Non voIP push notifications
             if !application.isRegisteredForRemoteNotifications {
                 self.application.registerForRemoteNotifications()

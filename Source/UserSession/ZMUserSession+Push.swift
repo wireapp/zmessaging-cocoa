@@ -142,7 +142,7 @@ extension ZMUserSession {
             guard let pushToken = selfClient.pushToken else {
                 // If we don't have any push token, then try to register it again
                 if #available(iOS 13.0, *) {
-                    self.sessionManager?.reRegisterPushToken()
+                    self.sessionManager?.registerForRemoteNotifications()
                 } else {
                     self.sessionManager?.updatePushToken(for: self)
                 }

@@ -147,20 +147,13 @@ extension SessionManager: PKPushRegistryDelegate {
         session.managedObjectContext.performGroupedBlock {
             // Refresh the tokens if needed
             if #available(iOS 13.0, *) {
-                if let token = self.deviceAPNSToken {
-                    session.setPushKitToken(token)
-                }
+                self.application.registerForRemoteNotifications()
             } else {
                 if let token = self.pushRegistry.pushToken(for: .voIP) {
                     session.setPushKitToken(token)
                 }
             }
         }
-    }
-    
-    public func reRegisterPushToken() {
-        application.unregisterForRemoteNotifications()
-        application.registerForRemoteNotifications()
     }
     
     func handleNotification(with userInfo: NotificationUserInfo, block: @escaping (ZMUserSession) -> Void) {
@@ -231,4 +224,24 @@ extension SessionManager {
         self.showContentDelegate?.showConnectionRequest(userId: userId)
     }
 
+}
+
+extension SessionManager {
+    public func updateDeviceToken(_ token: Data) {
+        if let userSession = activeUserSession {
+            userSession.setPushKitToken(token)
+        }
+        // give new device token to all running sessions
+        self.backgroundUserSessions.values.forEach({ userSession in
+            userSession.setPushKitToken(token)
+        })
+    }
+}
+
+
+// MARK: - SessionManagerType
+extension SessionManager {
+    public func registerForRemoteNotifications() {
+        application.registerForRemoteNotifications()
+    }
 }
