@@ -19,6 +19,7 @@
 
 import Foundation
 import WireTransport
+import WireRequestStrategy
 import UserNotifications
 
 let PushChannelUserIDKey = "user"

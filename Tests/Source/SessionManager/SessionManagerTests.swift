@@ -18,6 +18,7 @@
 
 import XCTest
 import WireTesting
+import WireRequestStrategy
 import PushKit
 @testable import WireSyncEngine
 

@@ -18,6 +18,7 @@
 
 import Foundation
 import WireTesting
+import WireRequestStrategy
 import WireTransport.Testing
 import avs
 
