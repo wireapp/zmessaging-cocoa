@@ -17,7 +17,8 @@
 //
 
 import Foundation
-import WireSyncEngine
+
+@testable import WireSyncEngine
 
 /// A mock of Application that records the calls
 @objcMembers public final class ApplicationMock : NSObject {
@@ -142,7 +143,7 @@ extension ApplicationMock {
     
     public func updateDeviceToken() {
         if let token = deviceToken {
-            userSession?.setPushKitToken(token)
+            userSession?.setPushKitToken(token, tokenType: .standard)
         }
     }
 

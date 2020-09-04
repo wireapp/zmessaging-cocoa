@@ -386,7 +386,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     
     // when
     [self.pushRegistry updatePushToken:deviceToken];
-    [self.userSession setPushKitToken:deviceToken];
+    [self.userSession setPushKitToken:deviceToken tokenType:PushTokenTypeStandard];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then

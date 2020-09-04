@@ -41,6 +41,18 @@ extension Dictionary {
     }
 }
 
+@objc
+public enum PushTokenType: Int {
+    case standard, voip
+
+    var transportType: String {
+        switch self {
+            case .standard: return "APNS"
+            case .voip: return "APNS_VOIP"
+        }
+    }
+}
+
 struct PushTokenMetadata {
     let isSandbox: Bool
     
@@ -73,24 +85,22 @@ struct PushTokenMetadata {
      
      @sa https://github.com/zinfra/backend-wiki/wiki/Native-Push-Notifications
      */
+    
+    var tokenType: PushTokenType
     var transportType: String {
-        if #available(iOS 13.0, *) {
-            return isSandbox ? "APNS_SANDBOX" : "APNS"
-        } else {
-            return isSandbox ? "APNS_VOIP_SANDBOX" : "APNS_VOIP"
-        }
+        return isSandbox ? (tokenType.transportType + "_SANDBOX") : tokenType.transportType
     }
     
-    static var current: PushTokenMetadata = {
+    static func current(for tokenType: PushTokenType) -> PushTokenMetadata {
         let appId = Bundle.main.bundleIdentifier ?? ""
         let buildType = BuildType.init(bundleID: appId)
         
         let isSandbox = ZMMobileProvisionParser().apsEnvironment == .sandbox
         let appIdentifier = buildType.certificateName
         
-        let metadata = PushTokenMetadata(isSandbox: isSandbox, appIdentifier: appIdentifier)
+        let metadata = PushTokenMetadata(isSandbox: isSandbox, appIdentifier: appIdentifier, tokenType: tokenType)
         return metadata
-    }()
+    }
 }
 
 extension ZMUserSession {
@@ -101,8 +111,8 @@ extension ZMUserSession {
         NotificationCenter.default.addObserver(self, selector: #selector(ZMUserSession.registerCurrentPushToken), name: ZMUserSession.registerCurrentPushTokenNotificationName, object: nil)
     }
 
-    public func setPushKitToken(_ data: Data) {
-        let metadata = PushTokenMetadata.current
+    public func setPushKitToken(_ data: Data, tokenType: PushTokenType) {
+        let metadata = PushTokenMetadata.current(for: tokenType)
 
         let syncMOC = managedObjectContext.zm_sync!
         syncMOC.performGroupedBlock {

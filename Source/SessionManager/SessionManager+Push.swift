@@ -53,7 +53,7 @@ extension SessionManager: PKPushRegistryDelegate {
         
         // give new push token to all running sessions
         backgroundUserSessions.values.forEach({ userSession in
-            userSession.setPushKitToken(pushCredentials.token)
+            userSession.setPushKitToken(pushCredentials.token, tokenType: .voip)
         })
     }
     
@@ -150,7 +150,7 @@ extension SessionManager: PKPushRegistryDelegate {
                 self.application.registerForRemoteNotifications()
             } else {
                 if let token = self.pushRegistry.pushToken(for: .voIP) {
-                    session.setPushKitToken(token)
+                    session.setPushKitToken(token, tokenType: .voip)
                 }
             }
         }
@@ -229,11 +229,11 @@ extension SessionManager {
 extension SessionManager {
     public func updateDeviceToken(_ token: Data) {
         if let userSession = activeUserSession {
-            userSession.setPushKitToken(token)
+            userSession.setPushKitToken(token, tokenType: .standard)
         }
         // give new device token to all running sessions
         self.backgroundUserSessions.values.forEach({ userSession in
-            userSession.setPushKitToken(token)
+            userSession.setPushKitToken(token, tokenType: .standard)
         })
     }
 }
