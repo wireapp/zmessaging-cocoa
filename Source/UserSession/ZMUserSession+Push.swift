@@ -74,9 +74,9 @@ struct PushTokenMetadata {
      @sa https://github.com/zinfra/backend-wiki/wiki/Native-Push-Notifications
      */
     var transportType: String {
-         if #available(iOS 13.0, *) {
-             return isSandbox ? "APNS_SANDBOX" : "APNS"
-         } else {
+        if #available(iOS 13.0, *) {
+            return isSandbox ? "APNS_SANDBOX" : "APNS"
+        } else {
             return isSandbox ? "APNS_VOIP_SANDBOX" : "APNS_VOIP"
         }
     }
@@ -101,7 +101,7 @@ extension ZMUserSession {
         NotificationCenter.default.addObserver(self, selector: #selector(ZMUserSession.registerCurrentPushToken), name: ZMUserSession.registerCurrentPushTokenNotificationName, object: nil)
     }
 
-    func setPushKitToken(_ data: Data) {
+    public func setPushKitToken(_ data: Data) {
         let metadata = PushTokenMetadata.current
 
         let syncMOC = managedObjectContext.zm_sync!

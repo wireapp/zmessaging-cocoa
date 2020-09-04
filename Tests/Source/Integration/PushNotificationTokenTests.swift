@@ -39,10 +39,14 @@ class PushNotificationTokenTests: IntegrationTest {
             XCTAssertEqual(request.method, .methodPOST, "Should be POST '/push/tokens', found \(request)", line: line)
 
             guard let payload = request.payload?.asDictionary() as? [String : String] else { return XCTFail("No payload found: \(request)", line: line) }
-            guard payload["transport"] == "APNS_VOIP" else { return XCTFail("Not VOIP transport: \(request)", line: line) }
+            if #available(iOS 13.0, *) {
+                guard payload["transport"] == "APNS" else { return XCTFail("Not VOIP transport: \(request)", line: line) }
+            } else {
+                guard payload["transport"] == "APNS_VOIP" else { return XCTFail("Not VOIP transport: \(request)", line: line) }
+            }
             guard payload["token"] == data.zmHexEncodedString() else {
                 return XCTFail("Wrong device token: \(request)", line: line)
-
+                
             }
         }
     }
@@ -192,6 +196,8 @@ class PushNotificationTokenTests: IntegrationTest {
         // given
         let token = Data(repeating: 0x41, count: 10)
         pushRegistry.mockPushToken = token
+        application?.deviceToken = token
+        application?.userSession = userSession
         userSession?.setPushKitToken(token)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()

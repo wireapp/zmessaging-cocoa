@@ -24,6 +24,9 @@ import WireSyncEngine
     
     public var applicationState: UIApplication.State = .active
     
+    public var deviceToken: Data?
+    public var userSession: ZMUserSession?
+    
     /// Records calls to `registerForRemoteNotification`
     public var registerForRemoteNotificationCount : Int = 0
     
@@ -46,6 +49,7 @@ extension ApplicationMock : ZMApplication {
     public func registerForRemoteNotifications() {
         self.registerForRemoteNotificationCount += 1
         self.registerForRemoteNotificationsCallback()
+        self.updateDeviceToken()
     }
     
     public func setMinimumBackgroundFetchInterval(_ minimumBackgroundFetchInterval: TimeInterval) {
@@ -134,6 +138,12 @@ extension ApplicationMock {
     
     @objc func setActive() {
         self.applicationState = .active
+    }
+    
+    public func updateDeviceToken() {
+        if let token = deviceToken {
+            userSession?.setPushKitToken(token)
+        }
     }
 
 }
