@@ -338,7 +338,7 @@ class CallStateObserverTests : DatabaseTest, CallNotificationStyleProvider {
         // given
         syncMOC.performGroupedBlock {
             self.conversation.lastServerTimeStamp = Date()
-            self.conversation.append(text: "test")
+            try! self.conversation.appendText(content: "test")
             self.conversation.clearMessageHistory()
             XCTAssert(self.conversation.isArchived)
             XCTAssertNotNil(self.conversation.clearedTimeStamp)

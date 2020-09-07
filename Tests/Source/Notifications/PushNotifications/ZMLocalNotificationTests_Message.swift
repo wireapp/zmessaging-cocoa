@@ -46,7 +46,7 @@ class ZMLocalNotificationTests_Message : ZMLocalNotificationTests {
         var quotedMessage: ZMClientMessage?
         
         if let quotedUser = quotedUser {
-            quotedMessage = conversation.append(text: "Don't quote me on this...") as? ZMClientMessage
+            quotedMessage = try! conversation.appendText(content: "Don't quote me on this...") as? ZMClientMessage
             quotedMessage?.sender = quotedUser
             quotedMessage?.serverTimestamp = conversation.lastReadServerTimeStamp!.addingTimeInterval(10)
         }
@@ -671,7 +671,7 @@ extension ZMLocalNotificationTests_Message {
     }
 
     func bodyForEditNote(_ conversation: ZMConversation, sender: ZMUser, text: String) -> String {
-        let message = conversation.append(text: "Foo") as! ZMClientMessage
+        let message = try! conversation.appendText(content: "Foo") as! ZMClientMessage
         message.markAsSent()
         let note = editNote(message, sender: sender, text: text)
         XCTAssertNotNil(note)

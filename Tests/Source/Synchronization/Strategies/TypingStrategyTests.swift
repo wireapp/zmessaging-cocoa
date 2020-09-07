@@ -502,7 +502,7 @@ extension TypingStrategyTests {
         })
 
         // when
-        _ = conversation.append(text: "foo")
+        try! conversation.appendText(content: "foo")
         
         // then
         withExtendedLifetime(token) {
@@ -550,7 +550,7 @@ extension TypingStrategyTests {
                 TypingStrategy.clearTranscoderStateForTyping(in: conversation)
                 XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             } else if delay == .appendMessage {
-                conversation.append(text: "foo")
+                try! conversation.appendText(content: "foo")
                 XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
             }
         }

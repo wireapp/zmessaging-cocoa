@@ -461,7 +461,7 @@ extension IntegrationTest {
     func prefetchClientByInsertingMessage(in mockConversation: MockConversation) {
         guard let convo = conversation(for: mockConversation) else { return }
         userSession?.perform {
-            convo.append(text: "hum, t'es sûr?")
+            try! convo.appendText(content: "hum, t'es sûr?")
         }
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))

@@ -70,7 +70,7 @@ class ConversationTests_ClearingHistory: ConversationTestsBase {
         // when adding new messages
         self.userSession?.perform {
             self.spinMainQueue(withTimeout: 1)// if the message is sent within the same second of clearing the window, it will not be added when resyncing
-            let message = conversation?.append(text: "lalala")!
+            let message = try! conversation?.appendText(content: "lalala")
             conversation?.markMessagesAsRead(until: message!)
         }
         

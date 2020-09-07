@@ -46,7 +46,7 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
         mockTransportSession.resetReceivedRequests()
         performIgnoringZMLogError {
             self.userSession?.perform {
-                message = conv?.append(text: "Hello World")
+                message = try! conv?.appendText(content: "Hello World")
             }
             _ = self.waitForAllGroupsToBeEmpty(withTimeout: 0.5)
         }
@@ -98,7 +98,7 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
         mockTransportSession.resetReceivedRequests()
         performIgnoringZMLogError {
             self.userSession?.perform {
-                message = conv?.append(imageFromData: self.verySmallJPEGData(), nonce: NSUUID.create()) as? ZMAssetClientMessage
+                message = try! conv?.appendImage(from: self.verySmallJPEGData(), nonce: NSUUID.create()) as? ZMAssetClientMessage
             }
             _ = self.waitForAllGroupsToBeEmpty(withTimeout: 0.5)
         }
@@ -190,13 +190,13 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
         let conversation = self.conversation(for: selfToUser1Conversation)
         
         userSession?.perform {
-            message = conversation?.append(text: "Bonsoir, je voudrais un croissant", mentions: [], fetchLinkPreview: true, nonce: .create()) as? ZMClientMessage
+            message = try! conversation?.appendText(content: "Bonsoir, je voudrais un croissant", mentions: [], fetchLinkPreview: true, nonce: .create()) as? ZMClientMessage
         }
         _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
         
         // WHEN
         userSession?.perform {
-            message = conversation?.append(text: messageText, mentions: [], fetchLinkPreview: true, nonce: .create()) as? ZMClientMessage
+            message = try! conversation?.appendText(content: messageText, mentions: [], fetchLinkPreview: true, nonce: .create()) as? ZMClientMessage
         }
         _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
         
@@ -223,7 +223,7 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
         
         // WHEN
         userSession?.perform {
-            message = conversation?.append(text: messageText, mentions: [], fetchLinkPreview: true, nonce: .create()) as? ZMClientMessage
+            message = try! conversation?.appendText(content: messageText, mentions: [], fetchLinkPreview: true, nonce: .create()) as? ZMClientMessage
         }
         _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
         
@@ -254,7 +254,7 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
         
         // fail to send
         userSession?.perform {
-            message = conversation?.append(text: "Where's everyone", mentions: [], fetchLinkPreview: true, nonce: .create()) as? ZMClientMessage
+            message = try! conversation?.appendText(content: "Where's everyone", mentions: [], fetchLinkPreview: true, nonce: .create()) as? ZMClientMessage
         }
         
         XCTAssertTrue(waitOnMainLoop(until: {
@@ -404,7 +404,7 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
         
         // WHEN
         userSession?.perform {
-            message = conversation?.append(text: text, mentions: [], fetchLinkPreview: true, nonce: .create()) as? ZMClientMessage
+            message = try! conversation?.appendText(content: text, mentions: [], fetchLinkPreview: true, nonce: .create()) as? ZMClientMessage
         }
         _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
         

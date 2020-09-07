@@ -29,7 +29,7 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         userSession?.perform {
             guard let conversation = self.conversation(for: self.selfToUser1Conversation) else {return XCTFail()}
-            message = conversation.append(text: "Hello")
+            message = try! conversation.appendText(content: "Hello")
         }
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -146,7 +146,7 @@ class DeleteMessagesTests: ConversationTestsBase {
         
         userSession?.perform {
             guard let conversation = self.conversation(for: self.selfToUser1Conversation) else {return XCTFail()}
-            message = conversation.append(text: "Hello")
+            message = try! conversation.appendText(content: "Hello")
         }
         
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))

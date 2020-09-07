@@ -204,7 +204,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         var genericMessage = originalMessage.underlyingMessage!
         genericMessage.setExpectsReadConfirmation(true)
         do {
-            originalMessage.add(try genericMessage.serializedData())
+            try originalMessage.setUnderlyingMessage(genericMessage)
         } catch {
             XCTFail("Error in adding data: \(error)")
         }
@@ -236,7 +236,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         var genericMessage = originalMessage.underlyingMessage!
         genericMessage.setExpectsReadConfirmation(true)
         do {
-            originalMessage.add(try genericMessage.serializedData())
+            try originalMessage.setUnderlyingMessage(genericMessage)
         } catch {
             XCTFail("Error in adding data: \(error)")
         }
@@ -314,7 +314,7 @@ extension ZMUserSessionTests_PushNotifications {
             connection.status = .accepted
             
             if hasMessage {
-                let message = conversation.append(text: "123") as? ZMClientMessage
+                let message = try! conversation.appendText(content: "123") as? ZMClientMessage
                 message?.markAsSent()
                 messageNonce = message?.nonce
             }

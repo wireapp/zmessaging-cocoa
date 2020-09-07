@@ -34,7 +34,7 @@ class ConversationTests_Reactions: ConversationTestsBase {
 
         var message: ZMMessage?
         self.userSession?.perform({
-            message = conversation?.append(text: "Je t'aime JCVD") as? ZMMessage
+            message = try! conversation?.appendText(content: "Je t'aime JCVD") as? ZMMessage
         })
         let nonce = message?.nonce
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -72,7 +72,7 @@ class ConversationTests_Reactions: ConversationTestsBase {
 
         var message: ZMMessage?
         self.userSession?.perform({
-            message = conversation?.append(text: "Je t'aime JCVD") as? ZMMessage
+            message = try! conversation?.appendText(content: "Je t'aime JCVD") as? ZMMessage
         })
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -113,7 +113,7 @@ class ConversationTests_Reactions: ConversationTestsBase {
         
         var message: ZMMessage?
         self.userSession?.perform {
-            message = conversation?.append(text: "Je t'aime JCVD") as? ZMMessage
+            message = try! conversation?.appendText(content: "Je t'aime JCVD") as? ZMMessage
         }
         let nonce = message?.nonce
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -149,7 +149,7 @@ class ConversationTests_Reactions: ConversationTestsBase {
         
         var message: ZMMessage?
         self.userSession?.perform {
-            message = conversation?.append(text: "Je t'aime JCVD") as? ZMMessage
+            message = try! conversation?.appendText(content: "Je t'aime JCVD") as? ZMMessage
         }
         let nonce = message?.nonce
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -189,7 +189,7 @@ class ConversationTests_Reactions: ConversationTestsBase {
 
         var message: ZMMessage?
         self.userSession?.perform {
-            message = conversation?.append(text: "Je t'aime JCVD") as? ZMMessage
+            message = try! conversation?.appendText(content: "Je t'aime JCVD") as? ZMMessage
         }
         let nonce = message?.nonce
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -229,7 +229,7 @@ class ConversationTests_Reactions: ConversationTestsBase {
 
         var message: ZMMessage?
         self.userSession?.perform {
-            message = conversation?.append(text: "Je t'aime JCVD") as? ZMMessage
+            message = try! conversation?.appendText(content: "Je t'aime JCVD") as? ZMMessage
         }
         let nonce = message?.nonce
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -318,7 +318,7 @@ class ConversationTests_Reactions: ConversationTestsBase {
         
         var message: ZMMessage?
         self.userSession?.perform {
-            message = conversation?.append(text: "Je t'aime JCVD") as? ZMMessage
+            message = try! conversation?.appendText(content: "Je t'aime JCVD") as? ZMMessage
         }
         let nonce = message?.nonce
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
