@@ -438,9 +438,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     private func registerOrMigratePushToken() {
         if #available(iOS 13.0, *) {
             // register for Non voIP push notifications
-            if !application.isRegisteredForRemoteNotifications {
-                self.application.registerForRemoteNotifications()
-            }
+            self.application.registerForRemoteNotifications()
         } else {
             // register for voIP push notifications
             self.pushRegistry.delegate = self

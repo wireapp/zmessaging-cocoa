@@ -148,12 +148,26 @@ extension PushTokenStrategy : ZMUpstreamTranscoder {
             guard let responseData = response.rawData else { return false }
             guard let payload = try? JSONDecoder().decode([String : [PushTokenPayload]].self, from: responseData) else { return false }
             guard let tokens = payload["tokens"] else { return false }
-
+            
             // Find tokens belonging to self client
-            let current = tokens.filter { $0.client == client.remoteIdentifier }
-
-            if current.count == 1 && // We found one token
-                current[0].token == pushToken.deviceTokenString // It matches what we have locally
+            let clientTokens = tokens.filter { $0.client == client.remoteIdentifier }
+            
+            let voipToken = clientTokens.filter { $0.transport.contains(PushTokenType.voip.transportType) }
+            if #available(iOS 13.0, *),
+                !voipToken.isEmpty {
+                let syncMOC = managedObjectContext.zm_sync!
+                syncMOC.performGroupedBlock {
+                    let token = PushToken(deviceToken: voipToken[0].token.hexDecodedData(),
+                                          appIdentifier: voipToken[0].app,
+                                          transportType: voipToken[0].transport,
+                                          isRegistered: true)
+                    client.pushToken = token.markToDelete()
+                    syncMOC.saveOrRollback()
+                }
+            }
+            
+            let current = tokens.filter { $0.client == client.remoteIdentifier && $0.token == pushToken.deviceTokenString }
+            if current.count == 1 // We found one token that matches what we have locally
             {
                 // Clear the flags and we are done
                 client.pushToken = pushToken.resetFlags()
@@ -236,3 +250,33 @@ extension PushTokenStrategy : ZMEventConsumer {
     }
 }
 
+// MARK: -  From Hex String to Data
+
+extension String {
+  /// A data representation of the hexadecimal bytes in this string.
+  public func hexDecodedData() -> Data {
+    // Get the UTF8 characters of this string
+    let chars = Array(utf8)
+
+    // Keep the bytes in an UInt8 array and later convert it to Data
+    var bytes = [UInt8]()
+    bytes.reserveCapacity(count / 2)
+
+    // It is a lot faster to use a lookup map instead of strtoul
+    let map: [UInt8] = [
+      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // 01234567
+      0x08, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 89:;<=>?
+      0x00, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00, // @ABCDEFG
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // HIJKLMNO
+    ]
+
+    // Grab two characters at a time, map them and turn it into a byte
+    for i in stride(from: 0, to: count, by: 2) {
+      let index1 = Int(chars[i] & 0x1F ^ 0x10)
+      let index2 = Int(chars[i + 1] & 0x1F ^ 0x10)
+      bytes.append(map[index1] << 4 | map[index2])
+    }
+
+    return Data(bytes)
+  }
+}

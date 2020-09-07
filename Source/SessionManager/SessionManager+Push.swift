@@ -230,6 +230,11 @@ extension SessionManager {
     public func updateDeviceToken(_ token: Data) {
         if let userSession = activeUserSession {
             userSession.setPushKitToken(token, tokenType: .standard)
+            
+            /// Will compare the push token registered on backend with the local one,
+            /// re-register it if they don't match
+            /// and delete voip token if the client has ios 13 or above
+            userSession.validatePushToken()
         }
         // give new device token to all running sessions
         self.backgroundUserSessions.values.forEach({ userSession in
