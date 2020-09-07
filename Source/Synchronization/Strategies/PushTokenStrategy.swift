@@ -158,7 +158,6 @@ extension PushTokenStrategy : ZMUpstreamTranscoder {
                 let token = voipTokens[0].createPushToken()
                 client.pushToken = token.markToDelete()
                 managedObjectContext.saveOrRollback()
-                return false
             }
             
             let current = tokens.filter { $0.client == client.remoteIdentifier && $0.token == pushToken.deviceTokenString }
