@@ -23,4 +23,5 @@ struct Logging {
     static let network = ZMSLog(tag: "Network")
     static let push = ZMSLog(tag: "Push")
     static let EAR = ZMSLog(tag: "EAR")
+    static let messageProcessing = ZMSLog(tag: "Message Processing")
 }
