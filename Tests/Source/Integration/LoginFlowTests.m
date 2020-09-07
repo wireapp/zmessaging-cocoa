@@ -381,9 +381,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     NSString *deviceTokenAsHex = @"6173646661736466";
     XCTAssertTrue([self login]);
     
-    // then
-    //XCTAssertTrue([self.pushRegistry.desiredPushTypes containsObject:PKPushTypeVoIP]);
-    
     // when
     [self.pushRegistry updatePushToken:deviceToken];
     [self.userSession setPushKitToken:deviceToken tokenType:PushTokenTypeStandard];
