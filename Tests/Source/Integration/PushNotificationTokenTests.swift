@@ -42,7 +42,7 @@ class PushNotificationTokenTests: IntegrationTest {
             guard payload["transport"] == "APNS" else { return XCTFail("Not VOIP transport: \(request)", line: line) }
             guard payload["token"] == data.zmHexEncodedString() else {
                 return XCTFail("Wrong device token: \(request)", line: line)
-                
+
             }
         }
     }
