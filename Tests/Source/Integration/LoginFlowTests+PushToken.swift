@@ -17,7 +17,8 @@
 //
 
 import Foundation
-import WireSyncEngine
+
+@testable import WireSyncEngine
 
 class LoginFlowTests_PushToken: IntegrationTest {
     override func setUp() {
