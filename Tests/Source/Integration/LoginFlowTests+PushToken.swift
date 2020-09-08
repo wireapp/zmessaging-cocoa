@@ -39,7 +39,7 @@ class LoginFlowTests_PushToken: IntegrationTest {
         
         // when
         self.pushRegistry.updatePushToken(deviceToken)
-        let pushToken = PushToken(deviceToken: deviceToken, tokenType: .standard)
+        let pushToken = PushToken.createAPNSToken(from: deviceToken)
         self.userSession?.setPushToken(pushToken)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         

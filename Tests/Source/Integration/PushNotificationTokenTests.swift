@@ -77,7 +77,7 @@ class PushNotificationTokenTests: IntegrationTest {
         let token = Data(repeating: 0x41, count: 10)
 
         // when
-        let pushToken = PushToken(deviceToken: token, tokenType: .standard)
+        let pushToken = PushToken.createAPNSToken(from: token)
         userSession?.setPushToken(pushToken)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -90,13 +90,13 @@ class PushNotificationTokenTests: IntegrationTest {
 
         // given
         let token = Data(repeating: 0x41, count: 10)
-        let pushToken1 = PushToken(deviceToken: token, tokenType: .standard)
+        let pushToken1 = PushToken.createAPNSToken(from: token)
         userSession?.setPushToken(pushToken1)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
 
         // when
-        let pushToken2 = PushToken(deviceToken: token, tokenType: .standard)
+        let pushToken2 = PushToken.createAPNSToken(from: token)
         userSession?.setPushToken(pushToken2)
 
         // then
@@ -108,14 +108,14 @@ class PushNotificationTokenTests: IntegrationTest {
 
         // given
         let token = Data(repeating: 0x41, count: 10)
-        let pushToken1 = PushToken(deviceToken: token, tokenType: .standard)
+        let pushToken1 = PushToken.createAPNSToken(from: token)
         userSession?.setPushToken(pushToken1)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
 
         // when
         let otherToken = Data(repeating: 0x42, count: 10)
-        let pushToken2 = PushToken(deviceToken: otherToken, tokenType: .standard)
+        let pushToken2 = PushToken.createAPNSToken(from: otherToken)
         userSession?.setPushToken(pushToken2)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -128,7 +128,7 @@ class PushNotificationTokenTests: IntegrationTest {
 
         // given
         let token = Data(repeating: 0x41, count: 10)
-        let pushToken = PushToken(deviceToken: token, tokenType: .standard)
+        let pushToken = PushToken.createAPNSToken(from: token)
         userSession?.setPushToken(pushToken)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
@@ -148,14 +148,14 @@ class PushNotificationTokenTests: IntegrationTest {
         // given
         let token = Data(repeating: 0x41, count: 10)
         let otherToken = Data(repeating: 0x42, count: 10)
-        let pushToken1 = PushToken(deviceToken: token, tokenType: .standard)
+        let pushToken1 = PushToken.createAPNSToken(from: token)
         userSession?.setPushToken(pushToken1)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
 
         // when
         userSession?.deletePushKitToken()
-        let pushToken2 = PushToken(deviceToken: otherToken, tokenType: .standard)
+        let pushToken2 = PushToken.createAPNSToken(from: otherToken)
         userSession?.setPushToken(pushToken2)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -178,7 +178,7 @@ class PushNotificationTokenTests: IntegrationTest {
         // given
         let token = Data(repeating: 0x41, count: 10)
         pushRegistry.mockPushToken = token
-        let standardToken = PushToken(deviceToken: token, tokenType: .standard)
+        let standardToken = PushToken.createAPNSToken(from: token)
         userSession?.setPushToken(standardToken)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
@@ -203,7 +203,7 @@ class PushNotificationTokenTests: IntegrationTest {
         pushRegistry.mockPushToken = token
         application?.deviceToken = token
         application?.userSession = userSession
-        let standardToken = PushToken(deviceToken: token, tokenType: .standard)
+        let standardToken = PushToken.createAPNSToken(from: token)
         userSession?.setPushToken(standardToken)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()

@@ -144,7 +144,7 @@ extension ApplicationMock {
     
     public func updateDeviceToken() {
         if let token = deviceToken {
-            let pushToken = PushToken(deviceToken: token, tokenType: .standard)
+            let pushToken = PushToken.createAPNSToken(from: token)
             userSession?.setPushToken(pushToken)
         }
     }
