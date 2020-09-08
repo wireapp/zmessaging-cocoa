@@ -152,10 +152,9 @@ extension PushTokenStrategy : ZMUpstreamTranscoder {
             // Find tokens belonging to self client
             let clientTokens = tokens.filter { $0.client == client.remoteIdentifier }
             
-            let voipToken = clientTokens.first(where: { $0.transport.contains(PushTokenType.voip.transportType) })
             if #available(iOS 13.0, *),
-                !voipTokens.isEmpty {
-                let token = voipTokens[0].createPushToken(for: .voip)
+                let voipToken = clientTokens.first(where: { $0.transport.contains(PushTokenType.voip.transportType) }) {
+                let token = voipToken.createPushToken(for: .voip)
                 client.pushToken = token.markToDelete()
                 managedObjectContext.saveOrRollback()
             }
