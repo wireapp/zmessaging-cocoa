@@ -133,19 +133,31 @@ import Foundation
         }
         
         enqueue {
-            guard let message = conversation.append(text: message) else { return /* failure */ }
-            self.appendReadReceiptIfNeeded(with: userInfo, in: conversation)
-            self.messageReplyObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { [weak self] in
-                self?.updateBackgroundTask(with: message)
-            })
+            do {
+                let message = try conversation.appendText(content: message)
+                self.appendReadReceiptIfNeeded(with: userInfo, in: conversation)
+                self.messageReplyObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { [weak self] in
+                    self?.updateBackgroundTask(with: message)
+                })
+            } catch {
+                Logging.messageProcessing.warn("Failed to reply to message from user notification. Reason: \(error.localizedDescription)")
+            }
         }
     }
     
     private func appendReadReceiptIfNeeded(with userInfo: NotificationUserInfo, in conversation: ZMConversation) {
-        if let originalMessage = userInfo.message(in: conversation, managedObjectContext: self.managedObjectContext) as? ZMClientMessage,
-            originalMessage.needsReadConfirmation {
+        guard
+            let originalMessage = userInfo.message(in: conversation, managedObjectContext: self.managedObjectContext) as? ZMClientMessage,
+            originalMessage.needsReadConfirmation
+        else {
+            return
+        }
+
+        do {
             let confirmation = GenericMessage(content: Confirmation(messageId: originalMessage.nonce!, type: .read))
-            _ = conversation.appendClientMessage(with: confirmation)
+            try conversation.appendClientMessage(with: confirmation)
+        } catch {
+            Logging.messageProcessing.warn("Failed to append read receipt from user notification. Reason: \(error.localizedDescription)")
         }
     }
     
