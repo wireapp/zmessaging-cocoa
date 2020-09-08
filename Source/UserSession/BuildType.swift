@@ -34,7 +34,7 @@ enum BuildType: Equatable {
         default: self = .custom(bundleID: bundleID)
         }
     }
-
+    
     var certificateName: String {
         switch self {
         case .production:
@@ -49,7 +49,7 @@ enum BuildType: Equatable {
             return bundleID
         }
     }
-
+    
     var bundleID: String {
         switch self {
         case .production:
@@ -63,6 +63,6 @@ enum BuildType: Equatable {
         case .custom(let bundleID):
             return bundleID
         }
-
+        
     }
 }

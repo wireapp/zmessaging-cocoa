@@ -42,7 +42,7 @@ extension Dictionary {
     }
 }
 
-public struct PushTokenMetadata {
+struct PushTokenMetadata {
     let isSandbox: Bool
     
     /*!
@@ -80,7 +80,7 @@ public struct PushTokenMetadata {
         return isSandbox ? (tokenType.transportType + "_SANDBOX") : tokenType.transportType
     }
     
-    public static func current(for tokenType: PushTokenType.TokenType) -> PushTokenMetadata {
+    static func current(for tokenType: PushTokenType.TokenType) -> PushTokenMetadata {
         let appId = Bundle.main.bundleIdentifier ?? ""
         let buildType = BuildType.init(bundleID: appId)
         
