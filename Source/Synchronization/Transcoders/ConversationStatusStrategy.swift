@@ -43,9 +43,9 @@ public final class ConversationStatusStrategy : ZMObjectSyncStrategy, ZMContextC
                 }
                 if conv.hasLocalModifications(forKey: clearedKey) {
                     do {
+                        try ZMConversation.updateSelfConversation(withClearedOf: conv)
                         conv.resetLocallyModifiedKeys(Set(arrayLiteral: clearedKey))
                         conv.deleteOlderMessages()
-                        try ZMConversation.updateSelfConversation(withClearedOf: conv)
                         didUpdateConversation = true
                     } catch {
                         Logging.messageProcessing.warn("Failed to update cleared in self conversation. Reason: \(error.localizedDescription)")
