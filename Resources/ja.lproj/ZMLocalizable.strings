@@ -21,6 +21,7 @@
 "conversation.username.groupingSeparator" = ", ";
 
 "user_session.error.blacklisted-email" = "このメールアドレスは許可されていません";
+"user_session.error.domain-blocked" = "このメールはチームの招待が必要です。招待を受けるには組織の IT 管理者にお問い合わせください。";
 "user_session.error.email-exists" = "このメールアドレスは既に登録されています";
 "user_session.error.invalid-email" = "このメールアドレスは無効です";
 "user_session.error.invalid-code" = "有効なコードを入力してください。";

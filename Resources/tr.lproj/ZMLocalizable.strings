@@ -21,6 +21,7 @@
 "conversation.username.groupingSeparator" = ", ";
 
 "user_session.error.blacklisted-email" = "Bu e-posta adresi kabul edilemiyor";
+"user_session.error.domain-blocked" = "This email requires a team invitation. Contact your organization's IT administrators to receive an invite.";
 "user_session.error.email-exists" = "Bu e-posta adresi zaten kaydedildi";
 "user_session.error.invalid-email" = "Bu e-posta adresi geçersiz";
 "user_session.error.invalid-code" = "Lütfen geçerli bir kod girin";

@@ -21,6 +21,7 @@
 "conversation.username.groupingSeparator" = ", ";
 
 "user_session.error.blacklisted-email" = "Cette adresse e-mail n'est pas autorisée";
+"user_session.error.domain-blocked" = "Cet e-mail nécessite une invitation de la part d'une équipe Wire existante. Contactez les administrateurs informatiques de votre organisation pour recevoir une invitation.";
 "user_session.error.email-exists" = "Cette adresse e-mail est déjà utilisée";
 "user_session.error.invalid-email" = "Cette adresse e-mail n'est pas valide";
 "user_session.error.invalid-code" = "Veuillez saisir un code valide";

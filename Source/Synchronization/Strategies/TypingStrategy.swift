@@ -128,8 +128,8 @@ public class TypingStrategy : AbstractRequestStrategy {
         super.init(withManagedObjectContext: syncContext, applicationStatus: applicationStatus)
         self.configuration = [
             .allowsRequestsWhileInBackground,
-            .allowsRequestsDuringEventProcessing,
-            .allowsRequestsDuringNotificationStreamFetch
+            .allowsRequestsWhileOnline,
+            .allowsRequestsDuringQuickSync
         ]
 
         observers.append(

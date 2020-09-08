@@ -101,7 +101,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
             team.remoteIdentifier = .create()
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             
             // when
             team.needsToDownloadRoles = false
@@ -117,7 +117,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
             team.remoteIdentifier = .create()
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             
             // when
             team.needsToDownloadRoles = true
@@ -136,7 +136,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             // given
             team = Team.insertNewObject(in: self.syncMOC)
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             team.remoteIdentifier = .create()
             team.needsToDownloadRoles = true
             self.boostrapChangeTrackers(with: team)
@@ -175,7 +175,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             team.remoteIdentifier = .create()
             team.needsToDownloadRoles = true
             self.boostrapChangeTrackers(with: team)
@@ -197,7 +197,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             team.remoteIdentifier = .create()
             team.needsToDownloadRoles = true
             self.boostrapChangeTrackers(with: team)
@@ -237,7 +237,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
             team = Team.insertNewObject(in: self.syncMOC)
             team.remoteIdentifier = .create()
             team.needsToDownloadRoles = true
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             self.boostrapChangeTrackers(with: team)
             
             guard let request = self.sut.nextRequest() else { return XCTFail("No request generated") }
@@ -264,7 +264,7 @@ class TeamRolesDownloadRequestStrategyTests: MessagingTest {
         syncMOC.performGroupedBlockAndWait {
             // given
             let team = Team.insertNewObject(in: self.syncMOC)
-            self.mockApplicationStatus.mockSynchronizationState = .eventProcessing
+            self.mockApplicationStatus.mockSynchronizationState = .online
             team.remoteIdentifier = teamId
             team.needsToDownloadRoles = true
             self.boostrapChangeTrackers(with: team)

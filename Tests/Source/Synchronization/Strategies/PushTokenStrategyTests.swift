@@ -43,7 +43,7 @@ class PushTokenStrategyTests: MessagingTest {
     override func setUp() {
         super.setUp()
         mockApplicationStatus = MockApplicationStatus()
-        mockApplicationStatus.mockSynchronizationState = .eventProcessing
+        mockApplicationStatus.mockSynchronizationState = .online
         mockAnalytics = MockAnalytics()
         syncMOC.performGroupedAndWait { moc in
             self.sut = PushTokenStrategy(withManagedObjectContext: moc, applicationStatus: self.mockApplicationStatus, analytics: self.mockAnalytics)

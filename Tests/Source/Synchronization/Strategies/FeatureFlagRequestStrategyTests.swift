@@ -34,7 +34,7 @@ class FeatureFlagRequestStrategyTests: MessagingTest {
         mockSyncStateDelegate = MockSyncStateDelegate()
         mockSyncStatus = MockSyncStatus(managedObjectContext: syncMOC, syncStateDelegate: mockSyncStateDelegate)
         mockApplicationStatus = MockApplicationStatus()
-        mockApplicationStatus.mockSynchronizationState = .synchronizing
+        mockApplicationStatus.mockSynchronizationState = .slowSyncing
         
         sut = FeatureFlagRequestStrategy(withManagedObjectContext: syncMOC,
                                          applicationStatus: mockApplicationStatus,

@@ -28,7 +28,7 @@ class AssetDeletionRequestStrategyTests : MessagingTest {
     override func setUp() {
         super.setUp()
         mockApplicationStatus = MockApplicationStatus()
-        mockApplicationStatus.mockSynchronizationState = .eventProcessing
+        mockApplicationStatus.mockSynchronizationState = .online
         mockIdentifierProvider = MockIdentifierProvider()
         sut = AssetDeletionRequestStrategy(
             context: syncMOC,

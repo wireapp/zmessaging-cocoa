@@ -27,7 +27,7 @@ public class LabelUpstreamRequestStrategy: AbstractRequestStrategy {
     override public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
         
-        self.configuration = .allowsRequestsDuringEventProcessing
+        self.configuration = .allowsRequestsWhileOnline
         self.upstreamSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
     }
     

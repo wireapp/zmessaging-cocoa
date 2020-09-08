@@ -52,7 +52,7 @@
 
 - (ZMStrategyConfigurationOption)configuration
 {
-    return ZMStrategyConfigurationOptionAllowsRequestsDuringSync;
+    return ZMStrategyConfigurationOptionAllowsRequestsDuringSlowSync;
 }
 
 - (void)startRequestingLastUpdateEventIDWithoutPersistingIt

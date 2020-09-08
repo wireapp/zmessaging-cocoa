@@ -21,14 +21,13 @@ import WireRequestStrategy
 import WireDataModel
 
 @objcMembers
-public final class CallingRequestStrategy : NSObject, RequestStrategy {
+public final class CallingRequestStrategy: AbstractRequestStrategy {
 
     // MARK: - Private Properties
     
     private let zmLog = ZMSLog(tag: "calling")
     
     private var callCenter: WireCallCenterV3?
-    private let managedObjectContext: NSManagedObjectContext
     private let genericMessageStrategy: GenericMessageRequestStrategy
     private let flowManager: FlowManagerType
 
@@ -45,15 +44,20 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
     // MARK: - Init
     
     public init(managedObjectContext: NSManagedObjectContext,
+                applicationStatus: ApplicationStatus,
                 clientRegistrationDelegate: ClientRegistrationDelegate,
                 flowManager: FlowManagerType,
                 callEventStatus: CallEventStatus) {
         
-        self.managedObjectContext = managedObjectContext
         self.genericMessageStrategy = GenericMessageRequestStrategy(context: managedObjectContext, clientRegistrationDelegate: clientRegistrationDelegate)
         self.flowManager = flowManager
         self.callEventStatus = callEventStatus
-        super.init()
+        
+        super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
+        
+        configuration = [.allowsRequestsWhileInBackground,
+                         .allowsRequestsWhileOnline,
+                         .allowsRequestsWhileWaitingForWebsocket]
         
         callConfigRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
         clientDiscoverySync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
@@ -73,7 +77,7 @@ public final class CallingRequestStrategy : NSObject, RequestStrategy {
 
     // MARK: - Methods
     
-    public func nextRequest() -> ZMTransportRequest? {
+    public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         let request = callConfigRequestSync.nextRequest() ??
                         clientDiscoverySync.nextRequest() ??
                         genericMessageStrategy.nextRequest()
