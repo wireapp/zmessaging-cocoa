@@ -58,7 +58,7 @@ class PushTokenStrategyTests: MessagingTest {
     
     @discardableResult func insertPushKitToken(isRegistered: Bool, shouldBeDeleted: Bool = false, shouldBeDownloaded: Bool = false) -> [String : String] {
         let client = ZMUser.selfUser(in: self.syncMOC).selfClient()
-        var token = PushToken(deviceToken: deviceTokenB, tokenType: .voip, isRegistered: isRegistered)
+        var token = PushToken(deviceToken: deviceTokenB, pushTokenType: PushTokenType(tokenType: .voip), isRegistered: isRegistered)
         token.isMarkedForDeletion = shouldBeDeleted
         token.isMarkedForDownload = shouldBeDownloaded
         client?.pushToken = token

@@ -20,6 +20,7 @@
 import Foundation
 import WireTransport
 import WireRequestStrategy
+import WireDataModel
 import UserNotifications
 
 let PushChannelUserIDKey = "user"
@@ -38,6 +39,56 @@ extension Dictionary {
         }
     
         return UUID(uuidString: userIdString)
+    }
+}
+
+public struct PushTokenMetadata {
+    let isSandbox: Bool
+    
+    /*!
+     @brief There are 4 different application identifiers which map to each of the bundle id's used
+     @discussion
+     com.wearezeta.zclient.ios-development (dev) - <b>com.wire.dev.ent</b>
+     
+     com.wearezeta.zclient.ios-internal (internal) - <b>com.wire.int.ent</b>
+     
+     com.wearezeta.zclient-alpha - <b>com.wire.ent</b>
+     
+     com.wearezeta.zclient.ios (app store) - <b>com.wire</b>
+     
+     @sa https://github.com/zinfra/backend-wiki/wiki/Native-Push-Notifications
+     */
+    let appIdentifier: String
+
+    /*!
+     @brief There are 4 transport types which depend on the token type and the environment
+     @discussion <b>APNS</b> -> ZMAPNSTypeNormal (deprecated)
+     
+     <b>APNS_VOIP</b> -> ZMAPNSTypeVoIP
+     
+     <b>APNS_SANDBOX</b> -> ZMAPNSTypeNormal + Sandbox environment (deprecated)
+     
+     <b>APNS_VOIP_SANDBOX</b> -> ZMAPNSTypeVoIP + Sandbox environment
+     
+     The non-VoIP types are deprecated at the moment.
+     
+     @sa https://github.com/zinfra/backend-wiki/wiki/Native-Push-Notifications
+     */
+    
+    var tokenType: PushTokenType.TokenType
+    var transportType: String {
+        return isSandbox ? (tokenType.transportType + "_SANDBOX") : tokenType.transportType
+    }
+    
+    public static func current(for tokenType: PushTokenType.TokenType) -> PushTokenMetadata {
+        let appId = Bundle.main.bundleIdentifier ?? ""
+        let buildType = BuildType.init(bundleID: appId)
+        
+        let isSandbox = ZMMobileProvisionParser().apsEnvironment == .sandbox
+        let appIdentifier = buildType.certificateName
+        
+        let metadata = PushTokenMetadata(isSandbox: isSandbox, appIdentifier: appIdentifier, tokenType: tokenType)
+        return metadata
     }
 }
 
@@ -223,5 +274,26 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
 extension UNNotificationContent {
     override open var description: String {
         return "<\(type(of:self)); threadIdentifier: \(self.threadIdentifier); content: redacted>"
+    }
+}
+
+extension PushToken {
+    public init(deviceToken: Data, pushTokenType: PushTokenType, isRegistered: Bool = false) {
+        let metadata = PushTokenMetadata.current(for: pushTokenType.tokenType)
+        self.init(deviceToken: deviceToken,
+                  appIdentifier: metadata.appIdentifier,
+                  transportType: metadata.transportType,
+                  type: pushTokenType,
+                  isRegistered: isRegistered,
+                  isMarkedForDeletion: false,
+                  isMarkedForDownload: false)
+    }
+    
+    public static func createVOIPToken(from deviceToken: Data) -> PushToken {
+        return PushToken(deviceToken: deviceToken, pushTokenType: PushTokenType(tokenType: .voip))
+    }
+    
+    public static func createAPNSToken(from deviceToken: Data) -> PushToken  {
+        return PushToken(deviceToken: deviceToken, pushTokenType: PushTokenType(tokenType: .standard))
     }
 }

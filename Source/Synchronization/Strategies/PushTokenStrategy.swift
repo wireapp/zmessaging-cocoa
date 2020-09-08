@@ -153,7 +153,7 @@ extension PushTokenStrategy : ZMUpstreamTranscoder {
             let clientTokens = tokens.filter { $0.client == client.remoteIdentifier }
             
             if #available(iOS 13.0, *),
-                let voipToken = clientTokens.first(where: { $0.transport.contains(PushTokenType.voip.transportType) }) {
+                let voipToken = clientTokens.first(where: { $0.transport.contains(PushTokenType.TokenType.voip.transportType) }) {
                 let token = voipToken.createPushToken(for: .voip)
                 client.pushToken = token?.markToDelete()
                 managedObjectContext.saveOrRollback()
@@ -216,11 +216,16 @@ fileprivate struct PushTokenPayload: Codable {
     let transport: String
     let client: String
 
-    func createPushToken(for tokenType: PushTokenType) -> PushToken? {
+    func createPushToken(for tokenType: PushTokenType.TokenType) -> PushToken? {
         guard let deviceToken = Data(hexString: self.token) else {
             return nil
         }
-        return PushToken(deviceToken: deviceToken, tokenType: tokenType)
+        switch tokenType {
+        case .voip:
+            return PushToken.createVOIPToken(from: deviceToken)
+        case .standard:
+            return PushToken.createAPNSToken(from: deviceToken)
+        }
     }
 }
 
