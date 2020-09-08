@@ -75,12 +75,12 @@ struct PushTokenMetadata {
      @sa https://github.com/zinfra/backend-wiki/wiki/Native-Push-Notifications
      */
     
-    var tokenType: PushTokenType
+    var tokenType: PushToken.TokenType
     var transportType: String {
         return isSandbox ? (tokenType.transportType + "_SANDBOX") : tokenType.transportType
     }
     
-    static func current(for tokenType: PushTokenType) -> PushTokenMetadata {
+    static func current(for tokenType: PushToken.TokenType) -> PushTokenMetadata {
         let appId = Bundle.main.bundleIdentifier ?? ""
         let buildType = BuildType.init(bundleID: appId)
         
@@ -278,7 +278,7 @@ extension UNNotificationContent {
 }
 
 extension PushToken {
-    public init(deviceToken: Data, pushTokenType: PushTokenType, isRegistered: Bool = false) {
+    public init(deviceToken: Data, pushTokenType: TokenType, isRegistered: Bool = false) {
         let metadata = PushTokenMetadata.current(for: pushTokenType)
         self.init(deviceToken: deviceToken,
                   appIdentifier: metadata.appIdentifier,
