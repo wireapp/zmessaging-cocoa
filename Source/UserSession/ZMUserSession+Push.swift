@@ -75,12 +75,12 @@ struct PushTokenMetadata {
      @sa https://github.com/zinfra/backend-wiki/wiki/Native-Push-Notifications
      */
     
-    var tokenType: PushTokenType.TokenType
+    var tokenType: PushTokenType
     var transportType: String {
         return isSandbox ? (tokenType.transportType + "_SANDBOX") : tokenType.transportType
     }
     
-    static func current(for tokenType: PushTokenType.TokenType) -> PushTokenMetadata {
+    static func current(for tokenType: PushTokenType) -> PushTokenMetadata {
         let appId = Bundle.main.bundleIdentifier ?? ""
         let buildType = BuildType.init(bundleID: appId)
         
@@ -279,21 +279,19 @@ extension UNNotificationContent {
 
 extension PushToken {
     public init(deviceToken: Data, pushTokenType: PushTokenType, isRegistered: Bool = false) {
-        let metadata = PushTokenMetadata.current(for: pushTokenType.tokenType)
+        let metadata = PushTokenMetadata.current(for: pushTokenType)
         self.init(deviceToken: deviceToken,
                   appIdentifier: metadata.appIdentifier,
                   transportType: metadata.transportType,
                   type: pushTokenType,
-                  isRegistered: isRegistered,
-                  isMarkedForDeletion: false,
-                  isMarkedForDownload: false)
+                  isRegistered: isRegistered)
     }
     
     public static func createVOIPToken(from deviceToken: Data) -> PushToken {
-        return PushToken(deviceToken: deviceToken, pushTokenType: PushTokenType(tokenType: .voip))
+        return PushToken(deviceToken: deviceToken, pushTokenType: .voip)
     }
     
     public static func createAPNSToken(from deviceToken: Data) -> PushToken  {
-        return PushToken(deviceToken: deviceToken, pushTokenType: PushTokenType(tokenType: .standard))
+        return PushToken(deviceToken: deviceToken, pushTokenType: .standard)
     }
 }
