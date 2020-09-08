@@ -32,7 +32,7 @@ class BuildTypeTests: ZMTBaseTest {
         
         bundleIdsToTypes.forEach { bundleId, expectedType in
             // WHEN
-            let type = WireSyncEngine.BuildType(bundleID: bundleId)
+            let type = WireDataModel.BuildType(bundleID: bundleId)
             // THEN
             XCTAssertEqual(type, expectedType)
         }
@@ -42,7 +42,7 @@ class BuildTypeTests: ZMTBaseTest {
         // GIVEN
         let someBundleId = "com.mycompany.myapp"
         // WHEN
-        let buildType = WireSyncEngine.BuildType(bundleID: someBundleId)
+        let buildType = WireDataModel.BuildType(bundleID: someBundleId)
         // THEN
         XCTAssertEqual(buildType, WireSyncEngine.BuildType.custom(bundleID: someBundleId))
     }

@@ -77,7 +77,8 @@ class PushNotificationTokenTests: IntegrationTest {
         let token = Data(repeating: 0x41, count: 10)
 
         // when
-        userSession?.setPushKitToken(token, tokenType: .standard)
+        let pushToken = PushToken(deviceToken: token, tokenType: .standard)
+        userSession?.setPushToken(pushToken)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
@@ -89,12 +90,14 @@ class PushNotificationTokenTests: IntegrationTest {
 
         // given
         let token = Data(repeating: 0x41, count: 10)
-        userSession?.setPushKitToken(token, tokenType: .standard)
+        let pushToken1 = PushToken(deviceToken: token, tokenType: .standard)
+        userSession?.setPushToken(pushToken1)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
 
         // when
-        userSession?.setPushKitToken(token, tokenType: .standard)
+        let pushToken2 = PushToken(deviceToken: token, tokenType: .standard)
+        userSession?.setPushToken(pushToken2)
 
         // then
         XCTAssertTrue(mockTransportSession.receivedRequests().isEmpty)
@@ -105,13 +108,15 @@ class PushNotificationTokenTests: IntegrationTest {
 
         // given
         let token = Data(repeating: 0x41, count: 10)
-        userSession?.setPushKitToken(token, tokenType: .standard)
+        let pushToken1 = PushToken(deviceToken: token, tokenType: .standard)
+        userSession?.setPushToken(pushToken1)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
 
         // when
         let otherToken = Data(repeating: 0x42, count: 10)
-        userSession?.setPushKitToken(otherToken, tokenType: .standard)
+        let pushToken2 = PushToken(deviceToken: otherToken, tokenType: .standard)
+        userSession?.setPushToken(pushToken2)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
@@ -123,7 +128,8 @@ class PushNotificationTokenTests: IntegrationTest {
 
         // given
         let token = Data(repeating: 0x41, count: 10)
-        userSession?.setPushKitToken(token, tokenType: .standard)
+        let pushToken = PushToken(deviceToken: token, tokenType: .standard)
+        userSession?.setPushToken(pushToken)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
 
@@ -142,13 +148,15 @@ class PushNotificationTokenTests: IntegrationTest {
         // given
         let token = Data(repeating: 0x41, count: 10)
         let otherToken = Data(repeating: 0x42, count: 10)
-        userSession?.setPushKitToken(token, tokenType: .standard)
+        let pushToken1 = PushToken(deviceToken: token, tokenType: .standard)
+        userSession?.setPushToken(pushToken1)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
 
         // when
         userSession?.deletePushKitToken()
-        userSession?.setPushKitToken(otherToken, tokenType: .standard)
+        let pushToken2 = PushToken(deviceToken: otherToken, tokenType: .standard)
+        userSession?.setPushToken(pushToken2)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
@@ -170,7 +178,8 @@ class PushNotificationTokenTests: IntegrationTest {
         // given
         let token = Data(repeating: 0x41, count: 10)
         pushRegistry.mockPushToken = token
-        userSession?.setPushKitToken(token, tokenType: .standard)
+        let standardToken = PushToken(deviceToken: token, tokenType: .standard)
+        userSession?.setPushToken(standardToken)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
         guard let client = userSession?.selfUserClient else { return XCTFail() }
@@ -194,7 +203,8 @@ class PushNotificationTokenTests: IntegrationTest {
         pushRegistry.mockPushToken = token
         application?.deviceToken = token
         application?.userSession = userSession
-        userSession?.setPushKitToken(token, tokenType: .standard)
+        let standardToken = PushToken(deviceToken: token, tokenType: .standard)
+        userSession?.setPushToken(standardToken)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
         guard let client = userSession?.selfUserClient else { return XCTFail() }

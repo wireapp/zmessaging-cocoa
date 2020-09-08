@@ -41,68 +41,6 @@ extension Dictionary {
     }
 }
 
-@objc
-public enum PushTokenType: Int {
-    case standard, voip
-
-    var transportType: String {
-        switch self {
-            case .standard: return "APNS"
-            case .voip: return "APNS_VOIP"
-        }
-    }
-}
-
-struct PushTokenMetadata {
-    let isSandbox: Bool
-    
-    /*!
-     @brief There are 4 different application identifiers which map to each of the bundle id's used
-     @discussion
-     com.wearezeta.zclient.ios-development (dev) - <b>com.wire.dev.ent</b>
-     
-     com.wearezeta.zclient.ios-internal (internal) - <b>com.wire.int.ent</b>
-     
-     com.wearezeta.zclient-alpha - <b>com.wire.ent</b>
-     
-     com.wearezeta.zclient.ios (app store) - <b>com.wire</b>
-     
-     @sa https://github.com/zinfra/backend-wiki/wiki/Native-Push-Notifications
-     */
-    let appIdentifier: String
-
-    /*!
-     @brief There are 4 transport types which depend on the token type and the environment
-     @discussion <b>APNS</b> -> ZMAPNSTypeNormal (deprecated)
-     
-     <b>APNS_VOIP</b> -> ZMAPNSTypeVoIP
-     
-     <b>APNS_SANDBOX</b> -> ZMAPNSTypeNormal + Sandbox environment (deprecated)
-     
-     <b>APNS_VOIP_SANDBOX</b> -> ZMAPNSTypeVoIP + Sandbox environment
-     
-     The non-VoIP types are deprecated at the moment.
-     
-     @sa https://github.com/zinfra/backend-wiki/wiki/Native-Push-Notifications
-     */
-    
-    var tokenType: PushTokenType
-    var transportType: String {
-        return isSandbox ? (tokenType.transportType + "_SANDBOX") : tokenType.transportType
-    }
-    
-    static func current(for tokenType: PushTokenType) -> PushTokenMetadata {
-        let appId = Bundle.main.bundleIdentifier ?? ""
-        let buildType = BuildType.init(bundleID: appId)
-        
-        let isSandbox = ZMMobileProvisionParser().apsEnvironment == .sandbox
-        let appIdentifier = buildType.certificateName
-        
-        let metadata = PushTokenMetadata(isSandbox: isSandbox, appIdentifier: appIdentifier, tokenType: tokenType)
-        return metadata
-    }
-}
-
 extension ZMUserSession {
 
     @objc public static let registerCurrentPushTokenNotificationName = Notification.Name(rawValue: "ZMUserSessionResetPushTokensNotification")
@@ -111,17 +49,12 @@ extension ZMUserSession {
         NotificationCenter.default.addObserver(self, selector: #selector(ZMUserSession.registerCurrentPushToken), name: ZMUserSession.registerCurrentPushTokenNotificationName, object: nil)
     }
 
-    public func setPushKitToken(_ data: Data, tokenType: PushTokenType) {
-        let metadata = PushTokenMetadata.current(for: tokenType)
-
+    public func setPushToken(_ pushToken: PushToken) {
         let syncMOC = managedObjectContext.zm_sync!
         syncMOC.performGroupedBlock {
             guard let selfClient = ZMUser.selfUser(in: syncMOC).selfClient() else { return }
-            if selfClient.pushToken?.deviceToken != data {
-                selfClient.pushToken = PushToken(deviceToken: data,
-                                                 appIdentifier: metadata.appIdentifier,
-                                                 transportType: metadata.transportType,
-                                                 isRegistered: false)
+            if selfClient.pushToken?.deviceToken != pushToken.deviceToken {
+                selfClient.pushToken = pushToken
                 syncMOC.saveOrRollback()
             }
         }

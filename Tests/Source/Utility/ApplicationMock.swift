@@ -17,6 +17,7 @@
 //
 
 import Foundation
+import WireDataModel
 
 @testable import WireSyncEngine
 
@@ -143,7 +144,8 @@ extension ApplicationMock {
     
     public func updateDeviceToken() {
         if let token = deviceToken {
-            userSession?.setPushKitToken(token, tokenType: .standard)
+            let pushToken = PushToken(deviceToken: token, tokenType: .standard)
+            userSession?.setPushToken(pushToken)
         }
     }
 
