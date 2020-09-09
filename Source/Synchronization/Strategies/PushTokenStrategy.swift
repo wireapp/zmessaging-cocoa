@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2017 Wire Swiss GmbH
+// Copyright (C) 2016 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -205,18 +205,6 @@ fileprivate struct PushTokenPayload: Codable {
     let app: String
     let transport: String
     let client: String
-
-    func createPushToken(for tokenType: PushToken.TokenType) -> PushToken? {
-        guard let deviceToken = Data(hexString: self.token) else {
-            return nil
-        }
-        switch tokenType {
-        case .voip:
-            return PushToken.createVOIPToken(from: deviceToken)
-        case .standard:
-            return PushToken.createAPNSToken(from: deviceToken)
-        }
-    }
 }
 
 extension PushTokenStrategy : ZMEventConsumer {
