@@ -28,7 +28,7 @@ extension ZMUserSession {
             execution: showIdentifier
         ),
         DebugCommand(
-            "listCommands",
+            "help",
             description: "List all commands",
             execution: listCommands
         )
@@ -187,8 +187,8 @@ private func listCommands(
     completionHandler: (DebugCommandResult) -> ()
     ) {
     
-    let output = ZMUserSession.debugCommands.map {
-        "\($0.key) -> \($0.value.description)"
+    let output = ZMUserSession.debugCommands.keys.sorted().map {
+        "\($0) -> \(ZMUserSession.debugCommands[$0]!.description)"
     }.joined(separator: "\n")
     completionHandler(.Success(info: output))
 }
