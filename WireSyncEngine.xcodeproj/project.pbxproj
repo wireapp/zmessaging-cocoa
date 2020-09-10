@@ -402,6 +402,7 @@
 		A913C02423A7F1C00048CE74 /* TeamRolesDownloadRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A913C02323A7F1C00048CE74 /* TeamRolesDownloadRequestStrategyTests.swift */; };
 		A938BDC823A7964200D4C208 /* ConversationRoleDownstreamRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A938BDC723A7964100D4C208 /* ConversationRoleDownstreamRequestStrategy.swift */; };
 		A938BDCA23A7966700D4C208 /* ConversationRoleDownstreamRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A938BDC923A7966700D4C208 /* ConversationRoleDownstreamRequestStrategyTests.swift */; };
+		A93B528B250101AC0061255E /* ZMUserSession+Debugging.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93B528A250101AC0061255E /* ZMUserSession+Debugging.swift */; };
 		A95D0B1223F6B75A0057014F /* AVSLogObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A95D0B1123F6B75A0057014F /* AVSLogObserver.swift */; };
 		A96190CA23A6DDCE00B8665F /* WireDataModel.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96190C923A6DDCE00B8665F /* WireDataModel.framework */; };
 		A9692F8A1986476900849241 /* NSString_NormalizationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A9692F881986476900849241 /* NSString_NormalizationTests.m */; };
@@ -1063,6 +1064,7 @@
 		A913C02323A7F1C00048CE74 /* TeamRolesDownloadRequestStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamRolesDownloadRequestStrategyTests.swift; sourceTree = "<group>"; };
 		A938BDC723A7964100D4C208 /* ConversationRoleDownstreamRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConversationRoleDownstreamRequestStrategy.swift; sourceTree = "<group>"; };
 		A938BDC923A7966700D4C208 /* ConversationRoleDownstreamRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConversationRoleDownstreamRequestStrategyTests.swift; sourceTree = "<group>"; };
+		A93B528A250101AC0061255E /* ZMUserSession+Debugging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+Debugging.swift"; sourceTree = "<group>"; };
 		A95D0B1123F6B75A0057014F /* AVSLogObserver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AVSLogObserver.swift; sourceTree = "<group>"; };
 		A96190C923A6DDCE00B8665F /* WireDataModel.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WireDataModel.framework; path = Carthage/Build/iOS/WireDataModel.framework; sourceTree = "<group>"; };
 		A9692F881986476900849241 /* NSString_NormalizationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSString_NormalizationTests.m; sourceTree = "<group>"; };
@@ -1917,6 +1919,7 @@
 				A9BABE5E19BA1EF300E9E5A3 /* Search */,
 				F9AB00211F0CDAF00037B437 /* FileRelocator.swift */,
 				166B2B5D23E86522003E8581 /* ZMUserSession.swift */,
+				A93B528A250101AC0061255E /* ZMUserSession+Debugging.swift */,
 				EEEED9A923F6BD75008C94CA /* ZMUserSession+SelfUserProvider.swift */,
 				636B716723BF46EA00B624D6 /* ZMUserSession+VerifyPassword.swift */,
 				164EAF9B1F4455FA00B628C4 /* ZMUserSession+Actions.swift */,
@@ -3130,6 +3133,7 @@
 				7CD279862338E31D00E638CD /* SessionManager+Authentication.swift in Sources */,
 				16FF474C1F0D54B20044C491 /* SessionManager+Logs.swift in Sources */,
 				F19F1D281EFBC34E00275E27 /* ZMUserSessionRegistrationNotification.m in Sources */,
+				A93B528B250101AC0061255E /* ZMUserSession+Debugging.swift in Sources */,
 				A913C02223A7EDFB0048CE74 /* TeamRolesDownloadRequestStrategy.swift in Sources */,
 				5EC2C5912137F80E00C6CE35 /* CallState.swift in Sources */,
 				5478A1411DEC4048006F7268 /* UserProfile.swift in Sources */,
