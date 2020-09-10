@@ -111,7 +111,7 @@ extension ZMUserSession {
             if selfClient.pushToken?.deviceToken != data {
                 selfClient.pushToken = PushToken(deviceToken: data,
                                                  appIdentifier: metadata.appIdentifier,
-                                                 transportType: metadata.transportType,
+                                                 transportType: metadata.transportType, type: .voip,
                                                  isRegistered: false)
                 syncMOC.saveOrRollback()
             }
