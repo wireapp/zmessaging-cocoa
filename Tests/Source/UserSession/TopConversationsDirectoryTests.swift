@@ -106,13 +106,13 @@ class TopConversationsDirectoryTests : MessagingTest {
         XCTAssertEqual(sut.topConversations, [conv2])
     }
 
-    func testThatItDoesNotReturnConversationsWithSystemMessages() {
+    func testThatItDoesNotReturnConversationsWithSystemMessages() throws {
         // GIVEN
         let conv1 = createConversation(in: uiMOC, fillWithNew: 0)
         conv1.appendStartedUsingThisDeviceMessage()
 
         let conv2 = createConversation(in: uiMOC, fillWithNew: 1)
-        conv2.appendKnock()
+        try conv2.appendKnock()
 
         // WHEN
         sut.refreshTopConversations()
@@ -356,11 +356,11 @@ extension TopConversationsDirectoryTests {
     func fill(_ conversation: ZMConversation, with messageCount: (new: Int, old: Int), file: StaticString = #file, line: UInt = #line) {
         guard messageCount.new > 0 || messageCount.old > 0 else { return }
         (0..<messageCount.new).forEach {
-            _ = conversation.append(text: "Message #\($0)")
+            try! conversation.appendText(content: "Message #\($0)")
         }
 
         (0..<messageCount.old).forEach {
-            let message = conversation.append(text: "Message #\($0)") as! ZMMessage
+            let message = try! conversation.appendText(content: "Message #\($0)") as! ZMMessage
             message.serverTimestamp = Date(timeIntervalSince1970: TimeInterval($0 * 100))
         }
 

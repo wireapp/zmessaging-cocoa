@@ -71,7 +71,7 @@ class LinkPreviewTests: ConversationTestsBase {
         
         // when
         userSession?.perform {
-            conversation?.append(text: MockLinkPreviewDetector.LinkPreviewURL.article.rawValue)
+            try! conversation?.appendText(content: MockLinkPreviewDetector.LinkPreviewURL.article.rawValue)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -88,7 +88,7 @@ class LinkPreviewTests: ConversationTestsBase {
         
         // when
         userSession?.perform {
-            conversation?.append(text: MockLinkPreviewDetector.LinkPreviewURL.article.rawValue)
+            try! conversation?.appendText(content: MockLinkPreviewDetector.LinkPreviewURL.article.rawValue)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -104,7 +104,7 @@ class LinkPreviewTests: ConversationTestsBase {
         
         // when
         userSession?.perform {
-            conversation?.append(text: MockLinkPreviewDetector.LinkPreviewURL.articleWithPicture.rawValue)
+            try! conversation?.appendText(content: MockLinkPreviewDetector.LinkPreviewURL.articleWithPicture.rawValue)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -121,7 +121,7 @@ class LinkPreviewTests: ConversationTestsBase {
         
         // when
         userSession?.perform {
-            conversation?.append(text: MockLinkPreviewDetector.LinkPreviewURL.tweet.rawValue)
+            try! conversation?.appendText(content: MockLinkPreviewDetector.LinkPreviewURL.tweet.rawValue)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -137,7 +137,7 @@ class LinkPreviewTests: ConversationTestsBase {
         
         // when
         userSession?.perform {
-            conversation?.append(text: MockLinkPreviewDetector.LinkPreviewURL.tweetWithPicture.rawValue)
+            try! conversation?.appendText(content: MockLinkPreviewDetector.LinkPreviewURL.tweetWithPicture.rawValue)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         

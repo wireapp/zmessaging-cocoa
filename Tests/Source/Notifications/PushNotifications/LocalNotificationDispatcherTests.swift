@@ -175,7 +175,7 @@ extension LocalNotificationDispatcherTests {
     func testThatWhenFailingAMessageItSchedulesANotification() {
         self.syncMOC.performGroupedBlockAndWait {
             // GIVEN
-            let message = self.conversation1.append(text: "bar") as! ZMClientMessage
+            let message = try! self.conversation1.appendText(content: "bar") as! ZMClientMessage
             message.sender = self.user1
 
             // WHEN
@@ -220,7 +220,7 @@ extension LocalNotificationDispatcherTests {
 
     func testThatItCancelsReadNotificationsIfTheLastReadChanges() {
         // GIVEN
-        let message = conversation1.append(text: "foo") as! ZMClientMessage
+        let message = try! conversation1.appendText(content: "foo") as! ZMClientMessage
         message.sender = user1
         let note1 = ZMLocalNotification(expiredMessage: message, moc: syncMOC)!
         let note2 = ZMLocalNotification(expiredMessageIn: self.conversation1, moc: syncMOC)!
@@ -357,7 +357,7 @@ extension LocalNotificationDispatcherTests {
         let sender = ZMUser.insertNewObject(in: self.syncMOC)
         sender.remoteIdentifier = UUID.create()
 
-        let message = conversation.append(text: "text") as! ZMClientMessage
+        let message = try! conversation.appendText(content: "text") as! ZMClientMessage
         
         let reaction1 = GenericMessage(content: WireProtos.Reaction(emoji: "❤️", messageID: message.nonce!))
         let reaction2 = GenericMessage(content: WireProtos.Reaction(emoji: "", messageID: message.nonce!))
