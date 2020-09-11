@@ -107,6 +107,8 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
             }
                         
             let note = ZMLocalNotification(event: event, conversation: conversation, managedObjectContext: self.syncMOC)
+            
+            note?.increaseEstimatedUnreadCount(on: conversation)
             note.apply(eventNotifications.addObject)
             note.apply(scheduleLocalNotification)
         }

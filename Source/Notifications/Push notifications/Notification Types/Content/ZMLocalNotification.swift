@@ -153,6 +153,68 @@ extension ZMLocalNotification {
     }
 }
 
+// MARK: - Unread Count
+
+extension ZMLocalNotification {
+            
+    func increaseEstimatedUnreadCount(on conversation: ZMConversation?) {
+        if shouldIncreaseUnreadCount {
+            conversation?.internalEstimatedUnreadCount += 1
+        }
+        
+        if shouldIncreaseUnreadMentionCount {
+            conversation?.internalEstimatedUnreadSelfMentionCount += 1
+        }
+        
+        if shouldIncreaseUnreadReplyCount {
+            conversation?.internalEstimatedUnreadSelfReplyCount += 1
+        }
+    }
+    
+    var shouldIncreaseUnreadCount: Bool {
+        switch type {
+        case .event(.connectionRequestPending):
+            return true
+        case .message(let contentType):
+            switch contentType {
+            case .messageTimerUpdate:
+                return false
+            default:
+                return true
+            }
+        default:
+            return false
+        }
+    }
+    
+    var shouldIncreaseUnreadMentionCount: Bool {
+        guard case LocalNotificationType.message(let contentType) = type else {
+            return false
+        }
+        
+        switch contentType {
+        case .text(_, isMention: true, isReply: _):
+            return true
+        default:
+            return false
+        }
+    }
+    
+    var shouldIncreaseUnreadReplyCount: Bool {
+        guard case LocalNotificationType.message(let contentType) = type else {
+            return false
+        }
+        
+        switch contentType {
+        case .text(_, isMention: _, isReply: true):
+            return true
+        default:
+            return false
+        }
+    }
+    
+}
+
 // Helper function inserted by Swift 4.2 migrator.
 fileprivate func convertToUNNotificationSoundName(_ input: String) -> UNNotificationSoundName {
 	return UNNotificationSoundName(rawValue: input)
