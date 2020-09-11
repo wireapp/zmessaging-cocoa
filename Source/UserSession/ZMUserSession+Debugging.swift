@@ -15,7 +15,7 @@ extension ZMUserSession {
     /// tokenized already (e.g. "print", "foobar")
     public func executeDebugCommand(
         _ command: [String],
-        onComplete: (DebugCommandResult) -> ()
+        onComplete: @escaping (DebugCommandResult) -> ()
     ) {
         guard let keyword = command.first else {
             onComplete(.UnknownCommand)
@@ -76,7 +76,7 @@ private protocol DebugCommand {
     /// This will be called to execute the command
     func execute(
         arguments: [String],
-        onComplete: ((DebugCommandResult) -> ())
+        onComplete: @escaping ((DebugCommandResult) -> ())
     )
     
     /// This will be called with any previous persisted state
@@ -113,7 +113,9 @@ private class DebugCommandMixin: DebugCommand {
         self.userSession = userSession
     }
     
-    func execute(arguments: [String], onComplete: ((DebugCommandResult) -> ())) {
+    func execute(arguments: [String],
+                onComplete: @escaping ((DebugCommandResult) -> ())
+    ) {
         onComplete(.Failure(error: "Not implemented"))
     }
     
@@ -181,7 +183,7 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
     
     override func execute(
         arguments: [String],
-        onComplete: ((DebugCommandResult) -> ()))
+        onComplete: @escaping ((DebugCommandResult) -> ()))
     {
         defer {
             self.saveEnabledLogs()
@@ -205,28 +207,30 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
         let isAdding = arguments[0] == "add"
         let subject = arguments[1]
         
-        guard let context = userSession.selfUserClient?.keysStore.encryptionContext
-            else {
-                return onComplete(.Failure(error: "No encryption context?"))
+        self.userSession.syncManagedObjectContext.perform {
+            guard let context = self.userSession.selfUserClient?.keysStore.encryptionContext
+                else {
+                    return onComplete(.Failure(error: "No encryption context?"))
+            }
+            
+            if !isAdding && subject == "all" {
+                context.disableExtendedLoggingOnAllSessions()
+                self.currentlyEnabledLogs = Set()
+                return onComplete(.Success(info: "all removed"))
+            }
+            
+            guard let identifier = EncryptionSessionIdentifier(string: subject) else {
+                return onComplete(.Failure(error: "Invalid id \(subject)"))
+            }
+            
+            if isAdding {
+                self.currentlyEnabledLogs.insert(identifier)
+            } else {
+                self.currentlyEnabledLogs.remove(identifier)
+            }
+            context.setExtendedLogging(identifier: identifier, enabled: isAdding)
+            return onComplete(.Success(info: nil))
         }
-        
-        if !isAdding && subject == "all" {
-            context.disableExtendedLoggingOnAllSessions()
-            self.currentlyEnabledLogs = Set()
-            return onComplete(.Success(info: "all removed"))
-        }
-        
-        guard let identifier = EncryptionSessionIdentifier(string: subject) else {
-            return onComplete(.Failure(error: "Invalid id \(subject)"))
-        }
-        
-        if isAdding {
-            self.currentlyEnabledLogs.insert(identifier)
-        } else {
-            self.currentlyEnabledLogs.remove(identifier)
-        }
-        context.setExtendedLogging(identifier: identifier, enabled: isAdding)
-        return onComplete(.Success(info: nil))
     }
     
     private let logsKey = "enabledLogs"
@@ -244,12 +248,14 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
         self.currentlyEnabledLogs = Set(logs.compactMap {
             EncryptionSessionIdentifier(string: $0)
         })
-        guard let context = userSession.selfUserClient?.keysStore.encryptionContext
-            else {
-                return
-        }
-        self.currentlyEnabledLogs.forEach {
-            context.setExtendedLogging(identifier: $0, enabled: true)
+        self.userSession.syncManagedObjectContext.performAndWait {
+            guard let context = userSession.selfUserClient?.keysStore.encryptionContext
+                else {
+                    return
+            }
+            self.currentlyEnabledLogs.forEach {
+                context.setExtendedLogging(identifier: $0, enabled: true)
+            }
         }
     }
 }
@@ -266,7 +272,7 @@ private class DebugCommandShowIdentifiers: DebugCommandMixin {
     
     override func execute(
         arguments: [String],
-        onComplete: ((DebugCommandResult) -> ()))
+        onComplete: @escaping ((DebugCommandResult) -> ()))
     {
         guard let client = userSession.selfUserClient,
             let user = userSession.selfUser as? ZMUser
@@ -295,7 +301,7 @@ private class DebugCommandHelp: DebugCommandMixin {
     
     override func execute(
         arguments: [String],
-        onComplete: ((DebugCommandResult) -> ()))
+        onComplete: @escaping ((DebugCommandResult) -> ()))
     {
         let output = userSession.debugCommands.keys.sorted().joined(separator: "\n")
         onComplete(.Success(info: output))
@@ -314,7 +320,7 @@ private class DebugCommandVariables: DebugCommandMixin {
         
     override func execute(
         arguments: [String],
-        onComplete: ((DebugCommandResult) -> ()))
+        onComplete: @escaping ((DebugCommandResult) -> ()))
     {
         var state = self.savedState ?? [:]
         switch arguments.first {
@@ -340,7 +346,9 @@ private class DebugCommandVariables: DebugCommandMixin {
             guard arguments.count == 2 else {
                 return onComplete(.Failure(error: "Usage: get <name>"))
             }
-            return onComplete(.Success(info: "\(state[arguments[1]])"))
+            return onComplete(
+                .Success(info: String(describing: state[arguments[1]]))
+            )
         default:
             return onComplete(.UnknownCommand)
         }
