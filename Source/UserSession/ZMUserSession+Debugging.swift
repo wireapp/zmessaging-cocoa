@@ -35,7 +35,7 @@ extension ZMUserSession {
         )
     }
     
-    public func restoreCommandsState() {
+    public func restoreDebugCommandsState() {
         debugCommands.values.forEach {
             $0.restoreFromState()
         }

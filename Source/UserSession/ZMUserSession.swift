@@ -221,7 +221,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         startEphemeralTimers()
         notifyUserAboutChangesInAvailabilityBehaviourIfNeeded()
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
-        
+        restoreDebugCommandsState()
     }
     
     private func configureTransportSession() {
