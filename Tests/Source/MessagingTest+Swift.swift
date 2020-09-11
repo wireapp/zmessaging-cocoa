@@ -31,7 +31,7 @@ extension MessagingTest {
                                                        linkPreviews: [],
                                                        replyingTo: nil), nonce: nonce)
         do {
-            try message.add(textMessage.serializedData())
+            try message.setUnderlyingMessage(textMessage)
         } catch {
             return nil
         }

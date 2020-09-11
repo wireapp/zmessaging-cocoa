@@ -155,7 +155,7 @@ class ZMHotFixDirectoryTests: MessagingTest {
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.conversationType = .group
             conversation.appendNewConversationSystemMessage(at: timestamp, users: [])
-            let message = conversation.append(text: "Hello") as? ZMClientMessage
+            let message = try! conversation.appendText(content: "Hello") as? ZMClientMessage
             message?.sender = user
             conversation.lastReadServerTimeStamp = timestamp.addingTimeInterval(-1)
             XCTAssertEqual(conversation.unreadMessages.count, 2)

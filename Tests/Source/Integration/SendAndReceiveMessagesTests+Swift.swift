@@ -85,7 +85,7 @@ class SendAndReceiveMessagesTests_Swift: ConversationTestsBase {
     
         var failedToSendMessage: ZMMessage?
         self.userSession?.perform {
-            failedToSendMessage = conversation?.append(text: "test") as? ZMMessage
+            failedToSendMessage = try! conversation?.appendText(content: "test") as? ZMMessage
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
     
@@ -415,7 +415,7 @@ extension SendAndReceiveMessagesTests_Swift {
         var message: ZMMessage?
         var messageNonce: UUID?
         self.userSession?.perform {
-            message = groupConversation?.append(text: "lalala") as! ZMMessage
+            message = try! groupConversation?.appendText(content: "lalala") as! ZMMessage
             messageNonce = message!.nonce
         }
         XCTAssertTrue(groupConversation!.managedObjectContext!.saveOrRollback())

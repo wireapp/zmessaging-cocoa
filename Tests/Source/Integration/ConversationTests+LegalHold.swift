@@ -31,7 +31,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
         
         // when
         userSession?.perform {
-            conversation?.append(text: "Hello")
+            try! conversation?.appendText(content: "Hello")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -51,7 +51,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
         }
         
         userSession?.perform {
-            conversation?.append(text: "Hello")
+            try! conversation?.appendText(content: "Hello")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(conversation?.legalHoldStatus, .pendingApproval)
@@ -66,7 +66,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
         
         // when
         userSession?.perform {
-            conversation?.append(text: "Hello")
+            try! conversation?.appendText(content: "Hello")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -228,7 +228,7 @@ class ConversationTests_LegalHold: ConversationTestsBase {
         }
 
         userSession?.perform {
-            conversation!.append(text: "This is the best group!")
+            try! conversation!.appendText(content: "This is the best group!")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertEqual(conversation?.legalHoldStatus, .pendingApproval)

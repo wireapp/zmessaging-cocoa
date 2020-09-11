@@ -65,10 +65,14 @@ extension ZMUserSession {
     
     func lockDatabase() {
         guard managedObjectContext.encryptMessagesAtRest else { return }
-
-        storeProvider.contextDirectory.clearEncryptionKeysInAllContexts()
         
-        DatabaseEncryptionLockNotification(databaseIsEncrypted: true).post(in: managedObjectContext.notificationContext)
+        BackgroundActivityFactory.shared.notifyWhenAllBackgroundActivitiesEnd { [weak self] in
+            self?.storeProvider.contextDirectory.clearEncryptionKeysInAllContexts()
+        
+            if let notificationContext = self?.managedObjectContext.notificationContext {
+                DatabaseEncryptionLockNotification(databaseIsEncrypted: true).post(in: notificationContext)
+            }
+        }
     }
     
     public func unlockDatabase(with context: LAContext) throws {
