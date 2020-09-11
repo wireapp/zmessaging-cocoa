@@ -426,7 +426,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         
         super.init()
         
-        registerForVoipPushNotifications()
+        registerForVoipPushNotificationsIfNeeded()
 
         postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
@@ -435,7 +435,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     }
     
     ///  For iOS earlier than 13 we should register for voip push notifications
-    private func registerForVoipPushNotifications() {
+    private func registerForVoipPushNotificationsIfNeeded() {
         guard #available(iOS 13.0, *) else {
             // register for voIP push notifications
             self.pushRegistry.delegate = self
@@ -728,7 +728,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         backgroundUserSessions[account.userIdentifier] = userSession
         userSession.useConstantBitRateAudio = useConstantBitRateAudio
         userSession.useConferenceCalling = useConferenceCalling
-        registerOrMigratePushToken(session: userSession)
+        updateOrMigratePushToken(session: userSession)
         registerObservers(account: account, session: userSession)
     }
     

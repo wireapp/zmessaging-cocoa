@@ -231,9 +231,6 @@ extension SessionManager {
 extension SessionManager {
     public func updateDeviceToken(_ deviceToken: Data) {
         let pushToken = PushToken.createAPNSToken(from: deviceToken)
-        if let userSession = activeUserSession {
-            userSession.setPushToken(pushToken)
-        }
         // give new device token to all running sessions
         self.backgroundUserSessions.values.forEach({ userSession in
             userSession.setPushToken(pushToken)
