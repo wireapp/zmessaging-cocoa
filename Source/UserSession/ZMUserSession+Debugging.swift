@@ -36,7 +36,9 @@ extension ZMUserSession {
     }
     
     public func restoreCommandsState() {
-        
+        debugCommands.values.forEach {
+            $0.restoreFromState()
+        }
     }
 
     fileprivate var debugStateUserDefaultsKey: String? {
@@ -79,7 +81,7 @@ private protocol DebugCommand {
     
     /// This will be called with any previous persisted state
     /// when the user session is initialized
-    func restoreFromState(state: [String: Any])
+    func restoreFromState()
 }
 
 extension DebugCommand {
@@ -93,6 +95,7 @@ extension DebugCommand {
     var savedState: [String: Any]? {
         get { return self.userSession.savedDebugState[self.keyword] }
     }
+    
 }
 
 /// This is a mixin (implementation of a protocol that can be
@@ -114,7 +117,7 @@ private class DebugCommandMixin: DebugCommand {
         onComplete(.Failure(error: "Not implemented"))
     }
     
-    func restoreFromState(state: [String : Any]) {
+    func restoreFromState() {
         return
     }
 }
@@ -141,7 +144,8 @@ extension ZMUserSession {
             return [
                 DebugCommandLogEncryption(userSession: self),
                 DebugCommandShowIdentifiers(userSession: self),
-                DebugCommandHelp(userSession: self)
+                DebugCommandHelp(userSession: self),
+                DebugCommandVariables(userSession: self)
             ].dictionary { (key: $0.keyword, value: $0) }
         }
     }
@@ -234,8 +238,9 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
         self.saveState(state: [logsKey: idsToSave])
     }
     
-    override func restoreFromState(state: [String : Any]) {
-        guard let logs = state[logsKey] as? [String] else { return }
+    override func restoreFromState() {
+        guard let state = savedState,
+            let logs = state[logsKey] as? [String] else { return }
         self.currentlyEnabledLogs = Set(logs.compactMap {
             EncryptionSessionIdentifier(string: $0)
         })
@@ -295,4 +300,50 @@ private class DebugCommandHelp: DebugCommandMixin {
         let output = userSession.debugCommands.keys.sorted().joined(separator: "\n")
         onComplete(.Success(info: output))
     }
+}
+
+/// Debug variables
+private class DebugCommandVariables: DebugCommandMixin {
+    
+    init(userSession: ZMUserSession) {
+        super.init(
+            keyword: "variables",
+            userSession: userSession
+        )
+    }
+        
+    override func execute(
+        arguments: [String],
+        onComplete: ((DebugCommandResult) -> ()))
+    {
+        var state = self.savedState ?? [:]
+        switch arguments.first {
+        case "list":
+            return onComplete(.Success(info: state.map { v in
+                "\(v.key) => \(v.value)"
+                }.joined(separator: "\n")
+            ))
+        case "set":
+            guard arguments.count == 2 || arguments.count == 3 else {
+                return onComplete(.Failure(error: "Usage: set <name> [<value>]"))
+            }
+            let key = arguments[1]
+            let value = arguments.count == 3 ? arguments[2] : nil
+            if let value = value {
+                state[key] = value
+            } else {
+                state.removeValue(forKey: key)
+            }
+            self.saveState(state: state)
+            return onComplete(.Success(info: nil))
+        case "get":
+            guard arguments.count == 2 else {
+                return onComplete(.Failure(error: "Usage: get <name>"))
+            }
+            return onComplete(.Success(info: "\(state[arguments[1]])"))
+        default:
+            return onComplete(.UnknownCommand)
+        }
+    }
+    
 }
