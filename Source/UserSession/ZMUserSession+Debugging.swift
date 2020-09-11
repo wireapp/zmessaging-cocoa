@@ -132,7 +132,7 @@ public enum DebugCommandResult {
 }
 
 
-// MARK: - Commands
+// MARK: - Commands List
 
 extension ZMUserSession {
 
@@ -140,6 +140,8 @@ extension ZMUserSession {
         get {
             return [
                 DebugCommandLogEncryption(userSession: self),
+                DebugCommandShowIdentifiers(userSession: self),
+                DebugCommandHelp(userSession: self)
             ].dictionary { (key: $0.keyword, value: $0) }
         }
     }
@@ -248,36 +250,49 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
 }
 
 /// Show the user and client identifier
+private class DebugCommandShowIdentifiers: DebugCommandMixin {
 
-private func showIdentifier(
-    arguments: [String],
-    userSession: ZMUserSession,
-    commandDefinition: DebugCommandMixin,
-    completionHandler: (DebugCommandResult) -> ()
-    ) {
-    
-    guard let client = userSession.selfUserClient,
-        let user = userSession.selfUser as? ZMUser
-    else {
-        completionHandler(.Failure(error: "No user"))
-        return
+    init(userSession: ZMUserSession) {
+        super.init(
+            keyword: "showIdentifier",
+            userSession: userSession
+        )
     }
     
-    completionHandler(.Success(info:
-        "User: \(user.remoteIdentifier.uuidString)\n" +
-        "Client: \(client.remoteIdentifier ?? "-")\n" +
-        "Session: \(client.sessionIdentifier?.rawValue ?? "-")"
-    ))
+    override func execute(
+        arguments: [String],
+        onComplete: ((DebugCommandResult) -> ()))
+    {
+        guard let client = userSession.selfUserClient,
+            let user = userSession.selfUser as? ZMUser
+        else {
+            onComplete(.Failure(error: "No user"))
+            return
+        }
+        
+        onComplete(.Success(info:
+            "User: \(user.remoteIdentifier.uuidString)\n" +
+            "Client: \(client.remoteIdentifier ?? "-")\n" +
+            "Session: \(client.sessionIdentifier?.rawValue ?? "-")"
+        ))
+    }
 }
 
-/// List all available commands
-private func listCommands(
-    arguments: [String],
-    userSession: ZMUserSession,
-    commandDefinition: DebugCommandMixin,
-    completionHandler: (DebugCommandResult) -> ()
-    ) {
+/// Show commands
+private class DebugCommandHelp: DebugCommandMixin {
+
+    init(userSession: ZMUserSession) {
+        super.init(
+            keyword: "help",
+            userSession: userSession
+        )
+    }
     
-    let output = userSession.debugCommands.keys.sorted().joined(separator: "\n")
-    completionHandler(.Success(info: output))
+    override func execute(
+        arguments: [String],
+        onComplete: ((DebugCommandResult) -> ()))
+    {
+        let output = userSession.debugCommands.keys.sorted().joined(separator: "\n")
+        onComplete(.Success(info: output))
+    }
 }
