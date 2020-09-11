@@ -142,6 +142,7 @@ extension PushTokenStrategy : ZMUpstreamTranscoder {
             // The token might have changed in the meantime, check if it's still up for deletion
             if let token = client.pushToken, token.isMarkedForDeletion {
                 client.pushToken = nil
+                NotificationInContext(name: ZMUserSession.registerCurrentPushTokenNotificationName, context: managedObjectContext.notificationContext).post()
             }
             return false
         case .getToken:
@@ -149,11 +150,7 @@ extension PushTokenStrategy : ZMUpstreamTranscoder {
             guard let payload = try? JSONDecoder().decode([String : [PushTokenPayload]].self, from: responseData) else { return false }
             guard let tokens = payload["tokens"] else { return false }
 
-            // Find tokens belonging to self client
-            let current = tokens.filter { $0.client == client.remoteIdentifier }
-
-            if current.count == 1 && // We found one token
-                current[0].token == pushToken.deviceTokenString // It matches what we have locally
+            if let _ = tokens.first(where: { $0.client == client.remoteIdentifier && $0.token == pushToken.deviceTokenString }) // We found one token that matches what we have locally
             {
                 // Clear the flags and we are done
                 client.pushToken = pushToken.resetFlags()

@@ -20,6 +20,7 @@
 import Foundation
 import WireTransport
 import WireRequestStrategy
+import WireDataModel
 import UserNotifications
 
 let PushChannelUserIDKey = "user"
@@ -73,25 +74,22 @@ struct PushTokenMetadata {
      
      @sa https://github.com/zinfra/backend-wiki/wiki/Native-Push-Notifications
      */
+    
+    var tokenType: PushToken.TokenType
     var transportType: String {
-        if isSandbox {
-            return "APNS_VOIP_SANDBOX"
-        }
-        else {
-            return "APNS_VOIP"
-        }
+        return isSandbox ? (tokenType.transportType + "_SANDBOX") : tokenType.transportType
     }
     
-    static var current: PushTokenMetadata = {
+    static func current(for tokenType: PushToken.TokenType) -> PushTokenMetadata {
         let appId = Bundle.main.bundleIdentifier ?? ""
         let buildType = BuildType.init(bundleID: appId)
         
         let isSandbox = ZMMobileProvisionParser().apsEnvironment == .sandbox
         let appIdentifier = buildType.certificateName
         
-        let metadata = PushTokenMetadata(isSandbox: isSandbox, appIdentifier: appIdentifier)
+        let metadata = PushTokenMetadata(isSandbox: isSandbox, appIdentifier: appIdentifier, tokenType: tokenType)
         return metadata
-    }()
+    }
 }
 
 extension ZMUserSession {
@@ -102,17 +100,12 @@ extension ZMUserSession {
         NotificationCenter.default.addObserver(self, selector: #selector(ZMUserSession.registerCurrentPushToken), name: ZMUserSession.registerCurrentPushTokenNotificationName, object: nil)
     }
 
-    func setPushKitToken(_ data: Data) {
-        let metadata = PushTokenMetadata.current
-
+    func setPushToken(_ pushToken: PushToken) {
         let syncMOC = managedObjectContext.zm_sync!
         syncMOC.performGroupedBlock {
             guard let selfClient = ZMUser.selfUser(in: syncMOC).selfClient() else { return }
-            if selfClient.pushToken?.deviceToken != data {
-                selfClient.pushToken = PushToken(deviceToken: data,
-                                                 appIdentifier: metadata.appIdentifier,
-                                                 transportType: metadata.transportType, type: .voip,
-                                                 isRegistered: false)
+            if selfClient.pushToken?.deviceToken != pushToken.deviceToken {
+                selfClient.pushToken = pushToken
                 syncMOC.saveOrRollback()
             }
         }
@@ -281,5 +274,24 @@ extension ZMUserSession: UNUserNotificationCenterDelegate {
 extension UNNotificationContent {
     override open var description: String {
         return "<\(type(of:self)); threadIdentifier: \(self.threadIdentifier); content: redacted>"
+    }
+}
+
+extension PushToken {
+    public init(deviceToken: Data, pushTokenType: TokenType, isRegistered: Bool = false) {
+        let metadata = PushTokenMetadata.current(for: pushTokenType)
+        self.init(deviceToken: deviceToken,
+                  appIdentifier: metadata.appIdentifier,
+                  transportType: metadata.transportType,
+                  type: pushTokenType,
+                  isRegistered: isRegistered)
+    }
+    
+    public static func createVOIPToken(from deviceToken: Data) -> PushToken {
+        return PushToken(deviceToken: deviceToken, pushTokenType: .voip)
+    }
+    
+    public static func createAPNSToken(from deviceToken: Data) -> PushToken  {
+        return PushToken(deviceToken: deviceToken, pushTokenType: .standard)
     }
 }

@@ -53,7 +53,8 @@ extension SessionManager: PKPushRegistryDelegate {
         
         // give new push token to all running sessions
         backgroundUserSessions.values.forEach({ userSession in
-            userSession.setPushKitToken(pushCredentials.token)
+            let pushToken = PushToken.createVOIPToken(from: pushCredentials.token)
+            userSession.setPushToken(pushToken)
         })
     }
     
@@ -146,8 +147,13 @@ extension SessionManager: PKPushRegistryDelegate {
     public func updatePushToken(for session: ZMUserSession) {
         session.managedObjectContext.performGroupedBlock {
             // Refresh the tokens if needed
-            if let token = self.pushRegistry.pushToken(for: .voIP) {
-                session.setPushKitToken(token)
+            if #available(iOS 13.0, *) {
+                self.application.registerForRemoteNotifications()
+            } else {
+                if let token = self.pushRegistry.pushToken(for: .voIP) {
+                    let pushToken = PushToken.createVOIPToken(from: token)
+                    session.setPushToken(pushToken)
+                }
             }
         }
     }
@@ -220,4 +226,14 @@ extension SessionManager {
         self.showContentDelegate?.showConnectionRequest(userId: userId)
     }
 
+}
+
+extension SessionManager {
+    public func updateDeviceToken(_ deviceToken: Data) {
+        let pushToken = PushToken.createAPNSToken(from: deviceToken)
+        // give new device token to all running sessions
+        self.backgroundUserSessions.values.forEach({ userSession in
+            userSession.setPushToken(pushToken)
+        })
+    }
 }

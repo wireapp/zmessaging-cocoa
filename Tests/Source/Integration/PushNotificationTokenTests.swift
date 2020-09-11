@@ -39,7 +39,7 @@ class PushNotificationTokenTests: IntegrationTest {
             XCTAssertEqual(request.method, .methodPOST, "Should be POST '/push/tokens', found \(request)", line: line)
 
             guard let payload = request.payload?.asDictionary() as? [String : String] else { return XCTFail("No payload found: \(request)", line: line) }
-            guard payload["transport"] == "APNS_VOIP" else { return XCTFail("Not VOIP transport: \(request)", line: line) }
+            guard payload["transport"] == "APNS" else { return XCTFail("Not VOIP transport: \(request)", line: line) }
             guard payload["token"] == data.zmHexEncodedString() else {
                 return XCTFail("Wrong device token: \(request)", line: line)
 
@@ -77,7 +77,8 @@ class PushNotificationTokenTests: IntegrationTest {
         let token = Data(repeating: 0x41, count: 10)
 
         // when
-        userSession?.setPushKitToken(token)
+        let pushToken = PushToken.createAPNSToken(from: token)
+        userSession?.setPushToken(pushToken)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
@@ -89,12 +90,14 @@ class PushNotificationTokenTests: IntegrationTest {
 
         // given
         let token = Data(repeating: 0x41, count: 10)
-        userSession?.setPushKitToken(token)
+        let pushToken1 = PushToken.createAPNSToken(from: token)
+        userSession?.setPushToken(pushToken1)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
 
         // when
-        userSession?.setPushKitToken(token)
+        let pushToken2 = PushToken.createAPNSToken(from: token)
+        userSession?.setPushToken(pushToken2)
 
         // then
         XCTAssertTrue(mockTransportSession.receivedRequests().isEmpty)
@@ -105,13 +108,15 @@ class PushNotificationTokenTests: IntegrationTest {
 
         // given
         let token = Data(repeating: 0x41, count: 10)
-        userSession?.setPushKitToken(token)
+        let pushToken1 = PushToken.createAPNSToken(from: token)
+        userSession?.setPushToken(pushToken1)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
 
         // when
         let otherToken = Data(repeating: 0x42, count: 10)
-        userSession?.setPushKitToken(otherToken)
+        let pushToken2 = PushToken.createAPNSToken(from: otherToken)
+        userSession?.setPushToken(pushToken2)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
@@ -123,7 +128,8 @@ class PushNotificationTokenTests: IntegrationTest {
 
         // given
         let token = Data(repeating: 0x41, count: 10)
-        userSession?.setPushKitToken(token)
+        let pushToken = PushToken.createAPNSToken(from: token)
+        userSession?.setPushToken(pushToken)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
 
@@ -142,13 +148,15 @@ class PushNotificationTokenTests: IntegrationTest {
         // given
         let token = Data(repeating: 0x41, count: 10)
         let otherToken = Data(repeating: 0x42, count: 10)
-        userSession?.setPushKitToken(token)
+        let pushToken1 = PushToken.createAPNSToken(from: token)
+        userSession?.setPushToken(pushToken1)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
 
         // when
         userSession?.deletePushKitToken()
-        userSession?.setPushKitToken(otherToken)
+        let pushToken2 = PushToken.createAPNSToken(from: otherToken)
+        userSession?.setPushToken(pushToken2)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
@@ -170,7 +178,8 @@ class PushNotificationTokenTests: IntegrationTest {
         // given
         let token = Data(repeating: 0x41, count: 10)
         pushRegistry.mockPushToken = token
-        userSession?.setPushKitToken(token)
+        let standardToken = PushToken.createAPNSToken(from: token)
+        userSession?.setPushToken(standardToken)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
         guard let client = userSession?.selfUserClient else { return XCTFail() }
@@ -192,7 +201,10 @@ class PushNotificationTokenTests: IntegrationTest {
         // given
         let token = Data(repeating: 0x41, count: 10)
         pushRegistry.mockPushToken = token
-        userSession?.setPushKitToken(token)
+        application?.deviceToken = token
+        application?.userSession = userSession
+        let standardToken = PushToken.createAPNSToken(from: token)
+        userSession?.setPushToken(standardToken)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         mockTransportSession.resetReceivedRequests()
         guard let client = userSession?.selfUserClient else { return XCTFail() }

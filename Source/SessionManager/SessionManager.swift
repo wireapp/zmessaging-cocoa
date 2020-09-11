@@ -426,15 +426,22 @@ public final class SessionManager : NSObject, SessionManagerType {
         
         super.init()
         
-        
-        // register for voIP push notifications
-        self.pushRegistry.delegate = self
-        self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
+        registerForVoipPushNotificationsIfNeeded()
 
         postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
         
         checkJailbreakIfNeeded()
+    }
+    
+    ///  For iOS earlier than 13 we should register for voip push notifications
+    private func registerForVoipPushNotificationsIfNeeded() {
+        guard #available(iOS 13.0, *) else {
+            // register for voIP push notifications
+            self.pushRegistry.delegate = self
+            self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
+            return
+        }
     }
     
     public func start(launchOptions: LaunchOptions) {
@@ -721,8 +728,18 @@ public final class SessionManager : NSObject, SessionManagerType {
         backgroundUserSessions[account.userIdentifier] = userSession
         userSession.useConstantBitRateAudio = useConstantBitRateAudio
         userSession.useConferenceCalling = useConferenceCalling
-        updatePushToken(for: userSession)
+        updateOrMigratePushToken(session: userSession)
         registerObservers(account: account, session: userSession)
+    }
+    
+    /// For iOS 13 or above we should use Non voIP push notifications. We should migrate (remove voip token and register APNS token ) the push token when upgrading the client OS or app version.
+    private func updateOrMigratePushToken(session userSession: ZMUserSession) {
+        if #available(iOS 13.0, *),
+            userSession.selfUserClient?.pushToken?.type == .voip {
+            userSession.deletePushKitToken() // delete voip token and register APNS token for remote notifications
+        } else {
+            updatePushToken(for: userSession)
+        }
     }
     
     private func deleteMessagesOlderThanRetentionLimit(provider: LocalStoreProviderProtocol) {
