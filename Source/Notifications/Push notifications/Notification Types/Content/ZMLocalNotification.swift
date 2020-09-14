@@ -177,16 +177,15 @@ extension ZMLocalNotification {
 extension LocalNotificationType {
     
     var shouldIncreaseUnreadCount: Bool {
-        switch self {
-        case .message(let contentType):
-            switch contentType {
-            case .messageTimerUpdate, .participantsAdded, .participantsRemoved, .reaction:
-                return false
-            default:
-                return true
-            }
-        default:
+        guard case LocalNotificationType.message(let contentType) = self else {
             return false
+        }
+        
+        switch contentType {
+        case .messageTimerUpdate, .participantsAdded, .participantsRemoved, .reaction:
+            return false
+        default:
+            return true
         }
     }
     
