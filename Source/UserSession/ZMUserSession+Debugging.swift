@@ -35,8 +35,15 @@ extension ZMUserSession {
         )
     }
     
-    public func restoreDebugCommandsState() {
-        debugCommands.values.forEach {
+    public func initDebugCommands() {
+        self.debugCommands = [
+            DebugCommandLogEncryption(userSession: self),
+            DebugCommandShowIdentifiers(userSession: self),
+            DebugCommandHelp(userSession: self),
+            DebugCommandVariables(userSession: self)
+        ].dictionary { (key: $0.keyword, value: $0) }
+        
+        self.debugCommands.values.forEach {
             $0.restoreFromState()
         }
     }
@@ -66,12 +73,12 @@ extension ZMUserSession {
 }
 
 /// A debug command that can be invoked with arguments
-private protocol DebugCommand {
+protocol DebugCommand {
     
     /// This is the keyword used to invoke the command
     var keyword: String { get }
     /// The user session context in which this command is executed
-    var userSession: ZMUserSession { get }
+    var userSession: ZMUserSession! { get }
         
     /// This will be called to execute the command
     func execute(
@@ -103,7 +110,7 @@ extension DebugCommand {
 private class DebugCommandMixin: DebugCommand {
     
     let keyword: String
-    let userSession: ZMUserSession
+    unowned let userSession: ZMUserSession!
     
     init(
         keyword: String,
@@ -139,19 +146,6 @@ public enum DebugCommandResult {
 
 // MARK: - Commands List
 
-extension ZMUserSession {
-
-    fileprivate var debugCommands: [String: DebugCommand] {
-        get {
-            return [
-                DebugCommandLogEncryption(userSession: self),
-                DebugCommandShowIdentifiers(userSession: self),
-                DebugCommandHelp(userSession: self),
-                DebugCommandVariables(userSession: self)
-            ].dictionary { (key: $0.keyword, value: $0) }
-        }
-    }
-}
 
 // MARK: - Command execution
 
@@ -208,11 +202,11 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
         let subject = arguments[1]
         
         self.userSession.syncManagedObjectContext.perform {
-            guard let context = self.userSession.selfUserClient?.keysStore.encryptionContext
-                else {
-                    return onComplete(.Failure(error: "No encryption context?"))
+            guard let context = ZMUser
+                .selfUser(in: self.userSession.syncManagedObjectContext)
+                .selfClient()?.keysStore.encryptionContext else {
+                return onComplete(.Failure(error: "No self user"))
             }
-            
             if !isAdding && subject == "all" {
                 context.disableExtendedLoggingOnAllSessions()
                 self.currentlyEnabledLogs = Set()
@@ -229,7 +223,7 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
                 self.currentlyEnabledLogs.remove(identifier)
             }
             context.setExtendedLogging(identifier: identifier, enabled: isAdding)
-            return onComplete(.Success(info: nil))
+            return onComplete(.Success(info: "Added logging for identifier \(identifier)"))
         }
     }
     
@@ -248,8 +242,8 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
         self.currentlyEnabledLogs = Set(logs.compactMap {
             EncryptionSessionIdentifier(string: $0)
         })
-        self.userSession.syncManagedObjectContext.performAndWait {
-            guard let context = userSession.selfUserClient?.keysStore.encryptionContext
+        self.userSession.syncManagedObjectContext.performAsync {
+            guard let context = ZMUser.selfUser(in: self.userSession.syncManagedObjectContext).selfClient()?.keysStore.encryptionContext
                 else {
                     return
             }

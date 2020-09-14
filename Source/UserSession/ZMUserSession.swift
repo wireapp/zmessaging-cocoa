@@ -56,6 +56,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var messageReplyObserver: ManagedObjectContextChangeObserver?
     var likeMesssageObserver: ManagedObjectContextChangeObserver?
     var urlActionProcessors: [URLActionProcessor]?
+    var debugCommands: [String: DebugCommand] = [:]
     
     public var hasCompletedInitialSync: Bool = false
     
@@ -221,7 +222,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         startEphemeralTimers()
         notifyUserAboutChangesInAvailabilityBehaviourIfNeeded()
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
-        restoreDebugCommandsState()
+        initDebugCommands()
     }
     
     private func configureTransportSession() {
