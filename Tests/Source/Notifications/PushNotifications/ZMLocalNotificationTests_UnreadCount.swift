@@ -22,46 +22,46 @@ import Foundation
 class ZMLocalNotificationTests_UnreadCount: ZMLocalNotificationTests {
     
     func testThatUnreadCountIsIncreased_ForContentTypes() {
-        let bar: [LocalNotificationContentType] = [.image,
-                                                   .audio,
-                                                   .video,
-                                                   .fileUpload,
-                                                   .ephemeral(isMention: false, isReply: false),
-                                                   .hidden,
-                                                   .knock,
-                                                   .location,
-                                                   .text("Hello World", isMention: false, isReply: false)]
+        let contentTypes: [LocalNotificationContentType] = [.image,
+                                                            .audio,
+                                                            .video,
+                                                            .fileUpload,
+                                                            .ephemeral(isMention: false, isReply: false),
+                                                            .hidden,
+                                                            .knock,
+                                                            .location,
+                                                            .text("Hello World", isMention: false, isReply: false)]
         
-        bar.forEach { contentType in
+        contentTypes.forEach { contentType in
             XCTAssertTrue(LocalNotificationType.message(contentType).shouldIncreaseUnreadCount)
         }
     }
     
     func testThatUnreadMentionCountIsIncreased_WhenSelfUserIsMentioned() {
-        let bar: [LocalNotificationContentType] = [.ephemeral(isMention: true, isReply: false),
-                                                   .text("Hello World", isMention: true, isReply: false)]
+        let contentTypes: [LocalNotificationContentType] = [.ephemeral(isMention: true, isReply: false),
+                                                            .text("Hello World", isMention: true, isReply: false)]
         
-        bar.forEach { contentType in
+        contentTypes.forEach { contentType in
             XCTAssertTrue(LocalNotificationType.message(contentType).shouldIncreaseUnreadMentionCount)
         }
     }
     
     func testThatUnreadSelfReplyCountIsIncreased_WhenSelfUserIsReplied() {
-        let bar: [LocalNotificationContentType] = [.ephemeral(isMention: false, isReply: true),
-                                                   .text("Hello World", isMention: false, isReply: true)]
+        let contentTypes: [LocalNotificationContentType] = [.ephemeral(isMention: false, isReply: true),
+                                                            .text("Hello World", isMention: false, isReply: true)]
         
-        bar.forEach { contentType in
+        contentTypes.forEach { contentType in
             XCTAssertTrue(LocalNotificationType.message(contentType).shouldIncreaseUnreadReplyCount)
         }
     }
     
     func testThatUnreadCountIsntIncreased_ForContentTypesWithoutUserGeneratedContent() {
-        let bar: [LocalNotificationContentType] = [.messageTimerUpdate(nil),
-                                                   .participantsAdded,
-                                                   .participantsRemoved,
-                                                   .reaction(emoji: "❤️")]
+        let contentTypes: [LocalNotificationContentType] = [.messageTimerUpdate(nil),
+                                                            .participantsAdded,
+                                                            .participantsRemoved,
+                                                            .reaction(emoji: "❤️")]
         
-        bar.forEach { contentType in
+        contentTypes.forEach { contentType in
             XCTAssertFalse(LocalNotificationType.message(contentType).shouldIncreaseUnreadCount)
         }
     }
