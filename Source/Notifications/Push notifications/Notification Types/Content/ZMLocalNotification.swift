@@ -158,26 +158,29 @@ extension ZMLocalNotification {
 extension ZMLocalNotification {
             
     func increaseEstimatedUnreadCount(on conversation: ZMConversation?) {
-        if shouldIncreaseUnreadCount {
+                
+        if type.shouldIncreaseUnreadCount {
             conversation?.internalEstimatedUnreadCount += 1
         }
         
-        if shouldIncreaseUnreadMentionCount {
+        if type.shouldIncreaseUnreadMentionCount {
             conversation?.internalEstimatedUnreadSelfMentionCount += 1
         }
         
-        if shouldIncreaseUnreadReplyCount {
+        if type.shouldIncreaseUnreadReplyCount {
             conversation?.internalEstimatedUnreadSelfReplyCount += 1
         }
     }
     
+}
+
+extension LocalNotificationType {
+    
     var shouldIncreaseUnreadCount: Bool {
-        switch type {
-        case .event(.connectionRequestPending):
-            return true
+        switch self {
         case .message(let contentType):
             switch contentType {
-            case .messageTimerUpdate:
+            case .messageTimerUpdate, .participantsAdded, .participantsRemoved, .reaction:
                 return false
             default:
                 return true
@@ -188,12 +191,13 @@ extension ZMLocalNotification {
     }
     
     var shouldIncreaseUnreadMentionCount: Bool {
-        guard case LocalNotificationType.message(let contentType) = type else {
+        guard case LocalNotificationType.message(let contentType) = self else {
             return false
         }
         
         switch contentType {
-        case .text(_, isMention: true, isReply: _):
+        case .text(_, isMention: true, isReply: _),
+             .ephemeral(isMention: true, isReply: _):
             return true
         default:
             return false
@@ -201,12 +205,13 @@ extension ZMLocalNotification {
     }
     
     var shouldIncreaseUnreadReplyCount: Bool {
-        guard case LocalNotificationType.message(let contentType) = type else {
+        guard case LocalNotificationType.message(let contentType) = self else {
             return false
         }
         
         switch contentType {
-        case .text(_, isMention: _, isReply: true):
+        case .text(_, isMention: _, isReply: true),
+             .ephemeral(isMention: _, isReply: true):
             return true
         default:
             return false

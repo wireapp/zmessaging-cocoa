@@ -399,6 +399,55 @@ extension LocalNotificationDispatcherTests {
         // then
         XCTAssertEqual(self.notificationCenter.scheduledRequests.count, 0)
     }
+    
+    // MARK: Updating unread count
+    
+    func testThatEstimatedUnreadCountIsIncreased_WhenProcessingTextMessage() {
+        // GIVEN
+        let text = UUID.create().transportString()
+        let event = createUpdateEvent(UUID.create(), conversationID: self.conversation1.remoteIdentifier!, genericMessage: GenericMessage(content: Text(content: text)), senderID: self.user1.remoteIdentifier)
+        
+        // WHEN
+        self.sut.processEventsWhileInBackground([event])
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(self.conversation1.estimatedUnreadCount, 1)
+        XCTAssertEqual(self.conversation1.estimatedUnreadSelfMentionCount, 0)
+        XCTAssertEqual(self.conversation1.estimatedUnreadSelfReplyCount, 0)
+    }
+    
+    func testThatEstimatedUnreadMentionCountIsIncreased_WhenProcessingTextMessageWhichMentionsSelfUser() {
+        // GIVEN
+        let text = UUID.create().transportString()
+        let selfUserMention = Mention(range: NSRange(), user: selfUser)
+        let event = createUpdateEvent(UUID.create(), conversationID: self.conversation1.remoteIdentifier!, genericMessage: GenericMessage(content: Text(content: text, mentions: [selfUserMention])), senderID: self.user1.remoteIdentifier)
+        
+        // WHEN
+        self.sut.processEventsWhileInBackground([event])
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(self.conversation1.estimatedUnreadCount, 1)
+        XCTAssertEqual(self.conversation1.estimatedUnreadSelfMentionCount, 1)
+        XCTAssertEqual(self.conversation1.estimatedUnreadSelfReplyCount, 0)
+    }
+    
+    func testThatEstimatedUnreadMentionCountIsIncreased_WhenProcessingTextMessageWhichRepliesToSelfUser() {
+        // GIVEN
+        let message = try! conversation1.appendText(content: "Hello") as! ZMOTRMessage
+        let text = UUID.create().transportString()
+        let event = createUpdateEvent(UUID.create(), conversationID: self.conversation1.remoteIdentifier!, genericMessage: GenericMessage(content: Text(content: text, replyingTo: message)), senderID: self.user1.remoteIdentifier)
+        
+        // WHEN
+        self.sut.processEventsWhileInBackground([event])
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // THEN
+        XCTAssertEqual(self.conversation1.estimatedUnreadCount, 1)
+        XCTAssertEqual(self.conversation1.estimatedUnreadSelfMentionCount, 0)
+        XCTAssertEqual(self.conversation1.estimatedUnreadSelfReplyCount, 1)
+    }
 }
 
 

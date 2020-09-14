@@ -23,7 +23,7 @@ public enum LocalNotificationEventType {
     case connectionRequestAccepted, connectionRequestPending, newConnection, conversationCreated, conversationDeleted
 }
 
-public enum LocalNotificationContentType : Equatable {
+public enum LocalNotificationContentType: Equatable {
     
     case text(String, isMention: Bool, isReply: Bool)
     case image
