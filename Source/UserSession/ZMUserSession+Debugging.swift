@@ -173,7 +173,7 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
     var currentlyEnabledLogs: Set<EncryptionSessionIdentifier> = Set()
     
     private var usage: String {
-        get { "\(self.keyword) <add|remove|list> <sessionId|all>"}
+        "\(keyword) <add|remove|list> <sessionId|all>"
     }
     
     init(userSession: ZMUserSession) {
