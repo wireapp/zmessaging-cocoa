@@ -153,6 +153,72 @@ extension ZMLocalNotification {
     }
 }
 
+// MARK: - Unread Count
+
+extension ZMLocalNotification {
+            
+    func increaseEstimatedUnreadCount(on conversation: ZMConversation?) {
+                
+        if type.shouldIncreaseUnreadCount {
+            conversation?.internalEstimatedUnreadCount += 1
+        }
+        
+        if type.shouldIncreaseUnreadMentionCount {
+            conversation?.internalEstimatedUnreadSelfMentionCount += 1
+        }
+        
+        if type.shouldIncreaseUnreadReplyCount {
+            conversation?.internalEstimatedUnreadSelfReplyCount += 1
+        }
+    }
+    
+}
+
+extension LocalNotificationType {
+    
+    var shouldIncreaseUnreadCount: Bool {
+        guard case LocalNotificationType.message(let contentType) = self else {
+            return false
+        }
+        
+        switch contentType {
+        case .messageTimerUpdate, .participantsAdded, .participantsRemoved, .reaction:
+            return false
+        default:
+            return true
+        }
+    }
+    
+    var shouldIncreaseUnreadMentionCount: Bool {
+        guard case LocalNotificationType.message(let contentType) = self else {
+            return false
+        }
+        
+        switch contentType {
+        case .text(_, isMention: true, isReply: _),
+             .ephemeral(isMention: true, isReply: _):
+            return true
+        default:
+            return false
+        }
+    }
+    
+    var shouldIncreaseUnreadReplyCount: Bool {
+        guard case LocalNotificationType.message(let contentType) = self else {
+            return false
+        }
+        
+        switch contentType {
+        case .text(_, isMention: _, isReply: true),
+             .ephemeral(isMention: _, isReply: true):
+            return true
+        default:
+            return false
+        }
+    }
+    
+}
+
 // Helper function inserted by Swift 4.2 migrator.
 fileprivate func convertToUNNotificationSoundName(_ input: String) -> UNNotificationSoundName {
 	return UNNotificationSoundName(rawValue: input)
