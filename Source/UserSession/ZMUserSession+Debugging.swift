@@ -29,14 +29,14 @@ extension ZMUserSession {
         onComplete: @escaping (DebugCommandResult) -> ()
     ) {
         guard let keyword = command.first else {
-            onComplete(.UnknownCommand)
+            onComplete(.unknownCommand)
             return
         }
         
         let arguments = Array(command.dropFirst())
         
         guard let command = debugCommands[keyword] else {
-            onComplete(.UnknownCommand)
+            onComplete(.unknownCommand)
             return
         }
         
@@ -131,7 +131,7 @@ private class DebugCommandMixin: DebugCommand {
     func execute(arguments: [String],
                 onComplete: @escaping ((DebugCommandResult) -> ())
     ) {
-        onComplete(.Failure(error: "Not implemented"))
+        onComplete(.failure(error: "Not implemented"))
     }
     
     func restoreFromState() {
@@ -142,17 +142,14 @@ private class DebugCommandMixin: DebugCommand {
 /// The result of a debug command
 public enum DebugCommandResult {
     /// The command was a success. There is a string to show to the user
-    case Success(info: String?)
+    case success(info: String?)
     /// The command was a success. There is a file to show to the user
-    case SuccessWithFile(file: NSURL)
+    case successWithFile(file: NSURL)
     /// The command failed
-    case Failure(error: String?)
+    case failure(error: String?)
     /// The command was not recognized
-    case UnknownCommand
+    case unknownCommand
 }
-
-
-// MARK: - Commands List
 
 
 // MARK: - Command execution
@@ -192,7 +189,7 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
         }
         
         if (arguments.first == "list") {
-            return onComplete(.Success(info:
+            return onComplete(.success(info:
                 "Enabled:\n" +
                 self.currentlyEnabledLogs
                     .map { $0.rawValue }
@@ -203,7 +200,7 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
         guard arguments.count == 2,
         arguments[0] == "add" || arguments[0] == "remove"
         else {
-            return onComplete(.Failure(error: "usage: \(self.usage)"))
+            return onComplete(.failure(error: "usage: \(self.usage)"))
         }
         
         let isAdding = arguments[0] == "add"
@@ -213,16 +210,16 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
             guard let context = ZMUser
                 .selfUser(in: self.userSession.syncManagedObjectContext)
                 .selfClient()?.keysStore.encryptionContext else {
-                return onComplete(.Failure(error: "No self user"))
+                return onComplete(.failure(error: "No self user"))
             }
             if !isAdding && subject == "all" {
                 context.disableExtendedLoggingOnAllSessions()
                 self.currentlyEnabledLogs = Set()
-                return onComplete(.Success(info: "all removed"))
+                return onComplete(.success(info: "all removed"))
             }
             
             guard let identifier = EncryptionSessionIdentifier(string: subject) else {
-                return onComplete(.Failure(error: "Invalid id \(subject)"))
+                return onComplete(.failure(error: "Invalid id \(subject)"))
             }
             
             if isAdding {
@@ -231,7 +228,7 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
                 self.currentlyEnabledLogs.remove(identifier)
             }
             context.setExtendedLogging(identifier: identifier, enabled: isAdding)
-            return onComplete(.Success(info: "Added logging for identifier \(identifier)"))
+            return onComplete(.success(info: "Added logging for identifier \(identifier)"))
         }
     }
     
@@ -280,11 +277,11 @@ private class DebugCommandShowIdentifiers: DebugCommandMixin {
             let client = userSession.selfUserClient,
             let user = userSession.selfUser as? ZMUser
         else {
-            onComplete(.Failure(error: "No user"))
+            onComplete(.failure(error: "No user"))
             return
         }
         
-        onComplete(.Success(info:
+        onComplete(.success(info:
             "User: \(user.remoteIdentifier.uuidString)\n" +
             "Client: \(client.remoteIdentifier ?? "-")\n" +
             "Session: \(client.sessionIdentifier?.rawValue ?? "-")"
@@ -307,7 +304,7 @@ private class DebugCommandHelp: DebugCommandMixin {
         onComplete: @escaping ((DebugCommandResult) -> ()))
     {
         let output = userSession.debugCommands.keys.sorted().joined(separator: "\n")
-        onComplete(.Success(info: output))
+        onComplete(.success(info: output))
     }
 }
 
@@ -328,13 +325,13 @@ private class DebugCommandVariables: DebugCommandMixin {
         var state = self.savedState ?? [:]
         switch arguments.first {
         case "list":
-            return onComplete(.Success(info: state.map { v in
+            return onComplete(.success(info: state.map { v in
                 "\(v.key) => \(v.value)"
                 }.joined(separator: "\n")
             ))
         case "set":
             guard arguments.count == 2 || arguments.count == 3 else {
-                return onComplete(.Failure(error: "Usage: set <name> [<value>]"))
+                return onComplete(.failure(error: "Usage: set <name> [<value>]"))
             }
             let key = arguments[1]
             let value = arguments.count == 3 ? arguments[2] : nil
@@ -344,16 +341,16 @@ private class DebugCommandVariables: DebugCommandMixin {
                 state.removeValue(forKey: key)
             }
             self.saveState(state: state)
-            return onComplete(.Success(info: nil))
+            return onComplete(.success(info: nil))
         case "get":
             guard arguments.count == 2 else {
-                return onComplete(.Failure(error: "Usage: get <name>"))
+                return onComplete(.failure(error: "Usage: get <name>"))
             }
             return onComplete(
-                .Success(info: String(describing: state[arguments[1]]))
+                .success(info: String(describing: state[arguments[1]]))
             )
         default:
-            return onComplete(.UnknownCommand)
+            return onComplete(.unknownCommand)
         }
     }
     
