@@ -185,7 +185,7 @@ private class DebugCommandLogEncryption: DebugCommandMixin {
         onComplete: @escaping ((DebugCommandResult) -> ()))
     {
         defer {
-            self.saveEnabledLogs()
+            saveEnabledLogs()
         }
         
         if (arguments.first == "list") {
