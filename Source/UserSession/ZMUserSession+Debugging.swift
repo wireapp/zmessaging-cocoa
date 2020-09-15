@@ -108,7 +108,7 @@ extension DebugCommand {
     }
     
     var savedState: [String: Any]? {
-        get { return self.userSession.savedDebugState[self.keyword] }
+        return userSession.savedDebugState[keyword]
     }
     
 }
