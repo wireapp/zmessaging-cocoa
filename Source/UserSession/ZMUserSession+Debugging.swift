@@ -276,7 +276,8 @@ private class DebugCommandShowIdentifiers: DebugCommandMixin {
         arguments: [String],
         onComplete: @escaping ((DebugCommandResult) -> ()))
     {
-        guard let client = userSession.selfUserClient,
+        guard 
+            let client = userSession.selfUserClient,
             let user = userSession.selfUser as? ZMUser
         else {
             onComplete(.Failure(error: "No user"))
