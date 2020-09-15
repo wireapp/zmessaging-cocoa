@@ -60,13 +60,10 @@ extension ZMUserSession {
     }
 
     fileprivate var debugStateUserDefaultsKey: String? {
-        get {
-            guard
-                let identifier = (self.selfUser as! ZMUser).remoteIdentifier
-            else { return nil }
-            return "Wire-debugCommandsState-\(identifier)"
-        }
-
+        guard
+            let identifier = (self.selfUser as! ZMUser).remoteIdentifier
+        else { return nil }
+        return "Wire-debugCommandsState-\(identifier)"
     }
     
     /// The debug state persisted for this user
