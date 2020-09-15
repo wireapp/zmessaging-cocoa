@@ -121,8 +121,7 @@ private class DebugCommandMixin: DebugCommand {
         
     let keyword: String
     
-    init(keyword: String
-    ) {
+    init(keyword: String) {
         self.keyword = keyword
     }
     
