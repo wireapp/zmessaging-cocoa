@@ -104,7 +104,7 @@ extension DebugCommand {
     /// Save any "state" that needs to be persisted. The state should
     /// only contain types can serialized in user defaults.
     func saveState(state: [String: Any]) {
-        self.userSession.savedDebugState[self.keyword] = state
+        userSession.savedDebugState[keyword] = state
     }
     
     var savedState: [String: Any]? {
