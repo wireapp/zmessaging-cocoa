@@ -21,14 +21,50 @@ import WireMockTransport
 
 class APNSTests_Swift: APNSTestsBase {
     
-    func testThatItSendsAConfirmationMessageWhenReceivingATextMessage() {        
+    func testThatItUpdatesApplicationBadgeCount_WhenReceivingATextMessage() {
         // GIVEN
         XCTAssertTrue(login())
-
+        
         let textMessage = GenericMessage(content: Text(content: "Hello"), nonce: .create())
-
+        
         closePushChannelAndWaitUntilClosed() // do not use websocket
-
+        
+        mockTransportSession.performRemoteChanges { session in
+            guard
+                let fromClient = self.user1.clients.anyObject() as? MockUserClient,
+                let toClient = self.selfUser.clients.anyObject() as? MockUserClient,
+                let data = try? textMessage.serializedData() else {
+                    return XCTFail()
+            }
+            // insert message on backend
+            self.selfToUser1Conversation.encryptAndInsertData(from: fromClient, to: toClient, data: data)
+            
+            // register new client
+            session.registerClient(for: self.user1)
+        }
+        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+        
+        application?.setBackground()
+        application?.simulateApplicationDidEnterBackground()
+        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+        XCTAssertEqual(self.application?.applicationIconBadgeNumber, 0)
+        
+        // WHEN
+        userSession?.receivedPushNotification(with: noticePayloadForLastEvent(), completion: {})
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
+        
+        // THEN
+        XCTAssertEqual(self.application?.applicationIconBadgeNumber, 1)
+    }
+    
+    func testThatItSendsAConfirmationMessage_WhenReceivingATextMessage() {
+        // GIVEN
+        XCTAssertTrue(login())
+        
+        let textMessage = GenericMessage(content: Text(content: "Hello"), nonce: .create())
+        
+        closePushChannelAndWaitUntilClosed() // do not use websocket
+        
         mockTransportSession.performRemoteChanges { session in
             guard
                 let fromClient = self.user1.clients.anyObject() as? MockUserClient,
@@ -67,10 +103,10 @@ class APNSTests_Swift: APNSTestsBase {
             }
             return nil
         }
-    
+        
         // WHEN
         userSession?.receivedPushNotification(with: noticePayloadForLastEvent(), completion: {})
-
+        
         XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
         _ = waitForAllGroupsToBeEmpty(withTimeout: 0.2)
     }

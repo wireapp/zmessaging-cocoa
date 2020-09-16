@@ -73,11 +73,14 @@ extension ZMSyncStrategy: UpdateEventProcessor {
     
     public func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
         if ignoreBuffer || isReadyToProcessEvents {
-            eventDecoder.decryptAndStoreEvents(updateEvents) { (decryptedEvents) in
+            eventDecoder.decryptAndStoreEvents(updateEvents) { [weak self] (decryptedEvents) in
+                guard let `self` = self else { return }
+                
                 Logging.eventProcessing.info("Consuming events while in background")
                 for eventConsumer in self.eventConsumers {
                     eventConsumer.processEventsWhileInBackground?(decryptedEvents)
                 }
+                self.syncMOC.saveOrRollback()
             }
         } else {
             Logging.eventProcessing.info("Buffering \(updateEvents.count) event(s)")
