@@ -110,11 +110,6 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         
         // then
         XCTAssertTrue(sut.isDatabaseLocked)
-
-        // cleanup
-        let context = LAContext()
-        try sut.unlockDatabase(with: context)
-        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
 
     // MARK: - Database lock handler/observer
@@ -140,10 +135,6 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         
         // cleanup
         token = nil
-
-        let context = LAContext()
-        try sut.unlockDatabase(with: context)
-        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
     func testThatDatabaseLockedHandlerIsCalled_AfterUnlockingDatabase() throws {
