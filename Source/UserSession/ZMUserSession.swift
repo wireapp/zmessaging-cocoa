@@ -56,6 +56,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var messageReplyObserver: ManagedObjectContextChangeObserver?
     var likeMesssageObserver: ManagedObjectContextChangeObserver?
     var urlActionProcessors: [URLActionProcessor]?
+    let debugCommands: [String: DebugCommand]
     
     public var hasCompletedInitialSync: Bool = false
     
@@ -195,7 +196,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.storedDidSaveNotifications = ContextDidSaveNotificationPersistence(accountContainer: storeProvider.accountContainer)
         self.userExpirationObserver = UserExpirationObserver(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
-        
+        self.debugCommands = ZMUserSession.initDebugCommands()
         super.init()
         
         ZMUserAgent.setWireAppVersion(appVersion)
@@ -221,7 +222,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         startEphemeralTimers()
         notifyUserAboutChangesInAvailabilityBehaviourIfNeeded()
         RequestAvailableNotification.notifyNewRequestsAvailable(self)
-        
+        restoreDebugCommandsState()
     }
     
     private func configureTransportSession() {
