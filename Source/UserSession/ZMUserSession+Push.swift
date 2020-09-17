@@ -28,7 +28,7 @@ let PushChannelDataKey = "data"
 
 extension Dictionary {
     
-    internal func accountId() -> UUID? {
+    public func accountId() -> UUID? {
         guard let userInfoData = self[PushChannelDataKey as! Key] as? [String: Any] else {
             Logging.push.safePublic("No data dictionary in notification userInfo payload");
             return nil
