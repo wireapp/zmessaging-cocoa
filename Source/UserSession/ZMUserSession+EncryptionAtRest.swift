@@ -20,38 +20,41 @@ import Foundation
 import LocalAuthentication
 import WireDataModel
 
+public typealias ResultHandler<T> = (Result<T>) -> Void
+
 extension ZMUserSession {
-    
-    public var encryptMessagesAtRest: Bool {
-        
-        set {
-            guard newValue != encryptMessagesAtRest else { return }
 
-            let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
+    // TODO: [John] document
 
-            syncManagedObjectContext.perform {
-                do {
-                    if newValue {
-                        try self.deleteKeys(for: account)
-                        try self.createKeys(for: account)
-                        try self.syncManagedObjectContext.enableEncryptionAtRest()
-                    } else {
-                        try self.syncManagedObjectContext.disableEncryptionAtRest()
-                        try self.deleteKeys(for: account)
-                    }
+    public func setEncryptionAtRest(enabled: Bool, completion: ResultHandler<Void>? = nil) {
+        guard enabled != encryptMessagesAtRest else { return }
 
-                    self.syncManagedObjectContext.saveOrRollback()
+        let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
 
-                } catch {
-                    self.syncManagedObjectContext.reset()
-                    Logging.EAR.error("Failed to enabling/disabling database encryption. Reason: \(error.localizedDescription)")
+        syncManagedObjectContext.performGroupedBlock {
+            do {
+                if enabled {
+                    try self.deleteKeys(for: account)
+                    try self.createKeys(for: account)
+                    try self.syncManagedObjectContext.enableEncryptionAtRest()
+                } else {
+                    try self.syncManagedObjectContext.disableEncryptionAtRest()
+                    try self.deleteKeys(for: account)
                 }
+
+                self.syncManagedObjectContext.saveOrRollback()
+                completion?(.success(()))
+
+            } catch {
+                self.syncManagedObjectContext.reset()
+                Logging.EAR.error("Failed to enabling/disabling database encryption. Reason: \(error.localizedDescription)")
+                completion?(.failure(error))
             }
         }
-        
-        get {
-            return managedObjectContext.encryptMessagesAtRest
-        }
+    }
+    
+    public var encryptMessagesAtRest: Bool {
+        return managedObjectContext.encryptMessagesAtRest
     }
 
     private func deleteKeys(for account: Account) throws {

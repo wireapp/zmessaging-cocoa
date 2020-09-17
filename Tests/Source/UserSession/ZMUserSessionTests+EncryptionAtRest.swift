@@ -21,11 +21,25 @@ import LocalAuthentication
 @testable import WireSyncEngine
 
 class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
-    
+
+    private var account: Account {
+        Account(userName: "", userIdentifier: ZMUser.selfUser(in: syncMOC).remoteIdentifier)
+    }
+
     override func tearDown() {
-        sut.encryptMessagesAtRest = false
-        
+        try! EncryptionKeys.deleteKeys(for: account)
+
         super.tearDown()
+    }
+
+    private func setEncryptionAtRest(enabled: Bool, file: StaticString = #file, line: UInt = #line) {
+        sut.setEncryptionAtRest(enabled: enabled) { result in
+            if case let .failure(error) = result {
+                XCTFail("Failed to update EAR. Reason: \(error.localizedDescription)", file: file, line: line)
+            }
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5), file: file, line: line)
     }
     
     // MARK: - Database locking/unlocking
@@ -36,7 +50,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         syncMOC.saveOrRollback()
         
         // when
-        sut.encryptMessagesAtRest = false
+        setEncryptionAtRest(enabled: false)
         
         // then
         XCTAssertFalse(sut.isDatabaseLocked)
@@ -48,7 +62,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         syncMOC.saveOrRollback()
         
         // when
-        sut.encryptMessagesAtRest = true
+        setEncryptionAtRest(enabled: true)
         
         // then
         XCTAssertFalse(sut.isDatabaseLocked)
@@ -58,10 +72,10 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         // given
         simulateLoggedInUser()
         syncMOC.saveOrRollback()
-        sut.encryptMessagesAtRest = true
+        setEncryptionAtRest(enabled: true)
         
         // when
-        sut.encryptMessagesAtRest = false
+        setEncryptionAtRest(enabled: false)
         
         // then
         XCTAssertFalse(sut.isDatabaseLocked)
@@ -71,7 +85,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         // given
         simulateLoggedInUser()
         syncMOC.saveOrRollback()
-        sut.encryptMessagesAtRest = true
+        setEncryptionAtRest(enabled: true)
         sut.applicationDidEnterBackground(nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -84,11 +98,11 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         XCTAssertFalse(sut.isDatabaseLocked)
     }
     
-    func testThatDatabaseIsLocked_AfterEnteringBackground() {
+    func testThatDatabaseIsLocked_AfterEnteringBackground() throws {
         // given
         simulateLoggedInUser()
         syncMOC.saveOrRollback()
-        sut.encryptMessagesAtRest = true
+        setEncryptionAtRest(enabled: true)
         
         // when
         sut.applicationDidEnterBackground(nil)
@@ -96,15 +110,20 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         
         // then
         XCTAssertTrue(sut.isDatabaseLocked)
+
+        // cleanup
+        let context = LAContext()
+        try sut.unlockDatabase(with: context)
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
 
     // MARK: - Database lock handler/observer
     
-    func testThatDatabaseLockedHandlerIsCalled_AfterDatabaseIsLocked() {
+    func testThatDatabaseLockedHandlerIsCalled_AfterDatabaseIsLocked() throws {
         // given
         simulateLoggedInUser()
         syncMOC.saveOrRollback()
-        sut.encryptMessagesAtRest = true
+        setEncryptionAtRest(enabled: true)
         
         // expect
         let databaseIsLocked = expectation(description: "database is locked")
@@ -121,13 +140,17 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         
         // cleanup
         token = nil
+
+        let context = LAContext()
+        try sut.unlockDatabase(with: context)
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
     
     func testThatDatabaseLockedHandlerIsCalled_AfterUnlockingDatabase() throws {
         // given
         simulateLoggedInUser()
         syncMOC.saveOrRollback()
-        sut.encryptMessagesAtRest = true
+        setEncryptionAtRest(enabled: true)
         sut.applicationDidEnterBackground(nil)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -156,11 +179,10 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         simulateLoggedInUser()
         syncMOC.saveOrRollback()
 
-        let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: syncMOC).remoteIdentifier)
         let oldKeys = try EncryptionKeys.createKeys(for: account)
 
         // when
-        sut.encryptMessagesAtRest = true
+        setEncryptionAtRest(enabled: true)
 
         // then
         let newKeys = syncMOC.encryptionKeys
