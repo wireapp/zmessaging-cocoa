@@ -24,7 +24,15 @@ public typealias ResultHandler<T> = (Result<T>) -> Void
 
 extension ZMUserSession {
 
-    // TODO: [John] document
+    /// Enable or disable encryption at rest.
+    ///
+    /// When toggling encryption at rest the existing database needs to be migrated. The migration happens
+    /// asynchronously on the sync context and only after a successful migration is the feature toggled. In
+    /// the case that the migration fails, the sync context is reset to a clean state.
+    ///
+    /// - Parameters:
+    ///     - enabled: When `true`, messages will be encrypted at rest.
+    ///     - completion: Invoked when the update succeeds or fails.
 
     public func setEncryptionAtRest(enabled: Bool, completion: ResultHandler<Void>? = nil) {
         guard enabled != encryptMessagesAtRest else { return }
