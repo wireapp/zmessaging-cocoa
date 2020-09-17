@@ -720,7 +720,7 @@ extension ZMLocalNotificationTests_Message {
 
     func testThatItGeneratesCorrectCategoryIfEncryptionAtRestIsEnabledForTeamUser() {
         // GIVEN
-        uiMOC.encryptMessagesAtRest = true
+        uiMOC.setEncryptionAtRestWithoutMigration(enabled: true)
 
         // WHEN
         let note = textNotification(oneOnOneConversation, sender: sender, text: "Hello", isEphemeral: false)!
@@ -731,7 +731,7 @@ extension ZMLocalNotificationTests_Message {
 
     func testThatItGeneratesCorrectCategoryIfEncryptionAtRestIsEnabledForNormalUser() {
         // GIVEN
-        uiMOC.encryptMessagesAtRest = true
+        uiMOC.setEncryptionAtRestWithoutMigration(enabled: true)
 
         let team = Team.insertNewObject(in: uiMOC)
         team.name = "Wire Amazing Team"
