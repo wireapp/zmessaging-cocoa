@@ -206,9 +206,7 @@
     ConversationChangeInfo *messageChange = [observer.notifications firstObjectMatchingWithBlock:^BOOL(ConversationChangeInfo *change) {
         return change.messagesChanged;
     }];
-    
-    XCTAssertEqual(observer.notifications.count, 2u);
-    
+        
     XCTAssertNotNil(messageChange);
     XCTAssertTrue(messageChange.messagesChanged);
     XCTAssertFalse(messageChange.participantsChanged);
