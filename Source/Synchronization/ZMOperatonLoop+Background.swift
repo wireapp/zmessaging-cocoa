@@ -34,21 +34,19 @@ fileprivate enum PushNotificationType: String {
 public extension ZMOperationLoop {
 
     @objc(fetchEventsFromPushChannelPayload:completionHandler:)
-    func fetchEvents(fromPushChannelPayload payload: [AnyHashable : Any], completionHandler: @escaping () -> Void) {        
-        syncMOC.performGroupedBlock {
-            guard let nonce = self.messageNonce(fromPushChannelData: payload) else {
-                return completionHandler()
-            }
-            
-            self.pushNotificationStatus.fetch(eventId: nonce, completionHandler: {
-                 self.callEventStatus.waitForCallEventProcessingToComplete { [weak self] in
-                    guard let strongSelf = self else { return }
-                    strongSelf.syncMOC.performGroupedBlock {
-                        completionHandler()
-                    }
-                }
-            })
+    func fetchEvents(fromPushChannelPayload payload: [AnyHashable : Any], completionHandler: @escaping () -> Void) {
+        guard let nonce = messageNonce(fromPushChannelData: payload) else {
+            return completionHandler()
         }
+        
+        pushNotificationStatus.fetch(eventId: nonce, completionHandler: {
+            self.callEventStatus.waitForCallEventProcessingToComplete { [weak self] in
+                guard let strongSelf = self else { return }
+                strongSelf.syncMOC.performGroupedBlock {
+                    completionHandler()
+                }
+            }
+        })
     }
     
     func messageNonce(fromPushChannelData payload: [AnyHashable : Any]) -> UUID? {

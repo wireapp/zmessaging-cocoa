@@ -320,9 +320,9 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
         _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
         
         // THEN
-        XCTAssertEqual(observer?.notifications.count, 1)
+        let changes: [ConversationChangeInfo]? = observer?.notifications.compactMap({ $0 as? ConversationChangeInfo})
+        let note = changes?.first(where: { $0.messagesChanged == true})
         
-        let note = observer?.notifications.firstObject as? ConversationChangeInfo
         XCTAssertNotNil(note)
         XCTAssertTrue(note?.messagesChanged ?? false)
         XCTAssertTrue(note?.lastModifiedDateChanged ?? false)
@@ -343,9 +343,9 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
         remotelyInsertOTRImage(into: groupConversation, imageFormat: format)
         
         // THEN
-        XCTAssertEqual(observer?.notifications.count, 1)
-        
-        let note = observer?.notifications.firstObject as? ConversationChangeInfo
+        let changes: [ConversationChangeInfo]? = observer?.notifications.compactMap({ $0 as? ConversationChangeInfo})
+        let note = changes?.first(where: { $0.messagesChanged == true})
+
         XCTAssertTrue(note?.messagesChanged ?? false)
         XCTAssertTrue(note?.lastModifiedDateChanged ?? false)
     }

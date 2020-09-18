@@ -68,7 +68,7 @@ class ConversationTests_List: ConversationTestsBase {
             XCTAssertEqual(note.deletedIndexes.count, 0)
             moves.append(contentsOf: note.zm_movedIndexPairs)
         }
-        XCTAssertEqual(updatesCount, 1)
+        XCTAssertEqual(updatesCount, 2) // Two updates because unread count is updated separately
         XCTAssertEqual(moves.count, 1)
         XCTAssertEqual(moves.first?.to, 0)
     }
@@ -193,7 +193,7 @@ class ConversationTests_List: ConversationTestsBase {
 
         // then
         XCTAssertEqual(oneToOneConversation, conversationList[0] as? ZMConversation) // make sure conversation is not on top
-        let note = conversationListChangeObserver?.notifications.firstObject as! ConversationListChangeInfo
+        let note = conversationListChangeObserver?.notifications.lastObject as! ConversationListChangeInfo
         XCTAssertNotNil(note)
 
         var moves: [Int:Int] = [:]
