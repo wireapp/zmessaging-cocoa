@@ -127,7 +127,7 @@ class SendAndReceiveMessagesTests_Swift: ConversationTestsBase {
         }
     }
     
-    func testThatItSendsANotificationWhenRecievingATextMessageThroughThePushChannel() {
+    func testThatItSendsANotificationWhenReceivingATextMessageThroughThePushChannel() {
         let expectedText = "The sky above the port was the color of "
         let nonce = UUID.create()
     
