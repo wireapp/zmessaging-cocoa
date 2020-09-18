@@ -32,12 +32,15 @@ extension ZMUserSession {
     ///
     /// - Parameters:
     ///     - enabled: When `true`, messages will be encrypted at rest.
-    ///     - completion: Invoked when the update succeeds or fails.
+    ///     - completion: Invoked on the main thread when the update succeeds or fails.
 
     public func setEncryptionAtRest(enabled: Bool, completion: ResultHandler<Void>? = nil) {
         guard enabled != encryptMessagesAtRest else { return }
 
         let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
+
+        // Avoid unneccessary and expensive change tracking triggered when saving the sync context.
+        self.notificationDispatcher.isDisabled = true
 
         syncManagedObjectContext.performGroupedBlock {
             do {
@@ -51,12 +54,23 @@ extension ZMUserSession {
                 }
 
                 self.syncManagedObjectContext.saveOrRollback()
-                completion?(.success(()))
+
+                DispatchQueue.main.async {
+                    self.notificationDispatcher.isDisabled = false
+                    completion?(.success(()))
+                }
 
             } catch {
+                Logging.EAR.error(
+                    "Failed to enabling/disabling database encryption. Reason: \(error.localizedDescription)"
+                )
+
                 self.syncManagedObjectContext.reset()
-                Logging.EAR.error("Failed to enabling/disabling database encryption. Reason: \(error.localizedDescription)")
-                completion?(.failure(error))
+
+                DispatchQueue.main.async {
+                    self.notificationDispatcher.isDisabled = false
+                    completion?(.failure(error))
+                }
             }
         }
     }
