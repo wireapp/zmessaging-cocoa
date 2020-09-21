@@ -19,6 +19,10 @@
 import Foundation
 import WireUtilities
 
+extension NSNotification.Name {
+    static let calculateBadgeCount = NSNotification.Name(rawValue: "calculateBadgeCountNotication")
+}
+
 @objc
 public protocol UpdateEventProcessor: class {
             
@@ -81,6 +85,7 @@ extension ZMSyncStrategy: UpdateEventProcessor {
                     eventConsumer.processEventsWhileInBackground?(decryptedEvents)
                 }
                 self.syncMOC.saveOrRollback()
+                NotificationInContext(name: .calculateBadgeCount, context: self.syncMOC.notificationContext).post()
             }
         } else {
             Logging.eventProcessing.info("Buffering \(updateEvents.count) event(s)")

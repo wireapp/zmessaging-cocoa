@@ -1116,7 +1116,9 @@ extension SessionManager: ZMConversationListObserver {
         DispatchQueue.main.async {
             let account = self.accountManager.account(with: accountID)
             account?.unreadConversationCount = unreadCount
-            self.application.applicationIconBadgeNumber = self.accountManager.totalUnreadCount
+            let totalUnreadCount = self.accountManager.totalUnreadCount
+            self.application.applicationIconBadgeNumber = totalUnreadCount
+            Logging.push.safePublic("Updated badge count to \(SanitizedString(stringLiteral: String(totalUnreadCount)))")
         }
     }
 }
