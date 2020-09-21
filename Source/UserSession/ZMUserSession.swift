@@ -309,8 +309,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     
     private func registerForCalculateBadgeCountNotification() {
         tokens.append(NotificationInContext.addObserver(name: .calculateBadgeCount, context: managedObjectContext.notificationContext) { [weak self] (_) in
-            guard let `self` = self else { return }
-            self.calculateBadgeCount()
+            self?.calculateBadgeCount()
         })
     }
     
