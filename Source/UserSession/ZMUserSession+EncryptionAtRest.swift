@@ -20,7 +20,15 @@ import Foundation
 import LocalAuthentication
 import WireDataModel
 
-extension ZMUserSession {
+public protocol UserSessionEncryptionAtRestInterface {
+    var encryptMessagesAtRest: Bool { get set }
+    var isDatabaseLocked: Bool { get }
+    
+    func unlockDatabase(with context: LAContext) throws
+    func registerDatabaseLockedHandler(_ handler: @escaping (_ isDatabaseLocked: Bool) -> Void) -> Any
+}
+
+extension ZMUserSession: UserSessionEncryptionAtRestInterface {
     
     public var encryptMessagesAtRest: Bool {
         
