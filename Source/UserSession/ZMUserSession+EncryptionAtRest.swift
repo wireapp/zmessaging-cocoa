@@ -26,7 +26,8 @@ extension ZMUserSession {
         
         set {
             do {
-                let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
+                
+                let account = Account(userName: "", userIdentifier: storeProvider.userIdentifier)
 
                 try EncryptionKeys.deleteKeys(for: account)
                 storeProvider.contextDirectory.clearEncryptionKeysInAllContexts()
@@ -76,7 +77,7 @@ extension ZMUserSession {
     }
     
     public func unlockDatabase(with context: LAContext) throws {
-        let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
+        let account = Account(userName: "", userIdentifier: storeProvider.userIdentifier)
         let keys = try EncryptionKeys.init(account: account, context: context)
 
         storeProvider.contextDirectory.storeEncryptionKeysInAllContexts(encryptionKeys: keys)
