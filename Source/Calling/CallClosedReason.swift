@@ -19,9 +19,6 @@
 import Foundation
 import avs
 
-/// Workaround, remove once avs is updated to latest version and `WCALL_REASON_OUTDATED_CLIENT` is available
-private let WCALL_REASON_OUTDATED_CLIENT: Int32 = 11
-
 /**
  * Reasons why a call can be terminated.
  */
