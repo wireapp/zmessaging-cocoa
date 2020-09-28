@@ -155,8 +155,8 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         // given
         simulateLoggedInUser()
         syncMOC.saveOrRollback()
-
-        let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: syncMOC).remoteIdentifier)
+        
+        let account = Account(userName: "", userIdentifier: storeProvider.userIdentifier)
         let oldKeys = try EncryptionKeys.createKeys(for: account)
 
         // when

@@ -45,6 +45,8 @@ public enum CallClosedReason : Int32 {
     case stillOngoing
     /// Call was dropped due to the security level degrading
     case securityDegraded
+    /// Call was closed because the client version is blacklisted for that call
+    case outdatedClient
     /// Call was closed for an unknown reason. This is most likely a bug.
     case unknown
 
@@ -76,6 +78,8 @@ public enum CallClosedReason : Int32 {
             self = .inputOutputError
         case WCALL_REASON_STILL_ONGOING:
             self = .stillOngoing
+        case WCALL_REASON_OUTDATED_CLIENT:
+            self = .outdatedClient
         default:
             self = .unknown
         }
@@ -104,6 +108,8 @@ public enum CallClosedReason : Int32 {
             return WCALL_REASON_STILL_ONGOING
         case .securityDegraded:
             return WCALL_REASON_ERROR
+        case .outdatedClient:
+            return WCALL_REASON_OUTDATED_CLIENT
         case .unknown:
             return WCALL_REASON_ERROR
         }

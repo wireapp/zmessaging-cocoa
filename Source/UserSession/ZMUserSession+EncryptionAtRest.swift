@@ -20,13 +20,22 @@ import Foundation
 import LocalAuthentication
 import WireDataModel
 
-extension ZMUserSession {
+public protocol UserSessionEncryptionAtRestInterface {
+    var encryptMessagesAtRest: Bool { get set }
+    var isDatabaseLocked: Bool { get }
+    
+    func unlockDatabase(with context: LAContext) throws
+    func registerDatabaseLockedHandler(_ handler: @escaping (_ isDatabaseLocked: Bool) -> Void) -> Any
+}
+
+extension ZMUserSession: UserSessionEncryptionAtRestInterface {
     
     public var encryptMessagesAtRest: Bool {
         
         set {
             do {
-                let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
+                
+                let account = Account(userName: "", userIdentifier: storeProvider.userIdentifier)
 
                 try EncryptionKeys.deleteKeys(for: account)
                 storeProvider.contextDirectory.clearEncryptionKeysInAllContexts()
@@ -76,7 +85,7 @@ extension ZMUserSession {
     }
     
     public func unlockDatabase(with context: LAContext) throws {
-        let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
+        let account = Account(userName: "", userIdentifier: storeProvider.userIdentifier)
         let keys = try EncryptionKeys.init(account: account, context: context)
 
         storeProvider.contextDirectory.storeEncryptionKeysInAllContexts(encryptionKeys: keys)
