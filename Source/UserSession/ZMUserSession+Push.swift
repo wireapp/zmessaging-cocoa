@@ -101,10 +101,6 @@ extension ZMUserSession {
         NotificationCenter.default.addObserver(self, selector: #selector(ZMUserSession.registerCurrentPushToken), name: ZMUserSession.registerCurrentPushTokenNotificationName, object: nil)
     }
     
-    public func registerForUpdateBadgeCountNotification() {
-        
-    }
-
     func setPushKitToken(_ data: Data) {
         let metadata = PushTokenMetadata.current
 
