@@ -459,6 +459,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
     
     public func didStartQuickSync() {
         managedObjectContext.performGroupedBlock { [weak self] in
+            self?.notificationDispatcher.isDisabled = true
             self?.isPerformingSync = true
             self?.updateNetworkState()
         }
@@ -470,7 +471,9 @@ extension ZMUserSession: ZMSyncStateDelegate {
         syncStrategy.processAllEventsInBuffer()
         let hasMoreEventsToProcess = syncStrategy.processEventsAfterFinishingQuickSync()
         
+
         managedObjectContext.performGroupedBlock { [weak self] in
+            self?.notificationDispatcher.isDisabled = hasMoreEventsToProcess
             self?.isPerformingSync = hasMoreEventsToProcess
             self?.updateNetworkState()
             self?.notifyThirdPartyServices()
