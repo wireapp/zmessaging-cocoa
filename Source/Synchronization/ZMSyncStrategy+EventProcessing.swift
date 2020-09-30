@@ -121,13 +121,11 @@ extension ZMSyncStrategy: UpdateEventProcessor {
         }
     }
     
-    ///Fetch all conversation from the decryptedUpdateEvents array thatare marked as needsToCalculateUnreadMessages and calculate unread messages for them
+    ///Fetch all conversation that are marked as needsToCalculateUnreadMessages and calculate unread messages for them
     private func calculateUnreadMessagesForConversationsFrom(_ decryptedUpdateEvents: [ZMUpdateEvent]) {
-        let conversationIds = Set(decryptedUpdateEvents.compactMap(\.conversationUUID))
-        let conversations: [ZMConversation] = conversationIds.lazy
-            .compactMap { ZMConversation.fetch(withRemoteIdentifier: $0, in: self.syncMOC) }
-            .filter(\.needsToCalculateUnreadMessages)
-        conversations.forEach { $0.calculateLastUnreadMessages() }
+        let fetchRequest = ZMConversation.sortedFetchRequest(with: ZMConversation.predicateForConversationsNeedingToBeCalculatedUnreadMessages)
+        let conversations = syncMOC.executeFetchRequestOrAssert(fetchRequest) as? [ZMConversation]
+        conversations?.forEach { $0.calculateLastUnreadMessages() }
     }
 
     @objc(prefetchRequestForUpdateEvents:)
@@ -156,3 +154,8 @@ extension ZMSyncStrategy: UpdateEventProcessor {
 
 }
 
+private extension ZMConversation {
+    static var predicateForConversationsNeedingToBeCalculatedUnreadMessages: NSPredicate {
+        return NSPredicate(format: "%K == YES", ZMConversationNeedsToCalculateUnreadMessagesKey)
+    }
+}
