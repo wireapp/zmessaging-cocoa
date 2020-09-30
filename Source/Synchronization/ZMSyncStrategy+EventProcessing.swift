@@ -126,7 +126,7 @@ extension ZMSyncStrategy: UpdateEventProcessor {
         let conversationIds = Set(decryptedUpdateEvents.compactMap(\.conversationUUID))
         let conversations: [ZMConversation] = conversationIds.lazy
             .compactMap { ZMConversation.fetch(withRemoteIdentifier: $0, in: self.syncMOC) }
-            .filter { $0.needsToCalculateUnreadMessages == true }
+            .filter(\.needsToCalculateUnreadMessages)
         conversations.forEach { $0.calculateLastUnreadMessages() }
     }
 
