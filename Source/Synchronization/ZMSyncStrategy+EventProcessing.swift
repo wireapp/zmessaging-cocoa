@@ -123,11 +123,11 @@ extension ZMSyncStrategy: UpdateEventProcessor {
     
     ///Fetch all conversation from the decryptedUpdateEvents array thatare marked as needsToCalculateUnreadMessages and calculate unread messages for them
     private func calculateUnreadMessagesForConversationsFrom(_ decryptedUpdateEvents: [ZMUpdateEvent]) {
-        let conversationUUIDs = decryptedUpdateEvents.compactMap { $0.conversationUUID }
-        let conversations: [ZMConversation?] = conversationUUIDs
-            .map { ZMConversation.fetch(withRemoteIdentifier: $0, in: syncMOC) }
-            .filter { $0?.needsToCalculateUnreadMessages == true }
-        conversations.forEach { $0?.calculateLastUnreadMessages() }
+        let conversationIds = Set(decryptedUpdateEvents.compactMap(\.conversationUUID))
+        let conversations: [ZMConversation] = conversationIds.lazy
+            .compactMap { ZMConversation.fetch(withRemoteIdentifier: $0, in: self.syncMOC) }
+            .filter { $0.needsToCalculateUnreadMessages == true }
+        conversations.forEach { $0.calculateLastUnreadMessages() }
     }
 
     @objc(prefetchRequestForUpdateEvents:)
