@@ -121,7 +121,7 @@ extension ZMSyncStrategy: UpdateEventProcessor {
         }
     }
     
-    ///
+    ///Fetch all conversation from the decryptedUpdateEvents array thatare marked as needsToCalculateUnreadMessages and calculate unread messages for them
     private func calculateUnreadMessagesForConversationsFrom(_ decryptedUpdateEvents: [ZMUpdateEvent]) {
         let conversationUUIDs = decryptedUpdateEvents.compactMap { $0.conversationUUID }
         let conversations: [ZMConversation?] = conversationUUIDs
