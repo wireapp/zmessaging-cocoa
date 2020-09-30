@@ -20,7 +20,6 @@
 
 @interface APNSTestsBase: IntegrationTest
 
-- (void)closePushChannelAndWaitUntilClosed;
 - (NSDictionary *)noticePayloadForLastEvent;
 - (NSDictionary *)noticePayloadWithIdentifier:(NSUUID *)uuid;
 

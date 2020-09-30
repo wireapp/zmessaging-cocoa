@@ -66,6 +66,9 @@
                   Identifier = "AvailabilityTests">
                </Test>
                <Test
+                  Identifier = "EventProcessingPerformanceTests">
+               </Test>
+               <Test
                   Identifier = "SessionManagerTests/testThatSessionManagerSetsUpAPNSEnvironmentOnLaunch()">
                </Test>
             </SkippedTests>

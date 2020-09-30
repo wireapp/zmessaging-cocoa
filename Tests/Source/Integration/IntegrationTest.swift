@@ -580,6 +580,25 @@ extension IntegrationTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
     
+    func closePushChannelAndWaitUntilClosed() {
+        mockTransportSession.performRemoteChanges { session in
+            self.mockTransportSession.pushChannel.keepOpen = false
+            session.simulatePushChannelClosed()
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+    
+    func simulateApplicationWillEnterForeground() {
+        application?.simulateApplicationWillEnterForeground()
+    }
+    
+    func simulateApplicationDidEnterBackground() {
+        closePushChannelAndWaitUntilClosed() // do not use websocket
+        application?.setBackground()
+        application?.simulateApplicationDidEnterBackground()
+        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+    }
+    
 }
 
 extension IntegrationTest {
