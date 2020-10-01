@@ -28,14 +28,34 @@ class CallParticipantsSnapshot {
 
     private(set) var members: OrderedSetState<AVSCallMember> {
         didSet {
-            updateParticipantTrust()
+            guard let moc = callCenter.uiMOC else { return }
+
+            participants = members
+                .map { CallParticipant(member: $0, context: moc) }
+                .compactMap(\.self)
         }
     }
 
-    private var allParticipantsAreTrusted = false {
+    private var participants = [CallParticipant]() {
         didSet {
-            guard oldValue && !allParticipantsAreTrusted else { return }
-            callCenter.closeCall(conversationId: conversationId, reason: .securityDegraded)
+            updateUserTrustMap()
+            notifyChange()
+        }
+    }
+
+    private var userTrustMap = [ZMUser: Bool]()
+
+    private func updateUserTrustMap() {
+        for user in participants.map(\.user) {
+            let userWasTrusted = userTrustMap[user] ?? false
+            let userIsTrusted = user.isTrusted
+
+            userTrustMap[user] = userIsTrusted
+
+            if userWasTrusted && !userIsTrusted {
+                callCenter.callDidDegrade(conversationId: conversationId, degradedUser: user)
+                break
+            }
         }
     }
 
@@ -60,7 +80,6 @@ class CallParticipantsSnapshot {
 
     func callParticipantsChanged(participants: [AVSCallMember]) {
         members = type(of:self).removeDuplicateMembers(participants)
-        notifyChange()
     }
 
     func callParticipantNetworkQualityChanged(client: AVSClient, networkQuality: NetworkQuality) {
@@ -77,22 +96,6 @@ class CallParticipantsSnapshot {
         }))
     }
 
-    private func updateParticipantTrust() {
-        guard
-            let moc = callCenter.uiMOC,
-            let selfClient = ZMUser.selfUser(in: moc).selfClient()
-            else {
-                return
-        }
-
-        let trustedClients = selfClient.trustedClients.compactMap(\.remoteIdentifier)
-
-        allParticipantsAreTrusted = members.array.lazy
-            .map(\.client.clientId)
-            .filter({ $0 != selfClient.remoteIdentifier })
-            .allSatisfy(trustedClients.contains)
-    }
-
     // MARK: - Helpers
 
     /// Returns the member matching the given userId and clientId.
@@ -105,10 +108,6 @@ class CallParticipantsSnapshot {
 
     private func notifyChange() {
         guard let context = callCenter.uiMOC else { return }
-        
-        let participants = members
-            .map { CallParticipant(member: $0, context: context) }
-            .compactMap(\.self)
 
         WireCallCenterCallParticipantNotification(conversationId: conversationId, participants: participants)
             .post(in: context.notificationContext)

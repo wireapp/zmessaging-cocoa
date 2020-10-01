@@ -122,7 +122,19 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
 
         return callCenter.isConferenceCall(conversationId: remoteIdentifier)
     }
-    
+
+    public var firstDegradedUser: ZMUser? {
+        if let conversationId = conversation?.remoteIdentifier,
+            let degradedUser = callCenter?.degradedUser(conversationId: conversationId)
+        {
+            return degradedUser
+        }
+
+        return conversation?.localParticipants.first(where: {
+            !$0.isTrusted
+        })
+    }
+
 }
 
 extension VoiceChannelV3 : CallActions {
