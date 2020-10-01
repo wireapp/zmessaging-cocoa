@@ -326,6 +326,18 @@ extension WireCallCenterV3 {
     }
 }
 
+extension WireCallCenterV3 {
+
+    func callDidDegrade(conversationId: UUID, degradedUser: ZMUser) {
+        closeCall(conversationId: conversationId, reason: .securityDegraded)
+
+        if let previousSnapshot = callSnapshots[conversationId] {
+            callSnapshots[conversationId] = previousSnapshot.updateDegradedUser(degradedUser)
+        }
+    }
+    
+}
+
 private extension Set where Element == ZMUser {
 
     var avsClients: Set<AVSClient> {
