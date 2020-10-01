@@ -25,7 +25,19 @@ class CallParticipantsSnapshot {
 
     private unowned var callCenter: WireCallCenterV3
     private let conversationId: UUID
-    private(set) var members: OrderedSetState<AVSCallMember>
+
+    private(set) var members: OrderedSetState<AVSCallMember> {
+        didSet {
+            updateParticipantTrust()
+        }
+    }
+
+    private var allParticipantsAreTrusted = false {
+        didSet {
+            guard oldValue && !allParticipantsAreTrusted else { return }
+            callCenter.closeCall(conversationId: conversationId, reason: .securityDegraded)
+        }
+    }
 
     /// Worst network quality of all the participants.
 
@@ -63,6 +75,21 @@ class CallParticipantsSnapshot {
         members = OrderedSetState(array: members.array.map({ member in
             member == localMember ? updatedMember : member
         }))
+    }
+
+    private func updateParticipantTrust() {
+        guard
+            let moc = callCenter.uiMOC,
+            let selfClient = ZMUser.selfUser(in: moc).selfClient()
+            else {
+                return
+        }
+
+        let trustedClients = selfClient.trustedClients.compactMap(\.remoteIdentifier)
+
+        allParticipantsAreTrusted = members.array.lazy
+            .map(\.client.clientId)
+            .allSatisfy(trustedClients.contains)
     }
 
     // MARK: - Helpers
