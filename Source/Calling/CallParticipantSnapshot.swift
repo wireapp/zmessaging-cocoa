@@ -89,6 +89,7 @@ class CallParticipantsSnapshot {
 
         allParticipantsAreTrusted = members.array.lazy
             .map(\.client.clientId)
+            .filter({ $0 != selfClient.remoteIdentifier })
             .allSatisfy(trustedClients.contains)
     }
 
