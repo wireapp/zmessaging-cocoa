@@ -180,12 +180,10 @@ extension VoiceChannelV3 : CallActionsInternal {
         var joined = false
         
         switch state {
-        case .incoming(video: _, shouldRing: _, degraded: let degraded):
-            if !degraded {
-                joined = callCenter?.answerCall(conversation: conversation, video: video) ?? false
-            }
+        case .incoming(video: _, shouldRing: _, degraded: _):
+            joined = callCenter?.answerCall(conversation: conversation, video: video) ?? false
         default:
-            joined = self.callCenter?.startCall(conversation: conversation, video: video) ?? false
+            joined = callCenter?.startCall(conversation: conversation, video: video) ?? false
         }
         
         return joined
