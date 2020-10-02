@@ -118,7 +118,6 @@ extension MockConversation {
         (1...count).forEach { (_) in
             let knock = try! GenericMessage(content: Knock.with { $0.hotKnock = false }).serializedData()
             insertClientMessage(from: users.randomElement()!, data: knock)
-//            insertKnock(from: users.randomElement()!, nonce: UUID())
         }
     }
         
