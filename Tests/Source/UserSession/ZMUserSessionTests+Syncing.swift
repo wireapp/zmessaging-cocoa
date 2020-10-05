@@ -118,22 +118,6 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
     
     // MARK: Quick Sync
 
-    func testThatObserverSystemIsDisabledDuringQuickSync() {
-        // when
-        sut.didStartQuickSync()
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // then
-        XCTAssertTrue(sut.notificationDispatcher.isDisabled)
-
-        // when
-        sut.didFinishQuickSync()
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // then
-        XCTAssertFalse(sut.notificationDispatcher.isDisabled)
-    }
-
     func testThatPerformingSyncIsFinishedAfterQuickSync() {
         
         // given
