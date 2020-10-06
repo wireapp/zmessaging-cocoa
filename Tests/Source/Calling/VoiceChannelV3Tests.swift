@@ -17,8 +17,6 @@
 //
 
 import Foundation
-
-import Foundation
 @testable import WireSyncEngine
 
 class VoiceChannelV3Tests : MessagingTest {
@@ -72,17 +70,6 @@ class VoiceChannelV3Tests : MessagingTest {
         // then
         XCTAssertTrue(wireCallCenterMock!.didCallAnswerCall)
     }
-    
-    func testThatItDoesntAnswer_whenTheresAnIncomingDegradedCall() {
-        // given
-        wireCallCenterMock?.setMockCallState(.incoming(video: false, shouldRing: false, degraded: true), conversationId: conversation!.remoteIdentifier!, callerId: UUID(), isVideo: false)
-
-        // when
-        _ = sut.join(video: false)
-        
-        // then
-        XCTAssertFalse(wireCallCenterMock!.didCallAnswerCall)
-    }
 
     func testThatItForwardsNetworkQualityFromCallCenter() {
         // given
@@ -100,4 +87,25 @@ class VoiceChannelV3Tests : MessagingTest {
         XCTAssertEqual(sut.networkQuality, quality)
     }
 
+    func testThatItReturnsDegradedUser_IfSavedInCallCenter() {
+        // Given
+        let conversationId = conversation!.remoteIdentifier!
+        let user = ZMUser.insertNewObject(in: uiMOC)
+        user.remoteIdentifier = UUID()
+        
+        wireCallCenterMock?.callSnapshots = [
+            conversationId : CallSnapshotTestFixture.degradedCallSnapshot(
+                conversationId: conversationId,
+                user: user,
+                callCenter: wireCallCenterMock!
+            )
+        ]
+        
+        // When / Then
+        XCTAssert(sut.firstDegradedUser == user)
+    }
+    
+    func testThatItReturnsNil_IfNoDegradedUser() {
+        XCTAssert(sut.firstDegradedUser == nil)
+    }
 }
