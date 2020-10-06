@@ -93,9 +93,6 @@ extension SessionManager {
         }
 
         guard let userId = unauthenticatedSession?.authenticationStatus.authenticatedUserIdentifier else { return completion(.failure(BackupError.notAuthenticated)) }
-
-        // Verify the imported file has the correct file extension.
-        guard location.pathExtension == BackupMetadata.fileExtension else { return completion(.failure(BackupError.invalidFileExtension)) }
         
         SessionManager.workerQueue.async(group: dispatchGroup) { [weak self] in
             guard let `self` = self else { return }
