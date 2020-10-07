@@ -94,6 +94,9 @@ extension SessionManager {
 
         guard let userId = unauthenticatedSession?.authenticationStatus.authenticatedUserIdentifier else { return completion(.failure(BackupError.notAuthenticated)) }
         
+        // Verify the imported file has the correct file extension.
+        guard FileExtensions.allCases.contains(where: { $0.rawValue == location.pathExtension }) else { return completion(.failure(BackupError.invalidFileExtension)) }
+        
         SessionManager.workerQueue.async(group: dispatchGroup) { [weak self] in
             guard let `self` = self else { return }
             let decryptedURL = SessionManager.temporaryURL(for: location)
@@ -167,11 +170,16 @@ extension SessionManager {
 
 // MARK: - Compressed Filename
 
+fileprivate enum FileExtensions: String, CaseIterable {
+    case fileExtensionUnderscore = "ios_wbu"
+    case fileExtensionHyphen = "ios-wbu"
+}
+
 fileprivate extension BackupMetadata {
     
     static let nameAppName = "Wire"
     static let nameFileName = "Backup"
-    static let fileExtension = "ios_wbu"
+    static let fileExtension = FileExtensions.fileExtensionUnderscore.rawValue
 
     private static let formatter: DateFormatter = {
        let formatter = DateFormatter()
