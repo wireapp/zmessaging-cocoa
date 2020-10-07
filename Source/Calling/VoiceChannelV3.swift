@@ -124,15 +124,16 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
     }
 
     public var firstDegradedUser: ZMUser? {
-        if let conversationId = conversation?.remoteIdentifier,
+        guard
+            let conversationId = conversation?.remoteIdentifier,
             let degradedUser = callCenter?.degradedUser(conversationId: conversationId)
-        {
-            return degradedUser
+        else {
+            return conversation?.localParticipants.first(where: {
+                !$0.isTrusted
+            })
         }
 
-        return conversation?.localParticipants.first(where: {
-            !$0.isTrusted
-        })
+        return degradedUser
     }
 
 }
