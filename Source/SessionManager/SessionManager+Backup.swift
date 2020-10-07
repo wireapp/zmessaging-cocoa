@@ -172,15 +172,15 @@ extension SessionManager {
 
 /// There are some external apps that users can use to transfer backup files, which can modify their attachments and change the underscore with a dash. For this reason, we accept 2 types of file extensions to restore conversations.
 fileprivate enum BackupFileExtensions: String, CaseIterable {
-    case fileExtensionUnderscore = "ios_wbu"
-    case fileExtensionHyphen = "ios-wbu"
+    case fileExtensionWithUnderscore = "ios_wbu"
+    case fileExtensionWithHyphen = "ios-wbu"
 }
 
 fileprivate extension BackupMetadata {
     
     static let nameAppName = "Wire"
     static let nameFileName = "Backup"
-    static let fileExtension = BackupFileExtensions.fileExtensionUnderscore.rawValue
+    static let fileExtension = BackupFileExtensions.fileExtensionWithUnderscore.rawValue
 
     private static let formatter: DateFormatter = {
        let formatter = DateFormatter()
