@@ -850,7 +850,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             }
             
             self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
-            // When the the device is jailbroken we would never have a
+            // When the device is jailbroken we would never have a
             // transition to any other state in the UI, so we won't inform it
             // anymore setting the delegate to nil.
             self.delegate = nil
