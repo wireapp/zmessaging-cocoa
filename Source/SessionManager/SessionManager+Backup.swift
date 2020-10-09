@@ -93,9 +93,9 @@ extension SessionManager {
         }
 
         guard let userId = unauthenticatedSession?.authenticationStatus.authenticatedUserIdentifier else { return completion(.failure(BackupError.notAuthenticated)) }
-
+        
         // Verify the imported file has the correct file extension.
-        guard location.pathExtension == BackupMetadata.fileExtension else { return completion(.failure(BackupError.invalidFileExtension)) }
+        guard BackupFileExtensions.allCases.contains(where: { $0.rawValue == location.pathExtension }) else { return completion(.failure(BackupError.invalidFileExtension)) }
         
         SessionManager.workerQueue.async(group: dispatchGroup) { [weak self] in
             guard let `self` = self else { return }
@@ -170,11 +170,17 @@ extension SessionManager {
 
 // MARK: - Compressed Filename
 
+/// There are some external apps that users can use to transfer backup files, which can modify their attachments and change the underscore with a dash. For this reason, we accept 2 types of file extensions to restore conversations.
+fileprivate enum BackupFileExtensions: String, CaseIterable {
+    case fileExtensionWithUnderscore = "ios_wbu"
+    case fileExtensionWithHyphen = "ios-wbu"
+}
+
 fileprivate extension BackupMetadata {
     
     static let nameAppName = "Wire"
     static let nameFileName = "Backup"
-    static let fileExtension = "ios_wbu"
+    static let fileExtension = BackupFileExtensions.fileExtensionWithUnderscore.rawValue
 
     private static let formatter: DateFormatter = {
        let formatter = DateFormatter()
