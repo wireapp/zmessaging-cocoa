@@ -341,6 +341,10 @@ public final class SessionManager : NSObject, SessionManagerType {
                     if blacklisted {
                         self.isAppVersionBlacklisted = true
                         self.delegate?.sessionManagerDidBlacklistCurrentVersion()
+                        // When the application version is blacklisted we don't want have a
+                        // transition to any other state in the UI, so we won't inform it
+                        // anymore by setting the delegate to nil.
+                        self.delegate = nil
                     }
             })
         }
@@ -846,6 +850,10 @@ public final class SessionManager : NSObject, SessionManagerType {
             }
             
             self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
+            // When the device is jailbroken we don't want have a
+            // transition to any other state in the UI, so we won't inform it
+            // anymore by setting the delegate to nil.
+            self.delegate = nil
         }
     }
     
