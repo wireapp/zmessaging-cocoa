@@ -66,6 +66,7 @@ protocol CallKitManagerDelegate: class {
 @objc
 public class CallKitManager: NSObject {
     
+    public var pendingCallKitCall: (() -> Void)?
     fileprivate let provider: CXProvider
     fileprivate let callController: CXCallController
     fileprivate weak var delegate: CallKitManagerDelegate?
@@ -416,8 +417,10 @@ extension CallKitManager : CXProviderDelegate {
             action.fail()
         }
         
-        if call.conversation.voiceChannel?.join(video: false) != true {
-            action.fail()
+        pendingCallKitCall = {
+            if call.conversation.voiceChannel?.join(video: false) != true {
+                action.fail()
+            }
         }
     }
     
