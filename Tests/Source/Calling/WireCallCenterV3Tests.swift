@@ -575,17 +575,6 @@ class WireCallCenterV3Tests: MessagingTest {
             XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.video)
         }
     }
-
-    func testThatItStartsAConferenceCall() {
-        checkThatItPostsNotification(expectedCallState: .outgoing(degraded: false), expectedCallerId: selfUserID, expectedConversationId: groupConversationID) {
-            // when
-            _ = sut.startCall(conversation: groupConversation, video: false)
-
-            // then
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.conference)
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.normal)
-        }
-    }
     
     func testThatItSetsTheCallStartTimeBeforePostingTheNotification() {
         // given
