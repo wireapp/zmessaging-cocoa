@@ -720,7 +720,6 @@ public final class SessionManager : NSObject, SessionManagerType {
         require(backgroundUserSessions[account.userIdentifier] == nil, "User session is already loaded")
         backgroundUserSessions[account.userIdentifier] = userSession
         userSession.useConstantBitRateAudio = useConstantBitRateAudio
-        userSession.useConferenceCalling = useConferenceCalling
         updatePushToken(for: userSession)
         registerObservers(account: account, session: userSession)
     }
@@ -827,12 +826,6 @@ public final class SessionManager : NSObject, SessionManagerType {
     public var useConstantBitRateAudio : Bool = false {
         didSet {
             activeUserSession?.useConstantBitRateAudio = useConstantBitRateAudio
-        }
-    }
-    
-    public var useConferenceCalling: Bool = false {
-        didSet {
-            activeUserSession?.useConferenceCalling = useConferenceCalling
         }
     }
 

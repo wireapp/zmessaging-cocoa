@@ -478,7 +478,7 @@ class WireCallCenterV3Tests: MessagingTest {
             _ = sut.answerCall(conversation: groupConversation, video: false)
             
             // then
-            XCTAssertEqual(mockAVSWrapper.answerCallArguments?.callType, AVSCallType.audioOnly)
+            XCTAssertEqual(mockAVSWrapper.answerCallArguments?.callType, AVSCallType.normal)
         }
     }
     
@@ -541,7 +541,7 @@ class WireCallCenterV3Tests: MessagingTest {
             _ = sut.startCall(conversation: groupConversation, video: false)
             
             // then
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.group)
+            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.conference)
             XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.normal)
         }
     }
@@ -552,7 +552,7 @@ class WireCallCenterV3Tests: MessagingTest {
             _ = sut.startCall(conversation: groupConversation, video: true)
             
             // then
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.group)
+            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.conference)
             XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.video)
         }
     }
@@ -571,14 +571,12 @@ class WireCallCenterV3Tests: MessagingTest {
             _ = sut.startCall(conversation: groupConversation, video: true)
             
             // then
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.group)
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.audioOnly)
+            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.conference)
+            XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.video)
         }
     }
 
     func testThatItStartsAConferenceCall() {
-        sut.useConferenceCalling = true
-
         checkThatItPostsNotification(expectedCallState: .outgoing(degraded: false), expectedCallerId: selfUserID, expectedConversationId: groupConversationID) {
             // when
             _ = sut.startCall(conversation: groupConversation, video: false)
