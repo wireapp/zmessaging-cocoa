@@ -66,7 +66,7 @@ protocol CallKitManagerDelegate: class {
 @objc
 public class CallKitManager: NSObject {
     
-    public var pendingCallKitAnswerAction: (() -> Void)?
+    fileprivate var pendingCallKitAnswerAction: (() -> Void)?
     fileprivate let provider: CXProvider
     fileprivate let callController: CXCallController
     fileprivate weak var delegate: CallKitManagerDelegate?
@@ -364,7 +364,6 @@ extension CallKitManager : CXProviderDelegate {
     public func providerDidReset(_ provider: CXProvider) {
         log("providerDidReset: \(provider)")
         mediaManager?.resetAudioDevice()
-        pendingCallKitAnswerAction = nil
         calls.removeAll()
         delegate?.endAllCalls()
     }
@@ -436,7 +435,6 @@ extension CallKitManager : CXProviderDelegate {
         
         calls.removeValue(forKey: action.callUUID)
         call.conversation.voiceChannel?.leave()
-        pendingCallKitAnswerAction = nil
         action.fulfill()
     }
     
@@ -473,6 +471,17 @@ extension CallKitManager : CXProviderDelegate {
         log("didDeactivate audioSession")
         mediaManager?.resetAudioDevice()
     }
+}
+
+// MARK: - Executing a pending call
+
+extension CallKitManager {
+    
+    public func answerPendingCallIfNeeded() {
+        pendingCallKitAnswerAction?()
+        pendingCallKitAnswerAction = nil
+    }
+    
 }
 
 extension CallKitManager : WireCallCenterCallStateObserver, WireCallCenterMissedCallObserver {
