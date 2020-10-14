@@ -80,7 +80,7 @@ extension SearchResult {
         let predicate = NSPredicate(format: "addressBookEntry.localIdentifier IN %@", Set(identifiersToContact.keys))
         let fetchRequest = ZMUser.sortedFetchRequest(with: predicate)
         fetchRequest?.returnsObjectsAsFaults = false
-        let users = managedObjectContext.executeFetchRequestOrAssert(fetchRequest) as! [ZMUser]
+        let users = managedObjectContext.executeFetchRequestOrAssert(fetchRequest!) as! [ZMUser]
         
         for user in users {
             guard let localIdentifier = user.addressBookEntry?.localIdentifier else { continue }

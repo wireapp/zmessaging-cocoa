@@ -110,7 +110,7 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
         // return the teams the user is still in of course, so we fetch all local teams and check which ones we
         // receive during the slow sync. Afterwards we delete all teams that were no longer present on the backend.
         let request = Team.sortedFetchRequest()
-        guard let existingTeams = managedObjectContext.executeFetchRequestOrAssert(request) as? [Team] else { return Set() }
+        guard let existingTeams = managedObjectContext.executeFetchRequestOrAssert(request!) as? [Team] else { return Set() }
         return Set(existingTeams.compactMap { $0.remoteIdentifier })
     }
     

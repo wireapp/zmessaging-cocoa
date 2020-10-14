@@ -46,7 +46,7 @@ import Foundation
         let selfUser = ZMUser.selfUser(in: context)
         let predicate = NSPredicate(format: "sender == %@ AND assetId_data == NULL", selfUser)
         let fetchRequest = ZMAssetClientMessage.sortedFetchRequest(with: predicate)
-        guard let messages = context.executeFetchRequestOrAssert(fetchRequest) as? [ZMAssetClientMessage] else { return }
+        guard let messages = context.executeFetchRequestOrAssert(fetchRequest!) as? [ZMAssetClientMessage] else { return }
         
         messages.forEach { message in
             message.updateTransferState(.uploadingFailed, synchronize: false)
@@ -60,7 +60,7 @@ import Foundation
     
     public static func insertNewConversationSystemMessage(_ context: NSManagedObjectContext) {
         let fetchRequest = ZMConversation.sortedFetchRequest()
-        guard let conversations = context.executeFetchRequestOrAssert(fetchRequest) as? [ZMConversation] else { return }
+        guard let conversations = context.executeFetchRequestOrAssert(fetchRequest!) as? [ZMConversation] else { return }
         
         // Add .newConversation system message in all group conversations if not already present
         conversations.filter { $0.conversationType == .group }.forEach { conversation in
@@ -82,7 +82,7 @@ import Foundation
     
     public static func markAllNewConversationSystemMessagesAsRead(_ context: NSManagedObjectContext) {
         let fetchRequest = ZMConversation.sortedFetchRequest()
-        guard let conversations = context.executeFetchRequestOrAssert(fetchRequest) as? [ZMConversation] else { return }
+        guard let conversations = context.executeFetchRequestOrAssert(fetchRequest!) as? [ZMConversation] else { return }
         
         conversations.filter({ $0.conversationType == .group }).forEach { conversation in
         
@@ -112,7 +112,7 @@ import Foundation
     
     public static func updateSystemMessages(_ context: NSManagedObjectContext) {
         let fetchRequest = ZMConversation.sortedFetchRequest()
-        guard let conversations = context.executeFetchRequestOrAssert(fetchRequest) as? [ZMConversation] else { return }
+        guard let conversations = context.executeFetchRequestOrAssert(fetchRequest!) as? [ZMConversation] else { return }
         let filteredConversations =  conversations.filter{ $0.conversationType == .oneOnOne || $0.conversationType == .group }
         
         // update "you are using this device" message
@@ -135,7 +135,7 @@ import Foundation
     /// Marks all users (excluding self) to be refetched.
     public static func refetchUsers(_ context: NSManagedObjectContext) {
         let request = ZMUser.sortedFetchRequest()
-        let users = context.executeFetchRequestOrAssert(request) as? [ZMUser]
+        let users = context.executeFetchRequestOrAssert(request!) as? [ZMUser]
 
         users?.lazy
             .filter { !$0.isSelfUser }
@@ -157,7 +157,7 @@ import Foundation
     public static func refetchConnectedUsers(_ context: NSManagedObjectContext) {
         let predicate = NSPredicate(format: "connection != nil")
         let request = ZMUser.sortedFetchRequest(with: predicate)
-        let users = context.executeFetchRequestOrAssert(request) as? [ZMUser]
+        let users = context.executeFetchRequestOrAssert(request!) as? [ZMUser]
 
         users?.lazy
             .filter { $0.isConnected }
@@ -210,7 +210,7 @@ import Foundation
     
     private static func refetchConversations(matching predicate: NSPredicate, in context: NSManagedObjectContext) {
         let request = ZMConversation.sortedFetchRequest(with: predicate)
-        let conversations = context.executeFetchRequestOrAssert(request) as? [ZMConversation]
+        let conversations = context.executeFetchRequestOrAssert(request!) as? [ZMConversation]
         
         conversations?.forEach { $0.needsToBeUpdatedFromBackend = true }
         context.enqueueDelayedSave()
@@ -233,7 +233,7 @@ import Foundation
         
         let requestForInsertedMessages = ZMClientMessage.sortedFetchRequest(with: predicate)
         
-        guard let possibleMatches = context.executeFetchRequestOrAssert(requestForInsertedMessages) as? [ZMClientMessage] else {
+        guard let possibleMatches = context.executeFetchRequestOrAssert(requestForInsertedMessages!) as? [ZMClientMessage] else {
             return
         }
         
