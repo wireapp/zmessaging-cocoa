@@ -46,14 +46,14 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
         // given
         sut.didFinishSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        XCTAssertFalse(sut.notificationDispatcher.isDisabled)
+        XCTAssertTrue(sut.notificationDispatcher.isEnabled)
         
         // when
         sut.didStartSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertTrue(sut.notificationDispatcher.isDisabled)
+        XCTAssertFalse(sut.notificationDispatcher.isEnabled)
     }
     
     func testThatObserverSystemIsEnabledAfterSlowSync() {
@@ -61,14 +61,14 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
         // given
         sut.didStartSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        XCTAssertTrue(sut.notificationDispatcher.isDisabled)
+        XCTAssertFalse(sut.notificationDispatcher.isEnabled)
         
         // when
         sut.didFinishSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertFalse(sut.notificationDispatcher.isDisabled)
+        XCTAssertTrue(sut.notificationDispatcher.isEnabled)
     }
     
     func testThatInitialSyncIsCompletedAfterSlowSync() {
