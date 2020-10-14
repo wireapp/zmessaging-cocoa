@@ -442,6 +442,41 @@ class CallKitManagerTest: DatabaseTest {
         XCTAssertTrue(action.isFulfilled)
     }
 
+    func testThatItSavesPendingCallKitAnswerAction() {
+        // given
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        createOneOnOneConversation(user: otherUser)
+        let conversation = otherUser.oneToOneConversation!
+        let provider = MockProvider(foo: true)
+        sut.reportIncomingCall(from: otherUser, in: conversation, video: false)
+        let action = MockCallAnswerAction(call: sut.callUUID(for: conversation)!)
+        
+        // when
+        self.sut.provider(provider, perform: action)
+        
+        // then
+        XCTAssertNotNil(sut.pendingCallKitAnswerAction)
+    }
+    
+    func testThatItRemovesPendingCallKitAnswerActionAfterCallIsEnded() {
+        // given
+        let otherUser = self.otherUser(moc: self.uiMOC)
+        createOneOnOneConversation(user: otherUser)
+        let conversation = otherUser.oneToOneConversation!
+        let provider = MockProvider(foo: true)
+        sut.reportIncomingCall(from: otherUser, in: conversation, video: false)
+        let answerAction = MockCallAnswerAction(call: sut.callUUID(for: conversation)!)
+        self.sut.provider(provider, perform: answerAction)
+        
+        // when
+        self.sut.requestEndCall(in: conversation)
+        let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXEndCallAction
+        self.sut.provider(provider, perform: action)
+        
+        // then
+        XCTAssertNil(sut.pendingCallKitAnswerAction)
+    }
+    
     /* Disabled for now, pending furter investigation
     func testThatCallAnswerActionFailWhenCallCantBeJoined() {
         // given
@@ -473,6 +508,7 @@ class CallKitManagerTest: DatabaseTest {
         
         // then
         XCTAssertTrue(action.isFulfilled)
+        XCTAssertNil(sut.pendingCallKitAnswerAction)
     }
     
     func testThatStartCallActionFailWhenCallCantBeStarted() {
