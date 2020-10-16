@@ -669,23 +669,14 @@ extension ZMLocalNotificationTests_Message {
         let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: UUID())!
         return ZMLocalNotification(event: event, conversation: message.conversation!, managedObjectContext: uiMOC)
     }
-
-    func bodyForEditNote(_ conversation: ZMConversation, sender: ZMUser, text: String) -> String {
-        let message = try! conversation.appendText(content: "Foo") as! ZMClientMessage
+    
+    func testThatItDoesntCreateANotificationForAnEditMessage() {
+        let message = try! oneOnOneConversation.appendText(content: "Foo") as! ZMClientMessage
         message.markAsSent()
-        let note = editNote(message, sender: sender, text: text)
-        XCTAssertNotNil(note)
-        return note!.body
+        let note = editNote(message, sender: sender, text: "Edited Text")
+        XCTAssertNil(note)
     }
-
-    func testThatItCreatesANotificationForAnEditMessage(){
-        XCTAssertEqual(bodyForEditNote(oneOnOneConversation, sender: sender, text: "Edited Text"), "Edited Text")
-        XCTAssertEqual(bodyForEditNote(groupConversation, sender: sender, text: "Edited Text"), "Super User: Edited Text")
-        XCTAssertEqual(bodyForEditNote(groupConversationWithoutUserDefinedName, sender: sender, text: "Edited Text"), "Super User: Edited Text")
-        XCTAssertEqual(bodyForEditNote(groupConversationWithoutName, sender: sender, text: "Edited Text"), "Super User in a conversation: Edited Text")
-        XCTAssertEqual(bodyForEditNote(invalidConversation, sender: sender, text: "Edited Text"), "Super User in a conversation: Edited Text")
-    }
-
+    
 }
 
 // MARK: - Categories
