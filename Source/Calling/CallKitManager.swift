@@ -66,7 +66,7 @@ protocol CallKitManagerDelegate: class {
 @objc
 public class CallKitManager: NSObject {
     
-    fileprivate var pendingCallKitAnswerAction: (() -> Void)?
+    internal var pendingCallKitAnswerAction: (() -> Void)?
     fileprivate let provider: CXProvider
     fileprivate let callController: CXCallController
     fileprivate weak var delegate: CallKitManagerDelegate?
