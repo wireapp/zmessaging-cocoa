@@ -473,7 +473,7 @@ extension CallKitManager : CXProviderDelegate {
     }
 }
 
-// MARK: - Executing a pending call
+// MARK: - Execute a pending call
 
 extension CallKitManager {
     

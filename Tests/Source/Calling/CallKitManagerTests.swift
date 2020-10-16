@@ -175,6 +175,7 @@ class CallKitManagerTest: DatabaseTest {
     var mockWireCallCenterV3: WireCallCenterV3Mock!
     var mockTransportSession: MockTransportSession!
     var mockCallKitManagerDelegate: MockCallKitManagerDelegate!
+    var pendingCallKitAnswerAction: (() -> Void)?
     
     func otherUser(moc: NSManagedObjectContext) -> ZMUser {
         let otherUser = ZMUser(context: moc)
@@ -458,7 +459,7 @@ class CallKitManagerTest: DatabaseTest {
         XCTAssertNotNil(sut.pendingCallKitAnswerAction)
     }
     
-    func testThatItRemovesPendingCallKitAnswerActionAfterCallIsEnded() {
+    func testThatItRemovesPendingCallKitAnswerActionAfterExecuteThisCall() {
         // given
         let otherUser = self.otherUser(moc: self.uiMOC)
         createOneOnOneConversation(user: otherUser)
@@ -469,9 +470,7 @@ class CallKitManagerTest: DatabaseTest {
         self.sut.provider(provider, perform: answerAction)
         
         // when
-        self.sut.requestEndCall(in: conversation)
-        let action = self.callKitController.requestedTransactions.first!.actions.first! as! CXEndCallAction
-        self.sut.provider(provider, perform: action)
+        sut.answerPendingCallIfNeeded()
         
         // then
         XCTAssertNil(sut.pendingCallKitAnswerAction)
