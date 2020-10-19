@@ -60,7 +60,9 @@ protocol RegistrationStatusProtocol: class {
     func success()
 }
 
-// MARK: - Registration Status
+multipartRequestWithPath
+
+
 
 /**
  * Handles regisitration of users and teams.

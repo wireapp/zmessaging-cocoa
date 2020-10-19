@@ -66,7 +66,7 @@ protocol CallKitManagerDelegate: class {
 @objc
 public class CallKitManager: NSObject {
     
-    internal var pendingCallKitAnswerAction: (() -> Void)?
+    fileprivate var pendingCallKitAnswerAction: (() -> Void)?
     fileprivate let provider: CXProvider
     fileprivate let callController: CXCallController
     fileprivate weak var delegate: CallKitManagerDelegate?
@@ -142,6 +142,10 @@ public class CallKitManager: NSObject {
     
     internal func callUUID(for conversation: ZMConversation) -> UUID? {
         return calls.first(where: { $0.value.conversation == conversation })?.key
+    }
+    
+    internal var hasPendingAnswerAction: Bool {
+        return pendingCallKitAnswerAction != nil
     }
 
 }
