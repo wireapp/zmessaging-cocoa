@@ -60,6 +60,8 @@ protocol RegistrationStatusProtocol: class {
     func success()
 }
 
+// MARK: - Registration Status
+
 /**
  * Handles regisitration of users and teams.
  */
