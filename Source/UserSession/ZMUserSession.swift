@@ -36,7 +36,11 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     private var tornDown: Bool = false
     
     var isNetworkOnline: Bool = true
-    var isPerformingSync: Bool = true
+    var isPerformingSync: Bool = true {
+        willSet {
+            notificationDispatcher.operationMode = newValue ? .economical : .normal
+        }
+    }
     var hasNotifiedThirdPartyServices: Bool = false
     
     var storeProvider: LocalStoreProviderProtocol!
@@ -441,7 +445,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
     public func didStartSlowSync() {
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.isPerformingSync = true
-            self?.notificationDispatcher.isDisabled = true
+            self?.notificationDispatcher.isEnabled = false
             self?.updateNetworkState()
         }
     }
@@ -449,7 +453,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
     public func didFinishSlowSync() {
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.hasCompletedInitialSync = true
-            self?.notificationDispatcher.isDisabled = false
+            self?.notificationDispatcher.isEnabled = true
             
             if let context = self?.managedObjectContext {
                 ZMUserSession.notifyInitialSyncCompleted(context: context)
