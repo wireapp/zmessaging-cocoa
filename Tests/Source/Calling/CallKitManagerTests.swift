@@ -491,26 +491,6 @@ class CallKitManagerTest: DatabaseTest {
         XCTAssertFalse(sut.hasPendingAnswerAction)
     }
     
-    func testThatPendingCallIsFulfilledAfterExecuteThisCall() {
-        // given
-        let otherUser = self.otherUser(moc: self.uiMOC)
-        createOneOnOneConversation(user: otherUser)
-        let conversation = otherUser.oneToOneConversation!
-        let provider = MockProvider(foo: true)
-        sut.reportIncomingCall(from: otherUser, in: conversation, video: false)
-        let answerAction = MockCallAnswerAction(call: sut.callUUID(for: conversation)!)
-        self.sut.provider(provider, perform: answerAction)
-        
-        // when
-        sut.answerPendingCallIfNeeded()
-        mockWireCallCenterV3.update(callState: .established, conversationId: conversation.remoteIdentifier!, callerId: otherUser.remoteIdentifier, isVideo: false)
-        
-        // then
-        XCTAssertTrue(answerAction.isFulfilled)
-    }
-    
-   
-    
     /* Disabled for now, pending furter investigation
     func testThatCallAnswerActionFailWhenCallCantBeJoined() {
         // given
