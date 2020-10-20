@@ -19,6 +19,10 @@
 import Foundation
 import WireUtilities
 
+extension NSNotification.Name {
+    static let calculateBadgeCount = NSNotification.Name(rawValue: "calculateBadgeCountNotication")
+}
+
 @objc
 public protocol UpdateEventProcessor: class {
             
@@ -73,11 +77,15 @@ extension ZMSyncStrategy: UpdateEventProcessor {
     
     public func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
         if ignoreBuffer || isReadyToProcessEvents {
-            eventDecoder.decryptAndStoreEvents(updateEvents) { (decryptedEvents) in
+            eventDecoder.decryptAndStoreEvents(updateEvents) { [weak self] (decryptedEvents) in
+                guard let `self` = self else { return }
+                
                 Logging.eventProcessing.info("Consuming events while in background")
                 for eventConsumer in self.eventConsumers {
                     eventConsumer.processEventsWhileInBackground?(decryptedEvents)
                 }
+                self.syncMOC.saveOrRollback()
+                NotificationInContext(name: .calculateBadgeCount, context: self.syncMOC.notificationContext).post()
             }
         } else {
             Logging.eventProcessing.info("Buffering \(updateEvents.count) event(s)")
@@ -106,12 +114,13 @@ extension ZMSyncStrategy: UpdateEventProcessor {
                 }
                 self.eventProcessingTracker?.registerEventProcessed()
             }
+            ZMConversation.calculateLastUnreadMessages(in: syncMOC)
             syncMOC.saveOrRollback()
             
             Logging.eventProcessing.debug("Events processed in \(-date.timeIntervalSinceNow): \(self.eventProcessingTracker?.debugDescription ?? "")")
         }
     }
-     
+    
     @objc(prefetchRequestForUpdateEvents:)
     public func prefetchRequest(updateEvents: [ZMUpdateEvent]) -> ZMFetchRequestBatch {
         var messageNounces: Set<UUID> = Set()
@@ -137,4 +146,3 @@ extension ZMSyncStrategy: UpdateEventProcessor {
     
 
 }
-

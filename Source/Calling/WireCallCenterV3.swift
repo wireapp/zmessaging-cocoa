@@ -187,6 +187,7 @@ extension WireCallCenterV3 {
             videoState: video ? .started : .stopped,
             networkQuality: .normal,
             isConferenceCall: isConferenceCall,
+            degradedUser: nil,
             conversationObserverToken: token
         )
     }
@@ -272,13 +273,14 @@ extension WireCallCenterV3 {
     /**
      * Determines the degradation of the conversation.
      * - parameter conversationId: The identifier of the conversation to check the state of.
-     * - returns: Whether the conversation has degraded security.
+     * - returns: Whether the conversation has degraded security or the call in the conversation has a degraded user.
      */
 
     public func isDegraded(conversationId: UUID) -> Bool {
         let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: uiMOC!)
-        let degraded = conversation?.securityLevel == .secureWithIgnored
-        return degraded
+        let isConversationDegraded = conversation?.securityLevel == .secureWithIgnored
+        let isCallDegraded = callSnapshots[conversationId]?.isDegradedCall ?? false
+        return isConversationDegraded || isCallDegraded
     }
 
     /// Returns conversations with active calls.
@@ -310,6 +312,10 @@ extension WireCallCenterV3 {
 
     public func isConferenceCall(conversationId: UUID) -> Bool {
         return callSnapshots[conversationId]?.isConferenceCall ?? false
+    }
+
+    func degradedUser(conversationId: UUID) -> ZMUser? {
+        return callSnapshots[conversationId]?.degradedUser
     }
 
 }

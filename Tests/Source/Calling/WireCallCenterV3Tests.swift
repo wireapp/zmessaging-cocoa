@@ -1181,3 +1181,35 @@ extension WireCallCenterV3Tests {
         }
     }
 }
+
+
+// MARK: - Call Degradation
+
+extension WireCallCenterV3Tests {
+    func testThatCallDidDegradeEndsCall() {
+        // When
+        sut.callDidDegrade(conversationId: UUID(), degradedUser: ZMUser.insertNewObject(in: uiMOC))
+        
+        // Then
+        XCTAssertTrue(mockAVSWrapper.didCallEndCall)
+    }
+    
+    func testThatCallDidDegradeUpdatesDegradedUser() {
+        // Given
+        let conversationId = groupConversation.remoteIdentifier!
+        
+        sut.callSnapshots = [
+            conversationId : CallSnapshotTestFixture.degradedCallSnapshot(
+                conversationId: conversationId,
+                user: otherUser,
+                callCenter: sut
+            )
+        ]
+        
+        // When
+        sut.callDidDegrade(conversationId: conversationId, degradedUser: otherUser)
+        
+        // Then
+        XCTAssertTrue(sut.callSnapshots[conversationId]?.isDegradedCall ?? false)
+    }
+}

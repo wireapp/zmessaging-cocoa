@@ -122,7 +122,20 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
 
         return callCenter.isConferenceCall(conversationId: remoteIdentifier)
     }
-    
+
+    public var firstDegradedUser: ZMUser? {
+        guard
+            let conversationId = conversation?.remoteIdentifier,
+            let degradedUser = callCenter?.degradedUser(conversationId: conversationId)
+        else {
+            return conversation?.localParticipants.first(where: {
+                !$0.isTrusted
+            })
+        }
+
+        return degradedUser
+    }
+
 }
 
 extension VoiceChannelV3 : CallActions {
@@ -180,12 +193,10 @@ extension VoiceChannelV3 : CallActionsInternal {
         var joined = false
         
         switch state {
-        case .incoming(video: _, shouldRing: _, degraded: let degraded):
-            if !degraded {
-                joined = callCenter?.answerCall(conversation: conversation, video: video) ?? false
-            }
+        case .incoming(video: _, shouldRing: _, degraded: _):
+            joined = callCenter?.answerCall(conversation: conversation, video: video) ?? false
         default:
-            joined = self.callCenter?.startCall(conversation: conversation, video: video) ?? false
+            joined = callCenter?.startCall(conversation: conversation, video: video) ?? false
         }
         
         return joined

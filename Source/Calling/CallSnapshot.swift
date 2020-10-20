@@ -32,7 +32,12 @@ struct CallSnapshot {
     let videoState: VideoState
     let networkQuality: NetworkQuality
     let isConferenceCall: Bool
+    let degradedUser: ZMUser?
     var conversationObserverToken : NSObjectProtocol?
+
+    var isDegradedCall: Bool {
+        return degradedUser != nil
+    }
 
     /**
      * Updates the snapshot with the new state of the call.
@@ -49,6 +54,7 @@ struct CallSnapshot {
                             videoState: videoState,
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -67,6 +73,7 @@ struct CallSnapshot {
                             videoState: videoState,
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -85,6 +92,7 @@ struct CallSnapshot {
                             videoState: videoState,
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -103,6 +111,30 @@ struct CallSnapshot {
                             videoState: videoState,
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
+                            conversationObserverToken: conversationObserverToken)
+    }
+
+    /**
+     * Updates the snapshot with the new degraded user.
+     *
+     * A user degrades the call if they were previously trusted by the self
+     * client and then joined the call with an unverified device.
+     * 
+     * - parameter degradedUser: The user who degraded the call.
+     */
+
+    func updateDegradedUser(_ degradedUser: ZMUser) -> CallSnapshot {
+        return CallSnapshot(callParticipants: callParticipants,
+                            callState: callState,
+                            callStarter: callStarter,
+                            isVideo: isVideo,
+                            isGroup: isGroup,
+                            isConstantBitRate: isConstantBitRate,
+                            videoState: videoState,
+                            networkQuality: networkQuality,
+                            isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
                             conversationObserverToken: conversationObserverToken)
     }
 

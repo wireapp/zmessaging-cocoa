@@ -1,2 +1,2 @@
-github "wireapp/wire-ios-mocktransport" ~> 120.0
+github "wireapp/wire-ios-mocktransport" ~> 121.0
 github "wireapp/wire-ios-testing" ~> 22.0

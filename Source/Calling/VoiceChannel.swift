@@ -60,6 +60,8 @@ public protocol CallProperties : NSObjectProtocol {
     var muted: Bool { get set }
 
     var isConferenceCall: Bool { get }
+
+    var firstDegradedUser: ZMUser? { get }
     
     func setVideoCaptureDevice(_ device: CaptureDevice) throws
 }

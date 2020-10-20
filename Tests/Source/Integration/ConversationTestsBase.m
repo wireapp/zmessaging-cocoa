@@ -199,17 +199,23 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(observer.notifications.count, 1u);
+    ConversationChangeInfo *unreadCountChange = [observer.notifications firstObjectMatchingWithBlock:^BOOL(ConversationChangeInfo *change) {
+        return change.unreadCountChanged;
+    }];
     
-    ConversationChangeInfo *note = observer.notifications.lastObject;
-    XCTAssertNotNil(note);
-    XCTAssertTrue(note.messagesChanged);
-    XCTAssertFalse(note.participantsChanged);
-    XCTAssertTrue(note.lastModifiedDateChanged);
+    ConversationChangeInfo *messageChange = [observer.notifications firstObjectMatchingWithBlock:^BOOL(ConversationChangeInfo *change) {
+        return change.messagesChanged;
+    }];
+        
+    XCTAssertNotNil(messageChange);
+    XCTAssertTrue(messageChange.messagesChanged);
+    XCTAssertFalse(messageChange.participantsChanged);
+    XCTAssertTrue(messageChange.lastModifiedDateChanged);
+    XCTAssertFalse(messageChange.connectionStateChanged);
+    
     if(!ignoreLastRead) {
-        XCTAssertTrue(note.unreadCountChanged);
+        XCTAssertTrue(unreadCountChange.unreadCountChanged);
     }
-    XCTAssertFalse(note.connectionStateChanged);
     
     verifyConversation(conversation);
 }

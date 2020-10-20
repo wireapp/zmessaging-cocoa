@@ -25,7 +25,39 @@ class CallParticipantsSnapshot {
 
     private unowned var callCenter: WireCallCenterV3
     private let conversationId: UUID
-    private(set) var members: OrderedSetState<AVSCallMember>
+
+    private(set) var members: OrderedSetState<AVSCallMember> {
+        didSet {
+            guard let moc = callCenter.uiMOC else { return }
+
+            participants = members
+                .map { CallParticipant(member: $0, context: moc) }
+                .compactMap(\.self)
+        }
+    }
+
+    private var participants = [CallParticipant]() {
+        didSet {
+            updateUserTrustMap()
+            notifyChange()
+        }
+    }
+
+    private var userTrustMap = [ZMUser: Bool]()
+
+    private func updateUserTrustMap() {
+        for user in participants.map(\.user) {
+            let userWasTrusted = userTrustMap[user] ?? false
+            let userIsTrusted = user.isTrusted
+
+            userTrustMap[user] = userIsTrusted
+
+            if userWasTrusted && !userIsTrusted {
+                callCenter.callDidDegrade(conversationId: conversationId, degradedUser: user)
+                break
+            }
+        }
+    }
 
     /// Worst network quality of all the participants.
 
@@ -48,7 +80,6 @@ class CallParticipantsSnapshot {
 
     func callParticipantsChanged(participants: [AVSCallMember]) {
         members = type(of:self).removeDuplicateMembers(participants)
-        notifyChange()
     }
 
     func callParticipantNetworkQualityChanged(client: AVSClient, networkQuality: NetworkQuality) {
@@ -77,10 +108,6 @@ class CallParticipantsSnapshot {
 
     private func notifyChange() {
         guard let context = callCenter.uiMOC else { return }
-        
-        let participants = members
-            .map { CallParticipant(member: $0, context: context) }
-            .compactMap(\.self)
 
         WireCallCenterCallParticipantNotification(conversationId: conversationId, participants: participants)
             .post(in: context.notificationContext)

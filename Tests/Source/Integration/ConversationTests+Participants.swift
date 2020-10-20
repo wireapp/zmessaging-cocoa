@@ -131,7 +131,7 @@ class ConversationTests_Participants: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        XCTAssertEqual(observer?.notifications.count, 1)
+        XCTAssertEqual(observer?.notifications.count, 2) // Two updates because unread count is updated separately
         let note1 = observer?.notifications.lastObject as! ConversationListChangeInfo
         XCTAssertEqual(note1.zm_movedIndexPairs.first, ZMMovedIndex.init(from: UInt(previousIndex), to: 0))
     }

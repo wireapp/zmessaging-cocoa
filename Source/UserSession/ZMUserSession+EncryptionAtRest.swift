@@ -22,7 +22,15 @@ import WireDataModel
 
 public typealias ResultHandler<T> = (Result<T>) -> Void
 
-extension ZMUserSession {
+public protocol UserSessionEncryptionAtRestInterface {
+    var encryptMessagesAtRest: Bool { get }
+    var isDatabaseLocked: Bool { get }
+    
+    func unlockDatabase(with context: LAContext) throws
+    func registerDatabaseLockedHandler(_ handler: @escaping (_ isDatabaseLocked: Bool) -> Void) -> Any
+}
+
+extension ZMUserSession: UserSessionEncryptionAtRestInterface {
 
     /// Enable or disable encryption at rest.
     ///
@@ -40,7 +48,7 @@ extension ZMUserSession {
         let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
 
         // Avoid unneccessary and expensive change tracking triggered when saving the sync context.
-        self.notificationDispatcher.isDisabled = true
+        self.notificationDispatcher.isEnabled = false
 
         syncManagedObjectContext.performGroupedBlock {
             do {
@@ -56,7 +64,7 @@ extension ZMUserSession {
                 self.syncManagedObjectContext.saveOrRollback()
 
                 DispatchQueue.main.async {
-                    self.notificationDispatcher.isDisabled = false
+                    self.notificationDispatcher.isEnabled = true
                     completion?(.success(()))
                 }
 
@@ -68,7 +76,7 @@ extension ZMUserSession {
                 self.syncManagedObjectContext.reset()
 
                 DispatchQueue.main.async {
-                    self.notificationDispatcher.isDisabled = false
+                    self.notificationDispatcher.isEnabled = true
                     completion?(.failure(error))
                 }
             }
@@ -117,7 +125,7 @@ extension ZMUserSession {
     }
     
     public func unlockDatabase(with context: LAContext) throws {
-        let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
+        let account = Account(userName: "", userIdentifier: storeProvider.userIdentifier)
         let keys = try EncryptionKeys.init(account: account, context: context)
 
         storeProvider.contextDirectory.storeEncryptionKeysInAllContexts(encryptionKeys: keys)

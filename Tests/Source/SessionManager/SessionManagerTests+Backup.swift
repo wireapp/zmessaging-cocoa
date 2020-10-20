@@ -141,6 +141,30 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssertEqual(result.error as? SessionManager.BackupError, .invalidFileExtension)
     }
     
+    func testThatItCanRestoreFileWithAHyphenInTheFileExtension() throws {
+        // Given
+        XCTAssert(login())
+        
+        let backupResult = backupActiveAcount(password: name)
+        guard let url = backupResult.value else { return XCTFail("\(backupResult.error!)") }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd"
+        let fileExtensionWithHyphen = "Wire-\(self.selfUser!.handle!)-Backup_\(formatter.string(from: .init())).ios-wbu"
+        
+        let fm = FileManager.default
+        try fm.createDirectory(atPath: backupURL.path, withIntermediateDirectories: true, attributes: nil)
+        let dataURL = backupURL.appendingPathComponent(fileExtensionWithHyphen)
+        try? fm.copyItem(at: url, to: dataURL)
+        
+        // When
+        XCTAssertEqual(dataURL.lastPathComponent, fileExtensionWithHyphen)
+        let result = restoreAcount(password: name, from: dataURL)
+        
+        // Then
+        XCTAssertNil(result.error, "\(result.error!)")
+    }
+    
     func testThatItReturnsAnErrorWhenImportingFileWithWrongPassword() throws {
         // Given
         XCTAssert(login())
