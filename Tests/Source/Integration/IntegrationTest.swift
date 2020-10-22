@@ -81,8 +81,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
             analytics: analytics,
             application: application,
             appVersion: appVersion,
-            storeProvider: storeProvider,
-            showContentDelegate: showContentDelegate
+            storeProvider: storeProvider
         )
     }
 

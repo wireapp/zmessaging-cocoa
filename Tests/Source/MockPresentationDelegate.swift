@@ -18,8 +18,12 @@
 
 import Foundation
 
-class MockURLActionDelegate: URLActionDelegate {
+class MockPresentationDelegate: PresentationDelegate {
     
+    var showConversationCalls: [ZMConversation] = []
+    var showConversationListCalls: Int = 0
+    var showUserProfileCalls: [UserType] = []
+    var showConnectionRequestCalls: [UUID] = []
     var failedToPerformActionCalls: [(URLAction, Error)] = []
     var shouldPerformActionCalls: [URLAction] = []
     var completedURLActionCalls: [URLAction] = []
@@ -37,4 +41,21 @@ class MockURLActionDelegate: URLActionDelegate {
     func completedURLAction(_ action: URLAction) {
         completedURLActionCalls.append(action)
     }
+    
+    func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?) {
+        showConversationCalls.append(conversation)
+    }
+    
+    func showConversationList() {
+        showConversationListCalls += 1
+    }
+    
+    func showUserProfile(user: UserType) {
+        showUserProfileCalls.append(user)
+    }
+    
+    func showConnectionRequest(userId: UUID) {
+        showConnectionRequestCalls.append(userId)
+    }
+    
 }

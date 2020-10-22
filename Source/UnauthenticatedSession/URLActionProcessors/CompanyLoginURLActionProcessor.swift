@@ -34,13 +34,13 @@ class CompanyLoginURLActionProcessor: URLActionProcessor {
         self.authenticationStatus = authenticationStatus
     }
     
-    func process(urlAction: URLAction, delegate urlActionDelegate: URLActionDelegate?) {
+    func process(urlAction: URLAction, delegate presentationDelegate: PresentationDelegate?) {
         switch urlAction {
         case .companyLoginSuccess(let userInfo):
             authenticationStatus.loginSucceeded(with: userInfo)
         case .startCompanyLogin(let code):
             guard delegate?.isAllowedToCreateNewAccount == true else {
-                urlActionDelegate?.failedToPerformAction(urlAction, error: SessionManager.AccountError.accountLimitReached)
+                presentationDelegate?.failedToPerformAction(urlAction, error: SessionManager.AccountError.accountLimitReached)
                 return
             }
             
@@ -52,7 +52,7 @@ class CompanyLoginURLActionProcessor: URLActionProcessor {
         // Delete the url scheme verification token
         CompanyLoginVerificationToken.flush()
         
-        urlActionDelegate?.completedURLAction(urlAction)
+        presentationDelegate?.completedURLAction(urlAction)
     }
     
 }
