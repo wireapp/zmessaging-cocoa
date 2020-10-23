@@ -38,7 +38,7 @@ extension SessionManager {
     /// - parameter url: URL the application was launched with
     /// - parameter options: options associated with the URL
     @discardableResult
-    public func openURL(_ url: URL, options: [UIApplication.OpenURLOptionsKey: Any]) throws -> Bool {
+    public func openURL(_ url: URL) throws -> Bool {
         guard let action = try URLAction(url: url) else { return false }
         
         if action.requiresAuthentication, let userSession = activeUserSession {
