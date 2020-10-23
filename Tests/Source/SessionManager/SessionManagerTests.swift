@@ -1375,7 +1375,7 @@ extension SessionManagerTests {
         XCTAssertNotNil(userSession)
         
         // WHEN
-        try sessionManager?.openURL(url, options: [:])
+        try sessionManager?.openURL(url)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN

@@ -46,7 +46,7 @@ class SessionManagerTests_URLActions: IntegrationTest {
     
     func testThatItIgnoresNonWireURL() throws {
         // when
-        let canOpenURL = try sessionManager?.openURL(URL(string: "https://google.com")!, options: [:])
+        let canOpenURL = try sessionManager?.openURL(URL(string: "https://google.com")!)
         
         // then
         XCTAssertEqual(canOpenURL, false)
@@ -60,7 +60,7 @@ class SessionManagerTests_URLActions: IntegrationTest {
         XCTAssertTrue(login())
         
         // when
-        let canOpenURL = try sessionManager?.openURL(url, options: [:])
+        let canOpenURL = try sessionManager?.openURL(url)
 
         // then
         let expectedUserData = ServiceUserData(provider: UUID(uuidString: "3879b1ec-4a12-11e8-842f-0ed5f89f718b")!,
@@ -77,7 +77,7 @@ class SessionManagerTests_URLActions: IntegrationTest {
         let url = URL(string: "wire://connect?service=2e1863a6-4a12-11e8-842f-0ed5f89f718b&provider=3879b1ec-4a12-11e8-842f-0ed5f89f718b")!
         
         // when then
-        XCTAssertThrowsError(try sessionManager?.openURL(url, options: [:])) { (error) in
+        XCTAssertThrowsError(try sessionManager?.openURL(url)) { (error) in
             XCTAssertEqual(error as? DeepLinkRequestError, .notLoggedIn)
         }
     }
@@ -90,7 +90,7 @@ class SessionManagerTests_URLActions: IntegrationTest {
         
         // when
         let url = URL(string: "wire://connect?service=2e1863a6-4a12-11e8-842f-0ed5f89f718b&provider=3879b1ec-4a12-11e8-842f-0ed5f89f718b")!
-        let canOpenURL = try sessionManager?.openURL(url, options: [:])
+        let canOpenURL = try sessionManager?.openURL(url)
         XCTAssertEqual(canOpenURL, true)
         
         // then: action should get postponed
