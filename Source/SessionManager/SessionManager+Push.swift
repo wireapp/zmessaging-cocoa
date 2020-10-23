@@ -184,40 +184,29 @@ extension SessionManager: PKPushRegistryDelegate {
     }
 }
 
-// MARK: - ShowContentDelegate
-
-@objc
-public protocol ShowContentDelegate: class {
-    func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?)
-    func showConversationList()
-    func showUserProfile(user: UserType)
-    func showConnectionRequest(userId: UUID)
-}
-
-
 extension SessionManager {
     
     public func showConversation(_ conversation: ZMConversation,
                                  at message: ZMConversationMessage? = nil,
                                  in session: ZMUserSession) {
         activateAccount(for: session) {
-            self.showContentDelegate?.showConversation(conversation, at: message)
+            self.presentationDelegate?.showConversation(conversation, at: message)
         }
     }
     
     public func showConversationList(in session: ZMUserSession) {
         activateAccount(for: session) {
-            self.showContentDelegate?.showConversationList()
+            self.presentationDelegate?.showConversationList()
         }
     }
 
 
     public func showUserProfile(user: UserType) {
-        self.showContentDelegate?.showUserProfile(user: user)
+        self.presentationDelegate?.showUserProfile(user: user)
     }
 
     public func showConnectionRequest(userId: UUID) {
-        self.showContentDelegate?.showConnectionRequest(userId: userId)
+        self.presentationDelegate?.showConnectionRequest(userId: userId)
     }
 
 }

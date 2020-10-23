@@ -181,7 +181,6 @@ public final class SessionManager : NSObject, SessionManagerType {
     public weak var delegate: SessionManagerDelegate? = nil
     public let accountManager: AccountManager
     public fileprivate(set) var activeUserSession: ZMUserSession?
-    public weak var urlActionDelegate: URLActionDelegate?
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public internal(set) var unauthenticatedSession: UnauthenticatedSession? {
@@ -198,7 +197,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         }
         
     }
-    public weak var showContentDelegate: ShowContentDelegate?
+    public weak var presentationDelegate: PresentationDelegate?
     public weak var foregroundNotificationResponder: ForegroundNotificationResponder?
     public weak var switchingDelegate: SessionManagerSwitchingDelegate?
     public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
@@ -258,7 +257,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         mediaManager: MediaManagerType,
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
-        showContentDelegate: ShowContentDelegate?,
+        presentationDelegate: PresentationDelegate?,
         application: ZMApplication,
         environment: BackendEnvironmentProvider,
         configuration: SessionManagerConfiguration,
@@ -272,7 +271,7 @@ public final class SessionManager : NSObject, SessionManagerType {
                 mediaManager: mediaManager,
                 analytics: analytics,
                 delegate: delegate,
-                showContentDelegate: showContentDelegate,
+                presentationDelegate: presentationDelegate,
                 application: application,
                 environment: environment,
                 configuration: configuration,
@@ -290,7 +289,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         mediaManager: MediaManagerType,
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
-        showContentDelegate: ShowContentDelegate?,
+        presentationDelegate: PresentationDelegate?,
         application: ZMApplication,
         environment: BackendEnvironmentProvider,
         configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
@@ -310,8 +309,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             flowManager: flowManager,
             environment: environment,
             reachability: reachability,
-            analytics: analytics,
-            showContentDelegate: showContentDelegate
+            analytics: analytics
           )
 
         self.init(

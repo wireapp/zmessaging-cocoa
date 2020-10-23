@@ -68,15 +68,15 @@ class CompanyLoginURLActionProcessorTests: ZMTBaseTest, WireSyncEngine.CompanyLo
         isAllowedToCreateNewAccount = false
         let ssoCode = UUID()
         let action: URLAction = .startCompanyLogin(code: ssoCode)
-        let urlActionDelegate = MockURLActionDelegate()
+        let presentationDelegate = MockPresentationDelegate()
         
         // when
-        sut.process(urlAction: action, delegate: urlActionDelegate)
+        sut.process(urlAction: action, delegate: presentationDelegate)
         
         // then
-        XCTAssertEqual(urlActionDelegate.failedToPerformActionCalls.count, 1)
-        XCTAssertEqual(urlActionDelegate.failedToPerformActionCalls.first?.0, action)
-        XCTAssertEqual(urlActionDelegate.failedToPerformActionCalls.first?.1 as? SessionManager.AccountError, .accountLimitReached)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.count, 1)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.first?.0, action)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.first?.1 as? SessionManager.AccountError, .accountLimitReached)
     }
     
     func testThatSSOCodeIsPropagatedToAuthenticationStatus_OnStartCompanyLoginAction() {
