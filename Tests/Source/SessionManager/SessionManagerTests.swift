@@ -1416,7 +1416,7 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
         self.userSession = userSession
     }
     
-    func activeUserSessionDatabaseLockDidChange(isLocked: Bool) {
+    func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
         // no op
     }
     

@@ -626,7 +626,7 @@ extension IntegrationTest {
     }
 }
 
-extension IntegrationTest : SessionManagerDelegate {
+extension IntegrationTest: SessionManagerDelegate {
     
     public func sessionManagerDidFailToLogin(account: Account?, error: Error) {
         // no-op
@@ -646,7 +646,7 @@ extension IntegrationTest : SessionManagerDelegate {
         setupTimers()
     }
     
-    public func activeUserSessionDatabaseLockDidChange(isLocked: Bool) {
+    public func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
         // no-op
     }
     
