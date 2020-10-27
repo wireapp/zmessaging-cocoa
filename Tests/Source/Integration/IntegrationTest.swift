@@ -646,7 +646,7 @@ extension IntegrationTest : SessionManagerDelegate {
         setupTimers()
     }
     
-    public func sessionManagerDidUpdateActiveUserSession(isDatabaseLocked: Bool) {
+    public func activeUserSessionDatabaseLockDidChange(isLocked: Bool) {
         // no-op
     }
     
