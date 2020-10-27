@@ -36,8 +36,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 
 @objc public protocol SessionActivationObserver: class {
     func sessionManagerWillChangeActiveUserSession(userSession: ZMUserSession?)
-    func sessionManagerChangedActiveUserSession(userSession: ZMUserSession?,
-                                                isDatabaseLocked: Bool)
+    func sessionManagerChangedActiveUserSession(isDatabaseLocked: Bool)
 }
 
 @objc public protocol SessionManagerDelegate : SessionActivationObserver {
@@ -651,8 +650,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             guard loggedIn else {
                 return
             }
-            self?.delegate?.sessionManagerChangedActiveUserSession(userSession: userSession,
-                                                                   isDatabaseLocked: userSession.isDatabaseLocked)
+            self?.delegate?.sessionManagerChangedActiveUserSession(isDatabaseLocked: userSession.isDatabaseLocked)
         }
     }
     
@@ -715,8 +713,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             self?.accountManager.addOrUpdate(account)
         }
         let databaseEncryptionObserverToken = session.registerDatabaseLockedHandler({ [weak self] isDatabaseLocked in
-            self?.delegate?.sessionManagerChangedActiveUserSession(userSession: session,
-                                                                   isDatabaseLocked: session.isDatabaseLocked)
+            self?.delegate?.sessionManagerChangedActiveUserSession(isDatabaseLocked: session.isDatabaseLocked)
         })
         accountTokens[account.userIdentifier] = [teamObserver,
                                                  selfObserver!,

@@ -1416,8 +1416,8 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
         self.userSession = userSession
     }
     
-    func sessionManagerChangedActiveUserSession(userSession: ZMUserSession?, isDatabaseLocked: Bool) {
-        self.userSession = userSession
+    func sessionManagerChangedActiveUserSession(isDatabaseLocked: Bool) {
+        // no op
     }
     
     var startedMigrationCalled = false
