@@ -35,6 +35,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 }
 
 @objc public protocol SessionActivationObserver: class {
+    func sessionManagerWillChangeActiveUserSession(userSession: ZMUserSession?)
     func sessionManagerChangedActiveUserSession(userSession: ZMUserSession?,
                                                 isDatabaseLocked: Bool)
 }
@@ -644,6 +645,8 @@ public final class SessionManager : NSObject, SessionManagerType {
     }
     
     func checkIfLoggedIn(userSession : ZMUserSession) {
+        delegate?.sessionManagerWillChangeActiveUserSession(userSession: userSession)
+        
         userSession.checkIfLoggedIn { [weak self] loggedIn in
             guard loggedIn else {
                 return

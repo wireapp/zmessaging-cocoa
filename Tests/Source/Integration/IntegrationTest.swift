@@ -632,7 +632,7 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
     
-    public func sessionManagerChangedActiveUserSession(userSession: ZMUserSession?, isDatabaseLocked: Bool) {
+    public func sessionManagerWillChangeActiveUserSession(userSession: ZMUserSession?) {
         self.userSession = userSession
         
         if let notificationCenter = self.notificationCenter {
@@ -644,6 +644,10 @@ extension IntegrationTest : SessionManagerDelegate {
         }
         
         setupTimers()
+    }
+    
+    public func sessionManagerChangedActiveUserSession(userSession: ZMUserSession?, isDatabaseLocked: Bool) {
+        // no-op
     }
     
     public func sessionManagerWillMigrateLegacyAccount() {
