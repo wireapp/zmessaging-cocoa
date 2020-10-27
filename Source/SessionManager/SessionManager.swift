@@ -35,8 +35,8 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 }
 
 @objc public protocol SessionActivationObserver: class {
-    func sessionManagerUserIsLoggedIn(isDatabaseLocked: Bool)
-    func sessionManagerRegisterDatabaseLocked(isDatabaseLocked: Bool)
+    func sessionManagerChangedActiveUserSession(userSession: ZMUserSession?,
+                                                isDatabaseLocked: Bool)
 }
 
 @objc public protocol SessionManagerDelegate : SessionActivationObserver {
@@ -516,7 +516,6 @@ public final class SessionManager : NSObject, SessionManagerType {
             let error = NSError(code: .addAccountRequested, userInfo: userInfo)
             if self?.activeUserSession == nil {
                 // If the user is already unauthenticated, we dont need to log out the current session
-                self?.databaseEncryptionObserverToken = nil
                 self?.delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: nil)
             } else {
                 self?.logoutCurrentSession(deleteCookie: false, error: error)
@@ -589,7 +588,6 @@ public final class SessionManager : NSObject, SessionManagerType {
         
         self.createUnauthenticatedSession(accountId: deleteAccount ? nil : account.userIdentifier)
         
-        databaseEncryptionObserverToken = nil
         delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: { [weak self] in
             
             if deleteCookie {
@@ -638,7 +636,6 @@ public final class SessionManager : NSObject, SessionManagerType {
             completion(session)
 
             self.checkIfLoggedIn(userSession: session)
-            self.registerDatabaseLocked(userSession: session)
             
             // Configure user notifications if they weren't already previously configured.
             self.configureUserNotifications()
@@ -651,15 +648,9 @@ public final class SessionManager : NSObject, SessionManagerType {
             guard loggedIn else {
                 return
             }
-            self?.delegate?.sessionManagerUserIsLoggedIn(isDatabaseLocked: userSession.isDatabaseLocked)
+            self?.delegate?.sessionManagerChangedActiveUserSession(userSession: userSession,
+                                                                   isDatabaseLocked: userSession.isDatabaseLocked)
         }
-    }
-    
-    private var databaseEncryptionObserverToken: Any? = nil
-    func registerDatabaseLocked(userSession: ZMUserSession) {
-        databaseEncryptionObserverToken = userSession.registerDatabaseLockedHandler({ [weak self] isDatabaseLocked in
-            self?.delegate?.sessionManagerRegisterDatabaseLocked(isDatabaseLocked: isDatabaseLocked)
-        })
     }
     
     // Loads user session for @c account given and executes the @c action block.
@@ -716,16 +707,20 @@ public final class SessionManager : NSObject, SessionManagerType {
         let conversationListObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.conversations(inUserSession: session), userSession: session)
         let connectionRequestObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.pendingConnectionConversations(inUserSession: session), userSession: session)
         let unreadCountObserver = NotificationInContext.addObserver(name: .AccountUnreadCountDidChangeNotification,
-                                                                    context: account)
-        { [weak self] note in
+                                                                    context: account) { [weak self] note in
             guard let account = note.context as? Account else { return }
             self?.accountManager.addOrUpdate(account)
         }
+        let databaseEncryptionObserverToken = session.registerDatabaseLockedHandler({ [weak self] isDatabaseLocked in
+            self?.delegate?.sessionManagerChangedActiveUserSession(userSession: session,
+                                                                   isDatabaseLocked: session.isDatabaseLocked)
+        })
         accountTokens[account.userIdentifier] = [teamObserver,
                                                  selfObserver!,
                                                  conversationListObserver,
                                                  connectionRequestObserver,
-                                                 unreadCountObserver
+                                                 unreadCountObserver,
+                                                 databaseEncryptionObserverToken
         ]
     }
 

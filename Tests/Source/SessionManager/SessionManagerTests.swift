@@ -1412,7 +1412,7 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     }
     
     var userSession : ZMUserSession?
-    func sessionManagerActivated(userSession: ZMUserSession) {
+    func sessionManagerChangedActiveUserSession(userSession: ZMUserSession?, isDatabaseLocked: Bool) {
         self.userSession = userSession
     }
     
