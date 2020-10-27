@@ -35,7 +35,8 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 }
 
 @objc public protocol SessionActivationObserver: class {
-    func sessionManagerActivated(userSession : ZMUserSession)
+    func sessionManagerUserIsLoggedIn(isDatabaseLocked: Bool)
+    func sessionManagerRegisterDatabaseLocked(isDatabaseLocked: Bool)
 }
 
 @objc public protocol SessionManagerDelegate : SessionActivationObserver {
@@ -515,6 +516,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             let error = NSError(code: .addAccountRequested, userInfo: userInfo)
             if self?.activeUserSession == nil {
                 // If the user is already unauthenticated, we dont need to log out the current session
+                self?.databaseEncryptionObserverToken = nil
                 self?.delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: nil)
             } else {
                 self?.logoutCurrentSession(deleteCookie: false, error: error)
@@ -587,6 +589,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         
         self.createUnauthenticatedSession(accountId: deleteAccount ? nil : account.userIdentifier)
         
+        databaseEncryptionObserverToken = nil
         delegate?.sessionManagerWillLogout(error: error, userSessionCanBeTornDown: { [weak self] in
             
             if deleteCookie {
@@ -633,12 +636,30 @@ public final class SessionManager : NSObject, SessionManagerType {
             
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
             completion(session)
-            self.delegate?.sessionManagerActivated(userSession: session)
+
+            self.checkIfLoggedIn(userSession: session)
+            self.registerDatabaseLocked(userSession: session)
             
             // Configure user notifications if they weren't already previously configured.
             self.configureUserNotifications()
             self.processPendingURLAction()
         }
+    }
+    
+    func checkIfLoggedIn(userSession : ZMUserSession) {
+        userSession.checkIfLoggedIn { [weak self] loggedIn in
+            guard loggedIn else {
+                return
+            }
+            self?.delegate?.sessionManagerUserIsLoggedIn(isDatabaseLocked: userSession.isDatabaseLocked)
+        }
+    }
+    
+    private var databaseEncryptionObserverToken: Any? = nil
+    func registerDatabaseLocked(userSession: ZMUserSession) {
+        databaseEncryptionObserverToken = userSession.registerDatabaseLockedHandler({ [weak self] isDatabaseLocked in
+            self?.delegate?.sessionManagerRegisterDatabaseLocked(isDatabaseLocked: isDatabaseLocked)
+        })
     }
     
     // Loads user session for @c account given and executes the @c action block.
