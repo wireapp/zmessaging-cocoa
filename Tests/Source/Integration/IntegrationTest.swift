@@ -632,21 +632,21 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
     
-    public func sessionManagerWillChangeActiveUserSession(userSession: ZMUserSession?) {
+    public func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession) {
         self.userSession = userSession
         
         if let notificationCenter = self.notificationCenter {
             self.userSession?.localNotificationDispatcher?.notificationCenter = notificationCenter
         }
         
-        userSession?.syncManagedObjectContext.performGroupedBlock {
-            userSession?.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
+        userSession.syncManagedObjectContext.performGroupedBlock {
+            userSession.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
         }
         
         setupTimers()
     }
     
-    public func sessionManagerChangedActiveUserSession(isDatabaseLocked: Bool) {
+    public func sessionManagerDidUpdateActiveUserSession(isDatabaseLocked: Bool) {
         // no-op
     }
     
