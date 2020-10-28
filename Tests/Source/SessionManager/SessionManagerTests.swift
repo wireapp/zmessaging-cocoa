@@ -1386,7 +1386,6 @@ extension SessionManagerTests {
 
 // MARK: - Mocks
 class SessionManagerTestDelegate: SessionManagerDelegate {
-
     var onLogout: ((NSError?) -> Void)?
     func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: (() -> Void)?) {
         onLogout?(error as NSError?)
@@ -1395,7 +1394,7 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     
     func sessionManagerDidFailToLogin(account: Account?,
                                       from selectedAccount: Account?,
-                                      error : Error) {
+                                      error: Error) {
         // no op
     }
     
