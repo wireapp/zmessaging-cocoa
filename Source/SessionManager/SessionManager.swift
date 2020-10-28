@@ -626,10 +626,11 @@ public final class SessionManager : NSObject, SessionManagerType {
                 delete(account: account, reason: .sessionExpired)
             } else {
                 createUnauthenticatedSession(accountId: account?.userIdentifier)
+                let error = NSError(code: .accessTokenExpired,
+                                    userInfo: account?.loginCredentials?.dictionaryRepresentation)
                 delegate?.sessionManagerDidFailToLogin(account: account,
                                                        from: accountManager.selectedAccount,
-                                                       error: NSError(code: .accessTokenExpired,
-                                                                      userInfo: account?.loginCredentials?.dictionaryRepresentation))
+                                                       error: error)
             }
             
             return
