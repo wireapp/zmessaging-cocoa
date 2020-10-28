@@ -1397,7 +1397,9 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
         // no op
     }
     
-    func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
+    func sessionManagerWillOpenAccount(_ account: Account,
+                                       from selectedAccount: Account?,
+                                       userSessionCanBeTornDown: @escaping () -> Void) {
         userSessionCanBeTornDown()
     }
     

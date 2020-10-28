@@ -42,7 +42,9 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 @objc public protocol SessionManagerDelegate : SessionActivationObserver {
     func sessionManagerDidFailToLogin(account: Account?, error : Error)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: (() -> Void)?)
-    func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
+    func sessionManagerWillOpenAccount(_ account: Account,
+                                       from selectedAccount: Account?,
+                                       userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillMigrateAccount(_ account: Account)
     func sessionManagerWillMigrateLegacyAccount()
     func sessionManagerDidBlacklistCurrentVersion()
@@ -495,8 +497,11 @@ public final class SessionManager : NSObject, SessionManagerType {
         
         confirmSwitchingAccount { [weak self] in
             self?.isSelectingAccount = true
+            let selectedAccount = self?.accountManager.selectedAccount
             
-            self?.delegate?.sessionManagerWillOpenAccount(account, userSessionCanBeTornDown: { [weak self] in
+            self?.delegate?.sessionManagerWillOpenAccount(account,
+                                                          from: selectedAccount,
+                                                          userSessionCanBeTornDown: { [weak self] in
                 self?.activeUserSession = nil
                 tearDownCompletion?()
                 self?.loadSession(for: account) { [weak self] session in
