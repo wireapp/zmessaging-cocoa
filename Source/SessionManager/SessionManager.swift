@@ -100,7 +100,8 @@ public protocol SessionManagerType: class {
 
 @objc
 public protocol SessionManagerSwitchingDelegate: class {
-    func confirmSwitchingAccount(completion: @escaping (Bool)->Void)
+    func sessionManagerConfirmSwitchingAccount(activeUserSession: ZMUserSession,
+                                               completion: @escaping (Bool) -> Void)
 }
 
 @objc
@@ -1297,15 +1298,20 @@ extension SessionManager {
 extension SessionManager {
     
     public func confirmSwitchingAccount(completion: @escaping ()->Void) {
-        guard let switchingDelegate = switchingDelegate else { return completion() }
+        guard
+            let switchingDelegate = switchingDelegate,
+            let activeUserSession = activeUserSession
+        else {
+            return completion()
+        }
         
-        switchingDelegate.confirmSwitchingAccount(completion: { (confirmed) in
+        switchingDelegate.sessionManagerConfirmSwitchingAccount(activeUserSession: activeUserSession,
+                                                                completion: { confirmed in
             if confirmed {
                 completion()
             }
         })
     }
-    
 }
 
 // MARK: - AVS Logging
