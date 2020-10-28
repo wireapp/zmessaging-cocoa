@@ -172,7 +172,7 @@
 		16E0FB87232F8933000E3235 /* ZMUserSession+Authentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E0FB86232F8933000E3235 /* ZMUserSession+Authentication.swift */; };
 		16E0FBB623311A19000E3235 /* ZMUserSessionTests+Authentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E0FBB4233119FE000E3235 /* ZMUserSessionTests+Authentication.swift */; };
 		16E6F26224B371190015B249 /* ZMUserSession+EncryptionAtRest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E6F26124B371190015B249 /* ZMUserSession+EncryptionAtRest.swift */; };
-		16ED865A23E2E91900CB1766 /* ZMUserSession+Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16ED865923E2E91900CB1766 /* ZMUserSession+Background.swift */; };
+		16ED865A23E2E91900CB1766 /* ZMUserSession+LifeCycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16ED865923E2E91900CB1766 /* ZMUserSession+LifeCycle.swift */; };
 		16ED865B23E2EE3C00CB1766 /* ZMMissingUpdateEventsTranscoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 54F8D6E419AB535700146664 /* ZMMissingUpdateEventsTranscoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		16ED865D23E30F7E00CB1766 /* ZMUserSesson+Proxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16ED865C23E30F7E00CB1766 /* ZMUserSesson+Proxy.swift */; };
 		16ED865F23E3145C00CB1766 /* ZMUserSession+Clients.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16ED865E23E3145C00CB1766 /* ZMUserSession+Clients.swift */; };
@@ -807,7 +807,7 @@
 		16E0FB86232F8933000E3235 /* ZMUserSession+Authentication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+Authentication.swift"; sourceTree = "<group>"; };
 		16E0FBB4233119FE000E3235 /* ZMUserSessionTests+Authentication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSessionTests+Authentication.swift"; sourceTree = "<group>"; };
 		16E6F26124B371190015B249 /* ZMUserSession+EncryptionAtRest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+EncryptionAtRest.swift"; sourceTree = "<group>"; };
-		16ED865923E2E91900CB1766 /* ZMUserSession+Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+Background.swift"; sourceTree = "<group>"; };
+		16ED865923E2E91900CB1766 /* ZMUserSession+LifeCycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+LifeCycle.swift"; sourceTree = "<group>"; };
 		16ED865C23E30F7E00CB1766 /* ZMUserSesson+Proxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSesson+Proxy.swift"; sourceTree = "<group>"; };
 		16ED865E23E3145C00CB1766 /* ZMUserSession+Clients.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+Clients.swift"; sourceTree = "<group>"; };
 		16F5F16B1E4092C00062F0AE /* NSManagedObjectContext+CTCallCenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSManagedObjectContext+CTCallCenter.swift"; sourceTree = "<group>"; };
@@ -1931,7 +1931,7 @@
 				EEEED9A923F6BD75008C94CA /* ZMUserSession+SelfUserProvider.swift */,
 				636B716723BF46EA00B624D6 /* ZMUserSession+VerifyPassword.swift */,
 				164EAF9B1F4455FA00B628C4 /* ZMUserSession+Actions.swift */,
-				16ED865923E2E91900CB1766 /* ZMUserSession+Background.swift */,
+				16ED865923E2E91900CB1766 /* ZMUserSession+LifeCycle.swift */,
 				16E0FB86232F8933000E3235 /* ZMUserSession+Authentication.swift */,
 				16ED865C23E30F7E00CB1766 /* ZMUserSesson+Proxy.swift */,
 				54034F371BB1A6D900F4ED62 /* ZMUserSession+Logs.swift */,
@@ -3073,7 +3073,7 @@
 				87508EA01D08264000162483 /* ZMSound.swift in Sources */,
 				1662B0F723D9B29C00B8C7C5 /* UnauthenticatedSession+DomainLookup.swift in Sources */,
 				5E9D326F2109C1740032FB06 /* CompanyLoginErrorCode.swift in Sources */,
-				16ED865A23E2E91900CB1766 /* ZMUserSession+Background.swift in Sources */,
+				16ED865A23E2E91900CB1766 /* ZMUserSession+LifeCycle.swift in Sources */,
 				F95706541DE5D1CC0087442C /* SearchUserImageStrategy.swift in Sources */,
 				163FB9992057E3F200E74F83 /* AuthenticationStatusProvider.swift in Sources */,
 				54CB3FE124A34B8A00BA86DD /* FeatureFlagRequestStrategy.swift in Sources */,
