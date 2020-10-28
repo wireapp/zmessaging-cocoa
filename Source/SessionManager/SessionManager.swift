@@ -646,6 +646,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
             completion(session)
 
+            self.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
             self.checkIfLoggedIn(userSession: session)
             
             // Configure user notifications if they weren't already previously configured.
@@ -655,13 +656,8 @@ public final class SessionManager : NSObject, SessionManagerType {
     }
     
     func checkIfLoggedIn(userSession : ZMUserSession) {
-        delegate?.sessionManagerDidChangeActiveUserSession(userSession: userSession)
-        
         userSession.checkIfLoggedIn { [weak self] loggedIn in
-            guard
-                loggedIn,
-                userSession == self?.activeUserSession
-            else {
+            guard loggedIn else {
                 return
             }
             self?.delegate?.sessionManagerDidReportDatabaseLockChange(isLocked: userSession.isDatabaseLocked)
@@ -727,6 +723,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             self?.accountManager.addOrUpdate(account)
         }
         let databaseEncryptionObserverToken = session.registerDatabaseLockedHandler({ [weak self] isDatabaseLocked in
+            guard session == self?.activeUserSession else { return }
             self?.delegate?.sessionManagerDidReportDatabaseLockChange(isLocked: session.isDatabaseLocked)
         })
         accountTokens[account.userIdentifier] = [teamObserver,
