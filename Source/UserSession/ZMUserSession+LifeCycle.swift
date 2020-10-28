@@ -53,6 +53,13 @@ extension ZMUserSession {
         mergeChangesFromStoredSaveNotificationsIfNeeded()
         startEphemeralTimers()
         deleteOldEphemeralMessages()
+        processPendingEvents()
+    }
+    
+    func processPendingEvents() {
+        syncManagedObjectContext.performGroupedBlock {
+            self.processEvents()
+        }
     }
     
     func deleteOldEphemeralMessages() {
