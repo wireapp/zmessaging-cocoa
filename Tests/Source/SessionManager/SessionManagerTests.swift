@@ -1393,7 +1393,9 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
         userSessionCanBeTornDown?()
     }
     
-    func sessionManagerDidFailToLogin(account: Account?, error: Error) {
+    func sessionManagerDidFailToLogin(account: Account?,
+                                      from selectedAccount: Account?,
+                                      error : Error) {
         // no op
     }
     

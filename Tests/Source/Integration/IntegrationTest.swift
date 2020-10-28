@@ -628,8 +628,10 @@ extension IntegrationTest {
 
 extension IntegrationTest: SessionManagerDelegate {
     
-    public func sessionManagerDidFailToLogin(account: Account?, error: Error) {
-        // no-op
+    public func sessionManagerDidFailToLogin(account: Account?,
+                                      from selectedAccount: Account?,
+                                      error : Error) {
+        // no op
     }
     
     public func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession) {
