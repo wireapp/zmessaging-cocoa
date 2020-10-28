@@ -39,7 +39,7 @@ extension ZMSyncStrategy: UpdateEventProcessor {
     ///
     /// /// - Returns: **True** if there are still more events to process
     @objc
-    func processEventsIfReady() -> Bool { // TODO jacob shouldn't be public
+    public func processEventsIfReady() -> Bool { // TODO jacob shouldn't be public
         guard isReadyToProcessEvents else {
             return  true
         }
