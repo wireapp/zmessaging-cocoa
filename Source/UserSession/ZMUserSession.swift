@@ -472,12 +472,21 @@ extension ZMUserSession: ZMSyncStateDelegate {
         guard let syncStrategy = syncStrategy else { return }
         
         syncStrategy.processAllEventsInBuffer()
-        let hasMoreEventsToProcess = syncStrategy.processEventsAfterFinishingQuickSync()
+        processEvents()
+        
+        managedObjectContext.performGroupedBlock { [weak self] in
+            self?.notifyThirdPartyServices()
+        }
+    }
+    
+    func processEvents() {
+        guard let syncStrategy = syncStrategy else { return }
+        
+        let hasMoreEventsToProcess = syncStrategy.processEventsIfReady()
         
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.isPerformingSync = hasMoreEventsToProcess
             self?.updateNetworkState()
-            self?.notifyThirdPartyServices()
         }
     }
     
