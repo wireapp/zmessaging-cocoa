@@ -35,6 +35,12 @@ public protocol CallNotificationStyleProvider: class {
         return sessionManager?.callNotificationStyle ?? .pushNotifications
     }
     
+    public var isCallOngoing: Bool {
+        guard let callCenter = callCenter else { return false }
+        
+        return !callCenter.activeCallConversations(in: self).isEmpty
+    }
+    
     internal var callKitManager : CallKitManager? {
         return sessionManager?.callKitManager
     }
@@ -60,5 +66,7 @@ public protocol CallNotificationStyleProvider: class {
             return managedObjectContext.zm_useConferenceCalling
         }
     }
+    
+    
     
 }

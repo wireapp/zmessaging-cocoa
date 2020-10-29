@@ -42,7 +42,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 @objc public protocol SessionManagerDelegate : SessionActivationObserver {
     func sessionManagerDidFailToLogin(account: Account?,
                                       from selectedAccount: Account?,
-                                      error : Error)
+                                      error: Error)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: (() -> Void)?)
     func sessionManagerWillOpenAccount(_ account: Account,
                                        from selectedAccount: Account?,
@@ -100,7 +100,7 @@ public protocol SessionManagerType: class {
 
 @objc
 public protocol SessionManagerSwitchingDelegate: class {
-    func confirmSwitchingAccount(completion: @escaping (Bool)->Void)
+    func confirmSwitchingAccount(completion: @escaping (Bool) -> Void)
 }
 
 @objc
@@ -1294,15 +1294,21 @@ extension SessionManager {
 extension SessionManager {
     
     public func confirmSwitchingAccount(completion: @escaping ()->Void) {
-        guard let switchingDelegate = switchingDelegate else { return completion() }
+        guard
+            let switchingDelegate = switchingDelegate,
+            let activeUserSession = activeUserSession,
+            activeUserSession.isCallOngoing
+        else {
+            return completion()
+        }
         
-        switchingDelegate.confirmSwitchingAccount(completion: { (confirmed) in
+        switchingDelegate.confirmSwitchingAccount(completion: { confirmed in
             if confirmed {
+                activeUserSession.callCenter?.endAllCalls()
                 completion()
             }
         })
     }
-    
 }
 
 // MARK: - AVS Logging

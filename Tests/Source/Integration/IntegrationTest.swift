@@ -630,7 +630,7 @@ extension IntegrationTest: SessionManagerDelegate {
     
     public func sessionManagerDidFailToLogin(account: Account?,
                                       from selectedAccount: Account?,
-                                      error : Error) {
+                                      error: Error) {
         // no op
     }
     
