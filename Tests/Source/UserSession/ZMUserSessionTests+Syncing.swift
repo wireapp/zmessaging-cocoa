@@ -23,7 +23,7 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
     
     // MARK: Helpers
     
-    class InitialSyncObserver : NSObject, ZMInitialSyncCompletionObserver {
+    class InitialSyncObserver: NSObject, ZMInitialSyncCompletionObserver {
         
         var didNotify : Bool = false
         var initialSyncToken : Any?
@@ -37,7 +37,6 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
             didNotify = true
         }
     }
-    
     
     // MARK: Slow Sync
     
@@ -130,6 +129,26 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
+        XCTAssertFalse(sut.isPerformingSync)
+    }
+    
+    // MARK: Process events
+    
+    func testThatItNotifiesOnlineSynchronzingWhileProcessingEvents() {
+        
+        // given
+        sut.didReceiveData()
+        sut.didFinishSlowSync()
+        sut.didFinishQuickSync()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        let networkStateRecorder = NetworkStateRecorder(userSession: sut)
+        
+        // when
+        sut.processEvents()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(networkStateRecorder.stateChanges, [.onlineSynchronizing, .online])
         XCTAssertFalse(sut.isPerformingSync)
     }
     
