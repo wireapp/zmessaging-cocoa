@@ -482,6 +482,11 @@ extension ZMUserSession: ZMSyncStateDelegate {
     func processEvents() {
         guard let syncStrategy = syncStrategy else { return }
         
+        managedObjectContext.performGroupedBlock { [weak self] in
+            self?.isPerformingSync = true
+            self?.updateNetworkState()
+        }
+        
         let hasMoreEventsToProcess = syncStrategy.processEventsIfReady()
         
         managedObjectContext.performGroupedBlock { [weak self] in
