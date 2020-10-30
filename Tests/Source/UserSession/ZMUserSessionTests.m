@@ -634,8 +634,8 @@
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(stateRecorder.stateChanges.count, 1u);
-    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges.firstObject intValue], ZMNetworkStateOnlineSynchronizing);
+    XCTAssertEqual(stateRecorder.stateChanges_objc.count, 1u);
+    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges_objc.firstObject intValue], ZMNetworkStateOnlineSynchronizing);
     
     // after
     token = nil;
@@ -652,7 +652,7 @@
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(stateRecorder.stateChanges.count, 0u);
+    XCTAssertEqual(stateRecorder.stateChanges_objc.count, 0u);
     
     // after
     token = nil;
@@ -670,8 +670,8 @@
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(stateRecorder.stateChanges.count, 1u);
-    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges.firstObject intValue], ZMNetworkStateOffline);
+    XCTAssertEqual(stateRecorder.stateChanges_objc.count, 1u);
+    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges_objc.firstObject intValue], ZMNetworkStateOffline);
     
     // after
     token = nil;
@@ -690,7 +690,7 @@
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(stateRecorder.stateChanges.count, 0u);
+    XCTAssertEqual(stateRecorder.stateChanges_objc.count, 0u);
     
     // after
     token = nil;

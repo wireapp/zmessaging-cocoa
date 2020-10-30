@@ -297,9 +297,9 @@
     XCTAssertTrue([self login]);
     
     // then
-    XCTAssertEqual(stateRecoder.stateChanges.count, 2u);
-    ZMNetworkState state1 = (ZMNetworkState)[stateRecoder.stateChanges.firstObject intValue];
-    ZMNetworkState state2 = (ZMNetworkState)[stateRecoder.stateChanges.lastObject intValue];
+    XCTAssertEqual(stateRecoder.stateChanges_objc.count, 2u);
+    ZMNetworkState state1 = (ZMNetworkState)[stateRecoder.stateChanges_objc.firstObject intValue];
+    ZMNetworkState state2 = (ZMNetworkState)[stateRecoder.stateChanges_objc.lastObject intValue];
 
     XCTAssertEqual(state1, ZMNetworkStateOnlineSynchronizing);
     XCTAssertEqual(state2, ZMNetworkStateOnline);

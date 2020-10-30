@@ -92,8 +92,7 @@
     self.syncStrategy = [OCMockObject mockForClass:[ZMSyncStrategy class]];
     [(ZMSyncStrategy *)[[(id)self.syncStrategy stub] andReturn:applicationStatusDirectory] applicationStatusDirectory];
     NOT_USED([[(id)self.syncStrategy stub] processAllEventsInBuffer]);
-    NOT_USED([[(id)self.syncStrategy stub] processEventsAfterFinishingQuickSync]);
-    NOT_USED([[(id)self.syncStrategy stub] processEventsAfterUnlockingDatabase]);
+    NOT_USED([[(id)self.syncStrategy stub] processEventsIfReady]);
     [self verifyMockLater:self.syncStrategy];
 
     self.operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];

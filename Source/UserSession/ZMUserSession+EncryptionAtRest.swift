@@ -93,14 +93,7 @@ extension ZMUserSession: UserSessionEncryptionAtRestInterface {
         DatabaseEncryptionLockNotification(databaseIsEncrypted: false).post(in: managedObjectContext.notificationContext)
         
         syncManagedObjectContext.performGroupedBlock {
-            guard let syncStrategy = self.syncStrategy else { return }
-            
-            let hasMoreEventsToProcess = syncStrategy.processEventsAfterUnlockingDatabase()
-            
-            self.managedObjectContext.performGroupedBlock { [weak self] in
-                self?.isPerformingSync = hasMoreEventsToProcess
-                self?.updateNetworkState()
-            }
+            self.processEvents()
         }
     }
     
