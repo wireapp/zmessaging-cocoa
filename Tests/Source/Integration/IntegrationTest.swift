@@ -626,13 +626,15 @@ extension IntegrationTest {
     }
 }
 
-extension IntegrationTest : SessionManagerDelegate {
+extension IntegrationTest: SessionManagerDelegate {
     
-    public func sessionManagerDidFailToLogin(account: Account?, error: Error) {
-        // no-op
+    public func sessionManagerDidFailToLogin(account: Account?,
+                                      from selectedAccount: Account?,
+                                      error: Error) {
+        // no op
     }
     
-    public func sessionManagerActivated(userSession: ZMUserSession) {
+    public func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession) {
         self.userSession = userSession
         
         if let notificationCenter = self.notificationCenter {
@@ -644,6 +646,10 @@ extension IntegrationTest : SessionManagerDelegate {
         }
         
         setupTimers()
+    }
+    
+    public func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
+        // no-op
     }
     
     public func sessionManagerWillMigrateLegacyAccount() {
@@ -667,7 +673,9 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
         
-    public func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
+    public func sessionManagerWillOpenAccount(_ account: Account,
+                                              from selectedAccount: Account?,
+                                              userSessionCanBeTornDown: @escaping () -> Void) {
         self.userSession = nil
         userSessionCanBeTornDown()
     }

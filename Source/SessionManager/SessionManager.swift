@@ -35,13 +35,18 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 }
 
 @objc public protocol SessionActivationObserver: class {
-    func sessionManagerActivated(userSession : ZMUserSession)
+    func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession)
+    func sessionManagerDidReportDatabaseLockChange(isLocked: Bool)
 }
 
 @objc public protocol SessionManagerDelegate : SessionActivationObserver {
-    func sessionManagerDidFailToLogin(account: Account?, error : Error)
+    func sessionManagerDidFailToLogin(account: Account?,
+                                      from selectedAccount: Account?,
+                                      error: Error)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: (() -> Void)?)
-    func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
+    func sessionManagerWillOpenAccount(_ account: Account,
+                                       from selectedAccount: Account?,
+                                       userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillMigrateAccount(_ account: Account)
     func sessionManagerWillMigrateLegacyAccount()
     func sessionManagerDidBlacklistCurrentVersion()
@@ -95,7 +100,7 @@ public protocol SessionManagerType: class {
 
 @objc
 public protocol SessionManagerSwitchingDelegate: class {
-    func confirmSwitchingAccount(completion: @escaping (Bool)->Void)
+    func confirmSwitchingAccount(completion: @escaping (Bool) -> Void)
 }
 
 @objc
@@ -494,8 +499,11 @@ public final class SessionManager : NSObject, SessionManagerType {
         
         confirmSwitchingAccount { [weak self] in
             self?.isSelectingAccount = true
+            let selectedAccount = self?.accountManager.selectedAccount
             
-            self?.delegate?.sessionManagerWillOpenAccount(account, userSessionCanBeTornDown: { [weak self] in
+            self?.delegate?.sessionManagerWillOpenAccount(account,
+                                                          from: selectedAccount,
+                                                          userSessionCanBeTornDown: { [weak self] in
                 self?.activeUserSession = nil
                 tearDownCompletion?()
                 self?.loadSession(for: account) { [weak self] session in
@@ -618,7 +626,11 @@ public final class SessionManager : NSObject, SessionManagerType {
                 delete(account: account, reason: .sessionExpired)
             } else {
                 createUnauthenticatedSession(accountId: account?.userIdentifier)
-                delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: account?.loginCredentials?.dictionaryRepresentation))
+                let error = NSError(code: .accessTokenExpired,
+                                    userInfo: account?.loginCredentials?.dictionaryRepresentation)
+                delegate?.sessionManagerDidFailToLogin(account: account,
+                                                       from: accountManager.selectedAccount,
+                                                       error: error)
             }
             
             return
@@ -633,11 +645,22 @@ public final class SessionManager : NSObject, SessionManagerType {
             
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
             completion(session)
-            self.delegate?.sessionManagerActivated(userSession: session)
+
+            self.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
+            self.checkIfLoggedIn(userSession: session)
             
             // Configure user notifications if they weren't already previously configured.
             self.configureUserNotifications()
             self.processPendingURLAction()
+        }
+    }
+    
+    func checkIfLoggedIn(userSession : ZMUserSession) {
+        userSession.checkIfLoggedIn { [weak self] loggedIn in
+            guard loggedIn else {
+                return
+            }
+            self?.delegate?.sessionManagerDidReportDatabaseLockChange(isLocked: userSession.isDatabaseLocked)
         }
     }
     
@@ -695,16 +718,20 @@ public final class SessionManager : NSObject, SessionManagerType {
         let conversationListObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.conversations(inUserSession: session), userSession: session)
         let connectionRequestObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.pendingConnectionConversations(inUserSession: session), userSession: session)
         let unreadCountObserver = NotificationInContext.addObserver(name: .AccountUnreadCountDidChangeNotification,
-                                                                    context: account)
-        { [weak self] note in
+                                                                    context: account) { [weak self] note in
             guard let account = note.context as? Account else { return }
             self?.accountManager.addOrUpdate(account)
         }
+        let databaseEncryptionObserverToken = session.registerDatabaseLockedHandler({ [weak self] isDatabaseLocked in
+            guard session == self?.activeUserSession else { return }
+            self?.delegate?.sessionManagerDidReportDatabaseLockChange(isLocked: session.isDatabaseLocked)
+        })
         accountTokens[account.userIdentifier] = [teamObserver,
                                                  selfObserver!,
                                                  conversationListObserver,
                                                  connectionRequestObserver,
-                                                 unreadCountObserver
+                                                 unreadCountObserver,
+                                                 databaseEncryptionObserverToken
         ]
     }
 
@@ -1033,7 +1060,9 @@ extension SessionManager: PostLoginAuthenticationObserver {
             createUnauthenticatedSession(accountId: accountId)
         }
         
-        delegate?.sessionManagerDidFailToLogin(account: accountManager.account(with: accountId), error: error)
+        delegate?.sessionManagerDidFailToLogin(account: accountManager.account(with: accountId),
+                                               from: accountManager.selectedAccount,
+                                               error: error)
     }
     
     public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
@@ -1058,7 +1087,9 @@ extension SessionManager: PostLoginAuthenticationObserver {
                 createUnauthenticatedSession(accountId: accountId)
             }
             
-            delegate?.sessionManagerDidFailToLogin(account: accountManager.account(with: accountId), error: error)
+            delegate?.sessionManagerDidFailToLogin(account: accountManager.account(with: accountId),
+                                                   from: accountManager.selectedAccount,
+                                                   error: error)
         }
     }
 
@@ -1173,7 +1204,9 @@ extension SessionManager : PreLoginAuthenticationObserver {
             createUnauthenticatedSession()
         }
         
-        delegate?.sessionManagerDidFailToLogin(account: nil, error: error)
+        delegate?.sessionManagerDidFailToLogin(account: nil,
+                                               from: accountManager.selectedAccount,
+                                               error: error)
     }
 
     public func companyLoginCodeDidBecomeAvailable(_ code: UUID) {
@@ -1261,15 +1294,21 @@ extension SessionManager {
 extension SessionManager {
     
     public func confirmSwitchingAccount(completion: @escaping ()->Void) {
-        guard let switchingDelegate = switchingDelegate else { return completion() }
+        guard
+            let switchingDelegate = switchingDelegate,
+            let activeUserSession = activeUserSession,
+            activeUserSession.isCallOngoing
+        else {
+            return completion()
+        }
         
-        switchingDelegate.confirmSwitchingAccount(completion: { (confirmed) in
+        switchingDelegate.confirmSwitchingAccount(completion: { confirmed in
             if confirmed {
+                activeUserSession.callCenter?.endAllCalls()
                 completion()
             }
         })
     }
-    
 }
 
 // MARK: - AVS Logging

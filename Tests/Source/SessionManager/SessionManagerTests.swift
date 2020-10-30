@@ -1386,18 +1386,21 @@ extension SessionManagerTests {
 
 // MARK: - Mocks
 class SessionManagerTestDelegate: SessionManagerDelegate {
-
     var onLogout: ((NSError?) -> Void)?
     func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: (() -> Void)?) {
         onLogout?(error as NSError?)
         userSessionCanBeTornDown?()
     }
     
-    func sessionManagerDidFailToLogin(account: Account?, error: Error) {
+    func sessionManagerDidFailToLogin(account: Account?,
+                                      from selectedAccount: Account?,
+                                      error: Error) {
         // no op
     }
     
-    func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
+    func sessionManagerWillOpenAccount(_ account: Account,
+                                       from selectedAccount: Account?,
+                                       userSessionCanBeTornDown: @escaping () -> Void) {
         userSessionCanBeTornDown()
     }
     
@@ -1412,8 +1415,12 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     }
     
     var userSession : ZMUserSession?
-    func sessionManagerActivated(userSession: ZMUserSession) {
+    func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession) {
         self.userSession = userSession
+    }
+    
+    func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
+        // no op
     }
     
     var startedMigrationCalled = false
