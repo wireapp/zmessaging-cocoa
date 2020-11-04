@@ -475,7 +475,7 @@ extension IntegrationTest {
         let data = (uuid as NSUUID).data() as NSData
         let predicate = NSPredicate(format: "remoteIdentifier_data == %@", data)
         let request = ZMUser.sortedFetchRequest(with: predicate)
-        let result = userSession?.managedObjectContext.executeFetchRequestOrAssert(request) as? [ZMUser]
+        let result = userSession?.managedObjectContext.executeFetchRequestOrAssert(request!) as? [ZMUser]
         
         if let user = result?.first {
             return user
@@ -492,7 +492,7 @@ extension IntegrationTest {
         let data = (uuid as NSUUID).data() as NSData
         let predicate = NSPredicate(format: "remoteIdentifier_data == %@", data)
         let request = ZMConversation.sortedFetchRequest(with: predicate)
-        let result = userSession?.managedObjectContext.executeFetchRequestOrAssert(request) as? [ZMConversation]
+        let result = userSession?.managedObjectContext.executeFetchRequestOrAssert(request!) as? [ZMConversation]
         
         if let conversation = result?.first {
             return conversation
