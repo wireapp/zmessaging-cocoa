@@ -222,9 +222,7 @@ extension SearchTask {
     }
     
     func connectedUsers(matchingQuery query: String) -> [ZMUser] {
-        guard let fetchRequest = ZMUser.sortedFetchRequest(with: ZMUser.predicateForConnectedUsers(withSearch: query)) else {
-            return []
-        }
+        let fetchRequest = ZMUser.sortedFetchRequest(with: ZMUser.predicateForConnectedUsers(withSearch: query))
         
         return searchContext.fetchOrAssert(request: fetchRequest) as? [ZMUser] ?? []
     }
@@ -232,15 +230,11 @@ extension SearchTask {
     func conversations(matchingQuery query: String) -> [ZMConversation] {
         ///TODO: use the interface with tean param?
         let fetchRequest = ZMConversation.sortedFetchRequest(with: ZMConversation.predicate(forSearchQuery: query, selfUser: ZMUser.selfUser(in: searchContext)))
-        fetchRequest?.sortDescriptors = [NSSortDescriptor(key: ZMNormalizedUserDefinedNameKey, ascending: true)]
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: ZMNormalizedUserDefinedNameKey, ascending: true)]
         
         var conversations: [ZMConversation]
-        if let unwrappedRequest = fetchRequest {
-            conversations = searchContext.fetchOrAssert(request: unwrappedRequest) as? [ZMConversation] ?? []
-        } else {
-            conversations = []
-        }
-        
+        conversations = searchContext.fetchOrAssert(request: fetchRequest) as? [ZMConversation] ?? []
+
         if query.hasPrefix("@") {
             // if we are searching for a username only include conversations with matching displayName
             conversations = conversations.filter { $0.displayName.contains(query)}
