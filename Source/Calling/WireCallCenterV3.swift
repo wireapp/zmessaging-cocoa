@@ -368,8 +368,10 @@ extension WireCallCenterV3 {
         
         endAllCalls(exluding: conversationId)
         
-        let callType = self.callType(startedWithVideo: video)
-        
+        let callType = self.callType(for: conversation,
+                                     startedWithVideo: video,
+                                     isConferenceCall: isConferenceCall(conversationId: conversationId))
+
         if !video {
             setVideoState(conversationId: conversationId, videoState: VideoState.stopped)
         }
@@ -412,7 +414,9 @@ extension WireCallCenterV3 {
             conversationType = .oneToOne
         }
 
-        let callType = self.callType(startedWithVideo: video)
+        let callType = self.callType(for: conversation,
+                                     startedWithVideo: video,
+                                     isConferenceCall: conversationType == .conference)
 
         let started = avsWrapper.startCall(conversationId: conversationId,
                                            callType: callType,
@@ -515,10 +519,13 @@ extension WireCallCenterV3 {
         flowManager.setVideoCaptureDevice(captureDevice, for: conversationId)
     }
 
-    private func callType(startedWithVideo: Bool) -> AVSCallType {
-        return startedWithVideo ? .video : .normal
+    private func callType(for conversation: ZMConversation, startedWithVideo: Bool, isConferenceCall: Bool) -> AVSCallType {
+        if !isConferenceCall && conversation.localParticipants.count > legacyVideoParticipantsLimit {
+            return .audioOnly
+        } else {
+            return startedWithVideo ? .video : .normal
+        }
     }
-
 }
 
 // MARK: - AVS Integration
