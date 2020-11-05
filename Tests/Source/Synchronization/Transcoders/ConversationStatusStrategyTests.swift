@@ -122,7 +122,7 @@ class ConversationStatusStrategyTests: MessagingTest {
             
             // when
             let request = self.sut.fetchRequestForTrackedObjects()
-            let result = self.syncMOC.executeFetchRequestOrAssert(request) as! [NSManagedObject]
+            let result = self.syncMOC.executeFetchRequestOrAssert(request! ) as! [NSManagedObject]
             if (result.count > 0) {
                 self.sut.addTrackedObjects(Set<NSManagedObject>(result))
             } else {

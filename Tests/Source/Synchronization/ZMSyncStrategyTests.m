@@ -682,7 +682,7 @@
     XCTAssertTrue([self.uiMOC saveOrRollback]);
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [self.sut.syncMOC performGroupedBlockAndWaitWithReasonableTimeout:^{
+    [self.sut.syncMOC performGroupedBlockThenWaitForReasonableTimeout:^{
         ZMUser *syncUser =  (ZMUser *)[self.sut.syncMOC objectWithID:uiUser.objectID];
         XCTAssertNotNil(syncUser);
         XCTAssertNil(syncUser.name);
@@ -697,7 +697,7 @@
     // sut automagically synchronizes objects
 
     // then
-    [self.sut.syncMOC performGroupedBlockAndWaitWithReasonableTimeout:^{
+    [self.sut.syncMOC performGroupedBlockThenWaitForReasonableTimeout:^{
         ZMUser *syncUser =  (ZMUser *)[self.sut.syncMOC objectWithID:uiUser.objectID];
         XCTAssertNotNil(syncUser);
         XCTAssertEqualObjects(syncUser.name, name);
@@ -712,7 +712,7 @@
     [self expectationForNotification:NSManagedObjectContextObjectsDidChangeNotification object:self.uiMOC handler:nil];
     
     // when
-    [self.syncMOC performGroupedBlockAndWaitWithReasonableTimeout:^{
+    [self.syncMOC performGroupedBlockThenWaitForReasonableTimeout:^{
         syncUser = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         XCTAssertTrue([self.syncMOC saveOrRollback]);
     }];
@@ -731,7 +731,7 @@
     }];
     
     // when
-    [self.syncMOC performGroupedBlockAndWaitWithReasonableTimeout:^{
+    [self.syncMOC performGroupedBlockThenWaitForReasonableTimeout:^{
         syncUser.name = name;
         XCTAssertTrue([self.syncMOC saveOrRollback]);
     }];
