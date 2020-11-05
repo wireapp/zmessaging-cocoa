@@ -52,7 +52,17 @@ extension ZMUserSession {
         
         mergeChangesFromStoredSaveNotificationsIfNeeded()
         startEphemeralTimers()
-        
+        deleteOldEphemeralMessages()
+        processPendingEvents()
+    }
+    
+    func processPendingEvents() {
+        syncManagedObjectContext.performGroupedBlock {
+            self.processEvents()
+        }
+    }
+    
+    func deleteOldEphemeralMessages() {
         // In the case that an ephemeral was sent via the share extension, we need
         // to ensure that they have timers running or are deleted/obfuscated if
         // needed. Note: ZMMessageTimer will only create a new timer for a message

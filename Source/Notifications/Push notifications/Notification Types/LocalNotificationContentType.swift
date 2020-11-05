@@ -70,7 +70,7 @@ public enum LocalNotificationContentType: Equatable {
             let quotedMessageId = UUID(uuidString: textMessageData.quote.quotedMessageID)
             return ZMOTRMessage.fetch(withNonce: quotedMessageId, for: conversation, in: moc)
         }
-
+        
         switch message.content {
         case .location:
             self =  .location
@@ -82,21 +82,22 @@ public enum LocalNotificationContentType: Equatable {
             self = .image
 
         case .ephemeral:
-            if let textMessageData = message.textData {
+            if message.ephemeral.hasText {
+                let textMessageData = message.ephemeral.text
                 let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc)
                 self = .ephemeral(isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
             } else {
                 self = .ephemeral(isMention: false, isReply: false)
             }
 
-        case .text, .edited:
+        case .text:
             guard
                 let textMessageData = message.textData,
                 let text = message.textData?.content.removingExtremeCombiningCharacters, !text.isEmpty
             else {
                 return nil
             }
-
+            
             let quotedMessage = getQuotedMessage(textMessageData, conversation: conversation, in: moc)
             self = .text(text, isMention: textMessageData.isMentioningSelf(selfUser), isReply: textMessageData.isQuotingSelf(quotedMessage))
 

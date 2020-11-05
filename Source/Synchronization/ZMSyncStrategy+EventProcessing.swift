@@ -34,28 +34,12 @@ public protocol UpdateEventProcessor: class {
 }
 
 extension ZMSyncStrategy: UpdateEventProcessor {
-         
-    /// Process previously received events after finishing the quick sync.
-    ///
-    /// - Returns: **True** if there are still more events to process
-    @objc
-    public func processEventsAfterFinishingQuickSync() -> Bool { // TODO jacob shouldn't be public
-        processAllEventsInBuffer()
-        return processEventsIfReady()
-    }
-    
-    /// Process previously received events after unlocking the database.
-    ///
-    /// - Returns: **True** if there are still more events to process
-    @objc
-    public func processEventsAfterUnlockingDatabase() -> Bool { // TODO jacob shouldn't be public
-        return processEventsIfReady()
-    }
-        
+                 
     /// Process previously received events if we are ready to process events.
     ///
     /// /// - Returns: **True** if there are still more events to process
-    func processEventsIfReady() -> Bool {
+    @objc
+    public func processEventsIfReady() -> Bool { // TODO jacob shouldn't be public
         guard isReadyToProcessEvents else {
             return  true
         }
