@@ -640,7 +640,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     }
     
     fileprivate func activateSession(for account: Account, completion: @escaping (ZMUserSession) -> Void) {
-        self.withSession(for: account) { session in
+        self.withSession(for: account, notifyAboutMigration: true) { session in
             self.activeUserSession = session
             
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
@@ -665,7 +665,9 @@ public final class SessionManager : NSObject, SessionManagerType {
     }
     
     // Loads user session for @c account given and executes the @c action block.
-    func withSession(for account: Account, perform completion: @escaping (ZMUserSession)->()) {
+    func withSession(for account: Account,
+                     notifyAboutMigration: Bool = false,
+                     perform completion: @escaping (ZMUserSession)->()) {
         log.debug("Request to load session for \(account)")
         let group = self.dispatchGroup
         group?.enter()
@@ -682,7 +684,11 @@ public final class SessionManager : NSObject, SessionManagerType {
                     applicationContainer: self.sharedContainerURL,
                     userIdentifier: account.userIdentifier,
                     dispatchGroup: self.dispatchGroup,
-                    migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateAccount(account) },
+                    migration: { [weak self] in
+                        if notifyAboutMigration {
+                            self?.delegate?.sessionManagerWillMigrateAccount(account)
+                        }
+                    },
                     completion: { provider in
                         let userSession = self.startBackgroundSession(for: account, with: provider)
                         completion(userSession)
