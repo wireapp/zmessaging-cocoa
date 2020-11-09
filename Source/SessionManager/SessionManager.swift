@@ -1013,6 +1013,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
             let registered = session.authenticationStatus.completedRegistration || session.registrationStatus.completedRegistration
             let emailCredentials = session.authenticationStatus.emailCredentials()
             
+            userSession.encryptMessagesAtRest = self.configuration.encryptionAtRestEnabledByDefault
             userSession.syncManagedObjectContext.performGroupedBlock {
                 userSession.setEmailCredentials(emailCredentials)
                 userSession.syncManagedObjectContext.registeredOnThisDevice = registered

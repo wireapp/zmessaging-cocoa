@@ -517,6 +517,27 @@ class SessionManagerTests_AuthenticationFailure: IntegrationTest {
     
 }
 
+class SessionManagerTests_EncryptionAtRestIsEnabledByDefault_Option: IntegrationTest {
+    
+    override func setUp() {
+        super.setUp()
+        createSelfUserAndConversation()
+    }
+    
+    override var sessionManagerConfiguration: SessionManagerConfiguration {
+        return SessionManagerConfiguration(encryptionAtRestIsEnabledByDefault: true)
+    }
+    
+    func testThatEncryptionAtRestIsEnabled_OnActiveUserSession() {
+        // given
+        XCTAssertTrue(login())
+        
+        // then
+        XCTAssertTrue(sessionManager!.activeUserSession!.encryptMessagesAtRest)
+    }
+    
+}
+
 class SessionManagerTests_PasswordVerificationFailure_With_DeleteAccountAfterThreshold: IntegrationTest {
     private var threshold: Int? = 2
     override func setUp() {
