@@ -454,24 +454,24 @@ public final class SessionManager : NSObject, SessionManagerType {
             LocalStoreProvider.fetchUserIDFromLegacyStore(
                 in: sharedContainerURL,
                 migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateLegacyAccount() },
-                completion: { [weak self] identifier in
-                    guard let `self` = self else { return }
-                    identifier.apply(self.migrateAccount)
-                    
-                    self.selectInitialAccount(self.accountManager.selectedAccount, launchOptions: launchOptions)
+                completion: { [weak self] userIdentifier in
+                    guard let `self` = self, let userIdentifier = userIdentifier else { return }
+                    let account = self.migrateAccount(with: userIdentifier)
+                    self.selectInitialAccount(account, launchOptions: launchOptions)
             })
         }
     }
 
     /// Creates an account with the given identifier and migrates its cookie storage.
-    private func migrateAccount(with identifier: UUID) {
+    private func migrateAccount(with identifier: UUID) -> Account {
         let account = Account(userName: "", userIdentifier: identifier)
         accountManager.addAndSelect(account)
         let migrator = ZMPersistentCookieStorageMigrator(userIdentifier: identifier, serverName: authenticatedSessionFactory.environment.backendURL.host!)
         _ = migrator.createStoreMigratingLegacyStoreIfNeeded()
+        return account
     }
 
-    private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
+    private func selectInitialAccount(_ account: Account, launchOptions: LaunchOptions) {
         if let url = launchOptions[UIApplication.LaunchOptionsKey.url] as? URL {
             if (try? URLAction(url: url))?.causesLogout == true {
                 // Do not log in if the launch URL action causes a logout
@@ -618,16 +618,16 @@ public final class SessionManager : NSObject, SessionManagerType {
          - account: account for which to load the session
          - completion: called when session is loaded or when session fails to load
      */
-    func loadSession(for account: Account?, completion: @escaping (ZMUserSession?) -> Void) {
-        guard let authenticatedAccount = account, environment.isAuthenticated(authenticatedAccount) else {
+    func loadSession(for account: Account, completion: @escaping (ZMUserSession?) -> Void) {
+        guard environment.isAuthenticated(account) else {
             completion(nil)
             
-            if let account = account, configuration.wipeOnCookieInvalid {
+            if configuration.wipeOnCookieInvalid {
                 delete(account: account, reason: .sessionExpired)
             } else {
-                createUnauthenticatedSession(accountId: account?.userIdentifier)
+                createUnauthenticatedSession(accountId: account.userIdentifier)
                 let error = NSError(code: .accessTokenExpired,
-                                    userInfo: account?.loginCredentials?.dictionaryRepresentation)
+                                    userInfo: account.loginCredentials?.dictionaryRepresentation)
                 delegate?.sessionManagerDidFailToLogin(account: account,
                                                        from: accountManager.selectedAccount,
                                                        error: error)
@@ -636,7 +636,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             return
         }
         
-        activateSession(for: authenticatedAccount, completion: completion)
+        activateSession(for: account, completion: completion)
     }
     
     fileprivate func activateSession(for account: Account, completion: @escaping (ZMUserSession) -> Void) {
