@@ -454,9 +454,12 @@ public final class SessionManager : NSObject, SessionManagerType {
                 in: sharedContainerURL,
                 migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateAccount() },
                 completion: { [weak self] userIdentifier in
-                    guard let `self` = self, let userIdentifier = userIdentifier else { return }
-                    let account = self.migrateAccount(with: userIdentifier)
-                    self.selectInitialAccount(account, launchOptions: launchOptions)
+                    guard let strongSelf = self, let userIdentifier = userIdentifier else {
+                        self?.createUnauthenticatedSession()
+                        return
+                    }
+                    let account = strongSelf.migrateAccount(with: userIdentifier)
+                    self?.selectInitialAccount(account, launchOptions: launchOptions)
             })
         }
     }
