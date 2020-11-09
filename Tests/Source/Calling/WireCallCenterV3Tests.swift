@@ -455,34 +455,7 @@ class WireCallCenterV3Tests: MessagingTest {
         }
     }
     
-    func testThatItAnswersACall_largeGroup() {
-        // given
-        // Make sure group conversation has at least 5 participants (including self)
-        for _ in 0..<4 {
-            let user: ZMUser = ZMUser.insertNewObject(in: uiMOC)
-            user.remoteIdentifier = UUID()
-            groupConversation.addParticipantAndUpdateConversationState(user: user, role: nil)
-        }
-
-        sut.handleIncomingCall(conversationId: groupConversationID,
-                               messageTime: Date(),
-                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
-                               isVideoCall: false,
-                               shouldRing: true,
-                               conversationType: .group)
-
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        checkThatItPostsNotification(expectedCallState: .answered(degraded: false), expectedCallerId: otherUserID, expectedConversationId: groupConversationID) {
-            // when
-            _ = sut.answerCall(conversation: groupConversation, video: false)
-            
-            // then
-            XCTAssertEqual(mockAVSWrapper.answerCallArguments?.callType, AVSCallType.audioOnly)
-        }
-    }
-    
-    func testThatItAnswersACall_audioOnly() {
+    func testThatItAnswersACall_oneToOne_normal() {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
@@ -503,7 +476,7 @@ class WireCallCenterV3Tests: MessagingTest {
         }
     }
     
-    func testThatItAnswersACall_withVideo() {
+    func testThatItAnswersACall_oneToOne_video() {
         // given
         sut.handleIncomingCall(conversationId: oneOnOneConversationID,
                                messageTime: Date(),
@@ -524,7 +497,116 @@ class WireCallCenterV3Tests: MessagingTest {
         }
     }
     
-    func testThatItStartsACall_oneToOne(){
+    func testThatItAnswersACall_legacy_largeGroup_audioOnly() {
+        // given
+        // Make sure group conversation has at least 5 participants (including self)
+        for _ in 0..<4 {
+            let user: ZMUser = ZMUser.insertNewObject(in: uiMOC)
+            user.remoteIdentifier = UUID()
+            groupConversation.addParticipantAndUpdateConversationState(user: user, role: nil)
+        }
+
+        sut.handleIncomingCall(conversationId: groupConversationID,
+                               messageTime: Date(),
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
+                               isVideoCall: false,
+                               shouldRing: true,
+                               conversationType: .group)
+        
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        checkThatItPostsNotification(expectedCallState: .answered(degraded: false), expectedCallerId: otherUserID, expectedConversationId: groupConversationID) {
+            // when
+            _ = sut.answerCall(conversation: groupConversation, video: false)
+            
+            // then
+            XCTAssertEqual(mockAVSWrapper.answerCallArguments?.callType, AVSCallType.audioOnly)
+        }
+    }
+    
+    func testThatItAnswersACall_legacy_smallGroup_normal() {
+        // given
+        sut.handleIncomingCall(conversationId: groupConversationID,
+                               messageTime: Date(),
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
+                               isVideoCall: false,
+                               shouldRing: true,
+                               conversationType: .group)
+        
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        checkThatItPostsNotification(expectedCallState: .answered(degraded: false), expectedCallerId: otherUserID, expectedConversationId: groupConversationID) {
+            // when
+            _ = sut.answerCall(conversation: groupConversation, video: false)
+            
+            // then
+            XCTAssertEqual(mockAVSWrapper.answerCallArguments?.callType, AVSCallType.normal)
+        }
+    }
+    
+    
+    func testThatItAnswersACall_legacy_smallGroup_video() {
+        // given
+        sut.handleIncomingCall(conversationId: groupConversationID,
+                               messageTime: Date(),
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
+                               isVideoCall: true,
+                               shouldRing: true,
+                               conversationType: .group)
+        
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        checkThatItPostsNotification(expectedCallState: .answered(degraded: false), expectedCallerId: otherUserID, expectedConversationId: groupConversationID) {
+            // when
+            _ = sut.answerCall(conversation: groupConversation, video: true)
+            
+            // then
+            XCTAssertEqual(mockAVSWrapper.answerCallArguments?.callType, AVSCallType.video)
+        }
+    }
+    
+    func testThatItAnswersACall_conference_normal() {
+        // given
+        sut.handleIncomingCall(conversationId: groupConversationID,
+                               messageTime: Date(),
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
+                               isVideoCall: false,
+                               shouldRing: true,
+                               conversationType: .conference)
+        
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        checkThatItPostsNotification(expectedCallState: .answered(degraded: false), expectedCallerId: otherUserID, expectedConversationId: groupConversationID) {
+            // when
+            _ = sut.answerCall(conversation: groupConversation, video: false)
+            
+            // then
+            XCTAssertEqual(mockAVSWrapper.answerCallArguments?.callType, AVSCallType.normal)
+        }
+    }
+    
+    func testThatItAnswersACall_conference_video() {
+        // given
+        sut.handleIncomingCall(conversationId: groupConversationID,
+                               messageTime: Date(),
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
+                               isVideoCall: true,
+                               shouldRing: true,
+                               conversationType: .conference)
+        
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        checkThatItPostsNotification(expectedCallState: .answered(degraded: false), expectedCallerId: otherUserID, expectedConversationId: groupConversationID) {
+            // when
+            _ = sut.answerCall(conversation: groupConversation, video: true)
+            
+            // then
+            XCTAssertEqual(mockAVSWrapper.answerCallArguments?.callType, AVSCallType.video)
+        }
+    }
+    
+    func testThatItStartsACall_oneToOne_normal(){
+        // given
         checkThatItPostsNotification(expectedCallState: .outgoing(degraded: false), expectedCallerId: selfUserID, expectedConversationId: oneOnOneConversationID) {
             // when
             _ = sut.startCall(conversation: oneOnOneConversation, video: false)
@@ -535,57 +617,27 @@ class WireCallCenterV3Tests: MessagingTest {
         }
     }
 
-    func testThatItStartsACall_smallGroup(){
+    func testThatItStartsACall_conference_normal(){
+        // given
         checkThatItPostsNotification(expectedCallState: .outgoing(degraded: false), expectedCallerId: selfUserID, expectedConversationId: groupConversationID) {
             // when
             _ = sut.startCall(conversation: groupConversation, video: false)
             
-            // then
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.group)
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.normal)
-        }
-    }
-    
-    func testThatItStartsACall_smallGroup_video(){
-        checkThatItPostsNotification(expectedCallState: .outgoing(degraded: false), expectedCallerId: selfUserID, expectedConversationId: groupConversationID) {
-            // when
-            _ = sut.startCall(conversation: groupConversation, video: true)
-            
-            // then
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.group)
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.video)
-        }
-    }
-    
-    func testThatItStartsACall_largeGroup() {
-        
-        // Make sure group conversation has at least 5 participants (including self)
-        for _ in 0..<4 {
-            let user: ZMUser = ZMUser.insertNewObject(in: uiMOC)
-            user.remoteIdentifier = UUID()
-            groupConversation.addParticipantAndUpdateConversationState(user: user, role: nil)
-        }
-        
-        checkThatItPostsNotification(expectedCallState: .outgoing(degraded: false), expectedCallerId: selfUserID, expectedConversationId: groupConversationID) {
-            // when
-            _ = sut.startCall(conversation: groupConversation, video: true)
-            
-            // then
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.group)
-            XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.audioOnly)
-        }
-    }
-
-    func testThatItStartsAConferenceCall() {
-        sut.useConferenceCalling = true
-
-        checkThatItPostsNotification(expectedCallState: .outgoing(degraded: false), expectedCallerId: selfUserID, expectedConversationId: groupConversationID) {
-            // when
-            _ = sut.startCall(conversation: groupConversation, video: false)
-
             // then
             XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.conference)
             XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.normal)
+        }
+    }
+        
+    func testThatItStartsACall_conference_video() {
+        // given
+        checkThatItPostsNotification(expectedCallState: .outgoing(degraded: false), expectedCallerId: selfUserID, expectedConversationId: groupConversationID) {
+            // when
+            _ = sut.startCall(conversation: groupConversation, video: true)
+            
+            // then
+            XCTAssertEqual(mockAVSWrapper.startCallArguments?.conversationType, AVSConversationType.conference)
+            XCTAssertEqual(mockAVSWrapper.startCallArguments?.callType, AVSCallType.video)
         }
     }
     
