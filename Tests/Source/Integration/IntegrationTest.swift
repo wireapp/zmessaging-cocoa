@@ -651,12 +651,8 @@ extension IntegrationTest: SessionManagerDelegate {
     public func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
         // no-op
     }
-    
-    public func sessionManagerWillMigrateLegacyAccount() {
-        // no-op
-    }
-    
-    public func sessionManagerWillMigrateAccount(_ account: Account) {
+        
+    public func sessionManagerWillMigrateAccount() {
         // no-op
     }
     

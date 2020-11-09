@@ -1424,12 +1424,8 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     }
     
     var startedMigrationCalled = false
-    func sessionManagerWillMigrateAccount(_ account: Account) {
+    func sessionManagerWillMigrateAccount() {
         startedMigrationCalled = true
-    }
-    
-    func sessionManagerWillMigrateLegacyAccount() {
-        // no op
     }
 
 }

@@ -47,8 +47,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
     func sessionManagerWillOpenAccount(_ account: Account,
                                        from selectedAccount: Account?,
                                        userSessionCanBeTornDown: @escaping () -> Void)
-    func sessionManagerWillMigrateAccount(_ account: Account)
-    func sessionManagerWillMigrateLegacyAccount()
+    func sessionManagerWillMigrateAccount()
     func sessionManagerDidBlacklistCurrentVersion()
     func sessionManagerDidBlacklistJailbrokenDevice()
 }
@@ -453,7 +452,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             // In order to do so we open the old database and get the user identifier.
             LocalStoreProvider.fetchUserIDFromLegacyStore(
                 in: sharedContainerURL,
-                migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateLegacyAccount() },
+                migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateAccount() },
                 completion: { [weak self] userIdentifier in
                     guard let `self` = self, let userIdentifier = userIdentifier else { return }
                     let account = self.migrateAccount(with: userIdentifier)
@@ -686,7 +685,7 @@ public final class SessionManager : NSObject, SessionManagerType {
                     dispatchGroup: self.dispatchGroup,
                     migration: { [weak self] in
                         if notifyAboutMigration {
-                            self?.delegate?.sessionManagerWillMigrateAccount(account)
+                            self?.delegate?.sessionManagerWillMigrateAccount()
                         }
                     },
                     completion: { provider in
