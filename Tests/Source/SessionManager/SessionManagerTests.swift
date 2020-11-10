@@ -138,7 +138,7 @@ final class SessionManagerTests: IntegrationTest {
                               mediaManager: MockMediaManager(),
                               analytics: nil,
                               delegate: nil,
-                              showContentDelegate: nil,
+                              presentationDelegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
                               configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
@@ -226,7 +226,7 @@ final class SessionManagerTests: IntegrationTest {
                               mediaManager: MockMediaManager(),
                               analytics: nil,
                               delegate: nil,
-                              showContentDelegate: nil,
+                              presentationDelegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
                               configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
@@ -285,7 +285,7 @@ final class SessionManagerTests: IntegrationTest {
                               mediaManager: mockMediaManager,
                               analytics: nil,
                               delegate: self.delegate,
-                              showContentDelegate: nil,
+                              presentationDelegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
                               configuration: configuration,
@@ -891,7 +891,7 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
                               mediaManager: MockMediaManager(),
                               analytics: nil,
                               delegate: nil,
-                              showContentDelegate: nil,
+                              presentationDelegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
                               configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
@@ -947,7 +947,7 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
                        mediaManager: MockMediaManager(),
                        analytics: nil,
                        delegate: nil,
-                       showContentDelegate: nil,
+                       presentationDelegate: nil,
                        application: application,
                        environment: sessionManager!.environment,
                        configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
@@ -1368,14 +1368,14 @@ extension SessionManagerTests {
         // GIVEN
         let id = UUID(uuidString: "1E628B42-4C83-49B7-B2B4-EF27BFE503EF")!
         let url = URL(string: "wire://start-sso/wire-\(id)")!
-        let urlActionDelegate = MockURLActionDelegate()
+        let presentationDelegate = MockPresentationDelegate()
 
-        sessionManager?.urlActionDelegate = urlActionDelegate
+        sessionManager?.presentationDelegate = presentationDelegate
         XCTAssertTrue(login())
         XCTAssertNotNil(userSession)
         
         // WHEN
-        try sessionManager?.openURL(url, options: [:])
+        try sessionManager?.openURL(url)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -1386,18 +1386,21 @@ extension SessionManagerTests {
 
 // MARK: - Mocks
 class SessionManagerTestDelegate: SessionManagerDelegate {
-
     var onLogout: ((NSError?) -> Void)?
     func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: (() -> Void)?) {
         onLogout?(error as NSError?)
         userSessionCanBeTornDown?()
     }
     
-    func sessionManagerDidFailToLogin(account: Account?, error: Error) {
+    func sessionManagerDidFailToLogin(account: Account?,
+                                      from selectedAccount: Account?,
+                                      error: Error) {
         // no op
     }
     
-    func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
+    func sessionManagerWillOpenAccount(_ account: Account,
+                                       from selectedAccount: Account?,
+                                       userSessionCanBeTornDown: @escaping () -> Void) {
         userSessionCanBeTornDown()
     }
     
@@ -1412,8 +1415,12 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     }
     
     var userSession : ZMUserSession?
-    func sessionManagerActivated(userSession: ZMUserSession) {
+    func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession) {
         self.userSession = userSession
+    }
+    
+    func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
+        // no op
     }
     
     var startedMigrationCalled = false

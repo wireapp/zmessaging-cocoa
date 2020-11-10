@@ -42,19 +42,19 @@ class ConnectToBotURLActionProcessorTests: IntegrationTest {
         // given
         XCTAssertTrue(login())
         
-        let urlActionDelegate = MockURLActionDelegate()
+        let presentationDelegate = MockPresentationDelegate()
         let action = URLAction.connectBot(serviceUser: ServiceUserData(provider: serviceProvider, service: serviceIdentifier))
         let sut = WireSyncEngine.ConnectToBotURLActionProcessor(contextprovider: userSession!,
                                                                 transportSession: mockTransportSession,
                                                                 eventProcessor: userSession!.operationLoop!.syncStrategy!)
         
         // when
-        sut.process(urlAction: action, delegate: urlActionDelegate)
+        sut.process(urlAction: action, delegate: presentationDelegate)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(urlActionDelegate.completedURLActionCalls.count, 1)
-        XCTAssertEqual(urlActionDelegate.completedURLActionCalls.first, action)
+        XCTAssertEqual(presentationDelegate.completedURLActionCalls.count, 1)
+        XCTAssertEqual(presentationDelegate.completedURLActionCalls.first, action)
     }
     
     func testThatFailedToPerformActionIsCalled_WhenFailingToConnectToService() {
@@ -62,20 +62,20 @@ class ConnectToBotURLActionProcessorTests: IntegrationTest {
         XCTAssertTrue(login())
         
         let unknownService = ServiceUserData(provider: UUID(), service: UUID())
-        let urlActionDelegate = MockURLActionDelegate()
+        let presentationDelegate = MockPresentationDelegate()
         let action = URLAction.connectBot(serviceUser: unknownService)
         let sut = WireSyncEngine.ConnectToBotURLActionProcessor(contextprovider: userSession!,
                                                                 transportSession: mockTransportSession,
                                                                 eventProcessor: userSession!.operationLoop!.syncStrategy!)
         
         // when
-        sut.process(urlAction: action, delegate: urlActionDelegate)
+        sut.process(urlAction: action, delegate: presentationDelegate)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(urlActionDelegate.failedToPerformActionCalls.count, 1)
-        XCTAssertEqual(urlActionDelegate.failedToPerformActionCalls.first?.0, action)
-        XCTAssertEqual(urlActionDelegate.failedToPerformActionCalls.first?.1 as? AddBotError, AddBotError.general)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.count, 1)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.first?.0, action)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.first?.1 as? AddBotError, AddBotError.general)
     }
     
 }

@@ -99,7 +99,7 @@ extension UnauthenticatedSession: CompanyLoginURLActionProcessorDelegate {
 
 extension UnauthenticatedSession: URLActionProcessor {
     
-    func process(urlAction: URLAction, delegate: URLActionDelegate?) {
+    func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         urlActionProcessors.forEach({ $0.process(urlAction: urlAction, delegate: delegate) })
     }
     

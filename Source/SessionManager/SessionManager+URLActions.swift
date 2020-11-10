@@ -18,28 +18,6 @@
 
 import Foundation
 
-/// URLActionDelegate supports observing and controlling which URLAction are performed.
-
-public protocol URLActionDelegate: class {
-    
-    /// Called when an attempt was made to process a URLAction but failed
-    ///
-    /// - parameter action: Action which failed to be performed.
-    /// - parameter error: Error describing why the action failed.
-    func failedToPerformAction(_ action: URLAction, error: Error)
-    
-    /// Called before attempt is made to process a URLAction, this is a opportunity for asking the user
-    /// to confirm the action. The answer is provided via the decisionHandler.
-    ///
-    /// - parameter action: Action which will be performed.
-    /// - parameter decisionHandler: Block which should be executed when the decision has been to perform the action or not.
-    /// - parameter shouldPerformAction: **true**: perform the action, **false**: abort the action
-    func shouldPerformAction(_ action: URLAction, decisionHandler: @escaping (_ shouldPerformAction: Bool) -> Void)
-    
-    /// Called when an URLAction was successfully performed.
-    func completedURLAction(_ action: URLAction)
-}
-
 /// URLActionProcessor has the capabillity of processing a URLAction
 
 protocol URLActionProcessor {
@@ -48,7 +26,7 @@ protocol URLActionProcessor {
     ///
     /// - parameter urlAction: URLAction to process.
     /// - parameter delegate: Delegate which observes the attempt of processing the action.
-    func process(urlAction: URLAction, delegate: URLActionDelegate?)
+    func process(urlAction: URLAction, delegate: PresentationDelegate?)
     
 }
 
@@ -60,7 +38,7 @@ extension SessionManager {
     /// - parameter url: URL the application was launched with
     /// - parameter options: options associated with the URL
     @discardableResult
-    public func openURL(_ url: URL, options: [UIApplication.OpenURLOptionsKey: Any]) throws -> Bool {
+    public func openURL(_ url: URL) throws -> Bool {
         guard let action = try URLAction(url: url) else { return false }
         
         if action.requiresAuthentication, let userSession = activeUserSession {
@@ -79,9 +57,9 @@ extension SessionManager {
     }
     
     func process(urlAction action: URLAction, on processor: URLActionProcessor) {
-        urlActionDelegate?.shouldPerformAction(action, decisionHandler: { [weak self] (shouldPerformAction) in
+        presentationDelegate?.shouldPerformAction(action, decisionHandler: { [weak self] (shouldPerformAction) in
             guard shouldPerformAction, let strongSelf = self else { return }
-            processor.process(urlAction: action, delegate: strongSelf.urlActionDelegate)
+            processor.process(urlAction: action, delegate: strongSelf.presentationDelegate)
         })
     }
     
