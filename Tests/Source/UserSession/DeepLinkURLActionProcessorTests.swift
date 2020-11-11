@@ -21,23 +21,19 @@ import Foundation
 
 class DeepLinkURLActionProcessorTests: DatabaseTest {
 
-    var urlActionDelegate: MockURLActionDelegate!
-    var showContentDelegate: MockShowContentDelegate!
+    var presentationDelegate: MockPresentationDelegate!
     var sut: WireSyncEngine.DeepLinkURLActionProcessor!
 
     
     override func setUp() {
         super.setUp()
-        
-        urlActionDelegate = MockURLActionDelegate()
-        showContentDelegate = MockShowContentDelegate()
-        sut = WireSyncEngine.DeepLinkURLActionProcessor(contextProvider: contextDirectory!, showContentdelegate: showContentDelegate)
+        presentationDelegate = MockPresentationDelegate()
+        sut = WireSyncEngine.DeepLinkURLActionProcessor(contextProvider: contextDirectory!)
     }
     
     override func tearDown() {
-        showContentDelegate = nil
+        presentationDelegate = nil
         sut = nil
-        
         super.tearDown()
     }
     
@@ -51,11 +47,11 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
         conversation.remoteIdentifier = conversationId
         
         // when
-        sut.process(urlAction: action, delegate: urlActionDelegate)
+        sut.process(urlAction: action, delegate: presentationDelegate)
         
         // then
-        XCTAssertEqual(showContentDelegate.showConversationCalls.count, 1)
-        XCTAssertEqual(showContentDelegate.showConversationCalls.first, conversation)
+        XCTAssertEqual(presentationDelegate.showConversationCalls.count, 1)
+        XCTAssertEqual(presentationDelegate.showConversationCalls.first, conversation)
     }
     
     func testThatItReportsTheActionAsFailed_WhenTheConversationDoesntExist() {
@@ -64,12 +60,12 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
         let action: URLAction = .openConversation(id: conversationId)
         
         // when
-        sut.process(urlAction: action, delegate: urlActionDelegate)
+        sut.process(urlAction: action, delegate: presentationDelegate)
         
         // then
-        XCTAssertEqual(urlActionDelegate.failedToPerformActionCalls.count, 1)
-        XCTAssertEqual(urlActionDelegate.failedToPerformActionCalls.first?.0, action)
-        XCTAssertEqual(urlActionDelegate.failedToPerformActionCalls.first?.1 as? DeepLinkRequestError, .invalidConversationLink)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.count, 1)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.first?.0, action)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.first?.1 as? DeepLinkRequestError, .invalidConversationLink)
     }
     
     func testThatItAsksToShowUserProfile_WhenUserIsKnown() {
@@ -80,11 +76,11 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
         user.remoteIdentifier = userId
         
         // when
-        sut.process(urlAction: action, delegate: urlActionDelegate)
+        sut.process(urlAction: action, delegate: presentationDelegate)
         
         // then
-        XCTAssertEqual(showContentDelegate.showUserProfileCalls.count, 1)
-        XCTAssertEqual(showContentDelegate.showUserProfileCalls.first as? ZMUser, user)
+        XCTAssertEqual(presentationDelegate.showUserProfileCalls.count, 1)
+        XCTAssertEqual(presentationDelegate.showUserProfileCalls.first as? ZMUser, user)
     }
     
     func testThatItAsksToShowConnectionRequest_WhenUserIsUnknown() {
@@ -93,11 +89,11 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
         let action: URLAction = .openUserProfile(id: userId)
         
         // when
-        sut.process(urlAction: action, delegate: urlActionDelegate)
+        sut.process(urlAction: action, delegate: presentationDelegate)
         
         // then
-        XCTAssertEqual(showContentDelegate.showConnectionRequestCalls.count, 1)
-        XCTAssertEqual(showContentDelegate.showConnectionRequestCalls.first, userId)
+        XCTAssertEqual(presentationDelegate.showConnectionRequestCalls.count, 1)
+        XCTAssertEqual(presentationDelegate.showConnectionRequestCalls.first, userId)
     }
     
 }

@@ -81,8 +81,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
             analytics: analytics,
             application: application,
             appVersion: appVersion,
-            storeProvider: storeProvider,
-            showContentDelegate: showContentDelegate
+            storeProvider: storeProvider
         )
     }
 
@@ -627,13 +626,15 @@ extension IntegrationTest {
     }
 }
 
-extension IntegrationTest : SessionManagerDelegate {
+extension IntegrationTest: SessionManagerDelegate {
     
-    public func sessionManagerDidFailToLogin(account: Account?, error: Error) {
-        // no-op
+    public func sessionManagerDidFailToLogin(account: Account?,
+                                      from selectedAccount: Account?,
+                                      error: Error) {
+        // no op
     }
     
-    public func sessionManagerActivated(userSession: ZMUserSession) {
+    public func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession) {
         self.userSession = userSession
         
         if let notificationCenter = self.notificationCenter {
@@ -647,11 +648,11 @@ extension IntegrationTest : SessionManagerDelegate {
         setupTimers()
     }
     
-    public func sessionManagerWillMigrateLegacyAccount() {
+    public func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
         // no-op
     }
     
-    public func sessionManagerWillMigrateAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
+    public func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void) {
         // no-op
     }
     
@@ -668,7 +669,9 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
         
-    public func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
+    public func sessionManagerWillOpenAccount(_ account: Account,
+                                              from selectedAccount: Account?,
+                                              userSessionCanBeTornDown: @escaping () -> Void) {
         self.userSession = nil
         userSessionCanBeTornDown()
     }

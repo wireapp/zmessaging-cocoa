@@ -136,8 +136,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
      
     public weak var thirdPartyServicesDelegate: ThirdPartyServicesDelegate?
     
-    public weak var showContentDelegate: ShowContentDelegate?
-    
     // MARK: - Tear down
     
     deinit {
@@ -184,8 +182,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                 operationLoop: ZMOperationLoop? = nil,
                 application: ZMApplication,
                 appVersion: String,
-                storeProvider: LocalStoreProviderProtocol,
-                showContentDelegate: ShowContentDelegate?) {
+                storeProvider: LocalStoreProviderProtocol) {
         
         storeProvider.contextDirectory.syncContext.performGroupedBlockAndWait {
             storeProvider.contextDirectory.syncContext.analytics = analytics
@@ -200,7 +197,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.analytics = analytics
         self.storeProvider = storeProvider
         self.transportSession = transportSession
-        self.showContentDelegate = showContentDelegate
         self.notificationDispatcher = NotificationDispatcher(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.storedDidSaveNotifications = ContextDidSaveNotificationPersistence(accountContainer: storeProvider.accountContainer)
         self.userExpirationObserver = UserExpirationObserver(managedObjectContext: storeProvider.contextDirectory.uiContext)
@@ -277,7 +273,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     
     private func createURLActionProcessors() -> [URLActionProcessor] {
         return [
-            DeepLinkURLActionProcessor(contextProvider: self, showContentdelegate: showContentDelegate),
+            DeepLinkURLActionProcessor(contextProvider: self),
             ConnectToBotURLActionProcessor(contextprovider: self, transportSession: transportSession, eventProcessor: operationLoop!.syncStrategy)
         ]
     }
@@ -518,9 +514,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
 }
 
 extension ZMUserSession: URLActionProcessor {
-    
-    func process(urlAction: URLAction, delegate: URLActionDelegate?) {
+    func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         urlActionProcessors?.forEach({ $0.process(urlAction: urlAction, delegate: delegate)} )
     }
-    
 }

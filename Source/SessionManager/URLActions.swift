@@ -38,14 +38,14 @@ public enum URLAction: Equatable {
     /// Switch to a custom backend
     case accessBackend(configurationURL: URL)
 
-    var causesLogout: Bool {
+    public var causesLogout: Bool {
         switch self {
         case .startCompanyLogin: return true
         default: return false
         }
     }
 
-    var requiresAuthentication: Bool {
+    public var requiresAuthentication: Bool {
         switch self {
         case .openConversation,
              .openUserProfile,
@@ -55,7 +55,7 @@ public enum URLAction: Equatable {
         }
     }
 
-    var opensDeepLink: Bool {
+    public var opensDeepLink: Bool {
         switch self {
         case .openConversation,
              .openUserProfile:
@@ -73,12 +73,12 @@ extension URLComponents {
 
 extension URLAction {
     
-    init?(url: URL, validatingIn defaults: UserDefaults = .shared()) throws {
+    public init?(url: URL, validatingIn defaults: UserDefaults = .shared()) throws {
         guard let components = URLComponents(string: url.absoluteString),
             let host = components.host,
             let scheme = components.scheme,
             scheme.starts(with: "wire") == true else {
-            return nil
+                return nil
         }
         
         switch host {
@@ -89,7 +89,7 @@ extension URLAction {
             } else {
                 throw DeepLinkRequestError.invalidUserLink
             }
-
+            
         case URL.DeepLink.conversation:
             if let lastComponent = url.pathComponents.last,
                 let uuid = UUID(uuidString: lastComponent) {
@@ -97,36 +97,36 @@ extension URLAction {
             } else {
                 throw DeepLinkRequestError.invalidConversationLink
             }
-
+            
         case URL.Host.startSSO:
             if let uuidCode = url.pathComponents.last.flatMap(CompanyLoginRequestDetector.requestCode) {
                 self = .startCompanyLogin(code: uuidCode)
             } else {
                 throw ConmpanyLoginRequestError.invalidLink
             }
-
+            
         case URL.Host.connect:
             guard let service = components.query(for: URLQueryItem.Key.Connect.service),
-                  let provider = components.query(for: URLQueryItem.Key.Connect.provider),
-                  let serviceUUID = UUID(uuidString: service),
-                  let providerUUID = UUID(uuidString: provider) else {
+                let provider = components.query(for: URLQueryItem.Key.Connect.provider),
+                let serviceUUID = UUID(uuidString: service),
+                let providerUUID = UUID(uuidString: provider) else {
                     throw DeepLinkRequestError.malformedLink
             }
             self = .connectBot(serviceUser: ServiceUserData(provider: providerUUID, service: serviceUUID))
-        
+            
         case URL.Host.accessBackend:
             guard let config = components.query(for: URLQueryItem.Key.AccessBackend.config), let url = URL(string: config) else {
                 throw DeepLinkRequestError.malformedLink
             }
             self = .accessBackend(configurationURL: url)
-
+            
         case URL.Host.login:
             let pathComponents = url.pathComponents
-
+            
             guard url.pathComponents.count >= 2 else {
                 throw ConmpanyLoginRequestError.invalidLink
             }
-
+            
             switch pathComponents[1] {
             case URL.Path.success:
                 guard URLAction.validateURLSchemeRequest(with: components, in: defaults) else {
@@ -143,10 +143,10 @@ extension URLAction {
                 guard let cookieData = HTTPCookie.extractCookieData(from: cookieString, url: url) else {
                     throw CompanyLoginError.invalidCookie
                 }
-
+                
                 let userInfo = UserInfo(identifier: userID, cookieData: cookieData)
                 self = .companyLoginSuccess(userInfo: userInfo)
-
+                
             case URL.Path.failure:
                 guard URLAction.validateURLSchemeRequest(with: components, in: defaults) else {
                     throw CompanyLoginError.tokenNotFound
@@ -155,12 +155,12 @@ extension URLAction {
                 guard let label = components.query(for: URLQueryItem.Key.errorLabel) else {
                     throw CompanyLoginError.missingRequiredParameter
                 }
-
+                
                 throw CompanyLoginError(label: label)
             default:
                 throw ConmpanyLoginRequestError.invalidLink
             }
-
+            
         default:
             throw DeepLinkRequestError.malformedLink
         }

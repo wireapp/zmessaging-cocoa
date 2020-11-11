@@ -22,15 +22,13 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
     
     var uiMOC: NSManagedObjectContext
     var syncMOC: NSManagedObjectContext
-    weak var showContentDelegate: ShowContentDelegate?
     
-    init(contextProvider: ZMManagedObjectContextProvider, showContentdelegate: ShowContentDelegate?) {
+    init(contextProvider: ZMManagedObjectContextProvider) {
         self.uiMOC = contextProvider.managedObjectContext
         self.syncMOC = contextProvider.syncManagedObjectContext
-        self.showContentDelegate = showContentdelegate
     }
     
-    func process(urlAction: URLAction, delegate: URLActionDelegate?) {
+    func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         switch urlAction {
             
         case .openConversation(let id):
@@ -39,12 +37,12 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
                 return
             }
             
-            showContentDelegate?.showConversation(conversation, at: nil)
+            delegate?.showConversation(conversation, at: nil)
         case .openUserProfile(let id):
             if let user = ZMUser(remoteID: id, createIfNeeded: false, in: uiMOC) {
-                showContentDelegate?.showUserProfile(user: user)
+                delegate?.showUserProfile(user: user)
             } else {
-                showContentDelegate?.showConnectionRequest(userId: id)
+                delegate?.showConnectionRequest(userId: id)
             }
             
         default:
@@ -53,5 +51,4 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
         
         delegate?.completedURLAction(urlAction)
     }
-    
 }

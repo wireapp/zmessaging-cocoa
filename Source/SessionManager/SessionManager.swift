@@ -35,15 +35,17 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 }
 
 @objc public protocol SessionActivationObserver: class {
-    func sessionManagerActivated(userSession : ZMUserSession)
+    func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession)
+    func sessionManagerDidReportDatabaseLockChange(isLocked: Bool)
 }
 
 @objc public protocol SessionManagerDelegate : SessionActivationObserver {
-    func sessionManagerDidFailToLogin(account: Account?, error : Error)
+    func sessionManagerDidFailToLogin(account: Account?,
+                                      from selectedAccount: Account?,
+                                      error: Error)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: (() -> Void)?)
     func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
-    func sessionManagerWillMigrateAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
-    func sessionManagerWillMigrateLegacyAccount()
+    func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerDidBlacklistCurrentVersion()
     func sessionManagerDidBlacklistJailbrokenDevice()
 }
@@ -96,7 +98,7 @@ public protocol SessionManagerType: class {
 
 @objc
 public protocol SessionManagerSwitchingDelegate: class {
-    func confirmSwitchingAccount(completion: @escaping (Bool)->Void)
+    func confirmSwitchingAccount(completion: @escaping (Bool) -> Void)
 }
 
 @objc
@@ -181,8 +183,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     var isAppVersionBlacklisted = false
     public weak var delegate: SessionManagerDelegate? = nil
     public let accountManager: AccountManager
-    public internal(set) var activeUserSession: ZMUserSession?
-    public weak var urlActionDelegate: URLActionDelegate?
+    public fileprivate(set) var activeUserSession: ZMUserSession?
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public internal(set) var unauthenticatedSession: UnauthenticatedSession? {
@@ -199,7 +200,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         }
         
     }
-    public weak var showContentDelegate: ShowContentDelegate?
+    public weak var presentationDelegate: PresentationDelegate?
     public weak var foregroundNotificationResponder: ForegroundNotificationResponder?
     public weak var switchingDelegate: SessionManagerSwitchingDelegate?
     public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
@@ -259,7 +260,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         mediaManager: MediaManagerType,
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
-        showContentDelegate: ShowContentDelegate?,
+        presentationDelegate: PresentationDelegate?,
         application: ZMApplication,
         environment: BackendEnvironmentProvider,
         configuration: SessionManagerConfiguration,
@@ -273,7 +274,7 @@ public final class SessionManager : NSObject, SessionManagerType {
                 mediaManager: mediaManager,
                 analytics: analytics,
                 delegate: delegate,
-                showContentDelegate: showContentDelegate,
+                presentationDelegate: presentationDelegate,
                 application: application,
                 environment: environment,
                 configuration: configuration,
@@ -291,7 +292,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         mediaManager: MediaManagerType,
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
-        showContentDelegate: ShowContentDelegate?,
+        presentationDelegate: PresentationDelegate?,
         application: ZMApplication,
         environment: BackendEnvironmentProvider,
         configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
@@ -311,8 +312,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             flowManager: flowManager,
             environment: environment,
             reachability: reachability,
-            analytics: analytics,
-            showContentDelegate: showContentDelegate
+            analytics: analytics
           )
 
         self.init(
@@ -342,6 +342,10 @@ public final class SessionManager : NSObject, SessionManagerType {
                     if blacklisted {
                         self.isAppVersionBlacklisted = true
                         self.delegate?.sessionManagerDidBlacklistCurrentVersion()
+                        // When the application version is blacklisted we don't want have a
+                        // transition to any other state in the UI, so we won't inform it
+                        // anymore by setting the delegate to nil.
+                        self.delegate = nil
                     }
             })
         }
@@ -447,25 +451,28 @@ public final class SessionManager : NSObject, SessionManagerType {
             // In order to do so we open the old database and get the user identifier.
             LocalStoreProvider.fetchUserIDFromLegacyStore(
                 in: sharedContainerURL,
-                migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateLegacyAccount() },
-                completion: { [weak self] identifier in
-                    guard let `self` = self else { return }
-                    identifier.apply(self.migrateAccount)
-                    
-                    self.selectInitialAccount(self.accountManager.selectedAccount, launchOptions: launchOptions)
+                migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateAccount() },
+                completion: { [weak self] userIdentifier in
+                    guard let strongSelf = self, let userIdentifier = userIdentifier else {
+                        self?.createUnauthenticatedSession()
+                        return
+                    }
+                    let account = strongSelf.migrateAccount(with: userIdentifier)
+                    self?.selectInitialAccount(account, launchOptions: launchOptions)
             })
         }
     }
 
     /// Creates an account with the given identifier and migrates its cookie storage.
-    private func migrateAccount(with identifier: UUID) {
+    private func migrateAccount(with identifier: UUID) -> Account {
         let account = Account(userName: "", userIdentifier: identifier)
         accountManager.addAndSelect(account)
         let migrator = ZMPersistentCookieStorageMigrator(userIdentifier: identifier, serverName: authenticatedSessionFactory.environment.backendURL.host!)
         _ = migrator.createStoreMigratingLegacyStoreIfNeeded()
+        return account
     }
 
-    private func selectInitialAccount(_ account: Account?, launchOptions: LaunchOptions) {
+    private func selectInitialAccount(_ account: Account, launchOptions: LaunchOptions) {
         if let url = launchOptions[UIApplication.LaunchOptionsKey.url] as? URL {
             if (try? URLAction(url: url))?.causesLogout == true {
                 // Do not log in if the launch URL action causes a logout
@@ -493,8 +500,11 @@ public final class SessionManager : NSObject, SessionManagerType {
         
         confirmSwitchingAccount { [weak self] in
             self?.isSelectingAccount = true
+            let selectedAccount = self?.accountManager.selectedAccount
             
-            self?.delegate?.sessionManagerWillOpenAccount(account, userSessionCanBeTornDown: { [weak self] in
+            self?.delegate?.sessionManagerWillOpenAccount(account,
+                                                          from: selectedAccount,
+                                                          userSessionCanBeTornDown: { [weak self] in
                 self?.activeUserSession = nil
                 tearDownCompletion?()
                 self?.loadSession(for: account) { [weak self] session in
@@ -609,30 +619,36 @@ public final class SessionManager : NSObject, SessionManagerType {
          - account: account for which to load the session
          - completion: called when session is loaded or when session fails to load
      */
-    func loadSession(for account: Account?, completion: @escaping (ZMUserSession?) -> Void) {
-        guard let authenticatedAccount = account, environment.isAuthenticated(authenticatedAccount) else {
+    func loadSession(for account: Account, completion: @escaping (ZMUserSession?) -> Void) {
+        guard environment.isAuthenticated(account) else {
             completion(nil)
             
-            if let account = account, configuration.wipeOnCookieInvalid {
+            if configuration.wipeOnCookieInvalid {
                 delete(account: account, reason: .sessionExpired)
             } else {
-                createUnauthenticatedSession(accountId: account?.userIdentifier)
-                delegate?.sessionManagerDidFailToLogin(account: account, error: NSError(code: .accessTokenExpired, userInfo: account?.loginCredentials?.dictionaryRepresentation))
+                createUnauthenticatedSession(accountId: account.userIdentifier)
+                let error = NSError(code: .accessTokenExpired,
+                                    userInfo: account.loginCredentials?.dictionaryRepresentation)
+                delegate?.sessionManagerDidFailToLogin(account: account,
+                                                       from: accountManager.selectedAccount,
+                                                       error: error)
             }
             
             return
         }
         
-        activateSession(for: authenticatedAccount, completion: completion)
+        activateSession(for: account, completion: completion)
     }
     
     fileprivate func activateSession(for account: Account, completion: @escaping (ZMUserSession) -> Void) {
-        self.withSession(for: account) { session in
+        self.withSession(for: account, notifyAboutMigration: true) { session in
             self.activeUserSession = session
             
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
             completion(session)
-            self.delegate?.sessionManagerActivated(userSession: session)
+
+            self.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
+            self.checkIfLoggedIn(userSession: session)
             
             // Configure user notifications if they weren't already previously configured.
             self.configureUserNotifications()
@@ -640,8 +656,19 @@ public final class SessionManager : NSObject, SessionManagerType {
         }
     }
     
+    func checkIfLoggedIn(userSession : ZMUserSession) {
+        userSession.checkIfLoggedIn { [weak self] loggedIn in
+            guard loggedIn else {
+                return
+            }
+            self?.delegate?.sessionManagerDidReportDatabaseLockChange(isLocked: userSession.isDatabaseLocked)
+        }
+    }
+    
     // Loads user session for @c account given and executes the @c action block.
-    func withSession(for account: Account, perform completion: @escaping (ZMUserSession)->()) {
+    func withSession(for account: Account,
+                     notifyAboutMigration: Bool = false,
+                     perform completion: @escaping (ZMUserSession)->()) {
         log.debug("Request to load session for \(account)")
         let group = self.dispatchGroup
         group?.enter()
@@ -659,7 +686,9 @@ public final class SessionManager : NSObject, SessionManagerType {
                     userIdentifier: account.userIdentifier,
                     dispatchGroup: self.dispatchGroup,
                     migration: { [weak self] in
-                        self?.delegate?.sessionManagerWillMigrateAccount(account, userSessionCanBeTornDown: {})
+                        if notifyAboutMigration {
+                            self?.delegate?.sessionManagerWillMigrateAccount(userSessionCanBeTornDown: {})
+                        }
                     },
                     completion: { provider in
                         let userSession = self.startBackgroundSession(for: account, with: provider)
@@ -696,16 +725,20 @@ public final class SessionManager : NSObject, SessionManagerType {
         let conversationListObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.conversations(inUserSession: session), userSession: session)
         let connectionRequestObserver = ConversationListChangeInfo.add(observer: self, for: ZMConversationList.pendingConnectionConversations(inUserSession: session), userSession: session)
         let unreadCountObserver = NotificationInContext.addObserver(name: .AccountUnreadCountDidChangeNotification,
-                                                                    context: account)
-        { [weak self] note in
+                                                                    context: account) { [weak self] note in
             guard let account = note.context as? Account else { return }
             self?.accountManager.addOrUpdate(account)
         }
+        let databaseEncryptionObserverToken = session.registerDatabaseLockedHandler({ [weak self] isDatabaseLocked in
+            guard session == self?.activeUserSession else { return }
+            self?.delegate?.sessionManagerDidReportDatabaseLockChange(isLocked: session.isDatabaseLocked)
+        })
         accountTokens[account.userIdentifier] = [teamObserver,
                                                  selfObserver!,
                                                  conversationListObserver,
                                                  connectionRequestObserver,
-                                                 unreadCountObserver
+                                                 unreadCountObserver,
+                                                 databaseEncryptionObserverToken
         ]
     }
 
@@ -724,7 +757,6 @@ public final class SessionManager : NSObject, SessionManagerType {
         require(backgroundUserSessions[account.userIdentifier] == nil, "User session is already loaded")
         backgroundUserSessions[account.userIdentifier] = userSession
         userSession.useConstantBitRateAudio = useConstantBitRateAudio
-        userSession.useConferenceCalling = useConferenceCalling
         updatePushToken(for: userSession)
         registerObservers(account: account, session: userSession)
     }
@@ -833,12 +865,6 @@ public final class SessionManager : NSObject, SessionManagerType {
             activeUserSession?.useConstantBitRateAudio = useConstantBitRateAudio
         }
     }
-    
-    public var useConferenceCalling: Bool = false {
-        didSet {
-            activeUserSession?.useConferenceCalling = useConferenceCalling
-        }
-    }
 
     internal func checkJailbreakIfNeeded() {
         guard configuration.blockOnJailbreakOrRoot || configuration.wipeOnJailbreakOrRoot else { return }
@@ -850,6 +876,10 @@ public final class SessionManager : NSObject, SessionManagerType {
             }
             
             self.delegate?.sessionManagerDidBlacklistJailbrokenDevice()
+            // When the device is jailbroken we don't want have a
+            // transition to any other state in the UI, so we won't inform it
+            // anymore by setting the delegate to nil.
+            self.delegate = nil
         }
     }
     
@@ -991,6 +1021,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
             let registered = session.authenticationStatus.completedRegistration || session.registrationStatus.completedRegistration
             let emailCredentials = session.authenticationStatus.emailCredentials()
             
+            userSession.encryptMessagesAtRest = self.configuration.encryptionAtRestEnabledByDefault
             userSession.syncManagedObjectContext.performGroupedBlock {
                 userSession.setEmailCredentials(emailCredentials)
                 userSession.syncManagedObjectContext.registeredOnThisDevice = registered
@@ -1031,7 +1062,9 @@ extension SessionManager: PostLoginAuthenticationObserver {
             createUnauthenticatedSession(accountId: accountId)
         }
         
-        delegate?.sessionManagerDidFailToLogin(account: accountManager.account(with: accountId), error: error)
+        delegate?.sessionManagerDidFailToLogin(account: accountManager.account(with: accountId),
+                                               from: accountManager.selectedAccount,
+                                               error: error)
     }
     
     public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
@@ -1056,7 +1089,9 @@ extension SessionManager: PostLoginAuthenticationObserver {
                 createUnauthenticatedSession(accountId: accountId)
             }
             
-            delegate?.sessionManagerDidFailToLogin(account: accountManager.account(with: accountId), error: error)
+            delegate?.sessionManagerDidFailToLogin(account: accountManager.account(with: accountId),
+                                                   from: accountManager.selectedAccount,
+                                                   error: error)
         }
     }
 
@@ -1171,7 +1206,9 @@ extension SessionManager : PreLoginAuthenticationObserver {
             createUnauthenticatedSession()
         }
         
-        delegate?.sessionManagerDidFailToLogin(account: nil, error: error)
+        delegate?.sessionManagerDidFailToLogin(account: nil,
+                                               from: accountManager.selectedAccount,
+                                               error: error)
     }
 
     public func companyLoginCodeDidBecomeAvailable(_ code: UUID) {
@@ -1259,15 +1296,21 @@ extension SessionManager {
 extension SessionManager {
     
     public func confirmSwitchingAccount(completion: @escaping ()->Void) {
-        guard let switchingDelegate = switchingDelegate else { return completion() }
+        guard
+            let switchingDelegate = switchingDelegate,
+            let activeUserSession = activeUserSession,
+            activeUserSession.isCallOngoing
+        else {
+            return completion()
+        }
         
-        switchingDelegate.confirmSwitchingAccount(completion: { (confirmed) in
+        switchingDelegate.confirmSwitchingAccount(completion: { confirmed in
             if confirmed {
+                activeUserSession.callCenter?.endAllCalls()
                 completion()
             }
         })
     }
-    
 }
 
 // MARK: - AVS Logging
