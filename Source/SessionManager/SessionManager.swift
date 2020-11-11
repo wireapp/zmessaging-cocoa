@@ -42,7 +42,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
     func sessionManagerDidFailToLogin(account: Account?, error : Error)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: (() -> Void)?)
     func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
-    func sessionManagerWillMigrateAccount(_ account: Account)
+    func sessionManagerWillMigrateAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillMigrateLegacyAccount()
     func sessionManagerDidBlacklistCurrentVersion()
     func sessionManagerDidBlacklistJailbrokenDevice()
@@ -91,6 +91,7 @@ public protocol SessionManagerType: class {
     func update(credentials: ZMCredentials) -> Bool
     
     func passwordVerificationDidFail(with failCount: Int)
+    
 }
 
 @objc
@@ -180,7 +181,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     var isAppVersionBlacklisted = false
     public weak var delegate: SessionManagerDelegate? = nil
     public let accountManager: AccountManager
-    public fileprivate(set) var activeUserSession: ZMUserSession?
+    public internal(set) var activeUserSession: ZMUserSession?
     public weak var urlActionDelegate: URLActionDelegate?
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
@@ -657,7 +658,9 @@ public final class SessionManager : NSObject, SessionManagerType {
                     applicationContainer: self.sharedContainerURL,
                     userIdentifier: account.userIdentifier,
                     dispatchGroup: self.dispatchGroup,
-                    migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateAccount(account) },
+                    migration: { [weak self] in
+                        self?.delegate?.sessionManagerWillMigrateAccount(account, userSessionCanBeTornDown: {})
+                    },
                     completion: { provider in
                         let userSession = self.startBackgroundSession(for: account, with: provider)
                         completion(userSession)
@@ -717,6 +720,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     
     fileprivate func configure(session userSession: ZMUserSession, for account: Account) {
         userSession.sessionManager = self
+        userSession.delegate = self
         require(backgroundUserSessions[account.userIdentifier] == nil, "User session is already loaded")
         backgroundUserSessions[account.userIdentifier] = userSession
         userSession.useConstantBitRateAudio = useConstantBitRateAudio

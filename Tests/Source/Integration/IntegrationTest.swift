@@ -651,7 +651,7 @@ extension IntegrationTest : SessionManagerDelegate {
         // no-op
     }
     
-    public func sessionManagerWillMigrateAccount(_ account: Account) {
+    public func sessionManagerWillMigrateAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
         // no-op
     }
     

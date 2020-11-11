@@ -1417,7 +1417,7 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     }
     
     var startedMigrationCalled = false
-    func sessionManagerWillMigrateAccount(_ account: Account) {
+    func sessionManagerWillMigrateAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
         startedMigrationCalled = true
     }
     

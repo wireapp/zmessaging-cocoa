@@ -33,12 +33,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
     }
 
     private func setEncryptionAtRest(enabled: Bool, file: StaticString = #file, line: UInt = #line) {
-        sut.setEncryptionAtRest(enabled: enabled) { result in
-            if case let .failure(error) = result {
-                XCTFail("Failed to update EAR. Reason: \(error.localizedDescription)", file: file, line: line)
-            }
-        }
-
+        sut.encryptMessagesAtRest = enabled
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5), file: file, line: line)
     }
     
@@ -132,6 +127,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         // when
         sut.applicationDidEnterBackground(nil)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // cleanup
         token = nil
@@ -158,6 +154,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         let context = LAContext()
         try sut.unlockDatabase(with: context)
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // cleanup
         token = nil

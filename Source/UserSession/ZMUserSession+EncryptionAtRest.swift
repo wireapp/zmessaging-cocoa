@@ -20,14 +20,19 @@ import Foundation
 import LocalAuthentication
 import WireDataModel
 
-public typealias ResultHandler<T> = (Result<T>) -> Void
-
 public protocol UserSessionEncryptionAtRestInterface {
     var encryptMessagesAtRest: Bool { get }
     var isDatabaseLocked: Bool { get }
     
+    func setEncryptionAtRest(enabled: Bool) throws
     func unlockDatabase(with context: LAContext) throws
     func registerDatabaseLockedHandler(_ handler: @escaping (_ isDatabaseLocked: Bool) -> Void) -> Any
+}
+
+protocol UserSessionEncryptionAtRestDelegate: class {
+    
+    func setEncryptionAtRest(enabled: Bool, account: Account, encryptionKeys: EncryptionKeys)
+    
 }
 
 extension ZMUserSession: UserSessionEncryptionAtRestInterface {
@@ -40,63 +45,36 @@ extension ZMUserSession: UserSessionEncryptionAtRestInterface {
     ///
     /// - Parameters:
     ///     - enabled: When `true`, messages will be encrypted at rest.
-    ///     - completion: Invoked on the main thread when the update succeeds or fails.
 
-    public func setEncryptionAtRest(enabled: Bool, completion: ResultHandler<Void>? = nil) {
+    public func setEncryptionAtRest(enabled: Bool) throws {
         guard enabled != encryptMessagesAtRest else { return }
 
-        let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
-
-        // Avoid unneccessary and expensive change tracking triggered when saving the sync context.
-        self.notificationDispatcher.isEnabled = false
-
-        syncManagedObjectContext.performGroupedBlock {
+        let account = Account(userName: "", userIdentifier: storeProvider.userIdentifier)
+        let encryptionKeys = try storeProvider.contextDirectory.encryptionKeysForSettingEncryptionAtRest(enabled: enabled, account: account)
+                
+        delegate?.setEncryptionAtRest(enabled: enabled,
+                                      account: account,
+                                      encryptionKeys: encryptionKeys)
+    }
+    
+    public internal(set) var encryptMessagesAtRest: Bool {
+        get {
+            return managedObjectContext.encryptMessagesAtRest
+        }
+        set {
+            guard encryptMessagesAtRest != newValue else { return }
+            
             do {
-                if enabled {
-                    try self.deleteKeys(for: account)
-                    try self.createKeys(for: account)
-                    try self.syncManagedObjectContext.enableEncryptionAtRest()
-                } else {
-                    try self.syncManagedObjectContext.disableEncryptionAtRest()
-                    try self.deleteKeys(for: account)
-                }
-
-                self.syncManagedObjectContext.saveOrRollback()
-
-                DispatchQueue.main.async {
-                    self.notificationDispatcher.isEnabled = true
-                    completion?(.success(()))
-                }
-
-            } catch {
-                Logging.EAR.error(
-                    "Failed to enabling/disabling database encryption. Reason: \(error.localizedDescription)"
-                )
-
-                self.syncManagedObjectContext.reset()
-
-                DispatchQueue.main.async {
-                    self.notificationDispatcher.isEnabled = true
-                    completion?(.failure(error))
-                }
+                let account = Account(userName: "", userIdentifier: storeProvider.userIdentifier)
+                try _ = storeProvider.contextDirectory.encryptionKeysForSettingEncryptionAtRest(enabled: newValue, account: account)
+                managedObjectContext.setEncryptionAtRestWithoutMigration(enabled: newValue)
+            } catch let error {
+                Logging.EAR.error("Failed to enable/disable encryption at rest: \(error)")
             }
+            
         }
     }
     
-    public var encryptMessagesAtRest: Bool {
-        return managedObjectContext.encryptMessagesAtRest
-    }
-
-    private func deleteKeys(for account: Account) throws {
-        try EncryptionKeys.deleteKeys(for: account)
-        storeProvider.contextDirectory.clearEncryptionKeysInAllContexts()
-    }
-
-    private func createKeys(for account: Account) throws {
-        let keys = try EncryptionKeys.createKeys(for: account)
-        storeProvider.contextDirectory.storeEncryptionKeysInAllContexts(encryptionKeys: keys)
-    }
-
     public var isDatabaseLocked: Bool {
         managedObjectContext.encryptMessagesAtRest && managedObjectContext.encryptionKeys == nil
     }
