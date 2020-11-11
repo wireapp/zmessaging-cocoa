@@ -44,7 +44,9 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
                                       from selectedAccount: Account?,
                                       error: Error)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: (() -> Void)?)
-    func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void)
+    func sessionManagerWillOpenAccount(_ account: Account,
+                                       from selectedAccount: Account?,
+                                       userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerDidBlacklistCurrentVersion()
     func sessionManagerDidBlacklistJailbrokenDevice()
@@ -183,7 +185,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     var isAppVersionBlacklisted = false
     public weak var delegate: SessionManagerDelegate? = nil
     public let accountManager: AccountManager
-    public fileprivate(set) var activeUserSession: ZMUserSession?
+    public internal(set) var activeUserSession: ZMUserSession?
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public internal(set) var unauthenticatedSession: UnauthenticatedSession? {
@@ -451,7 +453,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             // In order to do so we open the old database and get the user identifier.
             LocalStoreProvider.fetchUserIDFromLegacyStore(
                 in: sharedContainerURL,
-                migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateAccount() },
+                migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateAccount(userSessionCanBeTornDown: {}) },
                 completion: { [weak self] userIdentifier in
                     guard let strongSelf = self, let userIdentifier = userIdentifier else {
                         self?.createUnauthenticatedSession()

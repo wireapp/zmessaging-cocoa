@@ -1449,11 +1449,6 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
         // no op
     }
     
-    var startedMigrationCalled = false
-    func sessionManagerWillMigrateAccount() {
-        startedMigrationCalled = true
-    }
-
 }
 
 class SessionManagerObserverMock: SessionManagerCreatedSessionObserver, SessionManagerDestroyedSessionObserver {

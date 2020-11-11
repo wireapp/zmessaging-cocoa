@@ -23,7 +23,7 @@ extension SessionManager: UserSessionEncryptionAtRestDelegate {
     func setEncryptionAtRest(enabled: Bool, account: Account, encryptionKeys: EncryptionKeys) {
         let sharedContainerURL = self.sharedContainerURL
                     
-        delegate?.sessionManagerWillMigrateAccount(account, userSessionCanBeTornDown: { [weak self] in
+        delegate?.sessionManagerWillMigrateAccount(userSessionCanBeTornDown: { [weak self] in
             self?.tearDownBackgroundSession(for: account.userIdentifier)
             self?.activeUserSession = nil
             StorageStack.reset()
