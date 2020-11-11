@@ -20,6 +20,15 @@ import Foundation
 import LocalAuthentication
 @testable import WireSyncEngine
 
+class MockUserSessionDelegate: UserSessionDelegate {
+    
+    var calledSetEncryptionAtRest: (Bool, Account, EncryptionKeys)?
+    func setEncryptionAtRest(enabled: Bool, account: Account, encryptionKeys: EncryptionKeys) {
+        calledSetEncryptionAtRest = (enabled, account, encryptionKeys)
+    }
+    
+}
+
 class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
 
     private var account: Account {
@@ -35,6 +44,39 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
     private func setEncryptionAtRest(enabled: Bool, file: StaticString = #file, line: UInt = #line) {
         sut.encryptMessagesAtRest = enabled
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5), file: file, line: line)
+    }
+    
+    // MARK: - Database migration
+    
+    func testThatDelegateIsCalled_WhenEncryptionAtRestIsEnabled() throws {
+        // given
+        simulateLoggedInUser()
+        syncMOC.saveOrRollback()
+        let userSessionDelegate = MockUserSessionDelegate()
+        sut.delegate = userSessionDelegate
+        
+        // when
+        try sut.setEncryptionAtRest(enabled: true)
+        
+        // then
+        XCTAssertNotNil(userSessionDelegate.calledSetEncryptionAtRest)
+        XCTAssertEqual(userSessionDelegate.calledSetEncryptionAtRest?.0, true)
+    }
+    
+    func testThatDelegateIsCalled_WhenEncryptionAtRestIsDisabled() throws {
+        // given
+        simulateLoggedInUser()
+        syncMOC.saveOrRollback()
+        setEncryptionAtRest(enabled: true)
+        let userSessionDelegate = MockUserSessionDelegate()
+        sut.delegate = userSessionDelegate
+        
+        // when
+        try sut.setEncryptionAtRest(enabled: false)
+        
+        // then
+        XCTAssertNotNil(userSessionDelegate.calledSetEncryptionAtRest)
+        XCTAssertEqual(userSessionDelegate.calledSetEncryptionAtRest?.0, false)
     }
     
     // MARK: - Database locking/unlocking
