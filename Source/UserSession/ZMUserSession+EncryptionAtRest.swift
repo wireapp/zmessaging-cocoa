@@ -45,6 +45,8 @@ extension ZMUserSession: UserSessionEncryptionAtRestInterface {
     ///
     /// - Parameters:
     ///     - enabled: When `true`, messages will be encrypted at rest.
+    ///
+    /// - Throws: `MigrationError` if it's not possible to start the migration.
 
     public func setEncryptionAtRest(enabled: Bool) throws {
         guard enabled != encryptMessagesAtRest else { return }
@@ -66,8 +68,8 @@ extension ZMUserSession: UserSessionEncryptionAtRestInterface {
             
             do {
                 let account = Account(userName: "", userIdentifier: storeProvider.userIdentifier)
-                try _ = storeProvider.contextDirectory.encryptionKeysForSettingEncryptionAtRest(enabled: newValue, account: account)
-                managedObjectContext.setEncryptionAtRestWithoutMigration(enabled: newValue)
+                let encryptionKeys = try storeProvider.contextDirectory.encryptionKeysForSettingEncryptionAtRest(enabled: newValue, account: account)
+                try managedObjectContext.enableEncryptionAtRest(encryptionKeys: encryptionKeys, skipMigration: true)
             } catch let error {
                 Logging.EAR.error("Failed to enable/disable encryption at rest: \(error)")
             }
