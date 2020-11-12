@@ -653,7 +653,8 @@ extension IntegrationTest: SessionManagerDelegate {
     }
     
     public func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void) {
-        // no-op
+        self.userSession = nil
+        userSessionCanBeTornDown()
     }
     
     public func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: (() -> Void)?) {

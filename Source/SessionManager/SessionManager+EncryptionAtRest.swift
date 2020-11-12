@@ -22,6 +22,7 @@ extension SessionManager: UserSessionEncryptionAtRestDelegate {
         
     func setEncryptionAtRest(enabled: Bool, account: Account, encryptionKeys: EncryptionKeys) {
         let sharedContainerURL = self.sharedContainerURL
+        let dispatchGroup = self.dispatchGroup
                     
         delegate?.sessionManagerWillMigrateAccount(userSessionCanBeTornDown: { [weak self] in
             self?.tearDownBackgroundSession(for: account.userIdentifier)
@@ -29,6 +30,7 @@ extension SessionManager: UserSessionEncryptionAtRestDelegate {
             StorageStack.reset()
             StorageStack.migrateLocalStorage(accountIdentifier: account.userIdentifier,
                                              applicationContainer: sharedContainerURL,
+                                             dispatchGroup: dispatchGroup,
                                              migration: { context in
                                                 if enabled {
                                                     try context.enableEncryptionAtRest(encryptionKeys: encryptionKeys)
