@@ -456,10 +456,9 @@ public final class SessionManager : NSObject, SessionManagerType {
                 completion: { [weak self] userIdentifier in
                     guard let strongSelf = self, let userIdentifier = userIdentifier else {
                         self?.createUnauthenticatedSession()
-                        let userInfo = self?.accountManager.selectedAccount?.loginCredentials?.dictionaryRepresentation
-                        let error = NSError(code: .accessTokenExpired, userInfo: userInfo)
-                        self?.delegate?.sessionManagerDidFailToLogin(account: self?.accountManager.selectedAccount,
-                                                                     from: self?.accountManager.selectedAccount,
+                        let error = NSError(code: .accessTokenExpired, userInfo: nil)
+                        self?.delegate?.sessionManagerDidFailToLogin(account: nil,
+                                                                     from: nil,
                                                                      error: error)
                         return
                     }
