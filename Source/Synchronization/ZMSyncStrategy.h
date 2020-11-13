@@ -21,7 +21,6 @@
 @import Foundation;
 @import WireRequestStrategy;
 
-#import "ZMObjectStrategyDirectory.h"
 #import "ZMUpdateEventsBuffer.h"
 
 @class ZMTransportRequest;
@@ -37,6 +36,7 @@
 @class ApplicationStatusDirectory;
 @class CallingRequestStrategy;
 @class EventDecoder;
+@class ZMMissingUpdateEventsTranscoder;
 
 @protocol ZMTransportData;
 @protocol ZMSyncStateDelegate;
@@ -47,7 +47,7 @@
 @protocol LocalStoreProviderProtocol;
 @protocol EventProcessingTrackerProtocol;
 
-@interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory, TearDownCapable>
+@interface ZMSyncStrategy : NSObject <TearDownCapable>
 
 - (instancetype _Nonnull )initWithStoreProvider:(id<LocalStoreProviderProtocol> _Nonnull)storeProvider
                                   cookieStorage:(ZMPersistentCookieStorage * _Nullable)cookieStorage
@@ -61,6 +61,9 @@
 - (void)didEstablishUpdateEventsStream;
 - (void)applyHotFixes;
 
+/// process all events in the buffer
+- (void)processAllEventsInBuffer;
+
 - (ZMTransportRequest *_Nullable)nextRequest;
 
 - (void)tearDown;
@@ -68,6 +71,7 @@
 @property (nonatomic, readonly, nonnull) NSManagedObjectContext *syncMOC;
 @property (nonatomic, weak, readonly, nullable) ApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic, readonly, nonnull) CallingRequestStrategy *callingRequestStrategy;
+@property (nonatomic, readonly, nonnull) ZMMissingUpdateEventsTranscoder *missingUpdateEventsTranscoder;
 @property (nonatomic, readonly, nonnull) EventDecoder *eventDecoder;
 @property (nonatomic, readonly, nonnull) ZMUpdateEventsBuffer *eventsBuffer;
 @property (nonatomic, readonly, nonnull) NSArray<id<ZMEventConsumer>> *eventConsumers;
