@@ -33,6 +33,7 @@ class SessionManagerConfigurationTests: XCTestCase {
             "authenticateAfterReboot": false,
             "useBiometricsOrAccountPassword": true,
             "messageRetentionInterval": 3600,
+            "encryptionAtRestEnabledByDefault": false,
         }
 
         """
@@ -51,6 +52,7 @@ class SessionManagerConfigurationTests: XCTestCase {
         XCTAssertEqual(result.messageRetentionInterval, 3600)
         XCTAssertEqual(result.authenticateAfterReboot, false)
         XCTAssertEqual(result.failedPasswordThresholdBeforeWipe, nil)
+        XCTAssertEqual(result.encryptionAtRestEnabledByDefault, false)
     }
 
 }

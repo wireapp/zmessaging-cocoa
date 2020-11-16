@@ -25,14 +25,16 @@ class ConnectToBotURLActionProcessor: NSObject, URLActionProcessor, ZMManagedObj
     var managedObjectContext: NSManagedObjectContext
     var syncManagedObjectContext: NSManagedObjectContext
     
-    init(contextprovider: ZMManagedObjectContextProvider, transportSession: TransportSessionType, eventProcessor: UpdateEventProcessor) {
+    init(contextprovider: ZMManagedObjectContextProvider,
+         transportSession: TransportSessionType,
+         eventProcessor: UpdateEventProcessor) {
         self.managedObjectContext = contextprovider.managedObjectContext
         self.syncManagedObjectContext = contextprovider.syncManagedObjectContext
         self.transportSession = transportSession
         self.eventProcessor = eventProcessor
     }
     
-    func process(urlAction: URLAction, delegate: URLActionDelegate?) {
+    func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         if case .connectBot(let serviceUserData) = urlAction {
             let serviceUser = ZMSearchUser(contextProvider: self,
                                            name: "",

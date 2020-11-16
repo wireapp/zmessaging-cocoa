@@ -82,6 +82,7 @@ final class SessionManagerTests: IntegrationTest {
         
         // then
         XCTAssertNil(delegate.userSession)
+        XCTAssertTrue(delegate.sessionManagerDidFailToLoginIsCalled)
         XCTAssertNotNil(sut?.unauthenticatedSession)
         withExtendedLifetime(token) {
             XCTAssertEqual([], observer.createdUserSession)
@@ -138,7 +139,7 @@ final class SessionManagerTests: IntegrationTest {
                               mediaManager: MockMediaManager(),
                               analytics: nil,
                               delegate: nil,
-                              showContentDelegate: nil,
+                              presentationDelegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
                               configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
@@ -226,7 +227,7 @@ final class SessionManagerTests: IntegrationTest {
                               mediaManager: MockMediaManager(),
                               analytics: nil,
                               delegate: nil,
-                              showContentDelegate: nil,
+                              presentationDelegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
                               configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
@@ -285,7 +286,7 @@ final class SessionManagerTests: IntegrationTest {
                               mediaManager: mockMediaManager,
                               analytics: nil,
                               delegate: self.delegate,
-                              showContentDelegate: nil,
+                              presentationDelegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
                               configuration: configuration,
@@ -513,6 +514,27 @@ class SessionManagerTests_AuthenticationFailure: IntegrationTest {
         
         // then
         XCTAssertNil(sessionManager?.backgroundUserSessions[additionalAccount.userIdentifier])
+    }
+    
+}
+
+class SessionManagerTests_EncryptionAtRestIsEnabledByDefault_Option: IntegrationTest {
+    
+    override func setUp() {
+        super.setUp()
+        createSelfUserAndConversation()
+    }
+    
+    override var sessionManagerConfiguration: SessionManagerConfiguration {
+        return SessionManagerConfiguration(encryptionAtRestIsEnabledByDefault: true)
+    }
+    
+    func testThatEncryptionAtRestIsEnabled_OnActiveUserSession() {
+        // given
+        XCTAssertTrue(login())
+        
+        // then
+        XCTAssertTrue(sessionManager!.activeUserSession!.encryptMessagesAtRest)
     }
     
 }
@@ -891,7 +913,7 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
                               mediaManager: MockMediaManager(),
                               analytics: nil,
                               delegate: nil,
-                              showContentDelegate: nil,
+                              presentationDelegate: nil,
                               application: application,
                               environment: sessionManager!.environment,
                               configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
@@ -947,7 +969,7 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
                        mediaManager: MockMediaManager(),
                        analytics: nil,
                        delegate: nil,
-                       showContentDelegate: nil,
+                       presentationDelegate: nil,
                        application: application,
                        environment: sessionManager!.environment,
                        configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
@@ -1368,14 +1390,14 @@ extension SessionManagerTests {
         // GIVEN
         let id = UUID(uuidString: "1E628B42-4C83-49B7-B2B4-EF27BFE503EF")!
         let url = URL(string: "wire://start-sso/wire-\(id)")!
-        let urlActionDelegate = MockURLActionDelegate()
+        let presentationDelegate = MockPresentationDelegate()
 
-        sessionManager?.urlActionDelegate = urlActionDelegate
+        sessionManager?.presentationDelegate = presentationDelegate
         XCTAssertTrue(login())
         XCTAssertNotNil(userSession)
         
         // WHEN
-        try sessionManager?.openURL(url, options: [:])
+        try sessionManager?.openURL(url)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -1386,18 +1408,22 @@ extension SessionManagerTests {
 
 // MARK: - Mocks
 class SessionManagerTestDelegate: SessionManagerDelegate {
-
     var onLogout: ((NSError?) -> Void)?
     func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: (() -> Void)?) {
         onLogout?(error as NSError?)
         userSessionCanBeTornDown?()
     }
     
-    func sessionManagerDidFailToLogin(account: Account?, error: Error) {
-        // no op
+    var sessionManagerDidFailToLoginIsCalled: Bool = false
+    func sessionManagerDidFailToLogin(account: Account?,
+                                      from selectedAccount: Account?,
+                                      error: Error) {
+        sessionManagerDidFailToLoginIsCalled = true
     }
     
-    func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
+    func sessionManagerWillOpenAccount(_ account: Account,
+                                       from selectedAccount: Account?,
+                                       userSessionCanBeTornDown: @escaping () -> Void) {
         userSessionCanBeTornDown()
     }
     
@@ -1412,17 +1438,17 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     }
     
     var userSession : ZMUserSession?
-    func sessionManagerActivated(userSession: ZMUserSession) {
+    func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession) {
         self.userSession = userSession
     }
     
-    var startedMigrationCalled = false
-    func sessionManagerWillMigrateAccount(_ account: Account) {
-        startedMigrationCalled = true
+    func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
+        // no op
     }
     
-    func sessionManagerWillMigrateLegacyAccount() {
-        // no op
+    var startedMigrationCalled = false
+    func sessionManagerWillMigrateAccount() {
+        startedMigrationCalled = true
     }
 
 }

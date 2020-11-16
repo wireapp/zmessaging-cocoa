@@ -45,6 +45,7 @@ import Foundation
     public static func updateUploadedStateForNotUploadedFileMessages(_ context: NSManagedObjectContext) {
         let selfUser = ZMUser.selfUser(in: context)
         let predicate = NSPredicate(format: "sender == %@ AND assetId_data == NULL", selfUser)
+        
         let fetchRequest = ZMAssetClientMessage.sortedFetchRequest(with: predicate)
         
         guard let messages = context.fetchOrAssert(request: fetchRequest) as? [ZMAssetClientMessage] else { return }
@@ -83,6 +84,7 @@ import Foundation
     }
     
     public static func markAllNewConversationSystemMessagesAsRead(_ context: NSManagedObjectContext) {
+        
         let fetchRequest = ZMConversation.sortedFetchRequest()
         
         guard let conversations = context.fetchOrAssert(request: fetchRequest) as? [ZMConversation] else { return }

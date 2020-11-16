@@ -34,10 +34,6 @@ public class WireCallCenterV3: NSObject {
 
     let legacyVideoParticipantsLimit = 4
 
-    /// Whether conference calling is enabled.
-
-    var useConferenceCalling = false
-
     // MARK: - Properties
 
     /// The selfUser remoteIdentifier
@@ -372,8 +368,10 @@ extension WireCallCenterV3 {
         
         endAllCalls(exluding: conversationId)
         
-        let callType = self.callType(for: conversation, startedWithVideo: video)
-        
+        let callType = self.callType(for: conversation,
+                                     startedWithVideo: video,
+                                     isConferenceCall: isConferenceCall(conversationId: conversationId))
+
         if !video {
             setVideoState(conversationId: conversationId, videoState: VideoState.stopped)
         }
@@ -409,16 +407,16 @@ extension WireCallCenterV3 {
         
         let conversationType: AVSConversationType
 
-        switch (conversation.conversationType, useConferenceCalling) {
-        case (.group, false):
-            conversationType = .group
-        case (.group, true):
+        switch conversation.conversationType {
+        case .group:
             conversationType = .conference
         default:
             conversationType = .oneToOne
         }
 
-        let callType = self.callType(for: conversation, startedWithVideo: video)
+        let callType = self.callType(for: conversation,
+                                     startedWithVideo: video,
+                                     isConferenceCall: conversationType == .conference)
 
         let started = avsWrapper.startCall(conversationId: conversationId,
                                            callType: callType,
@@ -521,14 +519,13 @@ extension WireCallCenterV3 {
         flowManager.setVideoCaptureDevice(captureDevice, for: conversationId)
     }
 
-    private func callType(for conversation: ZMConversation, startedWithVideo: Bool) -> AVSCallType {
-        if !useConferenceCalling && conversation.localParticipants.count > legacyVideoParticipantsLimit {
+    private func callType(for conversation: ZMConversation, startedWithVideo: Bool, isConferenceCall: Bool) -> AVSCallType {
+        if !isConferenceCall && conversation.localParticipants.count > legacyVideoParticipantsLimit {
             return .audioOnly
         } else {
             return startedWithVideo ? .video : .normal
         }
     }
-
 }
 
 // MARK: - AVS Integration

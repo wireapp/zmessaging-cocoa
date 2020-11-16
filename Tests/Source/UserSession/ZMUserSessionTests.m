@@ -65,8 +65,7 @@
                                                                operationLoop:nil
                                                                  application:self.application
                                                                   appVersion:version
-                                                               storeProvider:self.storeProvider
-                                                         showContentDelegate:nil];
+                                                               storeProvider:self.storeProvider];
     XCTAssertNotNil(session);
     
     // then
@@ -196,8 +195,7 @@
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                                   storeProvider:self.storeProvider
-                                                             showContentDelegate:nil];
+                                                                   storeProvider:self.storeProvider];
     userSession.sessionManager = sessionManager;
     XCTAssertFalse([(MockSessionManager *)sessionManager updatePushTokenCalled]);
     [userSession didRegisterUserClient:userClient];
@@ -424,8 +422,7 @@
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                                   storeProvider:self.storeProvider
-                                                             showContentDelegate:nil];
+                                                                   storeProvider:self.storeProvider];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then

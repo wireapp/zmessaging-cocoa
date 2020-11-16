@@ -109,6 +109,7 @@ public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextCh
         // we want to ensure that we delete that team from the client. The `/teams` request will only
         // return the teams the user is still in of course, so we fetch all local teams and check which ones we
         // receive during the slow sync. Afterwards we delete all teams that were no longer present on the backend.
+        
         let request = Team.sortedFetchRequest()
         guard let existingTeams = managedObjectContext.fetchOrAssert(request: request) as? [Team] else { return Set() }
         

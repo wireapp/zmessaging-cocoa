@@ -232,8 +232,7 @@ extension SearchTask {
         let fetchRequest = ZMConversation.sortedFetchRequest(with: ZMConversation.predicate(forSearchQuery: query, selfUser: ZMUser.selfUser(in: searchContext)))
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: ZMNormalizedUserDefinedNameKey, ascending: true)]
         
-        var conversations: [ZMConversation]
-        conversations = searchContext.fetchOrAssert(request: fetchRequest) as? [ZMConversation] ?? []
+        var conversations = searchContext.fetchOrAssert(request: fetchRequest) as? [ZMConversation] ?? []
 
         if query.hasPrefix("@") {
             // if we are searching for a username only include conversations with matching displayName

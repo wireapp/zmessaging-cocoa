@@ -60,7 +60,6 @@ import WireDataModel
                                                                                transport: transport)
 
             newInstance.useConstantBitRateAudio = uiMOC.zm_useConstantBitRateAudio
-            newInstance.useConferenceCalling = uiMOC.zm_useConferenceCalling
             uiMOC.zm_callCenter = newInstance
             return newInstance
         }
