@@ -274,13 +274,18 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     }
     
     private func createOperationLoop() -> ZMOperationLoop {
+        let strategyFactory = RequestStrategyFactory(contextDirectory: storeProvider.contextDirectory,
+                                                     applicationStatusDirectory: applicationStatusDirectory!,
+                                                     cookieStorage: transportSession.cookieStorage,
+                                                     pushMessageHandler: localNotificationDispatcher!,
+                                                     flowManager: flowManager)
+        
         let syncStrategy = ZMSyncStrategy(storeProvider: storeProvider,
-                                          cookieStorage: transportSession.cookieStorage,
-                                          flowManager: flowManager,
                                           localNotificationsDispatcher: localNotificationDispatcher!,
                                           notificationsDispatcher: notificationDispatcher,
                                           applicationStatusDirectory: applicationStatusDirectory!,
-                                          application: application)
+                                          application: application,
+                                          requestStrategyFactory: strategyFactory)
         self.syncStrategy = syncStrategy
 
         return ZMOperationLoop(transportSession: transportSession,

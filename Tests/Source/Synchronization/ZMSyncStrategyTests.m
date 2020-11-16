@@ -192,6 +192,10 @@
                          self.teamRolesDownloadRequestStrategy
     ];
     
+    
+    MockRequestStrategyFactory *requestStrategyFactory = [[MockRequestStrategyFactory alloc] initWithStrategies:self.syncObjects];
+    
+    
     for(ZMObjectSyncStrategy *strategy in self.syncObjects) {
         [self verifyMockLater:strategy];
     }
@@ -205,20 +209,17 @@
     self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
     self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:[[FakeCookieStorage alloc] init] requestCancellation:self application:self.application syncStateDelegate:self analytics:nil];
     
+    NotificationDispatcher *notificationDispatcher =
+    [[NotificationDispatcher alloc] initWithManagedObjectContext:self.contextDirectory .uiContext];
+        
     self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider
-                                               cookieStorage:nil
-                                                 flowManager:self.mockflowManager
                                 localNotificationsDispatcher:self.mockDispatcher
-                                     notificationsDispatcher:[[NotificationDispatcher alloc] initWithManagedObjectContext:self.contextDirectory.uiContext]
+                                     notificationsDispatcher:notificationDispatcher
                                   applicationStatusDirectory:self.applicationStatusDirectory
-                                                 application:self.application];
+                                                 application:self.application
+                                      requestStrategyFactory:requestStrategyFactory];
     
     self.application.applicationState = UIApplicationStateBackground;
-    XCTAssertEqual(self.sut.userTranscoder, self.userTranscoder);
-    XCTAssertEqual(self.sut.conversationTranscoder, self.conversationTranscoder);
-    XCTAssertEqual(self.sut.clientMessageTranscoder, clientMessageTranscoder);
-
-    XCTAssertEqual(self.sut.connectionTranscoder, connectionTranscoder);
     
     WaitForAllGroupsToBeEmpty(0.5);
 }
@@ -295,52 +296,6 @@
     self.sut = nil;
     self.syncObjects = nil;
     [super tearDown];
-}
-
-- (void)testThatPushEventsAreProcessedForConversationEventSyncBeforeConversationSync
-{
-    // given
-    NSString *eventType = @"user.update";
-    
-    NSDictionary *payload = @{
-                               @"type" : eventType,
-                               @"foo" : @"bar"
-                               };
-    
-    NSDictionary *eventData = @{
-                                @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
-                                @"payload" : @[payload],
-                                };
-    
-    NSArray *expectedEvents = [ZMUpdateEvent eventsArrayFromPushChannelData:eventData];
-    XCTAssertEqual(expectedEvents.count, 1u);
-    
-    // expect
-    for(id obj in self.syncObjects) {
-        if ([obj conformsToProtocol:@protocol(ZMEventConsumer)] && obj != self.sut.conversationTranscoder) {
-            [[obj stub] processEvents:OCMOCK_ANY liveEvents:YES prefetchResult:OCMOCK_ANY];
-        }
-    }
-    
-    [self expectSyncObjectsToProcessEvents:NO
-                                liveEvents:NO
-                             decryptEvents:YES
-                   returnIDsForPrefetching:YES
-                                withEvents:expectedEvents];
-    
-    __block BOOL didCallConversationSync = NO;
-    
-    [[[(id) self.sut.conversationTranscoder expect] andDo:^(NSInvocation *i ZM_UNUSED) {
-        didCallConversationSync = YES;
-    }] processEvents:expectedEvents liveEvents:YES prefetchResult:OCMOCK_ANY];
-    
-    // when
-    [self.sut storeAndProcessUpdateEvents:@[expectedEvents.firstObject] ignoreBuffer:YES];
-    
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(didCallConversationSync);
 }
 
 - (void)testThatWhenItConsumesEventsTheyAreForwardedToAllIndividualObjects
