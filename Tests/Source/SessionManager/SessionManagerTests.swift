@@ -557,7 +557,7 @@ class SessionManagerTests_EncryptionAtRestMigration: IntegrationTest {
         // given
         XCTAssertTrue(login())
         let expectedText = "Hello World"
-        userSession?.encryptMessagesAtRest = true
+        try userSession?.setEncryptionAtRest(enabled: true, skipMigration: true)
         userSession?.perform({
             let groupConversation = self.conversation(for: self.groupConversation)
             try! groupConversation?.appendText(content: expectedText)
