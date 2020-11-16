@@ -22,17 +22,6 @@ import ZipArchive
 import WireUtilities
 import WireCryptobox
 
-enum EARBackupError: LocalizedError {
-    case missingEAREncryptionKey
-
-    var errorDescription: String? {
-        switch self {
-        case .missingEAREncryptionKey:
-            return "Failed to export backup when encryption at rest is enabled and the encryption keys are missing ."
-        }
-    }
-}
-
 extension SessionManager {
     
     public typealias BackupResultClosure = (Result<URL>) -> Void
@@ -52,18 +41,14 @@ extension SessionManager {
         case unknown
     }
 
-    public func backupActiveAccount(password: String, completion: @escaping BackupResultClosure) throws {
-        guard let userId = accountManager.selectedAccount?.userIdentifier,
-              let clientId = activeUserSession?.selfUserClient?.remoteIdentifier,
-              let handle = activeUserSession.flatMap(ZMUser.selfUser)?.handle else { return completion(.failure(BackupError.noActiveAccount)) }
-        
-        var encryptionKeys: EncryptionKeys?
-        if activeUserSession?.storeProvider.contextDirectory.uiContext.encryptMessagesAtRest ?? false {
-            do {
-                encryptionKeys = try activeUserSession?.storeProvider.contextDirectory.uiContext.getEncryptionKeys()
-            } catch {
-                throw EARBackupError.missingEAREncryptionKey
-            }
+    public func backupActiveAccount(password: String, completion: @escaping BackupResultClosure) {
+        guard
+            let userId = accountManager.selectedAccount?.userIdentifier,
+            let clientId = activeUserSession?.selfUserClient?.remoteIdentifier,
+            let handle = activeUserSession.flatMap(ZMUser.selfUser)?.handle,
+            let activeUserSession = activeUserSession
+        else {
+            return completion(.failure(BackupError.noActiveAccount))
         }
 
         StorageStack.backupLocalStorage(
@@ -71,7 +56,7 @@ extension SessionManager {
             clientIdentifier: clientId,
             applicationContainer: sharedContainerURL,
             dispatchGroup: dispatchGroup,
-            encryptionKeys: encryptionKeys,
+            encryptionKeys: activeUserSession.managedObjectContext.encryptionKeys,
             completion: { [dispatchGroup] in
                 SessionManager.handle(result: $0,
                                       password: password,
