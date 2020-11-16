@@ -45,13 +45,28 @@ extension SessionManager {
         guard let userId = accountManager.selectedAccount?.userIdentifier,
               let clientId = activeUserSession?.selfUserClient?.remoteIdentifier,
               let handle = activeUserSession.flatMap(ZMUser.selfUser)?.handle else { return completion(.failure(BackupError.noActiveAccount)) }
+        
+        var encryptionKeys: EncryptionKeys?
+        do {
+            encryptionKeys = try activeUserSession?.storeProvider.contextDirectory.getEncryptionKeys()
+        } catch {
+            print("encryptionKeys not found")
+        }
 
         StorageStack.backupLocalStorage(
             accountIdentifier: userId,
             clientIdentifier: clientId,
             applicationContainer: sharedContainerURL,
             dispatchGroup: dispatchGroup,
-            completion: { [dispatchGroup] in SessionManager.handle(result: $0, password: password, accountId: userId, dispatchGroup: dispatchGroup, completion: completion, handle: handle) }
+            encryptionKeys: encryptionKeys,
+            completion: { [dispatchGroup] in
+                SessionManager.handle(result: $0,
+                                      password: password,
+                                      accountId: userId,
+                                      dispatchGroup: dispatchGroup,
+                                      completion: completion,
+                                      handle: handle)
+            }
         )
     }
     
