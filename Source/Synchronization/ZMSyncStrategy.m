@@ -252,9 +252,11 @@ ZM_EMPTY_ASSERTING_INIT()
 - (NSArray *)allChangeTrackers
 {
     if (_allChangeTrackers == nil) {
-        _allChangeTrackers = [self.requestStrategies flattenWithBlock:^NSArray *(id <ZMObjectStrategy> objectSync) {
+        _allChangeTrackers = [self.strategies flattenWithBlock:^NSArray *(id <ZMObjectStrategy> objectSync) {
             if ([objectSync conformsToProtocol:@protocol(ZMContextChangeTrackerSource)]) {
                 return objectSync.contextChangeTrackers;
+            } else if ([objectSync conformsToProtocol:@protocol(ZMContextChangeTracker)]) {
+                return @[objectSync];
             }
             return nil;
         }];
