@@ -68,18 +68,6 @@ extension ZMUserSession: UserSessionEncryptionAtRestInterface {
         get {
             return managedObjectContext.encryptMessagesAtRest
         }
-        set {
-            guard encryptMessagesAtRest != newValue else { return }
-            
-            do {
-                let account = Account(userName: "", userIdentifier: storeProvider.userIdentifier)
-                let encryptionKeys = try storeProvider.contextDirectory.encryptionKeysForSettingEncryptionAtRest(enabled: newValue, account: account)
-                try managedObjectContext.enableEncryptionAtRest(encryptionKeys: encryptionKeys, skipMigration: true)
-            } catch let error {
-                Logging.EAR.error("Failed to enable/disable encryption at rest: \(error)")
-            }
-            
-        }
     }
     
     public var isDatabaseLocked: Bool {
