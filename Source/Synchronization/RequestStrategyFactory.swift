@@ -33,17 +33,20 @@ public class RequestStrategyFactory: NSObject, RequestStrategyFactoryProtocol {
     let cookieStorage: ZMPersistentCookieStorage
     let pushMessageHandler: PushMessageHandler
     let flowManager: FlowManagerType
+    let updateEventProcessor: UpdateEventProcessor
     
     init(contextDirectory: ManagedObjectContextDirectory,
          applicationStatusDirectory: ApplicationStatusDirectory,
          cookieStorage: ZMPersistentCookieStorage,
          pushMessageHandler: PushMessageHandler,
-         flowManager: FlowManagerType) {
+         flowManager: FlowManagerType,
+         updateEventProcessor: UpdateEventProcessor) {
         self.contextDirectory = contextDirectory
         self.applicationStatusDirectory = applicationStatusDirectory
         self.cookieStorage = cookieStorage
         self.pushMessageHandler = pushMessageHandler
         self.flowManager = flowManager
+        self.updateEventProcessor = updateEventProcessor
     }
     
     private var syncMOC: NSManagedObjectContext {
@@ -51,11 +54,6 @@ public class RequestStrategyFactory: NSObject, RequestStrategyFactoryProtocol {
     }
         
     public func buildStrategies() -> [Any] {
-        
-//            self.conversationStatusSync = [[ConversationStatusStrategy alloc] initWithManagedObjectContext:self.syncMOC];
-        
-        
-        
         let strategies: [Any] = [
             UserClientRequestStrategy(clientRegistrationStatus: applicationStatusDirectory.clientRegistrationStatus,
                                       clientUpdateStatus: applicationStatusDirectory.clientUpdateStatus,
@@ -64,7 +62,13 @@ public class RequestStrategyFactory: NSObject, RequestStrategyFactoryProtocol {
             MissingClientsRequestStrategy(withManagedObjectContext: syncMOC,
                                           applicationStatus: applicationStatusDirectory),
             ZMMissingUpdateEventsTranscoder(managedObjectContext: syncMOC,
-                                            applicationStatus: applicationStatusDirectory),
+                                            notificationsTracker: nil,
+                                            eventProcessor: updateEventProcessor,
+                                            previouslyReceivedEventIDsCollection: nil,
+                                            applicationStatus: applicationStatusDirectory,
+                                            pushNotificationStatus: applicationStatusDirectory.pushNotificationStatus,
+                                            syncStatus: applicationStatusDirectory.syncStatus,
+                                            operationStatus: applicationStatusDirectory.operationStatus),
             FetchingClientRequestStrategy(withManagedObjectContext: syncMOC,
                                           applicationStatus: applicationStatusDirectory),
             VerifyLegalHoldRequestStrategy(withManagedObjectContext: syncMOC,

@@ -51,6 +51,7 @@
 @property (nonatomic, weak) ApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic) NSArray *allChangeTrackers;
 
+@property (nonatomic) NSArray *strategies;
 @property (nonatomic) NSArray<ZMObjectSyncStrategy *> *requestStrategies;
 @property (nonatomic) NSArray<id<ZMEventConsumer>> *eventConsumers;
 
@@ -98,7 +99,7 @@ ZM_EMPTY_ASSERTING_INIT()
 
         self.eventDecoder = [[EventDecoder alloc] initWithEventMOC:self.eventMOC syncMOC:self.syncMOC];
         self.eventsBuffer = [[ZMUpdateEventsBuffer alloc] initWithUpdateEventProcessor:self];
-        self.requestStrategies = [requestStrategyFactory buildStrategies];
+        self.strategies = [requestStrategyFactory buildStrategies];
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
 
         ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:self.syncMOC]);
@@ -192,12 +193,13 @@ ZM_EMPTY_ASSERTING_INIT()
     [self appTerminated:nil];
 
     @autoreleasepool {
-        for (ZMObjectSyncStrategy *s in self.requestStrategies) {
-            if ([s respondsToSelector:@selector((tearDown))]) {
-                [s tearDown];
+        for (id strategy in self.strategies) {
+            if ([strategy respondsToSelector:@selector((tearDown))]) {
+                [strategy tearDown];
             }
         }
     }
+    self.strategies = nil;
     self.requestStrategies = nil;
     [self.notificationDispatcher tearDown];
 }
@@ -235,6 +237,18 @@ ZM_EMPTY_ASSERTING_INIT()
     }];
 }
 
+- (NSArray *)requestStrategies
+{
+    if (_requestStrategies == nil) {
+        _requestStrategies = [self.strategies filterWithBlock:^BOOL(id strategy) {
+            return [strategy respondsToSelector:@selector(nextRequest)];
+        
+        }];
+    }
+
+    return _requestStrategies;
+}
+
 - (NSArray *)allChangeTrackers
 {
     if (_allChangeTrackers == nil) {
@@ -254,7 +268,7 @@ ZM_EMPTY_ASSERTING_INIT()
     if (_eventConsumers == nil) {
         NSMutableArray<id<ZMEventConsumer>> *eventConsumers = [NSMutableArray array];
         
-        for (id<ZMObjectStrategy> objectStrategy in self.requestStrategies) {
+        for (id<ZMObjectStrategy> objectStrategy in self.strategies) {
             if ([objectStrategy conformsToProtocol:@protocol(ZMEventConsumer)]) {
                 [eventConsumers addObject:objectStrategy];
             }

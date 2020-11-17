@@ -278,7 +278,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                                                      applicationStatusDirectory: applicationStatusDirectory!,
                                                      cookieStorage: transportSession.cookieStorage,
                                                      pushMessageHandler: localNotificationDispatcher!,
-                                                     flowManager: flowManager)
+                                                     flowManager: flowManager,
+                                                     updateEventProcessor: self)
         
         let syncStrategy = ZMSyncStrategy(storeProvider: storeProvider,
                                           localNotificationsDispatcher: localNotificationDispatcher!,
@@ -517,4 +518,17 @@ extension ZMUserSession: URLActionProcessor {
     func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         urlActionProcessors?.forEach({ $0.process(urlAction: urlAction, delegate: delegate)} )
     }
+}
+
+// TODO jacob temporary solution while refactoring
+extension ZMUserSession: UpdateEventProcessor {
+    
+    public func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
+        syncStrategy?.storeUpdateEvents(updateEvents, ignoreBuffer: ignoreBuffer)
+    }
+    
+    public func storeAndProcessUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
+        syncStrategy?.storeAndProcessUpdateEvents(updateEvents, ignoreBuffer: ignoreBuffer)
+    }
+        
 }
