@@ -457,6 +457,10 @@ public final class SessionManager : NSObject, SessionManagerType {
                 completion: { [weak self] userIdentifier in
                     guard let strongSelf = self, let userIdentifier = userIdentifier else {
                         self?.createUnauthenticatedSession()
+                        let error = NSError(code: .accessTokenExpired, userInfo: nil)
+                        self?.delegate?.sessionManagerDidFailToLogin(account: nil,
+                                                                     from: nil,
+                                                                     error: error)
                         return
                     }
                     let account = strongSelf.migrateAccount(with: userIdentifier)
@@ -1023,7 +1027,9 @@ extension SessionManager: UnauthenticatedSessionDelegate {
             let registered = session.authenticationStatus.completedRegistration || session.registrationStatus.completedRegistration
             let emailCredentials = session.authenticationStatus.emailCredentials()
             
-            userSession.encryptMessagesAtRest = self.configuration.encryptionAtRestEnabledByDefault
+            try? userSession.setEncryptionAtRest(enabled: self.configuration.encryptionAtRestEnabledByDefault,
+                                                 skipMigration: true)
+            
             userSession.syncManagedObjectContext.performGroupedBlock {
                 userSession.setEmailCredentials(emailCredentials)
                 userSession.syncManagedObjectContext.registeredOnThisDevice = registered

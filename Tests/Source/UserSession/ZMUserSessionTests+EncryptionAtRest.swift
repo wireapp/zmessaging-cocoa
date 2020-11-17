@@ -42,7 +42,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
     }
 
     private func setEncryptionAtRest(enabled: Bool, file: StaticString = #file, line: UInt = #line) {
-        sut.encryptMessagesAtRest = enabled
+        try! sut.setEncryptionAtRest(enabled: true, skipMigration: true)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5), file: file, line: line)
     }
     

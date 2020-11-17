@@ -83,6 +83,7 @@ final class SessionManagerTests: IntegrationTest {
         
         // then
         XCTAssertNil(delegate.userSession)
+        XCTAssertTrue(delegate.sessionManagerDidFailToLoginIsCalled)
         XCTAssertNotNil(sut?.unauthenticatedSession)
         withExtendedLifetime(token) {
             XCTAssertEqual([], observer.createdUserSession)
@@ -557,7 +558,7 @@ class SessionManagerTests_EncryptionAtRestMigration: IntegrationTest {
         // given
         XCTAssertTrue(login())
         let expectedText = "Hello World"
-        userSession?.encryptMessagesAtRest = true
+        try userSession?.setEncryptionAtRest(enabled: true, skipMigration: true)
         userSession?.perform({
             let groupConversation = self.conversation(for: self.groupConversation)
             try! groupConversation?.appendText(content: expectedText)
@@ -1474,10 +1475,11 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
         userSessionCanBeTornDown?()
     }
     
+    var sessionManagerDidFailToLoginIsCalled: Bool = false
     func sessionManagerDidFailToLogin(account: Account?,
                                       from selectedAccount: Account?,
                                       error: Error) {
-        // no op
+        sessionManagerDidFailToLoginIsCalled = true
     }
     
     func sessionManagerWillOpenAccount(_ account: Account,
