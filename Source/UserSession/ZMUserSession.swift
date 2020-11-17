@@ -279,10 +279,10 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                                                      cookieStorage: transportSession.cookieStorage,
                                                      pushMessageHandler: localNotificationDispatcher!,
                                                      flowManager: flowManager,
-                                                     updateEventProcessor: self)
+                                                     updateEventProcessor: self,
+                                                     localNotificationDispatcher: localNotificationDispatcher!)
         
         let syncStrategy = ZMSyncStrategy(storeProvider: storeProvider,
-                                          localNotificationsDispatcher: localNotificationDispatcher!,
                                           notificationsDispatcher: notificationDispatcher,
                                           applicationStatusDirectory: applicationStatusDirectory!,
                                           application: application,

@@ -34,19 +34,22 @@ public class RequestStrategyFactory: NSObject, RequestStrategyFactoryProtocol {
     let pushMessageHandler: PushMessageHandler
     let flowManager: FlowManagerType
     let updateEventProcessor: UpdateEventProcessor
+    let localNotificationDispatcher: LocalNotificationDispatcher
     
     init(contextDirectory: ManagedObjectContextDirectory,
          applicationStatusDirectory: ApplicationStatusDirectory,
          cookieStorage: ZMPersistentCookieStorage,
          pushMessageHandler: PushMessageHandler,
          flowManager: FlowManagerType,
-         updateEventProcessor: UpdateEventProcessor) {
+         updateEventProcessor: UpdateEventProcessor,
+         localNotificationDispatcher: LocalNotificationDispatcher) {
         self.contextDirectory = contextDirectory
         self.applicationStatusDirectory = applicationStatusDirectory
         self.cookieStorage = cookieStorage
         self.pushMessageHandler = pushMessageHandler
         self.flowManager = flowManager
         self.updateEventProcessor = updateEventProcessor
+        self.localNotificationDispatcher = localNotificationDispatcher
     }
     
     private var syncMOC: NSManagedObjectContext {
@@ -186,9 +189,13 @@ public class RequestStrategyFactory: NSObject, RequestStrategyFactoryProtocol {
             FeatureFlagRequestStrategy(withManagedObjectContext: syncMOC,
                                        applicationStatus: applicationStatusDirectory,
                                        syncStatus: applicationStatusDirectory.syncStatus),
-            ConversationStatusStrategy(managedObjectContext: syncMOC)
+            ConversationStatusStrategy(managedObjectContext: syncMOC),
+            UserClientEventConsumer(managedObjectContext: syncMOC,
+                                    clientRegistrationStatus: applicationStatusDirectory.clientRegistrationStatus,
+                                    clientUpdateStatus: applicationStatusDirectory.clientUpdateStatus),
+            localNotificationDispatcher
         ]
-        
+                
         return strategies
     }
     

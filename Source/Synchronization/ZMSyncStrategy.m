@@ -46,7 +46,6 @@
 
 @property (nonatomic) NSManagedObjectContext *eventMOC;
 @property (nonatomic) EventDecoder *eventDecoder;
-@property (nonatomic, weak) LocalNotificationDispatcher *localNotificationDispatcher;
 
 @property (nonatomic, weak) ApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic) NSArray *allChangeTrackers;
@@ -77,7 +76,6 @@ ZM_EMPTY_ASSERTING_INIT()
 
 
 - (instancetype)initWithStoreProvider:(id<LocalStoreProviderProtocol>)storeProvider
-         localNotificationsDispatcher:(LocalNotificationDispatcher *)localNotificationsDispatcher
               notificationsDispatcher:(NotificationDispatcher *)notificationsDispatcher
            applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
                           application:(id<ZMApplication>)application
@@ -87,7 +85,6 @@ ZM_EMPTY_ASSERTING_INIT()
     if (self) {
         self.notificationDispatcher = notificationsDispatcher;
         self.application = application;
-        self.localNotificationDispatcher = localNotificationsDispatcher;
         self.syncMOC = storeProvider.contextDirectory.syncContext;
         self.uiMOC = storeProvider.contextDirectory.uiContext;
         self.hotFix = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
@@ -177,7 +174,6 @@ ZM_EMPTY_ASSERTING_INIT()
 - (void)tearDown
 {
     self.tornDown = YES;
-    self.localNotificationDispatcher = nil;
     self.applicationStatusDirectory = nil;
     self.changeTrackerBootStrap = nil;
     self.callingRequestStrategy = nil;
@@ -275,15 +271,7 @@ ZM_EMPTY_ASSERTING_INIT()
                 [eventConsumers addObject:objectStrategy];
             }
         }
-        
-        ApplicationStatusDirectory *statusDirectory = self.applicationStatusDirectory;
-        
-        [eventConsumers addObject:[[UserClientEventConsumer alloc] initWithManagedObjectContext:self.syncMOC
-                                                                       clientRegistrationStatus:statusDirectory.clientRegistrationStatus
-                                                                             clientUpdateStatus:statusDirectory.clientUpdateStatus]];
-        
-        [eventConsumers addObject:self.localNotificationDispatcher];
-        
+                
         _eventConsumers = eventConsumers;
     }
 

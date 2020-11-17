@@ -213,7 +213,6 @@
     [[NotificationDispatcher alloc] initWithManagedObjectContext:self.contextDirectory .uiContext];
         
     self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider
-                                localNotificationsDispatcher:self.mockDispatcher
                                      notificationsDispatcher:notificationDispatcher
                                   applicationStatusDirectory:self.applicationStatusDirectory
                                                  application:self.application
