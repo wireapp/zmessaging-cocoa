@@ -22,8 +22,6 @@
 @import WireSyncEngine;
 @import WireDataModel;
 @import WireRequestStrategy;
-@import OCMock;
-
 
 #import "MessagingTest.h"
 #import "ZMSyncStrategy+Internal.h"
@@ -34,33 +32,6 @@
 // Transcoders & strategies
 #import "MessagingTest+EventFactory.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
-
-@interface OCMockObject (TearDown)
-- (void)tearDown;
-@end
-
-// Only needed to be able to call these internal OCMock methods on teardown
-@protocol MockOCMockMock <NSObject>
-- (NSInvocation *)recordedInvocation;
-
-@end
-
-// A lot of objects end up in retain cycles because of extensive mocking.
-// We need to break them manually by releasing some of the internal arrays
-@implementation OCMockObject (TearDown)
-- (void)tearDown
-{
-    for (id recorder in stubs) {
-        objc_removeAssociatedObjects([recorder recordedInvocation]);
-    }
-    [stubs removeAllObjects];
-    [exceptions removeAllObjects];
-    [expectations removeAllObjects];
-    [invocations removeAllObjects];
-}
-
-@end
-
 
 @interface ZMSyncStrategyTests : MessagingTest <ZMRequestCancellation, ZMSyncStateDelegate>
 
