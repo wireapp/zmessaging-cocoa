@@ -77,9 +77,7 @@
 
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects1;
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects2;
-@property (nonatomic) id syncStatusMock;
-@property (nonatomic) id operationStatusMock;
-@property (nonatomic) id applicationStatusDirectoryMock;
+
 @property (nonatomic) id<LocalStoreProviderProtocol> storeProvider;
 
 @end
@@ -104,6 +102,10 @@
     NOT_USED(userClient);
 }
 
+- (void)finishQuickSync {
+    [self.applicationStatusDirectory.syncStatus finishCurrentSyncPhaseWithPhase: SyncPhaseFetchingMissedEvents];
+}
+
 - (void)setUp
 {
     [super setUp];
@@ -115,21 +117,13 @@
     selfConversation.remoteIdentifier = self.userIdentifier;
     selfConversation.conversationType = ZMConversationTypeSelf;
     
+    self.syncMOC.zm_lastNotificationID = [NSUUID UUID];
+    
     [self.syncMOC saveOrRollback];
         
     self.syncStateDelegate = [[MockSyncStateDelegate alloc] init];
-    self.syncStatusMock = [OCMockObject mockForClass:SyncStatus.class];
-    self.operationStatusMock = [OCMockObject mockForClass:OperationStatus.class];
-
     self.mockEventConsumer = [[MockEventConsumer alloc]  init];
     self.mockContextChangeTracker = [[MockContextChangeTracker alloc] init];
-    
-    self.applicationStatusDirectoryMock = [OCMockObject niceMockForClass:ApplicationStatusDirectory.class];
-    [[[[self.applicationStatusDirectoryMock expect] andReturn: self.applicationStatusDirectoryMock] classMethod] alloc];
-    (void) [[[self.applicationStatusDirectoryMock stub] andReturn:self.applicationStatusDirectoryMock] initWithManagedObjectContext:OCMOCK_ANY cookieStorage:OCMOCK_ANY requestCancellation:OCMOCK_ANY application:OCMOCK_ANY syncStateDelegate:OCMOCK_ANY analytics:nil];
-    [[[self.applicationStatusDirectoryMock stub] andReturn:self.syncStatusMock] syncStatus];
-    [[[self.applicationStatusDirectoryMock stub] andReturn:self.operationStatusMock] operationStatus];
-
     
     self.updateEventsBuffer = [OCMockObject mockForClass:ZMUpdateEventsBuffer.class];
     [[[[self.updateEventsBuffer expect] andReturn:self.updateEventsBuffer] classMethod] alloc];
@@ -170,15 +164,6 @@
     self.fetchRequestForTrackedObjects1 = nil;
     self.fetchRequestForTrackedObjects2 = nil;
     self.syncStateDelegate = nil;
-    [self.applicationStatusDirectoryMock tearDown];
-    [self.applicationStatusDirectoryMock stopMocking];
-    self.applicationStatusDirectoryMock = nil;
-    [self.operationStatusMock tearDown];
-    [self.operationStatusMock stopMocking];
-    self.operationStatusMock = nil;
-    [self.syncStatusMock tearDown];
-    [self.syncStatusMock stopMocking];
-    self.syncStatusMock = nil;
     self.storeProvider = nil;
     [self.sut tearDown];
     
@@ -205,7 +190,7 @@
                                                                           } uuid:nil]];
     XCTAssertEqual(eventsArray.count, 2u);
     
-    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
+    [self finishQuickSync];
     
     // when
     for(id event in eventsArray) {
@@ -234,7 +219,7 @@
     NSMutableArray *expectedEvents = [NSMutableArray array];
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     
-    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
+    [self finishQuickSync];
         
     // when
     [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:NO];
@@ -260,8 +245,6 @@
     NSMutableArray *expectedEvents = [NSMutableArray array];
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
-    
-    [[[self.syncStatusMock stub] andReturnValue:@(YES)] isSyncing];
     
     for(id obj in expectedEvents) {
         [[self.updateEventsBuffer expect] addUpdateEvent:obj];
@@ -291,7 +274,7 @@
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
-    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing]; // TODO jacob shoudl be YES?
+    [self finishQuickSync];
     
     // when
     [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:YES];
@@ -317,8 +300,6 @@
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
-    [[[self.syncStatusMock stub] andReturnValue:@(YES)] isSyncing];
-        
     // when
     [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:YES];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -355,7 +336,7 @@
                                           [ZMUpdateEvent eventFromEventStreamPayload:secondPayload uuid:nil]
                                           ];
     
-    [[[self.syncStatusMock stub] andReturnValue:@(NO)] isSyncing];
+    [self finishQuickSync];
         
     // when
     [self.sut storeAndProcessUpdateEvents:events ignoreBuffer:YES];
@@ -393,7 +374,6 @@
 - (void)testThatCallingNextRequestFetchesObjectsAndDistributesThemToTheChangeTracker
 {
     // given
-    [[[self.syncStatusMock stub] andReturnValue:@(SyncPhaseDone)] currentSyncPhase];
     __block ZMUser *user;
     __block ZMConversation *conversation;
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -621,52 +601,53 @@
 
 - (void)testThatItUpdateOperationStatusWhenTheAppEntersBackground
 {
-    // expect
-    [[self.operationStatusMock expect] setIsInBackground:YES];
+    // given
+        self.applicationStatusDirectory.operationStatus.isInBackground = NO;
     
     // when
     [self goToBackground];
     WaitForAllGroupsToBeEmpty(0.5);
+    
+    // then
+    XCTAssertTrue(self.applicationStatusDirectory.operationStatus.isInBackground);
+    
 }
 
 
 - (void)testThatItUpdateOperationStatusWhenTheAppWillEnterForeground
 {
-    // expect
-    [[self.operationStatusMock expect] setIsInBackground:NO];
+    // given
+    self.applicationStatusDirectory.operationStatus.isInBackground = YES;
 
     // when
     [self goToForeground];
+    
+    // then
+    XCTAssertFalse(self.applicationStatusDirectory.operationStatus.isInBackground);
 }
 
 - (void)testThatItNotifiesTheOperationLoopOfNewOperationWhenEnteringBackground
 {
     // expect
-    [[self.operationStatusMock expect] setIsInBackground:YES];
-    id mockRequestNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
-    [[[mockRequestNotification expect] classMethod] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [self expectationForNotification:@"RequestAvailableNotification" object:nil handler:nil];
 
     // when
     [self goToBackground];
     
     // then
-    [mockRequestNotification verify];
-    [mockRequestNotification stopMocking];
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 - (void)testThatItNotifiesTheOperationLoopOfNewOperationWhenEnteringForeground
 {
     // expect
-    [[self.operationStatusMock expect] setIsInBackground:NO];
-    id mockRequestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
-    [[mockRequestAvailableNotification expect] notifyNewRequestsAvailable:OCMOCK_ANY];
+    [self expectationForNotification:@"RequestAvailableNotification" object:nil handler:nil];
     
     // when
     [self goToForeground];
     
     // then
-    [mockRequestAvailableNotification verify];
-    [mockRequestAvailableNotification stopMocking];
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 @end
