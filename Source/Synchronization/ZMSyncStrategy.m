@@ -67,6 +67,7 @@
 @property (nonatomic) SearchUserImageStrategy *searchUserImageStrategy;
 @property (nonatomic) SignatureRequestStrategy *signatureRequestStrategy;
 @property (nonatomic) FeatureFlagRequestStrategy *featureFlagRequestStrategy;
+@property (nonatomic) FeatureConfigRequestStrategy *featureConfigRequestStrategy;
 
 @property (nonatomic, readwrite) CallingRequestStrategy *callingRequestStrategy;
 
@@ -191,6 +192,7 @@ ZM_EMPTY_ASSERTING_INIT()
                                    [[VerifyPasswordRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory],
                                    [[SignatureRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory],
                                    [[FeatureFlagRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory syncStatus:applicationStatusDirectory.syncStatus],
+                                   [[FeatureConfigRequestStrategy alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:applicationStatusDirectory],
                                    ];
 
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
