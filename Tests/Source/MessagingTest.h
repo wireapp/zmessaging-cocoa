@@ -30,7 +30,6 @@
 @class ZMUser;
 @class ZMConversation;
 @class ZMConnection;
-@protocol ZMObjectStrategyDirectory;
 @class ApplicationMock;
 @class ZMAssetClientMessage;
 
@@ -78,8 +77,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// perform operations pretending that the uiMOC is a syncMOC
 - (void)performPretendingUiMocIsSyncMoc:(void(^)(void))block;
-
-- (id<ZMObjectStrategyDirectory>)createMockObjectStrategyDirectoryInMoc:(NSManagedObjectContext *)moc;
 
 /// This tears down all objects in the managedObjectContext's userInfo that respond to the selector tearDown and subsequently removes them from the userInfo
 - (void)tearDownUserInfoObjectsOfMOC:(NSManagedObjectContext *)moc;
