@@ -144,6 +144,10 @@
                                                                           } uuid:nil],
                              [ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.message-add",
                                                                           @"a": @3,
+                                                                          @"data" : @{
+                                                                                  @"content" : @"www.wire.com",
+                                                                                  @"nonce" : NSUUID.createUUID,
+                                                                          },
                                                                           @"conversation": uuid
                                                                           } uuid:nil]];
     XCTAssertEqual(eventsArray.count, 2u);
@@ -158,8 +162,7 @@
     
      // then
     XCTAssertTrue(self.mockEventConsumer.processEventsCalled);
-    
-    // TODO jacob check arguments
+    XCTAssertEqualObjects(eventsArray, self.mockEventConsumer.eventsProcessed);
 }
 
 - (void)testThatItProcessUpdateEvents_WhenSyncingIsFinished
@@ -307,14 +310,30 @@
 - (void)testThatItRequestsNoncesAndRemoteIdentifiersToPrefetchFromAllOfItsSyncObjects
 {
     // given
-    id <ZMTransportData> payload = @{
-                                     @"conversation" : NSUUID.createUUID,
-                                     @"data" : @{},
-                                     @"time" : NSDate.date.transportString,
-                                     @"type" : @"conversation.member-update"
-                                     };
+    NSUUID *remoteIdentifier = NSUUID.createUUID;
+    NSUUID *messageNonce = NSUUID.createUUID;
+    id <ZMTransportData> payload1 = @{
+        @"conversation" : remoteIdentifier,
+        @"data" : @{},
+        @"time" : NSDate.date.transportString,
+        @"type" : @"conversation.member-update"
+    };
     
-    NSArray <ZMUpdateEvent *> *events = @[[ZMUpdateEvent eventFromEventStreamPayload:payload uuid:nil]];
+    id <ZMTransportData> payload2 = @{
+        @"conversation" : remoteIdentifier,
+        @"data" : @{
+                @"content" : @"www.wire.com",
+                @"nonce" : messageNonce,
+        },
+        @"from": NSUUID.createUUID.transportString,
+        @"id" : @"6c9d.800122000a5911ba",
+        @"time" : NSDate.date.transportString,
+        @"type" : @"conversation.message-add" };
+    
+    NSArray <ZMUpdateEvent *> *events = @[
+        [ZMUpdateEvent eventFromEventStreamPayload:payload1 uuid:nil],
+        [ZMUpdateEvent eventFromEventStreamPayload:payload2 uuid:nil]
+    ];
     
     // when
     ZMFetchRequestBatch *fetchRequest = [self.sut prefetchRequestForUpdateEvents:events];
@@ -325,7 +344,8 @@
     XCTAssertTrue(self.mockEventConsumer.messageNoncesToPrefetchCalled);
     XCTAssertTrue(self.mockEventConsumer.conversationRemoteIdentifiersToPrefetchCalled);
     
-    // TODO jacob we should verify the fetch request here
+    XCTAssertEqualObjects([NSSet setWithObject:remoteIdentifier], fetchRequest.remoteIdentifiersToFetch);
+    XCTAssertEqualObjects([NSSet setWithObject:messageNonce], fetchRequest.noncesToFetch);
 }
 
 - (void)testThatCallingNextRequestFetchesObjectsAndDistributesThemToTheChangeTracker
