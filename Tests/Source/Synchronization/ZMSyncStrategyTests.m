@@ -28,8 +28,6 @@
 #import "MessagingTest.h"
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
-#import "ZMUpdateEventsBuffer.h"
-#import "ZMOperationLoop.h"
 #import "MessagingTest+EventFactory.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 
@@ -68,7 +66,6 @@
 
 @property (nonatomic) ZMSyncStrategy *sut;
 
-@property (nonatomic) id updateEventsBuffer;
 @property (nonatomic) MockSyncStateDelegate *syncStateDelegate;
 @property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
 
@@ -125,11 +122,6 @@
     self.mockEventConsumer = [[MockEventConsumer alloc]  init];
     self.mockContextChangeTracker = [[MockContextChangeTracker alloc] init];
     
-    self.updateEventsBuffer = [OCMockObject mockForClass:ZMUpdateEventsBuffer.class];
-    [[[[self.updateEventsBuffer expect] andReturn:self.updateEventsBuffer] classMethod] alloc];
-    (void) [[[self.updateEventsBuffer stub] andReturn:self.updateEventsBuffer] initWithUpdateEventProcessor:OCMOCK_ANY];
-    [self verifyMockLater:self.updateEventsBuffer];
-
     MockRequestStrategyFactory *requestStrategyFactory =
     [[MockRequestStrategyFactory alloc] initWithStrategies:@[
         self.mockEventConsumer,
@@ -166,11 +158,6 @@
     self.syncStateDelegate = nil;
     self.storeProvider = nil;
     [self.sut tearDown];
-    
-    [self.updateEventsBuffer tearDown];
-    [self.updateEventsBuffer stopMocking];
-    self.updateEventsBuffer = nil;
-
     self.sut = nil;
     [super tearDown];
 }
@@ -204,7 +191,7 @@
     // TODO jacob check arguments
 }
 
-- (void)testThatItProcessUpdateEventsIfTheCurrentStateShouldProcessThem
+- (void)testThatItProcessUpdateEvents_WhenSyncingIsFinished
 {
     // given
     NSDictionary *eventData = @{
@@ -226,11 +213,11 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    XCTAssertTrue(self.mockEventConsumer.processEventsWhileInBackgroundCalled);
     XCTAssertTrue(self.mockEventConsumer.processEventsCalled);
 }
 
-
-- (void)testThatItForwardsUpdateEventsToBufferIfTheCurrentStateShouldBufferThemAndDoesNotDecryptTheUpdateEvents
+- (void)testThatItBuffersUpdateEvents_WhenSyncing
 {
     // given
     NSDictionary *eventData = @{
@@ -245,46 +232,45 @@
     NSMutableArray *expectedEvents = [NSMutableArray array];
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
-    
-    for(id obj in expectedEvents) {
-        [[self.updateEventsBuffer expect] addUpdateEvent:obj];
-    }
-    
+        
     // when
     [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:NO];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    XCTAssertFalse(self.mockEventConsumer.processEventsWhileInBackgroundCalled);
     XCTAssertFalse(self.mockEventConsumer.processEventsCalled);
 }
 
-- (void)testThatItProcessUpdateEventsToBufferIfTheCurrentStateShouldBufferThemButIgnoreBufferIsYes
+- (void)testThatItProcessBufferedUpdateEvents_WhenSyncingIsFinished
 {
     // given
     NSDictionary *eventData = @{
-                                @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
-                                @"payload" : @[
-                                        @{
-                                            @"type" : @"user.update",
-                                            @"foo" : @"bar"
-                                            }
-                                        ]
-                                };
+        @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
+        @"payload" : @[
+                @{
+                    @"type" : @"user.update",
+                    @"foo" : @"bar"
+                }
+        ]
+    };
     NSMutableArray *expectedEvents = [NSMutableArray array];
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
-    [self finishQuickSync];
+    [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:NO];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:YES];
+    [self finishQuickSync];
+    [self.sut processAllEventsInBuffer];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertTrue(self.mockEventConsumer.processEventsCalled);
+    XCTAssertTrue(self.mockEventConsumer.processEventsWhileInBackgroundCalled);
 }
 
-- (void)testThatItDoesProcessUpdateEventsIfTheCurrentStateShouldIgnoreThemButIgnoreBufferIsYes
+- (void)testThatItProcessUpdateEvents_WhenSyncingButIgnoreBufferIsYes
 {
     // given
     NSDictionary *eventData = @{
@@ -481,15 +467,6 @@
     
     // then
     XCTAssertEqualObjects(name, uiUser.name);
-}
-
-- (void)testThatItFlushesTheInternalBufferWhenAsked
-{
-    // expect
-    [[self.updateEventsBuffer expect] processAllEventsInBuffer];
-    
-    // when
-    [self.sut processAllEventsInBuffer];
 }
 
 - (void)testThatARollbackTriggersAnObjectsDidChange;
