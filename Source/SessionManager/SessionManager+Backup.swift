@@ -132,6 +132,7 @@ extension SessionManager {
                 from: url,
                 applicationContainer: self.sharedContainerURL,
                 dispatchGroup: self.dispatchGroup,
+                encryptionKeys: self.activeUserSession?.managedObjectContext.encryptionKeys,
                 completion: completion >>> VoidResult.init
             )
         }
