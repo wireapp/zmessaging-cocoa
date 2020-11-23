@@ -1027,9 +1027,6 @@ extension SessionManager: UnauthenticatedSessionDelegate {
             let registered = session.authenticationStatus.completedRegistration || session.registrationStatus.completedRegistration
             let emailCredentials = session.authenticationStatus.emailCredentials()
             
-            try? userSession.setEncryptionAtRest(enabled: self.configuration.encryptionAtRestEnabledByDefault,
-                                                 skipMigration: true)
-            
             userSession.syncManagedObjectContext.performGroupedBlock {
                 userSession.setEmailCredentials(emailCredentials)
                 userSession.syncManagedObjectContext.registeredOnThisDevice = registered
@@ -1047,6 +1044,10 @@ extension SessionManager: PostLoginAuthenticationObserver {
 
     public func clientRegistrationDidSucceed(accountId: UUID) {
         log.debug("Client registration was successful")
+        
+        if self.configuration.encryptionAtRestEnabledByDefault {
+            try? activeUserSession?.setEncryptionAtRest(enabled: true)
+        }
     }
     
     public func userDidLogout(accountId: UUID) {
