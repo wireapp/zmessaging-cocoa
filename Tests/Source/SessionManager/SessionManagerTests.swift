@@ -586,6 +586,10 @@ class SessionManagerTests_EncryptionAtRestIsEnabledByDefault_Option: Integration
         createSelfUserAndConversation()
     }
     
+    override var useInMemoryStore: Bool {
+        return false
+    }
+    
     override var sessionManagerConfiguration: SessionManagerConfiguration {
         return SessionManagerConfiguration(encryptionAtRestIsEnabledByDefault: true)
     }
