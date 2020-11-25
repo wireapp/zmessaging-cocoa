@@ -1,2 +1,4 @@
 github "wireapp/wire-ios-mocktransport" ~> 123.0
 github "wireapp/wire-ios-testing" ~> 22.0
+github "Quick/Quick"
+github "Quick/Nimble"

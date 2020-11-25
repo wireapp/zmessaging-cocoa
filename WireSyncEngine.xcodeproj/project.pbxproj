@@ -343,6 +343,11 @@
 		63495E4723FFF099002A7C59 /* ConversationTests+OTR.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63495E4623FFF098002A7C59 /* ConversationTests+OTR.swift */; };
 		636B716223ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 636B716123ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift */; };
 		636B716823BF46EB00B624D6 /* ZMUserSession+VerifyPassword.swift in Sources */ = {isa = PBXBuildFile; fileRef = 636B716723BF46EA00B624D6 /* ZMUserSession+VerifyPassword.swift */; };
+		6370DA05256EAE7500B5C8F1 /* Quick.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6370DA03256EAE7500B5C8F1 /* Quick.framework */; };
+		6370DA06256EAE7500B5C8F1 /* Nimble.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6370DA04256EAE7500B5C8F1 /* Nimble.framework */; };
+		6370DA08256EAEB400B5C8F1 /* Quick.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6370DA03256EAE7500B5C8F1 /* Quick.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6370DA09256EAEBB00B5C8F1 /* Nimble.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6370DA04256EAE7500B5C8F1 /* Nimble.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6370DA0B256EAF2300B5C8F1 /* Conversation_RoleTests_Quick_Nimble.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6370DA0A256EAF2300B5C8F1 /* Conversation_RoleTests_Quick_Nimble.swift */; };
 		6387932F23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6387932E23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift */; };
 		639290A4252CA53200046171 /* CallSnapshotTestFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639290A3252CA53100046171 /* CallSnapshotTestFixture.swift */; };
 		639290A7252DEDB500046171 /* WireCallCenterV3+Degradation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639290A6252DEDB400046171 /* WireCallCenterV3+Degradation.swift */; };
@@ -630,6 +635,17 @@
 				3E08B5631A67EDF800F23B9E /* WireSyncEngine.framework in Embed Framework */,
 			);
 			name = "Embed Framework";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6370DA07256EAE9E00B5C8F1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				6370DA09256EAEBB00B5C8F1 /* Nimble.framework in CopyFiles */,
+				6370DA08256EAEB400B5C8F1 /* Quick.framework in CopyFiles */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -1003,6 +1019,9 @@
 		63495E4623FFF098002A7C59 /* ConversationTests+OTR.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+OTR.swift"; sourceTree = "<group>"; };
 		636B716123ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyPasswordRequestStrategyTests.swift; sourceTree = "<group>"; };
 		636B716723BF46EA00B624D6 /* ZMUserSession+VerifyPassword.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+VerifyPassword.swift"; sourceTree = "<group>"; };
+		6370DA03256EAE7500B5C8F1 /* Quick.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quick.framework; path = Carthage/Build/iOS/Quick.framework; sourceTree = "<group>"; };
+		6370DA04256EAE7500B5C8F1 /* Nimble.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Nimble.framework; path = Carthage/Build/iOS/Nimble.framework; sourceTree = "<group>"; };
+		6370DA0A256EAF2300B5C8F1 /* Conversation_RoleTests_Quick_Nimble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conversation_RoleTests_Quick_Nimble.swift; sourceTree = "<group>"; };
 		6387932E23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyPasswordRequestStrategy.swift; sourceTree = "<group>"; };
 		639290A3252CA53100046171 /* CallSnapshotTestFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallSnapshotTestFixture.swift; sourceTree = "<group>"; };
 		639290A6252DEDB400046171 /* WireCallCenterV3+Degradation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WireCallCenterV3+Degradation.swift"; sourceTree = "<group>"; };
@@ -1352,6 +1371,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6370DA05256EAE7500B5C8F1 /* Quick.framework in Frameworks */,
+				6370DA06256EAE7500B5C8F1 /* Nimble.framework in Frameworks */,
 				878B823920A1DCF6007455CA /* HTMLString.framework in Frameworks */,
 				D59F3A1320692FA80023474F /* ZipArchive.framework in Frameworks */,
 				545816FA1E93E20700BFAF7E /* WireProtos.framework in Frameworks */,
@@ -1656,6 +1677,8 @@
 		540029B61918CA8500578793 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				6370DA04256EAE7500B5C8F1 /* Nimble.framework */,
+				6370DA03256EAE7500B5C8F1 /* Quick.framework */,
 				A96190C923A6DDCE00B8665F /* WireDataModel.framework */,
 				F13ADE7921B5322400B6E736 /* SwiftProtobuf.framework */,
 				878B823720A1DCE7007455CA /* HTMLString.framework */,
@@ -1821,6 +1844,7 @@
 				874A1749205812B6001C6760 /* ZMUserSessionTests.swift */,
 				166264922166517A00300F45 /* CallEventStatusTests.swift */,
 				87D2555821D6275800D03789 /* BuildTypeTests.swift */,
+				6370DA0A256EAF2300B5C8F1 /* Conversation_RoleTests_Quick_Nimble.swift */,
 			);
 			path = UserSession;
 			sourceTree = "<group>";
@@ -2600,6 +2624,7 @@
 				3E1860BF191A649D000FE027 /* Sources */,
 				3E1860C0191A649D000FE027 /* Frameworks */,
 				3E1860C1191A649D000FE027 /* Resources */,
+				6370DA07256EAE9E00B5C8F1 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -2864,6 +2889,7 @@
 				1645ED1B244DE345007A82D6 /* TeamMembersDownloadRequestStrategy.swift in Sources */,
 				549552541D645683004F21F6 /* AddressBookTests.swift in Sources */,
 				63F65F232474378200534A69 /* APNSTestsBase.m in Sources */,
+				6370DA0B256EAF2300B5C8F1 /* Conversation_RoleTests_Quick_Nimble.swift in Sources */,
 				161C886623FD248A00CB0B8E /* RecordingMockTransportSession.swift in Sources */,
 				F19F4F4D1E646C3C00F4D8FF /* UserProfileImageUpdateStatusTests.swift in Sources */,
 				1679D1CD1EF97387007B0DF5 /* ZMUserSessionTestsBase+Calling.swift in Sources */,
