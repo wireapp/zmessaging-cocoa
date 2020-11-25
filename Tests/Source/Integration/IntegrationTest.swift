@@ -651,9 +651,10 @@ extension IntegrationTest: SessionManagerDelegate {
     public func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
         // no-op
     }
-        
-    public func sessionManagerWillMigrateAccount() {
-        // no-op
+    
+    public func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void) {
+        self.userSession = nil
+        userSessionCanBeTornDown()
     }
     
     public func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: (() -> Void)?) {

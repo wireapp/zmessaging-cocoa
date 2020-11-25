@@ -19,6 +19,7 @@
 import XCTest
 import WireTesting
 import PushKit
+import LocalAuthentication
 @testable import WireSyncEngine
 
 final class SessionManagerTests: IntegrationTest {
@@ -518,11 +519,75 @@ class SessionManagerTests_AuthenticationFailure: IntegrationTest {
     
 }
 
+class SessionManagerTests_EncryptionAtRestMigration: IntegrationTest {
+    
+    override var useInMemoryStore: Bool {
+        return false
+    }
+    
+    override func setUp() {
+        super.setUp()
+        createSelfUserAndConversation()
+        createExtraUsersAndConversations()
+    }
+    
+    func testThatDatabaseIsMigrated_WhenEncryptionAtRestIsEnabled() throws {
+        // given
+        XCTAssertTrue(login())
+        let expectedText = "Hello World"
+        userSession?.perform({
+            let groupConversation = self.conversation(for: self.groupConversation)
+            try! groupConversation?.appendText(content: expectedText)
+        })
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        try userSession?.setEncryptionAtRest(enabled: true)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(userSession?.encryptMessagesAtRest, true)
+        
+        try userSession?.unlockDatabase(with: LAContext())
+        let groupConversation = self.conversation(for: self.groupConversation)
+        let clientMessage = groupConversation?.lastMessage as? ZMClientMessage
+        XCTAssertEqual(clientMessage?.messageText, expectedText)
+    }
+    
+    func testThatDatabaseIsMigrated_WhenEncryptionAtRestIsDisabled() throws {
+        // given
+        XCTAssertTrue(login())
+        let expectedText = "Hello World"
+        try userSession?.setEncryptionAtRest(enabled: true, skipMigration: true)
+        userSession?.perform({
+            let groupConversation = self.conversation(for: self.groupConversation)
+            try! groupConversation?.appendText(content: expectedText)
+        })
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        try userSession?.setEncryptionAtRest(enabled: false)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(userSession?.encryptMessagesAtRest, false)
+        
+        let groupConversation = self.conversation(for: self.groupConversation)
+        let clientMessage = groupConversation?.lastMessage as? ZMClientMessage
+        XCTAssertEqual(clientMessage?.messageText, expectedText)
+    }
+    
+}
+
 class SessionManagerTests_EncryptionAtRestIsEnabledByDefault_Option: IntegrationTest {
     
     override func setUp() {
         super.setUp()
         createSelfUserAndConversation()
+    }
+    
+    override var useInMemoryStore: Bool {
+        return false
     }
     
     override var sessionManagerConfiguration: SessionManagerConfiguration {
@@ -1442,15 +1507,15 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
         self.userSession = userSession
     }
     
+    var startedMigrationCalled = false
+    func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void) {
+        startedMigrationCalled = true
+    }
+
     func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
         // no op
     }
     
-    var startedMigrationCalled = false
-    func sessionManagerWillMigrateAccount() {
-        startedMigrationCalled = true
-    }
-
 }
 
 class SessionManagerObserverMock: SessionManagerCreatedSessionObserver, SessionManagerDestroyedSessionObserver {

@@ -28,6 +28,8 @@ public protocol ThirdPartyServicesDelegate: NSObjectProtocol {
     
 }
 
+typealias UserSessionDelegate = UserSessionEncryptionAtRestDelegate
+
 @objcMembers
 public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     
@@ -127,8 +129,11 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         }
     }
     
-    public weak var sessionManager: SessionManagerType?
+    weak var delegate: UserSessionDelegate?
     
+    // TODO remove this property and move functionality to separate protocols under UserSessionDelegate
+    public weak var sessionManager: SessionManagerType?
+     
     public weak var thirdPartyServicesDelegate: ThirdPartyServicesDelegate?
     
     // MARK: - Tear down
