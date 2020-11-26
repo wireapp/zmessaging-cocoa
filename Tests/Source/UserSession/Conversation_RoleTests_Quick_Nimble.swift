@@ -8,6 +8,7 @@
 
 import Quick
 import Nimble
+@testable import WireSyncEngine
 
 class ExampleClassToTest {
     var didSomething: Bool = false
@@ -77,23 +78,81 @@ class QuickExampleTest: QuickSpec {
 }
 
 class Conversation_RoleTests_Quick_Nimble: QuickSpec {
+    
+    typealias Factory = WireSyncEngine.ConversationRoleRequestFactory
+    
+    var contextDirectory: ManagedObjectContextDirectory?
+    
     override func spec() {
+        beforeSuite {
+            let group = DispatchGroup()
+            group.enter()
+            
+            var documentsDirectory: URL?
+            StorageStack.reset()
+            StorageStack.shared.createStorageAsInMemory = true
+            do {
+                documentsDirectory = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            } catch {
+                XCTAssertNil(error, "Unexpected error \(error)")
+            }
+            StorageStack.shared.createManagedObjectContextDirectory(accountIdentifier: UUID(), applicationContainer: documentsDirectory!) {
+                self.contextDirectory = $0
+                group.leave()
+            }
+            group.wait()
+        }
+        
+        var uiMOC: NSManagedObjectContext {
+            return self.contextDirectory!.uiContext
+        }
+        
         describe(".requestForUpdatingParticipantRole") {
             
             context("I don't have the required parameters") {
-                it("should fail") {}
+                 it("should fail") {}
             }
             
-            context("I have the parameters") {
-            
-                context("the response status is sucessful") {
+            context("inputs are valid") {
+                var user: ZMUser!
+                var conversation: ZMConversation!
+                var role: Role!
+                
+                beforeEach {
+                    user = ZMUser.insertNewObject(in: uiMOC)
+                    user.remoteIdentifier = UUID.create()
                     
-                    it("adds participant and updates conversation state") {
+                    conversation = ZMConversation.insertNewObject(in: uiMOC)
+                    conversation.remoteIdentifier = UUID.create()
+                    
+                    role = Role.insertNewObject(in: uiMOC)
+                    role.name = "wire_admin"
+                }
+                
+                it("return the correct request") {
+                    var result: VoidResult?
+                    
+                    guard let request = Factory.requestForUpdatingParticipantRole(role, for: user, in: conversation, completion: {
+                        result = $0
+                    })
+                    else {
+                        return fail("Could not create request")
+                    }
+                
+                    expect(result).toEventually(be(VoidResult.success))
+                    
+                    expect(request.path).to(equal("/conversations/\(conversation.remoteIdentifier!.transportString())/members/\(user.remoteIdentifier!.transportString())"))
+                    
+                    expect(request.method).to(equal(.methodPUT))
+                    expect(request.payload?.asDictionary() as? [String: String]).to(equal(["conversation_role": "wire_admin"]))
+                }
+                
+                context("request is completed") {
+                    it("completes with success") {
                         
                     }
                     
-                    it("completes with success") {
-                        
+                    it("updates participant roles in Database") {
                     }
                 }
                 
