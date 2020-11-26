@@ -46,7 +46,11 @@ open class AuthenticatedSessionFactory {
         self.reachability = reachability
     }
 
-    func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
+    func session(
+        for account: Account,
+        storeProvider: LocalStoreProviderProtocol,
+        configuration: ZMUserSession.Configuration) -> ZMUserSession? {
+
         let transportSession = ZMTransportSession(
             environment: environment,
             cookieStorage: environment.cookieStorage(for: account),
@@ -62,7 +66,8 @@ open class AuthenticatedSessionFactory {
             analytics: analytics,
             application: application,
             appVersion: appVersion,
-            storeProvider: storeProvider
+            storeProvider: storeProvider,
+            configuration: configuration
         )
         
         userSession.startRequestLoopTracker()

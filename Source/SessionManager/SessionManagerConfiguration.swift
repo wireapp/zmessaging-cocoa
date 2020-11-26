@@ -187,3 +187,18 @@ extension SessionManagerConfiguration {
     }
 
 }
+
+// MARK: - Helpers
+
+extension SessionManagerConfiguration {
+
+    var appLockConfig: AppLockController.Config {
+        return .init(
+            useBiometricsOrAccountPassword: useBiometricsOrAccountPassword,
+            useCustomCodeInsteadOfAccountPassword: useCustomCodeInsteadOfAccountPassword,
+            forceAppLock: forceAppLock,
+            timeOut: appLockTimeout
+        )
+    }
+
+}
