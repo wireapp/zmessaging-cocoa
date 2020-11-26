@@ -127,7 +127,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         failedPasswordThresholdBeforeWipe = try container.decodeIfPresent(Int.self, forKey: .failedPasswordThresholdBeforeWipe)
         encryptionAtRestEnabledByDefault = try container.decode(Bool.self, forKey: .encryptionAtRestEnabledByDefault)
         useBiometricsOrAccountPassword = try container.decode(Bool.self, forKey: .useBiometricsOrAccountPassword)
-        useCustomCodeInsteadOfAccountPassword = try container.decode(Bool.self, forKey: .useCustomCodeInsteadOfAccountPassword)
+        useCustomCodeInsteadOfAccountPassword = try container.decodeIfPresent(Bool.self, forKey: .useCustomCodeInsteadOfAccountPassword) ?? false
         forceAppLock = try container.decode(Bool.self, forKey: .forceAppLock)
         appLockTimeout = try container.decode(UInt.self, forKey: .appLockTimeout)
     }
