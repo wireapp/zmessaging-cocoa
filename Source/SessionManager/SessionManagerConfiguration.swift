@@ -88,18 +88,20 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
 
     // MARK: - Init
     
-    public init(wipeOnCookieInvalid: Bool = false,
-                blacklistDownloadInterval: TimeInterval = 6 * 60 * 60,
-                blockOnJailbreakOrRoot: Bool = false,
-                wipeOnJailbreakOrRoot: Bool = false,
-                messageRetentionInterval: TimeInterval? = nil,
-                authenticateAfterReboot: Bool = false,
-                failedPasswordThresholdBeforeWipe: Int? = nil,
-                encryptionAtRestIsEnabledByDefault: Bool = false,
-                useBiometricsOrAccountPassword: Bool = false,
-                useCustomCodeInsteadOfAccountPassword: Bool = false,
-                forceAppLock: Bool = false,
-                appLockTimeout: UInt = 10) {
+    public init(
+        wipeOnCookieInvalid: Bool = false,
+        blacklistDownloadInterval: TimeInterval = 6 * 60 * 60,
+        blockOnJailbreakOrRoot: Bool = false,
+        wipeOnJailbreakOrRoot: Bool = false,
+        messageRetentionInterval: TimeInterval? = nil,
+        authenticateAfterReboot: Bool = false,
+        failedPasswordThresholdBeforeWipe: Int? = nil,
+        encryptionAtRestIsEnabledByDefault: Bool = false,
+        useBiometricsOrAccountPassword: Bool = false,
+        useCustomCodeInsteadOfAccountPassword: Bool = false,
+        forceAppLock: Bool = false,
+        appLockTimeout: UInt = 10) {
+
         self.wipeOnCookieInvalid = wipeOnCookieInvalid
         self.blacklistDownloadInterval = blacklistDownloadInterval
         self.blockOnJailbreakOrRoot = blockOnJailbreakOrRoot
@@ -133,18 +135,20 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     // MARK: - Methods
     
     public func copy(with zone: NSZone? = nil) -> Any {
-        let copy = SessionManagerConfiguration(wipeOnCookieInvalid: wipeOnCookieInvalid,
-                                               blacklistDownloadInterval: blacklistDownloadInterval,
-                                               blockOnJailbreakOrRoot: blockOnJailbreakOrRoot,
-                                               wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot,
-                                               messageRetentionInterval: messageRetentionInterval,
-                                               authenticateAfterReboot: authenticateAfterReboot,
-                                               failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe,
-                                               encryptionAtRestIsEnabledByDefault: encryptionAtRestEnabledByDefault,
-                                               useBiometricsOrAccountPassword: useBiometricsOrAccountPassword,
-                                               useCustomCodeInsteadOfAccountPassword: useCustomCodeInsteadOfAccountPassword,
-                                               forceAppLock: forceAppLock,
-                                               appLockTimeout: appLockTimeout)
+        let copy = SessionManagerConfiguration(
+            wipeOnCookieInvalid: wipeOnCookieInvalid,
+            blacklistDownloadInterval: blacklistDownloadInterval,
+            blockOnJailbreakOrRoot: blockOnJailbreakOrRoot,
+            wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot,
+            messageRetentionInterval: messageRetentionInterval,
+            authenticateAfterReboot: authenticateAfterReboot,
+            failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe,
+            encryptionAtRestIsEnabledByDefault: encryptionAtRestEnabledByDefault,
+            useBiometricsOrAccountPassword: useBiometricsOrAccountPassword,
+            useCustomCodeInsteadOfAccountPassword: useCustomCodeInsteadOfAccountPassword,
+            forceAppLock: forceAppLock,
+            appLockTimeout: appLockTimeout
+        )
         
         return copy
     }
