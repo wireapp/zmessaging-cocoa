@@ -61,6 +61,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var likeMesssageObserver: ManagedObjectContextChangeObserver?
     var urlActionProcessors: [URLActionProcessor]?
     let debugCommands: [String: DebugCommand]
+    let appLockController: AppLockController
     
     public var hasCompletedInitialSync: Bool = false
     
@@ -168,7 +169,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         
         tornDown = true
     }
-    
+
     @objc
     public init(transportSession: TransportSessionType,
                 mediaManager: MediaManagerType,
@@ -177,7 +178,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                 operationLoop: ZMOperationLoop? = nil,
                 application: ZMApplication,
                 appVersion: String,
-                storeProvider: LocalStoreProviderProtocol) {
+                storeProvider: LocalStoreProviderProtocol,
+                configuration: Configuration) {
         
         storeProvider.contextDirectory.syncContext.performGroupedBlockAndWait {
             storeProvider.contextDirectory.syncContext.analytics = analytics
@@ -197,6 +199,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.userExpirationObserver = UserExpirationObserver(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.debugCommands = ZMUserSession.initDebugCommands()
+        self.appLockController = AppLockController(config: configuration.appLockConfig)
         super.init()
         
         ZMUserAgent.setWireAppVersion(appVersion)
