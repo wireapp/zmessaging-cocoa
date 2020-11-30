@@ -74,19 +74,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
         self.syncMOC = syncMOC;
         self.shouldStopEnqueueing = NO;
         applicationStatusDirectory.operationStatus.delegate = self;
-
-        if (uiMOC != nil) {
-            [[NSNotificationCenter defaultCenter] addObserver:self
-                                                     selector:@selector(userInterfaceContextDidSave:)
-                                                         name:NSManagedObjectContextDidSaveNotification
-                                                       object:uiMOC];
-        }
-        if (syncMOC != nil) {
-            [[NSNotificationCenter defaultCenter] addObserver:self
-                                                     selector:@selector(syncContextDidSave:)
-                                                         name:NSManagedObjectContextDidSaveNotification
-                                                       object:syncMOC];
-        }
         
         [ZMRequestAvailableNotification addObserver:self];
         
@@ -144,62 +131,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     return _apsSignalKeyStore;
 }
 
-+ (NSSet *)objectIDsetFromObject:(NSSet *)objects
-{
-    NSMutableSet *objectIds = [NSMutableSet set];
-    for(NSManagedObject* obj in objects) {
-        [objectIds addObject:obj.objectID];
-    }
-    return objectIds;
-}
-
-+ (NSSet *)objectSetFromObjectIDs:(NSSet *)objectIDs inContext:(NSManagedObjectContext *)moc
-{
-    NSMutableSet *objects = [NSMutableSet set];
-    for(NSManagedObjectID *objId in objectIDs) {
-        NSManagedObject *obj = [moc objectWithID:objId];
-        if(obj) {
-            [objects addObject:obj];
-        }
-    }
-    return objects;
-}
-
-- (void)userInterfaceContextDidSave:(NSNotification *)note
-{
-    NSSet *insertedObjectsIDs = [ZMOperationLoop objectIDsetFromObject:note.userInfo[NSInsertedObjectsKey]];
-    NSSet *updatedObjectsIDs = [ZMOperationLoop objectIDsetFromObject:note.userInfo[NSUpdatedObjectsKey]];
-    
-    // We need to proceed even if those to sets are empty because the metadata might have been updated.
-    
-    ZM_WEAK(self);
-    [self.syncMOC performGroupedBlock:^{
-        ZM_STRONG(self);
-        NSSet *syncInsertedObjects = [ZMOperationLoop objectSetFromObjectIDs:insertedObjectsIDs inContext:self.syncStrategy.syncMOC];
-        NSSet *syncUpdatedObjects = [ZMOperationLoop objectSetFromObjectIDs:updatedObjectsIDs inContext:self.syncStrategy.syncMOC];
-        
-        [self.syncStrategy processSaveWithInsertedObjects:syncInsertedObjects updateObjects:syncUpdatedObjects];
-        [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-    }];
-}
-
-- (void)syncContextDidSave:(NSNotification *)note
-{
-    //
-    // N.B.: We don't need to do any context / queue switching here, since we're on the sync context's queue.
-    //
-    
-    NSSet *syncInsertedObjects = note.userInfo[NSInsertedObjectsKey];
-    NSSet *syncUpdatedObjects = note.userInfo[NSUpdatedObjectsKey];
-    
-    if (syncInsertedObjects.count == 0 && syncUpdatedObjects.count == 0) {
-        return;
-    }
-    
-    [self.syncStrategy processSaveWithInsertedObjects:syncInsertedObjects updateObjects:syncUpdatedObjects];
-    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
-}
-
 - (ZMTransportRequestGenerator)requestGenerator {
     
     ZM_WEAK(self);
@@ -212,7 +143,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
         [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *response) {
             ZM_STRONG(self);
             
-            [self.syncStrategy.syncMOC enqueueDelayedSaveWithGroup:response.dispatchGroup];
+            [self.syncMOC enqueueDelayedSaveWithGroup:response.dispatchGroup];
             
             // Check if there is something to do now and when the save completes
             [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
