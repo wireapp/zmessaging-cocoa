@@ -47,7 +47,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
     func sessionManagerWillOpenAccount(_ account: Account,
                                        from selectedAccount: Account?,
                                        userSessionCanBeTornDown: @escaping () -> Void)
-    func sessionManagerWillMigrateAccount()
+    func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerDidBlacklistCurrentVersion()
     func sessionManagerDidBlacklistJailbrokenDevice()
 }
@@ -95,6 +95,7 @@ public protocol SessionManagerType: class {
     func update(credentials: ZMCredentials) -> Bool
     
     func passwordVerificationDidFail(with failCount: Int)
+    
 }
 
 @objc
@@ -184,7 +185,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     var isAppVersionBlacklisted = false
     public weak var delegate: SessionManagerDelegate? = nil
     public let accountManager: AccountManager
-    public fileprivate(set) var activeUserSession: ZMUserSession?
+    public internal(set) var activeUserSession: ZMUserSession?
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public internal(set) var unauthenticatedSession: UnauthenticatedSession? {
@@ -452,7 +453,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             // In order to do so we open the old database and get the user identifier.
             LocalStoreProvider.fetchUserIDFromLegacyStore(
                 in: sharedContainerURL,
-                migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateAccount() },
+                migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateAccount(userSessionCanBeTornDown: {}) },
                 completion: { [weak self] userIdentifier in
                     guard let strongSelf = self, let userIdentifier = userIdentifier else {
                         self?.createUnauthenticatedSession()
@@ -692,7 +693,7 @@ public final class SessionManager : NSObject, SessionManagerType {
                     dispatchGroup: self.dispatchGroup,
                     migration: { [weak self] in
                         if notifyAboutMigration {
-                            self?.delegate?.sessionManagerWillMigrateAccount()
+                            self?.delegate?.sessionManagerWillMigrateAccount(userSessionCanBeTornDown: {})
                         }
                     },
                     completion: { provider in
@@ -758,6 +759,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     
     fileprivate func configure(session userSession: ZMUserSession, for account: Account) {
         userSession.sessionManager = self
+        userSession.delegate = self
         require(backgroundUserSessions[account.userIdentifier] == nil, "User session is already loaded")
         backgroundUserSessions[account.userIdentifier] = userSession
         userSession.useConstantBitRateAudio = useConstantBitRateAudio
@@ -1025,7 +1027,6 @@ extension SessionManager: UnauthenticatedSessionDelegate {
             let registered = session.authenticationStatus.completedRegistration || session.registrationStatus.completedRegistration
             let emailCredentials = session.authenticationStatus.emailCredentials()
             
-            userSession.encryptMessagesAtRest = self.configuration.encryptionAtRestEnabledByDefault
             userSession.syncManagedObjectContext.performGroupedBlock {
                 userSession.setEmailCredentials(emailCredentials)
                 userSession.syncManagedObjectContext.registeredOnThisDevice = registered
@@ -1043,6 +1044,10 @@ extension SessionManager: PostLoginAuthenticationObserver {
 
     public func clientRegistrationDidSucceed(accountId: UUID) {
         log.debug("Client registration was successful")
+        
+        if self.configuration.encryptionAtRestEnabledByDefault {
+            try? activeUserSession?.setEncryptionAtRest(enabled: true)
+        }
     }
     
     public func userDidLogout(accountId: UUID) {

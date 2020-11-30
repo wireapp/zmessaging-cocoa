@@ -23,13 +23,12 @@
 #import "WireSyncEngine_iOS_Tests-Swift.h"
 #import "ObjectTranscoderTests.h"
 #import "ZMLastUpdateEventIDTranscoder+Internal.h"
-#import "ZMObjectStrategyDirectory.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
 
-@interface ZMLastUpdateEventIDTranscoderTests : ObjectTranscoderTests
+@interface ZMLastUpdateEventIDTranscoderTests : MessagingTest
 
+@property (nonatomic) MockApplicationStatus *mockApplicationStatus;
 @property (nonatomic) ZMLastUpdateEventIDTranscoder *sut;
-@property (nonatomic) id<ZMObjectStrategyDirectory> directory;
 @property (nonatomic) ZMSingleRequestSync *downstreamSync;
 @property (nonatomic) MockSyncStatus *mockSyncStatus;
 @property (nonatomic) id syncStateDelegate;
@@ -44,25 +43,22 @@
     self.downstreamSync = [OCMockObject mockForClass:ZMSingleRequestSync.class];
     [self verifyMockLater:self.downstreamSync];
     
-    self.directory = [self createMockObjectStrategyDirectoryInMoc:self.uiMOC];
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
     self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
     self.mockSyncStatus.mockPhase = SyncPhaseDone;
+    self.mockApplicationStatus = [[MockApplicationStatus alloc] init];
     self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateSlowSyncing;
 
-    self.sut = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus objectDirectory:self.directory];
+    self.sut = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
     self.sut.lastUpdateEventIDSync = self.downstreamSync;
-    
-    [self verifyMockLater:self.syncStrategy];
 }
 
 - (void)tearDown {
     self.downstreamSync = nil;
-    self.directory = nil;
     [self.syncStateDelegate stopMocking];
     self.syncStateDelegate = nil;
     self.mockSyncStatus = nil;
-    self.syncStrategy = nil;
+    self.mockApplicationStatus = nil;
     self.sut = nil;
     [super tearDown];
 }
@@ -101,7 +97,7 @@
 - (void)testThatItCreatesTheRightDownstreamSync
 {
     // when
-    ZMLastUpdateEventIDTranscoder *sut = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus objectDirectory:self.directory];
+    ZMLastUpdateEventIDTranscoder *sut = [[ZMLastUpdateEventIDTranscoder alloc] initWithManagedObjectContext:self.uiMOC applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
     id transcoder = sut.lastUpdateEventIDSync.transcoder;
     
     // then
@@ -176,66 +172,28 @@
 {
     // given
     NSUUID *uuid = [NSUUID createUUID];
-    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
-    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
     [self injectLastUpdateEventID:uuid.transportString];
-    
-    // expect
-    [[(id)self.directory.missingUpdateEventsTranscoder expect] setLastUpdateEventID:uuid];
-    
+        
     // when
     [self.sut persistLastUpdateEventID];
-}
-
-- (void)testThatItDoesNotPersistTheLastUpdateEventMoreThanOnceIfItIsNotInjectedAgain
-{
-    // given
-    NSUUID *uuid = [NSUUID createUUID];
-    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
-    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
-    [self injectLastUpdateEventID:uuid.transportString];
     
-    // expect
-    [[(id)self.directory.missingUpdateEventsTranscoder expect] setLastUpdateEventID:uuid];
-    [[(id)self.directory.missingUpdateEventsTranscoder reject] setLastUpdateEventID:OCMOCK_ANY];
+    // then
+    XCTAssertEqualObjects(uuid, self.uiMOC.zm_lastNotificationID);
     
-    // when
-    [self.sut persistLastUpdateEventID];
-    [self.sut persistLastUpdateEventID];
-}
-
-- (void)testThatItPersistTheLastUpdateEventMoreThanOnceIfItIsInjectedAgain
-{
-    // given
-    NSUUID *uuid = [NSUUID createUUID];
-    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
-    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
-    [self injectLastUpdateEventID:uuid.transportString];
-    
-    // expect
-    [[(id)self.directory.missingUpdateEventsTranscoder expect] setLastUpdateEventID:uuid];
-    [[(id)self.directory.missingUpdateEventsTranscoder expect] setLastUpdateEventID:uuid];
-    
-    // when
-    [self.sut persistLastUpdateEventID];
-    [self injectLastUpdateEventID:uuid.transportString];
-    [self.sut persistLastUpdateEventID];
 }
 
 - (void)testThatItTheLastUpdateEventIDIsNotPersistedIfTheResponseWasInvalid
 {
     // given
-    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:YES];
-    [[(id) self.syncStrategy stub] storeAndProcessUpdateEvents:OCMOCK_ANY ignoreBuffer:NO];
     [self performIgnoringZMLogError:^{
         [self injectLastUpdateEventID:@"foo"];
     }];
-    
-    // expect
-    [[(id)self.directory.missingUpdateEventsTranscoder reject] setLastUpdateEventID:OCMOCK_ANY];
-    
+        
     // when
     [self.sut persistLastUpdateEventID];
+    
+    // then
+    XCTAssertNil(self.uiMOC.zm_lastNotificationID);
 }
 
 - (void)testThatTheLastUpdateEventIDIsNotPersistedIfTheResponseIsAPermanentError
@@ -244,11 +202,11 @@
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:400 transportSessionError:nil];
     [self.sut didReceiveResponse:response forSingleRequest:self.downstreamSync];
     
-    // expect
-    [[(id)self.directory.missingUpdateEventsTranscoder reject] setLastUpdateEventID:OCMOCK_ANY];
-    
     // when
     [self.sut persistLastUpdateEventID];
+    
+    // then
+    XCTAssertNil(self.uiMOC.zm_lastNotificationID);
 }
 
 - (void)testThatItEncodesTheRightRequestWithoutClient

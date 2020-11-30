@@ -136,7 +136,7 @@ extension LocalNotificationDispatcher {
 
 // MARK: - Failed messages
 
-extension LocalNotificationDispatcher {
+extension LocalNotificationDispatcher: PushMessageHandler {
 
     /// Informs the user that the message failed to send
     public func didFailToSend(_ message: ZMMessage) {
