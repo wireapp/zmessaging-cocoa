@@ -36,7 +36,7 @@ extension ZMOperationLoop: ZMPushChannelConsumer {
                               object: self,
                               userInfo: [ ZMPushChannelIsOpenKey: false]).post()
         
-        syncStrategy.didInterruptUpdateEventsStream()
+        syncStatus.pushChannelDidClose()
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
     
@@ -46,7 +46,7 @@ extension ZMOperationLoop: ZMPushChannelConsumer {
                               object: self,
                               userInfo: [ ZMPushChannelIsOpenKey: true]).post()
         
-        syncStrategy.didEstablishUpdateEventsStream()
+        syncStatus.pushChannelDidOpen()
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
     

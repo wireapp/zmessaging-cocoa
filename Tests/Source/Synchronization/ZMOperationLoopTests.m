@@ -25,6 +25,7 @@
 #import "MessagingTest.h"
 #import "ZMSyncStrategy.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
+#import "WireSyncEngine_iOS_Tests-Swift.h"
 #import "MockModelObjectContextFactory.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+Internal.h"
@@ -37,6 +38,8 @@
 @property (nonatomic) id syncStrategy;
 @property (nonatomic) PushNotificationStatus *pushNotificationStatus;
 @property (nonatomic) CallEventStatus *callEventStatus;
+@property (nonatomic) SyncStatus *syncStatus;
+@property (nonatomic) MockSyncStateDelegate *mockSyncDelegate;
 @property (nonatomic) id mockPushChannel;
 @property (nonatomic) NSMutableArray *pushChannelNotifications;
 @property (nonatomic) id pushChannelObserverToken;
@@ -56,6 +59,8 @@
     [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.transportSession];
     
+    self.mockSyncDelegate = [[MockSyncStateDelegate alloc] init];
+    self.syncStatus = [[SyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.mockSyncDelegate];
     self.callEventStatus = [[CallEventStatus alloc] init];
     self.pushNotificationStatus = [[PushNotificationStatus alloc] initWithManagedObjectContext:self.syncMOC];
     self.mockPushChannel = [OCMockObject niceMockForClass:[ZMPushChannelConnection class]];
@@ -65,6 +70,7 @@
     
     [(ApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturn:self.pushNotificationStatus] pushNotificationStatus];
     [(ApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturn:self.callEventStatus] callEventStatus];
+    [(ApplicationStatusDirectory *)[[applicationStatusDirectory stub] andReturn:self.syncStatus] syncStatus];
     [(ZMSyncStrategy *)[[self.syncStrategy stub] andReturn:applicationStatusDirectory] applicationStatusDirectory];
 
     self.sut = [[ZMOperationLoop alloc] initWithTransportSession:self.transportSession
@@ -104,30 +110,25 @@
     [self.pushChannelNotifications addObject:note];
 }
 
-
-
-- (void)testThatItNotifiesTheSyncStrategyWhenThePushChannelIsOpened
+- (void)testThatItNotifiesTheSyncStatus_WhenThePushChannelIsOpened
 {
-    // expect
-    [[(id) self.syncStrategy expect] didEstablishUpdateEventsStream];
-    
     // when
     [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:self.mockPushChannel withResponse:nil];
     
     // then
-    [self.syncStrategy verify];
+    XCTAssertNotNil(self.syncStatus.pushChannelEstablishedDate);
 }
 
-- (void)testThatItNotifiesTheSyncStrategyWhenThePushChannelIsClosed
+- (void)testThatItNotifiesTheSyncStatus_WhenThePushChannelIsClosed
 {
-    // expect
-    [[(id) self.syncStrategy expect] didInterruptUpdateEventsStream];
+    // given
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:self.mockPushChannel withResponse:nil];
     
     // when
     [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:self.mockPushChannel withResponse:nil error:nil];
     
     // then
-    [self.syncStrategy verify];
+    XCTAssertNil(self.syncStatus.pushChannelEstablishedDate);
 }
 
 - (void)testThatItInitializesThePushChannel
@@ -488,7 +489,6 @@
 {
     // given
     id fakeResponse = [OCMockObject niceMockForClass:[NSHTTPURLResponse class]];
-    [[self.syncStrategy stub] didInterruptUpdateEventsStream];
     
     // when
     [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:self.mockPushChannel withResponse:fakeResponse error:nil];
@@ -503,7 +503,6 @@
 {
     // given
     id fakeResponse = [OCMockObject niceMockForClass:[NSHTTPURLResponse class]];
-    [[self.syncStrategy stub] didEstablishUpdateEventsStream];
 
     // when
     [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:self.mockPushChannel withResponse:fakeResponse];

@@ -190,6 +190,10 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     return self.applicationStatusDirectory.callEventStatus;
 }
 
+- (SyncStatus *)syncStatus {
+    return self.applicationStatusDirectory.syncStatus;
+}
+
 @end
 
 

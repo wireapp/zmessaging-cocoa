@@ -25,6 +25,7 @@
 @class PushNotificationStatus;
 @class ZMSyncStrategy;
 @class CallEventStatus;
+@class SyncStatus;
 
 // Required by OperationLoop+Background.h
 @interface ZMOperationLoop ()
@@ -34,4 +35,5 @@
 @property (nonatomic, weak) NSManagedObjectContext *syncMOC;
 @property (nonatomic, readonly) PushNotificationStatus *pushNotificationStatus;
 @property (nonatomic, readonly) CallEventStatus *callEventStatus;
+@property (nonatomic, readonly) SyncStatus *syncStatus;
 @end

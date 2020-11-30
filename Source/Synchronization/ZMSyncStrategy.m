@@ -151,16 +151,6 @@ ZM_EMPTY_ASSERTING_INIT()
     return self.syncMOC;
 }
 
-- (void)didEstablishUpdateEventsStream
-{
-    [self.applicationStatusDirectory.syncStatus pushChannelDidOpen];
-}
-
-- (void)didInterruptUpdateEventsStream
-{
-    [self.applicationStatusDirectory.syncStatus pushChannelDidClose];
-}
-
 - (void)applyHotFixes
 {
     [self.hotFix applyPatches];

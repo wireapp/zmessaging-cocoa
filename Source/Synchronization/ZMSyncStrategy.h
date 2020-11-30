@@ -47,8 +47,6 @@
                                     application:(id<ZMApplication> _Nonnull)application
                          requestStrategyFactory:(id<RequestStrategyFactoryProtocol> _Nonnull)requestStrategyFactory;
 
-- (void)didInterruptUpdateEventsStream;
-- (void)didEstablishUpdateEventsStream;
 - (void)applyHotFixes;
 
 /// process all events in the buffer
