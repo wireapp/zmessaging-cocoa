@@ -83,7 +83,7 @@ final class SessionManagerTests: IntegrationTest {
         
         // then
         XCTAssertNil(delegate.userSession)
-        XCTAssertTrue(delegate.sessionManagerDidFailToLoginIsCalled)
+        XCTAssertTrue(delegate.sessionManagerDidFailToFetchUserIdentifierIsCalled)
         XCTAssertNotNil(sut?.unauthenticatedSession)
         withExtendedLifetime(token) {
             XCTAssertEqual([], observer.createdUserSession)
@@ -1479,11 +1479,23 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
         userSessionCanBeTornDown?()
     }
     
-    var sessionManagerDidFailToLoginIsCalled: Bool = false
-    func sessionManagerDidFailToLogin(account: Account?,
-                                      from selectedAccount: Account?,
-                                      error: Error) {
-        sessionManagerDidFailToLoginIsCalled = true
+
+    func sessionManagerDidFailToLogin(error: Error) {
+        // no op
+    }
+    
+    var sessionManagerDidFailToFetchUserIdentifierIsCalled: Bool = false
+    func sessionManagerDidFailToFetchUserIdentifier() {
+        sessionManagerDidFailToFetchUserIdentifierIsCalled = true
+    }
+    
+    
+    func sessionManagerDidFailLoadSession(error: Error) {
+        // no op
+    }
+    
+    func sessionManagerDidFailToRegisterClient(error: Error) {
+        // no op
     }
     
     func sessionManagerWillOpenAccount(_ account: Account,

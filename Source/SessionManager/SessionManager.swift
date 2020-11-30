@@ -40,9 +40,10 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 }
 
 @objc public protocol SessionManagerDelegate : SessionActivationObserver {
-    func sessionManagerDidFailToLogin(account: Account?,
-                                      from selectedAccount: Account?,
-                                      error: Error)
+    func sessionManagerDidFailToLogin(error: Error)
+    func sessionManagerDidFailToFetchUserIdentifier()
+    func sessionManagerDidFailLoadSession(error: Error)
+    func sessionManagerDidFailToRegisterClient(error: Error)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: (() -> Void)?)
     func sessionManagerWillOpenAccount(_ account: Account,
                                        from selectedAccount: Account?,
@@ -457,10 +458,7 @@ public final class SessionManager : NSObject, SessionManagerType {
                 completion: { [weak self] userIdentifier in
                     guard let strongSelf = self, let userIdentifier = userIdentifier else {
                         self?.createUnauthenticatedSession()
-                        let error = NSError(code: .accessTokenExpired, userInfo: nil)
-                        self?.delegate?.sessionManagerDidFailToLogin(account: nil,
-                                                                     from: nil,
-                                                                     error: error)
+                        self?.delegate?.sessionManagerDidFailToFetchUserIdentifier()
                         return
                     }
                     let account = strongSelf.migrateAccount(with: userIdentifier)
@@ -635,9 +633,7 @@ public final class SessionManager : NSObject, SessionManagerType {
                 createUnauthenticatedSession(accountId: account.userIdentifier)
                 let error = NSError(code: .accessTokenExpired,
                                     userInfo: account.loginCredentials?.dictionaryRepresentation)
-                delegate?.sessionManagerDidFailToLogin(account: account,
-                                                       from: accountManager.selectedAccount,
-                                                       error: error)
+                delegate?.sessionManagerDidFailLoadSession(error: error)
             }
             
             return
@@ -1070,22 +1066,23 @@ extension SessionManager: PostLoginAuthenticationObserver {
         if unauthenticatedSession == nil || unauthenticatedSession?.accountId != accountId {
             createUnauthenticatedSession(accountId: accountId)
         }
-        
-        delegate?.sessionManagerDidFailToLogin(account: accountManager.account(with: accountId),
-                                               from: accountManager.selectedAccount,
-                                               error: error)
+                
+        delegate?.sessionManagerDidFailToRegisterClient(error: error)
     }
     
     public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
-        guard let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)),
-              let account = accountManager.account(with: accountId) else { return }
+        guard
+            let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)),
+            let account = accountManager.account(with: accountId)
+        else {
+            return
+        }
         
         log.debug("Authentication invalidated for \(accountId): \(error.code)")
         
         switch userSessionErrorCode {
         case .clientDeletedRemotely:
             delete(account: account, reason: .sessionExpired)
-            
         case .accessTokenExpired:
             if configuration.wipeOnCookieInvalid {
                 delete(account: account, reason: .sessionExpired)
@@ -1097,10 +1094,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
             if unauthenticatedSession == nil {
                 createUnauthenticatedSession(accountId: accountId)
             }
-            
-            delegate?.sessionManagerDidFailToLogin(account: accountManager.account(with: accountId),
-                                                   from: accountManager.selectedAccount,
-                                                   error: error)
+            delegate?.sessionManagerDidFailToLogin(error: error)
         }
     }
 
@@ -1215,9 +1209,7 @@ extension SessionManager : PreLoginAuthenticationObserver {
             createUnauthenticatedSession()
         }
         
-        delegate?.sessionManagerDidFailToLogin(account: nil,
-                                               from: accountManager.selectedAccount,
-                                               error: error)
+        delegate?.sessionManagerDidFailToLogin(error: error)
     }
 
     public func companyLoginCodeDidBecomeAvailable(_ code: UUID) {
