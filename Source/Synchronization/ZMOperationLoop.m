@@ -58,7 +58,8 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
 @implementation ZMOperationLoop
 
 - (instancetype)initWithTransportSession:(id<TransportSessionType>)transportSession
-                            syncStrategy:(ZMSyncStrategy *)syncStrategy
+                         requestStrategy:(id<RequestStrategy>)requestStrategy
+                    updateEventProcessor:(id<UpdateEventProcessor>)updateEventProcessor
               applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
                                    uiMOC:(NSManagedObjectContext *)uiMOC
                                  syncMOC:(NSManagedObjectContext *)syncMOC
@@ -70,7 +71,8 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     if (self) {
         self.applicationStatusDirectory = applicationStatusDirectory;
         self.transportSession = transportSession;
-        self.syncStrategy = syncStrategy;
+        self.requestStrategy = requestStrategy;
+        self.updateEventProcessor = updateEventProcessor;
         self.syncMOC = syncMOC;
         self.shouldStopEnqueueing = NO;
         applicationStatusDirectory.operationStatus.delegate = self;
@@ -96,7 +98,6 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [ZMRequestAvailableNotification removeObserver:self];
     
-    self.syncStrategy = nil;
     self.transportSession = nil;
     ///TODO: 
 //    RequireString([NSOperationQueue mainQueue] == [NSOperationQueue currentQueue],
@@ -139,7 +140,7 @@ static char* const ZMLogTag ZM_UNUSED = "OperationLoop";
         if (self == nil) {
             return nil;
         }
-        ZMTransportRequest *request = [self.syncStrategy nextRequest];
+        ZMTransportRequest *request = [self.requestStrategy nextRequest];
         [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *response) {
             ZM_STRONG(self);
             

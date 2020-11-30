@@ -29,7 +29,7 @@ extension ZMUserSession {
         BackgroundActivityFactory.shared.resume()
         
         syncManagedObjectContext.performGroupedBlock {
-            self.operationLoop?.syncStrategy.missingUpdateEventsTranscoder.startDownloadingMissingNotifications()
+//            self.operationLoop?.syncStrategy.missingUpdateEventsTranscoder.startDownloadingMissingNotifications() // TODO jacob perform through applicationStatusDirectory
             self.applicationStatusDirectory?.operationStatus.startBackgroundFetch(withCompletionHandler: completionHandler)
         }
     }

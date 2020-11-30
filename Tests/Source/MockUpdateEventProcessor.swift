@@ -20,15 +20,16 @@ import Foundation
 
 @testable import WireSyncEngine
 
-class MockUpdateEventProcessor: WireSyncEngine.UpdateEventProcessor {
+@objcMembers
+public class MockUpdateEventProcessor: NSObject, WireSyncEngine.UpdateEventProcessor {
     
-    var processedEvents: [ZMUpdateEvent] = []
+    public var processedEvents: [ZMUpdateEvent] = []
         
-    func storeAndProcessUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
+    public func storeAndProcessUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
         processedEvents.append(contentsOf: updateEvents)
     }
     
-    func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
+    public func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
         
     }
     

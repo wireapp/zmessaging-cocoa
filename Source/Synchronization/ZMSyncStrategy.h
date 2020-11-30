@@ -39,7 +39,7 @@
 @protocol EventProcessingTrackerProtocol;
 @protocol RequestStrategyFactoryProtocol;
 
-@interface ZMSyncStrategy : NSObject <TearDownCapable>
+@interface ZMSyncStrategy : NSObject <TearDownCapable, RequestStrategy>
 
 - (instancetype _Nonnull )initWithStoreProvider:(id<LocalStoreProviderProtocol> _Nonnull)storeProvider
                         notificationsDispatcher:(NotificationDispatcher * _Nonnull)notificationsDispatcher
