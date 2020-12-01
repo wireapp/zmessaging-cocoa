@@ -95,7 +95,6 @@
     self.mockPushChannel = nil;
     [self.transportSession stopMocking];
     self.transportSession = nil;
-//    self.syncStrategy = nil;
     self.mockRequestStrategy = nil;
     self.mockUpdateEventProcessor = nil;
     [self.sut tearDown];
@@ -175,7 +174,6 @@
                                                                   payload:@{@"foo": @"bar"}];
     
     self.mockRequestStrategy.mockRequest = request;
-//    [[[self.syncStrategy stub] andReturn:request] nextRequest];
     XCTestExpectation *attemptExpectation = [self expectationWithDescription:@"attemptToEnqueue"];
     [[[[self.transportSession expect] andDo:^(NSInvocation *invocation ZM_UNUSED) {
         [attemptExpectation fulfill];
@@ -199,7 +197,6 @@
 {
     // given
     ZMTransportEnqueueResult *result = [ZMTransportEnqueueResult resultDidHaveLessRequestsThanMax:NO didGenerateNonNullRequest:NO];
-//    [[[self.syncStrategy stub] andReturn:nil] nextRequest];
     self.mockRequestStrategy.mockRequest = nil;
 
     [[[self.transportSession expect] andReturn:result] attemptToEnqueueSyncRequestWithGenerator:OCMOCK_ANY];
