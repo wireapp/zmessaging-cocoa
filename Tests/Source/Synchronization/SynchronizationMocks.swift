@@ -312,12 +312,24 @@ public class MockSyncStatus : SyncStatus {
 
 @objcMembers public class MockRequestStrategy: NSObject, RequestStrategy {
     
-    public var mockRequest: ZMTransportRequest? = nil
+    
+    public var mockRequestQueue: [ZMTransportRequest] = []
+    public var mockRequest: ZMTransportRequest? {
+        set {
+            if let request = newValue {
+                mockRequestQueue = [request]
+            } else {
+                mockRequestQueue = []
+            }
+        }
+        get {
+            mockRequestQueue.last
+        }
+    }
     public var nextRequestCalled = false
     public func nextRequest() -> ZMTransportRequest? {
-        print("calling nextRequest")
         nextRequestCalled = true
-        return mockRequest
+        return mockRequestQueue.popLast()
     }
     
 }
