@@ -61,7 +61,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var likeMesssageObserver: ManagedObjectContextChangeObserver?
     var urlActionProcessors: [URLActionProcessor]?
     let debugCommands: [String: DebugCommand]
-    let appLockController: AppLockController
+    
+    public let appLockController: AppLockController
     
     public var hasCompletedInitialSync: Bool = false
     
@@ -199,7 +200,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.userExpirationObserver = UserExpirationObserver(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.debugCommands = ZMUserSession.initDebugCommands()
-        self.appLockController = AppLockController(config: configuration.appLockConfig)
+        self.appLockController = AppLockController(config: configuration.appLockConfig, selfUser: ZMUser.selfUser(in: storeProvider.contextDirectory.uiContext))
         super.init()
         
         ZMUserAgent.setWireAppVersion(appVersion)
