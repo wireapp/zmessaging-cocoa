@@ -179,6 +179,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                 mediaManager: MediaManagerType,
                 flowManager: FlowManagerType,
                 analytics: AnalyticsType?,
+                syncStrategy: ZMSyncStrategy? = nil,
                 operationLoop: ZMOperationLoop? = nil,
                 application: ZMApplication,
                 appVersion: String,
@@ -212,7 +213,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
             self.localNotificationDispatcher = LocalNotificationDispatcher(in: storeProvider.contextDirectory.syncContext)
             self.configureTransportSession()
             self.applicationStatusDirectory = self.createApplicationStatusDirectory()
-            self.syncStrategy = self.createSyncStrategy()
+            self.syncStrategy = syncStrategy ?? self.createSyncStrategy()
             self.operationLoop = operationLoop ?? self.createOperationLoop()
             self.urlActionProcessors = self.createURLActionProcessors()
             self.callStateObserver = CallStateObserver(localNotificationDispatcher: self.localNotificationDispatcher!,
@@ -276,7 +277,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
             DeepLinkURLActionProcessor(contextProvider: self),
             ConnectToBotURLActionProcessor(contextprovider: self,
                                            transportSession: transportSession,
-                                           eventProcessor: self)
+                                           eventProcessor: syncStrategy!)
         ]
     }
     

@@ -62,6 +62,7 @@
                                                                 mediaManager:self.mediaManager
                                                                  flowManager:self.flowManagerMock
                                                                    analytics:nil
+                                                                syncStrategy:nil
                                                                operationLoop:nil
                                                                  application:self.application
                                                                   appVersion:version
@@ -192,6 +193,7 @@
                                                                     mediaManager:self.mediaManager
                                                                      flowManager:self.flowManagerMock
                                                                        analytics:nil
+                                                                    syncStrategy:nil
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
@@ -419,6 +421,7 @@
                                                                     mediaManager:self.mediaManager
                                                                      flowManager:self.flowManagerMock
                                                                        analytics:nil
+                                                                    syncStrategy:nil
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
