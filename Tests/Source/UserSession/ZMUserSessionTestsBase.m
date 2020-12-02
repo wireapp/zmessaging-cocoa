@@ -97,7 +97,6 @@
 
     self.operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
     [[self.operationLoop stub] tearDown];
-//    [[[self.operationLoop stub] andReturn:self.syncStrategy] syncStrategy];
     
     self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
     
