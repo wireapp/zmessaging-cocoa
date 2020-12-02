@@ -29,9 +29,9 @@
 
 @interface ConversationTestsBase : IntegrationTest
 
-- (void)testThatItAppendsMessageToConversation:(MockConversation *)mockConversation
-                                     withBlock:(NSArray *(^)(MockTransportSession<MockTransportSessionObjectCreation> *session))appendMessages
-                                        verify:(void(^)(ZMConversation *))verifyConversation;
+//- (void)testThatItAppendsMessageToConversation:(MockConversation *)mockConversation
+//                                     withBlock:(NSArray *(^)(MockTransportSession<MockTransportSessionObjectCreation> *session))appendMessages
+//                                        verify:(void(^)(ZMConversation *))verifyConversation;
 
 - (void)testThatItSendsANotificationInConversation:(MockConversation *)mockConversation
                                     ignoreLastRead:(BOOL)ignoreLastRead
