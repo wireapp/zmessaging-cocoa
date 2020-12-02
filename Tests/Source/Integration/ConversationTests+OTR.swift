@@ -139,7 +139,7 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
         let genericMessage2 = GenericMessage(content: Text(content: expectedText2), nonce: nonce2)
         
         // WHEN
-        self.testThatItAppendsMessage(
+        testThatItAppendsMessage(
             to: groupConversation,
             with: { session in
                 guard

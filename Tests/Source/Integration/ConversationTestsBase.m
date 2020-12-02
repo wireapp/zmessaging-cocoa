@@ -293,7 +293,7 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
-        messsagesNonces = appendMessages(((MockTransportSession *)session));
+        messsagesNonces = appendMessages(((MockTransportSession<MockTransportSessionObjectCreation> *)session));
     }];
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
     
