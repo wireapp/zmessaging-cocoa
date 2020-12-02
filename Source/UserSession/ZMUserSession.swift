@@ -29,7 +29,7 @@ public protocol ThirdPartyServicesDelegate: NSObjectProtocol {
 }
 
 @objcMembers
-public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
+public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessionAppLockInterface {
     
     private let appVersion: String
     private var tokens: [Any] = []
@@ -62,7 +62,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var urlActionProcessors: [URLActionProcessor]?
     let debugCommands: [String: DebugCommand]
     
-    public let appLockController: AppLockController
+    public var appLockController: AppLockController
     
     public var hasCompletedInitialSync: Bool = false
     

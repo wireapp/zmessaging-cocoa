@@ -18,6 +18,10 @@
 
 import Foundation
 
+public protocol UserSessionAppLockInterface {
+    var appLockController: AppLockController { get set }
+}
+
 public extension ZMUserSession {
 
     /// An object used to configure a user session.
