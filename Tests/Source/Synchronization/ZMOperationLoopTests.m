@@ -221,60 +221,52 @@
 - (void)testThatMOCIsSavedOnSuccessfulRequest
 {
     // given
-    id mockObserver = [OCMockObject observerMock];
-    [[NSNotificationCenter defaultCenter] addMockObserver:mockObserver name:NSManagedObjectContextDidSaveNotification object:self.syncMOC];
     ZMTransportRequest *request = [ZMTransportRequest requestWithPath:@"/boo" method:ZMMethodGET payload:nil];
-
-    [[mockObserver expect] notificationWithName:NSManagedObjectContextDidSaveNotification object:OCMOCK_ANY userInfo:OCMOCK_ANY];
+    [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *resp ZM_UNUSED) {
+        NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC]);
+    }]];
     self.mockRequestStrategy.mockRequest = request;
 
     [ZMRequestAvailableNotification notifyNewRequestsAvailable:self]; // this will enqueue `request`
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *resp ZM_UNUSED) {
-        NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC]);
-    }]];
+        
+    // expect
+    [self expectationForNotification:NSManagedObjectContextDidSaveNotification
+                              object:nil
+                             handler:nil];
     
     // when
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    WaitForAllGroupsToBeEmpty(0.5);
-    [mockObserver verify];
-    
-    [[NSNotificationCenter defaultCenter] removeObserver:mockObserver];
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 
 }
 
 - (void)testThatMOCIsSavedOnFailedRequest
 {
     // given
-    id mockObserver = [OCMockObject observerMock];
-    [[NSNotificationCenter defaultCenter] addMockObserver:mockObserver name:NSManagedObjectContextDidSaveNotification object:self.syncMOC];
     ZMTransportRequest *request = [ZMTransportRequest requestWithPath:@"/boo" method:ZMMethodGET payload:nil];
-    
-    // expect
-    [[mockObserver expect] notificationWithName:NSManagedObjectContextDidSaveNotification object:OCMOCK_ANY userInfo:OCMOCK_ANY];
+    [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *resp ZM_UNUSED) {
+        NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC]);
+    }]];
     self.mockRequestStrategy.mockRequest = request;
     
     [ZMRequestAvailableNotification notifyNewRequestsAvailable:self]; // this will enqueue `request`
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [request addCompletionHandler:[ZMCompletionHandler handlerOnGroupQueue:self.syncMOC block:^(ZMTransportResponse *resp ZM_UNUSED) {
-        NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC]);
-    }]];
+    // expect
+    [self expectationForNotification:NSManagedObjectContextDidSaveNotification
+                              object:nil
+                             handler:nil];
     
     // when
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:400 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    WaitForAllGroupsToBeEmpty(0.5);
-    [mockObserver verify];
-    
-    [[NSNotificationCenter defaultCenter] removeObserver:mockObserver];
-    
+    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
 - (void)testThatItAsksSyncStrategyForNextOperationOnZMOperationLoopNewRequestAvailableNotification
