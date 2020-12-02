@@ -631,6 +631,8 @@ public final class SessionManager : NSObject, SessionManagerType {
                 delete(account: account, reason: .sessionExpired)
             } else {
                 createUnauthenticatedSession(accountId: account.userIdentifier)
+                
+                guard account == accountManager.selectedAccount else { return }
                 let error = NSError(code: .accessTokenExpired,
                                     userInfo: account.loginCredentials?.dictionaryRepresentation)
                 delegate?.sessionManagerDidFailLoadSession(error: error)
@@ -1066,7 +1068,9 @@ extension SessionManager: PostLoginAuthenticationObserver {
         if unauthenticatedSession == nil || unauthenticatedSession?.accountId != accountId {
             createUnauthenticatedSession(accountId: accountId)
         }
-                
+        
+        let account = accountManager.account(with: accountId)
+        guard account == accountManager.selectedAccount else { return }
         delegate?.sessionManagerDidFailToRegisterClient(error: error)
     }
     
@@ -1094,6 +1098,9 @@ extension SessionManager: PostLoginAuthenticationObserver {
             if unauthenticatedSession == nil {
                 createUnauthenticatedSession(accountId: accountId)
             }
+            
+            let account = accountManager.account(with: accountId)
+            guard account == accountManager.selectedAccount else { return }
             delegate?.sessionManagerDidFailToLogin(error: error)
         }
     }
