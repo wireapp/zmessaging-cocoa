@@ -57,8 +57,7 @@
     [super setUp];
     self.pushChannelNotifications = [NSMutableArray array];
     
-    self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com"
-                                                          userIdentifier:NSUUID.createUUID];
+    self.cookieStorage = [[FakeCookieStorage alloc] init];
     self.mockPushChannel = [[MockPushChannel alloc] init];
     self.mockTransportSesssion = [[RecordingMockTransportSession alloc] initWithCookieStorage:self.cookieStorage
                                                                                   pushChannel:self.mockPushChannel];
