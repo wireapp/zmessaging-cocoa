@@ -400,8 +400,8 @@
     // when we add connection requests from remote users to the selfuser
     {
         [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
-            [self addConnectionRequestInMockTransportsession:session forUser:mockUser1];
-            [self addConnectionRequestInMockTransportsession:session forUser:mockUser2];
+            [self addConnectionRequestInMockTransportsession:(MockTransportSession<MockTransportSessionObjectCreation> *)session forUser:mockUser1];
+            [self addConnectionRequestInMockTransportsession:(MockTransportSession<MockTransportSessionObjectCreation> *)session forUser:mockUser2];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
     }
