@@ -28,6 +28,8 @@ public protocol ThirdPartyServicesDelegate: NSObjectProtocol {
     
 }
 
+typealias UserSessionDelegate = UserSessionEncryptionAtRestDelegate
+
 @objcMembers
 public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     
@@ -128,8 +130,11 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         }
     }
     
-    public weak var sessionManager: SessionManagerType?
+    weak var delegate: UserSessionDelegate?
     
+    // TODO remove this property and move functionality to separate protocols under UserSessionDelegate
+    public weak var sessionManager: SessionManagerType?
+     
     public weak var thirdPartyServicesDelegate: ThirdPartyServicesDelegate?
     
     // MARK: - Tear down
@@ -199,7 +204,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.userExpirationObserver = UserExpirationObserver(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.debugCommands = ZMUserSession.initDebugCommands()
-        self.appLockController = AppLockController(config: configuration.appLockConfig)
+        self.appLockController = AppLockController(config: configuration.appLockConfig, selfUser: ZMUser.selfUser(in: storeProvider.contextDirectory.uiContext))
         super.init()
         
         ZMUserAgent.setWireAppVersion(appVersion)
@@ -277,13 +282,19 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     }
     
     private func createOperationLoop() -> ZMOperationLoop {
+        let strategyFactory = RequestStrategyFactory(contextDirectory: storeProvider.contextDirectory,
+                                                     applicationStatusDirectory: applicationStatusDirectory!,
+                                                     cookieStorage: transportSession.cookieStorage,
+                                                     pushMessageHandler: localNotificationDispatcher!,
+                                                     flowManager: flowManager,
+                                                     updateEventProcessor: self,
+                                                     localNotificationDispatcher: localNotificationDispatcher!)
+        
         let syncStrategy = ZMSyncStrategy(storeProvider: storeProvider,
-                                          cookieStorage: transportSession.cookieStorage,
-                                          flowManager: flowManager,
-                                          localNotificationsDispatcher: localNotificationDispatcher!,
                                           notificationsDispatcher: notificationDispatcher,
                                           applicationStatusDirectory: applicationStatusDirectory!,
-                                          application: application)
+                                          application: application,
+                                          requestStrategyFactory: strategyFactory)
         self.syncStrategy = syncStrategy
 
         return ZMOperationLoop(transportSession: transportSession,
@@ -515,4 +526,17 @@ extension ZMUserSession: URLActionProcessor {
     func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         urlActionProcessors?.forEach({ $0.process(urlAction: urlAction, delegate: delegate)} )
     }
+}
+
+// TODO jacob temporary solution while refactoring
+extension ZMUserSession: UpdateEventProcessor {
+    
+    public func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
+        syncStrategy?.storeUpdateEvents(updateEvents, ignoreBuffer: ignoreBuffer)
+    }
+    
+    public func storeAndProcessUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
+        syncStrategy?.storeAndProcessUpdateEvents(updateEvents, ignoreBuffer: ignoreBuffer)
+    }
+        
 }

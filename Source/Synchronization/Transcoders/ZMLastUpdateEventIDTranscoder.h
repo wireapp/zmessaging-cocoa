@@ -20,7 +20,6 @@
 @import Foundation;
 @import WireRequestStrategy;
 
-@protocol ZMObjectStrategyDirectory;
 @class SyncStatus;
 
 @interface ZMLastUpdateEventIDTranscoder : ZMAbstractRequestStrategy <ZMObjectStrategy>
@@ -31,8 +30,7 @@
 
 - (instancetype _Nonnull)initWithManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
                                     applicationStatus:(id<ZMApplicationStatus> _Nonnull)applicationStatus
-                                           syncStatus:(SyncStatus * _Nonnull)syncStatus
-                                      objectDirectory:(id<ZMObjectStrategyDirectory> _Nonnull)directory;
+                                           syncStatus:(SyncStatus * _Nonnull)syncStatus;
 
 
 - (void)startRequestingLastUpdateEventIDWithoutPersistingIt;

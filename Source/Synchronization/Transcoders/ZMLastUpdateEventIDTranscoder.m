@@ -20,14 +20,12 @@
 @import WireTransport;
 
 #import "ZMLastUpdateEventIDTranscoder+Internal.h"
-#import "ZMObjectStrategyDirectory.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 
 @interface ZMLastUpdateEventIDTranscoder ()
 
 @property (nonatomic) ZMSingleRequestSync *lastUpdateEventIDSync;
-@property (nonatomic, weak) id<ZMObjectStrategyDirectory> directory;
 @property (nonatomic) NSUUID *lastUpdateEventID;
 @property (nonatomic, weak) SyncStatus *syncStatus;
 
@@ -39,12 +37,10 @@
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                            applicationStatus:(id<ZMApplicationStatus>)applicationStatus
                                   syncStatus:(SyncStatus *)syncStatus
-                             objectDirectory:(id<ZMObjectStrategyDirectory>)directory;
 {
     self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatus];
     if(self) {
         self.syncStatus = syncStatus;
-        self.directory = directory;
         self.lastUpdateEventIDSync = [[ZMSingleRequestSync alloc] initWithSingleRequestTranscoder:self groupQueue:moc];
     }
     return self;
@@ -64,8 +60,7 @@
 - (void)persistLastUpdateEventID
 {
     if(self.lastUpdateEventID != nil) {
-        ZMMissingUpdateEventsTranscoder *noteSync = [self.directory missingUpdateEventsTranscoder];
-        noteSync.lastUpdateEventID = self.lastUpdateEventID;
+        self.managedObjectContext.zm_lastNotificationID = self.lastUpdateEventID;
     }
     self.lastUpdateEventID = nil;
 }

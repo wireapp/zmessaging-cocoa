@@ -21,45 +21,38 @@
 @import Foundation;
 @import WireRequestStrategy;
 
-#import "ZMObjectStrategyDirectory.h"
 #import "ZMUpdateEventsBuffer.h"
 
 @class ZMTransportRequest;
-@class ZMPushChannelConnection;
-@class ZMAuthenticationStatus;
 @class LocalNotificationDispatcher;
-@class UserProfileUpdateStatus;
-@class ProxiedRequestsStatus;
-@class ZMClientRegistrationStatus;
-@class ClientUpdateStatus;
-@class BackgroundAPNSPingBackStatus;
-@class ZMAccountStatus;
 @class ApplicationStatusDirectory;
 @class CallingRequestStrategy;
 @class EventDecoder;
+@class ZMMissingUpdateEventsTranscoder;
+@class RequestStrategyFactory;
 
 @protocol ZMTransportData;
 @protocol ZMSyncStateDelegate;
-@protocol ZMBackgroundable;
 @protocol ApplicationStateOwner;
-@protocol FlowManagerType;
 @protocol ZMApplication;
 @protocol LocalStoreProviderProtocol;
 @protocol EventProcessingTrackerProtocol;
+@protocol RequestStrategyFactoryProtocol;
 
-@interface ZMSyncStrategy : NSObject <ZMObjectStrategyDirectory, TearDownCapable>
+@interface ZMSyncStrategy : NSObject <TearDownCapable>
 
 - (instancetype _Nonnull )initWithStoreProvider:(id<LocalStoreProviderProtocol> _Nonnull)storeProvider
-                                  cookieStorage:(ZMPersistentCookieStorage * _Nullable)cookieStorage
-                                    flowManager:(id<FlowManagerType> _Nonnull)flowManager
-                   localNotificationsDispatcher:(LocalNotificationDispatcher * _Nonnull)localNotificationsDispatcher
                         notificationsDispatcher:(NotificationDispatcher * _Nonnull)notificationsDispatcher
                      applicationStatusDirectory:(ApplicationStatusDirectory * _Nonnull)applicationStatusDirectory
-                                    application:(id<ZMApplication> _Nonnull)application;
+                                    application:(id<ZMApplication> _Nonnull)application
+                         requestStrategyFactory:(id<RequestStrategyFactoryProtocol> _Nonnull)requestStrategyFactory;
 
 - (void)didInterruptUpdateEventsStream;
 - (void)didEstablishUpdateEventsStream;
 - (void)applyHotFixes;
+
+/// process all events in the buffer
+- (void)processAllEventsInBuffer;
 
 - (ZMTransportRequest *_Nullable)nextRequest;
 
@@ -68,6 +61,7 @@
 @property (nonatomic, readonly, nonnull) NSManagedObjectContext *syncMOC;
 @property (nonatomic, weak, readonly, nullable) ApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic, readonly, nonnull) CallingRequestStrategy *callingRequestStrategy;
+@property (nonatomic, readonly, nonnull) ZMMissingUpdateEventsTranscoder *missingUpdateEventsTranscoder;
 @property (nonatomic, readonly, nonnull) EventDecoder *eventDecoder;
 @property (nonatomic, readonly, nonnull) ZMUpdateEventsBuffer *eventsBuffer;
 @property (nonatomic, readonly, nonnull) NSArray<id<ZMEventConsumer>> *eventConsumers;
