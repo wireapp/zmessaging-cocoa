@@ -151,7 +151,7 @@
     [self createSelfUserAndConversation];
     [self createExtraUsersAndConversations];
 
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         
         NSDate *selfConversationDate = [NSDate dateWithTimeIntervalSince1970:1400157817];
         NSDate *connection1Date = [NSDate dateWithTimeInterval:500 sinceDate:selfConversationDate];

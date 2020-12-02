@@ -41,7 +41,7 @@
     __block NSDictionary *conversationTransportData;
     
     __block NSString *convIdentifier;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
         conversationTransportData = (NSDictionary *)conversation.transportData;
         convIdentifier = conversation.identifier;
@@ -94,7 +94,7 @@
     __block NSDictionary *conversationTransportData;
     
     __block NSString *convIdentifier;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
         conversationTransportData = (NSDictionary *)conversation.transportData;
         convIdentifier = conversation.identifier;
