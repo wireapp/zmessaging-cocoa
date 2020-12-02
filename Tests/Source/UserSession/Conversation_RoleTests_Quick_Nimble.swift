@@ -10,73 +10,6 @@ import Quick
 import Nimble
 @testable import WireSyncEngine
 
-class ExampleClassToTest {
-    var didSomething: Bool = false
-    var didSomethingElse: Bool = false
-    
-    func doSomething(with user: String?) {
-        if let user = user {
-            didSomething = true
-            didSomethingElse = true
-        }
-    }
-}
-
-class QuickExampleTest: QuickSpec {
-    override func spec() {
-        var sut: ExampleClassToTest!
-        
-        beforeSuite {
-            sut = ExampleClassToTest()
-        }
-        
-        afterSuite {
-            sut = nil
-        }
-        
-        describe(".doSomething") {
-            var user: String?
-            
-            beforeEach {
-                sut.didSomething = false
-                sut.didSomethingElse = false
-            }
-            
-            context("when we have a user") {
-                beforeEach {
-                    user = "User"
-                    sut.doSomething(with: user)
-                }
-                
-                afterEach {
-                    user = nil
-                }
-                
-                it("does something and something else") {
-                    expect(sut.didSomething).to(beTrue())
-                    expect(sut.didSomethingElse).to(beTrue())
-                }
-                
-                it("does something") {
-                    expect(sut.didSomething).to(beTrue())
-                }
-                
-                it("does something else") {
-                    expect(sut.didSomethingElse).to(beTrue())
-                }
-            }
-            
-            context("when we don't have a user") {
-                it("does nothing") {
-                    sut.doSomething(with: user)
-                    
-                    expect(sut.didSomething).to(beFalse())
-                }
-            }
-        }
-    }
-}
-
 class Conversation_RoleTests_Quick_Nimble: QuickSpec {
     
     typealias Factory = WireSyncEngine.ConversationRoleRequestFactory
@@ -107,60 +40,149 @@ class Conversation_RoleTests_Quick_Nimble: QuickSpec {
             return self.contextDirectory!.uiContext
         }
         
-        describe(".requestForUpdatingParticipantRole") {
+        describe("requestForUpdatingParticipantRole") {
+            var user: ZMUser!
+            var conversation: ZMConversation!
+            var role: Role!
+            var request: ZMTransportRequest?
+            var result: VoidResult?
             
-            context("I don't have the required parameters") {
-                 it("should fail") {}
+            beforeEach {
+                user = ZMUser.insertNewObject(in: uiMOC)
+                user.remoteIdentifier = UUID.create()
+                
+                conversation = ZMConversation.insertNewObject(in: uiMOC)
+                conversation.remoteIdentifier = UUID.create()
+                
+                role = Role.insertNewObject(in: uiMOC)
+                role.name = "wire_admin"
+            }
+            
+            afterEach {
+                user = nil
+                conversation = nil
+                role = nil
+            }
+            
+            it("fails when role name is missing") {
+                // GIVEN
+                role.name = nil
+                
+                // WHEN
+                request = Factory.requestForUpdatingParticipantRole(
+                    role,
+                    for: user,
+                    in: conversation,
+                    completion: {
+                        result = $0
+                })
+                
+                // THEN
+                expect(request).to(beNil())
+            }
+                
+            it("fails when user id is missing") {
+                // GIVEN
+                user.remoteIdentifier = nil
+               
+                // WHEN
+                request = Factory.requestForUpdatingParticipantRole(
+                    role,
+                    for: user,
+                    in: conversation,
+                    completion: {
+                        result = $0
+                })
+                
+                // THEN
+                expect(request).to(beNil())
+            }
+                
+            it("fails when conversation id is missing") {
+                // GIVEN
+                conversation.remoteIdentifier = nil
+                
+                // WHEN
+                request = Factory.requestForUpdatingParticipantRole(
+                    role,
+                    for: user,
+                    in: conversation,
+                    completion: {
+                        result = $0
+                })
+                
+                // THEN
+                expect(request).to(beNil())
             }
             
             context("inputs are valid") {
-                var user: ZMUser!
-                var conversation: ZMConversation!
-                var role: Role!
-                
                 beforeEach {
-                    user = ZMUser.insertNewObject(in: uiMOC)
-                    user.remoteIdentifier = UUID.create()
-                    
-                    conversation = ZMConversation.insertNewObject(in: uiMOC)
-                    conversation.remoteIdentifier = UUID.create()
-                    
-                    role = Role.insertNewObject(in: uiMOC)
-                    role.name = "wire_admin"
-                }
-                
-                it("return the correct request") {
-                    var result: VoidResult?
-                    
-                    guard let request = Factory.requestForUpdatingParticipantRole(role, for: user, in: conversation, completion: {
-                        result = $0
+                    request = Factory.requestForUpdatingParticipantRole(
+                        role,
+                        for: user,
+                        in: conversation,
+                        completion: {
+                            result = $0
                     })
-                    else {
-                        return fail("Could not create request")
-                    }
-                
-                    expect(result).toEventually(be(VoidResult.success))
-                    
-                    expect(request.path).to(equal("/conversations/\(conversation.remoteIdentifier!.transportString())/members/\(user.remoteIdentifier!.transportString())"))
-                    
-                    expect(request.method).to(equal(.methodPUT))
-                    expect(request.payload?.asDictionary() as? [String: String]).to(equal(["conversation_role": "wire_admin"]))
                 }
                 
-                context("request is completed") {
+                afterEach {
+                    request = nil
+                }
+                
+                it("returns the correct request") {
+                    expect(request?.path).to(equal("/conversations/\(conversation.remoteIdentifier!.transportString())/members/\(user.remoteIdentifier!.transportString())"))
+                    
+                    expect(request?.method).to(equal(.methodPUT))
+                    expect(request?.payload?.asDictionary() as? [String: String]).to(equal(["conversation_role": "wire_admin"]))
+                }
+                
+                context("response status is successful") {
+                    beforeEach {
+                        request?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
+                    }
+                    
                     it("completes with success") {
-                        
+                        testCompletionResult(isSuccess: true)
                     }
                     
-                    it("updates participant roles in Database") {
+                    it("updates participant roles in database") {
+                        expect(
+                            user.participantRoles.first { $0.conversation == conversation }?.role
+                        ).toEventually(equal(role))
                     }
                 }
-                
-                context("the response status is not sucessful") {
+               
+                context("response status is not sucessful") {
+                    beforeEach {
+                        request?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 400, transportSessionError: nil))
+                    }
                     
                     it("completes with failure") {
-                        
+                       testCompletionResult(isSuccess: false)
                     }
+                    
+                    it("does not update database") {
+                        expect(user.participantRoles).toEventually(beEmpty())
+                    }
+                }
+                
+                func testCompletionResult(isSuccess: Bool) {
+                    expect({
+                        let block: (Bool) -> (() -> (ToSucceedResult)) = { isSuccess in
+                            return { isSuccess ? .succeeded : .failed(reason: "wrong enum case") }
+                        }
+                        
+                        guard let result = result else {
+                            return { .failed(reason: "result is nil") }
+                        }
+                        switch result {
+                        case .success:
+                            return block(isSuccess)
+                        case .failure:
+                            return block(!isSuccess)
+                        }
+                    }).toEventually(succeed())
                 }
             }
         }
