@@ -354,10 +354,10 @@
 - (void)testThatItSendsANotificationWhenClosingThePushChannelAndRemovingConsumers
 {
     // given
-    id fakeResponse = [OCMockObject niceMockForClass:[NSHTTPURLResponse class]];
+    NSHTTPURLResponse *response = [[NSHTTPURLResponse alloc] init];
     
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:(ZMPushChannelConnection *)self.mockPushChannel withResponse:fakeResponse error:nil];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:(ZMPushChannelConnection *)self.mockPushChannel withResponse:response error:nil];
     
     // then
     XCTAssertEqual(self.pushChannelNotifications.count, 1u);
@@ -368,10 +368,10 @@
 - (void)testThatItSendsANotificationWhenOpeningThePushChannel
 {
     // given
-    id fakeResponse = [OCMockObject niceMockForClass:[NSHTTPURLResponse class]];
+    NSHTTPURLResponse *response = [[NSHTTPURLResponse alloc] init];
 
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:(ZMPushChannelConnection *)self.mockPushChannel withResponse:fakeResponse];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:(ZMPushChannelConnection *)self.mockPushChannel withResponse:response];
     
     // then
     XCTAssertEqual(self.pushChannelNotifications.count, 1u);
