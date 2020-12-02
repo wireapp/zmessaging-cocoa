@@ -62,7 +62,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
     var urlActionProcessors: [URLActionProcessor]?
     let debugCommands: [String: DebugCommand]
     
-    public var appLockController: AppLockController
+    public var appLockController: AppLockType
     
     public var hasCompletedInitialSync: Bool = false
     
