@@ -267,6 +267,7 @@
     return hasAllMessages;
 }
 
+/*
 - (void)testThatItAppendsMessageToConversation:(MockConversation *)mockConversation
                                      withBlock:(NSArray *(^)(MockTransportSession<MockTransportSessionObjectCreation> *session))appendMessages
                                         verify:(void(^)(ZMConversation *))verifyConversation
@@ -301,6 +302,6 @@
     verifyConversation(conversation);
     
 }
-
+*/
 @end
 
