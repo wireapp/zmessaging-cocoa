@@ -348,7 +348,7 @@
     [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         [session simulatePushChannelClosed];
         [session removeMemberWithUser:self.selfUser fromTeam:mockTeam];
-        [session saveAndCreatePushChannelEvents]; // clears the team.member-leave event from the push channel events
+        [(MockTransportSession *)session saveAndCreatePushChannelEvents]; // clears the team.member-leave event from the push channel events
         [session simulatePushChannelOpened];
     }];
     WaitForAllGroupsToBeEmpty(0.5);

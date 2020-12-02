@@ -1079,7 +1079,7 @@
     
     // (3) remove inserted client for user1
     {
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *__unused session) {
+        [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation>  _Nonnull __strong __unused session) {
             [self.user1.clients removeObject:additionalUserClient];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
@@ -1257,7 +1257,7 @@
     
     // when
     [self performIgnoringZMLogError:^{
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
+        [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation>  _Nonnull __strong __unused session) {
             [self.selfToUser1Conversation insertOTRMessageFromClient:self.user1.clients.anyObject
                                                             toClient:self.selfUser.clients.anyObject
                                                                 data:[@"😱" dataUsingEncoding:NSUTF8StringEncoding]];
@@ -1296,7 +1296,7 @@
     
     // when
     [self performIgnoringZMLogError:^{
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
+        [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation>  _Nonnull __strong __unused session) {
             [self.selfToUser1Conversation insertOTRMessageFromClient:self.user1.clients.anyObject
                                                             toClient:self.selfUser.clients.anyObject
                                                                 data:[@"😱" dataUsingEncoding:NSUTF8StringEncoding]];

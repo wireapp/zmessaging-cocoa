@@ -23,8 +23,8 @@
 @import WireUtilities;
 @import WireTesting;
 
-#import "MessagingTest.h"
-#import "ZMConversationTranscoder+Internal.h"
+//#import "MessagingTest.h"
+//#import "ZMConversationTranscoder+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ConversationTestsBase.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
@@ -206,7 +206,7 @@
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     [observer clearNotifications];
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * ZM_UNUSED session) {
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation>  _Nonnull __strong __unused session) {
         [self.groupConversation changeNameByUser:self.user3 name:newConversationName];
     }];
     
@@ -229,7 +229,7 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
-        [self.groupConversation addUsersByUser:session.selfUser addedUsers:@[self.user4]];
+        [self.groupConversation addUsersByUser:((MockTransportSession *)session).selfUser addedUsers:@[self.user4]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -251,7 +251,7 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
-        [self.groupConversation removeUsersByUser:session.selfUser removedUser:self.user3];
+        [self.groupConversation removeUsersByUser:((MockTransportSession *)session).selfUser removedUser:self.user3];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -274,7 +274,7 @@
     
     // when
     [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
-        [self.groupConversationWithServiceUser removeUsersByUser:session.selfUser removedUser:self.serviceUser];
+        [self.groupConversationWithServiceUser removeUsersByUser:((MockTransportSession *)session).selfUser removedUser:self.serviceUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -346,7 +346,7 @@
     
     ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation>  _Nonnull __strong __unused session) {
         [groupConversation addUsersByUser:self.user1 addedUsers:@[self.selfUser]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -715,7 +715,7 @@
 
     // when
     [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
-        block(session);
+        block(((MockTransportSession<MockTransportSessionObjectCreation> *)session));
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
