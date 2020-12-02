@@ -358,14 +358,14 @@
     NSString *phone = @"+99123456789";
     NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         self.selfUser.phone = phone;
         [session whiteListPhone:phone];
     }];
     
     BOOL success = [self loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code] ignoreAuthenticationFailures:NO];
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         NOT_USED(session);
         self.selfUser.email = nil;
         self.selfUser.password = nil;
@@ -400,7 +400,7 @@
     [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil]; // <- STEP 1
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         // simulate user click on email
         NOT_USED(session);
         self.selfUser.email = email;
@@ -481,7 +481,7 @@
     [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
     WaitForAllGroupsToBeEmpty(5);
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         // simulate user click on email
         NOT_USED(session);
         self.selfUser.email = email;

@@ -83,7 +83,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     // given
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         NOT_USED(session);
         self.selfUser.name = @"Self User";
         self.selfUser.email = email;
@@ -111,7 +111,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     // given
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         NOT_USED(session);
         self.selfUser.name = @"Self User";
         self.selfUser.email = email;
@@ -145,7 +145,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     // given
     NSString *phone = @"+4912345678900";
     NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         NOT_USED(session);
         self.selfUser.phone = phone;
     }];
@@ -179,7 +179,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     // given
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         NOT_USED(session);
         self.selfUser.name = @"Self User";
         self.selfUser.email = email;
@@ -223,7 +223,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
     __block MockUser *selfUser;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         selfUser = [session insertUserWithName:@"Self User"];
         selfUser.email = email;
         selfUser.password = password;
@@ -252,7 +252,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
     __block MockUser *selfUser;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         selfUser = [session insertUserWithName:@"Self User"];
         selfUser.email = email;
         selfUser.password = password;
@@ -297,7 +297,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     NSString *email = @"expected@example.com";
     NSString *password = @"valid-password-837246";
     __block MockUser *selfUser;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         selfUser = [session insertUserWithName:@"Self User"];
         selfUser.email = email;
         selfUser.password = password;
@@ -407,7 +407,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     // given
     NSString *phone = @"+4912345678900";
     NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         NOT_USED(session);
         self.selfUser.phone = phone;
     }];
@@ -470,7 +470,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 {
     // given
     NSString *phone = @"+4912345678900";
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         NOT_USED(session);
         self.selfUser.phone = phone;
     }];
@@ -536,7 +536,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     
     self.selfUser.phone = phone;
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         [session whiteListPhone:phone];
         self.selfUser.email = nil;
         self.selfUser.password = nil;
@@ -555,7 +555,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
                 [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
             }];
             
-            [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+            [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
                 // simulate user click on email
                 NOT_USED(session);
                 self.selfUser.email = email;
@@ -603,7 +603,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
     self.selfUser.phone = phone;
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         [session whiteListPhone:phone];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -670,7 +670,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
     
     // when we delete self client
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         MockUserClient *selfClient = self.selfUser.clients.anyObject;
         [session deleteUserClientWithIdentifier:selfClient.identifier forUser:self.selfUser];
     }];
@@ -693,7 +693,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     // given
     NSString *phone = @"+4912345678900";
     NSString *code = self.mockTransportSession.phoneVerificationCodeForLogin;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         NOT_USED(session);
         self.selfUser.phone = phone;
     }];
@@ -746,7 +746,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 {
     // given
     __block NSString *idToDelete;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         MockUserClient *client = [session registerClientForUser:self.selfUser];
         idToDelete = client.identifier;
     }];
