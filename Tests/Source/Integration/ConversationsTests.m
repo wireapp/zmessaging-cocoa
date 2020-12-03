@@ -23,8 +23,6 @@
 @import WireUtilities;
 @import WireTesting;
 
-#import "MessagingTest.h"
-#import "ZMConversationTranscoder+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "ConversationTestsBase.h"
 #import "WireSyncEngine_iOS_Tests-Swift.h"
@@ -206,7 +204,7 @@
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     [observer clearNotifications];
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * ZM_UNUSED session) {
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation>  _Nonnull __strong __unused session) {
         [self.groupConversation changeNameByUser:self.user3 name:newConversationName];
     }];
     
@@ -228,8 +226,8 @@
     XCTAssertNotNil(groupConversation);
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversation addUsersByUser:session.selfUser addedUsers:@[self.user4]];
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
+        [self.groupConversation addUsersByUser:((MockTransportSession *)session).selfUser addedUsers:@[self.user4]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -250,8 +248,8 @@
     XCTAssertTrue([groupConversation.localParticipants containsObject:user3]);
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversation removeUsersByUser:session.selfUser removedUser:self.user3];
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
+        [self.groupConversation removeUsersByUser:((MockTransportSession *)session).selfUser removedUser:self.user3];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -273,8 +271,8 @@
     XCTAssertTrue([groupConversation.localParticipants containsObject:bot]);
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversationWithServiceUser removeUsersByUser:session.selfUser removedUser:self.serviceUser];
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
+        [self.groupConversationWithServiceUser removeUsersByUser:((MockTransportSession *)session).selfUser removedUser:self.serviceUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
@@ -338,7 +336,7 @@
     XCTAssertTrue([self login]);
 
     __block MockConversation *groupConversation;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         groupConversation = [session insertConversationWithCreator:self.user3 otherUsers:@[self.user1, self.user2] type:ZMTConversationTypeGroup];
         [groupConversation changeNameByUser:self.selfUser name:@"Group conversation 2"];
     }];
@@ -346,7 +344,7 @@
     
     ZMConversationList *conversationList = [ZMConversationList conversationsInUserSession:self.userSession];
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> ZM_UNUSED *session) {
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation>  _Nonnull __strong __unused session) {
         [groupConversation addUsersByUser:self.user1 addedUsers:@[self.selfUser]];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -378,7 +376,7 @@
     ConversationListChangeObserver *convListener2 = [[ConversationListChangeObserver alloc] initWithConversationList:convList2];
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         NOT_USED(session);
         [session insertConversationWithSelfUser:self.selfUser creator:self.selfUser otherUsers:@[self.user1, self.user2] type:ZMTConversationTypeGroup];
     }];
@@ -445,7 +443,7 @@
     {
         // given
         NSDate *previousArchivedDate = [NSDate dateWithTimeIntervalSince1970:-1];
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
             // set last read
             NOT_USED(session);
             self.groupConversation.otrArchived = NO;
@@ -714,8 +712,8 @@
     }
 
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        block(session);
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
+        block(((MockTransportSession<MockTransportSessionObjectCreation> *)session));
     }];
     WaitForAllGroupsToBeEmpty(0.5);
 
@@ -797,7 +795,7 @@
     XCTAssertTrue(conversation.isArchived);
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         [session remotelyAcceptConnectionToUser:mockUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -843,7 +841,7 @@
     ZMConversationTranscoderListPageSize = 3;
     
     __block NSUInteger numberOfConversations;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         for(int i = 0; i < 10; ++i) {
             [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1, self.user2]];
         }
