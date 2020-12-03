@@ -20,7 +20,7 @@ import Foundation
 import WireRequestStrategy
 import XCTest
 
-public extension AssetRequestFactory {
+extension AssetRequestFactory {
     // We need this method for visibility in ObjC
     
     @objc(profileImageAssetRequestWithData:)
@@ -29,13 +29,62 @@ public extension AssetRequestFactory {
     }
 }
 
-class SlowSyncTests_Swift: IntegrationTest {
+final class SlowSyncTests_Swift: IntegrationTest {
     
     override func setUp() {
         super.setUp()
         createSelfUserAndConversation()
         createExtraUsersAndConversations()
     }
+    
+    func testThatItDoesASlowSyncAfterTheWebSocketWentDownAndNotificationsReturnsAnError() {
+        // given
+        XCTAssertTrue(login())
+    
+        mockTransportSession.resetReceivedRequests()
+    
+        // make /notifications fail
+        var hasNotificationsRequest = false
+        var hasConversationsRequest = false
+        var hasConnectionsRequest = false
+        var hasUserRequest = false
+    
+        mockTransportSession.responseGeneratorBlock = { request in
+            if request.path.hasPrefix("/notifications") {
+                if !(hasConnectionsRequest && hasConversationsRequest && hasUserRequest) {
+                    return ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil)
+                }
+                hasNotificationsRequest = true
+            }
+            if request.path.hasPrefix("/users") {
+                hasUserRequest = true
+            }
+            if request.path.hasPrefix("/conversations?ids=") {
+                hasConversationsRequest = true
+            }
+            if request.path.hasPrefix("/connections?size=") {
+                hasConnectionsRequest = true
+            }
+            return nil
+        }
+    
+        // when
+        mockTransportSession.performRemoteChanges({ session in
+            session.simulatePushChannelClosed()
+            session.simulatePushChannelOpened()
+        })
+        if !waitForAllGroupsToBeEmpty(withTimeout: 0.5) {
+            XCTFail("Timed out waiting for groups to empty.")
+        }
+
+        // then
+    
+        XCTAssert(hasNotificationsRequest)
+        XCTAssert(hasUserRequest)
+        XCTAssert(hasConversationsRequest)
+        XCTAssert(hasConnectionsRequest)
+    }
+
     
     func testThatItDoesAQuickSyncOnStarTupIfItHasReceivedNotificationsEarlier() {
         // GIVEN

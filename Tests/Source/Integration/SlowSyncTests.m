@@ -240,53 +240,6 @@
     XCTAssertTrue(hasNotificationsRequest);
 }
 
-- (void)testThatItDoesASlowSyncAfterTheWebSocketWentDownAndNotificationsReturnsAnError
-{
-    // given
-    XCTAssertTrue([self login]);
-    
-    [self.mockTransportSession resetReceivedRequests];
-
-    // make /notifications fail
-    __block BOOL hasNotificationsRequest = NO;
-    __block BOOL hasConversationsRequest = NO;
-    __block BOOL hasConnectionsRequest = NO;
-    __block BOOL hasUserRequest = NO;
-    
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        if([request.path hasPrefix:@"/notifications"]) {
-            if (!(hasConnectionsRequest && hasConversationsRequest && hasUserRequest)) {
-                return [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
-            }
-            hasNotificationsRequest = YES;
-        }
-        if ([request.path hasPrefix:@"/users"]) {
-            hasUserRequest = YES;
-        }
-        if ([request.path hasPrefix:@"/conversations?ids="]) {
-            hasConversationsRequest = YES;
-        }
-        if ([request.path hasPrefix:@"/connections?size="]) {
-            hasConnectionsRequest = YES;
-        }
-        return nil;
-    };
-    
-    // when
-    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
-        [session simulatePushChannelClosed];
-        [session simulatePushChannelOpened];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-
-    XCTAssertTrue(hasNotificationsRequest);
-    XCTAssertTrue(hasUserRequest);
-    XCTAssertTrue(hasConversationsRequest);
-    XCTAssertTrue(hasConnectionsRequest);
-}
-
 - (void)testThatTheUIIsNotifiedWhenTheSyncIsComplete
 {
     // given
