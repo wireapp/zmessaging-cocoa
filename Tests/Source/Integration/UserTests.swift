@@ -19,22 +19,22 @@
 import Foundation
 
 final class UserTests_swift: IntegrationTest {
-    
+
     override func setUp() {
         super.setUp()
-    
+
         createSelfUserAndConversation()
         createExtraUsersAndConversations()
     }
-    
+
     func testThatDisplayNameDoesNotChangesIfAUserWithADifferentNameIsAdded() {
         XCTAssertTrue(login())
-    
+
         // Create a conversation and change SelfUser name
-    
+
         let conversation = self.conversation(for: groupConversation)
         _ = conversation?.lastModifiedDate
-    
+
         weak var selfUser = ZMUser.selfUser(inUserSession: userSession!)
         userSession!.perform({
             selfUser?.name = "Super Name"
@@ -44,37 +44,36 @@ final class UserTests_swift: IntegrationTest {
         }
 
         XCTAssertEqual(selfUser?.name, "Super Name")
-    
+
         // initialize observers
-    
+
         let userObserver = UserChangeObserver(user: selfUser)
-    
+
         // when
         // add new user to groupConversation remotely
-    
+
         var extraUser: MockUser?
         mockTransportSession.performRemoteChanges({ [self] session in
             extraUser = session.insertUser(withName: "Max Tester")
             self.groupConversation.addUsers(by: self.selfUser, addedUsers: [extraUser!])
             XCTAssertNotNil(extraUser?.name)
         })
-        
+
         if !waitForAllGroupsToBeEmpty(withTimeout: 0.5) {
             XCTFail("Timed out waiting for groups to empty.")
         }
-    
+
         // then
-    
+
         let realUser = user(for: extraUser!)
         XCTAssertEqual(realUser?.name, "Max Tester")
         if let realUser = realUser {
             XCTAssert(((conversation?.localParticipants.contains(realUser)) != nil))
         }
-    
-    
+
         let userNotes = userObserver?.notifications
         XCTAssertEqual(userNotes!.count, 0)
-    
+
         XCTAssertEqual(realUser?.name, "Max Tester")
         XCTAssertEqual(selfUser?.name, "Super Name")
     }
