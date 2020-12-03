@@ -31,7 +31,7 @@ public protocol ThirdPartyServicesDelegate: NSObjectProtocol {
 typealias UserSessionDelegate = UserSessionEncryptionAtRestDelegate
 
 @objcMembers
-public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
+public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessionAppLockInterface {
     
     private let appVersion: String
     private var tokens: [Any] = []
@@ -63,7 +63,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var likeMesssageObserver: ManagedObjectContextChangeObserver?
     var urlActionProcessors: [URLActionProcessor]?
     let debugCommands: [String: DebugCommand]
-    let appLockController: AppLockController
+    
+    public var appLockController: AppLockType
     
     public var hasCompletedInitialSync: Bool = false
     
