@@ -129,7 +129,7 @@
     // add new user to groupConversation remotely
     
     __block MockUser *extraUser;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         extraUser = [session insertUserWithName:@"Max Tester"];
         [self.groupConversation addUsersByUser:self.selfUser addedUsers:@[extraUser]];
         XCTAssertNotNil(extraUser.name);

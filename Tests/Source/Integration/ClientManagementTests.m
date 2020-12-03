@@ -92,7 +92,7 @@
 
 - (void)insertTwoSelfClientsOnMockTransporSession
 {
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         MockUserClient *client1 = [session registerClientForUser:self.selfUser label:@"foobar" type:@"permanent" deviceClass:@"phone"];
         client1.time = [NSDate dateWithTimeIntervalSince1970:124535];
         client1.deviceClass = @"iPhone";
@@ -170,7 +170,7 @@
     
     // when
     __block MockUserClient *mockClient;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         mockClient = [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -200,7 +200,7 @@
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -231,7 +231,7 @@
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecure);
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -262,7 +262,7 @@
 
     UserClient *currentSelfClient = selfUser.selfClient;
     __block MockUserClient *mockClient;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         mockClient = [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -272,7 +272,7 @@
     UserChangeObserver *observer = [[UserChangeObserver alloc] initWithUser:selfUser];
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         [session deleteUserClientWithIdentifier:mockClient.identifier forUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
