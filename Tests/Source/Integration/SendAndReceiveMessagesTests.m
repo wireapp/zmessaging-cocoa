@@ -413,10 +413,10 @@
     XCTAssertNotEqual(groupConversation.displayName, newName);
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversation changeNameByUser:session.selfUser name:newName];
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
+        [self.groupConversation changeNameByUser:((MockTransportSession *)session).selfUser name:newName];
         [self spinMainQueueWithTimeout:0.2];
-        [self.groupConversation addUsersByUser:session.selfUser addedUsers:@[self.user4]];
+        [self.groupConversation addUsersByUser:((MockTransportSession *)session).selfUser addedUsers:@[self.user4]];
     }];
     WaitForAllGroupsToBeEmpty(0.1);
     
@@ -482,14 +482,14 @@
     XCTAssertNotEqual(groupConversation.displayName, newName1);
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversation changeNameByUser:session.selfUser name:newName1];
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
+        [self.groupConversation changeNameByUser:((MockTransportSession *)session).selfUser name:newName1];
     }];
     WaitForAllGroupsToBeEmpty(0.1);
     
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversation changeNameByUser:session.selfUser name:newName2];
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
+        [self.groupConversation changeNameByUser:((MockTransportSession *)session).selfUser name:newName2];
     }];
     WaitForAllGroupsToBeEmpty(0.1);
     

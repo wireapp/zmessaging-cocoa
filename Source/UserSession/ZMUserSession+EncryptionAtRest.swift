@@ -21,37 +21,50 @@ import LocalAuthentication
 import WireDataModel
 
 public protocol UserSessionEncryptionAtRestInterface {
-    var encryptMessagesAtRest: Bool { get set }
+    var encryptMessagesAtRest: Bool { get }
     var isDatabaseLocked: Bool { get }
     
+    func setEncryptionAtRest(enabled: Bool, skipMigration: Bool) throws
     func unlockDatabase(with context: LAContext) throws
     func registerDatabaseLockedHandler(_ handler: @escaping (_ isDatabaseLocked: Bool) -> Void) -> Any
 }
 
+protocol UserSessionEncryptionAtRestDelegate: class {
+    
+    func setEncryptionAtRest(enabled: Bool, account: Account, encryptionKeys: EncryptionKeys)
+    
+}
+
 extension ZMUserSession: UserSessionEncryptionAtRestInterface {
+
+    /// Enable or disable encryption at rest.
+    ///
+    /// When toggling encryption at rest the existing database needs to be migrated. The migration happens
+    /// asynchronously on the sync context and only after a successful migration is the feature toggled. In
+    /// the case that the migration fails, the sync context is reset to a clean state.
+    ///
+    /// - Parameters:
+    ///     - enabled: When **true**, messages will be encrypted at rest.
+    ///     - skipMigration: When **true**, existing messsages will not be migrated to be under encryption at rest. Defaults to **false**.
+    ///
+    /// - Throws: `MigrationError` if it's not possible to start the migration.
+
+    public func setEncryptionAtRest(enabled: Bool, skipMigration: Bool = false) throws {
+        guard enabled != encryptMessagesAtRest else { return }
+
+        let account = Account(userName: "", userIdentifier: storeProvider.userIdentifier)
+        let encryptionKeys = try storeProvider.contextDirectory.encryptionKeysForSettingEncryptionAtRest(enabled: enabled, account: account)
+        
+        if skipMigration {
+            try managedObjectContext.enableEncryptionAtRest(encryptionKeys: encryptionKeys, skipMigration: true)
+        } else {
+            delegate?.setEncryptionAtRest(enabled: enabled,
+                                          account: account,
+                                          encryptionKeys: encryptionKeys)
+        }
+    }
     
     public var encryptMessagesAtRest: Bool {
-        
-        set {
-            do {
-                
-                let account = Account(userName: "", userIdentifier: storeProvider.userIdentifier)
-
-                try EncryptionKeys.deleteKeys(for: account)
-                storeProvider.contextDirectory.clearEncryptionKeysInAllContexts()
-
-                if newValue {
-                    let keys = try EncryptionKeys.createKeys(for: account)
-                    storeProvider.contextDirectory.storeEncryptionKeysInAllContexts(encryptionKeys: keys)
-                }
-                
-                managedObjectContext.encryptMessagesAtRest = newValue
-                managedObjectContext.saveOrRollback()
-            } catch {
-                Logging.EAR.error("Failed to enabling/disabling database encryption")
-            }
-        }
-        
         get {
             return managedObjectContext.encryptMessagesAtRest
         }

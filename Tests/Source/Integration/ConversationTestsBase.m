@@ -151,7 +151,7 @@
     [self createSelfUserAndConversation];
     [self createExtraUsersAndConversations];
 
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         
         NSDate *selfConversationDate = [NSDate dateWithTimeIntervalSince1970:1400157817];
         NSDate *connection1Date = [NSDate dateWithTimeInterval:500 sinceDate:selfConversationDate];
@@ -192,7 +192,7 @@
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     [observer clearNotifications];
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation>  _Nonnull __strong __unused session) {
         createMessage();
     }];
     
@@ -245,7 +245,7 @@
     ConversationChangeObserver *observer = [[ConversationChangeObserver alloc] initWithConversation:conversation];
     [observer clearNotifications];
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
+    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation>  _Nonnull __strong __unused session) {
         createMessage();
     }];
     
@@ -292,8 +292,8 @@
     };
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * session) {
-        messsagesNonces = appendMessages(session);
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
+        messsagesNonces = appendMessages(((MockTransportSession<MockTransportSessionObjectCreation> *)session));
     }];
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
     

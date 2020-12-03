@@ -197,7 +197,7 @@
     XCTAssertTrue([self login]);
     
     //register other users clients
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         for(int i = 0; i < 7; ++i) {
             MockUser *user = [session insertUserWithName:[NSString stringWithFormat:@"TestUser %d", i+1]];
             user.email = [NSString stringWithFormat:@"user%d@example.com", i+1];
@@ -398,7 +398,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         NOT_USED(session);
         [self.groupConversationWithOnlyConnected addUsersByUser:self.user1 addedUsers:@[self.user5]];
     }];
@@ -413,7 +413,7 @@
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         MockConversation *selfToUser5Conversation = [session insertOneOnOneConversationWithSelfUser:self.selfUser otherUser:self.user5];
         selfToUser5Conversation.creator = self.selfUser;
         MockConnection *connectionSelfToUser5 = [session insertConnectionWithSelfUser:self.selfUser toUser:self.user5];
@@ -495,7 +495,7 @@
     [self makeConversationSecured:conversation];
     
     //when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         [session registerClientForUser:self.user1];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -894,7 +894,7 @@
     // given
     XCTAssertTrue([self login]);
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -950,7 +950,7 @@
     // given
     XCTAssertTrue([self login]);
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1050,7 +1050,7 @@
     __block MockUserClient *additionalUserClient;
     // (2) insert new client for user 1
     {
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
             additionalUserClient = [session registerClientForUser:self.user1];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
@@ -1079,7 +1079,7 @@
     
     // (3) remove inserted client for user1
     {
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *__unused session) {
+        [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation>  _Nonnull __strong __unused session) {
             [self.user1.clients removeObject:additionalUserClient];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
@@ -1111,7 +1111,7 @@
     // given
     XCTAssertTrue([self login]);
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         [session registerClientForUser:self.selfUser];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1153,7 +1153,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         // this creates an extra client for self user
         [session registerClientForUser:self.selfUser];
     }];
@@ -1209,7 +1209,7 @@
     ZMUser *user1 = [self userForMockUser:self.user1];
     
     // add additional client for user1 remotely
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         [session registerClientForUser:self.user1];
     }];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -1257,7 +1257,7 @@
     
     // when
     [self performIgnoringZMLogError:^{
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
+        [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation>  _Nonnull __strong __unused session) {
             [self.selfToUser1Conversation insertOTRMessageFromClient:self.user1.clients.anyObject
                                                             toClient:self.selfUser.clients.anyObject
                                                                 data:[@"😱" dataUsingEncoding:NSUTF8StringEncoding]];
@@ -1296,7 +1296,7 @@
     
     // when
     [self performIgnoringZMLogError:^{
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> * __unused session) {
+        [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation>  _Nonnull __strong __unused session) {
             [self.selfToUser1Conversation insertOTRMessageFromClient:self.user1.clients.anyObject
                                                             toClient:self.selfUser.clients.anyObject
                                                                 data:[@"😱" dataUsingEncoding:NSUTF8StringEncoding]];

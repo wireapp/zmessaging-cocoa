@@ -256,3 +256,56 @@ public class MockSyncStatus : SyncStatus {
 
     fileprivate(set) var failedToSend: [ZMMessage] = []
 }
+
+@objcMembers public class MockEventConsumer: NSObject, ZMEventConsumer {
+    
+    public var eventsProcessed: [ZMUpdateEvent] = []
+    public var processEventsCalled: Bool = false
+    public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
+        processEventsCalled = true
+        eventsProcessed.append(contentsOf: events)
+    }
+    
+    public var eventsProcessedWhileInBackground: [ZMUpdateEvent] = []
+    public var processEventsWhileInBackgroundCalled: Bool = false
+    public func processEventsWhileInBackground(_ events: [ZMUpdateEvent]) {
+        processEventsWhileInBackgroundCalled = true
+        eventsProcessedWhileInBackground.append(contentsOf: events)
+    }
+    
+    public var messageNoncesToPrefetchCalled: Bool = false
+    public func messageNoncesToPrefetch(toProcessEvents events: [ZMUpdateEvent]) -> Set<UUID> {
+        messageNoncesToPrefetchCalled = true
+        
+        return Set(events.compactMap(\.messageNonce))
+    }
+    
+    public var conversationRemoteIdentifiersToPrefetchCalled: Bool = false
+    public func conversationRemoteIdentifiersToPrefetch(toProcessEvents events: [ZMUpdateEvent]) -> Set<UUID> {
+        conversationRemoteIdentifiersToPrefetchCalled = true
+        
+        return Set(events.compactMap(\.conversationUUID))
+    }
+    
+}
+
+@objcMembers public class MockContextChangeTracker: NSObject, ZMContextChangeTracker {
+    
+    public var objectsDidChangeCalled: Bool = false
+    public func objectsDidChange(_ object: Set<NSManagedObject>) {
+        objectsDidChangeCalled = true
+    }
+    
+    public var fetchRequest: NSFetchRequest<NSFetchRequestResult>?
+    public var fetchRequestForTrackedObjectsCalled: Bool = false
+    public func fetchRequestForTrackedObjects() -> NSFetchRequest<NSFetchRequestResult>? {
+        fetchRequestForTrackedObjectsCalled = true
+        return fetchRequest
+    }
+    
+    public var addTrackedObjectsCalled = false
+    public func addTrackedObjects(_ objects: Set<NSManagedObject>) {
+        addTrackedObjectsCalled = true
+    }
+    
+}

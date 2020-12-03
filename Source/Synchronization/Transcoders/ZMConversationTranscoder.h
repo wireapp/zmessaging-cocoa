@@ -23,8 +23,6 @@
 
 extern NSString * const ConversationsPath;
 
-@protocol ZMObjectStrategyDirectory;
-
 @class ZMAuthenticationStatus;
 @class SyncStatus;
 

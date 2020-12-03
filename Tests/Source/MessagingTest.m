@@ -34,8 +34,6 @@
 #import "ZMTimingTests.h"
 #import "MockModelObjectContextFactory.h"
 
-#import "ZMObjectStrategyDirectory.h"
-
 #import "ZMUserTranscoder.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMSelfStrategy.h"
@@ -376,29 +374,6 @@ static ZMReachability *sharedReachabilityMock = nil;
 
     self.uiMOC.zm_fileAssetCache = fileAssetCache;
     self.uiMOC.zm_userImageCache = userImageCache;
-}
-
-- (id<ZMObjectStrategyDirectory>)createMockObjectStrategyDirectoryInMoc:(NSManagedObjectContext *)moc;
-{
-    id objectDirectory = [OCMockObject mockForProtocol:@protocol(ZMObjectStrategyDirectory)];
-    
-    id conversationTranscoder = [OCMockObject mockForClass:ZMConversationTranscoder.class];
-    [self verifyMockLater:conversationTranscoder];
-    id clientMessageTranscoder = [OCMockObject mockForClass:ClientMessageTranscoder.class];
-    [self verifyMockLater:clientMessageTranscoder];
-    id selfStrategy = [OCMockObject mockForClass:ZMSelfStrategy.class];
-    [self verifyMockLater:selfStrategy];
-    id missingUpdateEventsTranscoder = [OCMockObject mockForClass:ZMMissingUpdateEventsTranscoder.class];
-    [self verifyMockLater:missingUpdateEventsTranscoder];
-    
-    [[[objectDirectory stub] andReturn:clientMessageTranscoder] clientMessageTranscoder];
-    [[[objectDirectory stub] andReturn:selfStrategy] selfStrategy];
-    [[[objectDirectory stub] andReturn:missingUpdateEventsTranscoder] missingUpdateEventsTranscoder];
-    
-    [[[objectDirectory stub] andReturn:moc] moc];
-    [self verifyMockLater:objectDirectory];
-
-    return objectDirectory;
 }
 
 - (BOOL)waitWithTimeout:(NSTimeInterval)timeout forSaveOfContext:(NSManagedObjectContext *)moc untilBlock:(BOOL(^)(void))block;
