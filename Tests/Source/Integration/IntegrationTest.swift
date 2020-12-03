@@ -628,19 +628,7 @@ extension IntegrationTest {
 
 extension IntegrationTest: SessionManagerDelegate {
     
-    public func sessionManagerDidFailToLogin(error: Error) {
-        // no op
-    }
-    
-    public func sessionManagerDidFailToFetchUserIdentifier() {
-        // no op
-    }
-    
-    public func sessionManagerDidFailLoadSession(error: Error) {
-        // no op
-    }
-    
-    public func sessionManagerDidFailToRegisterClient(error: Error) {
+    public func sessionManagerDidFailToLogin(error: Error?) {
         // no op
     }
     

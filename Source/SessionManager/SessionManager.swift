@@ -40,10 +40,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 }
 
 @objc public protocol SessionManagerDelegate : SessionActivationObserver {
-    func sessionManagerDidFailToLogin(error: Error)
-    func sessionManagerDidFailToFetchUserIdentifier()
-    func sessionManagerDidFailLoadSession(error: Error)
-    func sessionManagerDidFailToRegisterClient(error: Error)
+    func sessionManagerDidFailToLogin(error: Error?)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: (() -> Void)?)
     func sessionManagerWillOpenAccount(_ account: Account,
                                        from selectedAccount: Account?,
@@ -458,7 +455,7 @@ public final class SessionManager : NSObject, SessionManagerType {
                 completion: { [weak self] userIdentifier in
                     guard let strongSelf = self, let userIdentifier = userIdentifier else {
                         self?.createUnauthenticatedSession()
-                        self?.delegate?.sessionManagerDidFailToFetchUserIdentifier()
+                        self?.delegate?.sessionManagerDidFailToLogin(error: nil)
                         return
                     }
                     let account = strongSelf.migrateAccount(with: userIdentifier)
@@ -635,7 +632,7 @@ public final class SessionManager : NSObject, SessionManagerType {
                 guard account == accountManager.selectedAccount else { return }
                 let error = NSError(code: .accessTokenExpired,
                                     userInfo: account.loginCredentials?.dictionaryRepresentation)
-                delegate?.sessionManagerDidFailLoadSession(error: error)
+                delegate?.sessionManagerDidFailToLogin(error: error)
             }
             
             return
@@ -1071,7 +1068,7 @@ extension SessionManager: PostLoginAuthenticationObserver {
         
         let account = accountManager.account(with: accountId)
         guard account == accountManager.selectedAccount else { return }
-        delegate?.sessionManagerDidFailToRegisterClient(error: error)
+        delegate?.sessionManagerDidFailToLogin(error: error)
     }
     
     public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
