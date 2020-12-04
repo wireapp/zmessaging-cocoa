@@ -39,7 +39,7 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
     func sessionManagerDidReportDatabaseLockChange(isLocked: Bool)
 }
 
-@objc public protocol SessionManagerDelegate : SessionActivationObserver {
+@objc public protocol SessionManagerDelegate: SessionActivationObserver {
     func sessionManagerDidFailToLogin(error: Error?)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: (() -> Void)?)
     func sessionManagerWillOpenAccount(_ account: Account,
@@ -629,7 +629,6 @@ public final class SessionManager : NSObject, SessionManagerType {
             } else {
                 createUnauthenticatedSession(accountId: account.userIdentifier)
                 
-                guard account == accountManager.selectedAccount else { return }
                 let error = NSError(code: .accessTokenExpired,
                                     userInfo: account.loginCredentials?.dictionaryRepresentation)
                 delegate?.sessionManagerDidFailToLogin(error: error)
