@@ -20,6 +20,11 @@ import Foundation
 import WireTransport
 import UIKit
 
+public protocol NotificationSettingsRegistrable {
+    /// To determine if notification settings should be registered
+    var shouldRegisterUserNotificationSettings : Bool { get }
+}
+
 /// An abstraction of the application (UIApplication, NSApplication)
 @objc public protocol ZMApplication : NSObjectProtocol {
     
@@ -28,10 +33,7 @@ import UIKit
     
     /// Badge count
     var applicationIconBadgeNumber : Int { get set }
-    
-    /// To determine if notification settings should be registered
-    @objc optional var shouldRegisterUserNotificationSettings : Bool { get }
-    
+        
     /// Register for remote notification
     func registerForRemoteNotifications()
     
