@@ -30,16 +30,18 @@ public struct CallParticipant: Hashable {
     public let user: ZMUser
     public let clientId: String
     public let state: CallParticipantState
-
-    public init(user: ZMUser, clientId: String, state: CallParticipantState) {
+    public let audioLevel: Int
+    
+    public init(user: ZMUser, clientId: String, state: CallParticipantState, audioLevel: Int) {
         self.user = user
         self.clientId = clientId
         self.state = state
+        self.audioLevel = audioLevel
     }
 
-    init?(member: AVSCallMember, context: NSManagedObjectContext) {
+    init?(member: AVSCallMember, audioLevel: Int = 0, context: NSManagedObjectContext) {
         guard let user = ZMUser(remoteID: member.client.userId, createIfNeeded: false, in: context) else { return nil }
-        self.init(user: user, clientId: member.client.clientId, state: member.callParticipantState)
+        self.init(user: user, clientId: member.client.clientId, state: member.callParticipantState, audioLevel: audioLevel)
     }
 
     // MARK: - Hashable

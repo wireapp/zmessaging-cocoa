@@ -19,6 +19,38 @@
 import Foundation
 import avs
 
+public struct AVSActiveSpeakersChange: Codable {
+    let audioLevels: [AudioLevel]
+    
+    public struct AudioLevel: Codable {
+        let userId: UUID
+        let clientId: String
+        let audioLevel: Int
+        
+        enum CodingKeys: String, CodingKey {
+            case userId = "userid"
+            case clientId = "clientid"
+            case audioLevel = "audio_level"
+        }
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case audioLevels = "audio_levels"
+    }
+}
+
+public struct AVSAudioLevel {
+    let client: AVSClient
+    let audioLevel: Int
+}
+
+extension AVSAudioLevel {
+    init(audioLevel: AVSActiveSpeakersChange.AudioLevel) {
+        self.client = AVSClient(userId: audioLevel.userId, clientId: audioLevel.clientId)
+        self.audioLevel = audioLevel.audioLevel
+    }
+}
+
 public struct AVSParticipantsChange: Codable {
 
     let convid: UUID

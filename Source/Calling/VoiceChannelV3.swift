@@ -252,4 +252,8 @@ extension VoiceChannelV3 : CallObservers {
     public func addMuteStateObserver(_ observer: MuteStateObserver) -> Any {
         return WireCallCenterV3.addMuteStateObserver(observer: observer, context: conversation!.managedObjectContext!)
     }
+
+    public func addActiveSpeakersObserver(_ observer: ActiveSpeakersObserver) -> Any {
+        return WireCallCenterV3.addActiveSpeakersObserver(observer: observer, context: conversation!.managedObjectContext!)
+    }
 }

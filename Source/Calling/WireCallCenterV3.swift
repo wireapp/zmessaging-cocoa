@@ -184,6 +184,7 @@ extension WireCallCenterV3 {
             networkQuality: .normal,
             isConferenceCall: isConferenceCall,
             degradedUser: nil,
+            audioLevels: [],
             conversationObserverToken: token
         )
     }
@@ -324,13 +325,17 @@ extension WireCallCenterV3 {
     func callParticipants(conversationId: UUID) -> [CallParticipant] {
         guard
             let context = uiMOC,
-            let callParticipants = callSnapshots[conversationId]?.callParticipants
+            let callParticipants = callSnapshots[conversationId]?.callParticipants,
+            let audioLevels = callSnapshots[conversationId]?.audioLevels
         else {
             return []
         }
-        
-        return callParticipants.members.array.compactMap {
-            CallParticipant(member: $0, context: context)
+        return callParticipants.members.array.compactMap { member in
+            let audioLevel = audioLevels.first {
+                member.client == $0.client
+            }?.audioLevel ?? 0
+            
+            return CallParticipant(member: member, audioLevel: audioLevel, context: context)
         }
     }
 

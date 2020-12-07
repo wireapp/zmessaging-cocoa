@@ -104,6 +104,8 @@ public protocol CallObservers : NSObjectProtocol {
     /// Add observer of the mute state. Returns a token which needs to be retained as long as the observer should be active.
     func addMuteStateObserver(_ observer: MuteStateObserver) -> Any
 
+    func addActiveSpeakersObserver(_ observer: ActiveSpeakersObserver) -> Any
+
     /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.
     static func addCallStateObserver(_ observer: WireCallCenterCallStateObserver, userSession: ZMUserSession) -> Any
 }

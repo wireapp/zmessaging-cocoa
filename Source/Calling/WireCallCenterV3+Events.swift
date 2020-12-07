@@ -324,6 +324,26 @@ extension WireCallCenterV3 {
             self.sendSFT(token: token, url: url, data: data)
         }
     }
+    
+    func handleActiveSpeakersChange(conversationId: UUID, data: String) {
+        handleEventInContext("active-speakers-change") {
+            guard let data = data.data(using: .utf8) else {
+                zmLog.safePublic("Invalid active speakers data")
+                return
+            }
+            do {
+                let change = try JSONDecoder().decode(AVSActiveSpeakersChange.self, from: data)
+                if let call = self.callSnapshots[conversationId] {
+                    let audioLevels = change.audioLevels.map {AVSAudioLevel(audioLevel: $0)}
+                    self.callSnapshots[conversationId] = call.update(with: audioLevels)
+                    WireCallCenterActiveSpeakersNotification().post(in: $0.notificationContext)
+                }
+            }
+            catch {
+                zmLog.safePublic("Cannot decode active speakers change JSON")
+            }
+        }
+    }
 }
 
 private extension Set where Element == ZMUser {
