@@ -27,11 +27,11 @@ private let zmLog = ZMSLog(tag: "calling")
 
 public struct CallParticipant: Hashable {
     
-    public let user: ZMUser
+    public let user: UserType
     public let clientId: String
     public let state: CallParticipantState
 
-    public init(user: ZMUser, clientId: String, state: CallParticipantState) {
+    public init(user: UserType, clientId: String, state: CallParticipantState) {
         self.user = user
         self.clientId = clientId
         self.state = state
@@ -44,8 +44,16 @@ public struct CallParticipant: Hashable {
 
     // MARK: - Hashable
 
+    public static func == (lhs: CallParticipant, rhs: CallParticipant) -> Bool {
+        return (lhs.user as? NSObject) == (rhs.user as? NSObject) && lhs.clientId == rhs.clientId && lhs.state == rhs.state
+    }
+
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(user.remoteIdentifier)
+        if let zmuser = user as? ZMUser {
+            hasher.combine(zmuser.remoteIdentifier)
+        } else {
+            hasher.combine((user as? NSObject)?.hashValue)
+        }
         hasher.combine(clientId)
     }
 
