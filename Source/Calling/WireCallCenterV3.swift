@@ -338,6 +338,29 @@ extension WireCallCenterV3 {
             return CallParticipant(member: member, audioLevel: audioLevel, context: context)
         }
     }
+    
+    func callParticipants(conversationId: UUID, activeSpeakersLimit limit: Int) -> [CallParticipant] {
+        guard
+            let context = uiMOC,
+            let callMembers = callSnapshots[conversationId]?.callParticipants.members.array,
+            let audioLevels = callSnapshots[conversationId]?.audioLevels.prefix(limit)
+        else { return [] }
+        
+        let activeParticipants: [CallParticipant] = audioLevels.compactMap { audioLevel in
+            guard let member = callMembers.first(where: { audioLevel.client == $0.client }) else {
+                return nil
+            }
+            return CallParticipant(member: member, audioLevel: audioLevel.audioLevel, context: context)
+        }
+        
+        let remainingParticipants = callMembers.filter { member in
+            return !activeParticipants.contains(where: { $0.clientId == member.client.clientId })
+        }.compactMap {
+            return CallParticipant(member: $0, context: context)
+        }
+
+        return activeParticipants + remainingParticipants
+    }
 
     /// Returns the remote identifier of the user that initiated the call.
     func initiatorForCall(conversationId: UUID) -> UUID? {
