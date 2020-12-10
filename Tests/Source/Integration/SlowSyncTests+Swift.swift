@@ -20,27 +20,75 @@ import Foundation
 import WireRequestStrategy
 import XCTest
 
-public extension AssetRequestFactory {
+extension AssetRequestFactory {
     // We need this method for visibility in ObjC
-    
+
     @objc(profileImageAssetRequestWithData:)
     func profileImageAssetRequest(with data: Data) -> ZMTransportRequest? {
         return upstreamRequestForAsset(withData: data, shareable: true, retention: .eternal)
     }
 }
 
-class SlowSyncTests_Swift: IntegrationTest {
-    
+final class SlowSyncTests_Swift: IntegrationTest {
+
     override func setUp() {
         super.setUp()
         createSelfUserAndConversation()
         createExtraUsersAndConversations()
     }
-    
+
+    func testThatItDoesASlowSyncAfterTheWebSocketWentDownAndNotificationsReturnsAnError() {
+        // given
+        XCTAssertTrue(login())
+
+        mockTransportSession.resetReceivedRequests()
+
+        // make /notifications fail
+        var hasNotificationsRequest = false
+        var hasConversationsRequest = false
+        var hasConnectionsRequest = false
+        var hasUserRequest = false
+
+        mockTransportSession.responseGeneratorBlock = { request in
+            if request.path.hasPrefix("/notifications") {
+                if !(hasConnectionsRequest && hasConversationsRequest && hasUserRequest) {
+                    return ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil)
+                }
+                hasNotificationsRequest = true
+            }
+            if request.path.hasPrefix("/users") {
+                hasUserRequest = true
+            }
+            if request.path.hasPrefix("/conversations?ids=") {
+                hasConversationsRequest = true
+            }
+            if request.path.hasPrefix("/connections?size=") {
+                hasConnectionsRequest = true
+            }
+            return nil
+        }
+
+        // when
+        mockTransportSession.performRemoteChanges({ session in
+            session.simulatePushChannelClosed()
+            session.simulatePushChannelOpened()
+        })
+        if !waitForAllGroupsToBeEmpty(withTimeout: 0.5) {
+            XCTFail("Timed out waiting for groups to empty.")
+        }
+
+        // then
+
+        XCTAssert(hasNotificationsRequest)
+        XCTAssert(hasUserRequest)
+        XCTAssert(hasConversationsRequest)
+        XCTAssert(hasConnectionsRequest)
+    }
+
     func testThatItDoesAQuickSyncOnStarTupIfItHasReceivedNotificationsEarlier() {
         // GIVEN
         XCTAssertTrue(login())
-        
+
         mockTransportSession.performRemoteChanges { _ in
             let message = GenericMessage(content: Text(content: "Hello, Test!"), nonce: .create())
             guard
@@ -52,30 +100,30 @@ class SlowSyncTests_Swift: IntegrationTest {
             self.groupConversation.encryptAndInsertData(from: client, to: selfClient, data: data)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         mockTransportSession.resetReceivedRequests()
-        
+
         // WHEN
         recreateSessionManager()
-        
+
         // THEN
         var hasNotificationsRequest = false
         for request in mockTransportSession.receivedRequests() {
             if request.path.hasPrefix("/notifications") {
                 hasNotificationsRequest = true
             }
-            
+
             XCTAssertFalse(request.path.hasPrefix("/conversations"))
             XCTAssertFalse(request.path.hasPrefix("/connections"))
         }
-        
+
         XCTAssertTrue(hasNotificationsRequest)
     }
-    
+
     func testThatItDoesAQuickSyncAfterTheWebSocketWentDown() {
         // GIVEN
         XCTAssertTrue(login())
-        
+
         mockTransportSession.performRemoteChanges { _ in
             let message = GenericMessage(content: Text(content: "Hello, Test!"), nonce: .create())
             guard
@@ -87,27 +135,27 @@ class SlowSyncTests_Swift: IntegrationTest {
             self.groupConversation.encryptAndInsertData(from: client, to: selfClient, data: data)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         mockTransportSession.resetReceivedRequests()
-        
+
         // WHEN
         mockTransportSession.performRemoteChanges { session in
             session.simulatePushChannelClosed()
             session.simulatePushChannelOpened()
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // THEN
         var hasNotificationsRequest = false
         for request in mockTransportSession.receivedRequests() {
             if request.path.hasPrefix("/notifications") {
                 hasNotificationsRequest = true
             }
-            
+
             XCTAssertFalse(request.path.hasPrefix("/conversations"))
             XCTAssertFalse(request.path.hasPrefix("/connections"))
         }
-              
+
         XCTAssertTrue(hasNotificationsRequest)
     }
 }

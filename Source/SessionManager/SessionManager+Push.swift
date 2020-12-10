@@ -137,7 +137,7 @@ extension SessionManager: PKPushRegistryDelegate {
     // MARK: Helpers
     
     public func configureUserNotifications() {
-        guard application.shouldRegisterUserNotificationSettings ?? true else { return }
+        guard (application as? NotificationSettingsRegistrable)?.shouldRegisterUserNotificationSettings ?? true else { return }
         notificationCenter.setNotificationCategories(PushNotificationCategory.allCategories)
         notificationCenter.requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { _, _ in })
         notificationCenter.delegate = self

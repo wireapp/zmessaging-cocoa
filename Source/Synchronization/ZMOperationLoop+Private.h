@@ -25,13 +25,19 @@
 @class PushNotificationStatus;
 @class ZMSyncStrategy;
 @class CallEventStatus;
+@class SyncStatus;
+
+@protocol RequestStrategy;
+@protocol UpdateEventProcessor;
 
 // Required by OperationLoop+Background.h
 @interface ZMOperationLoop ()
 
 @property (nonatomic) APSSignalingKeysStore *apsSignalKeyStore;
-@property (nonatomic) ZMSyncStrategy *syncStrategy;
+@property (nonatomic) id<RequestStrategy> requestStrategy;
+@property (nonatomic) id<UpdateEventProcessor> updateEventProcessor;
 @property (nonatomic, weak) NSManagedObjectContext *syncMOC;
 @property (nonatomic, readonly) PushNotificationStatus *pushNotificationStatus;
 @property (nonatomic, readonly) CallEventStatus *callEventStatus;
+@property (nonatomic, readonly) SyncStatus *syncStatus;
 @end

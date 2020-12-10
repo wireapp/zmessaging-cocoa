@@ -26,7 +26,7 @@ extension ZMOperationLoop: ZMPushChannelConsumer {
         if let events = ZMUpdateEvent.eventsArray(fromPushChannelData: data), !events.isEmpty {
             Logging.eventProcessing.info("Received \(events.count) events from push channel")
             events.forEach({ $0.appendDebugInformation("from push channel (web socket)")})
-            syncStrategy.storeAndProcessUpdateEvents(events, ignoreBuffer: false)
+            self.updateEventProcessor.storeAndProcessUpdateEvents(events, ignoreBuffer: false)
         }
     }
     
@@ -36,7 +36,7 @@ extension ZMOperationLoop: ZMPushChannelConsumer {
                               object: self,
                               userInfo: [ ZMPushChannelIsOpenKey: false]).post()
         
-        syncStrategy.didInterruptUpdateEventsStream()
+        syncStatus.pushChannelDidClose()
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
     
@@ -46,7 +46,7 @@ extension ZMOperationLoop: ZMPushChannelConsumer {
                               object: self,
                               userInfo: [ ZMPushChannelIsOpenKey: true]).post()
         
-        syncStrategy.didEstablishUpdateEventsStream()
+        syncStatus.pushChannelDidOpen()
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
     

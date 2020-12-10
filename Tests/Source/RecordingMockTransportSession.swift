@@ -39,9 +39,15 @@ class RecordingMockTransportSession: NSObject, TransportSessionType {
     
     func tearDown() { }
     
-    func enterBackground() { }
+    var didCallEnterBackground = false
+    func enterBackground() {
+        didCallEnterBackground = true
+    }
     
-    func enterForeground() { }
+    var didCallEnterForeground = false
+    func enterForeground() {
+        didCallEnterForeground = true
+    }
     
     func prepareForSuspendedState() { }
     
@@ -71,6 +77,9 @@ class RecordingMockTransportSession: NSObject, TransportSessionType {
     
     func addCompletionHandlerForBackgroundSession(identifier: String, handler: @escaping () -> Void) { }
     
-    func configurePushChannel(consumer: ZMPushChannelConsumer, groupQueue: ZMSGroupQueue) { }
+    var didCallConfigurePushChannel = false
+    func configurePushChannel(consumer: ZMPushChannelConsumer, groupQueue: ZMSGroupQueue) {
+        didCallConfigurePushChannel = true
+    }
 
 }

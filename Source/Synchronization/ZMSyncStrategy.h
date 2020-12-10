@@ -39,7 +39,7 @@
 @protocol EventProcessingTrackerProtocol;
 @protocol RequestStrategyFactoryProtocol;
 
-@interface ZMSyncStrategy : NSObject <TearDownCapable>
+@interface ZMSyncStrategy : NSObject <TearDownCapable, RequestStrategy>
 
 - (instancetype _Nonnull )initWithStoreProvider:(id<LocalStoreProviderProtocol> _Nonnull)storeProvider
                         notificationsDispatcher:(NotificationDispatcher * _Nonnull)notificationsDispatcher
@@ -47,8 +47,6 @@
                                     application:(id<ZMApplication> _Nonnull)application
                          requestStrategyFactory:(id<RequestStrategyFactoryProtocol> _Nonnull)requestStrategyFactory;
 
-- (void)didInterruptUpdateEventsStream;
-- (void)didEstablishUpdateEventsStream;
 - (void)applyHotFixes;
 
 /// process all events in the buffer

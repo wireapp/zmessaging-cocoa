@@ -46,7 +46,7 @@ class ConnectToBotURLActionProcessorTests: IntegrationTest {
         let action = URLAction.connectBot(serviceUser: ServiceUserData(provider: serviceProvider, service: serviceIdentifier))
         let sut = WireSyncEngine.ConnectToBotURLActionProcessor(contextprovider: userSession!,
                                                                 transportSession: mockTransportSession,
-                                                                eventProcessor: userSession!.operationLoop!.syncStrategy!)
+                                                                eventProcessor: userSession!)
         
         // when
         sut.process(urlAction: action, delegate: presentationDelegate)
@@ -66,7 +66,7 @@ class ConnectToBotURLActionProcessorTests: IntegrationTest {
         let action = URLAction.connectBot(serviceUser: unknownService)
         let sut = WireSyncEngine.ConnectToBotURLActionProcessor(contextprovider: userSession!,
                                                                 transportSession: mockTransportSession,
-                                                                eventProcessor: userSession!.operationLoop!.syncStrategy!)
+                                                                eventProcessor: userSession!)
         
         // when
         sut.process(urlAction: action, delegate: presentationDelegate)

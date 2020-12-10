@@ -103,53 +103,6 @@
     XCTAssertNotNil(newImageData);
 }
 
-
-- (void)testThatDisplayNameDoesNotChangesIfAUserWithADifferentNameIsAdded
-{
-    XCTAssertTrue([self login]);
-    
-    // Create a conversation and change SelfUser name
-    
-    ZMConversation *conversation = [self conversationForMockConversation:self.groupConversation];
-    (void) conversation.lastModifiedDate;
-    
-    ZMUser<ZMEditableUser> *selfUser = [ZMUser selfUserInUserSession:self.userSession];
-    [self.userSession performChanges:^{
-        selfUser.name = @"Super Name";
-    }];
-    WaitForAllGroupsToBeEmpty(0.2);
-    
-    XCTAssertEqualObjects(selfUser.name, @"Super Name");
-    
-    // initialize observers
-    
-    UserChangeObserver *userObserver = [[UserChangeObserver alloc] initWithUser:selfUser];
-    
-    // when
-    // add new user to groupConversation remotely
-    
-    __block MockUser *extraUser;
-    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
-        extraUser = [session insertUserWithName:@"Max Tester"];
-        [self.groupConversation addUsersByUser:self.selfUser addedUsers:@[extraUser]];
-        XCTAssertNotNil(extraUser.name);
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    
-    ZMUser *realUser = [self userForMockUser:extraUser];
-    XCTAssertEqualObjects(realUser.name, @"Max Tester");
-    XCTAssertTrue([conversation.localParticipants containsObject:realUser]);
-    
-    
-    NSArray *userNotes = userObserver.notifications;
-    XCTAssertEqual(userNotes.count, 0u);
-    
-    XCTAssertEqualObjects(realUser.name, @"Max Tester");
-    XCTAssertEqualObjects(selfUser.name, @"Super Name");
-}
-
 - (void)testThatClientsGetAddedAndDeletedForUserWhenRequested
 {
     XCTAssertTrue([self login]);

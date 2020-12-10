@@ -76,21 +76,34 @@
             RequireString(mocThatSaved == strongUiMoc, "Not the right MOC!");
         }
         
+        NSSet *insertedObjectsIDs = [self objectIDsetFromObject:note.userInfo[NSInsertedObjectsKey]];
+        NSSet *updatedObjectsIDs = [self objectIDsetFromObject:note.userInfo[NSUpdatedObjectsKey]];
+        
         ZM_WEAK(self);
         [self.syncMOC performGroupedBlock:^{
             ZM_STRONG(self);
             if(self == nil || self.tornDown) {
                 return;
             }
+                        
             [self.syncMOC mergeUserInfoFromUserInfo:userInfo];
             [self.syncMOC mergeChangesFromContextDidSaveNotification:note];
             [self.syncMOC processPendingChanges]; // We need this because merging sometimes leaves the MOC in a 'dirty' state
+            
+            NSSet *syncInsertedObjects = [self objectSetFromObjectIDs:insertedObjectsIDs inContext:self.syncMOC];
+            NSSet *syncUpdatedObjects = [self objectSetFromObjectIDs:updatedObjectsIDs inContext:self.syncMOC];
+            [self processSaveWithInsertedObjects:syncInsertedObjects updateObjects:syncUpdatedObjects];
+            
             [self.eventProcessingTracker registerSavePerformed];
         }];
     } else if (mocThatSaved.zm_isSyncContext) {
         RequireString(mocThatSaved == self.syncMOC, "Not the right MOC!");
         
         NSSet<NSManagedObjectID*>* changedObjectsIDs = [self extractManagedObjectIDsFrom:note];
+        
+        NSSet *insertedObjects = note.userInfo[NSInsertedObjectsKey];
+        NSSet *updatedObjects = note.userInfo[NSUpdatedObjectsKey];
+        [self processSaveWithInsertedObjects:insertedObjects updateObjects:updatedObjects];
         
         ZM_WEAK(self);
         [strongUiMoc performGroupedBlock:^{
@@ -106,6 +119,8 @@
             [self.eventProcessingTracker registerSavePerformed];
         }];
     }
+    
+    [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
 }
 
 - (NSSet<NSManagedObjectID*>*)extractManagedObjectIDsFrom:(NSNotification *)note
@@ -124,6 +139,10 @@
 
 - (BOOL)processSaveWithInsertedObjects:(NSSet *)insertedObjects updateObjects:(NSSet *)updatedObjects
 {
+    if (insertedObjects.count == 0 && updatedObjects.count == 0) {
+        return NO;
+    }
+    
     NSSet *allObjects = [NSSet zmSetByCompiningSets:insertedObjects, updatedObjects, nil];
     
     for(id<ZMContextChangeTracker> tracker in self.allChangeTrackers)
@@ -132,6 +151,27 @@
     }
     
     return YES;
+}
+
+- (NSSet *)objectSetFromObjectIDs:(NSSet *)objectIDs inContext:(NSManagedObjectContext *)moc
+{
+    NSMutableSet *objects = [NSMutableSet set];
+    for(NSManagedObjectID *objId in objectIDs) {
+        NSManagedObject *obj = [moc objectWithID:objId];
+        if(obj) {
+            [objects addObject:obj];
+        }
+    }
+    return objects;
+}
+
+- (NSSet *)objectIDsetFromObject:(NSSet *)objects
+{
+    NSMutableSet *objectIds = [NSMutableSet set];
+    for(NSManagedObject* obj in objects) {
+        [objectIds addObject:obj.objectID];
+    }
+    return objectIds;
 }
 
 @end
