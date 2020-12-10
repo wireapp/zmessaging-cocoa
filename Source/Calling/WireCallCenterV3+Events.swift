@@ -335,7 +335,7 @@ extension WireCallCenterV3 {
                 let change = try JSONDecoder().decode(AVSActiveSpeakersChange.self, from: data)
                 if let call = self.callSnapshots[conversationId] {
                     let audioLevels = change.audioLevels.map {AVSAudioLevel(audioLevel: $0)}
-                    self.callSnapshots[conversationId] = call.update(with: audioLevels)
+                    self.callSnapshots[conversationId] = call.updateAudioLevels(audioLevels)
                     WireCallCenterActiveSpeakersNotification().post(in: $0.notificationContext)
                 }
             }

@@ -39,26 +39,6 @@ struct CallSnapshot {
     var isDegradedCall: Bool {
         return degradedUser != nil
     }
-
-    /**
-     * Updates the snapshot with the new audio levels of the call.
-     * - parameter audioLevels: The new audio levels of the call computed from AVS.
-     */
-    
-    func update(with audioLevels: [AVSAudioLevel]) -> CallSnapshot {
-        return CallSnapshot(callParticipants: callParticipants,
-                            callState: callState,
-                            callStarter: callStarter,
-                            isVideo: isVideo,
-                            isGroup: isGroup,
-                            isConstantBitRate: isConstantBitRate,
-                            videoState: videoState,
-                            networkQuality: networkQuality,
-                            isConferenceCall: isConferenceCall,
-                            degradedUser: degradedUser,
-                            audioLevels: audioLevels,
-                            conversationObserverToken: conversationObserverToken)
-    }
     
     /**
      * Updates the snapshot with the new state of the call.
@@ -163,5 +143,24 @@ struct CallSnapshot {
                             audioLevels: audioLevels,
                             conversationObserverToken: conversationObserverToken)
     }
-
+    
+    /**
+     * Updates the snapshot with the new audio levels of the call.
+     * - parameter audioLevels: The new audio levels of the call computed from AVS.
+     */
+    
+    func updateAudioLevels(_ audioLevels: [AVSAudioLevel]) -> CallSnapshot {
+        return CallSnapshot(callParticipants: callParticipants,
+                            callState: callState,
+                            callStarter: callStarter,
+                            isVideo: isVideo,
+                            isGroup: isGroup,
+                            isConstantBitRate: isConstantBitRate,
+                            videoState: videoState,
+                            networkQuality: networkQuality,
+                            isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
+                            audioLevels: audioLevels,
+                            conversationObserverToken: conversationObserverToken)
+    }
 }
