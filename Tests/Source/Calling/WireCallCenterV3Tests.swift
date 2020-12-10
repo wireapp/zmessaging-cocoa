@@ -1100,7 +1100,7 @@ extension WireCallCenterV3Tests {
 
         // then
         let actual = sut.callParticipants(conversationId: oneOnOneConversationID)
-        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, audioLevel: 0)]
         XCTAssertEqual(actual, expected)
     }
 
@@ -1125,7 +1125,7 @@ extension WireCallCenterV3Tests {
         
         // then
         let actual = sut.callParticipants(conversationId: oneOnOneConversationID)
-        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, audioLevel: 0)]
         XCTAssertEqual(actual, expected)
     }
 
@@ -1137,7 +1137,7 @@ extension WireCallCenterV3Tests {
 
         // then
         let actual = sut.callParticipants(conversationId: groupConversationID)
-        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, audioLevel: 0)]
         XCTAssertEqual(actual, expected)
     }
 
@@ -1154,7 +1154,7 @@ extension WireCallCenterV3Tests {
 
         // then
         var actual = sut.callParticipants(conversationId: groupConversationID)
-        var expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        var expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, audioLevel: 0)]
         XCTAssertEqual(actual, expected)
 
         // when
@@ -1163,7 +1163,7 @@ extension WireCallCenterV3Tests {
 
         // then
         actual = sut.callParticipants(conversationId: groupConversationID)
-        expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connected(videoState: .stopped, microphoneState: .unmuted))]
+        expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connected(videoState: .stopped, microphoneState: .unmuted), audioLevel: 0)]
         XCTAssertEqual(actual, expected)
     }
 }
@@ -1263,5 +1263,38 @@ extension WireCallCenterV3Tests {
         
         // Then
         XCTAssertTrue(sut.callSnapshots[conversationId]?.isDegradedCall ?? false)
+    }
+}
+
+// MARK: - Active Speakers
+
+extension WireCallCenterV3Tests {
+    func testThatActiveSpeakersHandlerUpdatesAudioLevels() {
+        let conversationId = groupConversationID!
+
+        sut.callSnapshots = [
+            conversationId : CallSnapshotTestFixture.callSnapshot(
+                conversationId: conversationId,
+                callCenter: sut
+            )
+        ]
+        
+        let audioLevel = AVSActiveSpeakersChange.AudioLevel(userId: UUID(), clientId: UUID().transportString(), audioLevel: 100)
+        let change = AVSActiveSpeakersChange(audioLevels: [audioLevel])
+        
+        let encoded = try! JSONEncoder().encode(change)
+        let string = String(data: encoded, encoding: .utf8)!
+        
+        sut.handleActiveSpeakersChange(conversationId: conversationId, data: string)
+
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        let audioLevels = sut.callSnapshots[conversationId]!.audioLevels
+        XCTAssertFalse(sut.callSnapshots[conversationId]!.audioLevels.isEmpty)
+        
+    }
+    
+    func testThatActiveSpeakersHandlerPostsNotification() {
+        
     }
 }

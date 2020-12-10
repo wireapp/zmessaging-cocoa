@@ -41,6 +41,30 @@ struct CallSnapshotTestFixture {
             networkQuality: .normal,
             isConferenceCall: true,
             degradedUser: user,
+            audioLevels: [],
+            conversationObserverToken: nil
+        )
+    }
+    
+    static func callSnapshot(conversationId: UUID, callCenter: WireCallCenterV3) -> CallSnapshot {
+        let callParticipantsSnapshot = CallParticipantsSnapshot(
+            conversationId: conversationId,
+            members: [],
+            callCenter: callCenter
+        )
+        
+        return CallSnapshot(
+            callParticipants: callParticipantsSnapshot,
+            callState: .established,
+            callStarter: UUID(),
+            isVideo: false,
+            isGroup: true,
+            isConstantBitRate: false,
+            videoState: .stopped,
+            networkQuality: .normal,
+            isConferenceCall: true,
+            degradedUser: nil,
+            audioLevels: [],
             conversationObserverToken: nil
         )
     }
