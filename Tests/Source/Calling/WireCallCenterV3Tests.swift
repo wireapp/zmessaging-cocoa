@@ -1279,7 +1279,7 @@ extension WireCallCenterV3Tests {
             )
         ]
         
-        let audioLevel = AVSActiveSpeakersChange.AudioLevel(userId: UUID(), clientId: UUID().transportString(), audioLevel: 100)
+        let audioLevel = AVSActiveSpeakersChange.ActiveSpeaker(userId: UUID(), clientId: UUID().transportString(), audioLevel: 100)
         let change = AVSActiveSpeakersChange(audioLevels: [audioLevel])
         
         let encoded = try! JSONEncoder().encode(change)

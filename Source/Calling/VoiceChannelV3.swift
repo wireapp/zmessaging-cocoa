@@ -42,15 +42,23 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
     
     weak public var conversation: ZMConversation?
     
-    public var participants: [CallParticipant] {
-        guard let callCenter = callCenter, let conversationId = conversation?.remoteIdentifier else { return [] }
-        
-        return callCenter.callParticipants(conversationId: conversationId)
-    }
-    
     public required init(conversation: ZMConversation) {
         self.conversation = conversation
         super.init()
+    }
+    
+    public func participants(activeSpeakersLimit limit: Int) -> [CallParticipant] {
+        return participants(limit)
+    }
+    
+    public var participants: [CallParticipant] {
+        return participants(nil)
+    }
+    
+    private func participants(_ limit: Int?) -> [CallParticipant] {
+        guard let callCenter = callCenter, let conversationId = conversation?.remoteIdentifier else { return [] }
+        
+        return callCenter.callParticipants(conversationId: conversationId, activeSpeakersLimit: limit)
     }
     
     public var state: CallState {

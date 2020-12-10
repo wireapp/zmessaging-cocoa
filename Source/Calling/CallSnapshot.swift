@@ -33,7 +33,7 @@ struct CallSnapshot {
     let networkQuality: NetworkQuality
     let isConferenceCall: Bool
     let degradedUser: ZMUser?
-    let audioLevels: [AVSAudioLevel]
+    let activeSpeakers: [AVSActiveSpeaker]
     var conversationObserverToken : NSObjectProtocol?
 
     var isDegradedCall: Bool {
@@ -56,7 +56,7 @@ struct CallSnapshot {
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
                             degradedUser: degradedUser,
-                            audioLevels: audioLevels,
+                            activeSpeakers: activeSpeakers,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -76,7 +76,7 @@ struct CallSnapshot {
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
                             degradedUser: degradedUser,
-                            audioLevels: audioLevels,
+                            activeSpeakers: activeSpeakers,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -96,7 +96,7 @@ struct CallSnapshot {
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
                             degradedUser: degradedUser,
-                            audioLevels: audioLevels,
+                            activeSpeakers: activeSpeakers,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -116,7 +116,7 @@ struct CallSnapshot {
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
                             degradedUser: degradedUser,
-                            audioLevels: audioLevels,
+                            activeSpeakers: activeSpeakers,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -140,16 +140,16 @@ struct CallSnapshot {
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
                             degradedUser: degradedUser,
-                            audioLevels: audioLevels,
+                            activeSpeakers: activeSpeakers,
                             conversationObserverToken: conversationObserverToken)
     }
     
     /**
      * Updates the snapshot with the new audio levels of the call.
-     * - parameter audioLevels: The new audio levels of the call computed from AVS.
+     * - parameter activeSpeakers: The new active speakers of the call computed from AVS.
      */
     
-    func updateAudioLevels(_ audioLevels: [AVSAudioLevel]) -> CallSnapshot {
+    func updateActiveSpeakers(_ activeSpeakers: [AVSActiveSpeaker]) -> CallSnapshot {
         return CallSnapshot(callParticipants: callParticipants,
                             callState: callState,
                             callStarter: callStarter,
@@ -160,7 +160,7 @@ struct CallSnapshot {
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
                             degradedUser: degradedUser,
-                            audioLevels: audioLevels,
+                            activeSpeakers: activeSpeakers,
                             conversationObserverToken: conversationObserverToken)
     }
 }

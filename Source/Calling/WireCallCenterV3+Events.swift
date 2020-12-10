@@ -331,11 +331,23 @@ extension WireCallCenterV3 {
                 zmLog.safePublic("Invalid active speakers data")
                 return
             }
+            
+            // Example of `data`
+            //  {
+            //      "audio_levels": [
+            //          {
+            //              "userid": "3f49da1d-0d52-4696-9ef3-0dd181383e8a",
+            //              "clientid": "24cc758f602fb1f4",
+            //              "audio_level": 100
+            //          }
+            //      ]
+            //}
+            
             do {
                 let change = try JSONDecoder().decode(AVSActiveSpeakersChange.self, from: data)
                 if let call = self.callSnapshots[conversationId] {
-                    let audioLevels = change.audioLevels.map {AVSAudioLevel(audioLevel: $0)}
-                    self.callSnapshots[conversationId] = call.updateAudioLevels(audioLevels)
+                    let activeSpeakers = change.activeSpeakers.map {AVSActiveSpeaker(activeSpeaker: $0)}
+                    self.callSnapshots[conversationId] = call.updateActiveSpeakers(activeSpeakers)
                     WireCallCenterActiveSpeakersNotification().post(in: $0.notificationContext)
                 }
             }

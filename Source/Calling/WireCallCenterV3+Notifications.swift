@@ -78,9 +78,6 @@ public protocol ActiveSpeakersObserver : class {
 
 struct WireCallCenterActiveSpeakersNotification : SelfPostingNotification {
     static let notificationName = Notification.Name("WireCallCenterActiveSpeakersNotification")
-    
-    // TODO: Add necessary properties
-//    public let conversationId: UUID
 }
 
 // MARK:- Call state observer
@@ -386,11 +383,7 @@ extension WireCallCenterV3 {
     public class func addActiveSpeakersObserver(observer: ActiveSpeakersObserver, context: NSManagedObjectContext) -> Any {
         return NotificationInContext.addObserver(
             name: WireCallCenterActiveSpeakersNotification.notificationName,
-            context: context.notificationContext) { [weak observer] note in
-//                guard
-//                    let note = note.userInfo[WireCallCenterActiveSpeakersNotification.userInfoKey] as? WireCallCenterActiveSpeakersNotification,
-//                    let observer = observer
-//                else { return }
+            context: context.notificationContext) { [weak observer] _ in
                 observer?.callCenterDidChangeActiveSpeakers()
         }
     }

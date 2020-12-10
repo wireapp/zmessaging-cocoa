@@ -184,7 +184,7 @@ extension WireCallCenterV3 {
             networkQuality: .normal,
             isConferenceCall: isConferenceCall,
             degradedUser: nil,
-            audioLevels: [],
+            activeSpeakers: [],
             conversationObserverToken: token
         )
     }
@@ -321,45 +321,32 @@ extension WireCallCenterV3 {
 
 extension WireCallCenterV3 {
     
-    /// Returns the callParticipants currently in the conversation
-    func callParticipants(conversationId: UUID) -> [CallParticipant] {
+    /// Returns the callParticipants currently in the conversation.
+    func callParticipants(conversationId: UUID, activeSpeakersLimit limit: Int? = nil) -> [CallParticipant] {
         guard
-            let context = uiMOC,
-            let callParticipants = callSnapshots[conversationId]?.callParticipants,
-            let audioLevels = callSnapshots[conversationId]?.audioLevels
+            let callMembers = callSnapshots[conversationId]?.callParticipants.members.array,
+            let context = uiMOC
         else {
             return []
         }
-        return callParticipants.members.array.compactMap { member in
-            let audioLevel = audioLevels.first {
-                member.client == $0.client
-            }?.audioLevel ?? 0
-            
-            return CallParticipant(member: member, audioLevel: audioLevel, context: context)
+
+        let activeSpeakers = self.activeSpeakers(conversationId: conversationId, limitedBy: limit)
+        return callMembers.compactMap { member in
+            let isActive = activeSpeakers.contains(where: { $0.client == member.client })
+            return CallParticipant(member: member, isActiveSpeaker: isActive, context: context)
         }
     }
     
-    func callParticipants(conversationId: UUID, activeSpeakersLimit limit: Int) -> [CallParticipant] {
-        guard
-            let context = uiMOC,
-            let callMembers = callSnapshots[conversationId]?.callParticipants.members.array,
-            let audioLevels = callSnapshots[conversationId]?.audioLevels.prefix(limit)
-        else { return [] }
-        
-        let activeParticipants: [CallParticipant] = audioLevels.compactMap { audioLevel in
-            guard let member = callMembers.first(where: { audioLevel.client == $0.client }) else {
-                return nil
-            }
-            return CallParticipant(member: member, audioLevel: audioLevel.audioLevel, context: context)
+    private func activeSpeakers(conversationId: UUID, limitedBy limit: Int? = nil) -> [AVSActiveSpeaker] {
+        guard let audioLevels = callSnapshots[conversationId]?.activeSpeakers else {
+            return []
         }
         
-        let remainingParticipants = callMembers.filter { member in
-            return !activeParticipants.contains(where: { $0.clientId == member.client.clientId })
-        }.compactMap {
-            return CallParticipant(member: $0, context: context)
+        guard let limit = limit else {
+            return audioLevels
         }
-
-        return activeParticipants + remainingParticipants
+        
+        return Array(audioLevels.prefix(limit))
     }
 
     /// Returns the remote identifier of the user that initiated the call.
