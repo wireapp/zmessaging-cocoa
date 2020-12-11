@@ -33,7 +33,7 @@ public struct CallParticipant: Hashable {
     public let state: CallParticipantState
 
     
-    /// Init with seperated user and user id to allow CallParticipant is Hashable even user is not hashable
+    /// Init with separated user and user id to allow CallParticipant is Hashable even user is not hashable
     /// - Parameters:
     ///   - user: the call participant user
     ///   - userId: the call participant user's id
