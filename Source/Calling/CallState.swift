@@ -29,31 +29,35 @@ public struct CallParticipant: Hashable {
     
     public let user: UserType
     public let clientId: String
+    public let userId: UUID
     public let state: CallParticipantState
 
-    public init(user: UserType, clientId: String, state: CallParticipantState) {
+    public init(user: UserType,
+                userId: UUID,
+                clientId: String,
+                state: CallParticipantState) {
         self.user = user
         self.clientId = clientId
+        self.userId = userId
         self.state = state
     }
 
     init?(member: AVSCallMember, context: NSManagedObjectContext) {
         guard let user = ZMUser(remoteID: member.client.userId, createIfNeeded: false, in: context) else { return nil }
-        self.init(user: user, clientId: member.client.clientId, state: member.callParticipantState)
+        self.init(user: user, userId: user.remoteIdentifier, clientId: member.client.clientId, state: member.callParticipantState)
     }
 
     // MARK: - Hashable
 
     public static func == (lhs: CallParticipant, rhs: CallParticipant) -> Bool {
-        return (lhs.user as? NSObject) == (rhs.user as? NSObject) && lhs.clientId == rhs.clientId && lhs.state == rhs.state
+        return lhs.userId == rhs.userId &&
+               lhs.clientId == rhs.clientId &&
+               lhs.state == rhs.state
     }
 
     public func hash(into hasher: inout Hasher) {
-        if let zmuser = user as? ZMUser {
-            hasher.combine(zmuser.remoteIdentifier)
-        } else {
-            hasher.combine((user as? NSObject)?.hashValue)
-        }
+        hasher.combine(state)
+        hasher.combine(userId)
         hasher.combine(clientId)
     }
 
@@ -64,7 +68,7 @@ public struct CallParticipant: Hashable {
  * The state of a participant in a call.
  */
 
-public enum CallParticipantState: Equatable {
+public enum CallParticipantState: Equatable, Hashable {
     /// Participant is not in the call
     case unconnected
     /// A network problem occured but the call may still connect
