@@ -31,8 +31,21 @@ public struct CallParticipant: Hashable {
     public let clientId: String
     public let userId: UUID
     public let state: CallParticipantState
-
     
+    /// convenience init method for ZMUser
+    /// - Parameters:
+    ///   - user: the call participant ZMUser
+    ///   - clientId: the call participant's client
+    ///   - state: the call participant's state
+    public init(user: ZMUser,
+                clientId: String,
+                state: CallParticipantState) {
+        self.user = user
+        self.clientId = clientId
+        self.userId = user.remoteIdentifier
+        self.state = state
+    }
+
     /// Init with seperated user and user id to allow CallParticipant is Hashable even user is not hashable
     /// - Parameters:
     ///   - user: the call participant user
