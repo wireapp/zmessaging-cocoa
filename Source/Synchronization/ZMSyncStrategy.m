@@ -190,12 +190,6 @@ ZM_EMPTY_ASSERTING_INIT()
     [self.notificationDispatcher tearDown];
 }
 
-- (void)processAllEventsInBuffer
-{
-    [self.eventsBuffer processAllEventsInBuffer];
-}
-
-
 #if DEBUG
 - (void)dealloc
 {

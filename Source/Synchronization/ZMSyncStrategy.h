@@ -49,9 +49,6 @@
 
 - (void)applyHotFixes;
 
-/// process all events in the buffer
-- (void)processAllEventsInBuffer;
-
 - (ZMTransportRequest *_Nullable)nextRequest;
 
 - (void)tearDown;

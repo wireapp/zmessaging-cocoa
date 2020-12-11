@@ -44,6 +44,8 @@ extension ZMSyncStrategy: UpdateEventProcessor {
             return  true
         }
         
+        eventsBuffer.processAllEventsInBuffer()
+        
         if syncMOC.encryptMessagesAtRest {
             guard let encryptionKeys = syncMOC.encryptionKeys else {
                 return true

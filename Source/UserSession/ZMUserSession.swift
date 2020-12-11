@@ -481,9 +481,6 @@ extension ZMUserSession: ZMSyncStateDelegate {
     }
     
     public func didFinishQuickSync() {
-        guard let syncStrategy = syncStrategy else { return }
-        
-        syncStrategy.processAllEventsInBuffer()
         processEvents()
         
         managedObjectContext.performGroupedBlock { [weak self] in
