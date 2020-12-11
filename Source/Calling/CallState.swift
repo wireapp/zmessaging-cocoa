@@ -46,7 +46,7 @@ public struct CallParticipant: Hashable {
         self.state = state
     }
 
-    /// Init with separated user and user id to allow CallParticipant is Hashable even user is not hashable
+    /// Init with separated user and user id to allow CallParticipant to be Hashable even though user is not Hashable
     /// - Parameters:
     ///   - user: the call participant user
     ///   - userId: the call participant user's id
