@@ -123,7 +123,7 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         return callCenter.isConferenceCall(conversationId: remoteIdentifier)
     }
 
-    public var firstDegradedUser: ZMUser? {
+    public var firstDegradedUser: UserType? {
         guard
             let conversationId = conversation?.remoteIdentifier,
             let degradedUser = callCenter?.degradedUser(conversationId: conversationId)
