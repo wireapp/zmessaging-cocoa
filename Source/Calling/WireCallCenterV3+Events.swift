@@ -346,7 +346,7 @@ extension WireCallCenterV3 {
             do {
                 let change = try JSONDecoder().decode(AVSActiveSpeakersChange.self, from: data)
                 if let call = self.callSnapshots[conversationId] {
-                    let activeSpeakers = change.activeSpeakers.map {AVSActiveSpeaker(activeSpeaker: $0)}
+                    let activeSpeakers = change.activeSpeakers.map(AVSActiveSpeaker.init)
                     self.callSnapshots[conversationId] = call.updateActiveSpeakers(activeSpeakers)
                     WireCallCenterActiveSpeakersNotification().post(in: $0.notificationContext)
                 }
