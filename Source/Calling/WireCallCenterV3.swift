@@ -338,7 +338,7 @@ extension WireCallCenterV3 {
     }
     
     private func activeSpeakers(conversationId: UUID, limitedBy limit: Int? = nil) -> [AVSActiveSpeaker] {
-        guard let audioLevels = callSnapshots[conversationId]?.activeSpeakers else {
+        guard let activeSpeakers = callSnapshots[conversationId]?.activeSpeakers else {
             return []
         }
         
