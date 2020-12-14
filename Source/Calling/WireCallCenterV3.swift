@@ -343,10 +343,10 @@ extension WireCallCenterV3 {
         }
         
         guard let limit = limit else {
-            return audioLevels
+            return activeSpeakers
         }
         
-        return Array(audioLevels.prefix(limit))
+        return Array(activeSpeakers.prefix(limit))
     }
 
     /// Returns the remote identifier of the user that initiated the call.
