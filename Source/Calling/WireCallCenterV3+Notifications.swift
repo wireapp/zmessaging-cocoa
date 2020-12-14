@@ -69,7 +69,6 @@ struct WireCallCenterMutedNotification : SelfPostingNotification {
     public let muted: Bool
 }
 
-// TODO: Implement observer factory method
 // MARK:- Active speakers observer
 
 public protocol ActiveSpeakersObserver : class {
