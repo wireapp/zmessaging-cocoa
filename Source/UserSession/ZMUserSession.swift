@@ -220,7 +220,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
             self.applicationStatusDirectory = self.createApplicationStatusDirectory()
             self.updateEventProcessor = eventProcessor ?? self.createUpdateEventProcessor()
             self.strategyDirectory = strategyDirectory ?? self.createStrategyDirectory()
-            self.updateEventProcessor?.eventConsumers = strategyDirectory?.eventConsumers ?? []
             self.syncStrategy = syncStrategy ?? self.createSyncStrategy()
             self.operationLoop = operationLoop ?? self.createOperationLoop()
             self.urlActionProcessors = self.createURLActionProcessors()
@@ -229,6 +228,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                                                        callNotificationStyleProvider: self)
         }
 
+        updateEventProcessor!.eventConsumers = self.strategyDirectory!.eventConsumers
         registerForCalculateBadgeCountNotification()
         registerForRegisteringPushTokenNotification()
         registerForBackgroundNotifications()
