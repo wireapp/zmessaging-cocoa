@@ -58,7 +58,7 @@ extension ZMConversation {
                 // Process `conversation.message-timer-update` event
                 userSession.syncManagedObjectContext.performGroupedBlock {
                     // TODO jacob maybe skip the event decoder since we know these events will never be encrypted.
-                    userSession.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
+                    userSession.updateEventProcessor?.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
                 }
                 completion(.success)
             } else {

@@ -122,11 +122,10 @@
     self.mockEventConsumer = [[MockEventConsumer alloc]  init];
     self.mockContextChangeTracker = [[MockContextChangeTracker alloc] init];
     
-    MockRequestStrategyFactory *requestStrategyFactory =
-    [[MockRequestStrategyFactory alloc] initWithStrategies:@[
-        self.mockEventConsumer,
-        self.mockContextChangeTracker
-    ]];
+    MockStrategyDirectory *mockStrategyDirectory =
+    [[MockStrategyDirectory alloc] init];
+    mockStrategyDirectory.eventConsumers = @[self.mockEventConsumer];
+    mockStrategyDirectory.contextChangeTrackers = @[self.mockContextChangeTracker];
     
     self.fetchRequestForTrackedObjects1 = [NSFetchRequest fetchRequestWithEntityName:@"User"];
     self.fetchRequestForTrackedObjects1.predicate = [NSPredicate predicateWithFormat:@"name != nil"];
@@ -138,12 +137,15 @@
     
     NotificationDispatcher *notificationDispatcher =
     [[NotificationDispatcher alloc] initWithManagedObjectContext:self.contextDirectory .uiContext];
+    
+    EventProcessingTracker *eventProcessingTracker = [[EventProcessingTracker alloc] init];
         
     self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider
                                      notificationsDispatcher:notificationDispatcher
                                   applicationStatusDirectory:self.applicationStatusDirectory
                                                  application:self.application
-                                      requestStrategyFactory:requestStrategyFactory];
+                                           strategyDirectory:mockStrategyDirectory
+                                      eventProcessingTracker:eventProcessingTracker];
     
     self.application.applicationState = UIApplicationStateBackground;
     
@@ -161,6 +163,8 @@
     self.sut = nil;
     [super tearDown];
 }
+
+/** TODO jacob move to EventProcessorTests
 
 - (void)testThatWhenItConsumesEventsTheyAreForwardedToAllIndividualObjects
 {
@@ -376,6 +380,8 @@
     XCTAssertEqualObjects([NSSet setWithObject:remoteIdentifier], fetchRequest.remoteIdentifiersToFetch);
     XCTAssertEqualObjects([NSSet setWithObject:messageNonce], fetchRequest.noncesToFetch);
 }
+ 
+ */
 
 - (void)testThatCallingNextRequestFetchesObjectsAndDistributesThemToTheChangeTracker
 {

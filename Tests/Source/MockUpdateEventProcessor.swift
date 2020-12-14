@@ -22,8 +22,13 @@ import Foundation
 
 @objcMembers
 public class MockUpdateEventProcessor: NSObject, WireSyncEngine.UpdateEventProcessor {
-    
+
+    public var eventConsumers: [ZMEventConsumer] = []
     public var processedEvents: [ZMUpdateEvent] = []
+    
+    public func processEventsIfReady() -> Bool {
+        return false
+    }
         
     public func storeAndProcessUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
         processedEvents.append(contentsOf: updateEvents)

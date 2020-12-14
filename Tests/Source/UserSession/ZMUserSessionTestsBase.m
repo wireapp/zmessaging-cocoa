@@ -89,23 +89,19 @@
     [(ApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.operationStatus] operationStatus];
     [(ApplicationStatusDirectory *)[[(id)applicationStatusDirectory stub] andReturn:self.mockSyncStatus] syncStatus];
     
-    self.syncStrategy = [OCMockObject mockForClass:[ZMSyncStrategy class]];
-    [(ZMSyncStrategy *)[[(id)self.syncStrategy stub] andReturn:applicationStatusDirectory] applicationStatusDirectory];
-    NOT_USED([[(id)self.syncStrategy stub] processAllEventsInBuffer]);
-    NOT_USED([[(id)self.syncStrategy stub] processEventsIfReady]);
-    [self verifyMockLater:self.syncStrategy];
-
-    self.operationLoop = [OCMockObject mockForClass:ZMOperationLoop.class];
-    [[self.operationLoop stub] tearDown];
-    
     self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
+    
+    MockStrategyDirectory *mockStrategyDirectory = [[MockStrategyDirectory alloc] init];
+    MockUpdateEventProcessor *mockUpdateEventProcessor = [[MockUpdateEventProcessor alloc] init];
     
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
                                                   mediaManager:self.mediaManager
                                                    flowManager:self.flowManagerMock
                                                      analytics:nil
-                                                  syncStrategy:self.syncStrategy
-                                                 operationLoop:self.operationLoop
+                                                eventProcessor:mockUpdateEventProcessor
+                                             strategyDirectory:mockStrategyDirectory
+                                                  syncStrategy:nil
+                                                 operationLoop:nil
                                                    application:self.application
                                                     appVersion:@"00000"
                                                  storeProvider:self.storeProvider];
@@ -116,8 +112,6 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     self.validCookie = [@"valid-cookie" dataUsingEncoding:NSUTF8StringEncoding];
-    [self verifyMockLater:self.syncStrategy];
-    [self verifyMockLater:self.operationLoop];
 }
 
 - (void)tearDown
@@ -149,20 +143,10 @@
     self.sut.thirdPartyServicesDelegate = nil;
     self.mockSessionManager = nil;
     self.transportSession = nil;
-    
-    [self.operationLoop stopMocking];
-    self.operationLoop = nil;
-    
     [self.requestAvailableNotification stopMocking];
     self.requestAvailableNotification = nil;
-    
     self.mediaManager = nil;
-    
     self.flowManagerMock = nil;
-    
-    [(id)self.syncStrategy stopMocking];
-    self.syncStrategy = nil;
-    
     id tempSut = self.sut;
     self.sut = nil;
     [tempSut tearDown];

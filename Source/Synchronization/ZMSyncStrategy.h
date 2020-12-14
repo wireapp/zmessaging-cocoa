@@ -27,9 +27,7 @@
 @class LocalNotificationDispatcher;
 @class ApplicationStatusDirectory;
 @class CallingRequestStrategy;
-@class EventDecoder;
 @class ZMMissingUpdateEventsTranscoder;
-@class RequestStrategyFactory;
 
 @protocol ZMTransportData;
 @protocol ZMSyncStateDelegate;
@@ -37,7 +35,7 @@
 @protocol ZMApplication;
 @protocol LocalStoreProviderProtocol;
 @protocol EventProcessingTrackerProtocol;
-@protocol RequestStrategyFactoryProtocol;
+@protocol StrategyDirectoryProtocol;
 
 @interface ZMSyncStrategy : NSObject <TearDownCapable, RequestStrategy>
 
@@ -45,7 +43,8 @@
                         notificationsDispatcher:(NotificationDispatcher * _Nonnull)notificationsDispatcher
                      applicationStatusDirectory:(ApplicationStatusDirectory * _Nonnull)applicationStatusDirectory
                                     application:(id<ZMApplication> _Nonnull)application
-                         requestStrategyFactory:(id<RequestStrategyFactoryProtocol> _Nonnull)requestStrategyFactory;
+                              strategyDirectory:(id<StrategyDirectoryProtocol> _Nonnull)strategyDirectory
+                         eventProcessingTracker:(id<EventProcessingTrackerProtocol> _Nonnull)eventProcessingTracker;
 
 - (void)applyHotFixes;
 
@@ -57,12 +56,8 @@
 @property (nonatomic, weak, readonly, nullable) ApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic, readonly, nonnull) CallingRequestStrategy *callingRequestStrategy;
 @property (nonatomic, readonly, nonnull) ZMMissingUpdateEventsTranscoder *missingUpdateEventsTranscoder;
-@property (nonatomic, readonly, nonnull) EventDecoder *eventDecoder;
-@property (nonatomic, readonly, nonnull) ZMUpdateEventsBuffer *eventsBuffer;
 @property (nonatomic, readonly, nonnull) NSArray<id<ZMEventConsumer>> *eventConsumers;
 @property (nonatomic, weak, readonly, nullable) LocalNotificationDispatcher *localNotificationDispatcher;
-@property (nonatomic, readonly) BOOL isReadyToProcessEvents;
 @property (nonatomic, nullable) id<EventProcessingTrackerProtocol> eventProcessingTracker;
-
 @end
 

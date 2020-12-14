@@ -62,6 +62,8 @@
                                                                 mediaManager:self.mediaManager
                                                                  flowManager:self.flowManagerMock
                                                                    analytics:nil
+                                                              eventProcessor:nil
+                                                           strategyDirectory:nil
                                                                 syncStrategy:nil
                                                                operationLoop:nil
                                                                  application:self.application
@@ -193,6 +195,8 @@
                                                                     mediaManager:self.mediaManager
                                                                      flowManager:self.flowManagerMock
                                                                        analytics:nil
+                                                                  eventProcessor:nil
+                                                               strategyDirectory:nil
                                                                     syncStrategy:nil
                                                                    operationLoop:nil
                                                                      application:self.application
@@ -421,6 +425,8 @@
                                                                     mediaManager:self.mediaManager
                                                                      flowManager:self.flowManagerMock
                                                                        analytics:nil
+                                                                  eventProcessor:nil
+                                                               strategyDirectory:nil
                                                                     syncStrategy:nil
                                                                    operationLoop:nil
                                                                      application:self.application
