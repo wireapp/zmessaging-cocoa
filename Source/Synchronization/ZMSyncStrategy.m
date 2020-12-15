@@ -164,16 +164,6 @@ ZM_EMPTY_ASSERTING_INIT()
     }];
 }
 
-- (ZMMissingUpdateEventsTranscoder *)missingUpdateEventsTranscoder{
-    return [self.strategyDirectory.requestStrategies firstObjectMatchingWithBlock:^BOOL(id obj) {
-        if ([obj isKindOfClass:ZMMissingUpdateEventsTranscoder.self]) {
-            return YES;
-        }
-        
-        return NO;
-    }];
-}
-
 - (ZMTransportRequest *)nextRequest
 {
     if (!self.didFetchObjects) {

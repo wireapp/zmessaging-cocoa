@@ -51,8 +51,6 @@
 @property (nonatomic, readonly, nonnull) NSManagedObjectContext *syncMOC;
 @property (nonatomic, weak, readonly, nullable) ApplicationStatusDirectory *applicationStatusDirectory;
 @property (nonatomic, readonly, nonnull) CallingRequestStrategy *callingRequestStrategy;
-@property (nonatomic, readonly, nonnull) ZMMissingUpdateEventsTranscoder *missingUpdateEventsTranscoder;
-@property (nonatomic, weak, readonly, nullable) LocalNotificationDispatcher *localNotificationDispatcher;
 @property (nonatomic, nullable) id<EventProcessingTrackerProtocol> eventProcessingTracker;
 @end
 
