@@ -332,7 +332,9 @@ extension WireCallCenterV3 {
 
         let activeSpeakers = self.activeSpeakers(conversationId: conversationId, limitedBy: limit)
         return callMembers.compactMap { member in
-            let isActive = activeSpeakers.contains(where: { $0.client == member.client })
+            let isActive = activeSpeakers.contains(where: {
+                $0.client == member.client && $0.audioLevel > 0
+            })
             return CallParticipant(member: member, isActiveSpeaker: isActive, context: context)
         }
     }
