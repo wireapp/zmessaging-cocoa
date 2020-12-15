@@ -308,7 +308,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     
     func startRequestLoopTracker() {        
         transportSession.requestLoopDetectionCallback = { path in
-            // The tracker will return false in case the path should be ignored.
             guard !path.hasSuffix("/typing") else { return }
 
             Logging.network.warn("Request loop happening at path: \(path)")
