@@ -66,6 +66,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var urlActionProcessors: [URLActionProcessor]?
     let debugCommands: [String: DebugCommand]
     let eventProcessingTracker: EventProcessingTracker = EventProcessingTracker()
+    let hotFix: ZMHotFix
     
     public var hasCompletedInitialSync: Bool = false
     
@@ -208,6 +209,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.userExpirationObserver = UserExpirationObserver(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.debugCommands = ZMUserSession.initDebugCommands()
+        self.hotFix = ZMHotFix(syncMOC: storeProvider.contextDirectory.syncContext)
         super.init()
         
         ZMUserAgent.setWireAppVersion(appVersion)
@@ -499,21 +501,23 @@ extension ZMUserSession: ZMSyncStateDelegate {
     
     public func didFinishQuickSync() {
         processEvents()
-        
+                
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.notifyThirdPartyServices()
         }
     }
     
     func processEvents() {
-//        guard let syncStrategy = syncStrategy else { return }
-        
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.isPerformingSync = true
             self?.updateNetworkState()
         }
         
         let hasMoreEventsToProcess = updateEventProcessor!.processEventsIfReady()
+        
+        if !hasMoreEventsToProcess {
+            hotFix.applyPatches()
+        }
         
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.isPerformingSync = hasMoreEventsToProcess

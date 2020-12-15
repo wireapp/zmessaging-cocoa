@@ -49,7 +49,6 @@
 @property (atomic) BOOL tornDown;
 @property (nonatomic) BOOL contextMergingDisabled;
 
-@property (nonatomic) ZMHotFix *hotFix;
 @property (nonatomic) NotificationDispatcher *notificationDispatcher;
 
 @end
@@ -80,7 +79,6 @@ ZM_EMPTY_ASSERTING_INIT()
         self.application = application;
         self.syncMOC = storeProvider.contextDirectory.syncContext;
         self.uiMOC = storeProvider.contextDirectory.uiContext;
-        self.hotFix = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
         self.applicationStatusDirectory = applicationStatusDirectory;
         self.strategyDirectory = strategyDirectory;
         self.eventProcessingTracker = eventProcessingTracker;
@@ -136,16 +134,6 @@ ZM_EMPTY_ASSERTING_INIT()
 - (NSManagedObjectContext *)moc
 {
     return self.syncMOC;
-}
-
-- (void)applyHotFixes
-{
-    [self.hotFix applyPatches];
-}
-
-- (BOOL)isReadyToProcessEvents
-{
-    return !self.applicationStatusDirectory.syncStatus.isSyncing;
 }
 
 - (void)tearDown

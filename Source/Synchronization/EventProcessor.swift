@@ -89,9 +89,7 @@ class EventProcessor: UpdateEventProcessor {
         } else {
             processStoredUpdateEvents()
         }
-        
-//        applyHotFixes() TODO jacob move elsewhere
-        
+                
         return false
     }
     
