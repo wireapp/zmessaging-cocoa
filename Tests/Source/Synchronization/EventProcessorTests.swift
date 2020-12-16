@@ -40,11 +40,11 @@ class EventProcessorTests: MessagingTest {
         syncStateDelegate = MockSyncStateDelegate()
         
         syncStatus = SyncStatus(managedObjectContext: contextDirectory.syncContext,
-                                    syncStateDelegate: syncStateDelegate)
+                                syncStateDelegate: syncStateDelegate)
         
         storeProvider = MockLocalStoreProvider(sharedContainerDirectory: sharedContainerURL,
-                                                    userIdentifier: userIdentifier,
-                                                    contextDirectory: contextDirectory)
+                                               userIdentifier: userIdentifier,
+                                               contextDirectory: contextDirectory)
         
         sut = EventProcessor(storeProvider: storeProvider,
                              syncStatus: syncStatus,
