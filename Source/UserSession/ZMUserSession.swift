@@ -270,12 +270,12 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     
     private func createStrategyDirectory() -> StrategyDirectoryProtocol {
         return StrategyDirectory(contextDirectory: storeProvider.contextDirectory,
-                                      applicationStatusDirectory: applicationStatusDirectory!,
-                                      cookieStorage: transportSession.cookieStorage,
-                                      pushMessageHandler: localNotificationDispatcher!,
-                                      flowManager: flowManager,
-                                      updateEventProcessor: updateEventProcessor!,
-                                      localNotificationDispatcher: localNotificationDispatcher!)
+                                 applicationStatusDirectory: applicationStatusDirectory!,
+                                 cookieStorage: transportSession.cookieStorage,
+                                 pushMessageHandler: localNotificationDispatcher!,
+                                 flowManager: flowManager,
+                                 updateEventProcessor: updateEventProcessor!,
+                                 localNotificationDispatcher: localNotificationDispatcher!)
     }
     
     private func createUpdateEventProcessor() -> EventProcessor {
