@@ -52,7 +52,7 @@ public class StrategyDirectory: NSObject, StrategyDirectoryProtocol {
                                                updateEventProcessor: updateEventProcessor,
                                                localNotificationDispatcher: localNotificationDispatcher)
         
-        self.requestStrategies = strategies.compactMap({ $0 as? RequestStrategy})
+        self.requestStrategies = strategies.compactMap({ $0 as? RequestStrategy })
         self.eventConsumers = strategies.compactMap({ $0 as? ZMEventConsumer })
         self.contextChangeTrackers = strategies.flatMap({ (object: Any) -> [ZMContextChangeTracker] in
             if let source = object as? ZMContextChangeTrackerSource {
