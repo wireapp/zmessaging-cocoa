@@ -66,8 +66,6 @@
     self.mockSessionManager = [[MockSessionManager alloc] init];
     self.mediaManager = [[MockMediaManager alloc] init];
     self.flowManagerMock = [[FlowManagerMock alloc] init];
-    self.requestAvailableNotification = [OCMockObject mockForClass:ZMRequestAvailableNotification.class];
-        
     self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
     
     MockStrategyDirectory *mockStrategyDirectory = [[MockStrategyDirectory alloc] init];
@@ -117,8 +115,6 @@
     self.sut.thirdPartyServicesDelegate = nil;
     self.mockSessionManager = nil;
     self.transportSession = nil;
-    [self.requestAvailableNotification stopMocking];
-    self.requestAvailableNotification = nil;
     self.mediaManager = nil;
     self.flowManagerMock = nil;
     id tempSut = self.sut;
