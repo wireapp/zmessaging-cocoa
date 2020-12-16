@@ -274,7 +274,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                                       cookieStorage: transportSession.cookieStorage,
                                       pushMessageHandler: localNotificationDispatcher!,
                                       flowManager: flowManager,
-                                      updateEventProcessor: self,
+                                      updateEventProcessor: updateEventProcessor!,
                                       localNotificationDispatcher: localNotificationDispatcher!)
     }
     
@@ -546,31 +546,4 @@ extension ZMUserSession: URLActionProcessor {
     func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         urlActionProcessors?.forEach({ $0.process(urlAction: urlAction, delegate: delegate)} )
     }
-}
-
-// TODO jacob temporary solution while refactoring
-extension ZMUserSession: UpdateEventProcessor {
-  
-
-    public var eventConsumers: [ZMEventConsumer] {
-          get {
-            return updateEventProcessor?.eventConsumers ?? []
-          }
-          set {
-            updateEventProcessor?.eventConsumers = newValue
-          }
-      }
-    
-    public func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
-        updateEventProcessor?.storeUpdateEvents(updateEvents, ignoreBuffer: ignoreBuffer)
-    }
-
-    public func storeAndProcessUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
-        updateEventProcessor?.storeAndProcessUpdateEvents(updateEvents, ignoreBuffer: ignoreBuffer)
-    }
-    
-    public func processEventsIfReady() -> Bool {
-        return updateEventProcessor!.processEventsIfReady()
-    }
-
 }
