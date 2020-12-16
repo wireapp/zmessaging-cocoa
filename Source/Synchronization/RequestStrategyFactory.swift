@@ -23,7 +23,7 @@ public protocol StrategyDirectoryProtocol {
         
     var eventConsumers: [ZMEventConsumer] { get }
     var requestStrategies: [RequestStrategy] { get }
-    var contextChangeTrackers: [ZMContextChangeTracker] {get }
+    var contextChangeTrackers: [ZMContextChangeTracker] { get }
     
 }
 
