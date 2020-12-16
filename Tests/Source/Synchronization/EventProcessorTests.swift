@@ -85,7 +85,7 @@ class EventProcessorTests: MessagingTest {
     // MARK: - Tests
     
     func testThatEventsAreForwardedToAllEventConsumers_WhenProcessed() {
-        // given)
+        // given
         let events = createSampleEvents()
         completeQuickSync()
         
