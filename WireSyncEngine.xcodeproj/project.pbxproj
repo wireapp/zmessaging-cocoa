@@ -147,6 +147,7 @@
 		168E96DD220C6EB700FC92FA /* UserTests+AccountDeletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168E96DC220C6EB700FC92FA /* UserTests+AccountDeletion.swift */; };
 		16904A84207E078C00C92806 /* ConversationTests+Participants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16904A83207E078C00C92806 /* ConversationTests+Participants.swift */; };
 		1693151125836E5800709F15 /* EventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1693151025836E5800709F15 /* EventProcessor.swift */; };
+		1693151F2588CF9500709F15 /* EventProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1693151E2588CF9500709F15 /* EventProcessorTests.swift */; };
 		16962EE220286A4C0069D88D /* LocalNotificationType+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16962EE120286A4C0069D88D /* LocalNotificationType+Localization.swift */; };
 		16962EE420286D690069D88D /* LocalNotificationType+Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16962EE320286D690069D88D /* LocalNotificationType+Configuration.swift */; };
 		16962EE52028A86D0069D88D /* ZMLocalNotificationLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB568181FA22FBE003ADA3A /* ZMLocalNotificationLocalizationTests.swift */; };
@@ -788,6 +789,7 @@
 		168E96DC220C6EB700FC92FA /* UserTests+AccountDeletion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserTests+AccountDeletion.swift"; sourceTree = "<group>"; };
 		16904A83207E078C00C92806 /* ConversationTests+Participants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+Participants.swift"; sourceTree = "<group>"; };
 		1693151025836E5800709F15 /* EventProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventProcessor.swift; sourceTree = "<group>"; };
+		1693151E2588CF9500709F15 /* EventProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventProcessorTests.swift; sourceTree = "<group>"; };
 		16962EE120286A4C0069D88D /* LocalNotificationType+Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalNotificationType+Localization.swift"; sourceTree = "<group>"; };
 		16962EE320286D690069D88D /* LocalNotificationType+Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalNotificationType+Configuration.swift"; sourceTree = "<group>"; };
 		169BC10E22BD17FF0003159B /* LegalHoldRequestStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalHoldRequestStrategyTests.swift; sourceTree = "<group>"; };
@@ -2198,6 +2200,7 @@
 				873B893D20445F4400FBE254 /* ZMConversationAccessModeTests.swift */,
 				7C419ED621F8D7EB00B95770 /* EventProcessingTrackerTests.swift */,
 				166E47D2255EF0BD00C161C8 /* MockStrategyDirectory.swift */,
+				1693151E2588CF9500709F15 /* EventProcessorTests.swift */,
 			);
 			path = Synchronization;
 			sourceTree = "<group>";
@@ -2929,6 +2932,7 @@
 				F93F3A591ED5A67E003CD185 /* TeamTests.swift in Sources */,
 				F92CA9651F153622007D8570 /* ZMUserSessionTests+FileRelocation.swift in Sources */,
 				F9E4779F1D216467003A99AC /* ZMLocalNotificationSetTests.swift in Sources */,
+				1693151F2588CF9500709F15 /* EventProcessorTests.swift in Sources */,
 				F9B71F4C1CB2B841001DB03F /* NSManagedObjectContext+TestHelpers.m in Sources */,
 				F991CE151CB55512004D8465 /* ZMConversation+Testing.m in Sources */,
 				545434A919AB6ADA003892D9 /* ZMConversationTranscoderTests.m in Sources */,
