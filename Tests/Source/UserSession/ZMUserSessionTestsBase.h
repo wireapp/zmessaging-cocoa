@@ -73,10 +73,7 @@
 @property (nonatomic) NSUInteger dataChangeNotificationsCount;
 @property (nonatomic) ThirdPartyServices *thirdPartyServices;
 @property (nonatomic) id requestAvailableNotification;
-@property (nonatomic) SyncStatus *mockSyncStatus;
 @property (nonatomic) MockSyncStateDelegate *mockSyncStateDelegate;
-@property (nonatomic) ZMClientRegistrationStatus * clientRegistrationStatus;
-@property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 @property (nonatomic) id<LocalStoreProviderProtocol> storeProvider;
 
 - (void)simulateLoggedInUser;
