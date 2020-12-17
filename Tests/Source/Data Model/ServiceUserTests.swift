@@ -51,6 +51,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var isVerified: Bool = false
     
+    var isTrusted: Bool = true
+    
     var richProfile: [UserRichProfileField] = []
     
     /// Whether the user can create conversations.
