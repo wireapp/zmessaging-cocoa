@@ -212,8 +212,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.hotFix = ZMHotFix(syncMOC: storeProvider.contextDirectory.syncContext)
         super.init()
         
-        ZMUserAgent.setWireAppVersion(appVersion)
-        
         configureCaches()
         
         syncManagedObjectContext.performGroupedBlockAndWait {

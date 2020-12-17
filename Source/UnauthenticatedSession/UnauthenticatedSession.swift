@@ -54,7 +54,9 @@ public class UnauthenticatedSession: NSObject {
 
     weak var delegate: UnauthenticatedSessionDelegate?
 
-    init(transportSession: UnauthenticatedTransportSessionProtocol, reachability: ReachabilityProvider, delegate: UnauthenticatedSessionDelegate?) {
+    init(transportSession: UnauthenticatedTransportSessionProtocol,
+         reachability: ReachabilityProvider,
+         delegate: UnauthenticatedSessionDelegate?) {
         self.delegate = delegate
         self.groupQueue = DispatchGroupQueue(queue: .main)
         self.registrationStatus = RegistrationStatus()
