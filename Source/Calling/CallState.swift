@@ -76,7 +76,6 @@ public struct CallParticipant: Hashable {
     }
 
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(state)
         hasher.combine(userId)
         hasher.combine(clientId)
     }

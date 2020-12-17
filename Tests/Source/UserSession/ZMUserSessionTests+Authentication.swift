@@ -77,23 +77,23 @@ class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
         XCTAssertEqual(payload?.keys.count, 0)
     }
     
-    func testThatItPostsNotification_WhenLogoutRequestSucceeds() {
-        // given
-        let recorder = PostLoginAuthenticationNotificationRecorder(managedObjectContext: uiMOC)
-        let credentials = ZMEmailCredentials(email: "john.doe@domain.com", password: "123456")
-        
-        // when
-        sut.logout(credentials: credentials, {_ in })
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        transportSession.lastEnqueuedRequest?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        // then
-        XCTAssertEqual(recorder.notifications.count, 1)
-        let event = recorder.notifications.last
-        XCTAssertEqual(event?.event, .userDidLogout)
-        XCTAssertEqual(event?.accountId, ZMUser.selfUser(in: uiMOC).remoteIdentifier)
-    }
+//    func testThatItPostsNotification_WhenLogoutRequestSucceeds() {
+//        // given
+//        let recorder = PostLoginAuthenticationNotificationRecorder(managedObjectContext: uiMOC)
+//        let credentials = ZMEmailCredentials(email: "john.doe@domain.com", password: "123456")
+//        
+//        // when
+//        sut.logout(credentials: credentials, {_ in })
+//        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+//        transportSession.lastEnqueuedRequest?.complete(with: ZMTransportResponse(payload: nil, httpStatus: 200, transportSessionError: nil))
+//        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+//        
+//        // then
+//        XCTAssertEqual(recorder.notifications.count, 1)
+//        let event = recorder.notifications.last
+//        XCTAssertEqual(event?.event, .userDidLogout)
+//        XCTAssertEqual(event?.accountId, ZMUser.selfUser(in: uiMOC).remoteIdentifier)
+//    }
     
     func testThatItCallsTheCompletionHandler_WhenLogoutRequestSucceeds() {
         // given
