@@ -27,6 +27,7 @@
     case fetchingSelfUser
     case fetchingLegalHoldStatus
     case fetchingFeatureFlags
+    case fetchingFeatureConfigs
     case fetchingLabels
     case fetchingMissedEvents
     case done
