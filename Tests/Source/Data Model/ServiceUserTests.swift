@@ -52,9 +52,7 @@ final class DummyServiceUser: NSObject, ServiceUser {
     var readReceiptsEnabled: Bool = true
     
     var isVerified: Bool = false
-    
-    var isTrusted: Bool = true
-    
+        
     var richProfile: [UserRichProfileField] = []
     
     /// Whether the user can create conversations.
