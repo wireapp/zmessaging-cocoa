@@ -23,7 +23,7 @@ import XCTest
 
 final class DummyServiceUser: NSObject, ServiceUser {
     
-    var isTrusted: Bool = true
+    var isTrusted: Bool = false
     
     var hasLegalHoldRequest: Bool = false
     
