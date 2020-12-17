@@ -27,25 +27,57 @@ private let zmLog = ZMSLog(tag: "calling")
 
 public struct CallParticipant: Hashable {
     
-    public let user: ZMUser
+    public let user: UserType
     public let clientId: String
+    public let userId: UUID
     public let state: CallParticipantState
-
-    public init(user: ZMUser, clientId: String, state: CallParticipantState) {
+    
+    /// convenience init method for ZMUser
+    /// - Parameters:
+    ///   - user: the call participant ZMUser
+    ///   - clientId: the call participant's client
+    ///   - state: the call participant's state
+    public init(user: ZMUser,
+                clientId: String,
+                state: CallParticipantState) {
         self.user = user
         self.clientId = clientId
+        self.userId = user.remoteIdentifier
+        self.state = state
+    }
+
+    /// Init with separated user and user id to allow CallParticipant to be Hashable even though user is not Hashable
+    /// - Parameters:
+    ///   - user: the call participant user
+    ///   - userId: the call participant user's id
+    ///   - clientId: the call participant's client
+    ///   - state: the call participant's state
+    public init(user: UserType,
+                userId: UUID,
+                clientId: String,
+                state: CallParticipantState) {
+        self.user = user
+        self.clientId = clientId
+        self.userId = userId
         self.state = state
     }
 
     init?(member: AVSCallMember, context: NSManagedObjectContext) {
         guard let user = ZMUser(remoteID: member.client.userId, createIfNeeded: false, in: context) else { return nil }
-        self.init(user: user, clientId: member.client.clientId, state: member.callParticipantState)
+        self.init(user: user, userId: user.remoteIdentifier, clientId: member.client.clientId, state: member.callParticipantState)
     }
 
     // MARK: - Hashable
 
+    public static func == (lhs: CallParticipant, rhs: CallParticipant) -> Bool {
+        return lhs.userId == rhs.userId &&
+               lhs.clientId == rhs.clientId &&
+               lhs.state == rhs.state
+    }
+
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(user.remoteIdentifier)
+        hasher.combine(state)
+        hasher.combine(userId)
         hasher.combine(clientId)
     }
 
@@ -56,7 +88,7 @@ public struct CallParticipant: Hashable {
  * The state of a participant in a call.
  */
 
-public enum CallParticipantState: Equatable {
+public enum CallParticipantState: Equatable, Hashable {
     /// Participant is not in the call
     case unconnected
     /// A network problem occured but the call may still connect

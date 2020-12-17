@@ -102,7 +102,7 @@ class VoiceChannelV3Tests : MessagingTest {
         ]
         
         // When / Then
-        XCTAssert(sut.firstDegradedUser == user)
+        XCTAssert(sut.firstDegradedUser as? ZMUser == user)
     }
     
     func testThatItReturnsNil_IfNoDegradedUser() {
