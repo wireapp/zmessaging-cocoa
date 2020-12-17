@@ -69,13 +69,9 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     public var encryptionAtRestEnabledByDefault: Bool
 
     /// If set to true, then the app lock feature will use biometric authentication if available,
-    /// or fallback on the account password.
+    /// or fallback on the custom passcode.
 
-    public var useBiometricsOrAccountPassword: Bool
-
-    /// If set to true, then the app lock feature will require a custom passcode to be created.
-
-    public var useCustomCodeInsteadOfAccountPassword: Bool
+    public var useBiometricsOrCustomPasscode: Bool
 
     /// If set to true, the the app lock feature will be mandatory and can not be disabled by the
     /// user.
@@ -97,8 +93,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         authenticateAfterReboot: Bool = false,
         failedPasswordThresholdBeforeWipe: Int? = nil,
         encryptionAtRestIsEnabledByDefault: Bool = false,
-        useBiometricsOrAccountPassword: Bool = false,
-        useCustomCodeInsteadOfAccountPassword: Bool = false,
+        useBiometricsOrCustomPasscode: Bool = false,
         forceAppLock: Bool = false,
         appLockTimeout: UInt = 10) {
 
@@ -110,8 +105,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         self.authenticateAfterReboot = authenticateAfterReboot
         self.failedPasswordThresholdBeforeWipe = failedPasswordThresholdBeforeWipe
         self.encryptionAtRestEnabledByDefault = encryptionAtRestIsEnabledByDefault
-        self.useBiometricsOrAccountPassword = useBiometricsOrAccountPassword
-        self.useCustomCodeInsteadOfAccountPassword = useCustomCodeInsteadOfAccountPassword
+        self.useBiometricsOrCustomPasscode = useBiometricsOrCustomPasscode
         self.forceAppLock = forceAppLock
         self.appLockTimeout = appLockTimeout
     }
@@ -126,8 +120,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         authenticateAfterReboot = try container.decode(Bool.self, forKey: .authenticateAfterReboot)
         failedPasswordThresholdBeforeWipe = try container.decodeIfPresent(Int.self, forKey: .failedPasswordThresholdBeforeWipe)
         encryptionAtRestEnabledByDefault = try container.decode(Bool.self, forKey: .encryptionAtRestEnabledByDefault)
-        useBiometricsOrAccountPassword = try container.decode(Bool.self, forKey: .useBiometricsOrAccountPassword)
-        useCustomCodeInsteadOfAccountPassword = try container.decodeIfPresent(Bool.self, forKey: .useCustomCodeInsteadOfAccountPassword) ?? false
+        useBiometricsOrCustomPasscode = try container.decode(Bool.self, forKey: .useBiometricsOrCustomPasscode)
         forceAppLock = try container.decode(Bool.self, forKey: .forceAppLock)
         appLockTimeout = try container.decode(UInt.self, forKey: .appLockTimeout)
     }
@@ -144,8 +137,7 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
             authenticateAfterReboot: authenticateAfterReboot,
             failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe,
             encryptionAtRestIsEnabledByDefault: encryptionAtRestEnabledByDefault,
-            useBiometricsOrAccountPassword: useBiometricsOrAccountPassword,
-            useCustomCodeInsteadOfAccountPassword: useCustomCodeInsteadOfAccountPassword,
+            useBiometricsOrCustomPasscode: useBiometricsOrCustomPasscode,
             forceAppLock: forceAppLock,
             appLockTimeout: appLockTimeout
         )
@@ -180,8 +172,7 @@ extension SessionManagerConfiguration {
         case authenticateAfterReboot
         case failedPasswordThresholdBeforeWipe
         case encryptionAtRestEnabledByDefault
-        case useBiometricsOrAccountPassword
-        case useCustomCodeInsteadOfAccountPassword
+        case useBiometricsOrCustomPasscode
         case forceAppLock
         case appLockTimeout
     }
@@ -194,8 +185,7 @@ extension SessionManagerConfiguration {
 
     var appLockConfig: AppLockController.Config {
         return .init(
-            useBiometricsOrAccountPassword: useBiometricsOrAccountPassword,
-            useCustomCodeInsteadOfAccountPassword: useCustomCodeInsteadOfAccountPassword,
+            useBiometricsOrCustomPasscode: useBiometricsOrCustomPasscode,
             forceAppLock: forceAppLock,
             timeOut: appLockTimeout
         )
