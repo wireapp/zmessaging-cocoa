@@ -46,39 +46,6 @@
     self.lastReceivedNotification = notification;
 }
 
-- (void)testThatItSetsTheUserAgentOnStart;
-{
-    // given
-    NSString *version = @"The-version-123";
-    id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
-    [[[transportSession stub] andReturn:[OCMockObject niceMockForClass:[ZMPersistentCookieStorage class]]] cookieStorage];
-    
-    // expect
-    id userAgent = [OCMockObject mockForClass:ZMUserAgent.class];
-    [[[userAgent expect] classMethod] setWireAppVersion:version];
-    
-    // when
-    ZMUserSession *session = [[ZMUserSession alloc] initWithTransportSession:transportSession
-                                                                mediaManager:self.mediaManager
-                                                                 flowManager:self.flowManagerMock
-                                                                   analytics:nil
-                                                              eventProcessor:nil
-                                                           strategyDirectory:nil
-                                                                syncStrategy:nil
-                                                               operationLoop:nil
-                                                                 application:self.application
-                                                                  appVersion:version
-                                                               storeProvider:self.storeProvider
-                                                               configuration:ZMUserSessionConfiguration.defaultConfig];
-    XCTAssertNotNil(session);
-    
-    // then
-    [userAgent verify];
-    [userAgent stopMocking];
-    [session tearDown];
-    [transportSession stopMocking];
-}
-
 - (void)testThatWeCanGetAManagedObjectContext
 {
 

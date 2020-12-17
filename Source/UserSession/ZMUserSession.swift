@@ -216,8 +216,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
         self.appLockController = AppLockController(config: configuration.appLockConfig, selfUser: ZMUser.selfUser(in: storeProvider.contextDirectory.uiContext))
         super.init()
         
-        ZMUserAgent.setWireAppVersion(appVersion)
-        
         configureCaches()
         
         syncManagedObjectContext.performGroupedBlockAndWait {
