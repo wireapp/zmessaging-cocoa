@@ -94,8 +94,7 @@ extension ZMUserSession.Configuration {
     static var defaultConfig: ZMUserSession.Configuration {
         Self.init(
             appLockConfig: .init(
-                useBiometricsOrAccountPassword: false,
-                useCustomCodeInsteadOfAccountPassword: false,
+                useBiometricsOrCustomPasscode: false,
                 forceAppLock: false,
                 timeOut: 10
             )
