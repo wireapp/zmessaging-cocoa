@@ -53,8 +53,8 @@ public final class FeatureConfigRequestStrategy: AbstractRequestStrategy, ZMCont
     // MARK: - Init
     @objc
     public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext,
-                         applicationStatus: ApplicationStatus,
-                         syncStatus: SyncStatus) {
+                applicationStatus: ApplicationStatus,
+                syncStatus: SyncStatus) {
 
         self.syncStatus = syncStatus
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
