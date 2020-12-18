@@ -22,19 +22,27 @@ class FeatureConfigRequestStrategyTests: MessagingTest {
 
     var mockApplicationStatus: MockApplicationStatus!
     var sut: FeatureConfigRequestStrategy!
+    var mockSyncStatus: MockSyncStatus!
+    var mockSyncStateDelegate: MockSyncStateDelegate!
 
     override func setUp() {
         super.setUp()
+        mockSyncStateDelegate = MockSyncStateDelegate()
+        mockSyncStatus = MockSyncStatus(managedObjectContext: syncMOC, syncStateDelegate: mockSyncStateDelegate)
         mockApplicationStatus = MockApplicationStatus()
         mockApplicationStatus.mockSynchronizationState = .slowSyncing
+        
 
         sut = FeatureConfigRequestStrategy(withManagedObjectContext: syncMOC,
-                                           applicationStatus: mockApplicationStatus)
+                                           applicationStatus: mockApplicationStatus,
+                                           syncStatus: mockSyncStatus)
     }
 
     override func tearDown() {
         mockApplicationStatus = nil
         sut = nil
+        mockSyncStatus = nil
+        mockSyncStateDelegate = nil
         super.tearDown()
     }
 
