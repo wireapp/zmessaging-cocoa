@@ -86,7 +86,6 @@ public final class FeatureConfigRequestStrategy: AbstractRequestStrategy, ZMCont
 
     // MARK: - Overrides
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
-        guard syncStatus.currentSyncPhase == .fetchingFeatureConfigs else { return nil }
         return fetchAllConfigsSync.nextRequest() ?? fetchSingleConfigSync.nextRequest()
     }
 
@@ -131,10 +130,6 @@ extension FeatureConfigRequestStrategy: ZMDownstreamTranscoder {
         } catch {
             zmLog.error("Failed to process feature config response: \(error.localizedDescription)")
         }
-        
-        if syncStatus.currentSyncPhase == .fetchingFeatureConfigs {
-            syncStatus.finishCurrentSyncPhase(phase: .fetchingFeatureConfigs)
-        }
     }
 
     public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
@@ -157,12 +152,18 @@ extension FeatureConfigRequestStrategy: ZMSingleRequestTranscoder {
     }
 
     public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
+        defer {
+            if syncStatus.currentSyncPhase == .fetchingFeatureConfigs {
+                syncStatus.finishCurrentSyncPhase(phase: .fetchingFeatureConfigs)
+            }
+        }
         guard
             sync == fetchAllConfigsSync,
             let team = team,
             response.result == .success,
             let responseData = response.rawData
         else {
+            
             return
         }
 
@@ -171,10 +172,6 @@ extension FeatureConfigRequestStrategy: ZMSingleRequestTranscoder {
             featureController.store(feature: allConfigs.applock.asFeature, in: team)
         } catch {
             zmLog.error("Failed to decode feature config response: \(error)")
-        }
-        
-        if syncStatus.currentSyncPhase == .fetchingFeatureConfigs {
-            syncStatus.finishCurrentSyncPhase(phase: .fetchingFeatureConfigs)
         }
     }
 }
