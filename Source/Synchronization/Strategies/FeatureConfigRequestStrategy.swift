@@ -61,7 +61,7 @@ public final class FeatureConfigRequestStrategy: AbstractRequestStrategy, ZMCont
 
         configuration = [
             .allowsRequestsWhileOnline,
-            .allowsRequestsDuringQuickSync,
+            .allowsRequestsDuringSlowSync,
             .allowsRequestsWhileInBackground
         ]
 
