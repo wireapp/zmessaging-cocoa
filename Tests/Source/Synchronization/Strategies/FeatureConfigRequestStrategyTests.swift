@@ -101,9 +101,9 @@ class FeatureConfigRequestStrategyTests: MessagingTest {
         self.syncMOC.performGroupedAndWait { moc in
             // given
             let teamId = self.createTeam(for: .selfUser(in: moc)).remoteIdentifier!
+            self.sut.syncStatus.currentSyncPhase = .fetchingFeatureConfigs
 
             // when
-            Feature.triggerBackendRefreshForAllConfigs()
             guard let request = self.sut.nextRequestIfAllowed() else { return XCTFail() }
 
             // then
@@ -112,13 +112,27 @@ class FeatureConfigRequestStrategyTests: MessagingTest {
         }
     }
 
+    func test_ItDoesNotGenerateARequest_ToFetchAllConfigs_WhenNotInCorrectSyncPhase() {
+        self.syncMOC.performGroupedAndWait { moc in
+            // given
+            _ = self.createTeam(for: .selfUser(in: moc)).remoteIdentifier!
+            self.sut.syncStatus.currentSyncPhase = .fetchingLabels
+
+            // when
+            let request = self.sut.nextRequestIfAllowed()
+
+            // then
+            XCTAssertNil(request)
+        }
+    }
+
     func test_ItDoesNotGenerateARequest_ToFetchAllConfigs_WithoutATeam() {
         self.syncMOC.performGroupedAndWait { moc in
             // given
             XCTAssertNil(ZMUser.selfUser(in: moc).team)
+            self.sut.syncStatus.currentSyncPhase = .fetchingFeatureConfigs
 
             // when
-            Feature.triggerBackendRefreshForAllConfigs()
             let request = self.sut.nextRequestIfAllowed()
 
             // then
