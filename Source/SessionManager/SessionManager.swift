@@ -252,52 +252,20 @@ public final class SessionManager : NSObject, SessionManagerType {
     }
     
     private static var avsLogObserver: AVSLogObserver?
-
-    /// The entry point for SessionManager; call this instead of the initializers.
-    ///
-    public static func create(
-        appVersion: String,
-        mediaManager: MediaManagerType,
-        analytics: AnalyticsType?,
-        delegate: SessionManagerDelegate?,
-        presentationDelegate: PresentationDelegate?,
-        application: ZMApplication,
-        environment: BackendEnvironmentProvider,
-        configuration: SessionManagerConfiguration,
-        detector: JailbreakDetectorProtocol = JailbreakDetector(),
-        completion: @escaping (SessionManager) -> Void
-        ) {
-        
-        application.executeWhenFileSystemIsAccessible {
-            completion(SessionManager(
-                appVersion: appVersion,
-                mediaManager: mediaManager,
-                analytics: analytics,
-                delegate: delegate,
-                presentationDelegate: presentationDelegate,
-                application: application,
-                environment: environment,
-                configuration: configuration,
-                detector: detector
-            ))
-        }
-    }
     
     public override init() {
         fatal("init() not implemented")
     }
     
-    private convenience init(
+    public convenience init(
         appVersion: String,
         mediaManager: MediaManagerType,
         analytics: AnalyticsType?,
         delegate: SessionManagerDelegate?,
-        presentationDelegate: PresentationDelegate?,
         application: ZMApplication,
         environment: BackendEnvironmentProvider,
         configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
-        detector: JailbreakDetectorProtocol = JailbreakDetector()
-        ) {
+        detector: JailbreakDetectorProtocol = JailbreakDetector()) {
         
         let group = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
         let flowManager = FlowManager(mediaManager: mediaManager)
@@ -315,19 +283,17 @@ public final class SessionManager : NSObject, SessionManagerType {
             analytics: analytics
           )
 
-        self.init(
-            appVersion: appVersion,
-            authenticatedSessionFactory: authenticatedSessionFactory,
-            unauthenticatedSessionFactory: unauthenticatedSessionFactory,
-            analytics: analytics,
-            reachability: reachability,
-            delegate: delegate,
-            application: application,
-            pushRegistry: PKPushRegistry(queue: nil),
-            environment: environment,
-            configuration: configuration,
-            detector: detector
-        )
+        self.init(appVersion: appVersion,
+                  authenticatedSessionFactory: authenticatedSessionFactory,
+                  unauthenticatedSessionFactory: unauthenticatedSessionFactory,
+                  analytics: analytics,
+                  reachability: reachability,
+                  delegate: delegate,
+                  application: application,
+                  pushRegistry: PKPushRegistry(queue: nil),
+                  environment: environment,
+                  configuration: configuration,
+                  detector: detector)
         
         if configuration.blacklistDownloadInterval > 0 {
             self.blacklistVerificator = ZMBlacklistVerificator(checkInterval: configuration.blacklistDownloadInterval,
@@ -366,21 +332,19 @@ public final class SessionManager : NSObject, SessionManagerType {
         NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive(_:)), name: UIApplication.didBecomeActiveNotification, object: nil)
     }
 
-    init(
-        appVersion: String,
-        authenticatedSessionFactory: AuthenticatedSessionFactory,
-        unauthenticatedSessionFactory: UnauthenticatedSessionFactory,
-        analytics: AnalyticsType? = nil,
-        reachability: ReachabilityProvider & TearDownCapable,
-        delegate: SessionManagerDelegate?,
-        application: ZMApplication,
-        pushRegistry: PushRegistry,
-        dispatchGroup: ZMSDispatchGroup? = nil,
-        environment: BackendEnvironmentProvider,
-        configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
-        detector: JailbreakDetectorProtocol = JailbreakDetector()
-        ) {
-
+    init(appVersion: String,
+         authenticatedSessionFactory: AuthenticatedSessionFactory,
+         unauthenticatedSessionFactory: UnauthenticatedSessionFactory,
+         analytics: AnalyticsType? = nil,
+         reachability: ReachabilityProvider & TearDownCapable,
+         delegate: SessionManagerDelegate?,
+         application: ZMApplication,
+         pushRegistry: PushRegistry,
+         dispatchGroup: ZMSDispatchGroup? = nil,
+         environment: BackendEnvironmentProvider,
+         configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
+         detector: JailbreakDetectorProtocol = JailbreakDetector()) {
+        
         SessionManager.enableLogsByEnvironmentVariable()
         self.environment = environment
         self.appVersion = appVersion
@@ -389,14 +353,14 @@ public final class SessionManager : NSObject, SessionManagerType {
         self.dispatchGroup = dispatchGroup
         self.configuration = configuration.copy() as! SessionManagerConfiguration
         self.jailbreakDetector = detector
-
+        
         guard let sharedContainerURL = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else {
             preconditionFailure("Unable to get shared container URL")
         }
-
+        
         self.sharedContainerURL = sharedContainerURL
         self.accountManager = AccountManager(sharedDirectory: sharedContainerURL)
-
+        
         log.debug("Starting the session manager:")
         
         if self.accountManager.accounts.count > 0 {
@@ -422,7 +386,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         // received a push from terminated state, it requires these properties to be
         // non nil in order to process the notification
         BackgroundActivityFactory.shared.activityManager = UIApplication.shared
-
+        
         if let analytics = analytics {
             self.notificationsTracker = NotificationsTracker(analytics: analytics)
         } else {
@@ -435,7 +399,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         // register for voIP push notifications
         self.pushRegistry.delegate = self
         self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
-
+        
         postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
         
