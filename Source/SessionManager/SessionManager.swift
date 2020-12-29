@@ -705,7 +705,8 @@ public final class SessionManager : NSObject, SessionManagerType {
         log.debug("Deleting the data for \(account.userName) -- \(account.userIdentifier)")
         
         environment.cookieStorage(for: account).deleteKeychainItems()
-        
+        account.deleteKeychainItems()
+
         let accountID = account.userIdentifier
         self.accountManager.remove(account)
         
