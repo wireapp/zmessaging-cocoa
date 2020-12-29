@@ -344,7 +344,7 @@ public final class SessionManager : NSObject, SessionManagerType {
          environment: BackendEnvironmentProvider,
          configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
          detector: JailbreakDetectorProtocol = JailbreakDetector()) {
-        
+
         SessionManager.enableLogsByEnvironmentVariable()
         self.environment = environment
         self.appVersion = appVersion
@@ -353,14 +353,14 @@ public final class SessionManager : NSObject, SessionManagerType {
         self.dispatchGroup = dispatchGroup
         self.configuration = configuration.copy() as! SessionManagerConfiguration
         self.jailbreakDetector = detector
-        
+
         guard let sharedContainerURL = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else {
             preconditionFailure("Unable to get shared container URL")
         }
-        
+
         self.sharedContainerURL = sharedContainerURL
         self.accountManager = AccountManager(sharedDirectory: sharedContainerURL)
-        
+
         log.debug("Starting the session manager:")
         
         if self.accountManager.accounts.count > 0 {
@@ -386,7 +386,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         // received a push from terminated state, it requires these properties to be
         // non nil in order to process the notification
         BackgroundActivityFactory.shared.activityManager = UIApplication.shared
-        
+
         if let analytics = analytics {
             self.notificationsTracker = NotificationsTracker(analytics: analytics)
         } else {
@@ -399,7 +399,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         // register for voIP push notifications
         self.pushRegistry.delegate = self
         self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
-        
+
         postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
         
