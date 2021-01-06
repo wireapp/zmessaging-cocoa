@@ -628,9 +628,7 @@ extension IntegrationTest {
 
 extension IntegrationTest: SessionManagerDelegate {
     
-    public func sessionManagerDidFailToLogin(account: Account?,
-                                      from selectedAccount: Account?,
-                                      error: Error) {
+    public func sessionManagerDidFailToLogin(error: Error?) {
         // no op
     }
     

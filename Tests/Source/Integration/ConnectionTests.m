@@ -149,7 +149,7 @@
     NSUUID *userID = [NSUUID createUUID];
     [self createUserWithName:userName uuid:userID];
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         NOT_USED(session);
         NSFetchRequest *fetchRequest = [MockUser sortedFetchRequestWithPredicate:[NSPredicate predicateWithFormat:@"identifier == %@", userID.transportString]];
         NSArray *users = [self.mockTransportSession.managedObjectContext executeFetchRequestOrAssert:fetchRequest];
@@ -399,9 +399,9 @@
     
     // when we add connection requests from remote users to the selfuser
     {
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-            [self addConnectionRequestInMockTransportsession:session forUser:mockUser1];
-            [self addConnectionRequestInMockTransportsession:session forUser:mockUser2];
+        [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
+            [self addConnectionRequestInMockTransportsession:(MockTransportSession<MockTransportSessionObjectCreation> *)session forUser:mockUser1];
+            [self addConnectionRequestInMockTransportsession:(MockTransportSession<MockTransportSessionObjectCreation> *)session forUser:mockUser2];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
     }
@@ -499,7 +499,7 @@
 
     __block MockUser *mockUser1;
     __block MockUser *mockUser2;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         mockUser1 = [session insertUserWithName:userName1];
         mockUser1.handle = @"hans";
         XCTAssertNotNil(mockUser1.identifier);
@@ -558,7 +558,7 @@
 
     // when the remote users accept the connection requests
     {
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
             [session remotelyAcceptConnectionToUser:mockUser1];
             [session remotelyAcceptConnectionToUser:mockUser2];
         }];
@@ -626,7 +626,7 @@
     NSString *userName1 = @"Hans Von Üser";
     
     __block MockUser *mockUser1;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         mockUser1 = [session insertUserWithName:userName1];
         XCTAssertNotNil(mockUser1.identifier);
         mockUser1.email = @"";
@@ -663,7 +663,7 @@
     
     // when the remote users accept the connection requests
     {
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
             [session remotelyAcceptConnectionToUser:mockUser1];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
@@ -685,7 +685,7 @@
     NSString *userName1 = @"Hans Von Üser";
     
     __block MockUser *mockUser1;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         mockUser1 = [session insertUserWithName:userName1];
         XCTAssertNotNil(mockUser1.identifier);
         mockUser1.email = @"";
@@ -720,7 +720,7 @@
     
     // when the remote users accept the connection requests
     {
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
             [session remotelyAcceptConnectionToUser:mockUser1];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
@@ -739,7 +739,7 @@
     NSString *userName1 = @"Hans Von Üser";
     
     __block MockUser *mockUser1;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         mockUser1 = [session insertUserWithName:userName1];
         XCTAssertNotNil(mockUser1.identifier);
         mockUser1.email = @"foo@bar.example.com";
@@ -777,7 +777,7 @@
     
     // when the remote users accept the connection requests
     {
-        [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+        [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
             [session remotelyAcceptConnectionToUser:mockUser1];
         }];
         WaitForAllGroupsToBeEmpty(0.5);
@@ -822,7 +822,7 @@
     NSString *userName1 = @"Hans Von Üser";
     
     __block MockUser *mockUser1;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         mockUser1 = [session insertUserWithName:userName1];
         XCTAssertNotNil(mockUser1.identifier);
         mockUser1.email = @"";
@@ -868,7 +868,7 @@
     NSString *userName1 = @"Hans Von Üser";
     
     __block MockUser *mockUser;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         mockUser = [session insertUserWithName:userName1];
         XCTAssertNotNil(mockUser.identifier);
         mockUser.email = @"";
@@ -946,7 +946,7 @@
     XCTAssertEqual(ZMConnectionTranscoderPageSize, 2u);
     
     __block NSUInteger numberOfConnections;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         for(int i = 0; i < 11; ++i) {
             MockUser *user = [session insertUserWithName:@"foo foo"];
             user.identifier = [NSUUID createUUID].transportString;

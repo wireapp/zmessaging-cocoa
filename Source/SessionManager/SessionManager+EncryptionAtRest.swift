@@ -36,6 +36,7 @@ extension SessionManager: UserSessionEncryptionAtRestDelegate {
                                                     try context.enableEncryptionAtRest(encryptionKeys: encryptionKeys)
                                                 } else {
                                                     try context.disableEncryptionAtRest(encryptionKeys: encryptionKeys)
+                                                    try EncryptionKeys.deleteKeys(for: account)
                                                 }
             }) { result in
                 switch result {

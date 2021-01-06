@@ -22,6 +22,8 @@
 @protocol LocalStoreProviderProtocol;
 @protocol FlowManagerType;
 @protocol TransportSessionType;
+@protocol RequestStrategy;
+@protocol UpdateEventProcessor;
 
 @class ZMPersistentCookieStorage;
 @class ApplicationStatusDirectory;
@@ -36,7 +38,8 @@ extern NSString * const ZMPushChannelIsOpenKey;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithTransportSession:(id<TransportSessionType>)transportSession
-                            syncStrategy:(ZMSyncStrategy *)syncStrategy
+                         requestStrategy:(id<RequestStrategy>)requestStrategy
+                    updateEventProcessor:(id<UpdateEventProcessor>)updateEventProcessor
               applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
                                    uiMOC:(NSManagedObjectContext *)uiMOC
                                  syncMOC:(NSManagedObjectContext *)syncMOC;

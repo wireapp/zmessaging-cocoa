@@ -29,7 +29,6 @@ extension ZMUserSession {
         BackgroundActivityFactory.shared.resume()
         
         syncManagedObjectContext.performGroupedBlock {
-            self.operationLoop?.syncStrategy.missingUpdateEventsTranscoder.startDownloadingMissingNotifications()
             self.applicationStatusDirectory?.operationStatus.startBackgroundFetch(withCompletionHandler: completionHandler)
         }
     }
