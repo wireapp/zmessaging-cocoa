@@ -39,14 +39,8 @@ struct AVSActiveSpeakersChange: Codable {
     }
 }
 
-struct AVSActiveSpeaker {
-    let client: AVSClient
-    let audioLevel: Int
-}
-
-extension AVSActiveSpeaker: Equatable {
-    init(activeSpeaker: AVSActiveSpeakersChange.ActiveSpeaker) {
-        self.client = AVSClient(userId: activeSpeaker.userId, clientId: activeSpeaker.clientId)
-        self.audioLevel = activeSpeaker.audioLevel
+extension AVSActiveSpeakersChange.ActiveSpeaker {
+    var client: AVSClient {
+        AVSClient(userId: userId, clientId: clientId)
     }
 }

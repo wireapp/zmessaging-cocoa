@@ -33,7 +33,7 @@ struct CallSnapshot {
     let networkQuality: NetworkQuality
     let isConferenceCall: Bool
     let degradedUser: ZMUser?
-    let activeSpeakers: [AVSActiveSpeaker]
+    let activeSpeakers: [AVSActiveSpeakersChange.ActiveSpeaker]
     var conversationObserverToken : NSObjectProtocol?
 
     var isDegradedCall: Bool {
@@ -149,7 +149,7 @@ struct CallSnapshot {
      * - parameter activeSpeakers: The new active speakers of the call computed from AVS.
      */
     
-    func updateActiveSpeakers(_ activeSpeakers: [AVSActiveSpeaker]) -> CallSnapshot {
+    func updateActiveSpeakers(_ activeSpeakers: [AVSActiveSpeakersChange.ActiveSpeaker]) -> CallSnapshot {
         return CallSnapshot(callParticipants: callParticipants,
                             callState: callState,
                             callStarter: callStarter,
