@@ -132,53 +132,50 @@ final class SessionManagerTests: IntegrationTest {
         
         let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
 
-        var realSessionManager: SessionManager! = nil
         let observer = SessionManagerObserverMock()
         var createToken: Any? = nil
         var destroyToken: Any? = nil
-        SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: MockMediaManager(),
-                              analytics: nil,
-                              delegate: nil,
-                              presentationDelegate: nil,
-                              application: application,
-                              environment: sessionManager!.environment,
-                              configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
-                                
-                                let environment = MockEnvironment()
-                                let reachability = TestReachability()
-                                let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    application: application,
-                                    mediaManager: MockMediaManager(),
-                                    flowManager: FlowManagerMock(),
-                                    transportSession: self.mockTransportSession,
-                                    environment: environment,
-                                    reachability: reachability
-                                )
-                                
-                                sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
-                                sessionManager.start(launchOptions: [:])
-                                
-                                // WHEN
-                                createToken = sessionManager.addSessionManagerCreatedSessionObserver(observer)
-                                destroyToken = sessionManager.addSessionManagerDestroyedSessionObserver(observer)
-                                
-                                withExtendedLifetime(createToken) {
-                                    sessionManager.loadSession(for: account) { userSession in
-                                        realSessionManager = sessionManager
-                                        XCTAssertNotNil(userSession)
-                                        sessionManagerExpectation.fulfill()
-                                    }
-                                }
+        
+        let testSessionManager = SessionManager(appVersion: "0.0.0",
+                                                mediaManager: mockMediaManager,
+                                                analytics: nil,
+                                                delegate: nil,
+                                                application: application,
+                                                environment: sessionManager!.environment,
+                                                configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1))
+        
+        let environment = MockEnvironment()
+        let reachability = TestReachability()
+        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
+            application: application,
+            mediaManager: MockMediaManager(),
+            flowManager: FlowManagerMock(),
+            transportSession: self.mockTransportSession,
+            environment: environment,
+            reachability: reachability
+        )
+        
+        testSessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+        testSessionManager.start(launchOptions: [:])
+        
+        // WHEN
+        createToken = testSessionManager.addSessionManagerCreatedSessionObserver(observer)
+        destroyToken = testSessionManager.addSessionManagerDestroyedSessionObserver(observer)
+        
+        withExtendedLifetime(createToken) {
+            testSessionManager.loadSession(for: account) { userSession in
+                XCTAssertNotNil(userSession)
+                sessionManagerExpectation.fulfill()
+            }
         }
         
         // THEN
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
-        XCTAssertEqual([realSessionManager.activeUserSession!], observer.createdUserSession)
+        XCTAssertEqual([testSessionManager.activeUserSession!], observer.createdUserSession)
         
         // AND WHEN
         withExtendedLifetime(destroyToken) {
-            realSessionManager.tearDownBackgroundSession(for: account.userIdentifier)
+            testSessionManager.tearDownBackgroundSession(for: account.userIdentifier)
         }
     
         // THEN
@@ -219,52 +216,49 @@ final class SessionManagerTests: IntegrationTest {
         guard let application = application else { return XCTFail() }
         
         let sessionManagerExpectation = self.expectation(description: "Session manager and sessions are loaded")
-        
-        var realSessionManager: SessionManager! = nil
         let observer = SessionManagerObserverMock()
         
         var destroyToken: Any? = nil
-        SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: MockMediaManager(),
-                              analytics: nil,
-                              delegate: nil,
-                              presentationDelegate: nil,
-                              application: application,
-                              environment: sessionManager!.environment,
-                              configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
-                                
-                                let environment = MockEnvironment()
-                                let reachability = TestReachability()
-                                let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    application: application,
-                                    mediaManager: MockMediaManager(),
-                                    flowManager: FlowManagerMock(),
-                                    transportSession: self.mockTransportSession,
-                                    environment: environment,
-                                    reachability: reachability
-                                )
-                                
-                                sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
-                                sessionManager.start(launchOptions: [:])
-                                
-                                // WHEN
-                                destroyToken = sessionManager.addSessionManagerDestroyedSessionObserver(observer)
-                                
-                                sessionManager.loadSession(for: account1) { userSession in
-                                    realSessionManager = sessionManager
-                                    XCTAssertNotNil(userSession)
-                                    
-                                    // load second account
-                                    realSessionManager.loadSession(for: account2) { userSession in
-                                        XCTAssertNotNil(userSession)
-                                        sessionManagerExpectation.fulfill()
-                                    }
-                                }
+        
+        let testSessionManager = SessionManager(appVersion: "0.0.0",
+                                                mediaManager: mockMediaManager,
+                                                analytics: nil,
+                                                delegate: self.delegate,
+                                                application: application,
+                                                environment: sessionManager!.environment,
+                                                configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1),
+                                                detector: jailbreakDetector)
+        
+        let environment = MockEnvironment()
+        let reachability = TestReachability()
+        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
+            application: application,
+            mediaManager: MockMediaManager(),
+            flowManager: FlowManagerMock(),
+            transportSession: self.mockTransportSession,
+            environment: environment,
+            reachability: reachability
+        )
+        
+        testSessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+        testSessionManager.start(launchOptions: [:])
+        
+        // WHEN
+        destroyToken = testSessionManager.addSessionManagerDestroyedSessionObserver(observer)
+        
+        testSessionManager.loadSession(for: account1) { userSession in
+            XCTAssertNotNil(userSession)
+            
+            // load second account
+            testSessionManager.loadSession(for: account2) { userSession in
+                XCTAssertNotNil(userSession)
+                sessionManagerExpectation.fulfill()
+            }
         }
         
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
-        XCTAssertEqual(realSessionManager.backgroundUserSessions.count, 2)
-        XCTAssertEqual(realSessionManager.backgroundUserSessions[account2.userIdentifier], realSessionManager.activeUserSession)
+        XCTAssertEqual(testSessionManager.backgroundUserSessions.count, 2)
+        XCTAssertEqual(testSessionManager.backgroundUserSessions[account2.userIdentifier], testSessionManager.activeUserSession)
         
         withExtendedLifetime(destroyToken) {
             NotificationCenter.default.post(Notification(name: UIApplication.didReceiveMemoryWarningNotification))
@@ -278,25 +272,22 @@ final class SessionManagerTests: IntegrationTest {
         
         //GIVEN
         guard let application = application else { return XCTFail() }
-        let sessionManagerExpectation = self.expectation(description: "Session manager has detected a jailbroken device")
         let jailbreakDetector = MockJailbreakDetector(jailbroken: true)
         let configuration = SessionManagerConfiguration(blockOnJailbreakOrRoot: true)
         
         //WHEN
-        SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: mockMediaManager,
-                              analytics: nil,
-                              delegate: self.delegate,
-                              presentationDelegate: nil,
-                              application: application,
-                              environment: sessionManager!.environment,
-                              configuration: configuration,
-                              detector: jailbreakDetector) { sessionManager in
-                                //THEN
-                                XCTAssertTrue(self.delegate.jailbroken)
-                                sessionManagerExpectation.fulfill()
-        }
-    
+        let _ = SessionManager(appVersion: "0.0.0",
+                               mediaManager: mockMediaManager,
+                               analytics: nil,
+                               delegate: self.delegate,
+                               application: application,
+                               environment: sessionManager!.environment,
+                               configuration: configuration,
+                               detector: jailbreakDetector)
+        
+        XCTAssertTrue(self.delegate.jailbroken)
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
     
@@ -973,50 +964,46 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
         let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
         
         // WHEN
-        var realSessionManager: SessionManager! = nil
-        SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: MockMediaManager(),
-                              analytics: nil,
-                              delegate: nil,
-                              presentationDelegate: nil,
-                              application: application,
-                              environment: sessionManager!.environment,
-                              configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
-                                
-                                let environment = MockEnvironment()
-                                let reachability = TestReachability()
-                                let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    application: application,
-                                    mediaManager: MockMediaManager(),
-                                    flowManager: FlowManagerMock(),
-                                    transportSession: self.mockTransportSession,
-                                    environment: environment,
-                                    reachability: reachability
-                                )
-                                
-                                sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
-                                sessionManager.start(launchOptions: [:])
-                                
-                                sessionManager.loadSession(for: account) { userSession in
-                                    realSessionManager = sessionManager
-                                    XCTAssertNotNil(userSession)
-                                    sessionManagerExpectation.fulfill()
-                                }
+        let testSessionManager = SessionManager(appVersion: "0.0.0",
+                                                mediaManager: mockMediaManager,
+                                                analytics: nil,
+                                                delegate: nil,
+                                                application: application,
+                                                environment: sessionManager!.environment,
+                                                configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1))
+        let environment = MockEnvironment()
+        let reachability = TestReachability()
+        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
+            application: application,
+            mediaManager: MockMediaManager(),
+            flowManager: FlowManagerMock(),
+            transportSession: self.mockTransportSession,
+            environment: environment,
+            reachability: reachability
+        )
+        
+        testSessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+        testSessionManager.start(launchOptions: [:])
+        
+        testSessionManager.loadSession(for: account) { userSession in
+            XCTAssertNotNil(userSession)
+            sessionManagerExpectation.fulfill()
         }
+        
         
         // THEN
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
-        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
+        XCTAssertNotNil(testSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // WHEN
         NotificationCenter.default.post(name: UIApplication.didReceiveMemoryWarningNotification, object: nil)
         
         // THEN
-        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
+        XCTAssertNotNil(testSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // CLEANUP
-        realSessionManager.tearDownAllBackgroundSessions()
+        testSessionManager.tearDownAllBackgroundSessions()
     }
     
     func testThatItUnloadBackgroundUserSessionFromMemoryWarning() {
@@ -1029,50 +1016,47 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
         let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
 
         // WHEN
-        var realSessionManager: SessionManager! = nil
-        SessionManager.create(appVersion: "0.0.0",
-                       mediaManager: MockMediaManager(),
-                       analytics: nil,
-                       delegate: nil,
-                       presentationDelegate: nil,
-                       application: application,
-                       environment: sessionManager!.environment,
-                       configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
-                        
-                        let environment = MockEnvironment()
-                        let reachability = TestReachability()
-                        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                            application: application,
-                            mediaManager: MockMediaManager(),
-                            flowManager: FlowManagerMock(),
-                            transportSession: self.mockTransportSession,
-                            environment: environment,
-                            reachability: reachability
-                        )
-                        
-                        sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
-                        sessionManager.start(launchOptions: [:])
-
-            sessionManager.withSession(for: account) { userSession in
-                realSessionManager = sessionManager
-                XCTAssertNotNil(userSession)
-                sessionManagerExpectation.fulfill()
-            }
+        let testSessionManager = SessionManager(appVersion: "0.0.0",
+                                                mediaManager: mockMediaManager,
+                                                analytics: nil,
+                                                delegate: nil,
+                                                application: application,
+                                                environment: sessionManager!.environment,
+                                                configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1))
+        
+        let environment = MockEnvironment()
+        let reachability = TestReachability()
+        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
+            application: application,
+            mediaManager: MockMediaManager(),
+            flowManager: FlowManagerMock(),
+            transportSession: self.mockTransportSession,
+            environment: environment,
+            reachability: reachability
+        )
+        
+        testSessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+        testSessionManager.start(launchOptions: [:])
+        
+        testSessionManager.withSession(for: account) { userSession in
+            XCTAssertNotNil(userSession)
+            sessionManagerExpectation.fulfill()
         }
+
         
         // THEN
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
-        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
+        XCTAssertNotNil(testSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // WHEN
         NotificationCenter.default.post(name: UIApplication.didReceiveMemoryWarningNotification, object: nil)
         
         // THEN
-        XCTAssertNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
+        XCTAssertNil(testSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // CLEANUP
-        realSessionManager.tearDownAllBackgroundSessions()
+        testSessionManager.tearDownAllBackgroundSessions()
     }
     
     func prepareSession(for account: Account) {
