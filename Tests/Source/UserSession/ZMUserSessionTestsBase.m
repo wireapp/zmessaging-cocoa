@@ -99,6 +99,7 @@
     [[self.operationLoop stub] tearDown];
     
     self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
+    [ZMUser selfUserInContext:self.syncMOC].remoteIdentifier = [NSUUID createUUID];
     
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
                                                   mediaManager:self.mediaManager
