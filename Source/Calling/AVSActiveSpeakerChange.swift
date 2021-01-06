@@ -22,7 +22,7 @@ import avs
 struct AVSActiveSpeakersChange: Codable {
     let activeSpeakers: [ActiveSpeaker]
     
-    struct ActiveSpeaker: Codable {
+    struct ActiveSpeaker: Codable, Equatable {
         let userId: UUID
         let clientId: String
         let audioLevel: Int

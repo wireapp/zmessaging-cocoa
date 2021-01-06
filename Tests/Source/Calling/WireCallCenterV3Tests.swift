@@ -1301,7 +1301,7 @@ extension WireCallCenterV3Tests {
         
         sut.callSnapshots = callSnapshot(conversationId: conversationId, clients: [client])
         let change = activeSpeakersChange(for: conversationId, clients: [client])
-        let activeSpeaker = AVSActiveSpeaker(activeSpeaker: change.activeSpeakers.first!)
+        let activeSpeaker = change.activeSpeakers.first!
 
         // WHEN
         sut.handleActiveSpeakersChange(conversationId: conversationId, data: change.data)
