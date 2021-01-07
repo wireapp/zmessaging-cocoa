@@ -26,14 +26,6 @@ public final class FeatureConfigRequestStrategy: AbstractRequestStrategy, ZMCont
 
     // MARK: - Properties
     let syncStatus: SyncStatus
-    
-    private var needsToFetchAllConfigs = false {
-        didSet {
-            guard needsToFetchAllConfigs else { return }
-            fetchAllConfigsSync.readyForNextRequestIfNotBusy()
-            RequestAvailableNotification.notifyNewRequestsAvailable(self)
-        }
-    }
 
     private var fetchSingleConfigSync: ZMDownstreamObjectSync!
     private var fetchAllConfigsSync: ZMSingleRequestSync!
@@ -43,8 +35,6 @@ public final class FeatureConfigRequestStrategy: AbstractRequestStrategy, ZMCont
     private var team: Team? {
         return ZMUser.selfUser(in: managedObjectContext).team
     }
-
-    private var observerToken: Any?
 
     public var contextChangeTrackers: [ZMContextChangeTracker] {
         return [fetchSingleConfigSync]
@@ -75,13 +65,6 @@ public final class FeatureConfigRequestStrategy: AbstractRequestStrategy, ZMCont
         )
 
         fetchAllConfigsSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
-
-        observerToken = NotificationCenter.default.addObserver(
-            forName: Self.fetchAllConfigsTriggerNotification,
-            object: nil,
-            queue: nil,
-            using: { [weak self] _ in self?.needsToFetchAllConfigs = true }
-        )
     }
 
     // MARK: - Overrides
@@ -214,22 +197,5 @@ private extension Feature {
             return "appLock"
         }
     }
-
-}
-
-public extension Feature {
-
-    static func triggerBackendRefreshForAllConfigs() {
-        NotificationCenter.default.post(
-            name: FeatureConfigRequestStrategy.fetchAllConfigsTriggerNotification,
-            object: nil
-        )
-    }
-
-}
-
-private extension FeatureConfigRequestStrategy {
-
-    static let fetchAllConfigsTriggerNotification = Notification.Name("fetchAlLConfigsTriggerNotification")
 
 }
