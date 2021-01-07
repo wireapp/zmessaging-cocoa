@@ -175,7 +175,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
         
         tornDown = true
     }
-
+    
     @objc
     public init(transportSession: TransportSessionType,
                 mediaManager: MediaManagerType,
