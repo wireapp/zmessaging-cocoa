@@ -99,6 +99,7 @@
     [[self.operationLoop stub] tearDown];
     
     self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
+    [ZMUser selfUserInContext:self.syncMOC].remoteIdentifier = [NSUUID createUUID];
     
     self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
                                                   mediaManager:self.mediaManager
@@ -108,7 +109,8 @@
                                                  operationLoop:self.operationLoop
                                                    application:self.application
                                                     appVersion:@"00000"
-                                                 storeProvider:self.storeProvider];
+                                                 storeProvider:self.storeProvider
+                                                 configuration:ZMUserSessionConfiguration.defaultConfig];
         
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
     self.sut.sessionManager = (id<SessionManagerType>)self.mockSessionManager;

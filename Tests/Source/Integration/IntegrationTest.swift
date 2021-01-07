@@ -73,7 +73,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
         )
     }
 
-    override func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
+    override func session(for account: Account, storeProvider: LocalStoreProviderProtocol, configuration: ZMUserSession.Configuration = .defaultConfig) -> ZMUserSession? {
         return ZMUserSession(
             transportSession: transportSession,
             mediaManager: mediaManager,
@@ -81,10 +81,25 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
             analytics: analytics,
             application: application,
             appVersion: appVersion,
-            storeProvider: storeProvider
+            storeProvider: storeProvider,
+            configuration: configuration
         )
     }
 
+}
+
+extension ZMUserSession.Configuration {
+
+    @objc
+    static var defaultConfig: ZMUserSession.Configuration {
+        Self.init(
+            appLockConfig: .init(
+                useBiometricsOrCustomPasscode: false,
+                forceAppLock: false,
+                timeOut: 10
+            )
+        )
+    }
 }
 
 final class MockUnauthenticatedSessionFactory: UnauthenticatedSessionFactory {
