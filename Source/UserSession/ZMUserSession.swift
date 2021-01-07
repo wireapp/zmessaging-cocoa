@@ -31,7 +31,7 @@ public protocol ThirdPartyServicesDelegate: NSObjectProtocol {
 typealias UserSessionDelegate = UserSessionEncryptionAtRestDelegate
 
 @objcMembers
-public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
+public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessionAppLockInterface {
     
     private let appVersion: String
     private var tokens: [Any] = []
@@ -67,6 +67,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     let debugCommands: [String: DebugCommand]
     let eventProcessingTracker: EventProcessingTracker = EventProcessingTracker()
     let hotFix: ZMHotFix
+    
+    public var appLockController: AppLockType
     
     public var hasCompletedInitialSync: Bool = false
     
@@ -189,7 +191,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                 operationLoop: ZMOperationLoop? = nil,
                 application: ZMApplication,
                 appVersion: String,
-                storeProvider: LocalStoreProviderProtocol) {
+                storeProvider: LocalStoreProviderProtocol,
+                configuration: Configuration) {
         
         storeProvider.contextDirectory.syncContext.performGroupedBlockAndWait {
             storeProvider.contextDirectory.syncContext.analytics = analytics
@@ -210,6 +213,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.debugCommands = ZMUserSession.initDebugCommands()
         self.hotFix = ZMHotFix(syncMOC: storeProvider.contextDirectory.syncContext)
+        self.appLockController = AppLockController(config: configuration.appLockConfig, selfUser: ZMUser.selfUser(in: storeProvider.contextDirectory.uiContext))
         super.init()
         
         ZMUserAgent.setWireAppVersion(appVersion)

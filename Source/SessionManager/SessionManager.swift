@@ -500,10 +500,6 @@ public final class SessionManager : NSObject, SessionManagerType {
         delete(account: account, reason: .userInitiated)
     }
     
-    public func wipeDatabase() {
-        deleteAllAccounts(reason: .databaseWiped)
-    }
-    
     fileprivate func deleteAllAccounts(reason: ZMAccountDeletedReason) {
         let inactiveAccounts = accountManager.accounts.filter({ $0 != accountManager.selectedAccount })
         inactiveAccounts.forEach({ delete(account: $0, reason: reason) })
@@ -669,7 +665,8 @@ public final class SessionManager : NSObject, SessionManagerType {
         log.debug("Deleting the data for \(account.userName) -- \(account.userIdentifier)")
         
         environment.cookieStorage(for: account).deleteKeychainItems()
-        
+        account.deleteKeychainItems()
+
         let accountID = account.userIdentifier
         self.accountManager.remove(account)
         
@@ -741,7 +738,9 @@ public final class SessionManager : NSObject, SessionManagerType {
 
     // Creates the user session for @c account given, calls @c completion when done.
     private func startBackgroundSession(for account: Account, with provider: LocalStoreProviderProtocol) -> ZMUserSession {
-        guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider) else {
+        let sessionConfig = ZMUserSession.Configuration(appLockConfig: configuration.appLockConfig)
+
+        guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider, configuration: sessionConfig) else {
             preconditionFailure("Unable to create session for \(account)")
         }
         

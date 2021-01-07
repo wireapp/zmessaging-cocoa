@@ -18,13 +18,28 @@
 
 import Foundation
 
-public enum ZMAccountDeletedReason: Int {
-    /// The user account was deleted by the user
-    case userInitiated = 0
-    /// The user account was deleted because a jailbreak was detected
-    case jailbreakDetected
-    /// The user account was deleted because the session expired
-    case sessionExpired
-    /// The user account was deleted because the limit of failed password attempts was reached
-    case failedPasswordLimitReached
+public protocol UserSessionAppLockInterface {
+    var appLockController: AppLockType { get set }
 }
+
+public extension ZMUserSession {
+
+    /// An object used to configure a user session.
+
+    @objc(ZMUserSessionConfiguration)
+    final class Configuration: NSObject {
+
+        // MARK: - Properties
+
+        public let appLockConfig: AppLockController.Config
+
+        // MARK: - Life cycle
+
+        public init(appLockConfig: AppLockController.Config) {
+            self.appLockConfig = appLockConfig
+        }
+
+    }
+
+}
+
