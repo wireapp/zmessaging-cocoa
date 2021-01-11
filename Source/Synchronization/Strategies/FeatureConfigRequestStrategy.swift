@@ -136,7 +136,7 @@ extension FeatureConfigRequestStrategy: ZMSingleRequestTranscoder {
 
     private func requestToFetchAllFeatureConfigs() -> ZMTransportRequest? {
         guard let teamId = team?.remoteIdentifier?.transportString() else { return nil }
-        return ZMTransportRequest(getFromPath: "/teams/\(teamId)/features")
+        return ZMTransportRequest(getFromPath: "/teams/\(teamId)/features\(Feature.AppLock.name.rawValue)")
     }
 
     public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
@@ -149,15 +149,18 @@ extension FeatureConfigRequestStrategy: ZMSingleRequestTranscoder {
             sync == fetchAllConfigsSync,
             let team = team,
             response.result == .success,
-            let responseData = response.rawData
-        else {
-            
-            return
-        }
+            let responseData = response.rawData else { return }
 
         do {
-            let allConfigs = try JSONDecoder().decode(AllConfigsResponse.self, from: responseData)
-            featureController.store(feature: allConfigs.applock.asFeature, in: team)
+            let decoder = JSONDecoder()
+            let encoder = JSONEncoder()
+            let config = try decoder.decode(ConfigResponse<Feature.AppLock>.self, from: responseData)
+            let feature = Feature.createOrUpdate(name: Feature.AppLock.name,
+                                                 status: config.status,
+                                                 config: try encoder.encode(config.config),
+                                                 team: team,
+                                                 context: managedObjectContext)
+            feature.needsToBeUpdatedFromBackend = false
         } catch {
             zmLog.error("Failed to decode feature config response: \(error)")
         }
