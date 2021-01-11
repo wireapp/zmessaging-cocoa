@@ -36,7 +36,6 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 
 @objc public protocol SessionActivationObserver: class {
     func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession)
-    func sessionManagerDidReportDatabaseLockChange(isLocked: Bool)
 }
 
 @objc public protocol SessionManagerDelegate: SessionActivationObserver {
@@ -603,28 +602,28 @@ public final class SessionManager : NSObject, SessionManagerType {
     fileprivate func activateSession(for account: Account, completion: @escaping (ZMUserSession) -> Void) {
         self.withSession(for: account, notifyAboutMigration: true) { session in
             self.activeUserSession = session
-            
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
             completion(session)
 
             self.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
-            self.checkIfLoggedIn(userSession: session)
-            
-            // Configure user notifications if they weren't already previously configured.
-            self.configureUserNotifications()
-            self.processPendingURLAction()
+            self.performPostUnlockActionsIfPossible(for: session)
         }
     }
-    
-    func checkIfLoggedIn(userSession : ZMUserSession) {
-        userSession.checkIfLoggedIn { [weak self] loggedIn in
-            guard loggedIn else {
+
+    func performPostUnlockActionsIfPossible(for session: ZMUserSession) {
+        session.checkIfLoggedIn { [weak self] loggedIn in
+            guard
+                loggedIn,
+                session.lock == .none
+            else {
                 return
             }
-            self?.delegate?.sessionManagerDidReportDatabaseLockChange(isLocked: userSession.isDatabaseLocked)
+
+            self?.configureUserNotifications()
+            self?.processPendingURLAction()
         }
     }
-    
+
     // Loads user session for @c account given and executes the @c action block.
     func withSession(for account: Account,
                      notifyAboutMigration: Bool = false,
@@ -690,10 +689,12 @@ public final class SessionManager : NSObject, SessionManagerType {
             guard let account = note.context as? Account else { return }
             self?.accountManager.addOrUpdate(account)
         }
-        let databaseEncryptionObserverToken = session.registerDatabaseLockedHandler({ [weak self] isDatabaseLocked in
+
+        let databaseEncryptionObserverToken = session.registerDatabaseLockedHandler { [weak self] _ in
             guard session == self?.activeUserSession else { return }
-            self?.delegate?.sessionManagerDidReportDatabaseLockChange(isLocked: session.isDatabaseLocked)
-        })
+            self?.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
+        }
+
         accountTokens[account.userIdentifier] = [teamObserver,
                                                  selfObserver!,
                                                  conversationListObserver,
@@ -1077,6 +1078,11 @@ extension SessionManager {
         
         // Delete expired url scheme verification tokens
         CompanyLoginVerificationToken.flushIfNeeded()
+
+        if let session = activeUserSession {
+            // The session lock may have changed so inform the delegate in case.
+            self.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
+        }
     }
     
     @objc fileprivate func applicationWillResignActive(_ note: Notification) {

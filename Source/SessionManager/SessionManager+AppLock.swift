@@ -21,7 +21,8 @@ import Foundation
 extension SessionManager: UserSessionAppLockDelegate {
 
     func userSessionDidUnlock(_ session: ZMUserSession) {
-        checkIfLoggedIn(userSession: session)
+        performPostUnlockActionsIfPossible(for: session)
+        delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
     }
 
 }
