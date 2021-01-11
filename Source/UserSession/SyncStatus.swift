@@ -27,6 +27,7 @@
     case fetchingSelfUser
     case fetchingLegalHoldStatus
     case fetchingFeatureFlags
+    case fetchingFeatureConfigs
     case fetchingLabels
     case fetchingMissedEvents
     case done
@@ -65,6 +66,8 @@
             return "fetchingLegalHoldStatus"
         case .fetchingFeatureFlags:
             return "fetchingFeatureFlags"
+        case .fetchingFeatureConfigs:
+            return "fetchingFeatureConfigs"
         case .fetchingLabels:
             return "fetchingLabels"
         case .fetchingMissedEvents:

@@ -17,6 +17,10 @@
 		06BBF6FD247288E300A26626 /* FileTransferTests+Swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF6FB247288DD00A26626 /* FileTransferTests+Swift.swift */; };
 		06BBF6FF2472F3AC00A26626 /* SendAndReceiveMessagesTests+Swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF6FE2472F3AC00A26626 /* SendAndReceiveMessagesTests+Swift.swift */; };
 		06BBF7012473D51D00A26626 /* MessagingTest+Swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF7002473D51D00A26626 /* MessagingTest+Swift.swift */; };
+		06E087B6258C173C001EE66D /* FeatureConfigRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E087B5258C173C001EE66D /* FeatureConfigRequestStrategy.swift */; };
+		06E087BE258C1E93001EE66D /* FeatureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E087BD258C1E93001EE66D /* FeatureController.swift */; };
+		06E087C0258C1ED5001EE66D /* FeatureConfigRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E087BF258C1ED5001EE66D /* FeatureConfigRequestStrategyTests.swift */; };
+		06E087C2258C1F15001EE66D /* FeatureControllerTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E087C1258C1F15001EE66D /* FeatureControllerTest.swift */; };
 		06F98D602437916B007E914A /* SignatureRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06F98D5E24379143007E914A /* SignatureRequestStrategyTests.swift */; };
 		092083401BA95EE100F82B29 /* UserClientRequestFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0920833F1BA95EE100F82B29 /* UserClientRequestFactory.swift */; };
 		0920C4DA1B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0920C4D81B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift */; };
@@ -652,6 +656,10 @@
 		06BBF6FB247288DD00A26626 /* FileTransferTests+Swift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileTransferTests+Swift.swift"; sourceTree = "<group>"; };
 		06BBF6FE2472F3AC00A26626 /* SendAndReceiveMessagesTests+Swift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SendAndReceiveMessagesTests+Swift.swift"; sourceTree = "<group>"; };
 		06BBF7002473D51D00A26626 /* MessagingTest+Swift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MessagingTest+Swift.swift"; sourceTree = "<group>"; };
+		06E087B5258C173C001EE66D /* FeatureConfigRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureConfigRequestStrategy.swift; sourceTree = "<group>"; };
+		06E087BD258C1E93001EE66D /* FeatureController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureController.swift; sourceTree = "<group>"; };
+		06E087BF258C1ED5001EE66D /* FeatureConfigRequestStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureConfigRequestStrategyTests.swift; sourceTree = "<group>"; };
+		06E087C1258C1F15001EE66D /* FeatureControllerTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureControllerTest.swift; sourceTree = "<group>"; };
 		06F98D5E24379143007E914A /* SignatureRequestStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignatureRequestStrategyTests.swift; sourceTree = "<group>"; };
 		0920833C1BA84F3100F82B29 /* UserClientRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserClientRequestStrategyTests.swift; sourceTree = "<group>"; };
 		0920833F1BA95EE100F82B29 /* UserClientRequestFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserClientRequestFactory.swift; sourceTree = "<group>"; };
@@ -1757,6 +1765,7 @@
 				5E8EE1FD20FDCD1300DB1F9B /* MockPasteboard.swift */,
 				5E0EB1F82100A46F00B5DC2B /* MockCompanyLoginRequesterDelegate.swift */,
 				EE6654632445D4EE00CBF8D3 /* MockAddressBook.swift */,
+				06E087C1258C1F15001EE66D /* FeatureControllerTest.swift */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -1881,6 +1890,7 @@
 				A938BDC723A7964100D4C208 /* ConversationRoleDownstreamRequestStrategy.swift */,
 				06B99C7A242B51A300FEAFDE /* SignatureRequestStrategy.swift */,
 				54CB3FE024A34B8A00BA86DD /* FeatureFlagRequestStrategy.swift */,
+				06E087B5258C173C001EE66D /* FeatureConfigRequestStrategy.swift */,
 				D5225721206261C100562561 /* Asset Deletion */,
 			);
 			path = Strategies;
@@ -1916,6 +1926,7 @@
 				636B716123ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift */,
 				06F98D5E24379143007E914A /* SignatureRequestStrategyTests.swift */,
 				54BAB40C24A9EAC800EBC400 /* FeatureFlagRequestStrategyTests.swift */,
+				06E087BF258C1ED5001EE66D /* FeatureConfigRequestStrategyTests.swift */,
 			);
 			path = Strategies;
 			sourceTree = "<group>";
@@ -2251,6 +2262,7 @@
 				166A8BF81E02C7D500F5EEEA /* ZMHotFix+PendingChanges.swift */,
 				7C26879C21F7193800570AA9 /* EventProcessingTracker.swift */,
 				5EDF03EB2245563C00C04007 /* LinkPreviewAssetUploadRequestStrategy+Helper.swift */,
+				06E087BD258C1E93001EE66D /* FeatureController.swift */,
 			);
 			path = Synchronization;
 			sourceTree = "<group>";
@@ -2886,6 +2898,7 @@
 				16519D6D231EAAF300C9D76D /* Conversation+DeletionTests.swift in Sources */,
 				F925468E1C63B61000CE2D7C /* MessagingTest+EventFactory.m in Sources */,
 				06BBF6F4246EF28B00A26626 /* ConversationTests+LastRead.swift in Sources */,
+				06E087C0258C1ED5001EE66D /* FeatureConfigRequestStrategyTests.swift in Sources */,
 				16849B2023EDB32B00C025A8 /* MockSessionManager.swift in Sources */,
 				878ACB5920AF12C10016E68A /* ZMUserConsentTests.swift in Sources */,
 				8766853C1F2A1AA00031081B /* UnauthenticatedSessionTests.swift in Sources */,
@@ -2908,6 +2921,7 @@
 				06BBF6FA246EF67C00A26626 /* ConversationTests+ClearingHistory.swift in Sources */,
 				541228451AEE422C00D9ED1C /* ZMAuthenticationStatusTests.m in Sources */,
 				BF2A9D551D6B5B9700FA7DBC /* EventDecoderTests.swift in Sources */,
+				06E087C2258C1F15001EE66D /* FeatureControllerTest.swift in Sources */,
 				5E0EB1F72100A14A00B5DC2B /* CompanyLoginRequesterTests.swift in Sources */,
 				1671F9FF1E2FAF50009F3150 /* ZMLocalNotificationForTests_CallState.swift in Sources */,
 				EE6654642445D4EE00CBF8D3 /* MockAddressBook.swift in Sources */,
@@ -3228,6 +3242,7 @@
 				166A8BF31E015F3B00F5EEEA /* WireCallCenterV3Factory.swift in Sources */,
 				16519D38231D3B1700C9D76D /* Conversation+Deletion.swift in Sources */,
 				F1C1F3F01FCF18C5007273E3 /* NSError+Localized.swift in Sources */,
+				06E087BE258C1E93001EE66D /* FeatureController.swift in Sources */,
 				5467F1C41E0AE2EF008C1745 /* KeyValueStore.swift in Sources */,
 				5467F1C61E0AE421008C1745 /* KeyValueStore+AccessToken.swift in Sources */,
 				639290A7252DEDB500046171 /* WireCallCenterV3+Degradation.swift in Sources */,
@@ -3311,6 +3326,7 @@
 				161ACB3223F5BBA100ABFF33 /* CompanyLoginURLActionProcessor.swift in Sources */,
 				16F6BB381EDEA659009EA803 /* SearchResult+AddressBook.swift in Sources */,
 				5458AF841F7021B800E45977 /* PreLoginAuthenticationNotification.swift in Sources */,
+				06E087B6258C173C001EE66D /* FeatureConfigRequestStrategy.swift in Sources */,
 				F9ABE8AA1F02A45700D83214 /* TeamSyncRequestStrategy.swift in Sources */,
 				F9ABE84F1EFD568B00D83214 /* TeamDownloadRequestStrategy.swift in Sources */,
 				871667FA1BB2AE9C009C6EEA /* APSSignalingKeysStore.swift in Sources */,

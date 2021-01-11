@@ -70,6 +70,7 @@ final class SyncStatusTests : MessagingTest {
                 .fetchingSelfUser,
                 .fetchingLegalHoldStatus,
                 .fetchingFeatureFlags,
+                .fetchingFeatureConfigs,
                 .fetchingLabels,
                 .fetchingMissedEvents]
     }
@@ -130,6 +131,10 @@ final class SyncStatusTests : MessagingTest {
         // then
         XCTAssertNil(uiMOC.zm_lastNotificationID)
         sut.finishCurrentSyncPhase(phase: .fetchingFeatureFlags)
+        // then
+        XCTAssertNil(uiMOC.zm_lastNotificationID)
+        // when
+        sut.finishCurrentSyncPhase(phase: .fetchingFeatureConfigs)
         // then
         XCTAssertNil(uiMOC.zm_lastNotificationID)
         // when
@@ -221,6 +226,8 @@ final class SyncStatusTests : MessagingTest {
         sut.finishCurrentSyncPhase(phase: .fetchingLegalHoldStatus)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingFeatureFlags)
+        // when
+        sut.finishCurrentSyncPhase(phase: .fetchingFeatureConfigs)
         // when
         sut.finishCurrentSyncPhase(phase: .fetchingLabels)
         // when
@@ -489,6 +496,9 @@ extension SyncStatusTests {
         // when
         XCTAssertEqual(sut.currentSyncPhase, .fetchingFeatureFlags)
         sut.finishCurrentSyncPhase(phase: .fetchingFeatureFlags)
+        // when
+        XCTAssertEqual(sut.currentSyncPhase, .fetchingFeatureConfigs)
+        sut.finishCurrentSyncPhase(phase: .fetchingFeatureConfigs)
         // when
         XCTAssertEqual(sut.currentSyncPhase, .fetchingLabels)
         sut.finishCurrentSyncPhase(phase: .fetchingLabels)
