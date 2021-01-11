@@ -22,7 +22,10 @@ extension SessionManager: UserSessionAppLockDelegate {
 
     func userSessionDidUnlock(_ session: ZMUserSession) {
         performPostUnlockActionsIfPossible(for: session)
-        delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
+
+        DispatchQueue.main.async {
+            self.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
+        }
     }
 
 }
