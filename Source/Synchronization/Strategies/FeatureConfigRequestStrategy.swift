@@ -136,7 +136,7 @@ extension FeatureConfigRequestStrategy: ZMSingleRequestTranscoder {
 
     private func requestToFetchAllFeatureConfigs() -> ZMTransportRequest? {
         guard let teamId = team?.remoteIdentifier?.transportString() else { return nil }
-        return ZMTransportRequest(getFromPath: "/teams/\(teamId)/features\(Feature.AppLock.name.rawValue)")
+        return ZMTransportRequest(getFromPath: "/teams/\(teamId)/features/\(Feature.AppLock.name.rawValue)")
     }
 
     public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
