@@ -66,7 +66,8 @@
                                                                operationLoop:nil
                                                                  application:self.application
                                                                   appVersion:version
-                                                               storeProvider:self.storeProvider];
+                                                               storeProvider:self.storeProvider
+                                                               configuration:ZMUserSessionConfiguration.defaultConfig];
     XCTAssertNotNil(session);
     
     // then
@@ -197,7 +198,8 @@
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                                   storeProvider:self.storeProvider];
+                                                                   storeProvider:self.storeProvider
+                                                                   configuration:ZMUserSessionConfiguration.defaultConfig];
     userSession.sessionManager = sessionManager;
     XCTAssertFalse([(MockSessionManager *)sessionManager updatePushTokenCalled]);
     [userSession didRegisterUserClient:userClient];
@@ -425,7 +427,8 @@
                                                                    operationLoop:nil
                                                                      application:self.application
                                                                       appVersion:@"00000"
-                                                                   storeProvider:self.storeProvider];
+                                                                   storeProvider:self.storeProvider
+                                                                   configuration:ZMUserSessionConfiguration.defaultConfig];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then

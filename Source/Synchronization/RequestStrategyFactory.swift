@@ -189,6 +189,8 @@ public class RequestStrategyFactory: NSObject, RequestStrategyFactoryProtocol {
             FeatureFlagRequestStrategy(withManagedObjectContext: syncMOC,
                                        applicationStatus: applicationStatusDirectory,
                                        syncStatus: applicationStatusDirectory.syncStatus),
+            FeatureConfigRequestStrategy(withManagedObjectContext: syncMOC,
+                                         applicationStatus: applicationStatusDirectory),
             ConversationStatusStrategy(managedObjectContext: syncMOC),
             UserClientEventConsumer(managedObjectContext: syncMOC,
                                     clientRegistrationStatus: applicationStatusDirectory.clientRegistrationStatus,
