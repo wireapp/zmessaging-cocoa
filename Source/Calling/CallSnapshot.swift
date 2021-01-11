@@ -33,12 +33,13 @@ struct CallSnapshot {
     let networkQuality: NetworkQuality
     let isConferenceCall: Bool
     let degradedUser: ZMUser?
+    let activeSpeakers: [AVSActiveSpeakersChange.ActiveSpeaker]
     var conversationObserverToken : NSObjectProtocol?
 
     var isDegradedCall: Bool {
         return degradedUser != nil
     }
-
+    
     /**
      * Updates the snapshot with the new state of the call.
      * - parameter callState: The new state of the call computed from AVS.
@@ -55,6 +56,7 @@ struct CallSnapshot {
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
                             degradedUser: degradedUser,
+                            activeSpeakers: activeSpeakers,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -74,6 +76,7 @@ struct CallSnapshot {
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
                             degradedUser: degradedUser,
+                            activeSpeakers: activeSpeakers,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -93,6 +96,7 @@ struct CallSnapshot {
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
                             degradedUser: degradedUser,
+                            activeSpeakers: activeSpeakers,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -112,6 +116,7 @@ struct CallSnapshot {
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
                             degradedUser: degradedUser,
+                            activeSpeakers: activeSpeakers,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -135,7 +140,27 @@ struct CallSnapshot {
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
                             degradedUser: degradedUser,
+                            activeSpeakers: activeSpeakers,
                             conversationObserverToken: conversationObserverToken)
     }
-
+    
+    /**
+     * Updates the snapshot with the new audio levels of the call.
+     * - parameter activeSpeakers: The new active speakers of the call computed from AVS.
+     */
+    
+    func updateActiveSpeakers(_ activeSpeakers: [AVSActiveSpeakersChange.ActiveSpeaker]) -> CallSnapshot {
+        return CallSnapshot(callParticipants: callParticipants,
+                            callState: callState,
+                            callStarter: callStarter,
+                            isVideo: isVideo,
+                            isGroup: isGroup,
+                            isConstantBitRate: isConstantBitRate,
+                            videoState: videoState,
+                            networkQuality: networkQuality,
+                            isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
+                            activeSpeakers: activeSpeakers,
+                            conversationObserverToken: conversationObserverToken)
+    }
 }
