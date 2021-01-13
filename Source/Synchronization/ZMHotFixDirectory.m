@@ -194,6 +194,13 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      patchWithVersion:@"295.1.0" patchCode:^(__unused NSManagedObjectContext *context) {
                          [ZMHotFixDirectory migrateBackendEnvironmentToSharedUserDefaults];
                      }],
+                    
+                    /// We need to restart the slow sync after fixing a connection bug in order restore lost connections.
+                    [ZMHotFixPatch
+                     patchWithVersion:@"354.0.1"
+                     patchCode:^(NSManagedObjectContext *context) {
+                        [ZMHotFixDirectory restartSlowSync:context];
+                    }]
                     ];
     });
     return patches;
