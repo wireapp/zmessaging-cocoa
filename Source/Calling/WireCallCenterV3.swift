@@ -184,6 +184,7 @@ extension WireCallCenterV3 {
             networkQuality: .normal,
             isConferenceCall: isConferenceCall,
             degradedUser: nil,
+            activeSpeakers: [],
             conversationObserverToken: token
         )
     }
@@ -320,18 +321,32 @@ extension WireCallCenterV3 {
 
 extension WireCallCenterV3 {
     
-    /// Returns the callParticipants currently in the conversation
-    func callParticipants(conversationId: UUID) -> [CallParticipant] {
+    /// Returns the callParticipants currently in the conversation.
+    func callParticipants(conversationId: UUID, activeSpeakersLimit limit: Int? = nil) -> [CallParticipant] {
         guard
-            let context = uiMOC,
-            let callParticipants = callSnapshots[conversationId]?.callParticipants
+            let callMembers = callSnapshots[conversationId]?.callParticipants.members.array,
+            let context = uiMOC
         else {
             return []
         }
-        
-        return callParticipants.members.array.compactMap {
-            CallParticipant(member: $0, context: context)
+
+        let activeSpeakers = self.activeSpeakers(conversationId: conversationId, limitedBy: limit)
+        return callMembers.compactMap { member in
+            let isActive = activeSpeakers.contains(where: { $0.client == member.client })
+            return CallParticipant(member: member, isActiveSpeaker: isActive, context: context)
         }
+    }
+    
+    private func activeSpeakers(conversationId: UUID, limitedBy limit: Int? = nil) -> [AVSActiveSpeakersChange.ActiveSpeaker] {
+        guard let activeSpeakers = callSnapshots[conversationId]?.activeSpeakers else {
+            return []
+        }
+        
+        guard let limit = limit else {
+            return activeSpeakers
+        }
+        
+        return Array(activeSpeakers.prefix(limit))
     }
 
     /// Returns the remote identifier of the user that initiated the call.

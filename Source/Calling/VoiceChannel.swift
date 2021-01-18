@@ -51,6 +51,9 @@ public protocol CallProperties : NSObjectProtocol {
     /// Voice channel participants. May be a subset of conversation participants.
     var participants: [CallParticipant] { get }
     
+    /// Voice channel participants with a limit on participants flagged as active.
+    func participants(activeSpeakersLimit limit: Int?) -> [CallParticipant]
+    
     /// Voice channel is sending audio using a contant bit rate
     var isConstantBitRateAudioActive: Bool { get }
     var isVideoCall: Bool { get }
@@ -103,6 +106,8 @@ public protocol CallObservers : NSObjectProtocol {
     
     /// Add observer of the mute state. Returns a token which needs to be retained as long as the observer should be active.
     func addMuteStateObserver(_ observer: MuteStateObserver) -> Any
+
+    func addActiveSpeakersObserver(_ observer: ActiveSpeakersObserver) -> Any
 
     /// Add observer of the state of all voice channels. Returns a token which needs to be retained as long as the observer should be active.
     static func addCallStateObserver(_ observer: WireCallCenterCallStateObserver, userSession: ZMUserSession) -> Any

@@ -324,6 +324,37 @@ extension WireCallCenterV3 {
             self.sendSFT(token: token, url: url, data: data)
         }
     }
+    
+    func handleActiveSpeakersChange(conversationId: UUID, data: String) {
+        handleEventInContext("active-speakers-change") {
+            guard let data = data.data(using: .utf8) else {
+                zmLog.safePublic("Invalid active speakers data")
+                return
+            }
+            
+            // Example of `data`
+            //  {
+            //      "audio_levels": [
+            //          {
+            //              "userid": "3f49da1d-0d52-4696-9ef3-0dd181383e8a",
+            //              "clientid": "24cc758f602fb1f4",
+            //              "audio_level": 100
+            //          }
+            //      ]
+            //}
+            
+            do {
+                let change = try JSONDecoder().decode(AVSActiveSpeakersChange.self, from: data)
+                if let call = self.callSnapshots[conversationId] {
+                    self.callSnapshots[conversationId] = call.updateActiveSpeakers(change.activeSpeakers)
+                    WireCallCenterActiveSpeakersNotification().post(in: $0.notificationContext)
+                }
+            }
+            catch {
+                zmLog.safePublic("Cannot decode active speakers change JSON")
+            }
+        }
+    }
 }
 
 private extension Set where Element == ZMUser {

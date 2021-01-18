@@ -31,7 +31,8 @@ public struct CallParticipant: Hashable {
     public let clientId: String
     public let userId: UUID
     public let state: CallParticipantState
-    
+    public let isActiveSpeaker: Bool
+        
     /// convenience init method for ZMUser
     /// - Parameters:
     ///   - user: the call participant ZMUser
@@ -39,11 +40,13 @@ public struct CallParticipant: Hashable {
     ///   - state: the call participant's state
     public init(user: ZMUser,
                 clientId: String,
-                state: CallParticipantState) {
+                state: CallParticipantState,
+                isActiveSpeaker: Bool) {
         self.user = user
         self.clientId = clientId
         self.userId = user.remoteIdentifier
         self.state = state
+        self.isActiveSpeaker = isActiveSpeaker
     }
 
     /// Init with separated user and user id to allow CallParticipant to be Hashable even though user is not Hashable
@@ -55,16 +58,18 @@ public struct CallParticipant: Hashable {
     public init(user: UserType,
                 userId: UUID,
                 clientId: String,
-                state: CallParticipantState) {
+                state: CallParticipantState,
+                isActiveSpeaker: Bool) {
         self.user = user
         self.clientId = clientId
         self.userId = userId
         self.state = state
+        self.isActiveSpeaker = isActiveSpeaker
     }
 
-    init?(member: AVSCallMember, context: NSManagedObjectContext) {
+    init?(member: AVSCallMember, isActiveSpeaker: Bool = false, context: NSManagedObjectContext) {
         guard let user = ZMUser(remoteID: member.client.userId, createIfNeeded: false, in: context) else { return nil }
-        self.init(user: user, userId: user.remoteIdentifier, clientId: member.client.clientId, state: member.callParticipantState)
+        self.init(user: user, userId: user.remoteIdentifier, clientId: member.client.clientId, state: member.callParticipantState, isActiveSpeaker: isActiveSpeaker)
     }
 
     // MARK: - Hashable
