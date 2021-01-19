@@ -204,7 +204,7 @@ class TeamDownloadRequestStrategyTests: MessagingTest {
             guard let request = self.sut.nextRequest() else { return XCTFail("No request generated") }
 
             // when
-            let payload: [String: Any] = ["id": team.remoteIdentifier!.transportString(), "name": "Wire"]
+            let payload = self.sampleResponse(team: team, creatorId: UUID(), isBound: false)
             let response = ZMTransportResponse(payload: payload as ZMTransportData, httpStatus: 200, transportSessionError: nil)
             request.complete(with: response)
         }
