@@ -16,6 +16,27 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+//struct TeamListPayload: Decodable {
+//    let hasMore: Bool
+//    let teams: [TeamPayload]
+//}
+//
+//struct TeamPayload: Decodable {
+//    
+//    let name: String
+//    let creator: UUID
+//    let binding: Bool
+//    let iconKey: String
+//    
+//    private enum CodingKeys: String, CodingKey {
+//        case name = "user"
+//        case creator = "creator"
+//        case binding = "binding"
+//        case iconKey = "icon_key"
+//    }
+//        
+//}
+
 
 public final class TeamSyncRequestStrategy: AbstractRequestStrategy, ZMContextChangeTrackerSource, ZMRequestGeneratorSource {
     
@@ -127,9 +148,15 @@ extension TeamSyncRequestStrategy: ZMSimpleListRequestPaginatorSync {
         let teamsPayload = payload?["teams"] as? [[String: Any]]
         
         let teams = teamsPayload?.compactMap { (payload) -> Team? in
-            guard let isBound = payload["binding"] as? Bool, isBound == true,
-                  let id = (payload["id"] as? String).flatMap(UUID.init)
+            guard let id = (payload["id"] as? String).flatMap(UUID.init),
+                  let isBinding = payload["binding"] as? Bool
             else { return nil }
+
+            if isBinding {
+                let team = Team.fetchOrCreate(with: id, create: true, in: managedObjectContext, created: nil)
+            } else {
+                
+            }
             
             let team = Team.fetchOrCreate(with: id, create: true, in: managedObjectContext, created: nil)
             team?.update(with: payload)
