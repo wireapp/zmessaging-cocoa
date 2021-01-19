@@ -32,10 +32,10 @@ struct TeamPayload: Decodable {
     
     private enum CodingKeys: String, CodingKey {
         case identifier = "id"
-        case name = "user"
-        case creator = "creator"
-        case binding = "binding"
-        case icon = "icon"
+        case name
+        case creator
+        case binding
+        case icon
         case iconKey = "icon_key"
     }
         
