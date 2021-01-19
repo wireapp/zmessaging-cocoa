@@ -1100,7 +1100,7 @@ extension WireCallCenterV3Tests {
 
         // then
         let actual = sut.callParticipants(conversationId: oneOnOneConversationID)
-        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, isActiveSpeaker: false)]
         XCTAssertEqual(actual, expected)
     }
 
@@ -1125,7 +1125,7 @@ extension WireCallCenterV3Tests {
         
         // then
         let actual = sut.callParticipants(conversationId: oneOnOneConversationID)
-        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, isActiveSpeaker: false)]
         XCTAssertEqual(actual, expected)
     }
 
@@ -1137,7 +1137,7 @@ extension WireCallCenterV3Tests {
 
         // then
         let actual = sut.callParticipants(conversationId: groupConversationID)
-        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, isActiveSpeaker: false)]
         XCTAssertEqual(actual, expected)
     }
 
@@ -1154,7 +1154,7 @@ extension WireCallCenterV3Tests {
 
         // then
         var actual = sut.callParticipants(conversationId: groupConversationID)
-        var expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting)]
+        var expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, isActiveSpeaker: false)]
         XCTAssertEqual(actual, expected)
 
         // when
@@ -1163,7 +1163,7 @@ extension WireCallCenterV3Tests {
 
         // then
         actual = sut.callParticipants(conversationId: groupConversationID)
-        expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connected(videoState: .stopped, microphoneState: .unmuted))]
+        expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connected(videoState: .stopped, microphoneState: .unmuted), isActiveSpeaker: false)]
         XCTAssertEqual(actual, expected)
     }
 }
@@ -1263,5 +1263,109 @@ extension WireCallCenterV3Tests {
         
         // Then
         XCTAssertTrue(sut.callSnapshots[conversationId]?.isDegradedCall ?? false)
+    }
+}
+
+// MARK: - Active Speakers
+
+extension WireCallCenterV3Tests {
+
+    private func activeSpeakersChange(for conversationId: UUID, clients: [AVSClient]) -> AVSActiveSpeakersChange {
+        var activeSpeakers = [AVSActiveSpeakersChange.ActiveSpeaker]()
+        
+        for client in clients {
+            activeSpeakers += [AVSActiveSpeakersChange.ActiveSpeaker(
+                userId: client.userId,
+                clientId: client.clientId,
+                audioLevel: 100
+            )]
+        }
+        
+        return AVSActiveSpeakersChange(activeSpeakers: activeSpeakers)
+    }
+    
+    private func callSnapshot(conversationId: UUID, clients: [AVSClient]) -> [UUID: CallSnapshot] {
+        return [
+            conversationId : CallSnapshotTestFixture.callSnapshot(
+                conversationId: conversationId,
+                callCenter: sut,
+                clients: clients
+            )
+        ]
+    }
+    
+    func testThatActiveSpeakersHandlerUpdatesActiveSpeakers() {
+        // GIVEN
+        let conversationId = groupConversationID!
+        let client = AVSClient.mockClient
+        
+        sut.callSnapshots = callSnapshot(conversationId: conversationId, clients: [client])
+        let change = activeSpeakersChange(for: conversationId, clients: [client])
+        let activeSpeaker = change.activeSpeakers.first!
+
+        // WHEN
+        sut.handleActiveSpeakersChange(conversationId: conversationId, data: change.data)
+
+        // THEN
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(sut.callSnapshots[conversationId]!.activeSpeakers.first, activeSpeaker)
+    }
+    
+    func testThatActiveSpeakersHandlerPostsNotification() {
+        // GIVEN
+        let conversationId = groupConversationID!
+        let client = AVSClient.mockClient
+        
+        sut.callSnapshots = callSnapshot(conversationId: conversationId, clients: [client])
+        let change = activeSpeakersChange(for: conversationId, clients: [client])
+        
+        // EXPECT
+        expectation(forNotification: WireCallCenterActiveSpeakersNotification.notificationName, object: nil) { _ in
+            return true
+        }
+        
+        // WHEN
+        sut.handleActiveSpeakersChange(conversationId: conversationId, data: change.data)
+        
+        // THEN
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+    }
+    
+    func testThatCallParticipants_LimitsActiveSpeakersCorrectly() {
+        // GIVEN
+        let conversationId = groupConversationID!
+        let clients = [
+            AVSClient(userId: selfUserID, clientId: UUID().transportString()),
+            AVSClient(userId: otherUserID, clientId: UUID().transportString())
+        ]
+        
+        sut.callSnapshots = callSnapshot(conversationId: conversationId, clients: clients)
+        let data = activeSpeakersChange(for: conversationId, clients: clients).data
+        
+        sut.handleActiveSpeakersChange(conversationId: conversationId, data: data)
+        
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // WHEN
+        let participants = sut.callParticipants(conversationId: conversationId, activeSpeakersLimit: 1)
+        
+        // THEN
+        XCTAssertTrue(participants.count == 2)
+        let activeSpeakersAmount = participants.filter { $0.isActiveSpeaker }.count
+        XCTAssertTrue(activeSpeakersAmount == 1)
+    }
+}
+
+private extension AVSClient {
+    static var mockClient: AVSClient {
+        return AVSClient(userId: UUID(), clientId: UUID().transportString())
+    }
+}
+
+private extension AVSActiveSpeakersChange {
+    var data: String {
+        let encoded = try! JSONEncoder().encode(self)
+        return String(data: encoded, encoding: .utf8)!
     }
 }
