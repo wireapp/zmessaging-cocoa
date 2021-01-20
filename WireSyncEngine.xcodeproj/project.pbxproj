@@ -582,8 +582,6 @@
 		F9ABE8511EFD568B00D83214 /* TeamRequestFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9ABE84D1EFD568B00D83214 /* TeamRequestFactory.swift */; };
 		F9ABE8561EFD56BF00D83214 /* TeamDownloadRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9ABE8531EFD56BF00D83214 /* TeamDownloadRequestStrategyTests.swift */; };
 		F9ABE8571EFD56BF00D83214 /* TeamDownloadRequestStrategy+EventsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9ABE8541EFD56BF00D83214 /* TeamDownloadRequestStrategy+EventsTests.swift */; };
-		F9ABE8AA1F02A45700D83214 /* TeamSyncRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9ABE8A91F02A45700D83214 /* TeamSyncRequestStrategy.swift */; };
-		F9ABE8AE1F02A88200D83214 /* TeamSyncRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9ABE8AB1F02A86400D83214 /* TeamSyncRequestStrategyTests.swift */; };
 		F9B171F61C0EF21100E6EEC6 /* ClientUpdateStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B171F51C0EF21100E6EEC6 /* ClientUpdateStatus.swift */; };
 		F9B171F81C0F00E700E6EEC6 /* ClientUpdateStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B171F71C0F00E700E6EEC6 /* ClientUpdateStatusTests.swift */; };
 		F9B171FA1C0F320200E6EEC6 /* ClientManagementTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F9B171F91C0F320200E6EEC6 /* ClientManagementTests.m */; };
@@ -1317,8 +1315,6 @@
 		F9ABE84D1EFD568B00D83214 /* TeamRequestFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TeamRequestFactory.swift; sourceTree = "<group>"; };
 		F9ABE8531EFD56BF00D83214 /* TeamDownloadRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TeamDownloadRequestStrategyTests.swift; sourceTree = "<group>"; };
 		F9ABE8541EFD56BF00D83214 /* TeamDownloadRequestStrategy+EventsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "TeamDownloadRequestStrategy+EventsTests.swift"; sourceTree = "<group>"; };
-		F9ABE8A91F02A45700D83214 /* TeamSyncRequestStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TeamSyncRequestStrategy.swift; sourceTree = "<group>"; };
-		F9ABE8AB1F02A86400D83214 /* TeamSyncRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TeamSyncRequestStrategyTests.swift; sourceTree = "<group>"; };
 		F9B171F51C0EF21100E6EEC6 /* ClientUpdateStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientUpdateStatus.swift; sourceTree = "<group>"; };
 		F9B171F71C0F00E700E6EEC6 /* ClientUpdateStatusTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientUpdateStatusTests.swift; sourceTree = "<group>"; };
 		F9B171F91C0F320200E6EEC6 /* ClientManagementTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ClientManagementTests.m; sourceTree = "<group>"; };
@@ -1855,7 +1851,6 @@
 			isa = PBXGroup;
 			children = (
 				BF491CD01F03D7CF0055EE44 /* PermissionsDownloadRequestStrategy.swift */,
-				F9ABE8A91F02A45700D83214 /* TeamSyncRequestStrategy.swift */,
 				F9ABE84B1EFD568B00D83214 /* TeamDownloadRequestStrategy.swift */,
 				F9ABE84C1EFD568B00D83214 /* TeamDownloadRequestStrategy+Events.swift */,
 				A913C02123A7EDFA0048CE74 /* TeamRolesDownloadRequestStrategy.swift */,
@@ -1893,7 +1888,6 @@
 			children = (
 				BF491CD41F03E0FC0055EE44 /* PermissionsDownloadRequestStrategyTests.swift */,
 				169BC10E22BD17FF0003159B /* LegalHoldRequestStrategyTests.swift */,
-				F9ABE8AB1F02A86400D83214 /* TeamSyncRequestStrategyTests.swift */,
 				1645ED1A244DE345007A82D6 /* TeamMembersDownloadRequestStrategy.swift */,
 				F9ABE8531EFD56BF00D83214 /* TeamDownloadRequestStrategyTests.swift */,
 				F9ABE8541EFD56BF00D83214 /* TeamDownloadRequestStrategy+EventsTests.swift */,
@@ -2962,7 +2956,6 @@
 				F1FE8027200684F200A438CF /* NotificationsTrackingTests.swift in Sources */,
 				A913C02423A7F1C00048CE74 /* TeamRolesDownloadRequestStrategyTests.swift in Sources */,
 				163BB8161EE1B1AC00DF9384 /* SearchTests.swift in Sources */,
-				F9ABE8AE1F02A88200D83214 /* TeamSyncRequestStrategyTests.swift in Sources */,
 				EFC8281E1FB34F9600E27E21 /* EmailVerificationStrategyTests.swift in Sources */,
 				87D4625D1C3D526D00433469 /* DeleteAccountRequestStrategyTests.swift in Sources */,
 				06BBF6FD247288E300A26626 /* FileTransferTests+Swift.swift in Sources */,
@@ -3316,7 +3309,6 @@
 				161ACB3223F5BBA100ABFF33 /* CompanyLoginURLActionProcessor.swift in Sources */,
 				16F6BB381EDEA659009EA803 /* SearchResult+AddressBook.swift in Sources */,
 				5458AF841F7021B800E45977 /* PreLoginAuthenticationNotification.swift in Sources */,
-				F9ABE8AA1F02A45700D83214 /* TeamSyncRequestStrategy.swift in Sources */,
 				F9ABE84F1EFD568B00D83214 /* TeamDownloadRequestStrategy.swift in Sources */,
 				871667FA1BB2AE9C009C6EEA /* APSSignalingKeysStore.swift in Sources */,
 				54A343471D6B589A004B65EA /* AddressBookSearch.swift in Sources */,
