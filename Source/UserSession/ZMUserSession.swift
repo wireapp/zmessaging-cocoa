@@ -31,7 +31,7 @@ public protocol ThirdPartyServicesDelegate: NSObjectProtocol {
 typealias UserSessionDelegate = UserSessionEncryptionAtRestDelegate & UserSessionAppLockDelegate
 
 @objcMembers
-public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessionAppLockInterface {
+public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     
     private let appVersion: String
     private var tokens: [Any] = []

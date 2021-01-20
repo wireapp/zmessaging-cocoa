@@ -19,8 +19,13 @@
 import Foundation
 
 public protocol UserSessionAppLockInterface {
+
     var appLockController: AppLockType { get set }
+    var lock: ZMUserSession.Lock? { get }
+
 }
+
+extension ZMUserSession: UserSessionAppLockInterface {}
 
 public extension ZMUserSession {
 

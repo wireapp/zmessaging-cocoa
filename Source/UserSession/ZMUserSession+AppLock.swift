@@ -27,7 +27,7 @@ protocol UserSessionAppLockDelegate: class {
 
 extension ZMUserSession: AppLockDelegate {
 
-    public func appLockDidUnlock(_ appLock: AppLockType) {
+    public func appLockDidOpen(_ appLock: AppLockType) {
         delegate?.userSessionDidUnlock(self)
     }
 
