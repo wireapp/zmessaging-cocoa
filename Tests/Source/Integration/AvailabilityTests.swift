@@ -31,6 +31,7 @@ class AvailabilityTests: IntegrationTest {
         var mockTeam : MockTeam!
         mockTransportSession.performRemoteChanges { (session) in
             mockTeam = session.insertTeam(withName: "Super-Team", isBound: isBound, users: Set(members))
+            mockTeam.creator = members.first
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         return mockTeam
