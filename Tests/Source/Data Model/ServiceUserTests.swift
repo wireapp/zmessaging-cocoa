@@ -16,12 +16,13 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import Foundation
 import XCTest
 
 @testable import WireSyncEngine
 
 final class DummyServiceUser: NSObject, ServiceUser {
+    
+    var hasTeam: Bool = false
     
     var isTrusted: Bool = false
     
@@ -69,7 +70,7 @@ final class DummyServiceUser: NSObject, ServiceUser {
         return false
     }
     
-    func canAddUser(to conversation: ZMConversation) -> Bool {
+    func canAddUser(to conversation: ConversationLike) -> Bool {
         return false
     }
     
@@ -89,23 +90,23 @@ final class DummyServiceUser: NSObject, ServiceUser {
         return false
     }
     
-    func canModifyReadReceiptSettings(in conversation: ZMConversation) -> Bool {
+    func canModifyReadReceiptSettings(in conversation: ConversationLike) -> Bool {
         return false
     }
     
-    func canModifyEphemeralSettings(in conversation: ZMConversation) -> Bool {
+    func canModifyEphemeralSettings(in conversation: ConversationLike) -> Bool {
         return false
     }
     
-    func canModifyNotificationSettings(in conversation: ZMConversation) -> Bool {
+    func canModifyNotificationSettings(in conversation: ConversationLike) -> Bool {
         return false
     }
     
-    func canModifyAccessControlSettings(in conversation: ZMConversation) -> Bool {
+    func canModifyAccessControlSettings(in conversation: ConversationLike) -> Bool {
         return false
     }
     
-    func canModifyTitle(in conversation: ZMConversation) -> Bool {
+    func canModifyTitle(in conversation: ConversationLike) -> Bool {
         return false
     }
 
@@ -117,7 +118,7 @@ final class DummyServiceUser: NSObject, ServiceUser {
         return false
     }
 
-    func isGroupAdmin(in conversation: ZMConversation) -> Bool {
+    func isGroupAdmin(in conversation: ConversationLike) -> Bool {
         return false
     }
     
@@ -209,7 +210,7 @@ final class DummyServiceUser: NSObject, ServiceUser {
         
     }
     
-    func isGuest(in conversation: ZMConversation) -> Bool {
+    func isGuest(in conversation: ConversationLike) -> Bool {
         return false
     }
     
