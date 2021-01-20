@@ -19,6 +19,11 @@
 struct TeamListPayload: Decodable {
     let hasMore: Bool
     let teams: [TeamPayload]
+    
+    private enum CodingKeys: String, CodingKey {
+        case hasMore = "has_more"
+        case teams
+    }
 }
 
 struct TeamPayload: Decodable {
@@ -86,7 +91,7 @@ public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMConte
     public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus, syncStatus: SyncStatus) {
         self.syncStatus = syncStatus
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
-        configuration = [.allowsRequestsWhileOnline]
+        configuration = [.allowsRequestsWhileOnline, .allowsRequestsDuringSlowSync]
         downstreamSync = ZMDownstreamObjectSync(
             transcoder: self,
             entityName: Team.entityName(),
