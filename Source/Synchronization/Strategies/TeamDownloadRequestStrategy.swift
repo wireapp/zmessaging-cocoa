@@ -49,10 +49,11 @@ struct TeamPayload: Decodable {
 extension TeamPayload {
     
     func createOrUpdateTeam(in managedObjectContext: NSManagedObjectContext) -> Team? {
+        var created: Bool = false
         guard let team = Team.fetchOrCreate(with: identifier,
                                             create: true,
                                             in: managedObjectContext,
-                                            created: nil)
+                                            created: &created)
         else {
             return nil
         }
@@ -61,6 +62,11 @@ extension TeamPayload {
         team.creator = ZMUser(remoteID: creator, createIfNeeded: true, in: managedObjectContext)
         team.pictureAssetId = icon
         team.pictureAssetKey = iconKey
+        
+        if created {
+            let selfUser = ZMUser.selfUser(in: managedObjectContext)
+            _ = Member.getOrCreateMember(for: selfUser, in: team, context: managedObjectContext)
+        }
         
         if !binding {
             managedObjectContext.delete(team)
