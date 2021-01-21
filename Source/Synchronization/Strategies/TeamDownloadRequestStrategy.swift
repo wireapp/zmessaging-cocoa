@@ -58,21 +58,25 @@ extension TeamPayload {
             return nil
         }
         
-        team.name = name
-        team.creator = ZMUser(remoteID: creator, createIfNeeded: true, in: managedObjectContext)
-        team.pictureAssetId = icon
-        team.pictureAssetKey = iconKey
-        
         if created {
             let selfUser = ZMUser.selfUser(in: managedObjectContext)
             _ = Member.getOrCreateMember(for: selfUser, in: team, context: managedObjectContext)
         }
         
+        updateTeam(team, in: managedObjectContext)
+                
+        return team
+    }
+    
+    func updateTeam(_ team: Team, in managedObjectContext: NSManagedObjectContext) {
+        team.name = name
+        team.creator = ZMUser.fetchAndMerge(with: creator, createIfNeeded: true, in: managedObjectContext)
+        team.pictureAssetId = icon
+        team.pictureAssetKey = iconKey
+        
         if !binding {
             managedObjectContext.delete(team)
         }
-        
-        return team
     }
     
 }
@@ -164,12 +168,14 @@ extension TeamDownloadRequestStrategy: ZMDownstreamTranscoder {
     public func update(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
         guard
             downstreamSync as? ZMDownstreamObjectSync == self.downstreamSync,
+            let team = object as? Team,
             let rawData = response.rawData,
             let teamPayload = TeamPayload(rawData) else { return }
                     
-        let team = teamPayload.createOrUpdateTeam(in: managedObjectContext)
-        team?.needsToBeUpdatedFromBackend = false
-        team?.needsToDownloadRoles = true
+        teamPayload.updateTeam(team, in: managedObjectContext)
+        
+        team.needsToBeUpdatedFromBackend = false
+        team.needsToDownloadRoles = true
     }
 
     public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
