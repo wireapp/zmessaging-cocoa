@@ -270,49 +270,6 @@
     XCTAssertNotNil([[ZMUser selfUserInUserSession:self.userSession] emailAddress]);
 }
 
-- (void)testThatAccountDeletedIfTeamIsDiscoveredToBeDeletedDuringSlowSync
-{
-    // given
-    __block MockTeam *mockTeam;
-    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
-        mockTeam = [session insertTeamWithName:@"Foo" isBound: YES users:[NSSet setWithObject:self.selfUser]];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    XCTAssertTrue([self login]);
-    XCTAssertNotNil([ZMUser selfUserInUserSession:self.userSession].team);
-    
-    // when
-    // block requests to /notifications to enforce slowSync
-    __block BOOL hasTeamRequest = NO;
-
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        if([request.path hasPrefix:@"/notifications"]) {
-            if (!hasTeamRequest){
-                return [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
-            }
-        }
-        if ([request.path hasPrefix:@"/teams"]) {
-            hasTeamRequest = YES;
-        }
-        return nil;
-    };
-    
-    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
-        [session simulatePushChannelClosed];
-        [session removeMemberWithUser:self.selfUser fromTeam:mockTeam];
-        [(MockTransportSession *)session saveAndCreatePushChannelEvents]; // clears the team.member-leave event from the push channel events
-        [session simulatePushChannelOpened];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(hasTeamRequest);
-    XCTAssertNil(self.userSession); // user session has been closed
-    XCTAssertEqual(self.sessionManager.accountManager.accounts.count, 0ul); // account has been deleted
-}
-
-
 - (ZMUser *)findUserWithUUID:(NSString *)UUIDString inMoc:(NSManagedObjectContext *)moc {
     ZMUser *user = [ZMUser userWithRemoteID:[UUIDString UUID] createIfNeeded:NO inContext:moc];
     XCTAssertNotNil(user);
