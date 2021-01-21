@@ -166,7 +166,7 @@
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/conversations?ids=%@,%@,%@,%@", selfConversationIdentifier, selfToUser1ConversationIdentifier, selfToUser2ConversationIdentifier, groupConversationIdentifier]],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@", user1Identifier, user2Identifier]],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@", user3Identifier]],
-             [ZMTransportRequest requestGetFromPath:@"/teams?size=50"],
+             [ZMTransportRequest requestGetFromPath:@"/teams"],
              [ZMTransportRequest requestGetFromPath:@"/properties/labels"]
              ];
 
