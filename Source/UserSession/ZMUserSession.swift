@@ -177,7 +177,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     }
     
     @objc
-    public init(transportSession: TransportSessionType,
+    public init(userId: UUID,
+                transportSession: TransportSessionType,
                 mediaManager: MediaManagerType,
                 flowManager: FlowManagerType,
                 analytics: AnalyticsType?,
@@ -206,7 +207,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.userExpirationObserver = UserExpirationObserver(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.debugCommands = ZMUserSession.initDebugCommands()
-        self.appLockController = AppLockController(config: configuration.appLockConfig, selfUser: ZMUser.selfUser(in: storeProvider.contextDirectory.uiContext))
+        self.appLockController = AppLockController(userId: userId, config: configuration.appLockConfig, selfUser: ZMUser.selfUser(in: storeProvider.contextDirectory.uiContext))
         super.init()
 
         appLockController.delegate = self
