@@ -19,16 +19,12 @@
 import Foundation
 
 @objcMembers
-public class MockRequestStrategyFactory: NSObject, RequestStrategyFactoryProtocol {
+public class MockStrategyDirectory: NSObject, StrategyDirectoryProtocol {
+
+    public var eventConsumers: [ZMEventConsumer] = []
     
-    let strategies: [Any]
+    public var requestStrategies: [RequestStrategy] = []
     
-    public init(strategies: [Any]) {
-        self.strategies = strategies
-    }
-    
-    public func buildStrategies() -> [Any] {
-        return strategies
-    }
+    public var contextChangeTrackers: [ZMContextChangeTracker] = []
     
 }

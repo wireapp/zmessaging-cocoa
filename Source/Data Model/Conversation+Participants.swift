@@ -54,7 +54,7 @@ extension ZMConversation {
     public func addParticipants(_ participants: [UserType], userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
         addParticipants(participants,
                         transportSession: userSession.transportSession,
-                        eventProcessor: userSession,
+                        eventProcessor: userSession.updateEventProcessor!,
                         contextProvider: userSession,
                         completion: completion)
     }
@@ -111,7 +111,7 @@ extension ZMConversation {
     public func removeParticipant(_ participant: UserType, userSession: ZMUserSession, completion: @escaping (VoidResult) -> Void) {
         removeParticipant(participant,
                           transportSession: userSession.transportSession,
-                          eventProcessor: userSession,
+                          eventProcessor: userSession.updateEventProcessor!,
                           contextProvider: userSession,
                           completion: completion)
     }
