@@ -185,9 +185,10 @@ extension SessionManagerConfiguration {
 
     var appLockConfig: AppLockController.Config {
         return .init(
-            useBiometricsOrCustomPasscode: useBiometricsOrCustomPasscode,
-            forceAppLock: forceAppLock,
-            timeOut: appLockTimeout
+            isAvailable: true,
+            isForced: forceAppLock,
+            timeout: appLockTimeout,
+            requireCustomPasscode: useBiometricsOrCustomPasscode
         )
     }
 

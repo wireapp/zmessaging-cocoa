@@ -26,6 +26,10 @@ class MockUserSessionDelegate: UserSessionDelegate {
     func setEncryptionAtRest(enabled: Bool, account: Account, encryptionKeys: EncryptionKeys) {
         calledSetEncryptionAtRest = (enabled, account, encryptionKeys)
     }
+
+    func userSessionDidUnlock(_ session: ZMUserSession) {
+        
+    }
     
 }
 

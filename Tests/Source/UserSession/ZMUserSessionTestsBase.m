@@ -67,23 +67,26 @@
     self.mediaManager = [[MockMediaManager alloc] init];
     self.flowManagerMock = [[FlowManagerMock alloc] init];
     self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
-    [ZMUser selfUserInContext:self.syncMOC].remoteIdentifier = [NSUUID createUUID];
+
+    NSUUID *userId = [NSUUID createUUID];
+    [ZMUser selfUserInContext:self.syncMOC].remoteIdentifier = userId;
     
     MockStrategyDirectory *mockStrategyDirectory = [[MockStrategyDirectory alloc] init];
     MockUpdateEventProcessor *mockUpdateEventProcessor = [[MockUpdateEventProcessor alloc] init];
     
-    self.sut = [[ZMUserSession alloc] initWithTransportSession:self.transportSession
-                                                  mediaManager:self.mediaManager
-                                                   flowManager:self.flowManagerMock
-                                                     analytics:nil
-                                                eventProcessor:mockUpdateEventProcessor
-                                             strategyDirectory:mockStrategyDirectory
-                                                  syncStrategy:nil
-                                                 operationLoop:nil
-                                                   application:self.application
-                                                    appVersion:@"00000"
-                                                 storeProvider:self.storeProvider
-                                                 configuration:ZMUserSessionConfiguration.defaultConfig];
+    self.sut = [[ZMUserSession alloc] initWithUserId:userId
+                                    transportSession:self.transportSession
+                                        mediaManager:self.mediaManager
+                                         flowManager:self.flowManagerMock
+                                           analytics:nil
+                                      eventProcessor:mockUpdateEventProcessor
+                                   strategyDirectory:mockStrategyDirectory
+                                        syncStrategy:nil
+                                       operationLoop:nil
+                                         application:self.application
+                                          appVersion:@"00000"
+                                       storeProvider:self.storeProvider
+                                       configuration:ZMUserSessionConfiguration.defaultConfig];
         
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
     self.sut.sessionManager = (id<SessionManagerType>)self.mockSessionManager;

@@ -75,6 +75,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     override func session(for account: Account, storeProvider: LocalStoreProviderProtocol, configuration: ZMUserSession.Configuration = .defaultConfig) -> ZMUserSession? {
         return ZMUserSession(
+            userId: account.userIdentifier,
             transportSession: transportSession,
             mediaManager: mediaManager,
             flowManager: flowManager,
@@ -94,9 +95,10 @@ extension ZMUserSession.Configuration {
     static var defaultConfig: ZMUserSession.Configuration {
         Self.init(
             appLockConfig: .init(
-                useBiometricsOrCustomPasscode: false,
-                forceAppLock: false,
-                timeOut: 10
+                isAvailable: true,
+                isForced: false,
+                timeout: 19,
+                requireCustomPasscode: false
             )
         )
     }
