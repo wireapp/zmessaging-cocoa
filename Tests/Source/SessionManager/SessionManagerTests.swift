@@ -1493,10 +1493,6 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void) {
         startedMigrationCalled = true
     }
-
-    func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
-        // no op
-    }
     
 }
 

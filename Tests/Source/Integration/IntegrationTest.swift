@@ -662,11 +662,7 @@ extension IntegrationTest: SessionManagerDelegate {
         
         setupTimers()
     }
-    
-    public func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
-        // no-op
-    }
-    
+
     public func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void) {
         self.userSession = nil
         userSessionCanBeTornDown()
