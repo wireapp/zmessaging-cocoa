@@ -202,9 +202,6 @@ public class StrategyDirectory: NSObject, StrategyDirectoryProtocol {
                 withManagedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory,
                 syncStatus: applicationStatusDirectory.syncStatus),
-            GenericMessageNotificationRequestStrategy(
-                managedObjectContext: syncMOC,
-                clientRegistrationDelegate: applicationStatusDirectory.clientRegistrationStatus),
             UserImageAssetUpdateStrategy(
                 managedObjectContext: syncMOC,
                 applicationStatusDirectory: applicationStatusDirectory,
