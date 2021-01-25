@@ -46,37 +46,6 @@
     self.lastReceivedNotification = notification;
 }
 
-- (void)testThatItSetsTheUserAgentOnStart;
-{
-    // given
-    NSString *version = @"The-version-123";
-    id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
-    [[[transportSession stub] andReturn:[OCMockObject niceMockForClass:[ZMPersistentCookieStorage class]]] cookieStorage];
-    
-    // expect
-    id userAgent = [OCMockObject mockForClass:ZMUserAgent.class];
-    [[[userAgent expect] classMethod] setWireAppVersion:version];
-    
-    // when
-    ZMUserSession *session = [[ZMUserSession alloc] initWithTransportSession:transportSession
-                                                                mediaManager:self.mediaManager
-                                                                 flowManager:self.flowManagerMock
-                                                                   analytics:nil
-                                                                syncStrategy:nil
-                                                               operationLoop:nil
-                                                                 application:self.application
-                                                                  appVersion:version
-                                                               storeProvider:self.storeProvider
-                                                               configuration:ZMUserSessionConfiguration.defaultConfig];
-    XCTAssertNotNil(session);
-    
-    // then
-    [userAgent verify];
-    [userAgent stopMocking];
-    [session tearDown];
-    [transportSession stopMocking];
-}
-
 - (void)testThatWeCanGetAManagedObjectContext
 {
 
@@ -179,39 +148,12 @@
 {
     // given
     UserClient *userClient = [self createSelfClient];
-    id pushChannel = [OCMockObject niceMockForProtocol:@protocol(ZMPushChannel)];
-    id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
-    id cookieStorage = [OCMockObject niceMockForClass:ZMPersistentCookieStorage.class];
-    id sessionManager = [[MockSessionManager alloc] init];
-
-    // expect
-    [[pushChannel expect] setClientID:userClient.remoteIdentifier];
-    [[[transportSession stub] andReturn:pushChannel] pushChannel];
-    [[[transportSession stub] andReturn:cookieStorage] cookieStorage];
     
     // when
-    ZMUserSession *userSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
-                                                                    mediaManager:self.mediaManager
-                                                                     flowManager:self.flowManagerMock
-                                                                       analytics:nil
-                                                                    syncStrategy:nil
-                                                                   operationLoop:nil
-                                                                     application:self.application
-                                                                      appVersion:@"00000"
-                                                                   storeProvider:self.storeProvider
-                                                                   configuration:ZMUserSessionConfiguration.defaultConfig];
-    userSession.sessionManager = sessionManager;
-    XCTAssertFalse([(MockSessionManager *)sessionManager updatePushTokenCalled]);
-    [userSession didRegisterUserClient:userClient];
+    [self.sut didRegisterUserClient:userClient];
     
     // then
-    [pushChannel verify];
-    [transportSession verify];
-
-    XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
-    XCTAssertTrue([(MockSessionManager *)sessionManager updatePushTokenCalled]);
-
-    [userSession tearDown];
+    XCTAssertEqualObjects(self.mockPushChannel.clientID, userClient.remoteIdentifier);
 }
 
 - (void)testThatItReturnsTheFingerprintForSelfUserClient
@@ -423,6 +365,8 @@
                                                                     mediaManager:self.mediaManager
                                                                      flowManager:self.flowManagerMock
                                                                        analytics:nil
+                                                                  eventProcessor:nil
+                                                               strategyDirectory:nil
                                                                     syncStrategy:nil
                                                                    operationLoop:nil
                                                                      application:self.application

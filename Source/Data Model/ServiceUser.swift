@@ -182,7 +182,7 @@ public extension ServiceUser {
     func createConversation(in userSession: ZMUserSession, completionHandler: @escaping (Result<ZMConversation>) -> Void) {
         
         createConversation(transportSession: userSession.transportSession,
-                           eventProcessor: userSession,
+                           eventProcessor: userSession.updateEventProcessor!,
                            contextProvider: userSession,
                            completionHandler: completionHandler)
     }
@@ -284,7 +284,7 @@ public extension ZMConversation {
     func add(serviceUser serviceUserData: ServiceUserData, in userSession: ZMUserSession, completionHandler: @escaping (VoidResult) -> Void) {
         add(serviceUser: serviceUserData,
             transportSession: userSession.transportSession,
-            eventProcessor: userSession,
+            eventProcessor: userSession.updateEventProcessor!,
             contextProvider: userSession,
             completionHandler: completionHandler)
     }

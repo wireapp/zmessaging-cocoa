@@ -56,7 +56,8 @@ open class AuthenticatedSessionFactory {
             cookieStorage: environment.cookieStorage(for: account),
             reachability: reachability,
             initialAccessToken: nil,
-            applicationGroupIdentifier: nil
+            applicationGroupIdentifier: nil,
+            applicationVersion: appVersion
         )
 
         let userSession = ZMUserSession(
@@ -82,15 +83,23 @@ open class UnauthenticatedSessionFactory {
 
     var environment: BackendEnvironmentProvider
     let reachability: ReachabilityProvider
+    let appVersion: String
 
-    init(environment: BackendEnvironmentProvider, reachability: ReachabilityProvider) {
+    init(appVersion: String,
+         environment: BackendEnvironmentProvider,
+         reachability: ReachabilityProvider) {
         self.environment = environment
         self.reachability = reachability
+        self.appVersion = appVersion
     }
 
     func session(withDelegate delegate: UnauthenticatedSessionDelegate) -> UnauthenticatedSession {
-        let transportSession = UnauthenticatedTransportSession(environment: environment, reachability: reachability)
-        return UnauthenticatedSession(transportSession: transportSession, reachability: reachability, delegate: delegate)
+        let transportSession = UnauthenticatedTransportSession(environment: environment,
+                                                               reachability: reachability,
+                                                               applicationVersion: appVersion)
+        return UnauthenticatedSession(transportSession: transportSession,
+                                      reachability: reachability,
+                                      delegate: delegate)
     }
 
 }

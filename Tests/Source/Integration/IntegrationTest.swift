@@ -108,7 +108,7 @@ final class MockUnauthenticatedSessionFactory: UnauthenticatedSessionFactory {
     
     init(transportSession: UnauthenticatedTransportSessionProtocol, environment: BackendEnvironmentProvider, reachability: ReachabilityProvider) {
         self.transportSession = transportSession
-        super.init(environment: environment, reachability: reachability)
+        super.init(appVersion: "1.0", environment: environment, reachability: reachability)
     }
 
     override func session(withDelegate delegate: WireSyncEngine.UnauthenticatedSessionDelegate) -> UnauthenticatedSession {
