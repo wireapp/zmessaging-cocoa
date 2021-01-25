@@ -21,7 +21,24 @@ import XCTest
 @testable import WireSyncEngine
 
 final class DummyServiceUser: NSObject, ServiceUser {
-    
+    func cancelConnectionRequest() {
+        
+    }
+
+    func block () {
+        
+    }
+
+    func accept() {
+        
+    }
+
+    func ignore() {
+        
+    }
+
+    var isIgnored: Bool = false
+
     var hasTeam: Bool = false
     
     var isTrusted: Bool = false
