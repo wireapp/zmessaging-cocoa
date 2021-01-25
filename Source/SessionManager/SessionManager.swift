@@ -613,17 +613,9 @@ public final class SessionManager : NSObject, SessionManagerType {
     }
 
     func performPostUnlockActionsIfPossible(for session: ZMUserSession) {
-        session.checkIfLoggedIn { [weak self] loggedIn in
-            guard
-                loggedIn,
-                session.lock == .none
-            else {
-                return
-            }
-
-            self?.configureUserNotifications()
-            self?.processPendingURLAction()
-        }
+        guard session.lock == .none else { return }
+        configureUserNotifications()
+        processPendingURLAction()
     }
 
     // Loads user session for @c account given and executes the @c action block.

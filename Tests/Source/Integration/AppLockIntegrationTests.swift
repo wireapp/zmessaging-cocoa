@@ -58,7 +58,7 @@ final class AppLockIntegrationTests: IntegrationTest {
 
 // MARK: - Mocks
 
-private class MockAppLock: AppLockType {
+class MockAppLock: AppLockType {
 
     var delegate: AppLockDelegate?
 
