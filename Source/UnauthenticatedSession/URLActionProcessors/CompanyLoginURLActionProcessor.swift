@@ -44,7 +44,7 @@ class CompanyLoginURLActionProcessor: URLActionProcessor {
                 return
             }
             
-            authenticationStatus.notifyCompanyLoginCodeDidBecomeAvailable(code)
+            authenticationStatus.delegate.companyLoginCodeDidBecomeAvailable(code)
         default:
             break
         }

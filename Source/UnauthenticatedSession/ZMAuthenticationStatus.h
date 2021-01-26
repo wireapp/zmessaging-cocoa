@@ -39,6 +39,14 @@ FOUNDATION_EXPORT NSTimeInterval DebugLoginFailureTimerOverride;
 - (void)didChangeAuthenticationData;
 @end
 
+@protocol ZMAuthenticationStatusDelegate <NSObject>
+- (void)authenticationDidFail:(NSError *)error;
+- (void)authenticationReadyImportingBackup:(BOOL)existingAccount;
+- (void)authenticationDidSucceed;
+- (void)loginCodeRequestDidFail:(NSError *)error;
+- (void)loginCodeRequestDidSucceed;
+- (void)companyLoginCodeDidBecomeAvailable: (NSUUID *)uuid;
+@end
 
 typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
     ZMAuthenticationPhaseUnauthenticated = 0,
@@ -68,10 +76,14 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 
 @property (nonatomic) NSData *authenticationCookieData;
 
-- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue userInfoParser:(id<UserInfoParser>)userInfoParser;
+@property (nonatomic, weak) id <ZMAuthenticationStatusDelegate> delegate;
+@property (nonatomic, weak) id <UserInfoParser> userInfoParser;
+
+- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue;
 
 - (id)addAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
 
+- (void)resetLoginAndRegistrationStatus;
 - (void)prepareForLoginWithCredentials:(ZMCredentials *)credentials;
 - (void)continueAfterBackupImportStep;
 - (void)prepareForRequestingPhoneVerificationCodeForLogin:(NSString *)phone;
@@ -91,10 +103,8 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 
 @end
 
-@interface ZMAuthenticationStatus (CredentialProvider) <ZMCredentialProvider>
+@interface ZMAuthenticationStatus (CredentialProvider) <ZMCredentialProvider, NotificationContext>
 
 - (void)credentialsMayBeCleared;
 
 @end
-
-

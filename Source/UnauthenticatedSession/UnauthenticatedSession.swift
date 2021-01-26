@@ -44,7 +44,7 @@ public class UnauthenticatedSession: NSObject {
     /// **accountId** will be set if the unauthenticated session is associated with an existing account
     public internal(set) var accountId: UUID?
     public let groupQueue: DispatchGroupQueue
-    private(set) public var authenticationStatus: ZMAuthenticationStatus!
+    public var authenticationStatus: ZMAuthenticationStatus
     public let registrationStatus: RegistrationStatus 
     let reachability: ReachabilityProvider
     private(set) var operationLoop: UnauthenticatedOperationLoop!
@@ -54,15 +54,24 @@ public class UnauthenticatedSession: NSObject {
 
     weak var delegate: UnauthenticatedSessionDelegate?
 
-    init(transportSession: UnauthenticatedTransportSessionProtocol, reachability: ReachabilityProvider, delegate: UnauthenticatedSessionDelegate?) {
-        self.delegate = delegate
-        self.groupQueue = DispatchGroupQueue(queue: .main)
+    init(transportSession: UnauthenticatedTransportSessionProtocol,
+         reachability: ReachabilityProvider,
+         authenticationStatus: ZMAuthenticationStatus,
+         groupQueue: DispatchGroupQueue,
+         delegate: UnauthenticatedSessionDelegate?) {
+        
         self.registrationStatus = RegistrationStatus()
+        self.authenticationStatus = authenticationStatus
         self.transportSession = transportSession
         self.reachability = reachability
+        self.groupQueue = groupQueue
+        self.delegate = delegate
         super.init()
 
-        self.authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue, userInfoParser: self)
+        self.authenticationStatus = authenticationStatus
+        self.authenticationStatus.userInfoParser = self
+        self.authenticationStatus.resetLoginAndRegistrationStatus()
+        
         self.urlActionProcessors = [CompanyLoginURLActionProcessor(delegate: self, authenticationStatus: authenticationStatus)]
         self.operationLoop = UnauthenticatedOperationLoop(
             transportSession: transportSession,
@@ -84,7 +93,8 @@ public class UnauthenticatedSession: NSObject {
         if self.reachability.mayBeReachable {
             block()
         } else {
-            authenticationStatus.notifyAuthenticationDidFail(NSError(code: .networkError, userInfo:nil))
+            let error = NSError(code: .networkError, userInfo: nil)
+            authenticationStatus.delegate.authenticationDidFail(error)
         }
     }
 }

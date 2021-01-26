@@ -192,7 +192,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         }
         didSet {
             if let session = self.unauthenticatedSession {
-                self.preLoginAuthenticationToken = session.addAuthenticationObserver(self)
+//                self.preLoginAuthenticationToken = session.addAuthenticationObserver(self)
                 NotificationInContext(name: sessionManagerCreatedUnauthenticatedSessionNotificationName, context: self, object: session).post()
             } else {
                 self.preLoginAuthenticationToken = nil
@@ -267,12 +267,18 @@ public final class SessionManager : NSObject, SessionManagerType {
         configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
         detector: JailbreakDetectorProtocol = JailbreakDetector()) {
         
-        let group = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
         let flowManager = FlowManager(mediaManager: mediaManager)
 
+        let reachabilityDispatchGroup = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
         let serverNames = [environment.backendURL, environment.backendWSURL].compactMap { $0.host }
-        let reachability = ZMReachability(serverNames: serverNames, group: group)
-        let unauthenticatedSessionFactory = UnauthenticatedSessionFactory(environment: environment, reachability: reachability)
+        let reachability = ZMReachability(serverNames: serverNames, group: reachabilityDispatchGroup)
+        
+        let groupQueue = DispatchGroupQueue(queue: .main)
+        let authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue)
+        let unauthenticatedSessionFactory = UnauthenticatedSessionFactory(environment: environment,
+                                                                          reachability: reachability,
+                                                                          authenticationStatus: authenticationStatus!,
+                                                                          groupQueue: groupQueue)
         let authenticatedSessionFactory = AuthenticatedSessionFactory(
             appVersion: appVersion,
             application: application,
@@ -968,7 +974,8 @@ extension SessionManager: UnauthenticatedSessionDelegate {
     
     public func session(session: UnauthenticatedSession, createdAccount account: Account) {
         guard !(accountManager.accounts.count == SessionManager.maxNumberAccounts && accountManager.account(with: account.userIdentifier) == nil) else {
-            session.authenticationStatus.notifyAuthenticationDidFail(NSError(code: .accountLimitReached, userInfo: nil))
+            let error = NSError(code: .accountLimitReached, userInfo: nil)
+            session.authenticationStatus.delegate.authenticationDidFail(error)
             return
         }
         
@@ -1162,27 +1169,27 @@ extension SessionManager {
 
 }
 
-extension SessionManager : PreLoginAuthenticationObserver {
-    
-    public func authenticationDidSucceed() {
-        if nil != activeUserSession {
-            return RequestAvailableNotification.notifyNewRequestsAvailable(self)
-        }
-    }
-    
-    public func authenticationDidFail(_ error: NSError) {
-        if unauthenticatedSession == nil {
-            createUnauthenticatedSession()
-        }
-        
-        delegate?.sessionManagerDidFailToLogin(error: error)
-    }
-
-    public func companyLoginCodeDidBecomeAvailable(_ code: UUID) {
-        addAccount(userInfo: [SessionManager.companyLoginCodeKey: code,
-                              SessionManager.companyLoginRequestTimestampKey: Date()])
-    }
-}
+//extension SessionManager : PreLoginAuthenticationObserver {
+//
+//    public func authenticationDidSucceed() {
+//        if nil != activeUserSession {
+//            return RequestAvailableNotification.notifyNewRequestsAvailable(self)
+//        }
+//    }
+//
+//    public func authenticationDidFail(_ error: NSError) {
+//        if unauthenticatedSession == nil {
+//            createUnauthenticatedSession()
+//        }
+//
+//        delegate?.sessionManagerDidFailToLogin(error: error)
+//    }
+//
+//    public func companyLoginCodeDidBecomeAvailable(_ code: UUID) {
+//        addAccount(userInfo: [SessionManager.companyLoginCodeKey: code,
+//                              SessionManager.companyLoginRequestTimestampKey: Date()])
+//    }
+//}
 
 // MARK: - Session manager observer
 

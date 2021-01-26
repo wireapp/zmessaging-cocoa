@@ -20,83 +20,83 @@ import XCTest
 import WireTesting
 @testable import WireSyncEngine
 
-// This enum only exist due to obj-c compatibility
-@objc
-public enum PreLoginAuthenticationEventObjc : Int {
-    case loginCodeRequestDidSucceed
-    case loginCodeRequestDidFail
-    case authenticationDidSucceed
-    case authenticationDidFail
-    case readyToImportBackupExistingAccount
-    case readyToImportBackupNewAccount
-}
-
-public typealias PreLoginAuthenticationObserverHandler = (_ event: PreLoginAuthenticationEventObjc, _ error : NSError?) -> Void
-
-@objcMembers
-public class PreLoginAuthenticationObserverToken : NSObject, PreLoginAuthenticationObserver {
-    
-    private var token : Any?
-    private var handler : PreLoginAuthenticationObserverHandler
-
-    public init(authenticationStatus: ZMAuthenticationStatus, handler : @escaping PreLoginAuthenticationObserverHandler) {
-        self.handler = handler
-        
-        super.init()
-        
-        token = WireSyncEngine.PreLoginAuthenticationNotification.register(self, context: authenticationStatus)
-    }
-    
-    public func loginCodeRequestDidSucceed() {
-        handler(.loginCodeRequestDidSucceed, nil)
-    }
-    
-    public func loginCodeRequestDidFail(_ error: NSError) {
-        handler(.loginCodeRequestDidFail, error)
-    }
-    
-    public func authenticationDidSucceed() {
-        handler(.authenticationDidSucceed, nil)
-    }
-    
-    public func authenticationDidFail(_ error: NSError) {
-        handler(.authenticationDidFail, error)
-    }
-
-    public func authenticationReadyToImportBackup(existingAccount: Bool) {
-        let value: PreLoginAuthenticationEventObjc = existingAccount ? .readyToImportBackupExistingAccount : .readyToImportBackupNewAccount
-        handler(value, nil)
-    }
-}
-
-@objcMembers
-public class PreLoginAuthenticationNotificationEvent : NSObject {
-    
-    let event : PreLoginAuthenticationEventObjc
-    var error : NSError?
-    
-    init(event : PreLoginAuthenticationEventObjc, error : NSError?) {
-        self.event = event
-        self.error = error
-    }
-    
-}
-
-@objcMembers
-public class PreLoginAuthenticationNotificationRecorder : NSObject {
-    
-    private var token : Any?
-    public var notifications : [PreLoginAuthenticationNotificationEvent] = []
-    
-    init(authenticationStatus: ZMAuthenticationStatus) {
-        super.init()
-        
-        token = PreLoginAuthenticationObserverToken(authenticationStatus: authenticationStatus) { [weak self] (event, error) in
-            self?.notifications.append(PreLoginAuthenticationNotificationEvent(event: event, error: error))
-        }
-    }
-    
-}
+//// This enum only exist due to obj-c compatibility
+//@objc
+//public enum PreLoginAuthenticationEventObjc : Int {
+//    case loginCodeRequestDidSucceed
+//    case loginCodeRequestDidFail
+//    case authenticationDidSucceed
+//    case authenticationDidFail
+//    case readyToImportBackupExistingAccount
+//    case readyToImportBackupNewAccount
+//}
+//
+//public typealias PreLoginAuthenticationObserverHandler = (_ event: PreLoginAuthenticationEventObjc, _ error : NSError?) -> Void
+//
+//@objcMembers
+//public class PreLoginAuthenticationObserverToken : NSObject, PreLoginAuthenticationObserver {
+//    
+//    private var token : Any?
+//    private var handler : PreLoginAuthenticationObserverHandler
+//
+//    public init(authenticationStatus: ZMAuthenticationStatus, handler : @escaping PreLoginAuthenticationObserverHandler) {
+//        self.handler = handler
+//        
+//        super.init()
+//        
+//        token = WireSyncEngine.PreLoginAuthenticationNotification.register(self, context: authenticationStatus)
+//    }
+//    
+//    public func loginCodeRequestDidSucceed() {
+//        handler(.loginCodeRequestDidSucceed, nil)
+//    }
+//    
+//    public func loginCodeRequestDidFail(_ error: NSError) {
+//        handler(.loginCodeRequestDidFail, error)
+//    }
+//    
+//    public func authenticationDidSucceed() {
+//        handler(.authenticationDidSucceed, nil)
+//    }
+//    
+//    public func authenticationDidFail(_ error: NSError) {
+//        handler(.authenticationDidFail, error)
+//    }
+//
+//    public func authenticationReadyToImportBackup(existingAccount: Bool) {
+//        let value: PreLoginAuthenticationEventObjc = existingAccount ? .readyToImportBackupExistingAccount : .readyToImportBackupNewAccount
+//        handler(value, nil)
+//    }
+//}
+//
+//@objcMembers
+//public class PreLoginAuthenticationNotificationEvent : NSObject {
+//    
+//    let event : PreLoginAuthenticationEventObjc
+//    var error : NSError?
+//    
+//    init(event : PreLoginAuthenticationEventObjc, error : NSError?) {
+//        self.event = event
+//        self.error = error
+//    }
+//    
+//}
+//
+//@objcMembers
+//public class PreLoginAuthenticationNotificationRecorder : NSObject {
+//    
+//    private var token : Any?
+//    public var notifications : [PreLoginAuthenticationNotificationEvent] = []
+//    
+//    init(authenticationStatus: ZMAuthenticationStatus) {
+//        super.init()
+//        
+//        token = PreLoginAuthenticationObserverToken(authenticationStatus: authenticationStatus) { [weak self] (event, error) in
+//            self?.notifications.append(PreLoginAuthenticationNotificationEvent(event: event, error: error))
+//        }
+//    }
+//    
+//}
 
 final class TestUnauthenticatedTransportSession: NSObject, UnauthenticatedTransportSessionProtocol {
 

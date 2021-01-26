@@ -82,15 +82,30 @@ open class UnauthenticatedSessionFactory {
 
     var environment: BackendEnvironmentProvider
     let reachability: ReachabilityProvider
+    let authenticationStatus: ZMAuthenticationStatus
+    let groupQueue: DispatchGroupQueue
 
-    init(environment: BackendEnvironmentProvider, reachability: ReachabilityProvider) {
+    init(environment: BackendEnvironmentProvider,
+         reachability: ReachabilityProvider,
+         authenticationStatus: ZMAuthenticationStatus,
+         groupQueue: DispatchGroupQueue) {
         self.environment = environment
         self.reachability = reachability
+        self.authenticationStatus = authenticationStatus
+        self.groupQueue = groupQueue
     }
 
     func session(withDelegate delegate: UnauthenticatedSessionDelegate) -> UnauthenticatedSession {
-        let transportSession = UnauthenticatedTransportSession(environment: environment, reachability: reachability)
-        return UnauthenticatedSession(transportSession: transportSession, reachability: reachability, delegate: delegate)
+        let transportSession = UnauthenticatedTransportSession(environment: environment,
+                                                               reachability: reachability)
+        return UnauthenticatedSession(transportSession: transportSession,
+                                      reachability: reachability,
+                                      authenticationStatus: authenticationStatus,
+                                      groupQueue: groupQueue,
+                                      delegate: delegate)
     }
-
+    
+    deinit {
+        print("deinit")
+    }
 }
