@@ -60,6 +60,12 @@ final class AppLockIntegrationTests: IntegrationTest {
 
 class MockAppLock: AppLockType {
 
+    // MARK: - Metrics
+
+    var methodCalls = MethodCalls()
+
+    // MARK: - Properties
+
     var delegate: AppLockDelegate?
 
     var isAvailable = true
@@ -71,6 +77,8 @@ class MockAppLock: AppLockType {
     var isCustomPasscodeSet = false
     var needsToNotifyUser = false
 
+    // MARK: - Methods
+
     func deletePasscode() throws {
         // No op
     }
@@ -80,7 +88,7 @@ class MockAppLock: AppLockType {
     }
 
     func beginTimer() {
-        // No op
+        methodCalls.beginTimer.append(())
     }
 
     func open() throws {
@@ -93,6 +101,14 @@ class MockAppLock: AppLockType {
 
     func evaluateAuthentication(customPasscode: String) -> AppLockAuthenticationResult {
         fatalError("Not implemented")
+    }
+
+    // MARK: - Types
+
+    struct MethodCalls {
+
+        var beginTimer: [Void] = []
+        
     }
 
 }

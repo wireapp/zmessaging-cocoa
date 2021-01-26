@@ -182,7 +182,13 @@ public final class SessionManager : NSObject, SessionManagerType {
     var isAppVersionBlacklisted = false
     public weak var delegate: SessionManagerDelegate? = nil
     public let accountManager: AccountManager
-    public internal(set) var activeUserSession: ZMUserSession?
+
+    public internal(set) var activeUserSession: ZMUserSession? {
+        willSet {
+            guard activeUserSession != newValue else { return }
+            activeUserSession?.appLockController.beginTimer()
+        }
+    }
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public internal(set) var unauthenticatedSession: UnauthenticatedSession? {
@@ -533,7 +539,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     
     fileprivate func logout(account: Account, error: Error? = nil) {
         log.debug("Logging out account \(account.userIdentifier)...")
-        
+
         if let session = backgroundUserSessions[account.userIdentifier] {
             if session == activeUserSession {
                 logoutCurrentSession(deleteCookie: true, error: error)
@@ -1079,8 +1085,9 @@ extension SessionManager {
         }
     }
     
-    @objc fileprivate func applicationWillResignActive(_ note: Notification) {
+    @objc func applicationWillResignActive(_ note: Notification) {
         updateAllUnreadCounts()
+        activeUserSession?.appLockController.beginTimer()
     }
     
     @objc fileprivate func applicationDidBecomeActive(_ note: Notification) {
