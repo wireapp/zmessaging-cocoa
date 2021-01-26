@@ -108,7 +108,7 @@ final class MockUnauthenticatedSessionFactory: UnauthenticatedSessionFactory {
     
     init(transportSession: UnauthenticatedTransportSessionProtocol, environment: BackendEnvironmentProvider, reachability: ReachabilityProvider) {
         self.transportSession = transportSession
-        super.init(environment: environment, reachability: reachability)
+        super.init(appVersion: "1.0", environment: environment, reachability: reachability)
     }
 
     override func session(withDelegate delegate: WireSyncEngine.UnauthenticatedSessionDelegate) -> UnauthenticatedSession {
@@ -406,6 +406,7 @@ extension IntegrationTest {
             self.teamUser2 = user2
 
             let team = session.insertTeam(withName: "A Team", isBound: true, users: [self.selfUser, user1, user2])
+            team.creator = user1
             self.team = team
 
             let bot = session.insertUser(withName: "Botty the Bot")

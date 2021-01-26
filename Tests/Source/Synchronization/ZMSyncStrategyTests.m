@@ -99,10 +99,6 @@
     NOT_USED(userClient);
 }
 
-- (void)finishQuickSync {
-    [self.applicationStatusDirectory.syncStatus finishCurrentSyncPhaseWithPhase: SyncPhaseFetchingMissedEvents];
-}
-
 - (void)setUp
 {
     [super setUp];
@@ -122,11 +118,10 @@
     self.mockEventConsumer = [[MockEventConsumer alloc]  init];
     self.mockContextChangeTracker = [[MockContextChangeTracker alloc] init];
     
-    MockRequestStrategyFactory *requestStrategyFactory =
-    [[MockRequestStrategyFactory alloc] initWithStrategies:@[
-        self.mockEventConsumer,
-        self.mockContextChangeTracker
-    ]];
+    MockStrategyDirectory *mockStrategyDirectory =
+    [[MockStrategyDirectory alloc] init];
+    mockStrategyDirectory.eventConsumers = @[self.mockEventConsumer];
+    mockStrategyDirectory.contextChangeTrackers = @[self.mockContextChangeTracker];
     
     self.fetchRequestForTrackedObjects1 = [NSFetchRequest fetchRequestWithEntityName:@"User"];
     self.fetchRequestForTrackedObjects1.predicate = [NSPredicate predicateWithFormat:@"name != nil"];
@@ -138,12 +133,15 @@
     
     NotificationDispatcher *notificationDispatcher =
     [[NotificationDispatcher alloc] initWithManagedObjectContext:self.contextDirectory .uiContext];
+    
+    EventProcessingTracker *eventProcessingTracker = [[EventProcessingTracker alloc] init];
         
     self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider
                                      notificationsDispatcher:notificationDispatcher
                                   applicationStatusDirectory:self.applicationStatusDirectory
                                                  application:self.application
-                                      requestStrategyFactory:requestStrategyFactory];
+                                           strategyDirectory:mockStrategyDirectory
+                                      eventProcessingTracker:eventProcessingTracker];
     
     self.application.applicationState = UIApplicationStateBackground;
     
@@ -160,221 +158,6 @@
     [self.sut tearDown];
     self.sut = nil;
     [super tearDown];
-}
-
-- (void)testThatWhenItConsumesEventsTheyAreForwardedToAllIndividualObjects
-{
-    // given
-    NSString *uuid = [NSUUID createUUID].transportString;
-    NSArray *eventsArray = @[
-                             [ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.member-join",
-                                                                          @"f": @2,
-                                                                          @"conversation": uuid
-                                                                          } uuid:nil],
-                             [ZMUpdateEvent eventFromEventStreamPayload:@{@"type": @"conversation.message-add",
-                                                                          @"a": @3,
-                                                                          @"data" : @{
-                                                                                  @"content" : @"www.wire.com",
-                                                                                  @"nonce" : NSUUID.createUUID,
-                                                                          },
-                                                                          @"conversation": uuid
-                                                                          } uuid:nil]];
-    XCTAssertEqual(eventsArray.count, 2u);
-    
-    [self finishQuickSync];
-    
-    // when
-    for(id event in eventsArray) {
-        [self.sut storeAndProcessUpdateEvents:@[event] ignoreBuffer:YES];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }
-    
-     // then
-    XCTAssertTrue(self.mockEventConsumer.processEventsCalled);
-    XCTAssertEqualObjects(eventsArray, self.mockEventConsumer.eventsProcessed);
-}
-
-- (void)testThatItProcessUpdateEvents_WhenSyncingIsFinished
-{
-    // given
-    NSDictionary *eventData = @{
-                                @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
-                                @"payload" : @[
-                                        @{
-                                            @"type" : @"user.update",
-                                            @"foo" : @"bar"
-                                            }
-                                        ]
-                                };
-    NSMutableArray *expectedEvents = [NSMutableArray array];
-    [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
-    
-    [self finishQuickSync];
-        
-    // when
-    [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:NO];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(self.mockEventConsumer.processEventsWhileInBackgroundCalled);
-    XCTAssertTrue(self.mockEventConsumer.processEventsCalled);
-}
-
-- (void)testThatItBuffersUpdateEvents_WhenSyncing
-{
-    // given
-    NSDictionary *eventData = @{
-                                @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
-                                @"payload" : @[
-                                        @{
-                                            @"type" : @"user.update",
-                                            @"foo" : @"bar"
-                                            }
-                                        ]
-                                };
-    NSMutableArray *expectedEvents = [NSMutableArray array];
-    [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
-    XCTAssertGreaterThan(expectedEvents.count, 0u);
-        
-    // when
-    [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:NO];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertFalse(self.mockEventConsumer.processEventsWhileInBackgroundCalled);
-    XCTAssertFalse(self.mockEventConsumer.processEventsCalled);
-}
-
-- (void)testThatItProcessBufferedUpdateEvents_WhenSyncingIsFinished
-{
-    // given
-    NSDictionary *eventData = @{
-        @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
-        @"payload" : @[
-                @{
-                    @"type" : @"user.update",
-                    @"foo" : @"bar"
-                }
-        ]
-    };
-    NSMutableArray *expectedEvents = [NSMutableArray array];
-    [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
-    XCTAssertGreaterThan(expectedEvents.count, 0u);
-    
-    [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:NO];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // when
-    [self finishQuickSync];
-    [self.sut processAllEventsInBuffer];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(self.mockEventConsumer.processEventsWhileInBackgroundCalled);
-}
-
-- (void)testThatItProcessUpdateEvents_WhenSyncingButIgnoreBufferIsYes
-{
-    // given
-    NSDictionary *eventData = @{
-                                @"id" : @"5cc1ab91-45f4-49ec-bb7a-a5517b7a4173",
-                                @"payload" : @[
-                                        @{
-                                            @"type" : @"user.update",
-                                            @"foo" : @"bar"
-                                            }
-                                        ]
-                                };
-    NSMutableArray *expectedEvents = [NSMutableArray array];
-    [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:eventData]];
-    XCTAssertGreaterThan(expectedEvents.count, 0u);
-    
-    // when
-    [self.sut storeAndProcessUpdateEvents:expectedEvents ignoreBuffer:YES];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(self.mockEventConsumer.processEventsWhileInBackgroundCalled);
-}
-
-- (void)testThatItItCreatesAFetchBatchRequestWithTheNoncesAndRemoteIdentifiersFromUpdateEvents
-{
-    // given
-    id <ZMTransportData> firstPayload = @{
-                                          @"conversation" : NSUUID.createUUID,
-                                          @"data" : @{},
-                                          @"from": NSUUID.createUUID.transportString,
-                                          @"time" : NSDate.date.transportString,
-                                          @"type" : @"conversation.member-update"
-                                          };
-    
-    id <ZMTransportData> secondPayload = @{
-                                           @"conversation" : NSUUID.createUUID,
-                                           @"data" : @{
-                                                   @"content" : @"www.wire.com",
-                                                   @"nonce" : NSUUID.createUUID,
-                                                   },
-                                           @"from": NSUUID.createUUID.transportString,
-                                           @"id" : @"6c9d.800122000a5911ba",
-                                           @"time" : NSDate.date.transportString,
-                                           @"type" : @"conversation.message-add"
-                                           };
-    
-    NSArray <ZMUpdateEvent *> *events = @[
-                                          [ZMUpdateEvent eventFromEventStreamPayload:firstPayload uuid:nil],
-                                          [ZMUpdateEvent eventFromEventStreamPayload:secondPayload uuid:nil]
-                                          ];
-    
-    [self finishQuickSync];
-        
-    // when
-    [self.sut storeAndProcessUpdateEvents:events ignoreBuffer:YES];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(self.mockEventConsumer.messageNoncesToPrefetchCalled);
-    XCTAssertTrue(self.mockEventConsumer.conversationRemoteIdentifiersToPrefetchCalled);
-}
-
-- (void)testThatItRequestsNoncesAndRemoteIdentifiersToPrefetchFromAllOfItsSyncObjects
-{
-    // given
-    NSUUID *remoteIdentifier = NSUUID.createUUID;
-    NSUUID *messageNonce = NSUUID.createUUID;
-    id <ZMTransportData> payload1 = @{
-        @"conversation" : remoteIdentifier,
-        @"data" : @{},
-        @"time" : NSDate.date.transportString,
-        @"type" : @"conversation.member-update"
-    };
-    
-    id <ZMTransportData> payload2 = @{
-        @"conversation" : remoteIdentifier,
-        @"data" : @{
-                @"content" : @"www.wire.com",
-                @"nonce" : messageNonce,
-        },
-        @"from": NSUUID.createUUID.transportString,
-        @"id" : @"6c9d.800122000a5911ba",
-        @"time" : NSDate.date.transportString,
-        @"type" : @"conversation.message-add" };
-    
-    NSArray <ZMUpdateEvent *> *events = @[
-        [ZMUpdateEvent eventFromEventStreamPayload:payload1 uuid:nil],
-        [ZMUpdateEvent eventFromEventStreamPayload:payload2 uuid:nil]
-    ];
-    
-    // when
-    ZMFetchRequestBatch *fetchRequest = [self.sut prefetchRequestForUpdateEvents:events];
-    NOT_USED(fetchRequest);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(self.mockEventConsumer.messageNoncesToPrefetchCalled);
-    XCTAssertTrue(self.mockEventConsumer.conversationRemoteIdentifiersToPrefetchCalled);
-    
-    XCTAssertEqualObjects([NSSet setWithObject:remoteIdentifier], fetchRequest.remoteIdentifiersToFetch);
-    XCTAssertEqualObjects([NSSet setWithObject:messageNonce], fetchRequest.noncesToFetch);
 }
 
 - (void)testThatCallingNextRequestFetchesObjectsAndDistributesThemToTheChangeTracker

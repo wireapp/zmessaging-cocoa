@@ -39,25 +39,16 @@
 
 @property (nonatomic) id<ZMApplication> application;
 
-@property (nonatomic) ZMUpdateEventsBuffer *eventsBuffer;
 @property (nonatomic) ZMChangeTrackerBootstrap *changeTrackerBootStrap;
+@property (nonatomic) id<StrategyDirectoryProtocol> strategyDirectory;
 
 @property (nonatomic, readwrite) CallingRequestStrategy *callingRequestStrategy;
 
-@property (nonatomic) NSManagedObjectContext *eventMOC;
-@property (nonatomic) EventDecoder *eventDecoder;
-
 @property (nonatomic, weak) ApplicationStatusDirectory *applicationStatusDirectory;
-@property (nonatomic) NSArray *allChangeTrackers;
-
-@property (nonatomic) NSArray *strategies;
-@property (nonatomic) NSArray<ZMObjectSyncStrategy *> *requestStrategies;
-@property (nonatomic) NSArray<id<ZMEventConsumer>> *eventConsumers;
 
 @property (atomic) BOOL tornDown;
 @property (nonatomic) BOOL contextMergingDisabled;
 
-@property (nonatomic) ZMHotFix *hotFix;
 @property (nonatomic) NotificationDispatcher *notificationDispatcher;
 
 @end
@@ -79,7 +70,8 @@ ZM_EMPTY_ASSERTING_INIT()
               notificationsDispatcher:(NotificationDispatcher *)notificationsDispatcher
            applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
                           application:(id<ZMApplication>)application
-               requestStrategyFactory:(id<RequestStrategyFactoryProtocol>)requestStrategyFactory
+                    strategyDirectory:(id<StrategyDirectoryProtocol>)strategyDirectory
+               eventProcessingTracker:(id<EventProcessingTrackerProtocol>)eventProcessingTracker
 {
     self = [super init];
     if (self) {
@@ -87,17 +79,10 @@ ZM_EMPTY_ASSERTING_INIT()
         self.application = application;
         self.syncMOC = storeProvider.contextDirectory.syncContext;
         self.uiMOC = storeProvider.contextDirectory.uiContext;
-        self.hotFix = [[ZMHotFix alloc] initWithSyncMOC:self.syncMOC];
-        self.eventProcessingTracker = [[EventProcessingTracker alloc] init];
-
-        self.eventMOC = [NSManagedObjectContext createEventContextWithSharedContainerURL:storeProvider.applicationContainer userIdentifier:storeProvider.userIdentifier];
-        [self.eventMOC addGroup:self.syncMOC.dispatchGroup];
         self.applicationStatusDirectory = applicationStatusDirectory;
-
-        self.eventDecoder = [[EventDecoder alloc] initWithEventMOC:self.eventMOC syncMOC:self.syncMOC];
-        self.eventsBuffer = [[ZMUpdateEventsBuffer alloc] initWithUpdateEventProcessor:self];
-        self.strategies = [requestStrategyFactory buildStrategies];
-        self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.allChangeTrackers];
+        self.strategyDirectory = strategyDirectory;
+        self.eventProcessingTracker = eventProcessingTracker;
+        self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.strategyDirectory.contextChangeTrackers];
 
         ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:self.syncMOC]);
         ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:storeProvider.contextDirectory.uiContext]);
@@ -151,50 +136,16 @@ ZM_EMPTY_ASSERTING_INIT()
     return self.syncMOC;
 }
 
-- (void)applyHotFixes
-{
-    [self.hotFix applyPatches];
-}
-
-- (BOOL)isReadyToProcessEvents
-{
-    return !self.applicationStatusDirectory.syncStatus.isSyncing;
-}
-
 - (void)tearDown
 {
     self.tornDown = YES;
     self.applicationStatusDirectory = nil;
     self.changeTrackerBootStrap = nil;
     self.callingRequestStrategy = nil;
-    self.eventsBuffer = nil;
-    self.allChangeTrackers = nil;
-    self.eventDecoder = nil;
-    [self.eventMOC performGroupedBlockAndWait:^{
-        [self.eventMOC tearDownEventMOC];
-    }];
-    self.eventMOC = nil;
-    [self.application unregisterObserverForStateChange:self];
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    self.strategyDirectory = nil;
     [self appTerminated:nil];
-
-    @autoreleasepool {
-        for (id strategy in self.strategies) {
-            if ([strategy respondsToSelector:@selector((tearDown))]) {
-                [strategy tearDown];
-            }
-        }
-    }
-    self.strategies = nil;
-    self.requestStrategies = nil;
     [self.notificationDispatcher tearDown];
 }
-
-- (void)processAllEventsInBuffer
-{
-    [self.eventsBuffer processAllEventsInBuffer];
-}
-
 
 #if DEBUG
 - (void)dealloc
@@ -204,68 +155,13 @@ ZM_EMPTY_ASSERTING_INIT()
 #endif
 
 - (CallingRequestStrategy *)callingRequestStrategy{
-    return [self.requestStrategies firstObjectMatchingWithBlock:^BOOL(id obj) {
+    return [self.strategyDirectory.requestStrategies firstObjectMatchingWithBlock:^BOOL(id obj) {
         if ([obj isKindOfClass:CallingRequestStrategy.self]) {
             return YES;
         }
         
         return NO;
     }];
-}
-
-- (ZMMissingUpdateEventsTranscoder *)missingUpdateEventsTranscoder{
-    return [self.requestStrategies firstObjectMatchingWithBlock:^BOOL(id obj) {
-        if ([obj isKindOfClass:ZMMissingUpdateEventsTranscoder.self]) {
-            return YES;
-        }
-        
-        return NO;
-    }];
-}
-
-- (NSArray *)requestStrategies
-{
-    if (_requestStrategies == nil) {
-        _requestStrategies = [self.strategies filterWithBlock:^BOOL(id strategy) {
-            return [strategy respondsToSelector:@selector(nextRequest)];
-        
-        }];
-    }
-
-    return _requestStrategies;
-}
-
-- (NSArray *)allChangeTrackers
-{
-    if (_allChangeTrackers == nil) {
-        _allChangeTrackers = [self.strategies flattenWithBlock:^NSArray *(id <ZMObjectStrategy> objectSync) {
-            if ([objectSync conformsToProtocol:@protocol(ZMContextChangeTrackerSource)]) {
-                return objectSync.contextChangeTrackers;
-            } else if ([objectSync conformsToProtocol:@protocol(ZMContextChangeTracker)]) {
-                return @[objectSync];
-            }
-            return nil;
-        }];
-    }
-
-    return _allChangeTrackers;
-}
-
-- (NSArray<id<ZMEventConsumer>> *)eventConsumers
-{
-    if (_eventConsumers == nil) {
-        NSMutableArray<id<ZMEventConsumer>> *eventConsumers = [NSMutableArray array];
-        
-        for (id<ZMObjectStrategy> objectStrategy in self.strategies) {
-            if ([objectStrategy conformsToProtocol:@protocol(ZMEventConsumer)]) {
-                [eventConsumers addObject:objectStrategy];
-            }
-        }
-                
-        _eventConsumers = eventConsumers;
-    }
-
-    return _eventConsumers;
 }
 
 - (ZMTransportRequest *)nextRequest
@@ -279,7 +175,7 @@ ZM_EMPTY_ASSERTING_INIT()
         return nil;
     }
 
-    return [self.requestStrategies firstNonNilReturnedFromSelector:@selector(nextRequest)];
+    return [self.strategyDirectory.requestStrategies firstNonNilReturnedFromSelector:@selector(nextRequest)];
 }
 
 @end

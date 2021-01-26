@@ -145,8 +145,7 @@
     
     NSSet *allObjects = [NSSet zmSetByCompiningSets:insertedObjects, updatedObjects, nil];
     
-    for(id<ZMContextChangeTracker> tracker in self.allChangeTrackers)
-    {
+    for (id<ZMContextChangeTracker> tracker in self.strategyDirectory.contextChangeTrackers) {
         [tracker objectsDidChange:allObjects];
     }
     

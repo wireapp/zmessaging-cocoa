@@ -272,13 +272,16 @@ public final class SessionManager : NSObject, SessionManagerType {
         let reachabilityDispatchGroup = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
         let serverNames = [environment.backendURL, environment.backendWSURL].compactMap { $0.host }
         let reachability = ZMReachability(serverNames: serverNames, group: reachabilityDispatchGroup)
-        
         let groupQueue = DispatchGroupQueue(queue: .main)
         let authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue)
-        let unauthenticatedSessionFactory = UnauthenticatedSessionFactory(environment: environment,
-                                                                          reachability: reachability,
-                                                                          authenticationStatus: authenticationStatus!,
-                                                                          groupQueue: groupQueue)
+        
+        let unauthenticatedSessionFactory = UnauthenticatedSessionFactory(
+            appVersion: appVersion,
+            environment: environment,
+            reachability: reachability,
+            authenticationStatus: authenticationStatus!,
+            groupQueue: groupQueue)
+
         let authenticatedSessionFactory = AuthenticatedSessionFactory(
             appVersion: appVersion,
             application: application,
@@ -286,8 +289,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             flowManager: flowManager,
             environment: environment,
             reachability: reachability,
-            analytics: analytics
-          )
+            analytics: analytics)
 
         self.init(appVersion: appVersion,
                   authenticatedSessionFactory: authenticatedSessionFactory,
