@@ -34,6 +34,7 @@ class ZMUserSessionLegalHoldTests: IntegrationTest {
         mockTransportSession.performRemoteChanges { session in
             team = session.insertTeam(withName: "Team", isBound: true, users: [self.selfUser])
             team.hasLegalHoldService = true
+            team.creator = self.selfUser
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
@@ -78,6 +79,7 @@ class ZMUserSessionLegalHoldTests: IntegrationTest {
         mockTransportSession.performRemoteChanges { session in
             team = session.insertTeam(withName: "Team", isBound: true, users: [self.selfUser])
             team.hasLegalHoldService = true
+            team.creator = self.selfUser
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 

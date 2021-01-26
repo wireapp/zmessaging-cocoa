@@ -16,6 +16,70 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+struct TeamListPayload: Decodable {
+    let hasMore: Bool
+    let teams: [TeamPayload]
+    
+    private enum CodingKeys: String, CodingKey {
+        case hasMore = "has_more"
+        case teams
+    }
+}
+
+struct TeamPayload: Decodable {
+    
+    let identifier: UUID
+    let name: String
+    let creator: UUID
+    let binding: Bool
+    let icon: String
+    let iconKey: String?
+    
+    private enum CodingKeys: String, CodingKey {
+        case identifier = "id"
+        case name
+        case creator
+        case binding
+        case icon
+        case iconKey = "icon_key"
+    }
+        
+}
+
+extension TeamPayload {
+    
+    func createOrUpdateTeam(in managedObjectContext: NSManagedObjectContext) -> Team? {
+        var created: Bool = false
+        guard let team = Team.fetchOrCreate(with: identifier,
+                                            create: true,
+                                            in: managedObjectContext,
+                                            created: &created)
+        else {
+            return nil
+        }
+        
+        if created {
+            let selfUser = ZMUser.selfUser(in: managedObjectContext)
+            _ = Member.getOrCreateMember(for: selfUser, in: team, context: managedObjectContext)
+        }
+        
+        updateTeam(team, in: managedObjectContext)
+                
+        return team
+    }
+    
+    func updateTeam(_ team: Team, in managedObjectContext: NSManagedObjectContext) {
+        team.name = name
+        team.creator = ZMUser.fetchAndMerge(with: creator, createIfNeeded: true, in: managedObjectContext)
+        team.pictureAssetId = icon
+        team.pictureAssetKey = iconKey
+        
+        if !binding {
+            managedObjectContext.delete(team)
+        }
+    }
+    
+}
 
 fileprivate extension Team {
 
@@ -25,16 +89,19 @@ fileprivate extension Team {
 
 }
 
-
-public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMContextChangeTrackerSource, ZMRequestGeneratorSource {
+/// Responsible for downloading the team which the self user belongs to during the slow sync
+/// and for updating it when processing events or when manually requested.
+public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMContextChangeTrackerSource {
 
     private (set) var downstreamSync: ZMDownstreamObjectSync!
+    private (set) var slowSync: ZMSingleRequestSync!
+    
     fileprivate unowned var syncStatus: SyncStatus
     
     public init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus, syncStatus: SyncStatus) {
         self.syncStatus = syncStatus
         super.init(withManagedObjectContext: managedObjectContext, applicationStatus: applicationStatus)
-        configuration = [.allowsRequestsWhileOnline]
+        configuration = [.allowsRequestsWhileOnline, .allowsRequestsDuringSlowSync]
         downstreamSync = ZMDownstreamObjectSync(
             transcoder: self,
             entityName: Team.entityName(),
@@ -42,22 +109,54 @@ public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMConte
             filter: nil,
             managedObjectContext: managedObjectContext
         )
+        slowSync = ZMSingleRequestSync(singleRequestTranscoder: self,
+                                       groupQueue: managedObjectContext)
     }
 
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
-        return downstreamSync.nextRequest()
+        if isSyncing {
+            slowSync.readyForNextRequestIfNotBusy()
+            return slowSync.nextRequest()
+        } else {
+            return downstreamSync.nextRequest()
+        }
     }
 
     public var contextChangeTrackers: [ZMContextChangeTracker] {
         return [downstreamSync]
     }
-
-    public var requestGenerators: [ZMRequestGenerator] {
-        return [downstreamSync]
+    
+    fileprivate var expectedSyncPhase : SyncPhase {
+        return .fetchingTeams;
+    }
+    
+    fileprivate var isSyncing: Bool {
+        return syncStatus.currentSyncPhase == expectedSyncPhase
     }
 
 }
 
+extension TeamDownloadRequestStrategy: ZMSingleRequestTranscoder {
+    
+    public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
+        return TeamDownloadRequestFactory.getTeamsRequest
+    }
+    
+    public func didReceive(_ response: ZMTransportResponse, forSingleRequest sync: ZMSingleRequestSync) {
+        guard
+            let rawData = response.rawData,
+            let teamListPayload = TeamListPayload(rawData)
+        else {
+            syncStatus.failCurrentSyncPhase(phase: expectedSyncPhase)
+            return
+        }
+        
+        _ = teamListPayload.teams.first?.createOrUpdateTeam(in: managedObjectContext)
+                        
+        syncStatus.finishCurrentSyncPhase(phase: expectedSyncPhase)
+    }
+    
+}
 
 extension TeamDownloadRequestStrategy: ZMDownstreamTranscoder {
 
@@ -67,18 +166,16 @@ extension TeamDownloadRequestStrategy: ZMDownstreamTranscoder {
     }
 
     public func update(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
-        guard downstreamSync as? ZMDownstreamObjectSync == self.downstreamSync,
+        guard
+            downstreamSync as? ZMDownstreamObjectSync == self.downstreamSync,
             let team = object as? Team,
-            let payload = response.payload?.asDictionary() as? [String: Any] else { return }
-        
-        if let isBound = payload["binding"] as? Bool, !isBound {
-            managedObjectContext.delete(team)
-            return
-        }
+            let rawData = response.rawData,
+            let teamPayload = TeamPayload(rawData) else { return }
+                    
+        teamPayload.updateTeam(team, in: managedObjectContext)
         
         team.needsToBeUpdatedFromBackend = false
         team.needsToDownloadRoles = true
-        team.update(with: payload)
     }
 
     public func delete(_ object: ZMManagedObject!, with response: ZMTransportResponse!, downstreamSync: ZMObjectSync!) {
