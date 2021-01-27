@@ -54,6 +54,7 @@ class UserRichProfileIntegrationTests : IntegrationTest {
 
         mockTransportSession.performRemoteChanges {
             self.team = $0.insertTeam(withName: "Name", isBound: true)
+            self.team.creator = self.selfUser
             $0.insertMember(with: self.selfUser, in: self.team)
             _ = $0.insertTeam(withName: "Other", isBound: false, users:[self.user1])
             self.user1.appendRichInfo(type: entry1.type, value: entry1.value)

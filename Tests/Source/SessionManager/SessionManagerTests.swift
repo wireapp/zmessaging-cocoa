@@ -723,7 +723,8 @@ class SessionManagerTests_Teams: IntegrationTest {
         let teamName = "Wire"
         let image = MockAsset(in: mockTransportSession.managedObjectContext, forID: selfUser.previewProfileAssetIdentifier!)
         self.mockTransportSession.performRemoteChanges { session in
-            _ = session.insertTeam(withName: teamName, isBound: true, users: [self.selfUser])
+            let team = session.insertTeam(withName: teamName, isBound: true, users: [self.selfUser])
+            team.creator = self.selfUser
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -749,6 +750,7 @@ class SessionManagerTests_Teams: IntegrationTest {
         var team: MockTeam!
         self.mockTransportSession.performRemoteChanges { session in
             team = session.insertTeam(withName: "Wire", isBound: true, users: [self.selfUser])
+            team.creator = self.selfUser
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -774,6 +776,7 @@ class SessionManagerTests_Teams: IntegrationTest {
         var team: MockTeam!
         self.mockTransportSession.performRemoteChanges { session in
             team = session.insertTeam(withName: "Wire", isBound: true, users: [self.selfUser])
+            team.creator = self.selfUser
             asset = session.insertAsset(with: UUID(), assetToken: UUID(), assetData: assetData, contentType: "image/jpeg")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
