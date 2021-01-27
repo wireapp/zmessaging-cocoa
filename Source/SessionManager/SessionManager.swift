@@ -611,6 +611,8 @@ public final class SessionManager : NSObject, SessionManagerType {
         self.withSession(for: account, notifyAboutMigration: true) { session in
             self.activeUserSession = session
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
+
+            self.configureUserNotifications()
             completion(session)
 
             self.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
@@ -620,7 +622,6 @@ public final class SessionManager : NSObject, SessionManagerType {
 
     func performPostUnlockActionsIfPossible(for session: ZMUserSession) {
         guard session.lock == .none else { return }
-        configureUserNotifications()
         processPendingURLAction()
     }
 
