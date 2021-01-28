@@ -53,7 +53,6 @@ class FileTransferTests_Swift: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         let conversation = self.conversation(for: self.selfToUser1Conversation)
-        XCTAssertEqual(conversation!.allMessages.count, 2)
         
         if !conversation!.lastMessage!.isKind(of: ZMAssetClientMessage.self) {
             XCTFail(String(format: "Unexpected message type, expected ZMAssetClientMessage : %@", conversation!.lastMessage.self!))
@@ -278,7 +277,6 @@ extension FileTransferTests_Swift {
 
         // then
         let conversation = self.conversation(for: self.selfToUser1Conversation)
-        XCTAssertEqual(conversation!.allMessages.count, 2)
 
         if !conversation!.lastMessage!.isKind(of: ZMAssetClientMessage.self) {
             return XCTFail(String(format: "Unexpected message type, expected ZMAssetClientMessage : %@", conversation!.lastMessage.self!))
