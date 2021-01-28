@@ -18,11 +18,6 @@
 
 import Foundation
 
-public enum VideoGridPresentationMode: CaseIterable {
-    case activeSpeakers
-    case allVideoStreams
-}
-
 /**
  * The snapshot of the state of a call.
  */
