@@ -18,11 +18,36 @@
 
 
 fileprivate  enum TeamEventPayloadKey: String {
+    
     case team
     case data
     case user
     case conversation = "conv"
+    
+}
 
+struct TeamUpdateEventPayload: Decodable {
+    
+    let name: String?
+    let icon: String?
+    let iconKey: String?
+    
+    private enum CodingKeys: String, CodingKey {
+        case name
+        case icon
+        case iconKey = "icon_key"
+    }
+        
+}
+
+extension TeamUpdateEventPayload {
+    
+    func updateTeam(_ team: Team, in managedObjectContext: NSManagedObjectContext) {
+        team.name = name
+        team.pictureAssetId = icon
+        team.pictureAssetKey = iconKey
+    }
+    
 }
 
 fileprivate extension ZMUpdateEvent {
@@ -72,7 +97,8 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
     private func updateTeam(with event: ZMUpdateEvent) {
         guard let identifier = event.teamId, let data = event.dataPayload else { return }
         guard let existingTeam = Team.fetchOrCreate(with: identifier, create: false, in: managedObjectContext, created: nil) else { return }
-        existingTeam.update(with: data)
+        
+        TeamUpdateEventPayload(data)?.updateTeam(existingTeam, in: managedObjectContext)
     }
 
     private func processAddedMember(with event: ZMUpdateEvent) {

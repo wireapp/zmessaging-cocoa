@@ -49,6 +49,28 @@ extension Decodable {
     
 }
 
+extension Decodable {
+    
+    /// Initialize object from a dictionary
+    ///
+    /// - parameter payload: Dictionary representing the object
+    ///
+    /// This only works for dictionaries which only contain type
+    /// which can be represented as JSON.
+    
+    init?(_ payload: [String: Any]) {
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: payload, options: .prettyPrinted)
+            let decoder = JSONDecoder()
+            self = try decoder.decode(Self.self, from: jsonData)
+        } catch {
+            Logging.network.debug("Failed to decode payload: \(error)")
+            return nil
+        }
+    }
+    
+}
+
 extension DateFormatter {
     static let iso8601Full: DateFormatter = {
         let formatter = DateFormatter()

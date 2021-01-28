@@ -891,9 +891,10 @@ class SearchTaskTests : DatabaseTest {
         let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
         
         mockTransportSession.performRemoteChanges { (remoteChanges) in
+            let userA = remoteChanges.insertUser(withName: "User A")
             let team = remoteChanges.insertTeam(withName: "Team A", isBound: true)
             team.identifier = self.teamIdentifier.transportString()
-            let userA = remoteChanges.insertUser(withName: "User A")
+            team.creator = userA
             remoteChanges.insertMember(with: userA, in: team)
         }
         
@@ -914,10 +915,11 @@ class SearchTaskTests : DatabaseTest {
         let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
         
         mockTransportSession.performRemoteChanges { (remoteChanges) in
-            let team = remoteChanges.insertTeam(withName: "Team A", isBound: true)
-            team.identifier = self.teamIdentifier.transportString()
             let userA = remoteChanges.insertUser(withName: "User A")
             let selfUser = remoteChanges.insertSelfUser(withName: "Self User")
+            let team = remoteChanges.insertTeam(withName: "Team A", isBound: true)
+            team.identifier = self.teamIdentifier.transportString()
+            team.creator = userA
             remoteChanges.insertMember(with: selfUser, in: team)
             let member = remoteChanges.insertMember(with: userA, in: team)
             member.permissions = .admin

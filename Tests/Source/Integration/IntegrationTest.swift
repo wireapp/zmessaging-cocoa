@@ -406,6 +406,7 @@ extension IntegrationTest {
             self.teamUser2 = user2
 
             let team = session.insertTeam(withName: "A Team", isBound: true, users: [self.selfUser, user1, user2])
+            team.creator = user1
             self.team = team
 
             let bot = session.insertUser(withName: "Botty the Bot")
