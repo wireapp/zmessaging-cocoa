@@ -19,12 +19,25 @@
 import Foundation
 
 public enum ZMAccountDeletedReason: Int {
-    /// The user account was deleted by the user
+
+    /// The user account was deleted by the user.
+
     case userInitiated = 0
-    /// The user account was deleted because a jailbreak was detected
+
+    /// The user account was deleted because a jailbreak was detected.
+
     case jailbreakDetected
-    /// The user account was deleted because the session expired
+
+    /// The user account was deleted because the session expired.
+
     case sessionExpired
-    /// The user account was deleted because the limit of failed password attempts was reached
+
+    /// The user account was deleted because the limit of failed password attempts was reached.
+
     case failedPasswordLimitReached
+
+    /// The user account was deleted because the user chose to wipe the database.
+
+    case databaseWiped
+
 }

@@ -506,6 +506,10 @@ public final class SessionManager : NSObject, SessionManagerType {
     public func delete(account: Account) {
         delete(account: account, reason: .userInitiated)
     }
+
+    public func wipeDatabase(for account: Account) {
+        delete(account: account, reason: .databaseWiped)
+    }
     
     fileprivate func deleteAllAccounts(reason: ZMAccountDeletedReason) {
         let inactiveAccounts = accountManager.accounts.filter({ $0 != accountManager.selectedAccount })
