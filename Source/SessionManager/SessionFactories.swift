@@ -49,7 +49,9 @@ open class AuthenticatedSessionFactory {
     func session(
         for account: Account,
         storeProvider: LocalStoreProviderProtocol,
-        configuration: ZMUserSession.Configuration) -> ZMUserSession? {
+        configuration: ZMUserSession.Configuration,
+        userClientDelegate: UserClientDelegate?,
+        logoutDelegate: LogoutDelegate?) -> ZMUserSession? {
 
         let transportSession = ZMTransportSession(
             environment: environment,
@@ -68,7 +70,9 @@ open class AuthenticatedSessionFactory {
             application: application,
             appVersion: appVersion,
             storeProvider: storeProvider,
-            configuration: configuration
+            configuration: configuration,
+            userClientDelegate: userClientDelegate,
+            logoutDelegate: logoutDelegate
         )
         
         userSession.startRequestLoopTracker()

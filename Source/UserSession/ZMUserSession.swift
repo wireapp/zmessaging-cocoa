@@ -67,6 +67,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
     let debugCommands: [String: DebugCommand]
     let eventProcessingTracker: EventProcessingTracker = EventProcessingTracker()
     let hotFix: ZMHotFix
+    var userClientDelegate: UserClientDelegate?
+    var logoutDelegate: LogoutDelegate?
     
     public var appLockController: AppLockType
     
@@ -192,7 +194,9 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
                 application: ZMApplication,
                 appVersion: String,
                 storeProvider: LocalStoreProviderProtocol,
-                configuration: Configuration) {
+                configuration: Configuration,
+                userClientDelegate: UserClientDelegate?,
+                logoutDelegate: LogoutDelegate?) {
         
         storeProvider.contextDirectory.syncContext.performGroupedBlockAndWait {
             storeProvider.contextDirectory.syncContext.analytics = analytics
@@ -214,6 +218,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
         self.debugCommands = ZMUserSession.initDebugCommands()
         self.hotFix = ZMHotFix(syncMOC: storeProvider.contextDirectory.syncContext)
         self.appLockController = AppLockController(config: configuration.appLockConfig, selfUser: ZMUser.selfUser(in: storeProvider.contextDirectory.uiContext))
+        self.userClientDelegate = userClientDelegate
+        self.logoutDelegate = logoutDelegate
         super.init()
         
         configureCaches()
@@ -371,10 +377,11 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
     }
     
     private func transportSessionAccessTokenDidFail(response: ZMTransportResponse) {
-        managedObjectContext.performGroupedBlock {
-            let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
+        managedObjectContext.performGroupedBlock { [weak self] in
+            guard let strongRef = self else { return }
+            let selfUser = ZMUser.selfUser(in: strongRef.managedObjectContext)
             let error = NSError.userSessionErrorWith(.accessTokenExpired, userInfo: selfUser.loginCredentials.dictionaryRepresentation)
-            PostLoginAuthenticationNotification.notifyAuthenticationInvalidated(error: error, context: self.managedObjectContext)
+            strongRef.didAuthenticationInvalidate(error)
         }
     }
     
@@ -530,6 +537,43 @@ extension ZMUserSession: ZMSyncStateDelegate {
         // The push token can only be registered after client registration
         transportSession.pushChannel.clientID = userClient.remoteIdentifier
         registerCurrentPushToken()
+        
+        managedObjectContext.performGroupedBlock { [weak self] in
+            guard
+                let moc = self?.managedObjectContext,
+                let accountId = ZMUser.selfUser(in: moc).remoteIdentifier
+            else {
+                return
+            }
+            
+            self?.userClientDelegate?.clientRegistrationDidSucceed(accountId: accountId)
+        }
+    }
+    
+    public func didFailRegistrationUserClient(_ error: Error!) {
+        managedObjectContext.performGroupedBlock {  [weak self] in
+            guard
+                let moc = self?.managedObjectContext,
+                let accountId = ZMUser.selfUser(in: moc).remoteIdentifier
+            else {
+                return
+            }
+            
+            self?.userClientDelegate?.clientRegistrationDidFail(error as NSError, accountId: accountId)
+        }
+    }
+    
+    public func didAuthenticationInvalidate(_ error: Error!) {
+        managedObjectContext.performGroupedBlock {  [weak self] in
+            guard
+                let moc = self?.managedObjectContext,
+                let accountId = ZMUser.selfUser(in: moc).remoteIdentifier
+            else {
+                return
+            }
+            
+            self?.userClientDelegate?.authenticationInvalidated(error as NSError, accountId: accountId)
+        }
     }
     
     func notifyThirdPartyServices() {

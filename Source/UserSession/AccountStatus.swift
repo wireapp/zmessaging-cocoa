@@ -82,14 +82,5 @@ public final class AccountStatus : NSObject, ZMInitialSyncCompletionObserver {
         super.init()
         
         self.initialSyncToken = ZMUserSession.addInitialSyncCompletionObserver(self, context: managedObjectContext)
-        self.authenticationToken = PostLoginAuthenticationNotification.addObserver(self, context: managedObjectContext)
     }
-}
-
-extension AccountStatus : PostLoginAuthenticationObserver {
-    
-    public func clientRegistrationDidSucceed(accountId: UUID) {
-        didRegisterClient()
-    }
-    
 }

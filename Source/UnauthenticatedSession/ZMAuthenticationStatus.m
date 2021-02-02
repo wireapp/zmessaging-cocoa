@@ -334,6 +334,14 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 
+- (void)notifyAuthenticationDidFail:(NSError *)error {
+    [self.delegate authenticationDidFail:error];
+}
+
+- (void)notifyCompanyLoginCodeDidBecomeAvailable:(NSUUID *)uuid {
+    [self.delegate companyLoginCodeDidBecomeAvailable:uuid];
+}
+
 @end
 
 

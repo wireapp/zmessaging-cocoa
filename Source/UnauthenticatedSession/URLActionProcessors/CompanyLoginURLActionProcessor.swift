@@ -43,8 +43,7 @@ class CompanyLoginURLActionProcessor: URLActionProcessor {
                 presentationDelegate?.failedToPerformAction(urlAction, error: SessionManager.AccountError.accountLimitReached)
                 return
             }
-            
-            authenticationStatus.delegate.companyLoginCodeDidBecomeAvailable(code)
+            authenticationStatus.notifyCompanyLoginCodeDidBecomeAvailable(code)
         default:
             break
         }

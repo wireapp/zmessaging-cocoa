@@ -184,6 +184,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     public weak var delegate: SessionManagerDelegate? = nil
     public let accountManager: AccountManager
     public internal(set) var activeUserSession: ZMUserSession?
+    public var loginDelegate: LoginDelegate?
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public internal(set) var unauthenticatedSession: UnauthenticatedSession? {
@@ -192,10 +193,8 @@ public final class SessionManager : NSObject, SessionManagerType {
         }
         didSet {
             if let session = self.unauthenticatedSession {
-//                self.preLoginAuthenticationToken = session.addAuthenticationObserver(self)
+
                 NotificationInContext(name: sessionManagerCreatedUnauthenticatedSessionNotificationName, context: self, object: session).post()
-            } else {
-                self.preLoginAuthenticationToken = nil
             }
         }
         
@@ -206,8 +205,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     public let groupQueue: ZMSGroupQueue = DispatchGroupQueue(queue: .main)
     
     let application: ZMApplication
-    var postLoginAuthenticationToken: Any?
-    var preLoginAuthenticationToken: Any?
+    var deleteAccountToken: Any?
     var callCenterObserverToken: Any?
     var blacklistVerificator: ZMBlacklistVerificator?
     let reachability: ReachabilityProvider & TearDownCapable
@@ -335,6 +333,8 @@ public final class SessionManager : NSObject, SessionManagerType {
             self.tearDownAllBackgroundSessions()
         })
         
+        authenticationStatus?.delegate = self
+        
         NotificationCenter.default.addObserver(self, selector: #selector(applicationWillEnterForeground(_:)), name: UIApplication.willEnterForegroundNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(applicationWillResignActive(_:)), name: UIApplication.willResignActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive(_:)), name: UIApplication.didBecomeActiveNotification, object: nil)
@@ -408,7 +408,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         self.pushRegistry.delegate = self
         self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
 
-        postLoginAuthenticationToken = PostLoginAuthenticationNotification.addObserver(self, queue: self.groupQueue)
+        deleteAccountToken = DeleteAccountNotification.addObserver(self, queue: self.groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
         
         checkJailbreakIfNeeded()
@@ -748,7 +748,11 @@ public final class SessionManager : NSObject, SessionManagerType {
     private func startBackgroundSession(for account: Account, with provider: LocalStoreProviderProtocol) -> ZMUserSession {
         let sessionConfig = ZMUserSession.Configuration(appLockConfig: configuration.appLockConfig)
 
-        guard let newSession = authenticatedSessionFactory.session(for: account, storeProvider: provider, configuration: sessionConfig) else {
+        guard let newSession = authenticatedSessionFactory.session(for: account,
+                                                                   storeProvider: provider,
+                                                                   configuration: sessionConfig,
+                                                                   userClientDelegate: self,
+                                                                   logoutDelegate: self) else {
             preconditionFailure("Unable to create session for \(account)")
         }
         
@@ -977,7 +981,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
     public func session(session: UnauthenticatedSession, createdAccount account: Account) {
         guard !(accountManager.accounts.count == SessionManager.maxNumberAccounts && accountManager.account(with: account.userIdentifier) == nil) else {
             let error = NSError(code: .accountLimitReached, userInfo: nil)
-            session.authenticationStatus.delegate.authenticationDidFail(error)
+            session.authenticationStatus.notifyAuthenticationDidFail(error)
             return
         }
         
@@ -1004,38 +1008,24 @@ extension SessionManager: UnauthenticatedSessionDelegate {
     }
 }
 
-// MARK: - ZMAuthenticationObserver
+// MARK: - UserClientDelegate
 
-extension SessionManager: PostLoginAuthenticationObserver {
-
+extension SessionManager: UserClientDelegate {
     public func clientRegistrationDidSucceed(accountId: UUID) {
         log.debug("Client registration was successful")
         
         if self.configuration.encryptionAtRestEnabledByDefault {
             try? activeUserSession?.setEncryptionAtRest(enabled: true)
         }
-    }
-    
-    public func userDidLogout(accountId: UUID) {
-        log.debug("\(accountId): User logged out")
         
-        if let account = accountManager.account(with: accountId) {
-            delete(account: account, reason: .userInitiated)
-        }
-    }
-    
-    public func accountDeleted(accountId: UUID) {
-        log.debug("\(accountId): Account was deleted")
-        
-        if let account = accountManager.account(with: accountId) {
-            delete(account: account, reason: .sessionExpired)
-        }
+        loginDelegate?.clientRegistrationDidSucceed(accountId: accountId)
     }
     
     public func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
         if unauthenticatedSession == nil || unauthenticatedSession?.accountId != accountId {
             createUnauthenticatedSession(accountId: accountId)
         }
+        loginDelegate?.clientRegistrationDidFail(error, accountId: accountId)
         
         let account = accountManager.account(with: accountId)
         guard account == accountManager.selectedAccount else { return }
@@ -1043,6 +1033,8 @@ extension SessionManager: PostLoginAuthenticationObserver {
     }
     
     public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
+        loginDelegate?.authenticationDidFail(error)
+        
         guard
             let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)),
             let account = accountManager.account(with: accountId)
@@ -1072,7 +1064,29 @@ extension SessionManager: PostLoginAuthenticationObserver {
             delegate?.sessionManagerDidFailToLogin(error: error)
         }
     }
+}
 
+extension SessionManager: DeleteAccountObserver {
+    public func accountDeleted(accountId : UUID) {
+        log.debug("\(accountId): Account was deleted")
+    
+        if let account = accountManager.account(with: accountId) {
+            delete(account: account, reason: .sessionExpired)
+        }
+    }
+}
+
+// MARK: - LogoutDelegate
+
+extension SessionManager: LogoutDelegate {
+    /// Invoked when the user successfully logged out
+    public func userDidLogout(accountId: UUID) {
+        log.debug("\(accountId): User logged out")
+        
+        if let account = accountManager.account(with: accountId) {
+            delete(account: account, reason: .userInitiated)
+        }
+    }
 }
 
 // MARK: - Application lifetime notifications
@@ -1170,28 +1184,6 @@ extension SessionManager {
     }
 
 }
-
-//extension SessionManager : PreLoginAuthenticationObserver {
-//
-//    public func authenticationDidSucceed() {
-//        if nil != activeUserSession {
-//            return RequestAvailableNotification.notifyNewRequestsAvailable(self)
-//        }
-//    }
-//
-//    public func authenticationDidFail(_ error: NSError) {
-//        if unauthenticatedSession == nil {
-//            createUnauthenticatedSession()
-//        }
-//
-//        delegate?.sessionManagerDidFailToLogin(error: error)
-//    }
-//
-//    public func companyLoginCodeDidBecomeAvailable(_ code: UUID) {
-//        addAccount(userInfo: [SessionManager.companyLoginCodeKey: code,
-//                              SessionManager.companyLoginRequestTimestampKey: Date()])
-//    }
-//}
 
 // MARK: - Session manager observer
 

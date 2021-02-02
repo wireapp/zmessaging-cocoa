@@ -44,7 +44,7 @@ extension UnauthenticatedSession {
         
         if credentials.isInvalid {
             let error = NSError(code: .needsCredentials, userInfo: nil)
-            authenticationStatus.delegate.authenticationDidFail(error)
+            authenticationStatus.notifyAuthenticationDidFail(error)
         } else {
             authenticationErrorIfNotReachable {
                 self.authenticationStatus.prepareForLogin(with: credentials)

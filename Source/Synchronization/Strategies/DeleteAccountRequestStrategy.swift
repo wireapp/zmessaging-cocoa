@@ -62,7 +62,7 @@ import WireTransport
         if response.result == .success || response.result == .permanentError {
             self.managedObjectContext.setPersistentStoreMetadata(NSNumber(value: false), key: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
             
-            PostLoginAuthenticationNotification.notifyAccountDeleted(context: managedObjectContext.zm_userInterface)
+            DeleteAccountNotification.notifyAccountDeleted(context: managedObjectContext.zm_userInterface)
         }
     }
 }

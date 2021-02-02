@@ -93,7 +93,7 @@ public class UnauthenticatedSession: NSObject {
             block()
         } else {
             let error = NSError(code: .networkError, userInfo: nil)
-            authenticationStatus.delegate.authenticationDidFail(error)
+            authenticationStatus.notifyAuthenticationDidFail(error)
         }
     }
 }
