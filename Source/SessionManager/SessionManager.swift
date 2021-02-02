@@ -34,11 +34,11 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
     case callKit
 }
 
-@objc public protocol SessionActivationObserver: class {
-    func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession)
+public protocol SessionActivationObserver: class {
+    func sessionManagerDidChangeActiveUserSession(userSession: UserSessionAppLockInterface)
 }
 
-@objc public protocol SessionManagerDelegate: SessionActivationObserver {
+public protocol SessionManagerDelegate: SessionActivationObserver {
     func sessionManagerDidFailToLogin(error: Error?)
     func sessionManagerWillLogout(error : Error?, userSessionCanBeTornDown: (() -> Void)?)
     func sessionManagerWillOpenAccount(_ account: Account,

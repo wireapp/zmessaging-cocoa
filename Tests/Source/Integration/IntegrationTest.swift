@@ -650,15 +650,16 @@ extension IntegrationTest: SessionManagerDelegate {
         // no op
     }
     
-    public func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession) {
-        self.userSession = userSession
+    public func sessionManagerDidChangeActiveUserSession(userSession: UserSessionAppLockInterface) {
+        let zmUserSession = userSession as! ZMUserSession
+        self.userSession = zmUserSession
         
         if let notificationCenter = self.notificationCenter {
             self.userSession?.localNotificationDispatcher?.notificationCenter = notificationCenter
         }
         
-        userSession.syncManagedObjectContext.performGroupedBlock {
-            userSession.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
+        self.userSession?.syncManagedObjectContext.performGroupedBlock {
+            self.userSession?.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
         }
         
         setupTimers()
