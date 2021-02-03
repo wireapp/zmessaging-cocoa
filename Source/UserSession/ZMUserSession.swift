@@ -504,6 +504,18 @@ extension ZMUserSession: ZMSyncStateDelegate {
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.notifyThirdPartyServices()
         }
+
+        syncManagedObjectContext.performGroupedBlock { [weak self] in
+            guard
+                let `self` = self,
+                let team = ZMUser.selfUser(in: self.syncManagedObjectContext).team
+            else {
+                return
+            }
+
+            Feature.createDefaultInstanceIfNeeded(name: .appLock, team: team, context: self.syncManagedObjectContext)
+            team.enqueueBackendRefresh(for: .appLock)
+        }
     }
     
     func processEvents() {
