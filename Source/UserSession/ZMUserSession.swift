@@ -507,8 +507,8 @@ extension ZMUserSession: ZMSyncStateDelegate {
 
         // TODO: [John] This is a tempory solution until we add support for slow syncing
         // team features and config update events.
-        guard let team = ZMUser.selfUser(in: self.syncManagedObjectContext).team else { return }
-        Feature.createDefaultInstanceIfNeeded(name: .appLock, team: team, context: self.syncManagedObjectContext)
+        guard let team = ZMUser.selfUser(in: syncManagedObjectContext).team else { return }
+        Feature.createDefaultInstanceIfNeeded(name: .appLock, team: team, context: syncManagedObjectContext)
         team.enqueueBackendRefresh(for: .appLock)
     }
     
