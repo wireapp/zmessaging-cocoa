@@ -50,8 +50,8 @@ open class AuthenticatedSessionFactory {
         for account: Account,
         storeProvider: LocalStoreProviderProtocol,
         configuration: ZMUserSession.Configuration,
-        userClientDelegate: UserClientDelegate?,
-        logoutDelegate: LogoutDelegate?) -> ZMUserSession? {
+        selfUserClientDelegate: UserSessionSelfUserClientDelegate?,
+        logoutDelegate: UserSessionLogoutDelegate?) -> ZMUserSession? {
 
         let transportSession = ZMTransportSession(
             environment: environment,
@@ -71,7 +71,7 @@ open class AuthenticatedSessionFactory {
             appVersion: appVersion,
             storeProvider: storeProvider,
             configuration: configuration,
-            userClientDelegate: userClientDelegate,
+            selfUserClientDelegate: selfUserClientDelegate,
             logoutDelegate: logoutDelegate
         )
         

@@ -18,7 +18,7 @@
 
 import Foundation
 
-@objc public protocol DeleteAccountObserver: NSObjectProtocol {
+@objc public protocol AccountDeletedObserver: NSObjectProtocol {
     /// Account was successfully deleted
     @objc optional func accountDeleted(accountId : UUID)
 }
@@ -29,30 +29,30 @@ enum DeleteAccountEvent {
     case accountDeleted
 }
 
-@objcMembers public class DeleteAccountNotification : NSObject {
+@objcMembers public class AccountDeletedNotification : NSObject {
     
-    static private let name = Notification.Name(rawValue: "DeleteAccountNotification")
+    static private let name = Notification.Name(rawValue: "AccountDeletedNotification")
     static private let eventKey = "event"
     
     fileprivate static func notify(event: DeleteAccountEvent, context: NSManagedObjectContext) {
         NotificationInContext(name: self.name, context: context.notificationContext, object:context, userInfo: [self.eventKey: event]).post()
     }
     
-    static public func addObserver(_ observer: DeleteAccountObserver,
+    static public func addObserver(_ observer: AccountDeletedObserver,
                                    context: NSManagedObjectContext) -> Any {
          return self.addObserver(observer, context: context, queue: context)
     }
     
-    static public func addObserver(_ observer: DeleteAccountObserver,
+    static public func addObserver(_ observer: AccountDeletedObserver,
                                    queue: ZMSGroupQueue) -> Any {
         return self.addObserver(observer, context: nil, queue: queue)
     }
 
-    static public func addObserver(_ observer: DeleteAccountObserver) -> Any {
+    static public func addObserver(_ observer: AccountDeletedObserver) -> Any {
         return self.addObserver(observer, context: nil, queue: DispatchGroupQueue(queue: DispatchQueue.main))
     }
 
-    static private func addObserver(_ observer: DeleteAccountObserver, context: NSManagedObjectContext? = nil, queue: ZMSGroupQueue) -> Any {
+    static private func addObserver(_ observer: AccountDeletedObserver, context: NSManagedObjectContext? = nil, queue: ZMSGroupQueue) -> Any {
         
         let token = NotificationInContext.addUnboundedObserver(name: name, context: context?.notificationContext, queue:nil) { [weak observer] (note) in            
             guard
@@ -77,12 +77,12 @@ enum DeleteAccountEvent {
         return SelfUnregisteringNotificationCenterToken(token)
     }
     
-    static public func addObserver(_ observer: DeleteAccountObserver, userSession: ZMUserSession) -> Any {
+    static public func addObserver(_ observer: AccountDeletedObserver, userSession: ZMUserSession) -> Any {
         return self.addObserver(observer, context: userSession.managedObjectContext)
     }
 }
 
-@objc public extension DeleteAccountNotification {
+@objc public extension AccountDeletedNotification {
     @objc(notifyAccountDeletedInContext:)
     static func notifyAccountDeleted(context: NSManagedObjectContext) {
         self.notify(event: .accountDeleted, context: context)

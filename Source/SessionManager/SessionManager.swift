@@ -408,7 +408,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         self.pushRegistry.delegate = self
         self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
 
-        deleteAccountToken = DeleteAccountNotification.addObserver(self, queue: self.groupQueue)
+        deleteAccountToken = AccountDeletedNotification.addObserver(self, queue: self.groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
         
         checkJailbreakIfNeeded()
@@ -751,7 +751,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         guard let newSession = authenticatedSessionFactory.session(for: account,
                                                                    storeProvider: provider,
                                                                    configuration: sessionConfig,
-                                                                   userClientDelegate: self,
+                                                                   selfUserClientDelegate: self,
                                                                    logoutDelegate: self) else {
             preconditionFailure("Unable to create session for \(account)")
         }
@@ -981,7 +981,7 @@ extension SessionManager: UnauthenticatedSessionDelegate {
     public func session(session: UnauthenticatedSession, createdAccount account: Account) {
         guard !(accountManager.accounts.count == SessionManager.maxNumberAccounts && accountManager.account(with: account.userIdentifier) == nil) else {
             let error = NSError(code: .accountLimitReached, userInfo: nil)
-            session.authenticationStatus.notifyAuthenticationDidFail(error)
+            loginDelegate?.authenticationDidFail(error)
             return
         }
         
@@ -1008,9 +1008,9 @@ extension SessionManager: UnauthenticatedSessionDelegate {
     }
 }
 
-// MARK: - UserClientDelegate
+// MARK: - UserSessionSelfUserClientDelegate
 
-extension SessionManager: UserClientDelegate {
+extension SessionManager: UserSessionSelfUserClientDelegate {
     public func clientRegistrationDidSucceed(accountId: UUID) {
         log.debug("Client registration was successful")
         
@@ -1031,10 +1031,31 @@ extension SessionManager: UserClientDelegate {
         guard account == accountManager.selectedAccount else { return }
         delegate?.sessionManagerDidFailToLogin(error: error)
     }
+}
+
+extension SessionManager: AccountDeletedObserver {
+    public func accountDeleted(accountId : UUID) {
+        log.debug("\(accountId): Account was deleted")
+    
+        if let account = accountManager.account(with: accountId) {
+            delete(account: account, reason: .sessionExpired)
+        }
+    }
+}
+
+// MARK: - UserSessionLogoutDelegate
+
+extension SessionManager: UserSessionLogoutDelegate {
+    /// Invoked when the user successfully logged out
+    public func userDidLogout(accountId: UUID) {
+        log.debug("\(accountId): User logged out")
+        
+        if let account = accountManager.account(with: accountId) {
+            delete(account: account, reason: .userInitiated)
+        }
+    }
     
     public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
-        loginDelegate?.authenticationDidFail(error)
-        
         guard
             let userSessionErrorCode = ZMUserSessionErrorCode(rawValue: UInt(error.code)),
             let account = accountManager.account(with: accountId)
@@ -1062,29 +1083,6 @@ extension SessionManager: UserClientDelegate {
             let account = accountManager.account(with: accountId)
             guard account == accountManager.selectedAccount else { return }
             delegate?.sessionManagerDidFailToLogin(error: error)
-        }
-    }
-}
-
-extension SessionManager: DeleteAccountObserver {
-    public func accountDeleted(accountId : UUID) {
-        log.debug("\(accountId): Account was deleted")
-    
-        if let account = accountManager.account(with: accountId) {
-            delete(account: account, reason: .sessionExpired)
-        }
-    }
-}
-
-// MARK: - LogoutDelegate
-
-extension SessionManager: LogoutDelegate {
-    /// Invoked when the user successfully logged out
-    public func userDidLogout(accountId: UUID) {
-        log.debug("\(accountId): User logged out")
-        
-        if let account = accountManager.account(with: accountId) {
-            delete(account: account, reason: .userInitiated)
         }
     }
 }

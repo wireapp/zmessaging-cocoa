@@ -28,6 +28,24 @@ public protocol ThirdPartyServicesDelegate: NSObjectProtocol {
     
 }
 
+@objc(UserSessionSelfUserClientDelegate)
+public protocol UserSessionSelfUserClientDelegate: NSObjectProtocol {
+    /// Invoked when a client is successfully registered
+    func clientRegistrationDidSucceed(accountId: UUID)
+    
+    /// Invoked when there was an error registering the client
+    func clientRegistrationDidFail(_ error: NSError, accountId: UUID)
+}
+
+@objc(UserSessionLogoutDelegate)
+public protocol UserSessionLogoutDelegate: NSObjectProtocol {
+    /// Invoked when the user successfully logged out
+    @objc func userDidLogout(accountId: UUID)
+    
+    /// Invoked when the authentication has proven invalid
+    func authenticationInvalidated(_ error: NSError, accountId : UUID)
+}
+
 typealias UserSessionDelegate = UserSessionEncryptionAtRestDelegate
 
 @objcMembers
@@ -67,8 +85,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
     let debugCommands: [String: DebugCommand]
     let eventProcessingTracker: EventProcessingTracker = EventProcessingTracker()
     let hotFix: ZMHotFix
-    var userClientDelegate: UserClientDelegate?
-    var logoutDelegate: LogoutDelegate?
+    var selfUserClientDelegate: UserSessionSelfUserClientDelegate?
+    var logoutDelegate: UserSessionLogoutDelegate?
     
     public var appLockController: AppLockType
     
@@ -195,8 +213,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
                 appVersion: String,
                 storeProvider: LocalStoreProviderProtocol,
                 configuration: Configuration,
-                userClientDelegate: UserClientDelegate?,
-                logoutDelegate: LogoutDelegate?) {
+                selfUserClientDelegate: UserSessionSelfUserClientDelegate?,
+                logoutDelegate: UserSessionLogoutDelegate?) {
         
         storeProvider.contextDirectory.syncContext.performGroupedBlockAndWait {
             storeProvider.contextDirectory.syncContext.analytics = analytics
@@ -218,7 +236,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
         self.debugCommands = ZMUserSession.initDebugCommands()
         self.hotFix = ZMHotFix(syncMOC: storeProvider.contextDirectory.syncContext)
         self.appLockController = AppLockController(config: configuration.appLockConfig, selfUser: ZMUser.selfUser(in: storeProvider.contextDirectory.uiContext))
-        self.userClientDelegate = userClientDelegate
+        self.selfUserClientDelegate = selfUserClientDelegate
         self.logoutDelegate = logoutDelegate
         super.init()
         
@@ -546,7 +564,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
                 return
             }
             
-            self?.userClientDelegate?.clientRegistrationDidSucceed(accountId: accountId)
+            self?.selfUserClientDelegate?.clientRegistrationDidSucceed(accountId: accountId)
         }
     }
     
@@ -559,7 +577,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
                 return
             }
             
-            self?.userClientDelegate?.clientRegistrationDidFail(error as NSError, accountId: accountId)
+            self?.selfUserClientDelegate?.clientRegistrationDidFail(error as NSError, accountId: accountId)
         }
     }
     
@@ -572,7 +590,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
                 return
             }
             
-            self?.userClientDelegate?.authenticationInvalidated(error as NSError, accountId: accountId)
+            self?.logoutDelegate?.authenticationInvalidated(error as NSError, accountId: accountId)
         }
     }
     
