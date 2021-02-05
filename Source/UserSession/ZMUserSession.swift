@@ -47,6 +47,8 @@ public protocol UserSessionLogoutDelegate: NSObjectProtocol {
 }
 
 typealias UserSessionDelegate = UserSessionEncryptionAtRestDelegate
+    & UserSessionSelfUserClientDelegate
+    & UserSessionLogoutDelegate
 
 @objcMembers
 public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessionAppLockInterface {
@@ -85,8 +87,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
     let debugCommands: [String: DebugCommand]
     let eventProcessingTracker: EventProcessingTracker = EventProcessingTracker()
     let hotFix: ZMHotFix
-    var selfUserClientDelegate: UserSessionSelfUserClientDelegate?
-    var logoutDelegate: UserSessionLogoutDelegate?
     
     public var appLockController: AppLockType
     
@@ -212,9 +212,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
                 application: ZMApplication,
                 appVersion: String,
                 storeProvider: LocalStoreProviderProtocol,
-                configuration: Configuration,
-                selfUserClientDelegate: UserSessionSelfUserClientDelegate?,
-                logoutDelegate: UserSessionLogoutDelegate?) {
+                configuration: Configuration) {
         
         storeProvider.contextDirectory.syncContext.performGroupedBlockAndWait {
             storeProvider.contextDirectory.syncContext.analytics = analytics
@@ -236,8 +234,6 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
         self.debugCommands = ZMUserSession.initDebugCommands()
         self.hotFix = ZMHotFix(syncMOC: storeProvider.contextDirectory.syncContext)
         self.appLockController = AppLockController(config: configuration.appLockConfig, selfUser: ZMUser.selfUser(in: storeProvider.contextDirectory.uiContext))
-        self.selfUserClientDelegate = selfUserClientDelegate
-        self.logoutDelegate = logoutDelegate
         super.init()
         
         configureCaches()
@@ -564,7 +560,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
                 return
             }
             
-            self?.selfUserClientDelegate?.clientRegistrationDidSucceed(accountId: accountId)
+            self?.delegate?.clientRegistrationDidSucceed(accountId: accountId)
         }
     }
     
@@ -577,7 +573,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
                 return
             }
             
-            self?.selfUserClientDelegate?.clientRegistrationDidFail(error as NSError, accountId: accountId)
+            self?.delegate?.clientRegistrationDidFail(error as NSError, accountId: accountId)
         }
     }
     
@@ -601,7 +597,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
                 return
             }
             
-            self?.logoutDelegate?.authenticationInvalidated(error as NSError, accountId: accountId)
+            self?.delegate?.authenticationInvalidated(error as NSError, accountId: accountId)
         }
     }
 }

@@ -105,7 +105,7 @@ extension ZMUserSession {
             guard let strongSelf = self else { return }
             
             if response.httpStatus == 200 {
-                self?.logoutDelegate?.userDidLogout(accountId: accoutId)
+                self?.delegate?.userDidLogout(accountId: accoutId)
                 completion(.success)
             } else {
                 completion(.failure(strongSelf.errorFromFailedDeleteResponse(response)))

@@ -400,7 +400,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         self.pushRegistry.delegate = self
         self.pushRegistry.desiredPushTypes = Set(arrayLiteral: PKPushType.voIP)
 
-        deleteAccountToken = AccountDeletedNotification.addObserver(self, queue: self.groupQueue)
+        deleteAccountToken = AccountDeletedNotification.addObserver(observer: self, queue: groupQueue)
         callCenterObserverToken = WireCallCenterV3.addGlobalCallStateObserver(observer: self)
         
         checkJailbreakIfNeeded()
@@ -743,9 +743,7 @@ public final class SessionManager : NSObject, SessionManagerType {
 
         guard let newSession = authenticatedSessionFactory.session(for: account,
                                                                    storeProvider: provider,
-                                                                   configuration: sessionConfig,
-                                                                   selfUserClientDelegate: self,
-                                                                   logoutDelegate: self) else {
+                                                                   configuration: sessionConfig) else {
             preconditionFailure("Unable to create session for \(account)")
         }
         

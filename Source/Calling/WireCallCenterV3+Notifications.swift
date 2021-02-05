@@ -216,7 +216,7 @@ extension WireCallCenterV3 {
     class func addGlobalCallStateObserver(observer: WireCallCenterCallStateObserver) -> Any  {
         return NotificationInContext.addUnboundedObserver(name: WireCallCenterCallStateNotification.notificationName, context: nil) { [weak observer] (note) in
             if let note = note.userInfo[WireCallCenterCallStateNotification.userInfoKey] as? WireCallCenterCallStateNotification,
-               let context = note.context,
+                let context = note.context,
                let caller = ZMUser(remoteID: note.callerId, createIfNeeded: false, in: context),
                let conversation = ZMConversation(remoteID: note.conversationId, createIfNeeded: false, in: context) {
                 

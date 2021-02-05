@@ -62,7 +62,7 @@ extension ZMUserTranscoder {
     }
     
     private func deleteAccount() {
-        AccountDeletedNotification.notifyAccountDeleted(context: managedObjectContext)
+        let notification = AccountDeletedNotification(context: managedObjectContext)
+        notification.post(in: managedObjectContext.notificationContext)
     }
-    
 }
