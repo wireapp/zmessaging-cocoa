@@ -265,21 +265,15 @@ public final class SessionManager : NSObject, SessionManagerType {
         configuration: SessionManagerConfiguration = SessionManagerConfiguration(),
         detector: JailbreakDetectorProtocol = JailbreakDetector()) {
         
+        let group = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
         let flowManager = FlowManager(mediaManager: mediaManager)
 
-        let reachabilityDispatchGroup = ZMSDispatchGroup(dispatchGroup: DispatchGroup(), label: "Session manager reachability")!
         let serverNames = [environment.backendURL, environment.backendWSURL].compactMap { $0.host }
-        let reachability = ZMReachability(serverNames: serverNames, group: reachabilityDispatchGroup)
-        let groupQueue = DispatchGroupQueue(queue: .main)
-        let authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue)
-        
+        let reachability = ZMReachability(serverNames: serverNames, group: group)
         let unauthenticatedSessionFactory = UnauthenticatedSessionFactory(
             appVersion: appVersion,
             environment: environment,
-            reachability: reachability,
-            authenticationStatus: authenticationStatus!,
-            groupQueue: groupQueue)
-
+            reachability: reachability)
         let authenticatedSessionFactory = AuthenticatedSessionFactory(
             appVersion: appVersion,
             application: application,
@@ -332,8 +326,6 @@ public final class SessionManager : NSObject, SessionManagerType {
             log.debug("Received memory warning, tearing down background user sessions.")
             self.tearDownAllBackgroundSessions()
         })
-        
-        authenticationStatus?.delegate = self
         
         NotificationCenter.default.addObserver(self, selector: #selector(applicationWillEnterForeground(_:)), name: UIApplication.willEnterForegroundNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(applicationWillResignActive(_:)), name: UIApplication.willResignActiveNotification, object: nil)
@@ -714,7 +706,8 @@ public final class SessionManager : NSObject, SessionManagerType {
     @discardableResult
     fileprivate func createUnauthenticatedSession(accountId: UUID? = nil) -> UnauthenticatedSession {
         log.debug("Creating unauthenticated session")
-        let unauthenticatedSession = unauthenticatedSessionFactory.session(withDelegate: self)
+        let unauthenticatedSession = unauthenticatedSessionFactory.session(delegate: self,
+                                                                           authenticationStatusDelegate: self)
         unauthenticatedSession.accountId = accountId
         self.unauthenticatedSession = unauthenticatedSession
         return unauthenticatedSession

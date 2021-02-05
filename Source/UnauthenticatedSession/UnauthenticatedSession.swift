@@ -44,8 +44,8 @@ public class UnauthenticatedSession: NSObject {
     /// **accountId** will be set if the unauthenticated session is associated with an existing account
     public internal(set) var accountId: UUID?
     public let groupQueue: DispatchGroupQueue
-    public var authenticationStatus: ZMAuthenticationStatus
-    public let registrationStatus: RegistrationStatus 
+    private(set) public var authenticationStatus: ZMAuthenticationStatus!
+    public let registrationStatus: RegistrationStatus
     let reachability: ReachabilityProvider
     private(set) var operationLoop: UnauthenticatedOperationLoop!
     private let transportSession: UnauthenticatedTransportSessionProtocol
@@ -56,22 +56,20 @@ public class UnauthenticatedSession: NSObject {
 
     init(transportSession: UnauthenticatedTransportSessionProtocol,
          reachability: ReachabilityProvider,
-         authenticationStatus: ZMAuthenticationStatus,
-         groupQueue: DispatchGroupQueue,
-         delegate: UnauthenticatedSessionDelegate?) {
+         delegate: UnauthenticatedSessionDelegate?,
+         authenticationStatusDelegate: ZMAuthenticationStatusDelegate?) {
+        self.delegate = delegate
+        self.groupQueue = DispatchGroupQueue(queue: .main)
         self.registrationStatus = RegistrationStatus()
-        self.authenticationStatus = authenticationStatus
         self.transportSession = transportSession
         self.reachability = reachability
-        self.groupQueue = groupQueue
-        self.delegate = delegate
         super.init()
 
-        self.authenticationStatus = authenticationStatus
-        self.authenticationStatus.userInfoParser = self
-        self.authenticationStatus.resetLoginAndRegistrationStatus()
-        
-        self.urlActionProcessors = [CompanyLoginURLActionProcessor(delegate: self, authenticationStatus: authenticationStatus)]
+        self.authenticationStatus = ZMAuthenticationStatus(delegate: authenticationStatusDelegate,
+                                                           groupQueue: groupQueue,
+                                                           userInfoParser: self)
+        self.urlActionProcessors = [CompanyLoginURLActionProcessor(delegate: self,
+                                                                   authenticationStatus: authenticationStatus)]
         self.operationLoop = UnauthenticatedOperationLoop(
             transportSession: transportSession,
             operationQueue: groupQueue,

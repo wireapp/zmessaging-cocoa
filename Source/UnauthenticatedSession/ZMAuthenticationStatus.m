@@ -38,18 +38,22 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 
 @interface ZMAuthenticationStatus ()
 
+@property (nonatomic, weak) id<UserInfoParser> userInfoParser;
+@property (nonatomic, weak) id<ZMAuthenticationStatusDelegate> delegate;
 @property (nonatomic, strong) UserInfo *authenticatedUserInfo;
 
 @end
 
 @implementation ZMAuthenticationStatus
-@synthesize delegate;
-@synthesize userInfoParser;
 
-- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue {
+- (instancetype)initWithDelegate:(id<ZMAuthenticationStatusDelegate>)delegate
+                      groupQueue:(id<ZMSGroupQueue>)groupQueue
+                  userInfoParser:(id<UserInfoParser>)userInfoParser {
     self = [super init];
     if(self) {
+        self.delegate = delegate;
         self.groupQueue = groupQueue;
+        self.userInfoParser = userInfoParser;
         self.isWaitingForLogin = !self.isLoggedIn;
     }
     return self;

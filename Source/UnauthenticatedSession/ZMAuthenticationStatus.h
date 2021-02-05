@@ -76,10 +76,9 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 
 @property (nonatomic) NSData *authenticationCookieData;
 
-@property (nonatomic, weak) id <ZMAuthenticationStatusDelegate> delegate;
-@property (nonatomic, weak) id <UserInfoParser> userInfoParser;
-
-- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue;
+- (instancetype)initWithDelegate:(id<ZMAuthenticationStatusDelegate>)delegate
+                      groupQueue:(id<ZMSGroupQueue>)groupQueue
+                  userInfoParser:(id<UserInfoParser>)userInfoParser;
 
 - (id)addAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
 
