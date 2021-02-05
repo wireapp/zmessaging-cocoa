@@ -291,7 +291,7 @@
     
     UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
     client.remoteIdentifier = [NSUUID createUUID].transportString;
-    [[self.mockClientRegistrationDelegate expect] didRegisterUserClient:client];
+    [[self.mockClientRegistrationDelegate expect] didRegisterSelfUserClient:client];
     
     // when
     [self.sut didRegisterClient:client];

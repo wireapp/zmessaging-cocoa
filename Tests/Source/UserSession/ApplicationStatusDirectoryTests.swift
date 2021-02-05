@@ -92,9 +92,11 @@ extension ApplicationStatusDirectoryTests : ZMSyncStateDelegate {
         // no-op
     }
     
-    func didRegister(_ userClient: UserClient!) {
+    func didRegisterSelfUserClient(_ userClient: UserClient!) {
         // no-op
     }
     
-    
+    func didFailRegistrationUserClient(_ error: Error!) {
+        
+    }
 }

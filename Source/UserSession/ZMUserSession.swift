@@ -399,7 +399,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
             guard let strongRef = self else { return }
             let selfUser = ZMUser.selfUser(in: strongRef.managedObjectContext)
             let error = NSError.userSessionErrorWith(.accessTokenExpired, userInfo: selfUser.loginCredentials.dictionaryRepresentation)
-            strongRef.didAuthenticationInvalidate(error)
+            strongRef.notifyAuthenticationInvalidated(error)
         }
     }
     
@@ -549,7 +549,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
         }
     }
     
-    public func didRegister(_ userClient: UserClient!) {
+    public func didRegisterSelfUserClient(_ userClient: UserClient!) {
         
         // If during registration user allowed notifications,
         // The push token can only be registered after client registration
@@ -568,7 +568,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
         }
     }
     
-    public func didFailRegistrationUserClient(_ error: Error!) {
+    public func didFailRegistrerSelfUserClient(_ error: Error!) {
         managedObjectContext.performGroupedBlock {  [weak self] in
             guard
                 let moc = self?.managedObjectContext,
@@ -581,7 +581,18 @@ extension ZMUserSession: ZMSyncStateDelegate {
         }
     }
     
-    public func didAuthenticationInvalidate(_ error: Error!) {
+    public func didDeleteSelfUserClient(_ error: Error!) {
+        notifyAuthenticationInvalidated(error)
+    }
+    
+    public func notifyThirdPartyServices() {
+        if !hasNotifiedThirdPartyServices {
+            hasNotifiedThirdPartyServices = true
+            thirdPartyServicesDelegate?.userSessionIsReadyToUploadServicesData(userSession: self)
+        }
+    }
+    
+    private func notifyAuthenticationInvalidated(_ error: Error) {
         managedObjectContext.performGroupedBlock {  [weak self] in
             guard
                 let moc = self?.managedObjectContext,
@@ -593,14 +604,6 @@ extension ZMUserSession: ZMSyncStateDelegate {
             self?.logoutDelegate?.authenticationInvalidated(error as NSError, accountId: accountId)
         }
     }
-    
-    func notifyThirdPartyServices() {
-        if !hasNotifiedThirdPartyServices {
-            hasNotifiedThirdPartyServices = true
-            thirdPartyServicesDelegate?.userSessionIsReadyToUploadServicesData(userSession: self)
-        }
-    }
-    
 }
 
 extension ZMUserSession: URLActionProcessor {

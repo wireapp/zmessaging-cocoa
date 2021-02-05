@@ -226,6 +226,7 @@ public class MockSyncStatus : SyncStatus {
     @objc public var didCallFinishSlowSync = false
     @objc public var didCallStartQuickSync = false
     @objc public var didCallFinishQuickSync = false
+    @objc public var didCallDeleteUserClient = false
     
     public func didStartSlowSync() {
         didCallStartSlowSync = true
@@ -243,8 +244,12 @@ public class MockSyncStatus : SyncStatus {
         didCallFinishQuickSync = true
     }
     
-    public func didRegister(_ userClient: UserClient!) {
+    public func didRegisterSelfUserClient(_ userClient: UserClient!) {
         registeredUserClient = userClient
+    }
+    
+    public func didDeleteSelfUserClient(_ error: Error!) {
+        didCallDeleteUserClient = true
     }
 }
 

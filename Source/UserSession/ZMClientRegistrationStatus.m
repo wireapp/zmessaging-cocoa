@@ -286,7 +286,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     [self.managedObjectContext setPersistentStoreMetadata:client.remoteIdentifier forKey:ZMPersistedClientIdKey];
     
     [self fetchExistingSelfClientsAfterClientRegistered:client];
-    [self.registrationStatusDelegate didRegisterUserClient:client];
+    [self.registrationStatusDelegate didRegisterSelfUserClient:client];
     self.emailCredentials = nil;
     self.needsToCheckCredentials = NO;
     
@@ -333,7 +333,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
     else {
-        [self.registrationStatusDelegate didFailRegistrationUserClient:error];
+        [self.registrationStatusDelegate didFailRegistrerSelfUserClient:error];
     }
 }
 
@@ -342,7 +342,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     NSError *emailMissingError = [[NSError alloc] initWithDomain:NSError.ZMUserSessionErrorDomain
                                                             code:ZMUserSessionNeedsToRegisterEmailToRegisterClient
                                                         userInfo:nil];
-    [self.registrationStatusDelegate didFailRegistrationUserClient:emailMissingError];
+    [self.registrationStatusDelegate didFailRegistrerSelfUserClient:emailMissingError];
 }
 
 - (void)didFetchClients:(NSArray<NSManagedObjectID *> *)clientIDs;
@@ -358,7 +358,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
         NSMutableDictionary *errorUserInfo = [NSMutableDictionary dictionary];
         errorUserInfo[ZMClientsKey] = clientIDs;
         NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionCanNotRegisterMoreClients userInfo:errorUserInfo];
-        [self.registrationStatusDelegate didFailRegistrationUserClient:outError];
+        [self.registrationStatusDelegate didFailRegistrerSelfUserClient:outError];
         self.isWaitingForUserClients = NO;
         self.isWaitingForClientsToBeDeleted = YES;
     }
@@ -420,7 +420,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 
     ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
     NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:selfUser.loginCredentials.dictionaryRepresentation];
-    [self.registrationStatusDelegate didAuthenticationInvalidate:outError];
+    [self.registrationStatusDelegate didDeleteSelfUserClient:outError];
 }
 
 - (void)didDeleteClient
