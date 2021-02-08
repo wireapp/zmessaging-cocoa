@@ -57,7 +57,7 @@ import UserNotifications
                 Logging.push.safePublic("Error scheduling local notification")
                 Logging.push.error("Scheduling Error: \(error)")
             } else {
-                Logging.push.safePublic("Succesfully scheduled local notification")
+                Logging.push.safePublic("Successfully scheduled local notification")
             }
         })
     }
