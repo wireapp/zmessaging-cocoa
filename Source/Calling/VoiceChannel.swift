@@ -65,7 +65,8 @@ public protocol CallProperties : NSObjectProtocol {
     var isConferenceCall: Bool { get }
 
     var firstDegradedUser: UserType? { get }
-    
+    var videoGridPresentationMode: VideoGridPresentationMode { get set }
+
     func setVideoCaptureDevice(_ device: CaptureDevice) throws
 }
 

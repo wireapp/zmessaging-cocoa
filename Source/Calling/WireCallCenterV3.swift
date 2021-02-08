@@ -185,6 +185,7 @@ extension WireCallCenterV3 {
             isConferenceCall: isConferenceCall,
             degradedUser: nil,
             activeSpeakers: [],
+            videoGridPresentationMode: .allVideoStreams,
             conversationObserverToken: token
         )
     }
@@ -313,6 +314,10 @@ extension WireCallCenterV3 {
 
     func degradedUser(conversationId: UUID) -> ZMUser? {
         return callSnapshots[conversationId]?.degradedUser
+    }
+    
+    public func videoGridPresentationMode(conversationId: UUID) -> VideoGridPresentationMode {
+        return callSnapshots[conversationId]?.videoGridPresentationMode ?? .allVideoStreams
     }
 
 }
@@ -532,6 +537,12 @@ extension WireCallCenterV3 {
 
     public func setVideoCaptureDevice(_ captureDevice: CaptureDevice, for conversationId: UUID) {
         flowManager.setVideoCaptureDevice(captureDevice, for: conversationId)
+    }
+    
+    public func setVideoGridPresentationMode(_ presentationMode: VideoGridPresentationMode, for conversationId: UUID) {
+        if let snapshot = callSnapshots[conversationId] {
+            callSnapshots[conversationId] = snapshot.updateVideoGridPresentationMode(presentationMode)
+        }
     }
 
     private func callType(for conversation: ZMConversation, startedWithVideo: Bool, isConferenceCall: Bool) -> AVSCallType {
