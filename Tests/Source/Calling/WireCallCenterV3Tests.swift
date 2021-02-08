@@ -1374,7 +1374,7 @@ extension WireCallCenterV3Tests {
         testCallParticipants(activeSpeakerKind: .realTime, participantsKind: .all, limit: 1) {
             participants, activeSpeakerAmount in
             
-            XCTAssertTrue(activeSpeakerAmount == 1)
+            XCTAssertEqual(activeSpeakerAmount, 1)
         }
     }
     
@@ -1382,7 +1382,7 @@ extension WireCallCenterV3Tests {
         testCallParticipants(activeSpeakerKind: .realTime, participantsKind: .all) {
             participants, activeSpeakerAmount in
             
-            XCTAssertTrue(activeSpeakerAmount == participants.count)
+            XCTAssertEqual(activeSpeakerAmount, participants.count)
         }
     }
     
@@ -1390,7 +1390,7 @@ extension WireCallCenterV3Tests {
         testCallParticipants(activeSpeakerKind: .smoothed, participantsKind: .all) {
             participants, activeSpeakerAmount in
             
-            XCTAssertTrue(activeSpeakerAmount == 0)
+            XCTAssertEqual(activeSpeakerAmount, 0)
         }
     }
     
@@ -1398,7 +1398,7 @@ extension WireCallCenterV3Tests {
         testCallParticipants(activeSpeakerKind: .smoothed, participantsKind: .smoothedActiveSpeakers) {
             participants, activeSpeakerAmount in
             
-            XCTAssertTrue(activeSpeakerAmount == participants.count)
+            XCTAssertEqual(activeSpeakerAmount, participants.count)
         }
     }
     
@@ -1406,7 +1406,7 @@ extension WireCallCenterV3Tests {
         testCallParticipants(activeSpeakerKind: .realTime, participantsKind: .smoothedActiveSpeakers) {
             participants, activeSpeakerAmount in
             
-            XCTAssertTrue(activeSpeakerAmount == 0)
+            XCTAssertEqual(activeSpeakerAmount, 0)
         }
     }
 }
