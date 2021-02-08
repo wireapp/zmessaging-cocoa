@@ -18,12 +18,19 @@
 
 import Foundation
 
-public enum CallParticipantsKind {
+public enum CallParticipantsListKind {
+    
+    /// All the active participants, including the real time active speakers
+    
     case all
+
+    /// Only the smoothed active speakers
+    
     case smoothedActiveSpeakers
+
 }
 
-extension CallParticipantsKind {
+extension CallParticipantsListKind {
     
     func isActive(activeSpeaker: AVSActiveSpeakersChange.ActiveSpeaker) -> Bool {
         switch self {

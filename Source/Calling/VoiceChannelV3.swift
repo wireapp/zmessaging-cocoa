@@ -51,7 +51,7 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         return participants(ofKind: .all, activeSpeakersLimit: nil)
     }
 
-    public func participants(ofKind kind: CallParticipantsKind, activeSpeakersLimit limit: Int?) -> [CallParticipant] {
+    public func participants(ofKind kind: CallParticipantsListKind, activeSpeakersLimit limit: Int?) -> [CallParticipant] {
         guard
             let callCenter = callCenter,
             let conversationId = conversation?.remoteIdentifier

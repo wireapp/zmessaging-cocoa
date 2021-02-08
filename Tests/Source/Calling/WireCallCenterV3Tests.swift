@@ -1344,7 +1344,7 @@ extension WireCallCenterV3Tests {
     typealias CallParticipantsTestsAssertion = ([CallParticipant], Int) -> Void
     
     private func testCallParticipants(activeSpeakerKind: ActiveSpeakerKind,
-                                      participantsKind: CallParticipantsKind,
+                                      participantsKind: CallParticipantsListKind,
                                       limit: Int? = nil,
                                       assertionBlock: CallParticipantsTestsAssertion?)
     {

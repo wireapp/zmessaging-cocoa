@@ -333,7 +333,7 @@ extension WireCallCenterV3 {
     ///   - activeSpeakersLimit: the limit of active speakers to be included
     /// - Returns: the callParticipants currently in the conversation, according to the specified kind
     func callParticipants(conversationId: UUID,
-                          kind: CallParticipantsKind,
+                          kind: CallParticipantsListKind,
                           activeSpeakersLimit limit: Int? = nil) -> [CallParticipant]
     {
         guard
