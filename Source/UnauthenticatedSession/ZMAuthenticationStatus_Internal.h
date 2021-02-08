@@ -40,6 +40,7 @@
 @property (nonatomic, weak) id<ZMSGroupQueue> groupQueue;
 @property (nonatomic) ZMTimer *loginTimer;
 
+- (void)resetLoginAndRegistrationStatus;
 - (void)setLoginCredentials:(ZMCredentials *)credentials;
 
 @end

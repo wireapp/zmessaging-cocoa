@@ -398,7 +398,7 @@ extension ZMConversationTranscoderTests_Swift : ZMSyncStateDelegate {
         // nop
     }
     
-    func didFailRegistrationUserClient(_ error: Error!) {
+    func didFailRegisterSelfUserClient(_ error: Error!) {
         // nop
     }
     

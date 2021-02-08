@@ -333,7 +333,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
         [ZMRequestAvailableNotification notifyNewRequestsAvailable:self];
     }
     else {
-        [self.registrationStatusDelegate didFailRegistrerSelfUserClient:error];
+        [self.registrationStatusDelegate didFailRegisterSelfUserClient:error];
     }
 }
 
@@ -342,7 +342,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     NSError *emailMissingError = [[NSError alloc] initWithDomain:NSError.ZMUserSessionErrorDomain
                                                             code:ZMUserSessionNeedsToRegisterEmailToRegisterClient
                                                         userInfo:nil];
-    [self.registrationStatusDelegate didFailRegistrerSelfUserClient:emailMissingError];
+    [self.registrationStatusDelegate didFailRegisterSelfUserClient:emailMissingError];
 }
 
 - (void)didFetchClients:(NSArray<NSManagedObjectID *> *)clientIDs;
@@ -358,7 +358,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
         NSMutableDictionary *errorUserInfo = [NSMutableDictionary dictionary];
         errorUserInfo[ZMClientsKey] = clientIDs;
         NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionCanNotRegisterMoreClients userInfo:errorUserInfo];
-        [self.registrationStatusDelegate didFailRegistrerSelfUserClient:outError];
+        [self.registrationStatusDelegate didFailRegisterSelfUserClient:outError];
         self.isWaitingForUserClients = NO;
         self.isWaitingForClientsToBeDeleted = YES;
     }

@@ -82,7 +82,6 @@ typedef NS_ENUM(NSUInteger, ZMAuthenticationPhase) {
 
 - (id)addAuthenticationCenterObserver:(id<ZMAuthenticationStatusObserver>)observer;
 
-- (void)resetLoginAndRegistrationStatus;
 - (void)prepareForLoginWithCredentials:(ZMCredentials *)credentials;
 - (void)continueAfterBackupImportStep;
 - (void)prepareForRequestingPhoneVerificationCodeForLogin:(NSString *)phone;

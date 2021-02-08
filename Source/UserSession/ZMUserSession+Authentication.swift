@@ -86,7 +86,7 @@ extension ZMUserSession {
     
     public func logout(credentials: ZMEmailCredentials, _ completion: @escaping (VoidResult) -> Void) {
         guard
-            let accoutId = ZMUser.selfUser(inUserSession: self).remoteIdentifier,
+            let accountID = ZMUser.selfUser(inUserSession: self).remoteIdentifier,
             let selfClientIdentifier = ZMUser.selfUser(inUserSession: self).selfClient()?.remoteIdentifier
         else {
             return
@@ -105,7 +105,7 @@ extension ZMUserSession {
             guard let strongSelf = self else { return }
             
             if response.httpStatus == 200 {
-                self?.delegate?.userDidLogout(accountId: accoutId)
+                self?.delegate?.userDidLogout(accountId: accountID)
                 completion(.success)
             } else {
                 completion(.failure(strongSelf.errorFromFailedDeleteResponse(response)))

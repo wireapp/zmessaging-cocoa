@@ -564,7 +564,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
         }
     }
     
-    public func didFailRegistrerSelfUserClient(_ error: Error!) {
+    public func didFailRegisterSelfUserClient(_ error: Error!) {
         managedObjectContext.performGroupedBlock {  [weak self] in
             guard
                 let moc = self?.managedObjectContext,
