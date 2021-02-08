@@ -20,7 +20,6 @@ import Foundation
 
 private let cookieLabelKey = "ZMCookieLabel"
 private let registeredOnThisDeviceKey = "ZMRegisteredOnThisDevice"
-private let registeredOnThisDeviceBeforeConversationInitializationKey = "ZMRegisteredOnThisDeviceBeforeConversationInitialization"
 
 
 @objc extension NSManagedObjectContext {
@@ -33,17 +32,7 @@ private let registeredOnThisDeviceBeforeConversationInitializationKey = "ZMRegis
             self.setBooleanMetadataOnBothContexts(newValue, key: registeredOnThisDeviceKey)
         }
     }
-    
-    public var registeredOnThisDeviceBeforeConversationInitialization: Bool {
-        get {
-            return self.metadataBoolValueForKey(registeredOnThisDeviceBeforeConversationInitializationKey)
-        }
-        set {
-            let value = NSNumber(booleanLiteral: newValue)
-            self.setPersistentStoreMetadata(value, key: registeredOnThisDeviceBeforeConversationInitializationKey)
-        }
-    }
-    
+        
     private func metadataBoolValueForKey(_ key: String) -> Bool {
         return (self.persistentStoreMetadata(forKey: key) as? NSNumber)?.boolValue ?? false
     }

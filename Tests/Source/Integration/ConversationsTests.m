@@ -904,7 +904,6 @@
     XCTAssertTrue([self login]);
     
     ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    XCTAssertEqual(conversation.allMessages.count, 1u); // "You started using this device" message
     
     __block ZMMessage *message1;
     __block ZMMessage *message2;
@@ -923,7 +922,7 @@
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTAssertEqual(conversation.allMessages.count, 6u);
+    XCTAssertEqual(conversation.allMessages.count, 5u);
 
     NSArray *remainingMessages = @[message3, message2];
     NSDate *cleared = message1.serverTimestamp;

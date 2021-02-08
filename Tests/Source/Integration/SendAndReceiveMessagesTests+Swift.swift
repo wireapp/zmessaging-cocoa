@@ -69,8 +69,6 @@ class SendAndReceiveMessagesTests_Swift: ConversationTestsBase {
         let conversation = self.conversation(for: self.groupConversation)
         let convIDString = conversation?.remoteIdentifier?.transportString()
     
-        XCTAssertEqual(conversation!.allMessages.count, 6)
-    
         self.mockTransportSession.responseGeneratorBlock = { request in
             if request.path.contains("messages") && request.method == ZMTransportRequestMethod.methodPOST {
                 if request.path.contains(convIDString!) {

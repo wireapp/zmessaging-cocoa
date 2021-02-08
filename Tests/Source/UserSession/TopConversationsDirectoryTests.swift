@@ -109,7 +109,7 @@ class TopConversationsDirectoryTests : MessagingTest {
     func testThatItDoesNotReturnConversationsWithSystemMessages() throws {
         // GIVEN
         let conv1 = createConversation(in: uiMOC, fillWithNew: 0)
-        conv1.appendStartedUsingThisDeviceMessage()
+        conv1.appendNewConversationSystemMessage(at: Date(), users: Set())
 
         let conv2 = createConversation(in: uiMOC, fillWithNew: 1)
         try conv2.appendKnock()

@@ -42,7 +42,7 @@ class SessionManagerTests_MessageRetention: IntegrationTest {
         remotelyInsert(text: "Hello 2", from: user2.clients.anyObject() as! MockUserClient, into: groupConversation)
         remotelyInsert(text: "Hello 3", from: user2.clients.anyObject() as! MockUserClient, into: groupConversation)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        XCTAssertEqual(conversation(for: groupConversation)?.allMessages.count, 5) // text messages + system messages
+        XCTAssertEqual(conversation(for: groupConversation)?.allMessages.count, 4) // text messages + system messages
         
         // when
         sessionManager?.configuration.messageRetentionInterval = 1
@@ -64,7 +64,7 @@ class SessionManagerTests_MessageRetention: IntegrationTest {
         remotelyInsert(text: "Hello 2", from: user2.clients.anyObject() as! MockUserClient, into: groupConversation)
         remotelyInsert(text: "Hello 3", from: user2.clients.anyObject() as! MockUserClient, into: groupConversation)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        XCTAssertEqual(conversation(for: groupConversation)?.allMessages.count, 5) // text messages + system messages
+        XCTAssertEqual(conversation(for: groupConversation)?.allMessages.count, 4) // text messages + system messages
         
         // when
         sessionManager?.configuration.messageRetentionInterval = 100
@@ -73,7 +73,7 @@ class SessionManagerTests_MessageRetention: IntegrationTest {
         XCTAssertTrue(login())
         
         // then
-        XCTAssertEqual(conversation(for: groupConversation)?.allMessages.count, 5)
+        XCTAssertEqual(conversation(for: groupConversation)?.allMessages.count, 4)
     }
     
     func testThatItKeepsMessagesIfThereIsNoRetentionLimit() {
@@ -85,7 +85,7 @@ class SessionManagerTests_MessageRetention: IntegrationTest {
         remotelyInsert(text: "Hello 2", from: user2.clients.anyObject() as! MockUserClient, into: groupConversation)
         remotelyInsert(text: "Hello 3", from: user2.clients.anyObject() as! MockUserClient, into: groupConversation)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        XCTAssertEqual(conversation(for: groupConversation)?.allMessages.count, 5) // text messages + system messages
+        XCTAssertEqual(conversation(for: groupConversation)?.allMessages.count, 4) // text messages + system messages
         
         // when
         sessionManager?.configuration.messageRetentionInterval = nil
@@ -94,7 +94,7 @@ class SessionManagerTests_MessageRetention: IntegrationTest {
         XCTAssertTrue(login())
         
         // then
-        XCTAssertEqual(conversation(for: groupConversation)?.allMessages.count, 5)
+        XCTAssertEqual(conversation(for: groupConversation)?.allMessages.count, 4)
     }
     
 }
