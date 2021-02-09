@@ -105,6 +105,27 @@ class VoiceChannelV3Tests : MessagingTest {
         XCTAssert(sut.firstDegradedUser as? ZMUser == user)
     }
     
+    func testThatItUpdatesVideoGridPresentationMode() {
+        // Given
+        let conversationId = conversation!.remoteIdentifier!
+        let user = ZMUser.insertNewObject(in: uiMOC)
+        user.remoteIdentifier = UUID()
+        
+        wireCallCenterMock?.callSnapshots = [
+            conversationId : CallSnapshotTestFixture.callSnapshot(
+                conversationId: conversationId,
+                callCenter: wireCallCenterMock!,
+                clients: [])
+        ]
+        
+        // When
+        sut.videoGridPresentationMode = .activeSpeakers
+        
+        // Then
+        let callSnapshot = wireCallCenterMock?.callSnapshots[conversationId]
+        XCTAssert(sut.videoGridPresentationMode == callSnapshot?.videoGridPresentationMode)
+    }
+    
     func testThatItReturnsNil_IfNoDegradedUser() {
         XCTAssert(sut.firstDegradedUser == nil)
     }

@@ -568,7 +568,7 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
         // THEN
         let lastMessage = conversation?.lastMessages(limit: 10)[1] as? ZMSystemMessage
         XCTAssertEqual(conversation?.securityLevel, ZMConversationSecurityLevel.secureWithIgnored)
-        XCTAssertEqual(conversation?.allMessages.count, 4) // 3x system message (new device & secured & new client) + appended client message
+        XCTAssertEqual(conversation?.allMessages.count, 3) // 2x system message (secured & new client) + appended client message
         XCTAssertEqual(lastMessage?.systemMessageData?.systemMessageType, ZMSystemMessageType.newClient)
     }
 
@@ -591,10 +591,7 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
         
         setupInitialSecurityLevel(initialSecurityLevel, in: conversation)
         
-        // WHEN
-        let observer = ConversationChangeObserver(conversation: conversation)
-        observer?.clearNotifications()
-        
+        // WHEN        
         let previousMessageCount = conversation?.allMessages.count
         
         mockTransportSession.performRemoteChanges { session in
@@ -608,14 +605,7 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
         }
         _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
         
-        // THEN
-        let note = (observer?.notifications as? [ConversationChangeInfo])?.filter({ $0.securityLevelChanged }).first
-        if shouldChangeSecurityLevel {
-            XCTAssertNotNil(note)
-        } else {
-            XCTAssertNil(note)
-        }
-        
+        // THEN        
         XCTAssertEqual(conversation?.securityLevel, expectedSecurityLevel)
         
         let messageAddedCount = conversation!.allMessages.count - previousMessageCount!
@@ -630,7 +620,7 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
             }
             
             let expectedUsers = [user(for: user1)]
-            let users = Array(lastSystemMessage.systemMessageData!.users)
+            let users = Array(lastSystemMessage.users)
 
             assertArray(users, hasSameElementsAs: expectedUsers as [Any], name1: "users", name2: "expectedUsers", failureRecorder: ZMTFailureRecorder())
             XCTAssertEqual(lastSystemMessage.systemMessageType, ZMSystemMessageType.newClient)

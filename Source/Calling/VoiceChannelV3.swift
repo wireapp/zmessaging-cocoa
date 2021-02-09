@@ -143,6 +143,21 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         return degradedUser
     }
 
+    public var videoGridPresentationMode: VideoGridPresentationMode {
+        get {
+            guard
+                let remoteIdentifier = conversation?.remoteIdentifier,
+                let callCenter = callCenter
+            else {
+                return .allVideoStreams
+            }
+            return callCenter.videoGridPresentationMode(conversationId: remoteIdentifier)
+        }
+        set {
+            guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
+            callCenter?.setVideoGridPresentationMode(newValue, for: remoteIdentifier)
+        }
+    }
 }
 
 extension VoiceChannelV3 : CallActions {

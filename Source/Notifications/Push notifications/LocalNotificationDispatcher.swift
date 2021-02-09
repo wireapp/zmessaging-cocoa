@@ -52,7 +52,14 @@ import UserNotifications
     func scheduleLocalNotification(_ note: ZMLocalNotification) {
         Logging.push.safePublic("Scheduling local notification with id=\(note.id)")
         
-        notificationCenter.add(note.request, withCompletionHandler: nil)
+        notificationCenter.add(note.request, withCompletionHandler: { error in
+            if let error = error {
+                Logging.push.safePublic("Error scheduling local notification")
+                Logging.push.error("Scheduling Error: \(error)")
+            } else {
+                Logging.push.safePublic("Successfully scheduled local notification")
+            }
+        })
     }
 
     /// Determines if the notification content should be hidden as reflected in the store
