@@ -127,7 +127,6 @@
     
     ZMConversation *conversation =  [self conversationForMockConversation:self.groupConversation];
     
-    XCTAssertEqual(conversation.allMessages.count, 3u);
     id<ZMConversationMessage> originalMessage = conversation.lastMessage;
     XCTAssertEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [originalMessage.serverTimestamp timeIntervalSince1970], 0.1);
     [self spinMainQueueWithTimeout:0.5]; // if the tests run too fast the new message would otherwise have the same timestamp
