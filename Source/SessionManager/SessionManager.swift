@@ -615,6 +615,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             
             session.checkIfLoggedIn { [weak self] loggedIn in
                 guard loggedIn else {
+                    completion(session)
                     return
                 }
                 self?.delegate?.sessionManagerDidReportDatabaseLockChange(isLocked: session.isDatabaseLocked)
