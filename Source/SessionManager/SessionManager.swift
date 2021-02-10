@@ -607,23 +607,18 @@ public final class SessionManager : NSObject, SessionManagerType {
             self.activeUserSession = session
             
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
-            completion(session)
 
             self.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
-            self.checkIfLoggedIn(userSession: session)
             
             // Configure user notifications if they weren't already previously configured.
             self.configureUserNotifications()
-            self.processPendingURLAction()
-        }
-    }
-    
-    func checkIfLoggedIn(userSession : ZMUserSession) {
-        userSession.checkIfLoggedIn { [weak self] loggedIn in
-            guard loggedIn else {
-                return
+            
+            if session.isLoggedIn {
+                self.delegate?.sessionManagerDidReportDatabaseLockChange(isLocked: session.isDatabaseLocked)
+                self.processPendingURLAction()
             }
-            self?.delegate?.sessionManagerDidReportDatabaseLockChange(isLocked: userSession.isDatabaseLocked)
+            
+            completion(session)
         }
     }
     
