@@ -42,6 +42,7 @@ struct CallSnapshotTestFixture {
             isConferenceCall: true,
             degradedUser: user,
             activeSpeakers: [],
+            videoGridPresentationMode: .allVideoStreams,
             conversationObserverToken: nil
         )
     }
@@ -66,6 +67,7 @@ struct CallSnapshotTestFixture {
             isConferenceCall: true,
             degradedUser: nil,
             activeSpeakers: [],
+            videoGridPresentationMode: .allVideoStreams,
             conversationObserverToken: nil
         )
     }

@@ -129,12 +129,6 @@ class ConversationTests_ClearingHistory: ConversationTestsBase {
         conversation = self.conversation(for: self.groupConversation!)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        let message = conversation?.lastMessage as! ZMSystemMessage as ZMSystemMessage
-        XCTAssertEqual(message.systemMessageType, ZMSystemMessageType.usingNewDevice )
-        
-        XCTAssertEqual(conversation!.allMessages.count, 2)
-        XCTAssertEqual(conversation?.lastMessage?.objectID, message.objectID)
-
         let conversationsIncludingArchivedObjectIDs = conversationDirectory?.conversationsIncludingArchived.compactMap { $0 as? ZMConversation}.map { $0.objectID }
         let archivedConversationsObjectIDs = conversationDirectory?.archivedConversations.compactMap { $0 as? ZMConversation}.map { $0.objectID }
         let clearedConversationsObjectIDs = conversationDirectory?.clearedConversations.compactMap { $0 as? ZMConversation}.map { $0.objectID }
