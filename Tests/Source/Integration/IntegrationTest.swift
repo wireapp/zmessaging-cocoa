@@ -23,39 +23,6 @@ import avs
 
 @testable import WireSyncEngine
 
-class AuthenticationObserver : NSObject, PreLoginAuthenticationObserver, PostLoginAuthenticationObserver {
-    
-    var onFailure : (() -> Void)?
-    var onSuccess : (() -> Void)?
-    
-    var preLoginToken : Any?
-    var postLoginToken : Any?
-    
-    init(unauthenticatedSession : UnauthenticatedSession, groupQueue: ZMSGroupQueue) {
-        super.init()
-        
-        preLoginToken = unauthenticatedSession.addAuthenticationObserver(self)
-        postLoginToken = PostLoginAuthenticationNotification.addObserver(self, queue: groupQueue)
-    }
-    
-    func clientRegistrationDidSucceed(accountId: UUID) {
-        onSuccess?()
-    }
-    
-    func authenticationDidSucceed() {
-        onSuccess?()
-    }
-    
-    func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
-        onFailure?()
-    }
-    
-    func authenticationDidFail(_ error: NSError) {
-        onFailure?()
-    }
-    
-}
-
 final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     let transportSession: TransportSessionType
@@ -106,15 +73,20 @@ final class MockUnauthenticatedSessionFactory: UnauthenticatedSessionFactory {
 
     let transportSession: UnauthenticatedTransportSessionProtocol
     
-    init(transportSession: UnauthenticatedTransportSessionProtocol, environment: BackendEnvironmentProvider, reachability: ReachabilityProvider) {
+    init(transportSession: UnauthenticatedTransportSessionProtocol,
+         environment: BackendEnvironmentProvider,
+         reachability: ReachabilityProvider) {
         self.transportSession = transportSession
         super.init(appVersion: "1.0", environment: environment, reachability: reachability)
     }
 
-    override func session(withDelegate delegate: WireSyncEngine.UnauthenticatedSessionDelegate) -> UnauthenticatedSession {
-        return UnauthenticatedSession(transportSession: transportSession, reachability: reachability, delegate: delegate)
+    override func session(delegate: UnauthenticatedSessionDelegate,
+                                       authenticationStatusDelegate: ZMAuthenticationStatusDelegate) -> UnauthenticatedSession {
+        return UnauthenticatedSession(transportSession: transportSession,
+                                      reachability: reachability,
+                                      delegate: delegate,
+                                      authenticationStatusDelegate: authenticationStatusDelegate)
     }
-
 }
 
 
@@ -144,7 +116,6 @@ extension IntegrationTest {
         mockTransportSession.cookieStorage = ZMPersistentCookieStorage(forServerName: mockEnvironment.backendURL.host!, userIdentifier: currentUserIdentifier)
         WireCallCenterV3Factory.wireCallCenterClass = WireCallCenterV3IntegrationMock.self
         mockTransportSession.cookieStorage.deleteKeychainItems()
-                
         createSessionManager()        
     }
     
@@ -270,6 +241,8 @@ extension IntegrationTest {
             configuration: sessionManagerConfiguration,
             detector: jailbreakDetector
         )
+        
+        sessionManager?.loginDelegate = mockLoginDelegete
         
         sessionManager?.start(launchOptions: [:])
         
@@ -446,29 +419,12 @@ extension IntegrationTest {
     
     @objc
     func login(withCredentials credentials: ZMCredentials, ignoreAuthenticationFailures: Bool = false) -> Bool {
-        let queue = DispatchGroupQueue(queue: .main)
-        queue.add(self.dispatchGroup)
-        var authenticationObserver : AuthenticationObserver? = AuthenticationObserver(unauthenticatedSession: sessionManager!.unauthenticatedSession!, groupQueue: queue)
-        var didSucceed = false
-        
-        authenticationObserver?.onSuccess = {
-            didSucceed = true
-        }
-        
-        authenticationObserver?.onFailure = {
-            if !ignoreAuthenticationFailures {
-                XCTFail("Failed to authenticate")
-            }
-        }
-        
         sessionManager?.unauthenticatedSession?.login(with: credentials)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         sessionManager?.unauthenticatedSession?.continueAfterBackupImportStep()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        authenticationObserver = nil
         
-        return didSucceed
+        return mockLoginDelegete?.isCalledAuthenticationDidSucceed ?? false
     }
 
 
@@ -691,4 +647,53 @@ extension IntegrationTest: SessionManagerDelegate {
         userSessionCanBeTornDown()
     }
     
+}
+
+@objcMembers
+public class MockLoginDelegate: NSObject, LoginDelegate {
+    public var currentError: NSError? = nil
+    
+    public var isCalledLoginCodeRequestDidFail: Bool = false
+    public func loginCodeRequestDidFail(_ error: NSError) {
+        currentError = error
+        isCalledLoginCodeRequestDidFail = true
+    }
+    
+    public var isCalledLoginCodeRequestDidSucceed: Bool = false
+    public func loginCodeRequestDidSucceed() {
+        isCalledLoginCodeRequestDidSucceed = true
+    }
+    
+    public var isCalledAuthenticationDidFail: Bool = false
+    public func authenticationDidFail(_ error: NSError) {
+        currentError = error
+        isCalledAuthenticationDidFail = true
+    }
+    
+    public var isCalledAuthenticationInvalidated: Bool = false
+    public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
+        currentError = error
+        isCalledAuthenticationInvalidated = true
+    }
+    
+    public var isCalledAuthenticationDidSucceed: Bool = false
+    public func authenticationDidSucceed() {
+        isCalledAuthenticationDidSucceed = true
+    }
+    
+    public var isCalledAuthenticationReadyToImportBackup: Bool = false
+    public func authenticationReadyToImportBackup(existingAccount: Bool) {
+        isCalledAuthenticationReadyToImportBackup = true
+    }
+    
+    public var isCalledClientRegistrationDidSucceed: Bool = false
+    public func clientRegistrationDidSucceed(accountId: UUID) {
+        isCalledClientRegistrationDidSucceed = true
+    }
+    
+    public var isCalledClientRegistrationDidFail: Bool = false
+    public func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
+        currentError = error
+        isCalledClientRegistrationDidFail = true
+    }
 }

@@ -26,13 +26,17 @@ public final class UnauthenticatedSessionTests_SSO: ZMTBaseTest {
     var sut: UnauthenticatedSession!
     var mockDelegate: MockUnauthenticatedSessionDelegate!
     var reachability: TestReachability!
+    var mockAuthenticationStatusDelegate: MockAuthenticationStatusDelegate!
     
     public override func setUp() {
         super.setUp()
         transportSession = TestUnauthenticatedTransportSession()
         mockDelegate = MockUnauthenticatedSessionDelegate()
         reachability = TestReachability()
-        sut = UnauthenticatedSession(transportSession: transportSession, reachability: reachability, delegate: mockDelegate)
+        sut = UnauthenticatedSession(transportSession: transportSession,
+                                     reachability: reachability,
+                                     delegate: mockDelegate,
+                                     authenticationStatusDelegate: mockAuthenticationStatusDelegate)
         sut.groupQueue.add(dispatchGroup)
     }
     

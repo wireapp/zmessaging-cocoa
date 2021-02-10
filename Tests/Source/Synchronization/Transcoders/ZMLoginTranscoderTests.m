@@ -60,6 +60,7 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 @interface ZMLoginTranscoderTests : MessagingTest
 
 @property (nonatomic) DispatchGroupQueue *groupQueue;
+@property (nonatomic) MockAuthenticationStatusDelegate *mockAuthenticationStatusDelegate;
 @property (nonatomic) ZMLoginTranscoder *sut;
 @property (nonatomic) ZMAuthenticationStatus *authenticationStatus;
 @property (nonatomic) id mockClientRegistrationStatus;
@@ -82,8 +83,12 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
     self.mockUserInfoParser = [[MockUserInfoParser alloc] init];
 
     self.groupQueue = [[DispatchGroupQueue alloc] initWithQueue:dispatch_get_main_queue()];
+    self.mockAuthenticationStatusDelegate = [[MockAuthenticationStatusDelegate alloc] init];
     self.originalLoginTimerInterval = DefaultPendingValidationLoginAttemptInterval;
-    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithGroupQueue:self.groupQueue userInfoParser:self.mockUserInfoParser];
+    
+    self.authenticationStatus = [[ZMAuthenticationStatus alloc] initWithDelegate:self.mockAuthenticationStatusDelegate
+                                          groupQueue:self.groupQueue
+                                      userInfoParser:self.mockUserInfoParser];
 
     self.mockClientRegistrationStatus = [OCMockObject niceMockForClass:[ZMClientRegistrationStatus class]];
     
@@ -139,23 +144,14 @@ extern NSTimeInterval DefaultPendingValidationLoginAttemptInterval;
 
 - (void)expectAuthenticationFailedWithError:(ZMUserSessionErrorCode)code after:(void(^)(void))block;
 {
-    //expect
-    __block BOOL notified = NO;
-    id token = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        XCTAssertEqual(event, PreLoginAuthenticationEventObjcAuthenticationDidFail);
-        XCTAssertNotNil(error);
-        XCTAssertEqual((ZMUserSessionErrorCode)error.code, code);
-        notified = YES;
-    }];
-    
     // when
     block();
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    //then
-    XCTAssert(notified);
-    token = nil;
-//    [ZMUserSessionAuthenticationNotification removeObserverForToken:token];
+
+    // then
+    XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidSucceedEvents, 0);
+    XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidFailEvents.count, 1);
+    XCTAssertEqual((ZMUserSessionErrorCode)self.mockAuthenticationStatusDelegate.authenticationDidFailEvents[0].code,code);
 }
 
 - (void)expectRegistrationSucceedAfter:(void(^)(void))block;

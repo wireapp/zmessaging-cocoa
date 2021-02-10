@@ -20,13 +20,23 @@ import Foundation
 import LocalAuthentication
 @testable import WireSyncEngine
 
-class MockUserSessionDelegate: UserSessionDelegate {
+class MockUserSessionDelegate: NSObject, UserSessionDelegate {
     
     var calledSetEncryptionAtRest: (Bool, Account, EncryptionKeys)?
     func setEncryptionAtRest(enabled: Bool, account: Account, encryptionKeys: EncryptionKeys) {
         calledSetEncryptionAtRest = (enabled, account, encryptionKeys)
     }
     
+    func clientRegistrationDidSucceed(accountId: UUID) { }
+    
+    func clientRegistrationDidFail(_ error: NSError, accountId: UUID) { }
+    
+    var calleduserDidLogout: (Bool, UUID)?
+    func userDidLogout(accountId: UUID) {
+        calleduserDidLogout = (true, accountId)
+    }
+    
+    func authenticationInvalidated(_ error: NSError, accountId : UUID) { }
 }
 
 class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {

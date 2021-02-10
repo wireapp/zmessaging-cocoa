@@ -48,36 +48,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     [super tearDown];
 }
 
-- (NSArray *)expectationsForSuccessfulRegistration
-{
-    XCTestExpectation *authenticationDidSucceedExpectation = [self expectationWithDescription:@"authentication did succeed"];
-    XCTestExpectation *readyToImportBackup = [self expectationWithDescription:@"ready to import backup"];
-    id preLoginToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        NOT_USED(error);
-
-        if (event == PreLoginAuthenticationEventObjcAuthenticationDidSucceed) {
-            [authenticationDidSucceedExpectation fulfill];
-        } else if (event == PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount) {
-            [self.unauthenticatedSession continueAfterBackupImportStep];
-            [readyToImportBackup fulfill];
-        }
-
-    }];
-
-    XCTestExpectation *clientRegisteredExpectation = [self expectationWithDescription:@"client was registered"];
-    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
-        NOT_USED(error);
-        NOT_USED(accountId);
-        
-        if (event == PostLoginAuthenticationEventObjCClientRegistrationDidSucceed) {
-            [clientRegisteredExpectation fulfill];
-        }
-    }];
-    
-    return @[preLoginToken, postLoginToken];
-}
-
-
 - (void)testThatItNotifiesIfTheClientNeedsToBeRegistered
 {
     // given
@@ -90,20 +60,13 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         self.selfUser.password = password;
     }];
     
-    // expect
-    NSArray *tokens = [self expectationsForSuccessfulRegistration];
-    
     // when
     ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
     [self.unauthenticatedSession loginWithCredentials:credentials];
-    
-    // then
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-    XCTAssertNotNil([self.mockTransportSession.cookieStorage authenticationCookieData]);
-    XCTAssertTrue(self.userSession.isLoggedIn);
     WaitForAllGroupsToBeEmpty(0.5);
     
-    tokens = nil;
+    // then
+    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationReadyToImportBackup);
 }
 
 - (void)testThatItWaitsAfterEmailLoginToImportBackup
@@ -118,26 +81,13 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         self.selfUser.password = password;
     }];
 
-    // expect
-    XCTestExpectation *readyToImportBackup = [self expectationWithDescription:@"ready to import backup"];
-    id preLoginToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        NOT_USED(error);
-        if (event == PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount) {
-            [readyToImportBackup fulfill];
-        }
-    }];
-
     // when
     ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
     [self.unauthenticatedSession loginWithCredentials:credentials];
+    WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertFalse(self.userSession.isLoggedIn);
-    WaitForAllGroupsToBeEmpty(0.5);
-
-    preLoginToken = nil;
+    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationReadyToImportBackup);
 }
 
 - (void)testThatItWaitsAfterPhoneLoginToImportBackup
@@ -155,22 +105,16 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
+    XCTAssertTrue(self.mockLoginDelegete.isCalledLoginCodeRequestDidSucceed);
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
 
     // and when
-    [self.unauthenticatedSession loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code]];
+    ZMCredentials *credentials = [ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code];
+    [self.unauthenticatedSession loginWithCredentials:credentials];
     WaitForAllGroupsToBeEmpty(0.5);
 
-    // expect
-    XCTestExpectation *readyToImportBackup = [self expectationWithDescription:@"ready to import backup"];
-    id preLoginToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        NOT_USED(error);
-        if (event == PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount) {
-            [readyToImportBackup fulfill];
-        }
-    }];
-
-    preLoginToken = nil;
+    // then
+    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationReadyToImportBackup);
 }
 
 
@@ -185,22 +129,17 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         self.selfUser.email = email;
         self.selfUser.password = password;
     }];
-    
-    // expect
-    NSArray *tokens = [self expectationsForSuccessfulRegistration];
 
     // when
     ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
     [self.unauthenticatedSession loginWithCredentials:credentials];
+    WaitForAllGroupsToBeEmpty(0.5);
+    [self.unauthenticatedSession continueAfterBackupImportStep];
+    WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-    WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertNotNil([self.mockTransportSession.cookieStorage authenticationCookieData]);
     XCTAssertTrue(self.userSession.isLoggedIn);
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    tokens = nil;
 }
 
 - (void)testThatWeCanLoginWithAValidPreExistingCookie
@@ -229,21 +168,13 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         selfUser.password = password;
     }];
     
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"Authentication did fail"];
-    id token = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        if (event == PreLoginAuthenticationEventObjcAuthenticationDidFail && error.code == ZMUserSessionInvalidCredentials) {
-            [expectation fulfill];
-        }
-    }];
-    
     // when
     ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:@"wrong-password"];
     [self.unauthenticatedSession loginWithCredentials:credentials];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-    token = nil;
+    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationDidFail);
 }
 
 - (void)testThatWhenTransportSessionDeletesCookieInResponseToFailedLoginWeDoNotContinueSendingMoreRequests
@@ -257,8 +188,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         selfUser.email = email;
         selfUser.password = password;
     }];
-
-    PreLoginAuthenticationNotificationRecorder *recorder = [[PreLoginAuthenticationNotificationRecorder alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus];
     
     // getting access token fails
     __block NSInteger numberOfRequests = 0;
@@ -284,11 +213,10 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     [self.unauthenticatedSession continueAfterBackupImportStep];
     WaitForAllGroupsToBeEmpty(0.5);
 
+    // then
     XCTAssertFalse(self.userSession.isLoggedIn);
-    
-    XCTAssertEqual(recorder.notifications.count, 2lu);
-    XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount);
-    XCTAssertEqual(recorder.notifications.lastObject.event, PreLoginAuthenticationEventObjcAuthenticationDidSucceed);
+    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationReadyToImportBackup);
+    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationDidSucceed);
 }
 
 - (void)testThatWhenTransportSessionDeletesCookieInResponseToFailedRenewTokenWeGoToUnathorizedState
@@ -302,8 +230,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         selfUser.email = email;
         selfUser.password = password;
     }];
-    
-    PreLoginAuthenticationNotificationRecorder *recorder = [[PreLoginAuthenticationNotificationRecorder alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus];
     
     // getting access token fails
     __block NSInteger numberOfRequests = 0;
@@ -328,10 +254,10 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     [self.unauthenticatedSession continueAfterBackupImportStep];
     WaitForAllGroupsToBeEmpty(0.5);
     
+    // then
     XCTAssertFalse(self.userSession.isLoggedIn);
-    XCTAssertEqual(recorder.notifications.count, 2lu);
-    XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount);
-    XCTAssertEqual(recorder.notifications.lastObject.event, PreLoginAuthenticationEventObjcAuthenticationDidSucceed);
+    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationReadyToImportBackup);
+    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationDidSucceed);
 }
 
 
@@ -346,25 +272,20 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         self.mockTransportSession.disableEnqueueRequests = YES;
         return [ZMTransportResponse responseWithPayload:nil HTTPStatus:0 transportSessionError:error];
     };
-    PreLoginAuthenticationNotificationRecorder *recorder = [[PreLoginAuthenticationNotificationRecorder alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus];
     DebugLoginFailureTimerOverride = 0.2;
     
     // when
-    ZMCredentials *cred = [ZMEmailCredentials credentialsWithEmail:@"janet@fo.example.com" password:@"::FsdF:#$:fgsdAG"];
-    [self.unauthenticatedSession loginWithCredentials:cred];
+    ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:@"janet@fo.example.com" password:@"::FsdF:#$:fgsdAG"];
+    [self.unauthenticatedSession loginWithCredentials:credentials];
     
     // then
     XCTAssertTrue([self waitOnMainLoopUntilBlock:^BOOL{
-        return recorder.notifications.count > 0u;
+        return self.mockLoginDelegete.isCalledAuthenticationDidFail;
     } timeout:0.5]);
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    
-    XCTAssertGreaterThanOrEqual(recorder.notifications.count, 1lu);
-    XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcAuthenticationDidFail);
-    XCTAssertEqual(recorder.notifications.firstObject.error.code, (long)ZMUserSessionNetworkError);
+    XCTAssertEqual(self.mockLoginDelegete.currentError.code, (long)ZMUserSessionNetworkError);
     XCTAssertLessThan(self.mockTransportSession.receivedRequests.count, 2u);
-    
+
     // after
     DebugLoginFailureTimerOverride = 0;
 }
@@ -411,8 +332,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         NOT_USED(session);
         self.selfUser.phone = phone;
     }];
-    
-    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
 
     // when
     [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
@@ -428,9 +347,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(recorder.notifications.count, 1lu);
-    XCTAssertEqual(recorder.notifications.lastObject.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
-    
+    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationDidSucceed);
     ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
     XCTAssertEqualObjects(selfUser.name, self.selfUser.name);
     XCTAssertEqualObjects(selfUser.phoneNumber, phone);
@@ -448,22 +365,13 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         return nil;
     };
     
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"login code request did fail"];
-    id token = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        NOT_USED(error);
-        if (event == PreLoginAuthenticationEventObjcLoginCodeRequestDidFail) {
-            [expectation fulfill];
-        }
-    }];
-    
     // when
     [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-    
+    WaitForAllGroupsToBeEmpty(0.5);
+
     // then
+    XCTAssertTrue(self.mockLoginDelegete.isCalledLoginCodeRequestDidFail);
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
-    token = nil;
 }
 
 - (void)testThatItNotifiesIfTheLoginFails
@@ -474,7 +382,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         NOT_USED(session);
         self.selfUser.phone = phone;
     }];
-    PreLoginAuthenticationNotificationRecorder *recorder = [[PreLoginAuthenticationNotificationRecorder alloc] initWithAuthenticationStatus:self.unauthenticatedSession.authenticationStatus];
     
     // when
     [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
@@ -484,13 +391,14 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
     
     // and when
-    [self.unauthenticatedSession loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.invalidPhoneVerificationCode]];
+    ZMCredentials *credentials = [ZMPhoneCredentials credentialsWithPhoneNumber:phone
+                                                               verificationCode:self.mockTransportSession.invalidPhoneVerificationCode];
+    [self.unauthenticatedSession loginWithCredentials:credentials];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(recorder.notifications.count, 2lu);
-    XCTAssertEqual(recorder.notifications.firstObject.event, PreLoginAuthenticationEventObjcLoginCodeRequestDidSucceed);
-    XCTAssertEqual(recorder.notifications.lastObject.event, PreLoginAuthenticationEventObjcAuthenticationDidFail);
+    XCTAssertTrue(self.mockLoginDelegete.isCalledLoginCodeRequestDidSucceed);
+    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationDidFail);
 }
 
 @end
@@ -543,29 +451,18 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    XCTestExpectation *clientRegistrationDidSucceed = [self expectationWithDescription:@"client was registered"];
-    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
-        NOT_USED(accountId);
-        
-        if (event == PostLoginAuthenticationEventObjCClientRegistrationDidFail && error.code == (long)ZMUserSessionNeedsToRegisterEmailToRegisterClient) {
-//            [clientRegisteredDidFailExpectation fulfill];
-            
-            ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
-            [self.userSession performChanges:^{
-                [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
-            }];
-            
-            [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
-                // simulate user click on email
-                NOT_USED(session);
-                self.selfUser.email = email;
-            }];
-        }
-        
-        if (event == PostLoginAuthenticationEventObjCClientRegistrationDidSucceed) {
-            [clientRegistrationDidSucceed fulfill];
-        }
+    // when
+    ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
+    [self.userSession performChanges:^{
+        [self.userSession.userProfile requestSettingEmailAndPasswordWithCredentials:credentials error:nil];
     }];
+
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
+        // simulate user click on email
+        NOT_USED(session);
+        self.selfUser.email = email;
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     __block BOOL didRun = NO;
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
@@ -581,9 +478,9 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     };
     
     // and when
-    ZMPhoneCredentials *credentials = [ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.phoneVerificationCodeForLogin];
-    XCTAssertTrue([self loginWithCredentials:credentials ignoreAuthenticationFailures:YES]);
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+    ZMPhoneCredentials *newCredentials = [ZMPhoneCredentials credentialsWithPhoneNumber:phone
+                                                                       verificationCode:self.mockTransportSession.phoneVerificationCodeForLogin];
+    XCTAssertTrue([self loginWithCredentials:newCredentials ignoreAuthenticationFailures:YES]);
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -591,11 +488,9 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertEqualObjects(selfUser.name, self.selfUser.name);
     XCTAssertEqualObjects(selfUser.phoneNumber, phone);
     XCTAssertEqualObjects(selfUser.emailAddress, email);
-    
-    postLoginToken = nil;
 }
 
-- (void)testThatWeRecoverFromEnteringAWrongEmailAddressWhenRegisteringAClientAfterLoggingInWithPhone
+- (void)testThatWeRecoverFromEnteringAWrongEmailAddressWhenRegisteringAClientAfterLoggingInWithPhoneA
 {
     // given
     NSString *phone = @"+4912345678900";
@@ -609,34 +504,12 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
     __block NSUInteger runCount = 0;
     
-    // expect
-    XCTestExpectation *clientRegistrationDidSucceed = [self expectationWithDescription:@"client was registered"];
-    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
-        NOT_USED(accountId);
-        
-        if (event == PostLoginAuthenticationEventObjCClientRegistrationDidFail && error.code == (long)ZMUserSessionNeedsPasswordToRegisterClient) {
-            // first provide the wrong credentials
-            [self.mockTransportSession resetReceivedRequests];
-            ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:IntegrationTest.SelfUserEmail password:wrongPassword];
-            [self.unauthenticatedSession loginWithCredentials:credentials];
-        }
-        else if (event == PostLoginAuthenticationEventObjCClientRegistrationDidFail && error.code == (long)ZMUserSessionInvalidCredentials) {
-            // now we provide the right password
-            [self.mockTransportSession resetReceivedRequests];
-            ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:IntegrationTest.SelfUserEmail password:IntegrationTest.SelfUserPassword];
-            [self.unauthenticatedSession loginWithCredentials:credentials];
-        }
-        else if (event == PostLoginAuthenticationEventObjCClientRegistrationDidSucceed) {
-            [clientRegistrationDidSucceed fulfill];
-        }
-    }];
-    
     ZM_WEAK(self);
     self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse*(ZMTransportRequest *request) {
         ZM_STRONG(self);
         
         // when trying to register without email credentials, the BE tells us we need credentials
-        if(runCount <= 2 && [request.path isEqualToString:@"/clients"] && request.method == ZMMethodPOST) {
+        if(runCount <= 1 && [request.path isEqualToString:@"/clients"] && request.method == ZMMethodPOST) {
             NSDictionary *payload;
             if (runCount == 0) {
                 payload = @{@"label" : @"missing-auth"};
@@ -649,25 +522,38 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         return nil;
     };
 
-    // and when
+    // when
     [self.unauthenticatedSession loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:self.mockTransportSession.phoneVerificationCodeForLogin]];
     WaitForAllGroupsToBeEmpty(0.5);
     [self.unauthenticatedSession continueAfterBackupImportStep];
     WaitForAllGroupsToBeEmpty(0.5);
-
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-
+    
+    XCTAssertEqual(self.mockLoginDelegete.currentError.code, (long)ZMUserSessionNeedsPasswordToRegisterClient);
+    XCTAssertTrue(self.mockLoginDelegete.isCalledClientRegistrationDidFail);
+    
+    // first provide the wrong credentials
+    [self.mockTransportSession resetReceivedRequests];
+    ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:IntegrationTest.SelfUserEmail password:wrongPassword];
+    [self.unauthenticatedSession loginWithCredentials:credentials];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
+    XCTAssertEqual(self.mockLoginDelegete.currentError.code, (long)ZMUserSessionInvalidCredentials);
+    XCTAssertTrue(self.mockLoginDelegete.isCalledClientRegistrationDidFail);
+    
+    // then provide the right password
+    [self.mockTransportSession resetReceivedRequests];
+    ZMEmailCredentials *newCredentials = [ZMEmailCredentials credentialsWithEmail:IntegrationTest.SelfUserEmail password:IntegrationTest.SelfUserPassword];
+    [self.unauthenticatedSession loginWithCredentials:newCredentials];
+    WaitForAllGroupsToBeEmpty(0.5);
+    
     // then
-    postLoginToken = nil;
+    XCTAssertTrue(self.mockLoginDelegete.isCalledClientRegistrationDidSucceed);
 }
 
 - (void)testThatItCanRegisterNewClientAfterDeletingSelfClient
 {
     // given
     XCTAssertTrue([self login]);
-    
-    
-    PostLoginAuthenticationNotificationRecorder *recorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithDispatchGroup:self.dispatchGroup];
     
     // when we delete self client
     [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
@@ -680,12 +566,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertTrue([self login]);
     
     // then
-    XCTAssertEqual(recorder.notifications.count, 2lu);
-    XCTAssertEqual(recorder.notifications.firstObject.event, PostLoginAuthenticationEventObjCAuthenticationInvalidated);
-    XCTAssertEqual(recorder.notifications.lastObject.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
-
-    XCTAssertEqual(recorder.notifications.firstObject.error.code, ZMUserSessionClientDeletedRemotely);
-    XCTAssertEqualObjects([recorder.notifications.firstObject.error.userInfo objectForKey:ZMEmailCredentialKey], IntegrationTest.SelfUserEmail);
+    XCTAssertTrue(self.mockLoginDelegete.isCalledClientRegistrationDidSucceed);
 }
 
 - (void)testThatItCanRegisterNewClientAfterDeletingSelfClientAndReceivingNeedsPasswordToRegisterClient
@@ -711,34 +592,25 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
         [self createSessionManager];
         WaitForAllGroupsToBeEmpty(0.5);
     }
-    
-    // (2) login again after losing our client (BE will ask for password on 2nd client)
+
+    // (2) login again after losing our client (BE will ask for password on 2nd client
     {
-        XCTestExpectation *clientRegistrationDidSucceed = [self expectationWithDescription:@"client was registered"];
-        id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
-            NOT_USED(accountId);
-            
-            if (event == PostLoginAuthenticationEventObjCClientRegistrationDidFail && error.code == (long)ZMUserSessionNeedsPasswordToRegisterClient) {
-                ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:IntegrationTest.SelfUserEmail password:IntegrationTest.SelfUserPassword];
-                [self.userSession performChanges:^{
-                    [self.unauthenticatedSession loginWithCredentials:credentials];
-                }];
-            }
-            else if (event == PostLoginAuthenticationEventObjCClientRegistrationDidSucceed) {
-                [clientRegistrationDidSucceed fulfill];
-            }
+        ZMEmailCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:IntegrationTest.SelfUserEmail password:IntegrationTest.SelfUserPassword];
+        [self.userSession performChanges:^{
+            [self.unauthenticatedSession loginWithCredentials:credentials];
         }];
+        WaitForAllGroupsToBeEmpty(0.5);
+        
         
         // when
         [self.unauthenticatedSession requestPhoneVerificationCodeForLogin:phone];
         XCTAssertTrue([self loginWithCredentials:[ZMPhoneCredentials credentialsWithPhoneNumber:phone verificationCode:code] ignoreAuthenticationFailures:YES]);
         XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
         WaitForAllGroupsToBeEmpty(0.5);
-        
+
         // then
         ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
         XCTAssertEqualObjects(selfUser.name, self.selfUser.name);
-        postLoginToken = nil;
     }
 }
 
@@ -752,27 +624,16 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     }];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    // expect
-    XCTestExpectation *clientRegistrationDidSucceed = [self expectationWithDescription:@"client was registered"];
-    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
-        NOT_USED(accountId);
-        
-        if (event == PostLoginAuthenticationEventObjCClientRegistrationDidFail && error.code == (long)ZMUserSessionCanNotRegisterMoreClients) {
-            // simulate the user selecting a client to delete
-            [self.userSession performChanges:^{
-                ZMUser *selfUser = [self userForMockUser:self.selfUser];
-                [selfUser.managedObjectContext saveOrRollback];
-                UserClient *clientToDelete = [selfUser.clients.allObjects firstObjectMatchingWithBlock:^BOOL(UserClient *client) {
-                    return [client.remoteIdentifier isEqualToString:idToDelete];
-                }];
-                XCTAssertNotNil(clientToDelete);
-                [self.userSession deleteClient:clientToDelete withCredentials:nil];
-            }];
-        }
-        else if (event == PostLoginAuthenticationEventObjCClientRegistrationDidSucceed) {
-            [clientRegistrationDidSucceed fulfill];
-        }
+    [self.userSession performChanges:^{
+        ZMUser *selfUser = [self userForMockUser:self.selfUser];
+        [selfUser.managedObjectContext saveOrRollback];
+        UserClient *clientToDelete = [selfUser.clients.allObjects firstObjectMatchingWithBlock:^BOOL(UserClient *client) {
+            return [client.remoteIdentifier isEqualToString:idToDelete];
+        }];
+        XCTAssertNotNil(clientToDelete);
+        [self.userSession deleteClient:clientToDelete withCredentials:nil];
     }];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     __block BOOL didTryToRegister = NO;
     __block BOOL didDeleteClient = NO;
@@ -802,7 +663,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssert(didTryToRegister);
     ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
     XCTAssertEqualObjects(selfUser.name, self.selfUser.name);
-    postLoginToken = nil;
 }
 
 @end

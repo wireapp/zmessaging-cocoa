@@ -150,7 +150,7 @@
     UserClient *userClient = [self createSelfClient];
     
     // when
-    [self.sut didRegisterUserClient:userClient];
+    [self.sut didRegisterSelfUserClient:userClient];
     
     // then
     XCTAssertEqualObjects(self.mockPushChannel.clientID, userClient.remoteIdentifier);

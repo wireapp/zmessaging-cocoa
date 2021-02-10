@@ -49,7 +49,7 @@ class AccountStatusTests : MessagingTest {
         self.sut = AccountStatus(managedObjectContext: self.uiMOC)
         
         // when
-        PostLoginAuthenticationNotification.notifyClientRegistrationDidSucceed(context: uiMOC)
+        sut.didRegisterClient()
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -101,13 +101,13 @@ class AccountStatusTests : MessagingTest {
     func testThatItAppendsANewDeviceMessageWhenSyncCompletes_NewDevice() {
         // given
         setupSelfClient(inMoc: self.uiMOC)
-        
+
         self.sut = AccountStatus(managedObjectContext: self.uiMOC)
         XCTAssertEqual(self.sut.accountState, AccountState.activated)
 
-        PostLoginAuthenticationNotification.notifyClientRegistrationDidSucceed(context: uiMOC)
+        sut.didRegisterClient()
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         let oneOnOne = ZMConversation.insertNewObject(in: self.uiMOC)
         oneOnOne.conversationType = .oneOnOne
         let group = ZMConversation.insertNewObject(in: self.uiMOC)
@@ -116,7 +116,7 @@ class AccountStatusTests : MessagingTest {
         connection.conversationType = .connection
         let selfConv = ZMConversation.insertNewObject(in: self.uiMOC)
         selfConv.conversationType = .self
-        
+
         XCTAssertEqual(self.sut.accountState, AccountState.newDevice)
 
         // when
@@ -134,7 +134,7 @@ class AccountStatusTests : MessagingTest {
         } else {
             XCTFail()
         }
-        
+
         XCTAssertEqual(self.sut.accountState, AccountState.activated)
     }
     
