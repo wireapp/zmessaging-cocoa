@@ -28,21 +28,21 @@ public class MockClientRegistrationStatusDelegate: NSObject, ZMClientRegistratio
     
     public var currentError: Error? = nil
     
-    public var isCalledDidRegisterSelfUserClient: Bool = false
+    public var didCallRegisterSelfUserClient: Bool = false
     public func didRegisterSelfUserClient(_ userClient: UserClient!) {
-        isCalledDidRegisterSelfUserClient = true
+        didCallRegisterSelfUserClient = true
     }
     
-    public var isCalledDidFailRegisterSelfUserClient: Bool = false
+    public var didCallFailRegisterSelfUserClient: Bool = false
     public func didFailRegisterSelfUserClient(_ error: Error!) {
         currentError = error
-        isCalledDidFailRegisterSelfUserClient = true
+        didCallFailRegisterSelfUserClient = true
     }
     
-    public var isCalledDidDeleteSelfUserClient: Bool = false
+    public var didCallDeleteSelfUserClient: Bool = false
     public func didDeleteSelfUserClient(_ error: Error!) {
         currentError = error
-        isCalledDidDeleteSelfUserClient = true
+        didCallDeleteSelfUserClient = true
     }
 }
 
@@ -250,7 +250,7 @@ extension UserClientRequestStrategyTests {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // then
-        XCTAssertTrue(self.mockClientRegistrationStatusDelegate.isCalledDidRegisterSelfUserClient)
+        XCTAssertTrue(self.mockClientRegistrationStatusDelegate.didCallRegisterSelfUserClient)
     }
     
     
@@ -273,7 +273,7 @@ extension UserClientRequestStrategyTests {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // then
-        XCTAssertTrue(self.mockClientRegistrationStatusDelegate.isCalledDidFailRegisterSelfUserClient)
+        XCTAssertTrue(self.mockClientRegistrationStatusDelegate.didCallFailRegisterSelfUserClient)
         let expectedError = NSError(domain: NSError.ZMUserSessionErrorDomain,
                                     code: Int(ZMUserSessionErrorCode.invalidCredentials.rawValue),
                                     userInfo: nil)
@@ -313,7 +313,7 @@ extension UserClientRequestStrategyTests {
                 ZMUserLoginCredentialsKey: LoginCredentials(emailAddress: emailAddress, phoneNumber: nil, hasPassword: true, usesCompanyLogin: false)
             ])
 
-            XCTAssertTrue(self.mockClientRegistrationStatusDelegate.isCalledDidFailRegisterSelfUserClient)
+            XCTAssertTrue(self.mockClientRegistrationStatusDelegate.didCallFailRegisterSelfUserClient)
             XCTAssertEqual(self.mockClientRegistrationStatusDelegate.currentError as NSError?, expectedError)
         }
     }

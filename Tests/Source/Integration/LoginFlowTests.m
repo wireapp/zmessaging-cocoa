@@ -66,7 +66,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationReadyToImportBackup);
+    XCTAssertTrue(self.mockLoginDelegete.didCallAuthenticationReadyToImportBackup);
     XCTAssertFalse(self.userSession.isLoggedIn);
 }
 
@@ -85,7 +85,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertTrue(self.mockLoginDelegete.isCalledLoginCodeRequestDidSucceed);
+    XCTAssertTrue(self.mockLoginDelegete.didCallLoginCodeRequestDidSucceed);
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
 
     // and when
@@ -94,7 +94,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationReadyToImportBackup);
+    XCTAssertTrue(self.mockLoginDelegete.didCallAuthenticationReadyToImportBackup);
     XCTAssertFalse(self.userSession.isLoggedIn);
 }
 
@@ -154,7 +154,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationDidFail);
+    XCTAssertTrue(self.mockLoginDelegete.didCallAuthenticationDidFail);
     XCTAssertEqual(self.mockLoginDelegete.currentError.code, (long)ZMUserSessionInvalidCredentials);
 }
 
@@ -196,8 +196,8 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
     // then
     XCTAssertFalse(self.userSession.isLoggedIn);
-    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationReadyToImportBackup);
-    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationDidSucceed);
+    XCTAssertTrue(self.mockLoginDelegete.didCallAuthenticationReadyToImportBackup);
+    XCTAssertTrue(self.mockLoginDelegete.didCallAuthenticationDidSucceed);
 }
 
 - (void)testThatWhenTransportSessionDeletesCookieInResponseToFailedRenewTokenWeGoToUnathorizedState
@@ -237,8 +237,8 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     
     // then
     XCTAssertFalse(self.userSession.isLoggedIn);
-    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationReadyToImportBackup);
-    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationDidSucceed);
+    XCTAssertTrue(self.mockLoginDelegete.didCallAuthenticationReadyToImportBackup);
+    XCTAssertTrue(self.mockLoginDelegete.didCallAuthenticationDidSucceed);
 }
 
 
@@ -261,7 +261,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     
     // then
     XCTAssertTrue([self waitOnMainLoopUntilBlock:^BOOL{
-        return self.mockLoginDelegete.isCalledAuthenticationDidFail;
+        return self.mockLoginDelegete.didCallAuthenticationDidFail;
     } timeout:0.5]);
     WaitForAllGroupsToBeEmpty(0.5);
     XCTAssertEqual(self.mockLoginDelegete.currentError.code, (long)ZMUserSessionNetworkError);
@@ -328,7 +328,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationDidSucceed);
+    XCTAssertTrue(self.mockLoginDelegete.didCallAuthenticationDidSucceed);
     ZMUser *selfUser = [ZMUser selfUserInUserSession:self.userSession];
     XCTAssertEqualObjects(selfUser.name, self.selfUser.name);
     XCTAssertEqualObjects(selfUser.phoneNumber, phone);
@@ -351,7 +351,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertTrue(self.mockLoginDelegete.isCalledLoginCodeRequestDidFail);
+    XCTAssertTrue(self.mockLoginDelegete.didCallLoginCodeRequestDidFail);
     XCTAssertEqual(self.mockTransportSession.receivedRequests.count, 1u);
 }
 
@@ -378,8 +378,8 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertTrue(self.mockLoginDelegete.isCalledLoginCodeRequestDidSucceed);
-    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationDidFail);
+    XCTAssertTrue(self.mockLoginDelegete.didCallLoginCodeRequestDidSucceed);
+    XCTAssertTrue(self.mockLoginDelegete.didCallAuthenticationDidFail);
 }
 
 @end
@@ -510,7 +510,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
     
     XCTAssertEqual(self.mockLoginDelegete.currentError.code, (long)ZMUserSessionNeedsPasswordToRegisterClient);
-    XCTAssertTrue(self.mockLoginDelegete.isCalledClientRegistrationDidFail);
+    XCTAssertTrue(self.mockLoginDelegete.didCallClientRegistrationDidFail);
     
     // first provide the wrong credentials
     [self.mockTransportSession resetReceivedRequests];
@@ -519,7 +519,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
     
     XCTAssertEqual(self.mockLoginDelegete.currentError.code, (long)ZMUserSessionInvalidCredentials);
-    XCTAssertTrue(self.mockLoginDelegete.isCalledClientRegistrationDidFail);
+    XCTAssertTrue(self.mockLoginDelegete.didCallClientRegistrationDidFail);
     
     // then provide the right password
     [self.mockTransportSession resetReceivedRequests];
@@ -528,7 +528,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertTrue(self.mockLoginDelegete.isCalledClientRegistrationDidSucceed);
+    XCTAssertTrue(self.mockLoginDelegete.didCallClientRegistrationDidSucceed);
 }
 
 - (void)testThatItCanRegisterNewClientAfterDeletingSelfClient
@@ -547,7 +547,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertTrue([self login]);
     
     // then
-    XCTAssertTrue(self.mockLoginDelegete.isCalledClientRegistrationDidSucceed);
+    XCTAssertTrue(self.mockLoginDelegete.didCallClientRegistrationDidSucceed);
 }
 
 - (void)testThatItCanRegisterNewClientAfterDeletingSelfClientAndReceivingNeedsPasswordToRegisterClient

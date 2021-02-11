@@ -424,7 +424,7 @@ extension IntegrationTest {
         sessionManager?.unauthenticatedSession?.continueAfterBackupImportStep()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
-        return mockLoginDelegete?.isCalledAuthenticationDidSucceed ?? false
+        return mockLoginDelegete?.didCallAuthenticationDidSucceed ?? false
     }
 
 
@@ -653,47 +653,47 @@ extension IntegrationTest: SessionManagerDelegate {
 public class MockLoginDelegate: NSObject, LoginDelegate {
     public var currentError: NSError? = nil
     
-    public var isCalledLoginCodeRequestDidFail: Bool = false
+    public var didCallLoginCodeRequestDidFail: Bool = false
     public func loginCodeRequestDidFail(_ error: NSError) {
         currentError = error
-        isCalledLoginCodeRequestDidFail = true
+        didCallLoginCodeRequestDidFail = true
     }
     
-    public var isCalledLoginCodeRequestDidSucceed: Bool = false
+    public var didCallLoginCodeRequestDidSucceed: Bool = false
     public func loginCodeRequestDidSucceed() {
-        isCalledLoginCodeRequestDidSucceed = true
+        didCallLoginCodeRequestDidSucceed = true
     }
     
-    public var isCalledAuthenticationDidFail: Bool = false
+    public var didCallAuthenticationDidFail: Bool = false
     public func authenticationDidFail(_ error: NSError) {
         currentError = error
-        isCalledAuthenticationDidFail = true
+        didCallAuthenticationDidFail = true
     }
     
-    public var isCalledAuthenticationInvalidated: Bool = false
+    public var didCallAuthenticationInvalidated: Bool = false
     public func authenticationInvalidated(_ error: NSError, accountId: UUID) {
         currentError = error
-        isCalledAuthenticationInvalidated = true
+        didCallAuthenticationInvalidated = true
     }
     
-    public var isCalledAuthenticationDidSucceed: Bool = false
+    public var didCallAuthenticationDidSucceed: Bool = false
     public func authenticationDidSucceed() {
-        isCalledAuthenticationDidSucceed = true
+        didCallAuthenticationDidSucceed = true
     }
     
-    public var isCalledAuthenticationReadyToImportBackup: Bool = false
+    public var didCallAuthenticationReadyToImportBackup: Bool = false
     public func authenticationReadyToImportBackup(existingAccount: Bool) {
-        isCalledAuthenticationReadyToImportBackup = true
+        didCallAuthenticationReadyToImportBackup = true
     }
     
-    public var isCalledClientRegistrationDidSucceed: Bool = false
+    public var didCallClientRegistrationDidSucceed: Bool = false
     public func clientRegistrationDidSucceed(accountId: UUID) {
-        isCalledClientRegistrationDidSucceed = true
+        didCallClientRegistrationDidSucceed = true
     }
     
-    public var isCalledClientRegistrationDidFail: Bool = false
+    public var didCallClientRegistrationDidFail: Bool = false
     public func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
         currentError = error
-        isCalledClientRegistrationDidFail = true
+        didCallClientRegistrationDidFail = true
     }
 }

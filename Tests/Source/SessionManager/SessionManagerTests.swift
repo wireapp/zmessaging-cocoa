@@ -874,7 +874,7 @@ class SessionManagerTests_Teams: IntegrationTest {
             return XCTFail()
         }
         
-        XCTAssertTrue(delegate.isCalledAuthenticationDidFail)
+        XCTAssertTrue(delegate.didCallAuthenticationDidFail)
         XCTAssertEqual(error, NSError(code: .accountLimitReached, userInfo: nil))
     }
 
