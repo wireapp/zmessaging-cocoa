@@ -98,7 +98,7 @@
     NOT_USED(userClient);
 }
 
-- (void)didFailRegisterSelfUserClient:(NSError *)error {
+- (void)didFailToRegisterSelfUserClient:(NSError *)error {
     NOT_USED(error);
 }
 

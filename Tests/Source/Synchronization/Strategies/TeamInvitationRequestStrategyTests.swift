@@ -158,7 +158,7 @@ extension TeamInvitationRequestStrategyTests : ZMRequestCancellation, ZMSyncStat
     
     func didRegisterSelfUserClient(_ userClient: UserClient!) { }
     
-    func didFailRegisterSelfUserClient(_ error: Error!) { }
+    func didFailToRegisterSelfUserClient(error: Error!) { }
     
-    func didDeleteSelfUserClient(_ error: Error!) { }
+    func didDeleteSelfUserClient(error: Error!) { }
 }

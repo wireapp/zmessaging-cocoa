@@ -394,15 +394,15 @@ extension ZMConversationTranscoderTests_Swift : ZMSyncStateDelegate {
         // nop
     }
         
-    func didRegisterSelfUserClient(_ userClient: UserClient!) {
+    public func didRegisterSelfUserClient(_ userClient: UserClient!) {
         // nop
     }
     
-    func didFailRegisterSelfUserClient(_ error: Error!) {
+    public func didFailToRegisterSelfUserClient(error: Error!) {
         // nop
     }
     
-    func didDeleteSelfUserClient(_ error: Error!) {
+    public func didDeleteSelfUserClient(error: Error!) {
         // nop
     }
 }

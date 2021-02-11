@@ -253,11 +253,11 @@ public class MockSyncStatus : SyncStatus {
         registeredUserClient = userClient
     }
     
-    public func didFailRegisterSelfUserClient(_ error: Error!) {
+    public func didFailToRegisterSelfUserClient(error: Error!) {
         didCallFailRegisterUserClient = true
     }
     
-    public func didDeleteSelfUserClient(_ error: Error!) {
+    public func didDeleteSelfUserClient(error: Error!) {
         didCallDeleteUserClient = true
     }
 }

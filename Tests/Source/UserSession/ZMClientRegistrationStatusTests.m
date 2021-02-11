@@ -401,7 +401,7 @@
     [self.uiMOC saveOrRollback];
     
     NSError *error = [self needToRegisterEmailError];
-    [[self.mockClientRegistrationDelegate expect] didFailRegisterSelfUserClient: error];
+    [[self.mockClientRegistrationDelegate expect] didFailToRegisterSelfUserClient: error];
     
     // when
     [self.sut didFetchSelfUser];
@@ -420,7 +420,7 @@
     
     NSError *error = [NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionNeedsPasswordToRegisterClient
                                      userInfo:nil];
-    [[self.mockClientRegistrationDelegate expect] didFailRegisterSelfUserClient: [OCMArg any]];
+    [[self.mockClientRegistrationDelegate expect] didFailToRegisterSelfUserClient: [OCMArg any]];
     
     // when
     [self.sut didFailToRegisterClient:error];
@@ -438,7 +438,7 @@
     [self.uiMOC saveOrRollback];
     
     NSError *error = [NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionInvalidCredentials userInfo:nil];
-    [[self.mockClientRegistrationDelegate expect] didFailRegisterSelfUserClient: error];
+    [[self.mockClientRegistrationDelegate expect] didFailToRegisterSelfUserClient: error];
     
     // when
     [self.sut didFailToRegisterClient:error];
@@ -452,7 +452,7 @@
 {
     // given
     NSError *error = [self tooManyClientsError];
-    [[self.mockClientRegistrationDelegate expect] didFailRegisterSelfUserClient: error];
+    [[self.mockClientRegistrationDelegate expect] didFailToRegisterSelfUserClient: error];
     
     // when
     [self.sut didFailToRegisterClient:error];
