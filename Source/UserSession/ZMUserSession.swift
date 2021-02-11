@@ -559,10 +559,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
         registerCurrentPushToken()
         
         managedObjectContext.performGroupedBlock { [weak self] in
-            guard
-                let moc = self?.managedObjectContext,
-                let accountId = ZMUser.selfUser(in: moc).remoteIdentifier
-            else {
+            guard let accountId = self?.managedObjectContext.selfUserId else {
                 return
             }
             
@@ -572,10 +569,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
     
     public func didFailRegisterSelfUserClient(_ error: Error!) {
         managedObjectContext.performGroupedBlock {  [weak self] in
-            guard
-                let moc = self?.managedObjectContext,
-                let accountId = ZMUser.selfUser(in: moc).remoteIdentifier
-            else {
+            guard let accountId = self?.managedObjectContext.selfUserId else {
                 return
             }
             
@@ -596,10 +590,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
     
     private func notifyAuthenticationInvalidated(_ error: Error) {
         managedObjectContext.performGroupedBlock {  [weak self] in
-            guard
-                let moc = self?.managedObjectContext,
-                let accountId = ZMUser.selfUser(in: moc).remoteIdentifier
-            else {
+            guard let accountId = self?.managedObjectContext.selfUserId else {
                 return
             }
             
@@ -611,5 +602,11 @@ extension ZMUserSession: ZMSyncStateDelegate {
 extension ZMUserSession: URLActionProcessor {
     func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         urlActionProcessors?.forEach({ $0.process(urlAction: urlAction, delegate: delegate)} )
+    }
+}
+
+private extension NSManagedObjectContext {
+    var selfUserId: UUID? {
+        ZMUser.selfUser(in: self).remoteIdentifier
     }
 }

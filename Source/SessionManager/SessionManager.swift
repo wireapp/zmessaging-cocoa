@@ -184,7 +184,7 @@ public final class SessionManager : NSObject, SessionManagerType {
     public weak var delegate: SessionManagerDelegate? = nil
     public let accountManager: AccountManager
     public internal(set) var activeUserSession: ZMUserSession?
-    public var loginDelegate: LoginDelegate?
+    public weak var loginDelegate: LoginDelegate?
 
     public fileprivate(set) var backgroundUserSessions: [UUID: ZMUserSession] = [:]
     public internal(set) var unauthenticatedSession: UnauthenticatedSession? {
