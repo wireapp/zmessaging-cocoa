@@ -40,7 +40,7 @@ public protocol UserSessionSelfUserClientDelegate: NSObjectProtocol {
 @objc(UserSessionLogoutDelegate)
 public protocol UserSessionLogoutDelegate: NSObjectProtocol {
     /// Invoked when the user successfully logged out
-    @objc func userDidLogout(accountId: UUID)
+    func userDidLogout(accountId: UUID)
     
     /// Invoked when the authentication has proven invalid
     func authenticationInvalidated(_ error: NSError, accountId : UUID)

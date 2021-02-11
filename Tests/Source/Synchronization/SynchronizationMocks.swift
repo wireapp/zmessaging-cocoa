@@ -77,9 +77,13 @@ class MockAuthenticationStatus: ZMAuthenticationStatus {
     
     var mockPhase: ZMAuthenticationPhase
     
-    init(phase: ZMAuthenticationPhase = .authenticated, userInfoParser: UserInfoParser) {
+    init(delegate: ZMAuthenticationStatusDelegate,
+         phase: ZMAuthenticationPhase = .authenticated,
+         userInfoParser: UserInfoParser) {
         self.mockPhase = phase
-        super.init(groupQueue: DispatchGroupQueue(queue: .main), userInfoParser: userInfoParser)
+        super.init(delegate: delegate,
+                   groupQueue: DispatchGroupQueue(queue: .main),
+                   userInfoParser: userInfoParser)
     }
     
     override var currentPhase: ZMAuthenticationPhase {

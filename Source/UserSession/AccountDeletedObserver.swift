@@ -22,7 +22,7 @@ public protocol AccountDeletedObserver: class {
     func accountDeleted(accountId : UUID)
 }
 
-struct AccountDeletedNotification: SelfPostingNotification {
+public struct AccountDeletedNotification: SelfPostingNotification {
     static let notificationName = Notification.Name("AccountDeletedNotification")
 
     weak var context : NSManagedObjectContext?
