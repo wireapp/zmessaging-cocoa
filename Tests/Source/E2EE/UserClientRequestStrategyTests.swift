@@ -34,13 +34,13 @@ public class MockClientRegistrationStatusDelegate: NSObject, ZMClientRegistratio
     }
     
     public var didCallFailRegisterSelfUserClient: Bool = false
-    public func didFailRegisterSelfUserClient(_ error: Error!) {
+    public func didFailToRegisterSelfUserClient(error: Error!) {
         currentError = error
         didCallFailRegisterSelfUserClient = true
     }
     
     public var didCallDeleteSelfUserClient: Bool = false
-    public func didDeleteSelfUserClient(_ error: Error!) {
+    public func didDeleteSelfUserClient(error: Error!) {
         currentError = error
         didCallDeleteSelfUserClient = true
     }

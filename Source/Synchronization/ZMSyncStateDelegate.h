@@ -23,8 +23,8 @@
 @protocol ZMClientRegistrationStatusDelegate <NSObject>
 
 - (void)didRegisterSelfUserClient:(UserClient *)userClient;
-- (void)didFailRegisterSelfUserClient:(NSError *)error;
-- (void)didDeleteSelfUserClient:(NSError *)error;
+- (void)didFailToRegisterSelfUserClient:(NSError *)error NS_SWIFT_NAME(didFailToRegisterSelfUserClient(error:));
+- (void)didDeleteSelfUserClient:(NSError *)error NS_SWIFT_NAME(didDeleteSelfUserClient(error:));
 
 @end
 

@@ -552,7 +552,6 @@ extension ZMUserSession: ZMSyncStateDelegate {
     }
     
     public func didRegisterSelfUserClient(_ userClient: UserClient!) {
-        
         // If during registration user allowed notifications,
         // The push token can only be registered after client registration
         transportSession.pushChannel.clientID = userClient.remoteIdentifier
@@ -567,7 +566,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
         }
     }
     
-    public func didFailRegisterSelfUserClient(_ error: Error!) {
+    public func didFailToRegisterSelfUserClient(error: Error!) {
         managedObjectContext.performGroupedBlock {  [weak self] in
             guard let accountId = self?.managedObjectContext.selfUserId else {
                 return
@@ -577,7 +576,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
         }
     }
     
-    public func didDeleteSelfUserClient(_ error: Error!) {
+    public func didDeleteSelfUserClient(error: Error!) {
         notifyAuthenticationInvalidated(error)
     }
     
