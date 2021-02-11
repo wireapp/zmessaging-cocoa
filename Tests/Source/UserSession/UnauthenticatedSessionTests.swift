@@ -155,7 +155,6 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidSucceedEvents, 0)
         XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidFailEvents.count, 1)
         XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidFailEvents[0].localizedDescription, NSError(code: .needsCredentials, userInfo:nil).localizedDescription)
     }
@@ -167,7 +166,6 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         sut.login(with: ZMEmailCredentials(email: "my@mail.com", password: "my-password"))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         // then
-        XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidSucceedEvents, 0)
         XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidFailEvents.count, 1)
         XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidFailEvents[0].localizedDescription,
                        NSError(code: .networkError, userInfo:nil).localizedDescription)
@@ -180,7 +178,6 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         sut.login(with: ZMPhoneCredentials(phoneNumber: "+49111111111111", verificationCode: "1234"))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         // then
-        XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidSucceedEvents, 0)
         XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidFailEvents.count, 1)
         XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidFailEvents[0].localizedDescription, NSError(code: .networkError, userInfo:nil).localizedDescription)
     }

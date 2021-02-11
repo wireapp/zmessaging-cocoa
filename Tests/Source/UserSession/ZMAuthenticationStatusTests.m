@@ -171,7 +171,6 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.delegate.authenticationDidSucceedEvents, 0);
     XCTAssertEqual(self.delegate.authenticationDidFailEvents.count, 1);
     XCTAssertEqual(self.delegate.authenticationDidFailEvents[0].code, ZMUserSessionInvalidPhoneNumber);
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
@@ -192,7 +191,6 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.delegate.authenticationDidSucceedEvents, 0);
     XCTAssertEqual(self.delegate.authenticationDidFailEvents.count, 1);
     XCTAssertEqual(self.delegate.authenticationDidFailEvents[0].code, ZMUserSessionInvalidCredentials);
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
@@ -213,7 +211,6 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.delegate.authenticationDidSucceedEvents, 0);
     XCTAssertEqual(self.delegate.authenticationDidFailEvents.count, 1);
     XCTAssertEqual(self.delegate.authenticationDidFailEvents[0].code, ZMUserSessionInvalidCredentials);
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
@@ -235,7 +232,6 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.delegate.authenticationDidSucceedEvents, 0);
     XCTAssertEqual(self.delegate.authenticationDidFailEvents.count, 1);
     XCTAssertEqual(self.delegate.authenticationDidFailEvents[0].code, ZMUserSessionNetworkError);
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
@@ -276,7 +272,6 @@
 
     // then
     XCTAssertEqual(self.delegate.authenticationDidSucceedEvents, 1);
-    XCTAssertEqual(self.delegate.authenticationDidFailEvents.count, 0);
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseWaitingToImportBackup);
 }
 
@@ -299,7 +294,6 @@
 
     // then
     XCTAssertEqual(self.delegate.authenticationDidSucceedEvents, 1);
-    XCTAssertEqual(self.delegate.authenticationDidFailEvents.count, 0);
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseWaitingToImportBackup);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
     XCTAssertEqual(self.userInfoParser.accountExistsLocallyCalled, 1);

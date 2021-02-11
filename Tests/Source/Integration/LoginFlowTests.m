@@ -48,27 +48,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     [super tearDown];
 }
 
-- (void)testThatItNotifiesIfTheClientNeedsToBeRegistered
-{
-    // given
-    NSString *email = @"expected@example.com";
-    NSString *password = @"valid-password-837246";
-    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
-        NOT_USED(session);
-        self.selfUser.name = @"Self User";
-        self.selfUser.email = email;
-        self.selfUser.password = password;
-    }];
-    
-    // when
-    ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:password];
-    [self.unauthenticatedSession loginWithCredentials:credentials];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationReadyToImportBackup);
-}
-
 - (void)testThatItWaitsAfterEmailLoginToImportBackup
 {
     // given
@@ -88,6 +67,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
     // then
     XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationReadyToImportBackup);
+    XCTAssertFalse(self.userSession.isLoggedIn);
 }
 
 - (void)testThatItWaitsAfterPhoneLoginToImportBackup
@@ -115,6 +95,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
 
     // then
     XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationReadyToImportBackup);
+    XCTAssertFalse(self.userSession.isLoggedIn);
 }
 
 
@@ -138,7 +119,6 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertNotNil([self.mockTransportSession.cookieStorage authenticationCookieData]);
     XCTAssertTrue(self.userSession.isLoggedIn);
 }
 
@@ -175,6 +155,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     
     // then
     XCTAssertTrue(self.mockLoginDelegete.isCalledAuthenticationDidFail);
+    XCTAssertEqual(self.mockLoginDelegete.currentError.code, (long)ZMUserSessionInvalidCredentials);
 }
 
 - (void)testThatWhenTransportSessionDeletesCookieInResponseToFailedLoginWeDoNotContinueSendingMoreRequests
@@ -490,7 +471,7 @@ extern NSTimeInterval DebugLoginFailureTimerOverride;
     XCTAssertEqualObjects(selfUser.emailAddress, email);
 }
 
-- (void)testThatWeRecoverFromEnteringAWrongEmailAddressWhenRegisteringAClientAfterLoggingInWithPhoneA
+- (void)testThatWeRecoverFromEnteringAWrongEmailAddressWhenRegisteringAClientAfterLoggingInWithPhone
 {
     // given
     NSString *phone = @"+4912345678900";

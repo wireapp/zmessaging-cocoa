@@ -106,7 +106,6 @@
     WaitForAllGroupsToBeEmpty(0.2);
 
     // then
-    XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidSucceedEvents, 0);
     XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidFailEvents.count, 1);
     XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidFailEvents[0].code,
                    (long) ZMUserSessionUnknownError);
@@ -128,7 +127,6 @@
     WaitForAllGroupsToBeEmpty(0.2);
 
     // then
-    XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidSucceedEvents, 0);
     XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidFailEvents.count, 1);
     XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidFailEvents[0].code,
                    (long) ZMUserSessionInvalidPhoneNumber);
@@ -150,7 +148,6 @@
     WaitForAllGroupsToBeEmpty(0.2);
 
     // then
-    XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidSucceedEvents, 0);
     XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidFailEvents.count, 1);
     XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidFailEvents[0].code,
                    (long) ZMUserSessionCodeRequestIsAlreadyPending);
@@ -172,7 +169,6 @@
     WaitForAllGroupsToBeEmpty(0.2);
     
     // then
-    XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidSucceedEvents, 0);
     XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidFailEvents.count, 1);
     XCTAssertEqual(self.mockAuthenticationStatusDelegate.authenticationDidFailEvents[0].code,
                    (long) ZMUserSessionInvalidPhoneNumber);
