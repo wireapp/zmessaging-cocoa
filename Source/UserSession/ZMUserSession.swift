@@ -28,7 +28,27 @@ public protocol ThirdPartyServicesDelegate: NSObjectProtocol {
     
 }
 
+@objc(UserSessionSelfUserClientDelegate)
+public protocol UserSessionSelfUserClientDelegate: NSObjectProtocol {
+    /// Invoked when a client is successfully registered
+    func clientRegistrationDidSucceed(accountId: UUID)
+    
+    /// Invoked when there was an error registering the client
+    func clientRegistrationDidFail(_ error: NSError, accountId: UUID)
+}
+
+@objc(UserSessionLogoutDelegate)
+public protocol UserSessionLogoutDelegate: NSObjectProtocol {
+    /// Invoked when the user successfully logged out
+    func userDidLogout(accountId: UUID)
+    
+    /// Invoked when the authentication has proven invalid
+    func authenticationInvalidated(_ error: NSError, accountId : UUID)
+}
+
 typealias UserSessionDelegate = UserSessionEncryptionAtRestDelegate
+    & UserSessionSelfUserClientDelegate
+    & UserSessionLogoutDelegate
 
 @objcMembers
 public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessionAppLockInterface {
@@ -371,10 +391,11 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
     }
     
     private func transportSessionAccessTokenDidFail(response: ZMTransportResponse) {
-        managedObjectContext.performGroupedBlock {
-            let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
+        managedObjectContext.performGroupedBlock { [weak self] in
+            guard let strongRef = self else { return }
+            let selfUser = ZMUser.selfUser(in: strongRef.managedObjectContext)
             let error = NSError.userSessionErrorWith(.accessTokenExpired, userInfo: selfUser.loginCredentials.dictionaryRepresentation)
-            PostLoginAuthenticationNotification.notifyAuthenticationInvalidated(error: error, context: self.managedObjectContext)
+            strongRef.notifyAuthenticationInvalidated(error)
         }
     }
     
@@ -530,25 +551,61 @@ extension ZMUserSession: ZMSyncStateDelegate {
         }
     }
     
-    public func didRegister(_ userClient: UserClient!) {
-        
+    public func didRegisterSelfUserClient(_ userClient: UserClient!) {
         // If during registration user allowed notifications,
         // The push token can only be registered after client registration
         transportSession.pushChannel.clientID = userClient.remoteIdentifier
         registerCurrentPushToken()
+        
+        managedObjectContext.performGroupedBlock { [weak self] in
+            guard let accountId = self?.managedObjectContext.selfUserId else {
+                return
+            }
+            
+            self?.delegate?.clientRegistrationDidSucceed(accountId: accountId)
+        }
     }
     
-    func notifyThirdPartyServices() {
+    public func didFailToRegisterSelfUserClient(error: Error!) {
+        managedObjectContext.performGroupedBlock {  [weak self] in
+            guard let accountId = self?.managedObjectContext.selfUserId else {
+                return
+            }
+            
+            self?.delegate?.clientRegistrationDidFail(error as NSError, accountId: accountId)
+        }
+    }
+    
+    public func didDeleteSelfUserClient(error: Error!) {
+        notifyAuthenticationInvalidated(error)
+    }
+    
+    public func notifyThirdPartyServices() {
         if !hasNotifiedThirdPartyServices {
             hasNotifiedThirdPartyServices = true
             thirdPartyServicesDelegate?.userSessionIsReadyToUploadServicesData(userSession: self)
         }
     }
-
+    
+    private func notifyAuthenticationInvalidated(_ error: Error) {
+        managedObjectContext.performGroupedBlock {  [weak self] in
+            guard let accountId = self?.managedObjectContext.selfUserId else {
+                return
+            }
+            
+            self?.delegate?.authenticationInvalidated(error as NSError, accountId: accountId)
+        }
+    }
 }
 
 extension ZMUserSession: URLActionProcessor {
     func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         urlActionProcessors?.forEach({ $0.process(urlAction: urlAction, delegate: delegate)} )
+    }
+}
+
+private extension NSManagedObjectContext {
+    var selfUserId: UUID? {
+        ZMUser.selfUser(in: self).remoteIdentifier
     }
 }

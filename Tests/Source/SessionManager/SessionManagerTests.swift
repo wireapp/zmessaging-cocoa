@@ -863,13 +863,19 @@ class SessionManagerTests_Teams: IntegrationTest {
         sessionManager?.accountManager.addOrUpdate(account2)
         sessionManager?.accountManager.addOrUpdate(account3)
         
-        let recorder = PreLoginAuthenticationNotificationRecorder(authenticationStatus: sessionManager!.unauthenticatedSession!.authenticationStatus)
-        
         // when
         XCTAssert(login(ignoreAuthenticationFailures: true))
-
+        
         // then
-        XCTAssertEqual(NSError(code: .accountLimitReached, userInfo: nil), recorder.notifications.last!.error)
+        guard
+            let delegate = mockLoginDelegete,
+            let error = delegate.currentError
+        else {
+            return XCTFail()
+        }
+        
+        XCTAssertTrue(delegate.didCallAuthenticationDidFail)
+        XCTAssertEqual(error, NSError(code: .accountLimitReached, userInfo: nil))
     }
 
     func testThatItChecksAccountsForExistingAccount() {

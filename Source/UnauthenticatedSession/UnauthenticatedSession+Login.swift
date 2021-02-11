@@ -43,7 +43,8 @@ extension UnauthenticatedSession {
         guard !updatedCredentialsInUserSession else { return }
         
         if credentials.isInvalid {
-            authenticationStatus.notifyAuthenticationDidFail(NSError(code: .needsCredentials, userInfo: nil))
+            let error = NSError(code: .needsCredentials, userInfo: nil)
+            authenticationStatus.notifyAuthenticationDidFail(error)
         } else {
             authenticationErrorIfNotReachable {
                 self.authenticationStatus.prepareForLogin(with: credentials)
@@ -68,9 +69,4 @@ extension UnauthenticatedSession {
         }
         return true
     }
-    
-    func addAuthenticationObserver(_ observer: PreLoginAuthenticationObserver) -> Any {
-        return PreLoginAuthenticationNotification.register(observer, context: authenticationStatus)
-    }
-    
 }

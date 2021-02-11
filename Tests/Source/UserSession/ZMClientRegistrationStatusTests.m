@@ -61,7 +61,6 @@
 @property (nonatomic) id mockCookieStorage;
 @property (nonatomic) id mockClientRegistrationDelegate;
 @property (nonatomic) id sessionToken;
-@property (nonatomic) PostLoginAuthenticationNotificationRecorder *authenticationNotificationRecorder;
 @end
 
 
@@ -78,14 +77,12 @@
     self.sut = [[ZMClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC
                                                                   cookieStorage:self.mockCookieStorage
                                                      registrationStatusDelegate:self.mockClientRegistrationDelegate];
-    
-    self.authenticationNotificationRecorder = [[PostLoginAuthenticationNotificationRecorder alloc] initWithManagedObjectContext:self.uiMOC];
 }
 
 - (void)tearDown
 {
-    self.authenticationNotificationRecorder = nil;
     self.mockCookieStorage = nil;
+    self.mockClientRegistrationDelegate = nil;
     [self.sut tearDown];
     self.sut = nil;
     
@@ -176,16 +173,8 @@
 - (void)testThatItReturns_WaitingForDeletion_AfterUserSelectedClientToDelete
 {
     // given
-    __block BOOL notificationReceived = NO;
-    id postLoginToken = [[PostLoginAuthenticationObserverObjCToken alloc] initWithDispatchGroup:self.dispatchGroup handler:^(enum PostLoginAuthenticationEventObjC event, NSUUID *accountId, NSError *error) {
-        NOT_USED(error);
-        NOT_USED(accountId);
-        
-        if (event == PostLoginAuthenticationEventObjCAuthenticationInvalidated) {
-            notificationReceived = YES;
-        }
-    }];
-    
+    [[self.mockClientRegistrationDelegate expect] didDeleteSelfUserClient: [OCMArg any]];
+
     [self performPretendingUiMocIsSyncMoc:^{
         ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
         selfUser.remoteIdentifier = NSUUID.createUUID;
@@ -201,14 +190,11 @@
         // when
         [self.sut didDetectCurrentClientDeletion];
     }];
-    
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertTrue(notificationReceived);
     XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseUnregistered);
-    
-    postLoginToken = nil;
+    [self.mockClientRegistrationDelegate verify];
 }
 
 - (void)testThatItResets_LocallyModifiedKeys_AfterUserSelectedClientToDelete
@@ -291,7 +277,7 @@
     
     UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
     client.remoteIdentifier = [NSUUID createUUID].transportString;
-    [[self.mockClientRegistrationDelegate expect] didRegisterUserClient:client];
+    [[self.mockClientRegistrationDelegate expect] didRegisterSelfUserClient:client];
     
     // when
     [self.sut didRegisterClient:client];
@@ -394,15 +380,15 @@
     
     UserClient *client = [UserClient insertNewObjectInManagedObjectContext:self.uiMOC];
     client.remoteIdentifier = @"yay";
+    [[self.mockClientRegistrationDelegate expect] didRegisterSelfUserClient:client];
     
     // when
     [self.sut didRegisterClient:client];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 1u);
-    PostLoginAuthenticationNotificationEvent *note = self.authenticationNotificationRecorder.notifications.firstObject;
-    XCTAssertEqual(note.event, PostLoginAuthenticationEventObjCClientRegistrationDidSucceed);
+    XCTAssertEqual(self.sut.currentPhase, ZMClientRegistrationPhaseRegistered);
+    [self.mockClientRegistrationDelegate verify];
 }
 
 - (void)testThatItNotifiesTheUIIfTheRegistrationFailsWithMissingEmailVerification
@@ -414,15 +400,15 @@
     selfUser.phoneNumber = nil;
     [self.uiMOC saveOrRollback];
     
+    NSError *error = [self needToRegisterEmailError];
+    [[self.mockClientRegistrationDelegate expect] didFailToRegisterSelfUserClient: error];
+    
     // when
     [self.sut didFetchSelfUser];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 1u);
-    PostLoginAuthenticationNotificationEvent *note = self.authenticationNotificationRecorder.notifications.firstObject;
-    XCTAssertEqual(note.event, PostLoginAuthenticationEventObjCClientRegistrationDidFail);
-    XCTAssertEqual(note.error.code, [self needToRegisterEmailError].code);
+    [self.mockClientRegistrationDelegate verify];
 }
 
 - (void)testThatItNotifiesTheUIIfTheRegistrationFailsWithMissingPasswordError
@@ -432,17 +418,16 @@
     selfUser.remoteIdentifier = self.userIdentifier;
     [self.uiMOC saveOrRollback];
     
-    NSError *error = [NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionNeedsPasswordToRegisterClient userInfo:nil];
+    NSError *error = [NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionNeedsPasswordToRegisterClient
+                                     userInfo:nil];
+    [[self.mockClientRegistrationDelegate expect] didFailToRegisterSelfUserClient: [OCMArg any]];
     
     // when
     [self.sut didFailToRegisterClient:error];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 1u);
-    PostLoginAuthenticationNotificationEvent *note = self.authenticationNotificationRecorder.notifications.firstObject;
-    XCTAssertEqual(note.event, PostLoginAuthenticationEventObjCClientRegistrationDidFail);
-    XCTAssertEqual(note.error.code, error.code);
+    [self.mockClientRegistrationDelegate verify];
 }
 
 - (void)testThatItNotifiesTheUIIfTheRegistrationFailsWithWrongCredentialsError
@@ -453,28 +438,27 @@
     [self.uiMOC saveOrRollback];
     
     NSError *error = [NSError errorWithDomain:@"ZMUserSession" code:ZMUserSessionInvalidCredentials userInfo:nil];
+    [[self.mockClientRegistrationDelegate expect] didFailToRegisterSelfUserClient: error];
     
     // when
     [self.sut didFailToRegisterClient:error];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 1u);
-    PostLoginAuthenticationNotificationEvent *note = self.authenticationNotificationRecorder.notifications.firstObject;
-    XCTAssertEqual(note.event, PostLoginAuthenticationEventObjCClientRegistrationDidFail);
-    XCTAssertEqual(note.error.code, error.code);
+    [self.mockClientRegistrationDelegate verify];
 }
 
 - (void)testThatItDoesNotNotifiesTheUIIfTheRegistrationFailsWithTooManyClientsError
 {
     // given
     NSError *error = [self tooManyClientsError];
+    [[self.mockClientRegistrationDelegate expect] didFailToRegisterSelfUserClient: error];
     
     // when
     [self.sut didFailToRegisterClient:error];
     
     // then
-    XCTAssertEqual(self.authenticationNotificationRecorder.notifications.count, 0u);
+    [self.mockClientRegistrationDelegate reject];
 }
 
 - (void)testThatItDeletesTheCookieIfFetchingClientsFailedWithError_SelfClientIsInvalid
