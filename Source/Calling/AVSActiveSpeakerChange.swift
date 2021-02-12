@@ -17,14 +17,30 @@
 //
 
 import Foundation
+import avs
 
-public enum ZMAccountDeletedReason: Int {
-    /// The user account was deleted by the user
-    case userInitiated = 0
-    /// The user account was deleted because a jailbreak was detected
-    case jailbreakDetected
-    /// The user account was deleted because the session expired
-    case sessionExpired
-    /// The user account was deleted because the limit of failed password attempts was reached
-    case failedPasswordLimitReached
+struct AVSActiveSpeakersChange: Codable {
+    let activeSpeakers: [ActiveSpeaker]
+    
+    struct ActiveSpeaker: Codable, Equatable {
+        let userId: UUID
+        let clientId: String
+        let audioLevel: Int
+        
+        enum CodingKeys: String, CodingKey {
+            case userId = "userid"
+            case clientId = "clientid"
+            case audioLevel = "audio_level"
+        }
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case activeSpeakers = "audio_levels"
+    }
+}
+
+extension AVSActiveSpeakersChange.ActiveSpeaker {
+    var client: AVSClient {
+        AVSClient(userId: userId, clientId: clientId)
+    }
 }

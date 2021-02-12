@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2020 Wire Swiss GmbH
+// Copyright (C) 2021 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,13 +18,7 @@
 
 import Foundation
 
-public enum ZMAccountDeletedReason: Int {
-    /// The user account was deleted by the user
-    case userInitiated = 0
-    /// The user account was deleted because a jailbreak was detected
-    case jailbreakDetected
-    /// The user account was deleted because the session expired
-    case sessionExpired
-    /// The user account was deleted because the limit of failed password attempts was reached
-    case failedPasswordLimitReached
+public enum VideoGridPresentationMode: CaseIterable {
+    case activeSpeakers
+    case allVideoStreams
 }

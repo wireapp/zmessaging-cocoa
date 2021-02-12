@@ -28,7 +28,7 @@ extern NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest;
 
 
 
-@interface ZMUserTranscoder : ZMAbstractRequestStrategy <ZMObjectStrategy>
+@interface ZMUserTranscoder : ZMAbstractRequestStrategy <ZMObjectStrategy, ZMContextChangeTracker>
 
 - (instancetype _Nonnull)initWithManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
                                      applicationStatus:(id<ZMApplicationStatus> _Nonnull)applicationStatus NS_UNAVAILABLE;

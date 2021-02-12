@@ -69,6 +69,16 @@ struct WireCallCenterMutedNotification : SelfPostingNotification {
     public let muted: Bool
 }
 
+// MARK:- Active speakers observer
+
+public protocol ActiveSpeakersObserver : class {
+    func callCenterDidChangeActiveSpeakers()
+}
+
+struct WireCallCenterActiveSpeakersNotification : SelfPostingNotification {
+    static let notificationName = Notification.Name("WireCallCenterActiveSpeakersNotification")
+}
+
 // MARK:- Call state observer
 
 public protocol WireCallCenterCallStateObserver : class {
@@ -366,6 +376,14 @@ extension WireCallCenterV3 {
                 let observer = observer
                 else { return }
             observer.callCenterDidChange(muted: note.muted)
+        }
+    }
+    
+    public class func addActiveSpeakersObserver(observer: ActiveSpeakersObserver, context: NSManagedObjectContext) -> Any {
+        return NotificationInContext.addObserver(
+            name: WireCallCenterActiveSpeakersNotification.notificationName,
+            context: context.notificationContext) { [weak observer] _ in
+                observer?.callCenterDidChangeActiveSpeakers()
         }
     }
 

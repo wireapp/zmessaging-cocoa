@@ -73,7 +73,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
         )
     }
 
-    override func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
+    override func session(for account: Account, storeProvider: LocalStoreProviderProtocol, configuration: ZMUserSession.Configuration = .defaultConfig) -> ZMUserSession? {
         return ZMUserSession(
             transportSession: transportSession,
             mediaManager: mediaManager,
@@ -81,10 +81,25 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
             analytics: analytics,
             application: application,
             appVersion: appVersion,
-            storeProvider: storeProvider
+            storeProvider: storeProvider,
+            configuration: configuration
         )
     }
 
+}
+
+extension ZMUserSession.Configuration {
+
+    @objc
+    static var defaultConfig: ZMUserSession.Configuration {
+        Self.init(
+            appLockConfig: .init(
+                useBiometricsOrCustomPasscode: false,
+                forceAppLock: false,
+                timeOut: 10
+            )
+        )
+    }
 }
 
 final class MockUnauthenticatedSessionFactory: UnauthenticatedSessionFactory {
@@ -93,7 +108,7 @@ final class MockUnauthenticatedSessionFactory: UnauthenticatedSessionFactory {
     
     init(transportSession: UnauthenticatedTransportSessionProtocol, environment: BackendEnvironmentProvider, reachability: ReachabilityProvider) {
         self.transportSession = transportSession
-        super.init(environment: environment, reachability: reachability)
+        super.init(appVersion: "1.0", environment: environment, reachability: reachability)
     }
 
     override func session(withDelegate delegate: WireSyncEngine.UnauthenticatedSessionDelegate) -> UnauthenticatedSession {
@@ -391,6 +406,7 @@ extension IntegrationTest {
             self.teamUser2 = user2
 
             let team = session.insertTeam(withName: "A Team", isBound: true, users: [self.selfUser, user1, user2])
+            team.creator = user1
             self.team = team
 
             let bot = session.insertUser(withName: "Botty the Bot")
@@ -628,9 +644,7 @@ extension IntegrationTest {
 
 extension IntegrationTest: SessionManagerDelegate {
     
-    public func sessionManagerDidFailToLogin(account: Account?,
-                                      from selectedAccount: Account?,
-                                      error: Error) {
+    public func sessionManagerDidFailToLogin(error: Error?) {
         // no op
     }
     

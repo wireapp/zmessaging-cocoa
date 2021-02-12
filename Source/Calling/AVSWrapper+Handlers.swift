@@ -199,5 +199,11 @@ extension AVSWrapper {
         /// typedef int (wcall_sft_req_h)(void *ctx, const char *url, const uint8_t *data, size_t len, void *arg);
 
         typealias SFTCallMessageSend = @convention(c) (VoidPtr, StringPtr, UnsafePointer<UInt8>?, Int, ContextRef) -> Int32
+        
+        /// Callback used to inform the user of a change in the list of active speakers
+        ///
+        /// typedef void (wcall_active_speaker_h)(WUSER_HANDLE wuser, const char *convid, const char *json_levels, void *arg);
+        
+        typealias ActiveSpeakersChange = @convention(c) (UInt32, StringPtr, StringPtr, ContextRef) -> Void
     }
 }

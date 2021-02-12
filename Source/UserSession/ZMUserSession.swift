@@ -31,7 +31,7 @@ public protocol ThirdPartyServicesDelegate: NSObjectProtocol {
 typealias UserSessionDelegate = UserSessionEncryptionAtRestDelegate
 
 @objcMembers
-public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
+public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessionAppLockInterface {
     
     private let appVersion: String
     private var tokens: [Any] = []
@@ -53,6 +53,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var transportSession: TransportSessionType
     let storedDidSaveNotifications: ContextDidSaveNotificationPersistence
     let userExpirationObserver: UserExpirationObserver
+    var updateEventProcessor: UpdateEventProcessor?
+    var strategyDirectory: StrategyDirectoryProtocol?
     var syncStrategy: ZMSyncStrategy?
     var operationLoop: ZMOperationLoop?
     var notificationDispatcher: NotificationDispatcher
@@ -63,6 +65,10 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var likeMesssageObserver: ManagedObjectContextChangeObserver?
     var urlActionProcessors: [URLActionProcessor]?
     let debugCommands: [String: DebugCommand]
+    let eventProcessingTracker: EventProcessingTracker = EventProcessingTracker()
+    let hotFix: ZMHotFix
+    
+    public var appLockController: AppLockType
     
     public var hasCompletedInitialSync: Bool = false
     
@@ -179,10 +185,14 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                 mediaManager: MediaManagerType,
                 flowManager: FlowManagerType,
                 analytics: AnalyticsType?,
+                eventProcessor: UpdateEventProcessor? = nil,
+                strategyDirectory: StrategyDirectoryProtocol? = nil,
+                syncStrategy: ZMSyncStrategy? = nil,
                 operationLoop: ZMOperationLoop? = nil,
                 application: ZMApplication,
                 appVersion: String,
-                storeProvider: LocalStoreProviderProtocol) {
+                storeProvider: LocalStoreProviderProtocol,
+                configuration: Configuration) {
         
         storeProvider.contextDirectory.syncContext.performGroupedBlockAndWait {
             storeProvider.contextDirectory.syncContext.analytics = analytics
@@ -202,9 +212,9 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.userExpirationObserver = UserExpirationObserver(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.debugCommands = ZMUserSession.initDebugCommands()
+        self.hotFix = ZMHotFix(syncMOC: storeProvider.contextDirectory.syncContext)
+        self.appLockController = AppLockController(config: configuration.appLockConfig, selfUser: ZMUser.selfUser(in: storeProvider.contextDirectory.uiContext))
         super.init()
-        
-        ZMUserAgent.setWireAppVersion(appVersion)
         
         configureCaches()
         
@@ -212,7 +222,9 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
             self.localNotificationDispatcher = LocalNotificationDispatcher(in: storeProvider.contextDirectory.syncContext)
             self.configureTransportSession()
             self.applicationStatusDirectory = self.createApplicationStatusDirectory()
-            self.syncStrategy = operationLoop?.syncStrategy
+            self.updateEventProcessor = eventProcessor ?? self.createUpdateEventProcessor()
+            self.strategyDirectory = strategyDirectory ?? self.createStrategyDirectory()
+            self.syncStrategy = syncStrategy ?? self.createSyncStrategy()
             self.operationLoop = operationLoop ?? self.createOperationLoop()
             self.urlActionProcessors = self.createURLActionProcessors()
             self.callStateObserver = CallStateObserver(localNotificationDispatcher: self.localNotificationDispatcher!,
@@ -220,6 +232,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                                                        callNotificationStyleProvider: self)
         }
 
+        updateEventProcessor!.eventConsumers = self.strategyDirectory!.eventConsumers
         registerForCalculateBadgeCountNotification()
         registerForRegisteringPushTokenNotification()
         registerForBackgroundNotifications()
@@ -257,6 +270,22 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
 
     }
     
+    private func createStrategyDirectory() -> StrategyDirectoryProtocol {
+        return StrategyDirectory(contextDirectory: storeProvider.contextDirectory,
+                                 applicationStatusDirectory: applicationStatusDirectory!,
+                                 cookieStorage: transportSession.cookieStorage,
+                                 pushMessageHandler: localNotificationDispatcher!,
+                                 flowManager: flowManager,
+                                 updateEventProcessor: updateEventProcessor!,
+                                 localNotificationDispatcher: localNotificationDispatcher!)
+    }
+    
+    private func createUpdateEventProcessor() -> EventProcessor {
+        return EventProcessor(storeProvider: self.storeProvider,
+                              syncStatus: applicationStatusDirectory!.syncStatus,
+                              eventProcessingTracker: eventProcessingTracker)
+    }
+    
     private func createApplicationStatusDirectory() -> ApplicationStatusDirectory {
         let applicationStatusDirectory = ApplicationStatusDirectory(withManagedObjectContext: self.syncManagedObjectContext,
                                                                      cookieStorage: transportSession.cookieStorage,
@@ -274,40 +303,34 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     private func createURLActionProcessors() -> [URLActionProcessor] {
         return [
             DeepLinkURLActionProcessor(contextProvider: self),
-            ConnectToBotURLActionProcessor(contextprovider: self, transportSession: transportSession, eventProcessor: operationLoop!.syncStrategy)
+            ConnectToBotURLActionProcessor(contextprovider: self,
+                                           transportSession: transportSession,
+                                           eventProcessor: updateEventProcessor!)
         ]
     }
     
+    private func createSyncStrategy() -> ZMSyncStrategy {
+        return ZMSyncStrategy(storeProvider: storeProvider,
+                              notificationsDispatcher: notificationDispatcher,
+                              applicationStatusDirectory: applicationStatusDirectory!,
+                              application: application,
+                              strategyDirectory: strategyDirectory!,
+                              eventProcessingTracker: eventProcessingTracker)
+    }
+    
     private func createOperationLoop() -> ZMOperationLoop {
-        let strategyFactory = RequestStrategyFactory(contextDirectory: storeProvider.contextDirectory,
-                                                     applicationStatusDirectory: applicationStatusDirectory!,
-                                                     cookieStorage: transportSession.cookieStorage,
-                                                     pushMessageHandler: localNotificationDispatcher!,
-                                                     flowManager: flowManager,
-                                                     updateEventProcessor: self,
-                                                     localNotificationDispatcher: localNotificationDispatcher!)
-        
-        let syncStrategy = ZMSyncStrategy(storeProvider: storeProvider,
-                                          notificationsDispatcher: notificationDispatcher,
-                                          applicationStatusDirectory: applicationStatusDirectory!,
-                                          application: application,
-                                          requestStrategyFactory: strategyFactory)
-        self.syncStrategy = syncStrategy
-
         return ZMOperationLoop(transportSession: transportSession,
-                               syncStrategy: syncStrategy,
+                               requestStrategy: syncStrategy,
+                               updateEventProcessor: updateEventProcessor!,
                                applicationStatusDirectory: applicationStatusDirectory!,
                                uiMOC: managedObjectContext,
                                syncMOC: syncManagedObjectContext)
     }
     
-    func startRequestLoopTracker() {
-        let tracker = RequestLoopAnalyticsTracker(with: analytics)
-        
+    func startRequestLoopTracker() {        
         transportSession.requestLoopDetectionCallback = { path in
-            // The tracker will return false in case the path should be ignored.
-            guard !tracker.tag(with: path) else { return }
-            
+            guard !path.hasSuffix("/typing") else { return }
+
             Logging.network.warn("Request loop happening at path: \(path)")
             
             DispatchQueue.main.async {
@@ -476,25 +499,30 @@ extension ZMUserSession: ZMSyncStateDelegate {
     }
     
     public func didFinishQuickSync() {
-        guard let syncStrategy = syncStrategy else { return }
-        
-        syncStrategy.processAllEventsInBuffer()
         processEvents()
-        
+                
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.notifyThirdPartyServices()
         }
+
+        // TODO: [John] This is a tempory solution until we add support for slow syncing
+        // team features and config update events.
+        guard let team = ZMUser.selfUser(in: syncManagedObjectContext).team else { return }
+        Feature.createDefaultInstanceIfNeeded(name: .appLock, team: team, context: syncManagedObjectContext)
+        team.enqueueBackendRefresh(for: .appLock)
     }
     
     func processEvents() {
-        guard let syncStrategy = syncStrategy else { return }
-        
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.isPerformingSync = true
             self?.updateNetworkState()
         }
         
-        let hasMoreEventsToProcess = syncStrategy.processEventsIfReady()
+        let hasMoreEventsToProcess = updateEventProcessor!.processEventsIfReady()
+        
+        if !hasMoreEventsToProcess {
+            hotFix.applyPatches()
+        }
         
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.isPerformingSync = hasMoreEventsToProcess
@@ -516,24 +544,11 @@ extension ZMUserSession: ZMSyncStateDelegate {
             thirdPartyServicesDelegate?.userSessionIsReadyToUploadServicesData(userSession: self)
         }
     }
-    
+
 }
 
 extension ZMUserSession: URLActionProcessor {
     func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         urlActionProcessors?.forEach({ $0.process(urlAction: urlAction, delegate: delegate)} )
     }
-}
-
-// TODO jacob temporary solution while refactoring
-extension ZMUserSession: UpdateEventProcessor {
-    
-    public func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
-        syncStrategy?.storeUpdateEvents(updateEvents, ignoreBuffer: ignoreBuffer)
-    }
-    
-    public func storeAndProcessUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
-        syncStrategy?.storeAndProcessUpdateEvents(updateEvents, ignoreBuffer: ignoreBuffer)
-    }
-        
 }
