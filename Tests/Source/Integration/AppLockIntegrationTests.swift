@@ -51,7 +51,6 @@ final class AppLockIntegrationTests: IntegrationTest {
 
         // Then
         XCTAssertNil(userSession!.lock)
-        sessionManagerDidChangeActiveUserSession(userSession: userSession!)
     }
 
 }

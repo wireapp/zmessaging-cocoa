@@ -35,7 +35,8 @@ public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 }
 
 public protocol SessionActivationObserver: class {
-    func sessionManagerDidChangeActiveUserSession(userSession: UserSessionAppLockInterface)
+    func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession)
+    func sessionManagerDidReportLockChange(forSession session: UserSessionAppLockInterface)
 }
 
 public protocol SessionManagerDelegate: SessionActivationObserver {
@@ -616,6 +617,7 @@ public final class SessionManager : NSObject, SessionManagerType {
             self.activeUserSession = session
             log.debug("Activated ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")
 
+            self.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
             self.configureUserNotifications()
             completion(session)
 
@@ -627,7 +629,7 @@ public final class SessionManager : NSObject, SessionManagerType {
                     return
                 }
             
-                self?.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
+                self?.delegate?.sessionManagerDidReportLockChange(forSession: session)
                 self?.performPostUnlockActionsIfPossible(for: session)
             }
         }
@@ -706,7 +708,7 @@ public final class SessionManager : NSObject, SessionManagerType {
 
         let databaseEncryptionObserverToken = session.registerDatabaseLockedHandler { [weak self] _ in
             guard session == self?.activeUserSession else { return }
-            self?.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
+            self?.delegate?.sessionManagerDidReportLockChange(forSession: session)
         }
 
         accountTokens[account.userIdentifier] = [teamObserver,
@@ -1093,7 +1095,7 @@ extension SessionManager {
 
         if let session = activeUserSession {
             // The session lock may have changed so inform the delegate in case.
-            self.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
+            self.delegate?.sessionManagerDidReportLockChange(forSession: session)
         }
     }
     

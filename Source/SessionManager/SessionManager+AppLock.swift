@@ -24,7 +24,7 @@ extension SessionManager: UserSessionAppLockDelegate {
         performPostUnlockActionsIfPossible(for: session)
 
         DispatchQueue.main.async {
-            self.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
+            self.delegate?.sessionManagerDidReportLockChange(forSession: session)
         }
     }
 

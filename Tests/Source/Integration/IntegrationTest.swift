@@ -650,9 +650,8 @@ extension IntegrationTest: SessionManagerDelegate {
         // no op
     }
     
-    public func sessionManagerDidChangeActiveUserSession(userSession: UserSessionAppLockInterface) {
-        let zmUserSession = userSession as! ZMUserSession
-        self.userSession = zmUserSession
+    public func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession) {
+        self.userSession = userSession
         
         if let notificationCenter = self.notificationCenter {
             self.userSession?.localNotificationDispatcher?.notificationCenter = notificationCenter
@@ -663,6 +662,10 @@ extension IntegrationTest: SessionManagerDelegate {
         }
         
         setupTimers()
+    }
+
+    public func sessionManagerDidReportLockChange(forSession session: UserSessionAppLockInterface) {
+        // No op
     }
 
     public func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void) {

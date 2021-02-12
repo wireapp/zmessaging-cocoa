@@ -1565,8 +1565,12 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     }
     
     var userSession : ZMUserSession?
-    func sessionManagerDidChangeActiveUserSession(userSession: UserSessionAppLockInterface) {
-        self.userSession = userSession as! ZMUserSession
+    func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession) {
+        self.userSession = userSession
+    }
+
+    func sessionManagerDidReportLockChange(forSession session: UserSessionAppLockInterface) {
+        // No op
     }
     
     var startedMigrationCalled = false
