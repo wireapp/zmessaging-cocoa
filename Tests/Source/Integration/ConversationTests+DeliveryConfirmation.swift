@@ -65,7 +65,7 @@ class ConversationTests_DeliveryConfirmation: ConversationTestsBase {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
         
         // then
-        XCTAssertEqual(conversation?.allMessages.count, 2) // system message & inserted message
+        XCTAssertEqual(conversation?.allMessages.count, 1) // inserted message
         
         guard let request = mockTransportSession?.receivedRequests().last else {return XCTFail()}
         XCTAssertEqual((request as AnyObject).path, requestPath)

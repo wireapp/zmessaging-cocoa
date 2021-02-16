@@ -28,10 +28,10 @@ public protocol ThirdPartyServicesDelegate: NSObjectProtocol {
     
 }
 
-typealias UserSessionDelegate = UserSessionEncryptionAtRestDelegate
+typealias UserSessionDelegate = UserSessionEncryptionAtRestDelegate & UserSessionAppLockDelegate
 
 @objcMembers
-public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessionAppLockInterface {
+public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     
     private let appVersion: String
     private var tokens: [Any] = []
@@ -67,7 +67,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
     let debugCommands: [String: DebugCommand]
     let eventProcessingTracker: EventProcessingTracker = EventProcessingTracker()
     let hotFix: ZMHotFix
-    
+
     public var appLockController: AppLockType
     
     public var hasCompletedInitialSync: Bool = false
@@ -181,7 +181,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
     }
     
     @objc
-    public init(transportSession: TransportSessionType,
+    public init(userId: UUID,
+                transportSession: TransportSessionType,
                 mediaManager: MediaManagerType,
                 flowManager: FlowManagerType,
                 analytics: AnalyticsType?,
@@ -213,8 +214,10 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider, UserSessio
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.debugCommands = ZMUserSession.initDebugCommands()
         self.hotFix = ZMHotFix(syncMOC: storeProvider.contextDirectory.syncContext)
-        self.appLockController = AppLockController(config: configuration.appLockConfig, selfUser: ZMUser.selfUser(in: storeProvider.contextDirectory.uiContext))
+        self.appLockController = AppLockController(userId: userId, config: configuration.appLockConfig, selfUser: ZMUser.selfUser(in: storeProvider.contextDirectory.uiContext))
         super.init()
+
+        appLockController.delegate = self
         
         configureCaches()
         
@@ -504,6 +507,12 @@ extension ZMUserSession: ZMSyncStateDelegate {
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.notifyThirdPartyServices()
         }
+
+        // TODO: [John] This is a tempory solution until we add support for slow syncing
+        // team features and config update events.
+        guard let team = ZMUser.selfUser(in: syncManagedObjectContext).team else { return }
+        Feature.createDefaultInstanceIfNeeded(name: .appLock, team: team, context: syncManagedObjectContext)
+        team.enqueueBackendRefresh(for: .appLock)
     }
     
     func processEvents() {
@@ -538,7 +547,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
             thirdPartyServicesDelegate?.userSessionIsReadyToUploadServicesData(userSession: self)
         }
     }
-    
+
 }
 
 extension ZMUserSession: URLActionProcessor {

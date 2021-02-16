@@ -1370,6 +1370,83 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
     }
 }
 
+final class SessionManagerTests_AppLock: IntegrationTest {
+
+    private var appLock: MockAppLock!
+
+    override func setUp() {
+        super.setUp()
+        // Mock transport doesn't support multiple accounts at the moment so we pretend to be offline
+        // in order to avoid the user session's getting stuck in a request loop.
+        mockTransportSession.doNotRespondToRequests = true
+        appLock = MockAppLock()
+    }
+
+    override func tearDown() {
+        sessionManager!.tearDownAllBackgroundSessions()
+        appLock = nil
+        mockTransportSession.doNotRespondToRequests = false
+        super.tearDown()
+    }
+
+    func test_ItBeginsAppLockTimer_WhenChangingTheActiveUserSession() {
+        // Given
+        let account1 = addAccount(name: "Account 1", userIdentifier: currentUserIdentifier)
+        let account2 = addAccount(name: "Account 2", userIdentifier: .create())
+
+        weak var session1: ZMUserSession?
+        sessionManager?.loadSession(for: account1, completion: { (session) in
+            session1 = session
+            session1?.appLockController = self.appLock
+        })
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(sessionManager!.activeUserSession, session1)
+
+        // When
+        let switchedAccount = expectation(description: "switched account")
+        sessionManager!.select(account2) {
+            switchedAccount.fulfill()
+        }
+
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+
+        // Then
+        XCTAssertEqual(appLock.methodCalls.beginTimer.count, 1)
+    }
+
+    func test_ItBeginAppLockTimer_WhenTheAppResignsActive() {
+        // Given
+        let account1 = addAccount(name: "Account 1", userIdentifier: currentUserIdentifier)
+
+        // Make account 1 the active session.
+        weak var session1: ZMUserSession?
+        sessionManager?.loadSession(for: account1, completion: { (session) in
+            session1 = session
+            session1?.appLockController = self.appLock
+        })
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(sessionManager!.activeUserSession, session1)
+
+        // When
+        let notification = Notification(name: UIApplication.willResignActiveNotification)
+        sessionManager!.applicationWillResignActive(notification)
+
+        // Then
+        XCTAssertEqual(appLock.methodCalls.beginTimer.count, 1)
+    }
+
+    private func addAccount(name: String, userIdentifier: UUID) -> Account {
+        let account = Account(userName: name, userIdentifier: userIdentifier)
+        let cookie = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = cookie
+        sessionManager!.accountManager.addOrUpdate(account)
+        return account
+    }
+
+}
+
 extension NSManagedObjectContext {
     func createSelfUserAndSelfConversation() {
         let selfUser = ZMUser.selfUser(in: self)
@@ -1491,14 +1568,14 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
     func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession) {
         self.userSession = userSession
     }
+
+    func sessionManagerDidReportLockChange(forSession session: UserSessionAppLockInterface) {
+        // No op
+    }
     
     var startedMigrationCalled = false
     func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void) {
         startedMigrationCalled = true
-    }
-
-    func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
-        // no op
     }
     
 }

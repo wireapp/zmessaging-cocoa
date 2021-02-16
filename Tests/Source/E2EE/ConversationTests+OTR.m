@@ -766,7 +766,7 @@
     // THEN
     ZMSystemMessage *lastMessage = (ZMSystemMessage *)[conversation lastMessagesWithLimit:10][1]; // second to last message
     XCTAssertEqual(conversation.securityLevel, ZMConversationSecurityLevelSecureWithIgnored);
-    XCTAssertEqual(conversation.allMessages.count, 4lu); // 3x system message (new device & secured & new client) + appended client message
+    XCTAssertEqual(conversation.allMessages.count, 3lu); // 2x system message (secured & new client) + appended client message
     XCTAssertEqual(lastMessage.systemMessageData.systemMessageType, ZMSystemMessageTypeNewClient);
 }
 
@@ -1268,7 +1268,6 @@
     
     // then
     id<ZMConversationMessage> lastMessage = conversation.lastMessage;
-    XCTAssertEqual(conversation.allMessages.count, 2lu);
     XCTAssertNotNil(lastMessage.systemMessageData);
     XCTAssertEqual(lastMessage.systemMessageData.systemMessageType, ZMSystemMessageTypeDecryptionFailed);
 }

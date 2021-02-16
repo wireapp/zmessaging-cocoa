@@ -75,6 +75,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
     override func session(for account: Account, storeProvider: LocalStoreProviderProtocol, configuration: ZMUserSession.Configuration = .defaultConfig) -> ZMUserSession? {
         return ZMUserSession(
+            userId: account.userIdentifier,
             transportSession: transportSession,
             mediaManager: mediaManager,
             flowManager: flowManager,
@@ -94,9 +95,10 @@ extension ZMUserSession.Configuration {
     static var defaultConfig: ZMUserSession.Configuration {
         Self.init(
             appLockConfig: .init(
-                useBiometricsOrCustomPasscode: false,
-                forceAppLock: false,
-                timeOut: 10
+                isAvailable: true,
+                isForced: false,
+                timeout: 19,
+                requireCustomPasscode: false
             )
         )
     }
@@ -655,17 +657,17 @@ extension IntegrationTest: SessionManagerDelegate {
             self.userSession?.localNotificationDispatcher?.notificationCenter = notificationCenter
         }
         
-        userSession.syncManagedObjectContext.performGroupedBlock {
-            userSession.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
+        self.userSession?.syncManagedObjectContext.performGroupedBlock {
+            self.userSession?.syncManagedObjectContext.setPersistentStoreMetadata(NSNumber(value: true), key: ZMSkipHotfix)
         }
         
         setupTimers()
     }
-    
-    public func sessionManagerDidReportDatabaseLockChange(isLocked: Bool) {
-        // no-op
+
+    public func sessionManagerDidReportLockChange(forSession session: UserSessionAppLockInterface) {
+        // No op
     }
-    
+
     public func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void) {
         self.userSession = nil
         userSessionCanBeTornDown()

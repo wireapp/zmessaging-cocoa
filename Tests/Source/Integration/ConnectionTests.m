@@ -601,25 +601,6 @@
     (void)listObserver;
 }
 
-- (void)testThatWeSeeANewConversationSystemMessageWhenAcceptingAConnectionRequest;
-{
-    XCTAssertTrue([self login]);
-    
-    ZMConversation *conversation = [self conversationForMockConversation:self.selfToUser1Conversation];
-    XCTAssertNotNil(self.selfToUser1Conversation);
-    XCTAssertNotNil(conversation);
-    
-    [self.userSession saveOrRollbackChanges];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    XCTAssertEqual(conversation.conversationType, ZMConversationTypeOneOnOne);
-    XCTAssertEqual(conversation.allMessages.count, 1u);
-    id<ZMConversationMessage> message = conversation.lastMessage;
-    XCTAssertEqualObjects([message class], [ZMSystemMessage class]);
-    XCTAssertEqual(((ZMSystemMessage *)message).systemMessageType, ZMSystemMessageTypeUsingNewDevice);
-}
-
-
 - (void)DISABLED_testThatWeDontSeeASystemMessageWhenAUserAcceptsAConnectionRequest;
 {
     // given two remote users
