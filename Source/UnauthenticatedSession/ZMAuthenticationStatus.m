@@ -39,18 +39,22 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 @interface ZMAuthenticationStatus ()
 
 @property (nonatomic, weak) id<UserInfoParser> userInfoParser;
+@property (nonatomic, weak) id<ZMAuthenticationStatusDelegate> delegate;
 @property (nonatomic, strong) UserInfo *authenticatedUserInfo;
 
 @end
 
 @implementation ZMAuthenticationStatus
 
-- (instancetype)initWithGroupQueue:(id<ZMSGroupQueue>)groupQueue userInfoParser:(nullable id<UserInfoParser>)userInfoParser {
+- (instancetype)initWithDelegate:(id<ZMAuthenticationStatusDelegate>)delegate
+                      groupQueue:(id<ZMSGroupQueue>)groupQueue
+                  userInfoParser:(id<UserInfoParser>)userInfoParser {
     self = [super init];
     if(self) {
+        self.delegate = delegate;
         self.groupQueue = groupQueue;
-        self.isWaitingForLogin = !self.isLoggedIn;
         self.userInfoParser = userInfoParser;
+        self.isWaitingForLogin = !self.isLoggedIn;
     }
     return self;
 }
@@ -191,9 +195,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     if (self.isWaitingForLogin) {
         self.isWaitingForLogin = NO;
     }
-    [self notifyAuthenticationDidSucceed];
-    // There might be some authentication errors after parsing the response (e.g. too many accounts)
-    
+    [self.delegate authenticationDidSucceed];
     [self.userInfoParser upgradeToAuthenticatedSessionWithUserInfo:userInfo];
 }
 
@@ -220,7 +222,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
        && self.loginCredentials == credentials)
     {
         self.loginCredentials = nil;
-        [self notifyAuthenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNetworkError userInfo:nil]];
+        [self.delegate authenticationDidFail:[NSError userSessionErrorWithErrorCode:ZMUserSessionNetworkError userInfo:nil]];
     }
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
@@ -255,7 +257,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
         self.authenticatedUserInfo = userInfo;
         self.isWaitingForBackupImport = YES;
         BOOL existingAccount = [self.userInfoParser accountExistsLocallyFromUserInfo:userInfo];
-        [self notifyAuthenticationReadyToImportBackupWithExistingAccount:existingAccount];
+        [self.delegate authenticationReadyImportingBackup: existingAccount];
     }
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
@@ -266,7 +268,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     [self resetLoginAndRegistrationStatus];
     
     NSError *error = [NSError userSessionErrorWithErrorCode:(invalidCredentials ? ZMUserSessionInvalidCredentials : ZMUserSessionUnknownError) userInfo:nil];
-    [self notifyAuthenticationDidFail:error];
+    [self.delegate authenticationDidFail: error];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 
@@ -275,7 +277,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     ZMLogDebug(@"%@ invalid credentials: %d", NSStringFromSelector(_cmd), invalidCredentials);
     
     NSError *error = [NSError userSessionErrorWithErrorCode:(invalidCredentials ? ZMUserSessionInvalidCredentials : ZMUserSessionUnknownError) userInfo:nil];
-    [self notifyAuthenticationDidFail:error];
+    [self.delegate authenticationDidFail: error];
     [self resetLoginAndRegistrationStatus];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
@@ -285,7 +287,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
     self.isWaitingForEmailVerification = YES;
     NSError *error = [NSError userSessionErrorWithErrorCode:ZMUserSessionAccountIsPendingActivation userInfo:nil];
-    [self notifyAuthenticationDidFail:error];
+    [self.delegate authenticationDidFail: error];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
 
@@ -293,7 +295,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
     NSError *error = [NSError userSessionErrorWithErrorCode:ZMUserSessionAccountSuspended userInfo:nil];
-    [self notifyAuthenticationDidFail:error];
+    [self.delegate authenticationDidFail: error];
     [self resetLoginAndRegistrationStatus];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
@@ -323,7 +325,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 - (void)didCompleteRequestForLoginCodeSuccessfully
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
-    [self notifyLoginCodeRequestDidSucceed];
+    [self.delegate loginCodeRequestDidSucceed];
     self.loginPhoneNumberThatNeedsAValidationCode = nil;
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
 }
@@ -332,8 +334,16 @@ static NSString* ZMLogTag ZM_UNUSED = @"Authentication";
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
     self.loginPhoneNumberThatNeedsAValidationCode = nil;
-    [self notifyLoginCodeRequestDidFail:error];
+    [self.delegate loginCodeRequestDidFail: error];
     ZMLogDebug(@"current phase: %lu", (unsigned long)self.currentPhase);
+}
+
+- (void)notifyAuthenticationDidFail:(NSError *)error {
+    [self.delegate authenticationDidFail:error];
+}
+
+- (void)notifyCompanyLoginCodeDidBecomeAvailable:(NSUUID *)uuid {
+    [self.delegate companyLoginCodeDidBecomeAvailable:uuid];
 }
 
 @end

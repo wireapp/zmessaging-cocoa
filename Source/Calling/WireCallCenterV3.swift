@@ -184,6 +184,8 @@ extension WireCallCenterV3 {
             networkQuality: .normal,
             isConferenceCall: isConferenceCall,
             degradedUser: nil,
+            activeSpeakers: [],
+            videoGridPresentationMode: .allVideoStreams,
             conversationObserverToken: token
         )
     }
@@ -313,6 +315,10 @@ extension WireCallCenterV3 {
     func degradedUser(conversationId: UUID) -> ZMUser? {
         return callSnapshots[conversationId]?.degradedUser
     }
+    
+    public func videoGridPresentationMode(conversationId: UUID) -> VideoGridPresentationMode {
+        return callSnapshots[conversationId]?.videoGridPresentationMode ?? .allVideoStreams
+    }
 
 }
 
@@ -320,18 +326,32 @@ extension WireCallCenterV3 {
 
 extension WireCallCenterV3 {
     
-    /// Returns the callParticipants currently in the conversation
-    func callParticipants(conversationId: UUID) -> [CallParticipant] {
+    /// Returns the callParticipants currently in the conversation.
+    func callParticipants(conversationId: UUID, activeSpeakersLimit limit: Int? = nil) -> [CallParticipant] {
         guard
-            let context = uiMOC,
-            let callParticipants = callSnapshots[conversationId]?.callParticipants
+            let callMembers = callSnapshots[conversationId]?.callParticipants.members.array,
+            let context = uiMOC
         else {
             return []
         }
-        
-        return callParticipants.members.array.compactMap {
-            CallParticipant(member: $0, context: context)
+
+        let activeSpeakers = self.activeSpeakers(conversationId: conversationId, limitedBy: limit)
+        return callMembers.compactMap { member in
+            let isActive = activeSpeakers.contains(where: { $0.client == member.client })
+            return CallParticipant(member: member, isActiveSpeaker: isActive, context: context)
         }
+    }
+    
+    private func activeSpeakers(conversationId: UUID, limitedBy limit: Int? = nil) -> [AVSActiveSpeakersChange.ActiveSpeaker] {
+        guard let activeSpeakers = callSnapshots[conversationId]?.activeSpeakers else {
+            return []
+        }
+        
+        guard let limit = limit else {
+            return activeSpeakers
+        }
+        
+        return Array(activeSpeakers.prefix(limit))
     }
 
     /// Returns the remote identifier of the user that initiated the call.
@@ -517,6 +537,12 @@ extension WireCallCenterV3 {
 
     public func setVideoCaptureDevice(_ captureDevice: CaptureDevice, for conversationId: UUID) {
         flowManager.setVideoCaptureDevice(captureDevice, for: conversationId)
+    }
+    
+    public func setVideoGridPresentationMode(_ presentationMode: VideoGridPresentationMode, for conversationId: UUID) {
+        if let snapshot = callSnapshots[conversationId] {
+            callSnapshots[conversationId] = snapshot.updateVideoGridPresentationMode(presentationMode)
+        }
     }
 
     private func callType(for conversation: ZMConversation, startedWithVideo: Bool, isConferenceCall: Bool) -> AVSCallType {

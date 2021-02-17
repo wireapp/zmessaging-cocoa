@@ -97,6 +97,7 @@ public class AVSWrapper: AVSWrapperType {
         wcall_set_mute_handler(handle, muteChangeHandler, observer)
         wcall_set_participant_changed_handler(handle, callParticipantHandler, observer)
         wcall_set_req_clients_handler(handle, requestClientsHandler)
+        wcall_set_active_speaker_handler(handle, activeSpeakersHandler)
     }
 
     // MARK: - Convenience Methods
@@ -330,6 +331,12 @@ public class AVSWrapper: AVSWrapperType {
 
         return AVSWrapper.withCallCenter(contextRef, url) {
             $0.handleSFTCallMessageRequest(token: token, url: $1, data: transformedData)
+        }
+    }
+    
+    private let activeSpeakersHandler: Handler.ActiveSpeakersChange = { handle, conversationIdRef, json, contextRef in
+        AVSWrapper.withCallCenter(contextRef, conversationIdRef, json) {
+            $0.handleActiveSpeakersChange(conversationId: $1, data: $2)
         }
     }
 

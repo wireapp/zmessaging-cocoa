@@ -18,17 +18,23 @@
 
 import Foundation
 
-@objcMembers
-public class MockRequestStrategyFactory: NSObject, RequestStrategyFactoryProtocol {
-    
-    let strategies: [Any]
-    
-    public init(strategies: [Any]) {
-        self.strategies = strategies
+public extension ZMUserSession {
+
+    /// An object used to configure a user session.
+
+    @objc(ZMUserSessionConfiguration)
+    final class Configuration: NSObject {
+
+        // MARK: - Properties
+
+        public let appLockConfig: AppLockController.Config
+
+        // MARK: - Life cycle
+
+        public init(appLockConfig: AppLockController.Config) {
+            self.appLockConfig = appLockConfig
+        }
+
     }
-    
-    public func buildStrategies() -> [Any] {
-        return strategies
-    }
-    
+
 }

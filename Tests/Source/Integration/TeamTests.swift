@@ -53,6 +53,7 @@ class TeamTests : IntegrationTest {
         var mockTeam : MockTeam!
         mockTransportSession.performRemoteChanges { (session) in
             mockTeam = session.insertTeam(withName: "Super-Team", isBound: isBound, users: Set(members))
+            mockTeam.creator = members.first
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         return mockTeam
@@ -157,37 +158,3 @@ extension TeamTests {
     
 }
 
-// MARK : Remotely Deleted Team
-
-extension TeamTests {
-
-    // See TeamSyncRequestStrategy.skipTeamSync
-    func testThatItDeletesAccountIfItsDiscoveredThatTeamHasBeenDeletedDuringSlowSync() {
-        XCTAssert(login())
-        
-        // Given
-        // 1. Insert local team, which will not be returned by mock transport when fetching /teams
-        let localOnlyTeamId = UUID.create()
-        let localOnlyTeam = Team.insertNewObject(in: userSession!.managedObjectContext)
-        localOnlyTeam.remoteIdentifier = localOnlyTeamId
-        XCTAssert(userSession!.managedObjectContext.saveOrRollback())
-        
-        // 2. Force a slow sync by returning a 404 when hitting /notifications
-        mockTransportSession.responseGeneratorBlock = { request in
-            if request.path.hasPrefix("/notifications") && !request.path.contains("cancel_fallback") {
-                defer { self.mockTransportSession.responseGeneratorBlock = nil }
-                return ZMTransportResponse(payload: nil, httpStatus: 404, transportSessionError: nil)
-            }
-            return nil
-        }
-        
-        // When
-        recreateSessionManager() // this will trigger a quick sync
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
-        // Then
-        XCTAssertNil(userSession) // user should be logged from the account
-        XCTAssertTrue(sessionManager!.accountManager.accounts.isEmpty) // account should be deleted
-    }
-
-}

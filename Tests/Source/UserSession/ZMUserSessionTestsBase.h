@@ -68,17 +68,11 @@
 @property (nonatomic) NSData *validCookie;
 @property (nonatomic) NSURL *baseURL;
 @property (nonatomic) ZMUserSession *sut;
-@property (nonatomic) ZMSyncStrategy *syncStrategy;
-@property (nonatomic) id mediaManager;
+@property (nonatomic) id<MediaManagerType> mediaManager;
 @property (nonatomic) FlowManagerMock *flowManagerMock;
 @property (nonatomic) NSUInteger dataChangeNotificationsCount;
 @property (nonatomic) ThirdPartyServices *thirdPartyServices;
-@property (nonatomic) id requestAvailableNotification;
-@property (nonatomic) id operationLoop;
-@property (nonatomic) SyncStatus *mockSyncStatus;
 @property (nonatomic) MockSyncStateDelegate *mockSyncStateDelegate;
-@property (nonatomic) ZMClientRegistrationStatus * clientRegistrationStatus;
-@property (nonatomic) ProxiedRequestsStatus *proxiedRequestStatus;
 @property (nonatomic) id<LocalStoreProviderProtocol> storeProvider;
 
 - (void)simulateLoggedInUser;

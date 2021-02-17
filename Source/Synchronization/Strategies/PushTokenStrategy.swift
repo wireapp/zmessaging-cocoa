@@ -23,9 +23,6 @@ let VoIPIdentifierSuffix = "-voip"
 let TokenKey = "token"
 let PushTokenPath = "/push/tokens"
 
-
-extension ZMSingleRequestSync : ZMRequestGenerator {}
-
 @objc public class PushTokenStrategy : AbstractRequestStrategy {
 
     enum Keys {
@@ -42,10 +39,6 @@ extension ZMSingleRequestSync : ZMRequestGenerator {}
 
     fileprivate var pushKitTokenSync : ZMUpstreamModifiedObjectSync!
     fileprivate var notificationsTracker: NotificationsTracker?
-
-    var allRequestGenerators : [ZMRequestGenerator] {
-        return [pushKitTokenSync]
-    }
 
     private func modifiedPredicate() -> NSPredicate {
         guard let basePredicate = UserClient.predicateForObjectsThatNeedToBeUpdatedUpstream() else {
@@ -69,20 +62,6 @@ extension ZMSingleRequestSync : ZMRequestGenerator {}
         return pushKitTokenSync.nextRequest()
     }
 
-}
-
-extension PushTokenStrategy: ZMContextChangeTrackerSource {
-    public func objectsDidChange(_ object: Set<NSManagedObject>) {
-
-    }
-
-    public func fetchRequestForTrackedObjects() -> NSFetchRequest<NSFetchRequestResult>? {
-        return nil
-    }
-
-    public func addTrackedObjects(_ objects: Set<NSManagedObject>) {
-
-    }
 }
 
 extension PushTokenStrategy : ZMUpstreamTranscoder {
@@ -181,18 +160,18 @@ extension PushTokenStrategy : ZMUpstreamTranscoder {
         return nil
     }
 
-    public var requestGenerators: [ZMRequestGenerator] {
-        return []
-    }
-
-    public var contextChangeTrackers: [ZMContextChangeTracker] {
-        return [self.pushKitTokenSync]
-    }
-
     public func shouldProcessUpdatesBeforeInserts() -> Bool {
         return false
     }
 
+}
+
+extension PushTokenStrategy: ZMContextChangeTrackerSource {
+    
+    public var contextChangeTrackers: [ZMContextChangeTracker] {
+        return [self.pushKitTokenSync]
+    }
+    
 }
 
 fileprivate struct PushTokenPayload: Codable {

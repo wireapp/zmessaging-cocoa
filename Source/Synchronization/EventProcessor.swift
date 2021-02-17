@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2018 Wire Swiss GmbH
+// Copyright (C) 2020 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
 //
 
 import Foundation
-import WireUtilities
 
 extension NSNotification.Name {
     static let calculateBadgeCount = NSNotification.Name(rawValue: "calculateBadgeCountNotication")
@@ -31,10 +30,45 @@ public protocol UpdateEventProcessor: class {
     
     @objc(storeAndProcessUpdateEvents:ignoreBuffer:)
     func storeAndProcessUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool)
+    
+    func processEventsIfReady() -> Bool
+    
+    var eventConsumers: [ZMEventConsumer] { get set }
 }
 
-extension ZMSyncStrategy: UpdateEventProcessor {
-                 
+class EventProcessor: UpdateEventProcessor {
+    
+    let syncContext: NSManagedObjectContext
+    let eventContext: NSManagedObjectContext
+    let syncStatus: SyncStatus
+    var eventBuffer: ZMUpdateEventsBuffer?
+    let eventDecoder: EventDecoder
+    let eventProcessingTracker: EventProcessingTrackerProtocol
+    
+    public var eventConsumers: [ZMEventConsumer] = []
+    
+    var isReadyToProcessEvents: Bool {
+        return !syncStatus.isSyncing
+    }
+    
+    // MARK: Life Cycle
+    
+    init(storeProvider: LocalStoreProviderProtocol,
+         syncStatus: SyncStatus,
+         eventProcessingTracker: EventProcessingTrackerProtocol) {
+        self.syncContext = storeProvider.contextDirectory.syncContext
+        self.eventContext = NSManagedObjectContext.createEventContext(withSharedContainerURL: storeProvider.applicationContainer,
+                                                                      userIdentifier: storeProvider.userIdentifier)
+        self.eventContext.add(syncContext.dispatchGroup)
+        self.syncStatus = syncStatus
+        self.eventDecoder = EventDecoder(eventMOC: eventContext, syncMOC: syncContext)
+        self.eventProcessingTracker = eventProcessingTracker
+        self.eventBuffer = ZMUpdateEventsBuffer(updateEventProcessor: self)
+        
+    }
+    
+    // MARK: Methods
+    
     /// Process previously received events if we are ready to process events.
     ///
     /// /// - Returns: **True** if there are still more events to process
@@ -44,8 +78,10 @@ extension ZMSyncStrategy: UpdateEventProcessor {
             return  true
         }
         
-        if syncMOC.encryptMessagesAtRest {
-            guard let encryptionKeys = syncMOC.encryptionKeys else {
+        eventBuffer?.processAllEventsInBuffer()
+        
+        if syncContext.encryptMessagesAtRest {
+            guard let encryptionKeys = syncContext.encryptionKeys else {
                 return true
             }
             
@@ -53,9 +89,7 @@ extension ZMSyncStrategy: UpdateEventProcessor {
         } else {
             processStoredUpdateEvents()
         }
-        
-        applyHotFixes()
-        
+                
         return false
     }
     
@@ -68,12 +102,12 @@ extension ZMSyncStrategy: UpdateEventProcessor {
                 for eventConsumer in self.eventConsumers {
                     eventConsumer.processEventsWhileInBackground?(decryptedEvents)
                 }
-                self.syncMOC.saveOrRollback()
-                NotificationInContext(name: .calculateBadgeCount, context: self.syncMOC.notificationContext).post()
+                self.syncContext.saveOrRollback()
+                NotificationInContext(name: .calculateBadgeCount, context: self.syncContext.notificationContext).post()
             }
         } else {
             Logging.eventProcessing.info("Buffering \(updateEvents.count) event(s)")
-            updateEvents.forEach(eventsBuffer.addUpdateEvent)
+            updateEvents.forEach({ eventBuffer?.addUpdateEvent($0) })
         }
     }
     
@@ -88,7 +122,7 @@ extension ZMSyncStrategy: UpdateEventProcessor {
             
             let date = Date()
             let fetchRequest = prefetchRequest(updateEvents: decryptedUpdateEvents)
-            let prefetchResult = syncMOC.executeFetchRequestBatchOrAssert(fetchRequest)
+            let prefetchResult = syncContext.executeFetchRequestBatchOrAssert(fetchRequest)
             
             Logging.eventProcessing.info("Consuming: [\n\(decryptedUpdateEvents.map({ "\tevent: \(ZMUpdateEvent.eventTypeString(for: $0.type) ?? "Unknown")" }).joined(separator: "\n"))\n]")
             
@@ -96,12 +130,12 @@ extension ZMSyncStrategy: UpdateEventProcessor {
                 for eventConsumer in self.eventConsumers {
                     eventConsumer.processEvents([event], liveEvents: true, prefetchResult: prefetchResult)
                 }
-                self.eventProcessingTracker?.registerEventProcessed()
+                self.eventProcessingTracker.registerEventProcessed()
             }
-            ZMConversation.calculateLastUnreadMessages(in: syncMOC)
-            syncMOC.saveOrRollback()
+            ZMConversation.calculateLastUnreadMessages(in: syncContext)
+            syncContext.saveOrRollback()
             
-            Logging.eventProcessing.debug("Events processed in \(-date.timeIntervalSinceNow): \(self.eventProcessingTracker?.debugDescription ?? "")")
+            Logging.eventProcessing.debug("Events processed in \(-date.timeIntervalSinceNow): \(self.eventProcessingTracker.debugDescription)")
         }
     }
     
@@ -128,5 +162,4 @@ extension ZMSyncStrategy: UpdateEventProcessor {
         return fetchRequest
     }
     
-
 }

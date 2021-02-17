@@ -46,23 +46,30 @@ open class AuthenticatedSessionFactory {
         self.reachability = reachability
     }
 
-    func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
+    func session(
+        for account: Account,
+        storeProvider: LocalStoreProviderProtocol,
+        configuration: ZMUserSession.Configuration) -> ZMUserSession? {
+
         let transportSession = ZMTransportSession(
             environment: environment,
             cookieStorage: environment.cookieStorage(for: account),
             reachability: reachability,
             initialAccessToken: nil,
-            applicationGroupIdentifier: nil
+            applicationGroupIdentifier: nil,
+            applicationVersion: appVersion
         )
 
         let userSession = ZMUserSession(
+            userId: account.userIdentifier,
             transportSession: transportSession,
             mediaManager: mediaManager,
             flowManager:flowManager,
             analytics: analytics,
             application: application,
             appVersion: appVersion,
-            storeProvider: storeProvider
+            storeProvider: storeProvider,
+            configuration: configuration
         )
         
         userSession.startRequestLoopTracker()
@@ -77,15 +84,24 @@ open class UnauthenticatedSessionFactory {
 
     var environment: BackendEnvironmentProvider
     let reachability: ReachabilityProvider
+    let appVersion: String
 
-    init(environment: BackendEnvironmentProvider, reachability: ReachabilityProvider) {
+    init(appVersion: String,
+         environment: BackendEnvironmentProvider,
+         reachability: ReachabilityProvider) {
         self.environment = environment
         self.reachability = reachability
+        self.appVersion = appVersion
     }
 
-    func session(withDelegate delegate: UnauthenticatedSessionDelegate) -> UnauthenticatedSession {
-        let transportSession = UnauthenticatedTransportSession(environment: environment, reachability: reachability)
-        return UnauthenticatedSession(transportSession: transportSession, reachability: reachability, delegate: delegate)
+    func session(delegate: UnauthenticatedSessionDelegate,
+                 authenticationStatusDelegate: ZMAuthenticationStatusDelegate) -> UnauthenticatedSession {
+        let transportSession = UnauthenticatedTransportSession(environment: environment,
+                                                               reachability: reachability,
+                                                               applicationVersion: appVersion)
+        return UnauthenticatedSession(transportSession: transportSession,
+                                      reachability: reachability,
+                                      delegate: delegate,
+                                      authenticationStatusDelegate: authenticationStatusDelegate)
     }
-
 }

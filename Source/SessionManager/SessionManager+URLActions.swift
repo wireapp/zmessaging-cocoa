@@ -40,19 +40,22 @@ extension SessionManager {
     @discardableResult
     public func openURL(_ url: URL) throws -> Bool {
         guard let action = try URLAction(url: url) else { return false }
-        
-        if action.requiresAuthentication, let userSession = activeUserSession {
-            process(urlAction: action, on: userSession)
-        } else if action.requiresAuthentication {
-            guard isSelectedAccountAuthenticated else {
-                throw DeepLinkRequestError.notLoggedIn
-            }
-            
-            pendingURLAction = action
-        } else {
+
+        guard action.requiresAuthentication else {
             process(urlAction: action, on: activeUnauthenticatedSession)
+            return true
         }
-        
+
+        guard isSelectedAccountAuthenticated else {
+            throw DeepLinkRequestError.notLoggedIn
+        }
+
+        guard let userSession = activeUserSession, !userSession.isLocked else {
+            pendingURLAction = action
+            return true
+        }
+
+        process(urlAction: action, on: userSession)
         return true
     }
     

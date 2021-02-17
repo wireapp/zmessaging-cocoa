@@ -28,7 +28,28 @@ public protocol ThirdPartyServicesDelegate: NSObjectProtocol {
     
 }
 
+@objc(UserSessionSelfUserClientDelegate)
+public protocol UserSessionSelfUserClientDelegate: NSObjectProtocol {
+    /// Invoked when a client is successfully registered
+    func clientRegistrationDidSucceed(accountId: UUID)
+    
+    /// Invoked when there was an error registering the client
+    func clientRegistrationDidFail(_ error: NSError, accountId: UUID)
+}
+
+@objc(UserSessionLogoutDelegate)
+public protocol UserSessionLogoutDelegate: NSObjectProtocol {
+    /// Invoked when the user successfully logged out
+    func userDidLogout(accountId: UUID)
+    
+    /// Invoked when the authentication has proven invalid
+    func authenticationInvalidated(_ error: NSError, accountId : UUID)
+}
+
 typealias UserSessionDelegate = UserSessionEncryptionAtRestDelegate
+    & UserSessionSelfUserClientDelegate
+    & UserSessionLogoutDelegate
+    & UserSessionAppLockDelegate
 
 @objcMembers
 public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
@@ -53,6 +74,8 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var transportSession: TransportSessionType
     let storedDidSaveNotifications: ContextDidSaveNotificationPersistence
     let userExpirationObserver: UserExpirationObserver
+    var updateEventProcessor: UpdateEventProcessor?
+    var strategyDirectory: StrategyDirectoryProtocol?
     var syncStrategy: ZMSyncStrategy?
     var operationLoop: ZMOperationLoop?
     var notificationDispatcher: NotificationDispatcher
@@ -63,6 +86,10 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     var likeMesssageObserver: ManagedObjectContextChangeObserver?
     var urlActionProcessors: [URLActionProcessor]?
     let debugCommands: [String: DebugCommand]
+    let eventProcessingTracker: EventProcessingTracker = EventProcessingTracker()
+    let hotFix: ZMHotFix
+
+    public var appLockController: AppLockType
     
     public var hasCompletedInitialSync: Bool = false
     
@@ -175,14 +202,19 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     }
     
     @objc
-    public init(transportSession: TransportSessionType,
+    public init(userId: UUID,
+                transportSession: TransportSessionType,
                 mediaManager: MediaManagerType,
                 flowManager: FlowManagerType,
                 analytics: AnalyticsType?,
+                eventProcessor: UpdateEventProcessor? = nil,
+                strategyDirectory: StrategyDirectoryProtocol? = nil,
+                syncStrategy: ZMSyncStrategy? = nil,
                 operationLoop: ZMOperationLoop? = nil,
                 application: ZMApplication,
                 appVersion: String,
-                storeProvider: LocalStoreProviderProtocol) {
+                storeProvider: LocalStoreProviderProtocol,
+                configuration: Configuration) {
         
         storeProvider.contextDirectory.syncContext.performGroupedBlockAndWait {
             storeProvider.contextDirectory.syncContext.analytics = analytics
@@ -202,9 +234,11 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
         self.userExpirationObserver = UserExpirationObserver(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.topConversationsDirectory = TopConversationsDirectory(managedObjectContext: storeProvider.contextDirectory.uiContext)
         self.debugCommands = ZMUserSession.initDebugCommands()
+        self.hotFix = ZMHotFix(syncMOC: storeProvider.contextDirectory.syncContext)
+        self.appLockController = AppLockController(userId: userId, config: configuration.appLockConfig, selfUser: ZMUser.selfUser(in: storeProvider.contextDirectory.uiContext))
         super.init()
-        
-        ZMUserAgent.setWireAppVersion(appVersion)
+
+        appLockController.delegate = self
         
         configureCaches()
         
@@ -212,7 +246,9 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
             self.localNotificationDispatcher = LocalNotificationDispatcher(in: storeProvider.contextDirectory.syncContext)
             self.configureTransportSession()
             self.applicationStatusDirectory = self.createApplicationStatusDirectory()
-            self.syncStrategy = operationLoop?.syncStrategy
+            self.updateEventProcessor = eventProcessor ?? self.createUpdateEventProcessor()
+            self.strategyDirectory = strategyDirectory ?? self.createStrategyDirectory()
+            self.syncStrategy = syncStrategy ?? self.createSyncStrategy()
             self.operationLoop = operationLoop ?? self.createOperationLoop()
             self.urlActionProcessors = self.createURLActionProcessors()
             self.callStateObserver = CallStateObserver(localNotificationDispatcher: self.localNotificationDispatcher!,
@@ -220,6 +256,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
                                                        callNotificationStyleProvider: self)
         }
 
+        updateEventProcessor!.eventConsumers = self.strategyDirectory!.eventConsumers
         registerForCalculateBadgeCountNotification()
         registerForRegisteringPushTokenNotification()
         registerForBackgroundNotifications()
@@ -257,6 +294,22 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
 
     }
     
+    private func createStrategyDirectory() -> StrategyDirectoryProtocol {
+        return StrategyDirectory(contextDirectory: storeProvider.contextDirectory,
+                                 applicationStatusDirectory: applicationStatusDirectory!,
+                                 cookieStorage: transportSession.cookieStorage,
+                                 pushMessageHandler: localNotificationDispatcher!,
+                                 flowManager: flowManager,
+                                 updateEventProcessor: updateEventProcessor!,
+                                 localNotificationDispatcher: localNotificationDispatcher!)
+    }
+    
+    private func createUpdateEventProcessor() -> EventProcessor {
+        return EventProcessor(storeProvider: self.storeProvider,
+                              syncStatus: applicationStatusDirectory!.syncStatus,
+                              eventProcessingTracker: eventProcessingTracker)
+    }
+    
     private func createApplicationStatusDirectory() -> ApplicationStatusDirectory {
         let applicationStatusDirectory = ApplicationStatusDirectory(withManagedObjectContext: self.syncManagedObjectContext,
                                                                      cookieStorage: transportSession.cookieStorage,
@@ -274,40 +327,34 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     private func createURLActionProcessors() -> [URLActionProcessor] {
         return [
             DeepLinkURLActionProcessor(contextProvider: self),
-            ConnectToBotURLActionProcessor(contextprovider: self, transportSession: transportSession, eventProcessor: operationLoop!.syncStrategy)
+            ConnectToBotURLActionProcessor(contextprovider: self,
+                                           transportSession: transportSession,
+                                           eventProcessor: updateEventProcessor!)
         ]
     }
     
+    private func createSyncStrategy() -> ZMSyncStrategy {
+        return ZMSyncStrategy(storeProvider: storeProvider,
+                              notificationsDispatcher: notificationDispatcher,
+                              applicationStatusDirectory: applicationStatusDirectory!,
+                              application: application,
+                              strategyDirectory: strategyDirectory!,
+                              eventProcessingTracker: eventProcessingTracker)
+    }
+    
     private func createOperationLoop() -> ZMOperationLoop {
-        let strategyFactory = RequestStrategyFactory(contextDirectory: storeProvider.contextDirectory,
-                                                     applicationStatusDirectory: applicationStatusDirectory!,
-                                                     cookieStorage: transportSession.cookieStorage,
-                                                     pushMessageHandler: localNotificationDispatcher!,
-                                                     flowManager: flowManager,
-                                                     updateEventProcessor: self,
-                                                     localNotificationDispatcher: localNotificationDispatcher!)
-        
-        let syncStrategy = ZMSyncStrategy(storeProvider: storeProvider,
-                                          notificationsDispatcher: notificationDispatcher,
-                                          applicationStatusDirectory: applicationStatusDirectory!,
-                                          application: application,
-                                          requestStrategyFactory: strategyFactory)
-        self.syncStrategy = syncStrategy
-
         return ZMOperationLoop(transportSession: transportSession,
-                               syncStrategy: syncStrategy,
+                               requestStrategy: syncStrategy,
+                               updateEventProcessor: updateEventProcessor!,
                                applicationStatusDirectory: applicationStatusDirectory!,
                                uiMOC: managedObjectContext,
                                syncMOC: syncManagedObjectContext)
     }
     
-    func startRequestLoopTracker() {
-        let tracker = RequestLoopAnalyticsTracker(with: analytics)
-        
+    func startRequestLoopTracker() {        
         transportSession.requestLoopDetectionCallback = { path in
-            // The tracker will return false in case the path should be ignored.
-            guard !tracker.tag(with: path) else { return }
-            
+            guard !path.hasSuffix("/typing") else { return }
+
             Logging.network.warn("Request loop happening at path: \(path)")
             
             DispatchQueue.main.async {
@@ -348,10 +395,11 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
     }
     
     private func transportSessionAccessTokenDidFail(response: ZMTransportResponse) {
-        managedObjectContext.performGroupedBlock {
-            let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
+        managedObjectContext.performGroupedBlock { [weak self] in
+            guard let strongRef = self else { return }
+            let selfUser = ZMUser.selfUser(in: strongRef.managedObjectContext)
             let error = NSError.userSessionErrorWith(.accessTokenExpired, userInfo: selfUser.loginCredentials.dictionaryRepresentation)
-            PostLoginAuthenticationNotification.notifyAuthenticationInvalidated(error: error, context: self.managedObjectContext)
+            strongRef.notifyAuthenticationInvalidated(error)
         }
     }
     
@@ -476,25 +524,30 @@ extension ZMUserSession: ZMSyncStateDelegate {
     }
     
     public func didFinishQuickSync() {
-        guard let syncStrategy = syncStrategy else { return }
-        
-        syncStrategy.processAllEventsInBuffer()
         processEvents()
-        
+                
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.notifyThirdPartyServices()
         }
+
+        // TODO: [John] This is a tempory solution until we add support for slow syncing
+        // team features and config update events.
+        guard let team = ZMUser.selfUser(in: syncManagedObjectContext).team else { return }
+        Feature.createDefaultInstanceIfNeeded(name: .appLock, team: team, context: syncManagedObjectContext)
+        team.enqueueBackendRefresh(for: .appLock)
     }
     
     func processEvents() {
-        guard let syncStrategy = syncStrategy else { return }
-        
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.isPerformingSync = true
             self?.updateNetworkState()
         }
         
-        let hasMoreEventsToProcess = syncStrategy.processEventsIfReady()
+        let hasMoreEventsToProcess = updateEventProcessor!.processEventsIfReady()
+        
+        if !hasMoreEventsToProcess {
+            hotFix.applyPatches()
+        }
         
         managedObjectContext.performGroupedBlock { [weak self] in
             self?.isPerformingSync = hasMoreEventsToProcess
@@ -502,21 +555,51 @@ extension ZMUserSession: ZMSyncStateDelegate {
         }
     }
     
-    public func didRegister(_ userClient: UserClient!) {
-        
+    public func didRegisterSelfUserClient(_ userClient: UserClient!) {
         // If during registration user allowed notifications,
         // The push token can only be registered after client registration
         transportSession.pushChannel.clientID = userClient.remoteIdentifier
         registerCurrentPushToken()
+        
+        managedObjectContext.performGroupedBlock { [weak self] in
+            guard let accountId = self?.managedObjectContext.selfUserId else {
+                return
+            }
+            
+            self?.delegate?.clientRegistrationDidSucceed(accountId: accountId)
+        }
     }
     
-    func notifyThirdPartyServices() {
+    public func didFailToRegisterSelfUserClient(error: Error!) {
+        managedObjectContext.performGroupedBlock {  [weak self] in
+            guard let accountId = self?.managedObjectContext.selfUserId else {
+                return
+            }
+            
+            self?.delegate?.clientRegistrationDidFail(error as NSError, accountId: accountId)
+        }
+    }
+    
+    public func didDeleteSelfUserClient(error: Error!) {
+        notifyAuthenticationInvalidated(error)
+    }
+    
+    public func notifyThirdPartyServices() {
         if !hasNotifiedThirdPartyServices {
             hasNotifiedThirdPartyServices = true
             thirdPartyServicesDelegate?.userSessionIsReadyToUploadServicesData(userSession: self)
         }
     }
     
+    private func notifyAuthenticationInvalidated(_ error: Error) {
+        managedObjectContext.performGroupedBlock {  [weak self] in
+            guard let accountId = self?.managedObjectContext.selfUserId else {
+                return
+            }
+            
+            self?.delegate?.authenticationInvalidated(error as NSError, accountId: accountId)
+        }
+    }
 }
 
 extension ZMUserSession: URLActionProcessor {
@@ -525,15 +608,8 @@ extension ZMUserSession: URLActionProcessor {
     }
 }
 
-// TODO jacob temporary solution while refactoring
-extension ZMUserSession: UpdateEventProcessor {
-    
-    public func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
-        syncStrategy?.storeUpdateEvents(updateEvents, ignoreBuffer: ignoreBuffer)
+private extension NSManagedObjectContext {
+    var selfUserId: UUID? {
+        ZMUser.selfUser(in: self).remoteIdentifier
     }
-    
-    public func storeAndProcessUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
-        syncStrategy?.storeAndProcessUpdateEvents(updateEvents, ignoreBuffer: ignoreBuffer)
-    }
-        
 }
