@@ -26,6 +26,10 @@ class MockUserSessionDelegate: NSObject, UserSessionDelegate {
     func setEncryptionAtRest(enabled: Bool, account: Account, encryptionKeys: EncryptionKeys) {
         calledSetEncryptionAtRest = (enabled, account, encryptionKeys)
     }
+
+    func userSessionDidUnlock(_ session: ZMUserSession) {
+        
+    }
     
     func clientRegistrationDidSucceed(accountId: UUID) { }
     
@@ -230,5 +234,31 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         XCTAssertFalse(sut.isDatabaseLocked)
         XCTAssertNotEqual(oldKeys, newKeys)
     }
-    
+
+    func testThatIfDatabaseIsLocked_ThenUserSessionLockIsSet() throws {
+        // given
+        simulateLoggedInUser()
+        syncMOC.saveOrRollback()
+        setEncryptionAtRest(enabled: true)
+
+        sut.applicationDidEnterBackground(nil)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        XCTAssertTrue(sut.isDatabaseLocked)
+
+        // then
+        XCTAssertEqual(sut.lock, .database)
+    }
+
+    func testThatIfDatabaseIsNotLocked_ThenUserSessionLockIsNotSet() throws {
+        // given
+        simulateLoggedInUser()
+        syncMOC.saveOrRollback()
+        setEncryptionAtRest(enabled: false)
+        XCTAssertFalse(sut.isDatabaseLocked)
+
+        // then
+        XCTAssertNotEqual(sut.lock, .database)
+    }
+
 }

@@ -1,8 +1,10 @@
 
+name: Dispatch new release
+
 on:
   workflow_dispatch:
   release:
-    type: [ published ]
+    types: [ published ]
 
 jobs:
   dispatch:
