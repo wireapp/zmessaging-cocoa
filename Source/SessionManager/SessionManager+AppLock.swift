@@ -18,26 +18,14 @@
 
 import Foundation
 
-public enum ZMAccountDeletedReason: Int {
+extension SessionManager: UserSessionAppLockDelegate {
 
-    /// The user account was deleted by the user.
+    func userSessionDidUnlock(_ session: ZMUserSession) {
+        performPostUnlockActionsIfPossible(for: session)
 
-    case userInitiated = 0
-
-    /// The user account was deleted because a jailbreak was detected.
-
-    case jailbreakDetected
-
-    /// The user account was deleted because the session expired.
-
-    case sessionExpired
-
-    /// The user account was deleted because the limit of failed password attempts was reached.
-
-    case failedPasswordLimitReached
-
-    /// The user account was deleted because the user chose to wipe the database.
-
-    case databaseWiped
+        DispatchQueue.main.async {
+            self.delegate?.sessionManagerDidReportLockChange(forSession: session)
+        }
+    }
 
 }

@@ -79,7 +79,8 @@ class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
     
     func testThatItPostsNotification_WhenLogoutRequestSucceeds() {
         // given
-        let recorder = PostLoginAuthenticationNotificationRecorder(managedObjectContext: uiMOC)
+        let userSessionDelegate = MockUserSessionDelegate()
+        sut.delegate = userSessionDelegate
         let credentials = ZMEmailCredentials(email: "john.doe@domain.com", password: "123456")
         
         // when
@@ -89,10 +90,9 @@ class ZMUserSessionTests_Authentication: ZMUserSessionTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(recorder.notifications.count, 1)
-        let event = recorder.notifications.last
-        XCTAssertEqual(event?.event, .userDidLogout)
-        XCTAssertEqual(event?.accountId, ZMUser.selfUser(in: uiMOC).remoteIdentifier)
+        XCTAssertNotNil(userSessionDelegate.calleduserDidLogout)
+        XCTAssertEqual(userSessionDelegate.calleduserDidLogout?.0, true)
+        XCTAssertEqual(userSessionDelegate.calleduserDidLogout?.1, ZMUser.selfUser(in: uiMOC).remoteIdentifier)
     }
     
     func testThatItCallsTheCompletionHandler_WhenLogoutRequestSucceeds() {

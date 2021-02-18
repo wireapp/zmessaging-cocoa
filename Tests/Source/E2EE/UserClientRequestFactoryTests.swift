@@ -29,22 +29,26 @@ class UserClientRequestFactoryTests: MessagingTest {
     var sut: UserClientRequestFactory!
     var authenticationStatus: ZMAuthenticationStatus!
     var spyKeyStore: SpyUserClientKeyStore!
+    var mockAuthenticationStatusDelegate: MockAuthenticationStatusDelegate!
     var userInfoParser: MockUserInfoParser!
     
     override func setUp() {
         super.setUp()
-        self.spyKeyStore = SpyUserClientKeyStore(accountDirectory: accountDirectory, applicationContainer: sharedContainerURL)
-        self.userInfoParser = MockUserInfoParser()
-        self.authenticationStatus = MockAuthenticationStatus(userInfoParser: self.userInfoParser)
-        self.sut = UserClientRequestFactory(keysStore: self.spyKeyStore)
+        spyKeyStore = SpyUserClientKeyStore(accountDirectory: accountDirectory, applicationContainer: sharedContainerURL)
+        userInfoParser = MockUserInfoParser()
+        mockAuthenticationStatusDelegate = MockAuthenticationStatusDelegate()
+        authenticationStatus = MockAuthenticationStatus(delegate: mockAuthenticationStatusDelegate,
+                                                             userInfoParser: self.userInfoParser)
+        sut = UserClientRequestFactory(keysStore: self.spyKeyStore)
     }
     
     override func tearDown() {
         try? FileManager.default.removeItem(at: spyKeyStore.cryptoboxDirectory)
-        self.authenticationStatus = nil
-        self.sut = nil
-        self.spyKeyStore = nil
-        self.userInfoParser = nil
+        authenticationStatus = nil
+        mockAuthenticationStatusDelegate = nil
+        sut = nil
+        spyKeyStore = nil
+        userInfoParser = nil
         super.tearDown()
     }
 

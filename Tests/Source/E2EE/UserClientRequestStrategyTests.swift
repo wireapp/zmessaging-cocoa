@@ -23,150 +23,34 @@ import WireTesting
 import WireMockTransport
 import WireDataModel
 
-typealias PostLoginAuthenticationHandler = (_ event : WireSyncEngine.PostLoginAuthenticationEvent, _ accountId: UUID) -> Void
-
-extension PostLoginAuthenticationObserver {
-    
-    func addObserver(context : NSManagedObjectContext, handler: @escaping PostLoginAuthenticationHandler) -> Any {
-        return PostLoginAuthenticationObserverToken(managedObjectContext: context, handler: handler)
-    }
-    
-}
-
 @objcMembers
-class PostLoginAuthenticationObserverToken : NSObject, PostLoginAuthenticationObserver {
+public class MockClientRegistrationStatusDelegate: NSObject, ZMClientRegistrationStatusDelegate {
     
-    var token : Any?
-    var handler : PostLoginAuthenticationHandler
+    public var currentError: Error? = nil
     
-    convenience init(managedObjectContext: NSManagedObjectContext, handler: @escaping PostLoginAuthenticationHandler) {
-        self.init(managedObjectContext: managedObjectContext, groupQueue: managedObjectContext, handler: handler)
+    public var didCallRegisterSelfUserClient: Bool = false
+    public func didRegisterSelfUserClient(_ userClient: UserClient!) {
+        didCallRegisterSelfUserClient = true
     }
     
-    init(managedObjectContext: NSManagedObjectContext?, groupQueue: ZMSGroupQueue, handler: @escaping PostLoginAuthenticationHandler) {
-        self.handler = handler
-        super.init()
-        if let managedObjectContext = managedObjectContext {
-            self.token = PostLoginAuthenticationNotification.addObserver(self, context: managedObjectContext)
-        } else {
-            self.token = PostLoginAuthenticationNotification.addObserver(self, queue: groupQueue)
-        }
-        
+    public var didCallFailRegisterSelfUserClient: Bool = false
+    public func didFailToRegisterSelfUserClient(error: Error!) {
+        currentError = error
+        didCallFailRegisterSelfUserClient = true
     }
     
-    func authenticationInvalidated(_ error: NSError, accountId: UUID) {
-        handler(.authenticationInvalidated(error: error), accountId)
-    }
-    
-    func clientRegistrationDidSucceed(accountId: UUID) {
-        handler(.clientRegistrationDidSucceed, accountId)
-    }
-    
-    func clientRegistrationDidFail(_ error: NSError, accountId: UUID) {
-        handler(.clientRegistrationDidFail(error: error), accountId)
-    }
-    
-    func accountDeleted(accountId: UUID) {
-        handler(.accountDeleted, accountId)
-    }
-    
-    func userDidLogout(accountId: UUID) {
-        handler(.userDidLogout, accountId)
-    }
-    
-}
-
-@objc
-public enum PostLoginAuthenticationEventObjC : Int {
-    case authenticationInvalidated
-    case clientRegistrationDidSucceed
-    case clientRegistrationDidFail
-    case accountDeleted
-    case userDidLogout
-}
-
-public typealias PostLoginAuthenticationObjCHandler = (_ event : PostLoginAuthenticationEventObjC, _ accountId: UUID, _ error: NSError?) -> Void
-
-@objcMembers
-public class PostLoginAuthenticationObserverObjCToken : NSObject {
-    
-    var token : Any?
-    
-    convenience init(managedObjectContext: NSManagedObjectContext, handler: @escaping PostLoginAuthenticationObjCHandler) {
-        self.init(managedObjectContext: managedObjectContext, groupQueue: managedObjectContext, handler: handler)
-    }
-    
-    public convenience init(dispatchGroup: ZMSDispatchGroup, handler: @escaping PostLoginAuthenticationObjCHandler) {
-        let queue = DispatchGroupQueue(queue: .main)
-        queue.add(dispatchGroup)
-        self.init(managedObjectContext: nil, groupQueue: queue, handler: handler)
-    }
-    
-    init(managedObjectContext: NSManagedObjectContext?, groupQueue: ZMSGroupQueue, handler: @escaping PostLoginAuthenticationObjCHandler) {
-        self.token = PostLoginAuthenticationObserverToken(
-            managedObjectContext: managedObjectContext,
-            groupQueue: groupQueue,
-            handler: { (event, accountId) in
-            switch event {
-            case .clientRegistrationDidSucceed:
-                handler(.clientRegistrationDidSucceed, accountId, nil)
-            case .clientRegistrationDidFail(error: let error):
-                handler(.clientRegistrationDidFail, accountId, error)
-            case .authenticationInvalidated(error: let error):
-                handler(.authenticationInvalidated, accountId, error)
-            case .accountDeleted:
-                handler(.accountDeleted, accountId, nil)
-            case .userDidLogout:
-                handler(.userDidLogout, accountId, nil)
-            }
-        })
+    public var didCallDeleteSelfUserClient: Bool = false
+    public func didDeleteSelfUserClient(error: Error!) {
+        currentError = error
+        didCallDeleteSelfUserClient = true
     }
 }
 
-@objcMembers
-public class PostLoginAuthenticationNotificationEvent : NSObject {
-    
-    let event : PostLoginAuthenticationEventObjC
-    let accountId : UUID
-    var error : NSError?
-    
-    init(event : PostLoginAuthenticationEventObjC, accountId : UUID, error : NSError?) {
-        self.event = event
-        self.accountId = accountId
-        self.error = error
-    }
-    
-}
-
-@objcMembers
-public class PostLoginAuthenticationNotificationRecorder : NSObject {
-    
-    private var token : Any?
-    public var notifications : [PostLoginAuthenticationNotificationEvent] = []
-    
-    init(managedObjectContext: NSManagedObjectContext) {
-        super.init()
-        
-        token = PostLoginAuthenticationObserverObjCToken(managedObjectContext: managedObjectContext) { [weak self] (event, accountId, error) in
-            self?.notifications.append(PostLoginAuthenticationNotificationEvent(event: event, accountId: accountId, error: error))
-        }
-    }
-    
-    public init(dispatchGroup: ZMSDispatchGroup) {
-        super.init()
-        let queue = DispatchGroupQueue(queue: .main)
-        queue.add(dispatchGroup)
-        token = PostLoginAuthenticationObserverObjCToken(managedObjectContext: nil, groupQueue: queue) { [weak self] (event, accountId, error) in
-            self?.notifications.append(PostLoginAuthenticationNotificationEvent(event: event, accountId: accountId, error: error))
-        }
-    }
-    
-}
-
-class UserClientRequestStrategyTests: RequestStrategyTestBase, PostLoginAuthenticationObserver {
+class UserClientRequestStrategyTests: RequestStrategyTestBase {
     
     var sut: UserClientRequestStrategy!
     var clientRegistrationStatus: ZMMockClientRegistrationStatus!
+    var mockClientRegistrationStatusDelegate: MockClientRegistrationStatusDelegate!
     var authenticationStatus: MockAuthenticationStatus!
     var clientUpdateStatus: ZMMockClientUpdateStatus!
     let fakeCredentialsProvider = FakeCredentialProvider()
@@ -177,22 +61,19 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase, PostLoginAuthenti
     
     var postLoginAuthenticationObserverToken : Any?
     
-    var receivedAuthenticationEvents : [WireSyncEngine.PostLoginAuthenticationEvent] = []
-    
     override func setUp() {
         super.setUp()
         self.syncMOC.performGroupedBlockAndWait {
             self.spyKeyStore = SpyUserClientKeyStore(accountDirectory: self.accountDirectory, applicationContainer: self.sharedContainerURL)
             self.cookieStorage = ZMPersistentCookieStorage(forServerName: "myServer", userIdentifier: self.userIdentifier)
-
-            self.clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC, cookieStorage: self.cookieStorage, registrationStatusDelegate: nil)
+            self.mockClientRegistrationStatusDelegate = MockClientRegistrationStatusDelegate()
+            self.clientRegistrationStatus = ZMMockClientRegistrationStatus(managedObjectContext: self.syncMOC,
+                                                                           cookieStorage: self.cookieStorage,
+                                                                           registrationStatusDelegate: self.mockClientRegistrationStatusDelegate)
             self.clientUpdateStatus = ZMMockClientUpdateStatus(syncManagedObjectContext: self.syncMOC)
             self.sut = UserClientRequestStrategy(clientRegistrationStatus: self.clientRegistrationStatus, clientUpdateStatus:self.clientUpdateStatus, context: self.syncMOC, userKeysStore: self.spyKeyStore)
             let selfUser = ZMUser.selfUser(in: self.syncMOC)
             selfUser.remoteIdentifier = self.userIdentifier
-            self.postLoginAuthenticationObserverToken = PostLoginAuthenticationObserverToken(managedObjectContext: self.uiMOC, handler: { [weak self] (event, _) in
-                self?.receivedAuthenticationEvents.append(event)
-            })
             self.syncMOC.saveOrRollback()
         }
     }
@@ -202,11 +83,11 @@ class UserClientRequestStrategyTests: RequestStrategyTestBase, PostLoginAuthenti
         
         self.clientRegistrationStatus.tearDown()
         self.clientRegistrationStatus = nil
+        self.mockClientRegistrationStatusDelegate = nil
         self.clientUpdateStatus = nil
         self.spyKeyStore = nil
         self.sut.tearDown()
         self.sut = nil
-        self.receivedAuthenticationEvents = []
         self.postLoginAuthenticationObserverToken = nil
         super.tearDown()
     }
@@ -367,15 +248,9 @@ extension UserClientRequestStrategyTests {
             request.complete(with: response)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
-
-        syncMOC.performGroupedBlockAndWait {
-            // then
-            XCTAssertEqual(self.receivedAuthenticationEvents.count, 1, "should only receive one notification")
-            guard let event = self.receivedAuthenticationEvents.first else { return XCTFail() }
-            guard case WireSyncEngine.PostLoginAuthenticationEvent.clientRegistrationDidSucceed = event else {
-                return XCTFail()
-            }
-        }
+        
+        // then
+        XCTAssertTrue(self.mockClientRegistrationStatusDelegate.didCallRegisterSelfUserClient)
     }
     
     
@@ -397,19 +272,12 @@ extension UserClientRequestStrategyTests {
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
-        syncMOC.performGroupedBlockAndWait {
-            // then
-            let expectedError = NSError(domain: NSError.ZMUserSessionErrorDomain, code: Int(ZMUserSessionErrorCode.invalidCredentials.rawValue), userInfo: nil)
-            XCTAssertEqual(self.receivedAuthenticationEvents.count, 1, "should only receive one notification")
-            guard let event = self.receivedAuthenticationEvents.first else { return XCTFail() }
-            
-            
-            if case WireSyncEngine.PostLoginAuthenticationEvent.clientRegistrationDidFail(error:  let error) = event {
-                XCTAssertEqual(error, expectedError)
-            } else {
-                XCTFail()
-            }
-        }
+        // then
+        XCTAssertTrue(self.mockClientRegistrationStatusDelegate.didCallFailRegisterSelfUserClient)
+        let expectedError = NSError(domain: NSError.ZMUserSessionErrorDomain,
+                                    code: Int(ZMUserSessionErrorCode.invalidCredentials.rawValue),
+                                    userInfo: nil)
+        XCTAssertEqual(self.mockClientRegistrationStatusDelegate.currentError as NSError?, expectedError)
     }
     
     
@@ -445,14 +313,8 @@ extension UserClientRequestStrategyTests {
                 ZMUserLoginCredentialsKey: LoginCredentials(emailAddress: emailAddress, phoneNumber: nil, hasPassword: true, usesCompanyLogin: false)
             ])
 
-            XCTAssertEqual(self.receivedAuthenticationEvents.count, 1, "should only receive one notification")
-            guard let event = self.receivedAuthenticationEvents.first else { return XCTFail() }
-            
-            if case WireSyncEngine.PostLoginAuthenticationEvent.clientRegistrationDidFail(error:  let error) = event {
-                XCTAssertEqual(error, expectedError)
-            } else {
-                XCTFail()
-            }
+            XCTAssertTrue(self.mockClientRegistrationStatusDelegate.didCallFailRegisterSelfUserClient)
+            XCTAssertEqual(self.mockClientRegistrationStatusDelegate.currentError as NSError?, expectedError)
         }
     }
     

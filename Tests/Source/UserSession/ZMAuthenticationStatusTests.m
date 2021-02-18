@@ -32,12 +32,9 @@
 @interface ZMAuthenticationStatusTests : MessagingTest
 
 @property (nonatomic) ZMAuthenticationStatus *sut;
-
-@property (nonatomic) id authenticationObserverToken;
-@property (nonatomic, copy) void(^authenticationCallback)(enum PreLoginAuthenticationEventObjc event, NSError *error);
-
 @property (nonatomic) id registrationObserverToken;
 @property (nonatomic, copy) void(^registrationCallback)(ZMUserSessionRegistrationNotificationType type, NSError *error);
+@property (nonatomic) MockAuthenticationStatusDelegate *delegate;
 @property (nonatomic) MockUserInfoParser *userInfoParser;
 
 @end
@@ -47,28 +44,23 @@
 - (void)setUp {
     [super setUp];
 
+    self.delegate = [[MockAuthenticationStatusDelegate alloc] init];
     self.userInfoParser = [[MockUserInfoParser alloc] init];
     DispatchGroupQueue *groupQueue = [[DispatchGroupQueue alloc] initWithQueue:dispatch_get_main_queue()];
-    self.sut = [[ZMAuthenticationStatus alloc] initWithGroupQueue:groupQueue userInfoParser:self.userInfoParser];
+    self.sut = [[ZMAuthenticationStatus alloc] initWithDelegate:self.delegate
+                                                     groupQueue:groupQueue
+                                                 userInfoParser:self.userInfoParser];
 
+    
+    
     // If a test fires any notification and it's not listening for it, this will fail
     ZM_WEAK(self);
-    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error){
-        NOT_USED(error);
-        ZM_STRONG(self);
-        XCTFail(@"Unexpected notification: %li", event);
-    };
     // If a test fires any notification and it's not listening for it, this will fail
     self.registrationCallback = ^(ZMUserSessionRegistrationNotificationType type, NSError *error){
         NOT_USED(error);
         ZM_STRONG(self);
         XCTFail(@"Unexpected notification %li", type);
     }; // forces to overwrite if a test fires this
-    
-    self.authenticationObserverToken = [[PreLoginAuthenticationObserverToken alloc] initWithAuthenticationStatus:self.sut handler:^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        ZM_STRONG(self);
-        self.authenticationCallback(event, error);
-    }];
     
     self.registrationObserverToken = [ZMUserSessionRegistrationNotification addObserverInContext:self.sut withBlock:^(ZMUserSessionRegistrationNotificationType event, NSError *error) {
         ZM_STRONG(self);
@@ -79,7 +71,7 @@
 - (void)tearDown
 {
     self.sut = nil;
-    self.authenticationObserverToken = nil;
+    self.delegate = nil;
     self.registrationObserverToken = nil;
     self.userInfoParser = nil;
     [super tearDown];
@@ -156,65 +148,37 @@
 
 - (void)testThatItResetsWhenCompletingTheRequestForPhoneLoginCode
 {
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    
-    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, __unused NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(event, PreLoginAuthenticationEventObjcLoginCodeRequestDidSucceed);
-        [expectation fulfill];
-    };
-    
     // when
     [self.sut prepareForRequestingPhoneVerificationCodeForLogin:@"+4912345678"];
     [self.sut didCompleteRequestForLoginCodeSuccessfully];
     WaitForAllGroupsToBeEmpty(0.5);
-    
+
     // then
+    XCTAssertEqual(self.delegate.authenticationDidSucceedEvents, 1);
+    XCTAssertEqual(self.delegate.authenticationDidFailEvents.count, 0);
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertNil(self.sut.loginPhoneNumberThatNeedsAValidationCode);
-    
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
 }
 
 - (void)testThatItResetsWhenFailingTheRequestForPhoneLoginCode
 {
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    NSError *expectedError = [NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidPhoneNumber userInfo:nil];
-    ZM_WEAK(self);
-    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(event, PreLoginAuthenticationEventObjcLoginCodeRequestDidFail);
-        XCTAssertEqual(error, expectedError);
-        [expectation fulfill];
-    };
-    
+    // given
+    NSError *error = [NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidPhoneNumber userInfo:nil];
+
     // when
     [self.sut prepareForRequestingPhoneVerificationCodeForLogin:@"+4912345678"];
-    [self.sut didFailRequestForLoginCode:expectedError];
+    [self.sut didFailRequestForLoginCode:error];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    XCTAssertEqual(self.delegate.authenticationDidFailEvents.count, 1);
+    XCTAssertEqual(self.delegate.authenticationDidFailEvents[0].code, ZMUserSessionInvalidPhoneNumber);
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertNil(self.sut.loginPhoneNumberThatNeedsAValidationCode);
-    
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
 }
 
 - (void)testThatItResetsWhenFailingEmailLogin
 {
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(event, PreLoginAuthenticationEventObjcAuthenticationDidFail);
-        XCTAssertEqualObjects(error, [NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidCredentials userInfo:nil]);
-        [expectation fulfill];
-    };
-    
     // given
     NSString *email = @"gfdgfgdfg@fds.sgf";
     NSString *password = @"#$4tewt343$";
@@ -227,24 +191,14 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    XCTAssertEqual(self.delegate.authenticationDidFailEvents.count, 1);
+    XCTAssertEqual(self.delegate.authenticationDidFailEvents[0].code, ZMUserSessionInvalidCredentials);
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertNil(self.sut.loginCredentials);
-    
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
 }
 
 - (void)testThatItResetsWhenFailingPhoneLogin
 {
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(event, PreLoginAuthenticationEventObjcAuthenticationDidFail);
-        XCTAssertEqualObjects(error, [NSError userSessionErrorWithErrorCode:ZMUserSessionInvalidCredentials userInfo:nil]);
-        [expectation fulfill];
-    };
-    
     // given
     NSString *phone = @"+49123456789000";
     NSString *code = @"324543";
@@ -257,24 +211,14 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    XCTAssertEqual(self.delegate.authenticationDidFailEvents.count, 1);
+    XCTAssertEqual(self.delegate.authenticationDidFailEvents[0].code, ZMUserSessionInvalidCredentials);
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertNil(self.sut.loginCredentials);
-    
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
 }
 
 - (void)testThatItResetsWhenTimingOutLoginWithTheSameCredentials
 {
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(event, PreLoginAuthenticationEventObjcAuthenticationDidFail);
-        XCTAssertEqualObjects(error, [NSError userSessionErrorWithErrorCode:ZMUserSessionNetworkError userInfo:nil]);
-        [expectation fulfill];
-    };
-    
     // given
     NSString *email = @"gfdgfgdfg@fds.sgf";
     NSString *password = @"#$4tewt343$";
@@ -288,10 +232,10 @@
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
+    XCTAssertEqual(self.delegate.authenticationDidFailEvents.count, 1);
+    XCTAssertEqual(self.delegate.authenticationDidFailEvents[0].code, ZMUserSessionNetworkError);
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseUnauthenticated);
     XCTAssertNil(self.sut.loginCredentials);
-    
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
 }
 
 - (void)testThatItDoesNotResetsWhenTimingOutLoginWithDifferentCredentials
@@ -315,16 +259,6 @@
 
 - (void)testThatItWaitsForBackupImportAfterLoggingInWithEmail
 {
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(event, PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount);
-        XCTAssertNil(error);
-        [expectation fulfill];
-    };
-
     // given
     NSString *email = @"gfdgfgdfg@fds.sgf";
     NSString *password = @"#$4tewt343$";
@@ -337,22 +271,12 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
+    XCTAssertEqual(self.delegate.authenticationDidSucceedEvents, 1);
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseWaitingToImportBackup);
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
 }
 
 - (void)testThatItAsksForUserInfoParserIfAccountForBackupExists
 {
-    // expect
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        ZM_STRONG(self);
-        XCTAssertEqual(event, PreLoginAuthenticationEventObjcReadyToImportBackupExistingAccount);
-        XCTAssertNil(error);
-        [expectation fulfill];
-    };
-
     // given
     NSString *email = @"gfdgfgdfg@fds.sgf";
     NSString *password = @"#$4tewt343$";
@@ -369,6 +293,7 @@
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
+    XCTAssertEqual(self.delegate.authenticationDidSucceedEvents, 1);
     XCTAssertEqual(self.sut.currentPhase, ZMAuthenticationPhaseWaitingToImportBackup);
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0]);
     XCTAssertEqual(self.userInfoParser.accountExistsLocallyCalled, 1);
@@ -445,18 +370,6 @@
 
     ZMCredentials *credentials = [ZMEmailCredentials credentialsWithEmail:email password:pass];
     ZMTransportResponse *response = [ZMTransportResponse responseWithPayload:nil HTTPStatus:200 transportSessionError:nil];
-
-    XCTestExpectation *expectation = [self expectationWithDescription:@"notification"];
-    ZM_WEAK(self);
-    self.authenticationCallback = ^(enum PreLoginAuthenticationEventObjc event, NSError *error) {
-        ZM_STRONG(self);
-        if (!(event == PreLoginAuthenticationEventObjcReadyToImportBackupNewAccount ||
-              event == PreLoginAuthenticationEventObjcAuthenticationDidSucceed)) {
-            XCTFail(@"Unexpected event");
-        }
-        XCTAssertEqual(error, nil);
-        [expectation fulfill];
-    };
 
     // when
     [self performPretendingUiMocIsSyncMoc:^{

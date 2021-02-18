@@ -105,4 +105,35 @@ class SessionManagerTests_URLActions: IntegrationTest {
         XCTAssertEqual(presentationDelegate.shouldPerformActionCalls.count, 1)
         XCTAssertEqual(presentationDelegate.shouldPerformActionCalls.first, .connectBot(serviceUser: expectedUserData))
     }
+
+    func testThatItDelaysURLActionProcessing_UntilUserSessionBecomesUnlocked() throws {
+        // given: user session is availablle but it is locked
+        XCTAssertTrue(login())
+
+        let appLock = MockAppLock()
+        appLock.isLocked = true
+        userSession!.appLockController = appLock
+        XCTAssertTrue(userSession!.isLocked)
+
+        presentationDelegate?.isPerformingActions = false
+
+        // when
+        let url = URL(string: "wire://connect?service=2e1863a6-4a12-11e8-842f-0ed5f89f718b&provider=3879b1ec-4a12-11e8-842f-0ed5f89f718b")!
+        let canOpenURL = try sessionManager?.openURL(url)
+        XCTAssertEqual(canOpenURL, true)
+
+        // then: action should get postponed
+        XCTAssertEqual(presentationDelegate.shouldPerformActionCalls.count, 0)
+
+        // when
+        appLock.isLocked = false
+        userSession!.delegate?.userSessionDidUnlock(userSession!)
+
+        // then: action should get resumed
+        let expectedUserData = ServiceUserData(provider: UUID(uuidString: "3879b1ec-4a12-11e8-842f-0ed5f89f718b")!,
+                                               service: UUID(uuidString: "2e1863a6-4a12-11e8-842f-0ed5f89f718b")!)
+        XCTAssertEqual(presentationDelegate.shouldPerformActionCalls.count, 1)
+        XCTAssertEqual(presentationDelegate.shouldPerformActionCalls.first, .connectBot(serviceUser: expectedUserData))
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
 }
