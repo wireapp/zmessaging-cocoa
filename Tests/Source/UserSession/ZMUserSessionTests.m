@@ -150,7 +150,7 @@
     UserClient *userClient = [self createSelfClient];
     
     // when
-    [self.sut didRegisterUserClient:userClient];
+    [self.sut didRegisterSelfUserClient:userClient];
     
     // then
     XCTAssertEqualObjects(self.mockPushChannel.clientID, userClient.remoteIdentifier);
@@ -353,26 +353,28 @@
 - (void)testThatItSetsItselfAsADelegateOfTheTransportSessionAndForwardsUserClientID
 {
     // given
-    UserClient *selfClient = [self createSelfClient];;
+    UserClient *selfClient = [self createSelfClient];
+    NSUUID *userId = NSUUID.createUUID;
     
     self.mockPushChannel = [[MockPushChannel alloc] init];
-    self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com" userIdentifier:NSUUID.createUUID];
+    self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com" userIdentifier:userId];
     RecordingMockTransportSession *transportSession = [[RecordingMockTransportSession alloc] initWithCookieStorage:self.cookieStorage pushChannel:self.mockPushChannel];
 
 
     // when
-    ZMUserSession *testSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
-                                                                    mediaManager:self.mediaManager
-                                                                     flowManager:self.flowManagerMock
-                                                                       analytics:nil
-                                                                  eventProcessor:nil
-                                                               strategyDirectory:nil
-                                                                    syncStrategy:nil
-                                                                   operationLoop:nil
-                                                                     application:self.application
-                                                                      appVersion:@"00000"
-                                                                   storeProvider:self.storeProvider
-                                                                   configuration:ZMUserSessionConfiguration.defaultConfig];
+    ZMUserSession *testSession = [[ZMUserSession alloc] initWithUserId:userId
+                                                      transportSession:transportSession
+                                                          mediaManager:self.mediaManager
+                                                           flowManager:self.flowManagerMock
+                                                             analytics:nil
+                                                        eventProcessor:nil
+                                                     strategyDirectory:nil
+                                                          syncStrategy:nil
+                                                         operationLoop:nil
+                                                           application:self.application
+                                                            appVersion:@"00000"
+                                                         storeProvider:self.storeProvider
+                                                         configuration:ZMUserSessionConfiguration.defaultConfig];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then

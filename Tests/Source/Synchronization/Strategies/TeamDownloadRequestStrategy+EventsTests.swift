@@ -114,21 +114,21 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             "data": NSNull()
         ]
         
-        // expect
-        let accountDeletedExpectation = expectation(description: "Account was deleted")
-        var token : Any? = PostLoginAuthenticationObserverToken(managedObjectContext: uiMOC) { (event, _) in
-            if case WireSyncEngine.PostLoginAuthenticationEvent.accountDeleted = event {
-                accountDeletedExpectation.fulfill()
+        expectation(forNotification: AccountDeletedNotification.notificationName, object: nil) { wrappedNote in
+            guard
+                let note = wrappedNote.userInfo?[AccountDeletedNotification.userInfoKey] as? AccountDeletedNotification,
+                let _ = note.context
+            else {
+                return false
             }
+            return true
         }
-        XCTAssertNotNil(token)
-
+        
         // when
         processEvent(fromPayload: payload)
 
         // then
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
-        token = nil
     }
 
     func testThatItRequestAccountDeletionWhenReceivingATeamDeleteUpdateEvent() {
@@ -154,21 +154,21 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
             "data": NSNull()
         ]
         
-        let accountDeletedExpectation = expectation(description: "Account was deleted")
-        var token : Any? = PostLoginAuthenticationObserverToken(managedObjectContext: uiMOC) { (event, _) in
-            if case WireSyncEngine.PostLoginAuthenticationEvent.accountDeleted = event {
-                accountDeletedExpectation.fulfill()
+        expectation(forNotification: AccountDeletedNotification.notificationName, object: nil) { wrappedNote in
+            guard
+                let note = wrappedNote.userInfo?[AccountDeletedNotification.userInfoKey] as? AccountDeletedNotification,
+                let _ = note.context
+                else {
+                    return false
             }
+            return true
         }
-        XCTAssertNotNil(token)
         
-    
         // when
         processEvent(fromPayload: payload)
-
+        
         // then
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
-        token = nil
     }
 
     // MARK: - Team Update
@@ -470,13 +470,15 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         }
         
         // expect
-        let accountDeletedExpectation = expectation(description: "Account was deleted")
-        var token : Any? = PostLoginAuthenticationObserverToken(managedObjectContext: uiMOC) { (event, _) in
-            if case WireSyncEngine.PostLoginAuthenticationEvent.accountDeleted = event {
-                accountDeletedExpectation.fulfill()
+        expectation(forNotification: AccountDeletedNotification.notificationName, object: nil) { wrappedNote in
+            guard
+                let note = wrappedNote.userInfo?[AccountDeletedNotification.userInfoKey] as? AccountDeletedNotification,
+                let _ = note.context
+            else {
+                return false
             }
+            return true
         }
-        XCTAssertNotNil(token)
 
         // when
         let payload: [String: Any] = [
@@ -489,7 +491,6 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
 
         // then
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
-        token = nil
     }
 
     func testThatItRemovesAMemberFromAllGroupConversationsSheWasPartOfWhenReceivingAMemberLeaveForThatMember() {

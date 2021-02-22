@@ -34,6 +34,7 @@
 
     self.mockMediaManager = [[MockMediaManager alloc] init];
     self.mockEnvironment = [[MockEnvironment alloc] init];
+    self.mockLoginDelegete = [[MockLoginDelegate alloc] init];
     
     self.currentUserIdentifier = [NSUUID createUUID];
     [self _setUp];

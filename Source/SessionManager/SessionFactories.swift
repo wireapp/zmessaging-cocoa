@@ -61,6 +61,7 @@ open class AuthenticatedSessionFactory {
         )
 
         let userSession = ZMUserSession(
+            userId: account.userIdentifier,
             transportSession: transportSession,
             mediaManager: mediaManager,
             flowManager:flowManager,
@@ -93,13 +94,14 @@ open class UnauthenticatedSessionFactory {
         self.appVersion = appVersion
     }
 
-    func session(withDelegate delegate: UnauthenticatedSessionDelegate) -> UnauthenticatedSession {
+    func session(delegate: UnauthenticatedSessionDelegate,
+                 authenticationStatusDelegate: ZMAuthenticationStatusDelegate) -> UnauthenticatedSession {
         let transportSession = UnauthenticatedTransportSession(environment: environment,
                                                                reachability: reachability,
                                                                applicationVersion: appVersion)
         return UnauthenticatedSession(transportSession: transportSession,
                                       reachability: reachability,
-                                      delegate: delegate)
+                                      delegate: delegate,
+                                      authenticationStatusDelegate: authenticationStatusDelegate)
     }
-
 }
