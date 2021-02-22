@@ -1100,7 +1100,7 @@ extension WireCallCenterV3Tests {
 
         // then
         let actual = sut.callParticipants(conversationId: oneOnOneConversationID, kind: .all)
-        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, isActiveSpeaker: false)]
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, activeSpeakerState: .inactive)]
         XCTAssertEqual(actual, expected)
     }
 
@@ -1125,7 +1125,7 @@ extension WireCallCenterV3Tests {
         
         // then
         let actual = sut.callParticipants(conversationId: oneOnOneConversationID, kind: .all)
-        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, isActiveSpeaker: false)]
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, activeSpeakerState: .inactive)]
         XCTAssertEqual(actual, expected)
     }
 
@@ -1137,7 +1137,7 @@ extension WireCallCenterV3Tests {
 
         // then
         let actual = sut.callParticipants(conversationId: groupConversationID, kind: .all)
-        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, isActiveSpeaker: false)]
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, activeSpeakerState: .inactive)]
         XCTAssertEqual(actual, expected)
     }
 
@@ -1154,7 +1154,7 @@ extension WireCallCenterV3Tests {
 
         // then
         var actual = sut.callParticipants(conversationId: groupConversationID, kind: .all)
-        var expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, isActiveSpeaker: false)]
+        var expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, activeSpeakerState: .inactive)]
         XCTAssertEqual(actual, expected)
 
         // when
@@ -1163,7 +1163,7 @@ extension WireCallCenterV3Tests {
 
         // then
         actual = sut.callParticipants(conversationId: groupConversationID, kind: .all)
-        expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connected(videoState: .stopped, microphoneState: .unmuted), isActiveSpeaker: false)]
+        expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connected(videoState: .stopped, microphoneState: .unmuted), activeSpeakerState: .inactive)]
         XCTAssertEqual(actual, expected)
     }
 }
@@ -1366,7 +1366,12 @@ extension WireCallCenterV3Tests {
         let participants = sut.callParticipants(conversationId: conversationId, kind: participantsKind, activeSpeakersLimit: limit)
         
         // THEN
-        let activeSpeakersAmount = participants.filter { $0.isActiveSpeaker }.count
+        let activeSpeakersAmount = participants.filter {
+            guard case .active = $0.activeSpeakerState else {
+                return false
+            }
+            return true
+        }.count
         assertionBlock?(participants, activeSpeakersAmount)
     }
     

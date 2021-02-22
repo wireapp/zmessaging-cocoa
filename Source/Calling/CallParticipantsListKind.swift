@@ -36,7 +36,7 @@ extension CallParticipantsListKind {
         switch self {
         case .all where activeSpeaker.audioLevelNow > 0,
              .smoothedActiveSpeakers where activeSpeaker.audioLevel > 0:
-            return .active(audioLevels: activeSpeaker.audioLevels)
+            return .active(audioLevelNow: activeSpeaker.audioLevelNow)
         default:
             return .inactive
         }

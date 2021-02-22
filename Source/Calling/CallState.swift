@@ -152,27 +152,9 @@ public enum MicrophoneState: Int32, Codable {
 
 public enum ActiveSpeakerState: Equatable {
     /// Participant is an active speaker
-    case active(audioLevels: AudioLevels)
+    case active(audioLevelNow: Int)
     /// Participant is not an active speaker
     case inactive
-    
-    var audioLevels: AudioLevels? {
-        switch self {
-        case .active(audioLevels: let audioLevels):
-            return audioLevels
-        default:
-            return nil
-        }
-    }
-}
-
-/**
- * The audio levels of an active speaker
- */
-
-public struct AudioLevels: Equatable {
-    let instantaneous: Int
-    let smoothed: Int
 }
 
 /**

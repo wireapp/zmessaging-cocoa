@@ -48,19 +48,31 @@ class CallParticipantsKindTests: XCTestCase {
     }
     
     func testThat_RealTimeActiveSpeaker_IsActive_WhenCase_All() {
-        XCTAssertTrue(CallParticipantsListKind.all.isActive(activeSpeaker: realTimeActiveSpeaker))
+        XCTAssertEqual(
+            CallParticipantsListKind.all.stateOf(activeSpeaker: realTimeActiveSpeaker),
+            .active(audioLevelNow: 100)
+        )
     }
     
-    func testThat_RealTimeActiveSpeaker_IsNotActive_WhenCase_SmoothedActiveSpeakers() {
-        XCTAssertFalse(CallParticipantsListKind.smoothedActiveSpeakers.isActive(activeSpeaker: realTimeActiveSpeaker))
+    func testThat_RealTimeActiveSpeaker_IsInactive_WhenCase_SmoothedActiveSpeakers() {
+        XCTAssertEqual(
+            CallParticipantsListKind.smoothedActiveSpeakers.stateOf(activeSpeaker: realTimeActiveSpeaker),
+            .inactive
+        )
     }
     
-    func testThat_SmoothedActiveSpeaker_IsNotActive_WhenCase_All() {
-        XCTAssertFalse(CallParticipantsListKind.all.isActive(activeSpeaker: smoothedActiveSpeaker))
+    func testThat_SmoothedActiveSpeaker_IsInactive_WhenCase_All() {
+        XCTAssertEqual(
+            CallParticipantsListKind.all.stateOf(activeSpeaker: smoothedActiveSpeaker),
+            .inactive
+        )
     }
     
     func testThat_SmoothedActiveSpeaker_IsActive_WhenCase_SmoothedActiveSpeakers() {
-        XCTAssertTrue(CallParticipantsListKind.smoothedActiveSpeakers.isActive(activeSpeaker: smoothedActiveSpeaker))
+        XCTAssertEqual(
+            CallParticipantsListKind.smoothedActiveSpeakers.stateOf(activeSpeaker: smoothedActiveSpeaker),
+            .active(audioLevelNow: 0)
+        )
     }
 
 }
