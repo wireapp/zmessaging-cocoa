@@ -49,4 +49,8 @@ extension AVSActiveSpeakersChange.ActiveSpeaker {
     var client: AVSClient {
         AVSClient(userId: userId, clientId: clientId)
     }
+    
+    var audioLevels: AudioLevels {
+        return AudioLevels(instantaneous: audioLevelNow, smoothed: audioLevel)
+    }
 }

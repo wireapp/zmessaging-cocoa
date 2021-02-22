@@ -31,13 +31,14 @@ public enum CallParticipantsListKind {
 }
 
 extension CallParticipantsListKind {
-    
-    func isActive(activeSpeaker: AVSActiveSpeakersChange.ActiveSpeaker) -> Bool {
+
+    func stateOf(activeSpeaker: AVSActiveSpeakersChange.ActiveSpeaker) -> ActiveSpeakerState {
         switch self {
-        case .all:
-            return activeSpeaker.audioLevelNow > 0
-        case .smoothedActiveSpeakers:
-            return activeSpeaker.audioLevel > 0
+        case .all where activeSpeaker.audioLevelNow > 0,
+             .smoothedActiveSpeakers where activeSpeaker.audioLevel > 0:
+            return .active(audioLevels: activeSpeaker.audioLevels)
+        default:
+            return .inactive
         }
     }
 
