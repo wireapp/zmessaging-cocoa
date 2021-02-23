@@ -32,7 +32,7 @@ public enum CallParticipantsListKind {
 
 extension CallParticipantsListKind {
 
-    func stateOf(activeSpeaker: AVSActiveSpeakersChange.ActiveSpeaker) -> ActiveSpeakerState {
+    func state(ofActiveSpeaker activeSpeaker: AVSActiveSpeakersChange.ActiveSpeaker) -> ActiveSpeakerState {
         switch self {
         case .all where activeSpeaker.audioLevelNow > 0,
              .smoothedActiveSpeakers where activeSpeaker.audioLevel > 0:

@@ -349,7 +349,7 @@ extension WireCallCenterV3 {
             var activeSpeakerState: ActiveSpeakerState = .inactive
             
             if let activeSpeaker = activeSpeakers.first(where: { $0.client == member.client }) {
-                activeSpeakerState = kind.stateOf(activeSpeaker: activeSpeaker)
+                activeSpeakerState = kind.state(ofActiveSpeaker: activeSpeaker)
             }
             
             if kind == .smoothedActiveSpeakers && activeSpeakerState == .inactive {
