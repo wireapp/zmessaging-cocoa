@@ -150,7 +150,7 @@ public enum MicrophoneState: Int32, Codable {
  * The speaking activity state of a participant in the call.
  */
 
-public enum ActiveSpeakerState: Equatable {
+public enum ActiveSpeakerState: Hashable {
     /// Participant is an active speaker
     case active(audioLevelNow: Int)
     /// Participant is not an active speaker
