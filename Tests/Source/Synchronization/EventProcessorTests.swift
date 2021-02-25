@@ -65,6 +65,8 @@ class EventProcessorTests: MessagingTest {
     // MARK: - Helpers
     
     func completeQuickSync() {
+        syncStatus.currentSyncPhase = .done
+        syncStatus.pushChannelDidOpen()
         syncStatus.finishCurrentSyncPhase(phase: .fetchingMissedEvents)
     }
     
