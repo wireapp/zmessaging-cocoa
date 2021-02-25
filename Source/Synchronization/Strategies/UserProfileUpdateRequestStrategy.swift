@@ -53,7 +53,8 @@ import Foundation
             .allowsRequestsWhileUnauthenticated,
             .allowsRequestsWhileOnline,
             .allowsRequestsDuringSlowSync,
-            .allowsRequestsDuringQuickSync
+            .allowsRequestsDuringQuickSync,
+            .allowsRequestsWhileWaitingForWebsocket
         ]
 
         self.phoneCodeRequestSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
