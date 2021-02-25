@@ -423,16 +423,6 @@
     XCTAssertTrue([self waitForOfflineStatus]);
 }
 
-- (void)testThatWeSetUserSessionToSyncDoneWhenSyncIsDone
-{
-    // when
-    [self.sut didStartQuickSync];
-    [self.sut didFinishQuickSync];
-    
-    // then
-    XCTAssertTrue([self waitForStatus:ZMNetworkStateOnline]);
-}
-
 - (void)testThatItNotifiesThirdPartyServicesWhenSyncIsDone
 {
     // given
