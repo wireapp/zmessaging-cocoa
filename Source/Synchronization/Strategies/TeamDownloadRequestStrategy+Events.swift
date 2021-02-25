@@ -140,7 +140,8 @@ extension TeamDownloadRequestStrategy: ZMEventConsumer {
     }
     
     private func deleteAccount() {
-        PostLoginAuthenticationNotification.notifyAccountDeleted(context: managedObjectContext)
+        let notification = AccountDeletedNotification(context: managedObjectContext)
+        notification.post(in: managedObjectContext.notificationContext)
     }
 
 }

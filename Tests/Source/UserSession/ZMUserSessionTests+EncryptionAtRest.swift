@@ -20,13 +20,27 @@ import Foundation
 import LocalAuthentication
 @testable import WireSyncEngine
 
-class MockUserSessionDelegate: UserSessionDelegate {
+class MockUserSessionDelegate: NSObject, UserSessionDelegate {
     
     var calledSetEncryptionAtRest: (Bool, Account, EncryptionKeys)?
     func setEncryptionAtRest(enabled: Bool, account: Account, encryptionKeys: EncryptionKeys) {
         calledSetEncryptionAtRest = (enabled, account, encryptionKeys)
     }
+
+    func userSessionDidUnlock(_ session: ZMUserSession) {
+        
+    }
     
+    func clientRegistrationDidSucceed(accountId: UUID) { }
+    
+    func clientRegistrationDidFail(_ error: NSError, accountId: UUID) { }
+    
+    var calleduserDidLogout: (Bool, UUID)?
+    func userDidLogout(accountId: UUID) {
+        calleduserDidLogout = (true, accountId)
+    }
+    
+    func authenticationInvalidated(_ error: NSError, accountId : UUID) { }
 }
 
 class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
@@ -220,5 +234,31 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         XCTAssertFalse(sut.isDatabaseLocked)
         XCTAssertNotEqual(oldKeys, newKeys)
     }
-    
+
+    func testThatIfDatabaseIsLocked_ThenUserSessionLockIsSet() throws {
+        // given
+        simulateLoggedInUser()
+        syncMOC.saveOrRollback()
+        setEncryptionAtRest(enabled: true)
+
+        sut.applicationDidEnterBackground(nil)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        XCTAssertTrue(sut.isDatabaseLocked)
+
+        // then
+        XCTAssertEqual(sut.lock, .database)
+    }
+
+    func testThatIfDatabaseIsNotLocked_ThenUserSessionLockIsNotSet() throws {
+        // given
+        simulateLoggedInUser()
+        syncMOC.saveOrRollback()
+        setEncryptionAtRest(enabled: false)
+        XCTAssertFalse(sut.isDatabaseLocked)
+
+        // then
+        XCTAssertNotEqual(sut.lock, .database)
+    }
+
 }

@@ -21,14 +21,18 @@ import XCTest
 class ZMAuthenticationStatusTests_PhoneVerification: XCTestCase {
     
     var sut: ZMAuthenticationStatus!
+    var delegate: MockAuthenticationStatusDelegate!
     var userInfoParser: MockUserInfoParser!
     
     override func setUp() {
         super.setUp()
-        
+        delegate = MockAuthenticationStatusDelegate()
         userInfoParser = MockUserInfoParser()
+        
         let groupQueue = DispatchGroupQueue(queue: DispatchQueue.main)
-        sut = ZMAuthenticationStatus(groupQueue: groupQueue, userInfoParser: userInfoParser)
+        sut = ZMAuthenticationStatus(delegate: delegate,
+                                     groupQueue: groupQueue,
+                                     userInfoParser: userInfoParser)
     }
     
     func testThatItCanRequestPhoneVerificationCodeForLoginAfterRequestingTheCode() {

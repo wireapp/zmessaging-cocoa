@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2020 Wire Swiss GmbH
+// Copyright (C) 2021 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,23 +18,28 @@
 
 import Foundation
 
-public extension ZMUserSession {
+public enum CallParticipantsListKind {
+    
+    /// All the active participants, including the real time active speakers
+    
+    case all
 
-    /// An object used to configure a user session.
+    /// Only the smoothed active speakers
+    
+    case smoothedActiveSpeakers
 
-    @objc(ZMUserSessionConfiguration)
-    final class Configuration: NSObject {
+}
 
-        // MARK: - Properties
+extension CallParticipantsListKind {
 
-        public let appLockConfig: AppLockController.Config
-
-        // MARK: - Life cycle
-
-        public init(appLockConfig: AppLockController.Config) {
-            self.appLockConfig = appLockConfig
+    func state(ofActiveSpeaker activeSpeaker: AVSActiveSpeakersChange.ActiveSpeaker) -> ActiveSpeakerState {
+        switch self {
+        case .all where activeSpeaker.audioLevelNow > 0,
+             .smoothedActiveSpeakers where activeSpeaker.audioLevel > 0:
+            return .active(audioLevelNow: activeSpeaker.audioLevelNow)
+        default:
+            return .inactive
         }
-
     }
 
 }

@@ -326,8 +326,16 @@ extension WireCallCenterV3 {
 
 extension WireCallCenterV3 {
     
-    /// Returns the callParticipants currently in the conversation.
-    func callParticipants(conversationId: UUID, activeSpeakersLimit limit: Int? = nil) -> [CallParticipant] {
+    /// Get a list of callParticipants of a given kind for a conversation
+    /// - Parameters:
+    ///   - conversationId: the remote identifier of the conversation
+    ///   - kind: the kind of participants expected in return
+    ///   - activeSpeakersLimit: the limit of active speakers to be included
+    /// - Returns: the callParticipants currently in the conversation, according to the specified kind
+    func callParticipants(conversationId: UUID,
+                          kind: CallParticipantsListKind,
+                          activeSpeakersLimit limit: Int? = nil) -> [CallParticipant]
+    {
         guard
             let callMembers = callSnapshots[conversationId]?.callParticipants.members.array,
             let context = uiMOC
@@ -336,9 +344,19 @@ extension WireCallCenterV3 {
         }
 
         let activeSpeakers = self.activeSpeakers(conversationId: conversationId, limitedBy: limit)
+        
         return callMembers.compactMap { member in
-            let isActive = activeSpeakers.contains(where: { $0.client == member.client })
-            return CallParticipant(member: member, isActiveSpeaker: isActive, context: context)
+            var activeSpeakerState: ActiveSpeakerState = .inactive
+            
+            if let activeSpeaker = activeSpeakers.first(where: { $0.client == member.client }) {
+                activeSpeakerState = kind.state(ofActiveSpeaker: activeSpeaker)
+            }
+            
+            if kind == .smoothedActiveSpeakers && activeSpeakerState == .inactive {
+                return nil
+            }
+            
+            return CallParticipant(member: member, activeSpeakerState: activeSpeakerState, context: context)
         }
     }
     

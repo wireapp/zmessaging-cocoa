@@ -39,8 +39,8 @@ final class CallParticipantTests: MessagingTest {
     func testThatHashIsSameWithDifferentState() {
         
         //GIVEN & WHEN
-        let callParticipant1 = CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, isActiveSpeaker: false)
-        let callParticipant2 = CallParticipant(user: otherUser, clientId: otherUserClientID, state: .unconnected, isActiveSpeaker: false)
+        let callParticipant1 = CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, activeSpeakerState: .inactive)
+        let callParticipant2 = CallParticipant(user: otherUser, clientId: otherUserClientID, state: .unconnected, activeSpeakerState: .inactive)
 
         //THEN
         XCTAssertEqual(callParticipant1.hashValue, callParticipant2.hashValue)

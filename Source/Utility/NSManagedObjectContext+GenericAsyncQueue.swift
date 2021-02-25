@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2020 Wire Swiss GmbH
+// Copyright (C) 2021 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,26 +18,22 @@
 
 import Foundation
 
-public enum ZMAccountDeletedReason: Int {
+/// Abstraction of queue
+public protocol GenericAsyncQueue {
+    
+    func performAsync(_ block: @escaping () -> ())
+}
 
-    /// The user account was deleted by the user.
+extension DispatchQueue: GenericAsyncQueue {
+    
+    public func performAsync(_ block: @escaping () -> ()) {
+        self.async(execute: block)
+    }
+}
 
-    case userInitiated = 0
-
-    /// The user account was deleted because a jailbreak was detected.
-
-    case jailbreakDetected
-
-    /// The user account was deleted because the session expired.
-
-    case sessionExpired
-
-    /// The user account was deleted because the limit of failed password attempts was reached.
-
-    case failedPasswordLimitReached
-
-    /// The user account was deleted because the user chose to wipe the database.
-
-    case databaseWiped
-
+extension NSManagedObjectContext: GenericAsyncQueue {
+    
+    public func performAsync(_ block: @escaping () -> ()) {
+        self.performGroupedBlock(block)
+    }
 }

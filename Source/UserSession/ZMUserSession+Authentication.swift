@@ -85,7 +85,12 @@ extension ZMUserSession {
     }
     
     public func logout(credentials: ZMEmailCredentials, _ completion: @escaping (VoidResult) -> Void) {
-        guard let selfClientIdentifier = ZMUser.selfUser(inUserSession: self).selfClient()?.remoteIdentifier else { return }
+        guard
+            let accountID = ZMUser.selfUser(inUserSession: self).remoteIdentifier,
+            let selfClientIdentifier = ZMUser.selfUser(inUserSession: self).selfClient()?.remoteIdentifier
+        else {
+            return
+        }
         
         let payload: [String: Any]
         if let password = credentials.password, !password.isEmpty {
@@ -96,11 +101,11 @@ extension ZMUserSession {
         
         let request = ZMTransportRequest(path: "/clients/\(selfClientIdentifier)", method: .methodDELETE, payload: payload as ZMTransportData)
         
-        request.add(ZMCompletionHandler(on: managedObjectContext, block: {[weak self] (response) in
+        request.add(ZMCompletionHandler(on: managedObjectContext, block: { [weak self] (response) in
             guard let strongSelf = self else { return }
             
             if response.httpStatus == 200 {
-                PostLoginAuthenticationNotification.notifyUserDidLogout(context: strongSelf.managedObjectContext)
+                self?.delegate?.userDidLogout(accountId: accountID)
                 completion(.success)
             } else {
                 completion(.failure(strongSelf.errorFromFailedDeleteResponse(response)))

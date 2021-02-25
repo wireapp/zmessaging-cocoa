@@ -1099,8 +1099,8 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        let actual = sut.callParticipants(conversationId: oneOnOneConversationID)
-        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, isActiveSpeaker: false)]
+        let actual = sut.callParticipants(conversationId: oneOnOneConversationID, kind: .all)
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, activeSpeakerState: .inactive)]
         XCTAssertEqual(actual, expected)
     }
 
@@ -1124,8 +1124,8 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        let actual = sut.callParticipants(conversationId: oneOnOneConversationID)
-        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, isActiveSpeaker: false)]
+        let actual = sut.callParticipants(conversationId: oneOnOneConversationID, kind: .all)
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, activeSpeakerState: .inactive)]
         XCTAssertEqual(actual, expected)
     }
 
@@ -1136,8 +1136,8 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        let actual = sut.callParticipants(conversationId: groupConversationID)
-        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, isActiveSpeaker: false)]
+        let actual = sut.callParticipants(conversationId: groupConversationID, kind: .all)
+        let expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, activeSpeakerState: .inactive)]
         XCTAssertEqual(actual, expected)
     }
 
@@ -1153,8 +1153,8 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        var actual = sut.callParticipants(conversationId: groupConversationID)
-        var expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, isActiveSpeaker: false)]
+        var actual = sut.callParticipants(conversationId: groupConversationID, kind: .all)
+        var expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connecting, activeSpeakerState: .inactive)]
         XCTAssertEqual(actual, expected)
 
         // when
@@ -1162,8 +1162,8 @@ extension WireCallCenterV3Tests {
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
-        actual = sut.callParticipants(conversationId: groupConversationID)
-        expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connected(videoState: .stopped, microphoneState: .unmuted), isActiveSpeaker: false)]
+        actual = sut.callParticipants(conversationId: groupConversationID, kind: .all)
+        expected = [CallParticipant(user: otherUser, clientId: otherUserClientID, state: .connected(videoState: .stopped, microphoneState: .unmuted), activeSpeakerState: .inactive)]
         XCTAssertEqual(actual, expected)
     }
 }
@@ -1270,14 +1270,23 @@ extension WireCallCenterV3Tests {
 
 extension WireCallCenterV3Tests {
 
-    private func activeSpeakersChange(for conversationId: UUID, clients: [AVSClient]) -> AVSActiveSpeakersChange {
+    private enum ActiveSpeakerKind {
+        case smoothed
+        case realTime
+    }
+    
+    private func activeSpeakersChange(for conversationId: UUID,
+                                      clients: [AVSClient],
+                                      activeSpeakerKind kind: ActiveSpeakerKind = .realTime) -> AVSActiveSpeakersChange
+    {
         var activeSpeakers = [AVSActiveSpeakersChange.ActiveSpeaker]()
         
         for client in clients {
             activeSpeakers += [AVSActiveSpeakersChange.ActiveSpeaker(
                 userId: client.userId,
                 clientId: client.clientId,
-                audioLevel: 100
+                audioLevel: kind == .smoothed ? 100 : 0,
+                audioLevelNow: kind == .realTime ? 100 : 0
             )]
         }
         
@@ -1332,7 +1341,13 @@ extension WireCallCenterV3Tests {
         
     }
     
-    func testThatCallParticipants_LimitsActiveSpeakersCorrectly() {
+    typealias CallParticipantsTestsAssertion = ([CallParticipant], Int) -> Void
+    
+    private func testCallParticipants(activeSpeakerKind: ActiveSpeakerKind,
+                                      participantsKind: CallParticipantsListKind,
+                                      limit: Int? = nil,
+                                      assertionBlock: CallParticipantsTestsAssertion?)
+    {
         // GIVEN
         let conversationId = groupConversationID!
         let clients = [
@@ -1341,19 +1356,63 @@ extension WireCallCenterV3Tests {
         ]
         
         sut.callSnapshots = callSnapshot(conversationId: conversationId, clients: clients)
-        let data = activeSpeakersChange(for: conversationId, clients: clients).data
+        let data = activeSpeakersChange(for: conversationId, clients: clients, activeSpeakerKind: activeSpeakerKind).data
         
         sut.handleActiveSpeakersChange(conversationId: conversationId, data: data)
         
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-
+        
         // WHEN
-        let participants = sut.callParticipants(conversationId: conversationId, activeSpeakersLimit: 1)
+        let participants = sut.callParticipants(conversationId: conversationId, kind: participantsKind, activeSpeakersLimit: limit)
         
         // THEN
-        XCTAssertTrue(participants.count == 2)
-        let activeSpeakersAmount = participants.filter { $0.isActiveSpeaker }.count
-        XCTAssertTrue(activeSpeakersAmount == 1)
+        let activeSpeakersAmount = participants.filter {
+            guard case .active = $0.activeSpeakerState else {
+                return false
+            }
+            return true
+        }.count
+        assertionBlock?(participants, activeSpeakersAmount)
+    }
+    
+    func testThatCallParticipants_LimitsActiveSpeakersCorrectly() {
+        testCallParticipants(activeSpeakerKind: .realTime, participantsKind: .all, limit: 1) {
+            participants, activeSpeakerAmount in
+            
+            XCTAssertEqual(activeSpeakerAmount, 1)
+        }
+    }
+    
+    func testThatCallParticipants_IncludesRealTimeActiveSpeakers_WhenParticipantsKind_All() {
+        testCallParticipants(activeSpeakerKind: .realTime, participantsKind: .all) {
+            participants, activeSpeakerAmount in
+            
+            XCTAssertEqual(activeSpeakerAmount, participants.count)
+        }
+    }
+    
+    func testThatCallParticipants_ExcludesSmoothedActiveSpeakers_WhenParticipantsKind_All() {
+        testCallParticipants(activeSpeakerKind: .smoothed, participantsKind: .all) {
+            participants, activeSpeakerAmount in
+            
+            XCTAssertEqual(activeSpeakerAmount, 0)
+        }
+    }
+    
+    func testThatCallParticipants_ReturnsSmoothedActiveSpeakersOnly_WhenParticipantKind_SmoothedActiveSpeakers() {
+        testCallParticipants(activeSpeakerKind: .smoothed, participantsKind: .smoothedActiveSpeakers) {
+            participants, activeSpeakerAmount in
+            
+            XCTAssertEqual(activeSpeakerAmount, participants.count)
+        }
+    }
+    
+    func testThatCallParticipants_ExcludesRealTimeActiveSpeakers_WhenParticipantKind_SmoothedActiveSpeakers() {
+        testCallParticipants(activeSpeakerKind: .realTime, participantsKind: .smoothedActiveSpeakers) {
+            participants, activeSpeakerAmount in
+            
+            XCTAssertEqual(activeSpeakerAmount, 0)
+        }
     }
 }
 
