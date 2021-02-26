@@ -284,6 +284,7 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
 {
     ZMLogDebug(@"%@", NSStringFromSelector(_cmd));
     [self.managedObjectContext setPersistentStoreMetadata:client.remoteIdentifier forKey:ZMPersistedClientIdKey];
+    [self.managedObjectContext saveOrRollback];
     
     [self fetchExistingSelfClientsAfterClientRegistered:client];
     [self.registrationStatusDelegate didRegisterSelfUserClient:client];

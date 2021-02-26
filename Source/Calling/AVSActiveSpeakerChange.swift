@@ -25,12 +25,18 @@ struct AVSActiveSpeakersChange: Codable {
     struct ActiveSpeaker: Codable, Equatable {
         let userId: UUID
         let clientId: String
+        
+        /// Audio level smoothed over time
         let audioLevel: Int
+        
+        /// Instantaneous audio level
+        let audioLevelNow: Int
         
         enum CodingKeys: String, CodingKey {
             case userId = "userid"
             case clientId = "clientid"
             case audioLevel = "audio_level"
+            case audioLevelNow = "audio_level_now"
         }
     }
     

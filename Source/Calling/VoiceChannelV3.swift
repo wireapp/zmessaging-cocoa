@@ -46,20 +46,20 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
         self.conversation = conversation
         super.init()
     }
-    
-    public func participants(activeSpeakersLimit limit: Int?) -> [CallParticipant] {
+        
+    public var participants: [CallParticipant] {
+        return participants(ofKind: .all, activeSpeakersLimit: nil)
+    }
+
+    public func participants(ofKind kind: CallParticipantsListKind, activeSpeakersLimit limit: Int?) -> [CallParticipant] {
         guard
             let callCenter = callCenter,
             let conversationId = conversation?.remoteIdentifier
         else { return [] }
         
-        return callCenter.callParticipants(conversationId: conversationId, activeSpeakersLimit: limit)
+        return callCenter.callParticipants(conversationId: conversationId, kind: kind, activeSpeakersLimit: limit)
     }
     
-    public var participants: [CallParticipant] {
-        return participants(activeSpeakersLimit: nil)
-    }
-        
     public var state: CallState {
         if let conversation = conversation, let remoteIdentifier = conversation.remoteIdentifier, let callCenter = self.callCenter {
             return callCenter.callState(conversationId: remoteIdentifier)

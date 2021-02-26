@@ -138,11 +138,7 @@ public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
             }
         }
     }
-    
-    public var isLoggedIn: Bool { // TODO jacob we don't want this to be public
-        return transportSession.cookieStorage.isAuthenticated && applicationStatusDirectory?.clientRegistrationStatus.currentPhase == .registered
-    }
-    
+        
     public var isNotificationContentHidden: Bool {
         get {
             guard let value = managedObjectContext.persistentStoreMetadata(forKey: LocalNotificationDispatcher.ZMShouldHideNotificationContentKey) as? NSNumber else {
