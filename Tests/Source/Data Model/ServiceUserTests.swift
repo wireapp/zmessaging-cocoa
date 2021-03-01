@@ -138,6 +138,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     func isGroupAdmin(in conversation: ConversationLike) -> Bool {
         return false
     }
+
+    var domain: String?
     
     var previewImageData: Data? = nil
     
