@@ -46,6 +46,7 @@ public protocol SessionManagerDelegate: SessionActivationObserver {
                                        from selectedAccount: Account?,
                                        userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void)
+    func sessionManagerDidFailLoadDatabase()
     func sessionManagerDidBlacklistCurrentVersion()
     func sessionManagerDidBlacklistJailbrokenDevice()
 }
@@ -658,6 +659,9 @@ public final class SessionManager : NSObject, SessionManagerType {
                         if notifyAboutMigration {
                             self?.delegate?.sessionManagerWillMigrateAccount(userSessionCanBeTornDown: {})
                         }
+                    },
+                    databaseLoadingFailure: { [weak self] in
+                        self?.delegate?.sessionManagerDidFailLoadDatabase()
                     },
                     completion: { provider in
                         let userSession = self.startBackgroundSession(for: account, with: provider)

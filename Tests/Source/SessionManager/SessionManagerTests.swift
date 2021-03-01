@@ -1565,8 +1565,11 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
         // no op
     }
     
-    var jailbroken = false
+    func sessionManagerDidFailLoadDatabase() {
+        // no op
+    }
     
+    var jailbroken = false
     func sessionManagerDidBlacklistJailbrokenDevice() {
         jailbroken = true
     }

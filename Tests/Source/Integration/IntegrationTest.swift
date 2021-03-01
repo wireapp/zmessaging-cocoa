@@ -643,6 +643,10 @@ extension IntegrationTest: SessionManagerDelegate {
     public func sessionManagerDidBlacklistJailbrokenDevice() {
         // no-op
     }
+    
+    public func sessionManagerDidFailLoadDatabase() {
+        // no-op
+    }
         
     public func sessionManagerWillOpenAccount(_ account: Account,
                                               from selectedAccount: Account?,
