@@ -618,14 +618,14 @@ public final class SessionManager : NSObject, SessionManagerType {
             self.delegate?.sessionManagerDidChangeActiveUserSession(userSession: session)
             self.configureUserNotifications()
 
+            completion(session)
+            
             // If the user isn't logged in it's because they still need
             // to complete the login flow, which will be handle elsewhere.
             if session.isLoggedIn {            
                 self.delegate?.sessionManagerDidReportLockChange(forSession: session)
                 self.performPostUnlockActionsIfPossible(for: session)
             }
-            
-            completion(session)
         }
     }
 
