@@ -422,7 +422,11 @@ extension WireCallCenterV3 {
             if previousSnapshot != nil {
                 callSnapshots[conversationId] = previousSnapshot!.update(with: callState)
             }
-            
+
+            if conversation.conversationType == .group {
+                muted = true
+            }
+
             if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId) {
                 WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: callerId, messageTime:nil, previousCallState: previousSnapshot?.callState).post(in: context.notificationContext)
             }
