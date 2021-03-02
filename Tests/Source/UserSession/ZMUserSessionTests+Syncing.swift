@@ -37,18 +37,36 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
             didNotify = true
         }
     }
+
+    func startQuickSync() {
+        sut.applicationStatusDirectory?.syncStatus.currentSyncPhase = .done
+        sut.applicationStatusDirectory?.syncStatus.pushChannelDidOpen()
+    }
+
+    func finishQuickSync() {
+        sut.applicationStatusDirectory?.syncStatus.finishCurrentSyncPhase(phase: .fetchingMissedEvents)
+    }
+
+    func startSlowSync() {
+        sut.applicationStatusDirectory?.syncStatus.forceSlowSync()
+    }
+
+    func finishSlowSync() {
+        sut.applicationStatusDirectory?.syncStatus.currentSyncPhase = .lastSlowSyncPhase
+        sut.applicationStatusDirectory?.syncStatus.finishCurrentSyncPhase(phase: .lastSlowSyncPhase)
+    }
     
     // MARK: Slow Sync
     
     func testThatObserverSystemIsDisabledDuringSlowSync() {
         
         // given
-        sut.didFinishSlowSync()
+        finishSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertTrue(sut.notificationDispatcher.isEnabled)
         
         // when
-        sut.didStartSlowSync()
+        startSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -58,12 +76,12 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
     func testThatObserverSystemIsEnabledAfterSlowSync() {
         
         // given
-        sut.didStartSlowSync()
+        startSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertFalse(sut.notificationDispatcher.isEnabled)
         
         // when
-        sut.didFinishSlowSync()
+        finishSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -73,12 +91,12 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
     func testThatInitialSyncIsCompletedAfterSlowSync() {
         
         // given
-        sut.didStartSlowSync()
+        startSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertFalse(sut.hasCompletedInitialSync)
         
         // when
-        sut.didFinishSlowSync()
+        finishSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -88,12 +106,12 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
     func testThatItNotifiesObserverWhenInitialIsSyncCompleted(){
         // given
         let observer = InitialSyncObserver(context: uiMOC)
-        sut.didStartSlowSync()
+        startSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertFalse(observer.didNotify)
         
         // when
-        sut.didFinishSlowSync()
+        finishSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -103,12 +121,12 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
     func testThatPerformingSyncIsStillOngoingAfterSlowSync() {
         
         // given
-        sut.didStartSlowSync()
+        startSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertTrue(sut.isPerformingSync)
         
         // when
-        sut.didFinishSlowSync()
+        finishSlowSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -120,12 +138,12 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
     func testThatPerformingSyncIsFinishedAfterQuickSync() {
         
         // given
-        sut.didStartQuickSync()
+        startQuickSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         XCTAssertTrue(sut.isPerformingSync)
         
         // when
-        sut.didFinishQuickSync()
+        finishQuickSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
@@ -133,13 +151,27 @@ class ZMUserSessionTests_Syncing: ZMUserSessionTestsBase {
     }
     
     // MARK: Process events
+
+    func testThatPerformingSyncIsStillOngoingAfterProcessingEvents_IfQuickSyncIsNotCompleted() {
+
+        // given
+        startQuickSync()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertTrue(sut.isPerformingSync)
+
+        // when
+        sut.processEvents()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // then
+        XCTAssertTrue(sut.isPerformingSync)
+    }
     
     func testThatItNotifiesOnlineSynchronzingWhileProcessingEvents() {
         
         // given
-        sut.didReceiveData()
-        sut.didFinishSlowSync()
-        sut.didFinishQuickSync()
+        startQuickSync()
+        finishQuickSync()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         let networkStateRecorder = NetworkStateRecorder(userSession: sut)
         

@@ -338,7 +338,8 @@ extension WireCallCenterV3 {
             //          {
             //              "userid": "3f49da1d-0d52-4696-9ef3-0dd181383e8a",
             //              "clientid": "24cc758f602fb1f4",
-            //              "audio_level": 100
+            //              "audio_level": 100,
+            //              "audio_level_now": 100
             //          }
             //      ]
             //}

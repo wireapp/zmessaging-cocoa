@@ -150,7 +150,7 @@
     UserClient *userClient = [self createSelfClient];
     
     // when
-    [self.sut didRegisterUserClient:userClient];
+    [self.sut didRegisterSelfUserClient:userClient];
     
     // then
     XCTAssertEqualObjects(self.mockPushChannel.clientID, userClient.remoteIdentifier);
@@ -421,16 +421,6 @@
     
     // then
     XCTAssertTrue([self waitForOfflineStatus]);
-}
-
-- (void)testThatWeSetUserSessionToSyncDoneWhenSyncIsDone
-{
-    // when
-    [self.sut didStartQuickSync];
-    [self.sut didFinishQuickSync];
-    
-    // then
-    XCTAssertTrue([self waitForStatus:ZMNetworkStateOnline]);
 }
 
 - (void)testThatItNotifiesThirdPartyServicesWhenSyncIsDone

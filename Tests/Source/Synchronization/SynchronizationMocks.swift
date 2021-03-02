@@ -77,9 +77,13 @@ class MockAuthenticationStatus: ZMAuthenticationStatus {
     
     var mockPhase: ZMAuthenticationPhase
     
-    init(phase: ZMAuthenticationPhase = .authenticated, userInfoParser: UserInfoParser) {
+    init(delegate: ZMAuthenticationStatusDelegate,
+         phase: ZMAuthenticationPhase = .authenticated,
+         userInfoParser: UserInfoParser) {
         self.mockPhase = phase
-        super.init(groupQueue: DispatchGroupQueue(queue: .main), userInfoParser: userInfoParser)
+        super.init(delegate: delegate,
+                   groupQueue: DispatchGroupQueue(queue: .main),
+                   userInfoParser: userInfoParser)
     }
     
     override var currentPhase: ZMAuthenticationPhase {
@@ -226,6 +230,8 @@ public class MockSyncStatus : SyncStatus {
     @objc public var didCallFinishSlowSync = false
     @objc public var didCallStartQuickSync = false
     @objc public var didCallFinishQuickSync = false
+    @objc public var didCallFailRegisterUserClient = false
+    @objc public var didCallDeleteUserClient = false
     
     public func didStartSlowSync() {
         didCallStartSlowSync = true
@@ -243,8 +249,16 @@ public class MockSyncStatus : SyncStatus {
         didCallFinishQuickSync = true
     }
     
-    public func didRegister(_ userClient: UserClient!) {
+    public func didRegisterSelfUserClient(_ userClient: UserClient!) {
         registeredUserClient = userClient
+    }
+    
+    public func didFailToRegisterSelfUserClient(error: Error!) {
+        didCallFailRegisterUserClient = true
+    }
+    
+    public func didDeleteSelfUserClient(error: Error!) {
+        didCallDeleteUserClient = true
     }
 }
 

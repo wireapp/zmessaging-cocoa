@@ -94,9 +94,16 @@
 
 - (void)didFinishQuickSync { }
 
-- (void)didRegisterUserClient:(UserClient *)userClient
-{
+- (void)didRegisterSelfUserClient:(UserClient *)userClient {
     NOT_USED(userClient);
+}
+
+- (void)didFailToRegisterSelfUserClient:(NSError *)error {
+    NOT_USED(error);
+}
+
+- (void)didDeleteSelfUserClient:(NSError *)error {
+    NOT_USED(error);
 }
 
 - (void)setUp

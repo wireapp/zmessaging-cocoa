@@ -52,8 +52,8 @@ public protocol CallProperties : NSObjectProtocol {
     var participants: [CallParticipant] { get }
     
     /// Voice channel participants with a limit on participants flagged as active.
-    func participants(activeSpeakersLimit limit: Int?) -> [CallParticipant]
-    
+    func participants(ofKind kind: CallParticipantsListKind, activeSpeakersLimit limit: Int?) -> [CallParticipant]
+        
     /// Voice channel is sending audio using a contant bit rate
     var isConstantBitRateAudioActive: Bool { get }
     var isVideoCall: Bool { get }

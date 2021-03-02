@@ -35,7 +35,8 @@ import WireTransport
             .allowsRequestsWhileUnauthenticated,
             .allowsRequestsWhileOnline,
             .allowsRequestsDuringSlowSync,
-            .allowsRequestsDuringQuickSync
+            .allowsRequestsDuringQuickSync,
+            .allowsRequestsWhileWaitingForWebsocket
         ]
         self.deleteSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: self.managedObjectContext)
     }
@@ -62,7 +63,11 @@ import WireTransport
         if response.result == .success || response.result == .permanentError {
             self.managedObjectContext.setPersistentStoreMetadata(NSNumber(value: false), key: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
             
-            PostLoginAuthenticationNotification.notifyAccountDeleted(context: managedObjectContext.zm_userInterface)
+            guard let context = managedObjectContext.zm_userInterface else {
+                return
+            }
+            let notification = AccountDeletedNotification(context: context)
+            notification.post(in: context.notificationContext)
         }
     }
 }

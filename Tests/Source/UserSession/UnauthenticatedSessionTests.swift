@@ -20,91 +20,13 @@ import XCTest
 import WireTesting
 @testable import WireSyncEngine
 
-// This enum only exist due to obj-c compatibility
-@objc
-public enum PreLoginAuthenticationEventObjc : Int {
-    case loginCodeRequestDidSucceed
-    case loginCodeRequestDidFail
-    case authenticationDidSucceed
-    case authenticationDidFail
-    case readyToImportBackupExistingAccount
-    case readyToImportBackupNewAccount
-}
-
-public typealias PreLoginAuthenticationObserverHandler = (_ event: PreLoginAuthenticationEventObjc, _ error : NSError?) -> Void
-
-@objcMembers
-public class PreLoginAuthenticationObserverToken : NSObject, PreLoginAuthenticationObserver {
-    
-    private var token : Any?
-    private var handler : PreLoginAuthenticationObserverHandler
-
-    public init(authenticationStatus: ZMAuthenticationStatus, handler : @escaping PreLoginAuthenticationObserverHandler) {
-        self.handler = handler
-        
-        super.init()
-        
-        token = WireSyncEngine.PreLoginAuthenticationNotification.register(self, context: authenticationStatus)
-    }
-    
-    public func loginCodeRequestDidSucceed() {
-        handler(.loginCodeRequestDidSucceed, nil)
-    }
-    
-    public func loginCodeRequestDidFail(_ error: NSError) {
-        handler(.loginCodeRequestDidFail, error)
-    }
-    
-    public func authenticationDidSucceed() {
-        handler(.authenticationDidSucceed, nil)
-    }
-    
-    public func authenticationDidFail(_ error: NSError) {
-        handler(.authenticationDidFail, error)
-    }
-
-    public func authenticationReadyToImportBackup(existingAccount: Bool) {
-        let value: PreLoginAuthenticationEventObjc = existingAccount ? .readyToImportBackupExistingAccount : .readyToImportBackupNewAccount
-        handler(value, nil)
-    }
-}
-
-@objcMembers
-public class PreLoginAuthenticationNotificationEvent : NSObject {
-    
-    let event : PreLoginAuthenticationEventObjc
-    var error : NSError?
-    
-    init(event : PreLoginAuthenticationEventObjc, error : NSError?) {
-        self.event = event
-        self.error = error
-    }
-    
-}
-
-@objcMembers
-public class PreLoginAuthenticationNotificationRecorder : NSObject {
-    
-    private var token : Any?
-    public var notifications : [PreLoginAuthenticationNotificationEvent] = []
-    
-    init(authenticationStatus: ZMAuthenticationStatus) {
-        super.init()
-        
-        token = PreLoginAuthenticationObserverToken(authenticationStatus: authenticationStatus) { [weak self] (event, error) in
-            self?.notifications.append(PreLoginAuthenticationNotificationEvent(event: event, error: error))
-        }
-    }
-    
-}
-
 final class TestUnauthenticatedTransportSession: NSObject, UnauthenticatedTransportSessionProtocol {
 
     public var cookieStorage = ZMPersistentCookieStorage()
-    
+
     var nextEnqueueResult: EnqueueResult = .nilRequest
     var lastEnqueuedRequest: ZMTransportRequest?
-    
+
     func enqueueOneTime(_ request: ZMTransportRequest) {
         lastEnqueuedRequest = request
     }
@@ -112,31 +34,40 @@ final class TestUnauthenticatedTransportSession: NSObject, UnauthenticatedTransp
     func enqueueRequest(withGenerator generator: () -> ZMTransportRequest?) -> EnqueueResult {
         return nextEnqueueResult
     }
-    
+
     func tearDown() {}
     let environment: BackendEnvironmentProvider = MockEnvironment()
 
 }
 
-
-final class TestAuthenticationObserver: NSObject, PreLoginAuthenticationObserver {
+@objcMembers
+final class MockAuthenticationStatusDelegate: NSObject, ZMAuthenticationStatusDelegate {
     public var authenticationDidSucceedEvents: Int = 0
     public var authenticationDidFailEvents: [Error] = []
+    public var receivedSSOCode: UUID? = nil
     
-    private var preLoginAuthenticationToken : Any?
+    func authenticationDidFail(_ error: Error!) {
+        authenticationDidFailEvents.append(error)
+    }
     
-    init(unauthenticatedSession : UnauthenticatedSession) {
-        super.init()
-        
-        preLoginAuthenticationToken = unauthenticatedSession.addAuthenticationObserver(self)
+    func authenticationReadyImportingBackup(_ existingAccount: Bool) {
+        authenticationDidSucceedEvents += 1
     }
     
     func authenticationDidSucceed() {
         authenticationDidSucceedEvents += 1
     }
     
-    func authenticationDidFail(_ error: NSError) {
+    func loginCodeRequestDidFail(_ error: Error!) {
         authenticationDidFailEvents.append(error)
+    }
+
+    func loginCodeRequestDidSucceed() {
+        authenticationDidSucceedEvents += 1
+    }
+
+    func companyLoginCodeDidBecomeAvailable(_ uuid: UUID!) {
+        receivedSSOCode = uuid
     }
 }
 
@@ -180,13 +111,18 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
     var sut: UnauthenticatedSession!
     var mockDelegate: MockUnauthenticatedSessionDelegate!
     var reachability: TestReachability!
+    var mockAuthenticationStatusDelegate: MockAuthenticationStatusDelegate!
     
     public override func setUp() {
         super.setUp()
         transportSession = TestUnauthenticatedTransportSession()
         mockDelegate = MockUnauthenticatedSessionDelegate()
         reachability = TestReachability()
-        sut = UnauthenticatedSession(transportSession: transportSession, reachability: reachability, delegate: mockDelegate)
+        mockAuthenticationStatusDelegate = MockAuthenticationStatusDelegate()
+        sut = UnauthenticatedSession(transportSession: transportSession,
+                                     reachability: reachability,
+                                     delegate: mockDelegate,
+                                     authenticationStatusDelegate: mockAuthenticationStatusDelegate)
         sut.groupQueue.add(dispatchGroup)
     }
     
@@ -212,7 +148,6 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
     }
     
     func testThatDuringLoginItThrowsErrorWhenNoCredentials() {
-        let observer = TestAuthenticationObserver(unauthenticatedSession: sut)
         // given
         reachability.mayBeReachable = false
         // when
@@ -220,35 +155,31 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertEqual(observer.authenticationDidSucceedEvents, 0)
-        XCTAssertEqual(observer.authenticationDidFailEvents.count, 1)
-        XCTAssertEqual(observer.authenticationDidFailEvents[0].localizedDescription, NSError(code: .needsCredentials, userInfo:nil).localizedDescription)
+        XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidFailEvents.count, 1)
+        XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidFailEvents[0].localizedDescription, NSError(code: .needsCredentials, userInfo:nil).localizedDescription)
     }
     
     func testThatDuringLoginWithEmailItThrowsErrorWhenOffline() {
-        let observer = TestAuthenticationObserver(unauthenticatedSession: sut)
         // given
         reachability.mayBeReachable = false
         // when
         sut.login(with: ZMEmailCredentials(email: "my@mail.com", password: "my-password"))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         // then
-        XCTAssertEqual(observer.authenticationDidSucceedEvents, 0)
-        XCTAssertEqual(observer.authenticationDidFailEvents.count, 1)
-        XCTAssertEqual(observer.authenticationDidFailEvents[0].localizedDescription, NSError(code: .networkError, userInfo:nil).localizedDescription)
+        XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidFailEvents.count, 1)
+        XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidFailEvents[0].localizedDescription,
+                       NSError(code: .networkError, userInfo:nil).localizedDescription)
     }
 
     func testThatDuringLoginWithPhoneNumberItThrowsErrorWhenOffline() {
-        let observer = TestAuthenticationObserver(unauthenticatedSession: sut)
         // given
         reachability.mayBeReachable = false
         // when
         sut.login(with: ZMPhoneCredentials(phoneNumber: "+49111111111111", verificationCode: "1234"))
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         // then
-        XCTAssertEqual(observer.authenticationDidSucceedEvents, 0)
-        XCTAssertEqual(observer.authenticationDidFailEvents.count, 1)
-        XCTAssertEqual(observer.authenticationDidFailEvents[0].localizedDescription, NSError(code: .networkError, userInfo:nil).localizedDescription)
+        XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidFailEvents.count, 1)
+        XCTAssertEqual(mockAuthenticationStatusDelegate.authenticationDidFailEvents[0].localizedDescription, NSError(code: .networkError, userInfo:nil).localizedDescription)
     }
 
     func testThatItAsksDelegateIfAccountAlreadyExists() throws {

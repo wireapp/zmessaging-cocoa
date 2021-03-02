@@ -31,7 +31,7 @@ public struct CallParticipant: Hashable {
     public let clientId: String
     public let userId: UUID
     public let state: CallParticipantState
-    public let isActiveSpeaker: Bool
+    public let activeSpeakerState: ActiveSpeakerState
         
     /// convenience init method for ZMUser
     /// - Parameters:
@@ -41,12 +41,12 @@ public struct CallParticipant: Hashable {
     public init(user: ZMUser,
                 clientId: String,
                 state: CallParticipantState,
-                isActiveSpeaker: Bool) {
+                activeSpeakerState: ActiveSpeakerState) {
         self.user = user
         self.clientId = clientId
         self.userId = user.remoteIdentifier
         self.state = state
-        self.isActiveSpeaker = isActiveSpeaker
+        self.activeSpeakerState = activeSpeakerState
     }
 
     /// Init with separated user and user id to allow CallParticipant to be Hashable even though user is not Hashable
@@ -59,17 +59,17 @@ public struct CallParticipant: Hashable {
                 userId: UUID,
                 clientId: String,
                 state: CallParticipantState,
-                isActiveSpeaker: Bool) {
+                activeSpeakerState: ActiveSpeakerState) {
         self.user = user
         self.clientId = clientId
         self.userId = userId
         self.state = state
-        self.isActiveSpeaker = isActiveSpeaker
+        self.activeSpeakerState = activeSpeakerState
     }
 
-    init?(member: AVSCallMember, isActiveSpeaker: Bool = false, context: NSManagedObjectContext) {
+    init?(member: AVSCallMember, activeSpeakerState: ActiveSpeakerState = .inactive, context: NSManagedObjectContext) {
         guard let user = ZMUser(remoteID: member.client.userId, createIfNeeded: false, in: context) else { return nil }
-        self.init(user: user, userId: user.remoteIdentifier, clientId: member.client.clientId, state: member.callParticipantState, isActiveSpeaker: isActiveSpeaker)
+        self.init(user: user, userId: user.remoteIdentifier, clientId: member.client.clientId, state: member.callParticipantState, activeSpeakerState: activeSpeakerState)
     }
 
     // MARK: - Hashable
@@ -144,6 +144,17 @@ public enum MicrophoneState: Int32, Codable {
     case unmuted = 0
     /// Sender is muted
     case muted = 1
+}
+
+/**
+ * The speaking activity state of a participant in the call.
+ */
+
+public enum ActiveSpeakerState: Hashable {
+    /// Participant is an active speaker
+    case active(audioLevelNow: Int)
+    /// Participant is not an active speaker
+    case inactive
 }
 
 /**

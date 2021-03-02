@@ -107,9 +107,9 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
                     eventNotifications.cancelCurrentNotifications(messageNonce: messageID)
                 }
                 
-                if receivedMessage.hasEdited || receivedMessage.hasHidden || receivedMessage.hasDeleted {
-                    // Cancel notification for message that was edited, deleted or hidden
-                    cancelMessageForEditingMessage(receivedMessage)
+                if receivedMessage.hasHidden || receivedMessage.hasDeleted {
+                    // Cancel notification for message that was deleted or hidden
+                    cancelMessageForDeletedMessage(receivedMessage)
                 }
             }
                         
@@ -185,14 +185,10 @@ extension LocalNotificationDispatcher {
         self.allNotificationSets.forEach { $0.cancelNotifications(conversation) }
     }
     
-    func cancelMessageForEditingMessage(_ genericMessage: GenericMessage) {
+    func cancelMessageForDeletedMessage(_ genericMessage: GenericMessage) {
         var idToDelete : UUID?
-        
-        if genericMessage.hasEdited {
-            let replacingID = genericMessage.edited.replacingMessageID
-            idToDelete = UUID(uuidString: replacingID)
-        }
-        else if genericMessage.hasDeleted {
+
+        if genericMessage.hasDeleted {
             let deleted = genericMessage.deleted.messageID
             idToDelete = UUID(uuidString: deleted)
         }
