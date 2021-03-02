@@ -201,6 +201,7 @@ extension IntegrationTest {
     
     @objc
     func recreateSessionManager() {
+        closePushChannelAndWaitUntilClosed()
         destroySharedSearchDirectory()
         destroySessionManager()
         createSessionManager()
@@ -208,6 +209,7 @@ extension IntegrationTest {
     
     @objc
     func recreateSessionManagerAndDeleteLocalData() {
+        closePushChannelAndWaitUntilClosed()
         destroySharedSearchDirectory()
         destroySessionManager()
         destroyPersistentStore()

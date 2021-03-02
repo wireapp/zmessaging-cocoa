@@ -820,6 +820,7 @@ class SessionManagerTests_Teams: IntegrationTest {
         // when
         sessionManager?.logoutCurrentSession()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        closePushChannelAndWaitUntilClosed()
         XCTAssert(login())
         
         // then

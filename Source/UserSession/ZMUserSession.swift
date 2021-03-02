@@ -540,13 +540,14 @@ extension ZMUserSession: ZMSyncStateDelegate {
         }
         
         let hasMoreEventsToProcess = updateEventProcessor!.processEventsIfReady()
+        let isSyncing = applicationStatusDirectory?.syncStatus.isSyncing == true
         
         if !hasMoreEventsToProcess {
             hotFix.applyPatches()
         }
         
         managedObjectContext.performGroupedBlock { [weak self] in
-            self?.isPerformingSync = hasMoreEventsToProcess
+            self?.isPerformingSync = hasMoreEventsToProcess || isSyncing
             self?.updateNetworkState()
         }
     }

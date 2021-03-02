@@ -57,6 +57,7 @@ public class LabelDownstreamRequestStrategy: AbstractRequestStrategy {
         
         self.configuration = [.allowsRequestsDuringSlowSync,
                               .allowsRequestsDuringQuickSync,
+                              .allowsRequestsWhileWaitingForWebsocket,
                               .allowsRequestsWhileOnline]
         self.slowSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
     }
