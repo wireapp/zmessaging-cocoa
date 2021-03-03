@@ -644,7 +644,7 @@ extension IntegrationTest: SessionManagerDelegate {
         // no-op
     }
     
-    public func sessionManagerDidFailLoadDatabase() {
+    public func sessionManagerDidFailToLoadDatabase() {
         // no-op
     }
         

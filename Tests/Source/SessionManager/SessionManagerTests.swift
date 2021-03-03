@@ -1565,7 +1565,7 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
         // no op
     }
     
-    func sessionManagerDidFailLoadDatabase() {
+    func sessionManagerDidFailToLoadDatabase() {
         // no op
     }
     
