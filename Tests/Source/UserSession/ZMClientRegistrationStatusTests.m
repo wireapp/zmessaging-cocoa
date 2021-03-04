@@ -24,7 +24,7 @@
 #import "ZMClientRegistrationStatus.h"
 #import "ZMCredentials.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 #import "ZMClientRegistrationStatus+Internal.h"
 #import "NSError+ZMUserSession.h"
 

@@ -920,7 +920,7 @@
 		3E1860B6191A5D99000FE027 /* TestHost-main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "TestHost-main.m"; sourceTree = "<group>"; };
 		3E1860B7191A5D99000FE027 /* TestHostAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestHostAppDelegate.h; sourceTree = "<group>"; };
 		3E1860B8191A5D99000FE027 /* TestHostAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestHostAppDelegate.m; sourceTree = "<group>"; };
-		3E1860C3191A649D000FE027 /* WireSyncEngine-iOS-Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WireSyncEngine-iOS-Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3E1860C3191A649D000FE027 /* UnitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UnitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3E2712FE1A891781008EE50F /* Tests-ios-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tests-ios-Info.plist"; sourceTree = "<group>"; };
 		3E288A6919C859210031CFCE /* NotificationObservers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NotificationObservers.h; sourceTree = "<group>"; };
 		3E288A6A19C859210031CFCE /* NotificationObservers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NotificationObservers.m; sourceTree = "<group>"; };
@@ -1789,7 +1789,7 @@
 			isa = PBXGroup;
 			children = (
 				3E186088191A56F6000FE027 /* WireSyncEngine Test Host.app */,
-				3E1860C3191A649D000FE027 /* WireSyncEngine-iOS-Tests.xctest */,
+				3E1860C3191A649D000FE027 /* UnitTests.xctest */,
 				549815931A43232400A7CE2E /* WireSyncEngine.framework */,
 				169BA1D225ECDBA300374343 /* IntegrationTests.xctest */,
 			);
@@ -2765,9 +2765,9 @@
 			productReference = 3E186088191A56F6000FE027 /* WireSyncEngine Test Host.app */;
 			productType = "com.apple.product-type.application";
 		};
-		3E1860C2191A649D000FE027 /* WireSyncEngine-iOS-Tests */ = {
+		3E1860C2191A649D000FE027 /* UnitTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3E1860D2191A649D000FE027 /* Build configuration list for PBXNativeTarget "WireSyncEngine-iOS-Tests" */;
+			buildConfigurationList = 3E1860D2191A649D000FE027 /* Build configuration list for PBXNativeTarget "UnitTests" */;
 			buildPhases = (
 				3E1860BF191A649D000FE027 /* Sources */,
 				3E1860C0191A649D000FE027 /* Frameworks */,
@@ -2780,9 +2780,9 @@
 				3E1860D1191A649D000FE027 /* PBXTargetDependency */,
 				A9FF8089195B17B3002CD44B /* PBXTargetDependency */,
 			);
-			name = "WireSyncEngine-iOS-Tests";
+			name = UnitTests;
 			productName = "WireSyncEngine-iOS-Tests";
-			productReference = 3E1860C3191A649D000FE027 /* WireSyncEngine-iOS-Tests.xctest */;
+			productReference = 3E1860C3191A649D000FE027 /* UnitTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		549815921A43232400A7CE2E /* WireSyncEngine-ios */ = {
@@ -2877,7 +2877,7 @@
 			projectRoot = "";
 			targets = (
 				549815921A43232400A7CE2E /* WireSyncEngine-ios */,
-				3E1860C2191A649D000FE027 /* WireSyncEngine-iOS-Tests */,
+				3E1860C2191A649D000FE027 /* UnitTests */,
 				3E186087191A56F6000FE027 /* WireSyncEngine Test Host */,
 				169BA1D125ECDBA300374343 /* IntegrationTests */,
 			);
@@ -3690,7 +3690,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.wire.IntegrationTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/Tests/Source/Test-Bridging-Header.h";
-				SWIFT_OBJC_INTERFACE_HEADER_NAME = "WireSyncEngine_iOS_Tests-Swift.h";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Tests-Swift.h";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WireSyncEngine Test Host.app/WireSyncEngine Test Host";
 				WRAPPER_EXTENSION = xctest;
 			};
@@ -3705,7 +3705,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.wire.IntegrationTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/Tests/Source/Test-Bridging-Header.h";
-				SWIFT_OBJC_INTERFACE_HEADER_NAME = "WireSyncEngine_iOS_Tests-Swift.h";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Tests-Swift.h";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WireSyncEngine Test Host.app/WireSyncEngine Test Host";
 				WRAPPER_EXTENSION = xctest;
 			};
@@ -3748,6 +3748,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.WireSyncEngine-Test-Host";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/Tests/Source/Test-Bridging-Header.h";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Tests-Swift.h";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WireSyncEngine Test Host.app/WireSyncEngine Test Host";
 				WRAPPER_EXTENSION = xctest;
 			};
@@ -3762,6 +3763,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.WireSyncEngine-Test-Host";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/Tests/Source/Test-Bridging-Header.h";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Tests-Swift.h";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WireSyncEngine Test Host.app/WireSyncEngine Test Host";
 				WRAPPER_EXTENSION = xctest;
 			};
@@ -3828,7 +3830,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3E1860D2191A649D000FE027 /* Build configuration list for PBXNativeTarget "WireSyncEngine-iOS-Tests" */ = {
+		3E1860D2191A649D000FE027 /* Build configuration list for PBXNativeTarget "UnitTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3E1860D3191A649D000FE027 /* Debug */,

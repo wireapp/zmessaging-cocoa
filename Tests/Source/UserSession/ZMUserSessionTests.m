@@ -23,7 +23,7 @@
 @import avs;
 
 #include "ZMUserSessionTestsBase.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 @interface ZMUserSessionTests : ZMUserSessionTestsBase
 

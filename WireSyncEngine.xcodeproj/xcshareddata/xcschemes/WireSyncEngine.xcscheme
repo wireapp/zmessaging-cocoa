@@ -57,8 +57,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "3E1860C2191A649D000FE027"
-               BuildableName = "WireSyncEngine-iOS-Tests.xctest"
-               BlueprintName = "WireSyncEngine-iOS-Tests"
+               BuildableName = "UnitTests.xctest"
+               BlueprintName = "UnitTests"
                ReferencedContainer = "container:WireSyncEngine.xcodeproj">
             </BuildableReference>
             <SkippedTests>

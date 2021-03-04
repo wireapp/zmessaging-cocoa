@@ -23,7 +23,7 @@
 #import "ObjectTranscoderTests.h"
 #import "ZMConnectionTranscoder+Internal.h"
 #import "ZMSimpleListRequestPaginator.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 @interface ZMConnectionTranscoderTest : ObjectTranscoderTests
 
