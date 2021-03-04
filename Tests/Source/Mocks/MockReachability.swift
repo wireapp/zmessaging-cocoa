@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2020 Wire Swiss GmbH
+// Copyright (C) 2021 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,15 +18,22 @@
 
 import Foundation
 
-class MockReachability: NSObject, ReachabilityProvider & TearDownCapable {
-    
-    var mayBeReachable: Bool = true
-    var isMobileConnection: Bool = true
-    var oldMayBeReachable: Bool = true
-    var oldIsMobileConnection: Bool = true
-    
-    func add(_ observer: ZMReachabilityObserver, queue: OperationQueue?) -> Any { return NSObject() }
-    func addReachabilityObserver(on queue: OperationQueue?, block: @escaping ReachabilityObserverBlock) -> Any { return NSObject() }
-    func tearDown() { }
-    
+class MockReachability: NSObject, ReachabilityProvider, TearDownCapable {
+    var mayBeReachable = true
+    var isMobileConnection = true
+    var oldMayBeReachable = true
+    var oldIsMobileConnection = true
+
+    var tearDownCalled = false
+    func tearDown() {
+        tearDownCalled = true
+    }
+
+    func add(_ observer: ZMReachabilityObserver, queue: OperationQueue?) -> Any {
+        return NSObject()
+    }
+
+    func addReachabilityObserver(on queue: OperationQueue?, block: @escaping ReachabilityObserverBlock) -> Any {
+        return NSObject()
+    }
 }

@@ -36,7 +36,7 @@ final class SessionManagerTests: IntegrationTest {
     func createManager(launchOptions: LaunchOptions = [:]) -> SessionManager? {
         guard let application = application else { return nil }
         let environment = MockEnvironment()
-        let reachability = TestReachability()
+        let reachability = MockReachability()
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: mockTransportSession, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             application: application,
@@ -145,7 +145,7 @@ final class SessionManagerTests: IntegrationTest {
                                                 configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1))
         
         let environment = MockEnvironment()
-        let reachability = TestReachability()
+        let reachability = MockReachability()
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             application: application,
             mediaManager: MockMediaManager(),
@@ -230,7 +230,7 @@ final class SessionManagerTests: IntegrationTest {
                                                 detector: jailbreakDetector)
         
         let environment = MockEnvironment()
-        let reachability = TestReachability()
+        let reachability = MockReachability()
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             application: application,
             mediaManager: MockMediaManager(),
@@ -982,7 +982,7 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
                                                 environment: sessionManager!.environment,
                                                 configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1))
         let environment = MockEnvironment()
-        let reachability = TestReachability()
+        let reachability = MockReachability()
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             application: application,
             mediaManager: MockMediaManager(),
@@ -1035,7 +1035,7 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
                                                 configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1))
         
         let environment = MockEnvironment()
-        let reachability = TestReachability()
+        let reachability = MockReachability()
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             application: application,
             mediaManager: MockMediaManager(),
@@ -1605,26 +1605,6 @@ class SessionManagerObserverMock: SessionManagerCreatedSessionObserver, SessionM
         destroyedUserSessions.append(accountId)
     }
     
-}
-
-class TestReachability: NSObject, ReachabilityProvider, TearDownCapable {
-    var mayBeReachable = true
-    var isMobileConnection = true
-    var oldMayBeReachable = true
-    var oldIsMobileConnection = true
-    
-    var tearDownCalled = false
-    func tearDown() {
-        tearDownCalled = true
-    }
-    
-    func add(_ observer: ZMReachabilityObserver, queue: OperationQueue?) -> Any {
-        return NSObject()
-    }
-    
-    func addReachabilityObserver(on queue: OperationQueue?, block: @escaping ReachabilityObserverBlock) -> Any {
-        return NSObject()
-    }
 }
 
 class MockForegroundNotificationResponder: NSObject, ForegroundNotificationResponder {
