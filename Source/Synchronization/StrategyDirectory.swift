@@ -245,9 +245,6 @@ public class StrategyDirectory: NSObject, StrategyDirectoryProtocol {
             ConversationRoleDownstreamRequestStrategy(
                 withManagedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory),
-            VerifyPasswordRequestStrategy(
-                withManagedObjectContext: syncMOC,
-                applicationStatus: applicationStatusDirectory),
             SignatureRequestStrategy(
                 withManagedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory),
