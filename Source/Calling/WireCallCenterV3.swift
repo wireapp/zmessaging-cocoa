@@ -1,6 +1,6 @@
 /*
  * Wire
- * Copyright (C) 2016 Wire Swiss GmbH
+ * Copyright (C) 2021 Wire Swiss GmbH
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -422,7 +422,11 @@ extension WireCallCenterV3 {
             if previousSnapshot != nil {
                 callSnapshots[conversationId] = previousSnapshot!.update(with: callState)
             }
-            
+
+            if conversation.conversationType == .group {
+                muted = true
+            }
+
             if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId) {
                 WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: callerId, messageTime:nil, previousCallState: previousSnapshot?.callState).post(in: context.notificationContext)
             }

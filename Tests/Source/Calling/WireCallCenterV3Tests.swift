@@ -1002,7 +1002,43 @@ extension WireCallCenterV3Tests {
             XCTAssertEqual(true, observer.muted)
         }
     }
-    
+
+    func testThat_ItMutesUser_When_AnsweringCall_InGroupConversation() {
+        // given
+        sut.handleIncomingCall(conversationId: groupConversationID,
+                               messageTime: Date(),
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
+                               isVideoCall: false,
+                               shouldRing: true,
+                               conversationType: .conference)
+
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // when
+        XCTAssertTrue(sut.answerCall(conversation: groupConversation, video: false))
+
+        // then
+        XCTAssertTrue(sut.muted)
+    }
+
+    func testThat_ItDoesntMuteUser_When_AnsweringCall_InOneToOneConversation() {
+        // given
+        sut.handleIncomingCall(conversationId: oneOnOneConversationID,
+                               messageTime: Date(),
+                               client: AVSClient(userId: otherUserID, clientId: otherUserClientID),
+                               isVideoCall: false,
+                               shouldRing: true,
+                               conversationType: .oneToOne)
+
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // when
+        XCTAssertTrue(sut.answerCall(conversation: oneOnOneConversation, video: false))
+
+        // then
+        XCTAssertFalse(sut.muted)
+    }
+
 }
 
 // MARK: - Ignoring Calls
