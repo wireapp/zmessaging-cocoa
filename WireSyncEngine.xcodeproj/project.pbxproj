@@ -849,6 +849,8 @@
 		168474252252579A004DE9EC /* ZMUserSessionTests+Syncing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSessionTests+Syncing.swift"; sourceTree = "<group>"; };
 		16849B1B23EDA1FD00C025A8 /* MockUpdateEventProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockUpdateEventProcessor.swift; sourceTree = "<group>"; };
 		16849B1F23EDB32B00C025A8 /* MockSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSessionManager.swift; sourceTree = "<group>"; };
+		168818A025F1512400BB51C3 /* AllTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AllTests.xctestplan; sourceTree = "<group>"; };
+		168818AB25F1533A00BB51C3 /* IntegrationTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = IntegrationTests.xctestplan; sourceTree = "<group>"; };
 		168CF42620077C54009FCB89 /* TeamInvitationStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamInvitationStatus.swift; sourceTree = "<group>"; };
 		168CF4282007840A009FCB89 /* Team+Invite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Team+Invite.swift"; sourceTree = "<group>"; };
 		168CF42A20079A02009FCB89 /* TeamInvitationRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamInvitationRequestStrategy.swift; sourceTree = "<group>"; };
@@ -1577,6 +1579,15 @@
 			path = URLActionProcessors;
 			sourceTree = "<group>";
 		};
+		1688189C25F150E100BB51C3 /* TestsPlans */ = {
+			isa = PBXGroup;
+			children = (
+				168818A025F1512400BB51C3 /* AllTests.xctestplan */,
+				168818AB25F1533A00BB51C3 /* IntegrationTests.xctestplan */,
+			);
+			path = TestsPlans;
+			sourceTree = "<group>";
+		};
 		169BA1D325ECDBA300374343 /* IntegrationTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -1778,6 +1789,7 @@
 				3E18605E191A4F4F000FE027 /* Resources */,
 				5423B997191A4A1B0044347D /* Tests */,
 				169BA1D325ECDBA300374343 /* IntegrationTests */,
+				1688189C25F150E100BB51C3 /* TestsPlans */,
 				540029B61918CA8500578793 /* Frameworks */,
 				540029B51918CA8500578793 /* Products */,
 			);
