@@ -439,11 +439,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         guard let account = accountManager.selectedAccount else {
             return
         }
-        LocalStoreProvider.removeDatabaseFromDisk(accountIdentifier: account.userIdentifier,
-                                                  applicationContainer: sharedContainerURL,
-                                                  completion: { [weak self] in
-                self?.delete(account: account)
-        })
+        delete(account: account)
     }
 
     /// Creates an account with the given identifier and migrates its cookie storage.
