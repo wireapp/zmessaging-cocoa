@@ -84,4 +84,12 @@ public extension Bundle {
             completionHandler: completion
         )
     }
+
+    public static func removeDatabaseFromDisk(accountIdentifier: UUID,
+                                              applicationContainer: URL,
+                                              completion: () -> Void) {
+        StorageStack.shared.removeDatabaseFromDisk(accountIdentifier: accountIdentifier,
+                                                   applicationContainer: applicationContainer,
+                                                   completion: completion)
+    }
 }

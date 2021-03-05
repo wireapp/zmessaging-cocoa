@@ -435,6 +435,17 @@ public final class SessionManager : NSObject, SessionManagerType {
         }
     }
 
+    public func removeDatabaseFromDisk() {
+        guard let account = accountManager.selectedAccount else {
+            return
+        }
+        LocalStoreProvider.removeDatabaseFromDisk(accountIdentifier: account.userIdentifier,
+                                                  applicationContainer: sharedContainerURL,
+                                                  completion: { [weak self] in
+                self?.delete(account: account)
+        })
+    }
+
     /// Creates an account with the given identifier and migrates its cookie storage.
     private func migrateAccount(with identifier: UUID) -> Account {
         let account = Account(userName: "", userIdentifier: identifier)
