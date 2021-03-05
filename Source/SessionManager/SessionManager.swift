@@ -1026,7 +1026,13 @@ extension SessionManager: UserSessionSelfUserClientDelegate {
         log.debug("Client registration was successful")
         
         if self.configuration.encryptionAtRestEnabledByDefault {
-            try? activeUserSession?.setEncryptionAtRest(enabled: true)
+            do {
+                try activeUserSession?.setEncryptionAtRest(enabled: true)
+            } catch {
+                if let account = accountManager.account(with: accountId) {
+                    delete(account: account, reason: .biometricPasscodeNotAvailable)
+                }
+            }
         }
         
         loginDelegate?.clientRegistrationDidSucceed(accountId: accountId)
