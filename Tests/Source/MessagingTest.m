@@ -206,6 +206,8 @@ static ZMReachability *sharedReachabilityMock = nil;
 
 - (void)tearDown;
 {
+    Require([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
+    
     BackgroundActivityFactory.sharedFactory.activityManager = nil;
 
     ZMConversationDefaultLastReadTimestampSaveDelay = self.originalConversationLastReadTimestampTimerValue;
