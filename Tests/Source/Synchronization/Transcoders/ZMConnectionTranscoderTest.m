@@ -58,8 +58,13 @@
 
 - (void)tearDown
 {
+    [(id)self.syncStateDelegate stopMocking];
+    self.syncStateDelegate = nil;
+
     [self.mockClientRegistrationDelegate tearDown];
     self.mockClientRegistrationDelegate = nil;
+
+    self.mockSyncStatus = nil;
     self.sut = nil;
     [super tearDown];
 }
