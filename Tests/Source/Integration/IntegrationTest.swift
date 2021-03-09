@@ -126,10 +126,10 @@ extension IntegrationTest {
         destroyTimers()
         sharedSearchDirectory?.tearDown()
         sharedSearchDirectory = nil
-        userSession = nil
-        userSession?.tearDown()
         mockTransportSession?.cleanUp()
         mockTransportSession = nil
+        userSession = nil
+        userSession?.tearDown()
         sessionManager = nil
         selfUser = nil
         user1 = nil
@@ -195,6 +195,7 @@ extension IntegrationTest {
     @objc
     func recreateSessionManagerAndDeleteLocalData() {
         closePushChannelAndWaitUntilClosed()
+        mockTransportSession.resetReceivedRequests()
         destroySharedSearchDirectory()
         destroySessionManager()
         destroyPersistentStore()
