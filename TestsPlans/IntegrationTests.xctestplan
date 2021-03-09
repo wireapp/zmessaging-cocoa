@@ -12,7 +12,7 @@
     },
     {
       "id" : "09EB119B-627A-473C-8B09-E23268F9B9C1",
-      "name" : "Thread Santizer",
+      "name" : "Thread Sanitizer",
       "options" : {
         "threadSanitizerEnabled" : true
       }
