@@ -26,7 +26,7 @@ class MockAppLock: AppLockType {
 
     // MARK: - Properties
 
-    var delegate: AppLockDelegate?
+    weak var delegate: AppLockDelegate?
 
     var isAvailable = true
     var isActive = true
