@@ -352,9 +352,6 @@
 		632A582025CC43DA00F0C4BD /* CallParticipantsListKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632A581F25CC43DA00F0C4BD /* CallParticipantsListKind.swift */; };
 		632A582225CD9DF900F0C4BD /* CallParticipantsKindTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632A582125CD9DF900F0C4BD /* CallParticipantsKindTests.swift */; };
 		63495E4723FFF099002A7C59 /* ConversationTests+OTR.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63495E4623FFF098002A7C59 /* ConversationTests+OTR.swift */; };
-		636B716223ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 636B716123ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift */; };
-		636B716823BF46EB00B624D6 /* ZMUserSession+VerifyPassword.swift in Sources */ = {isa = PBXBuildFile; fileRef = 636B716723BF46EA00B624D6 /* ZMUserSession+VerifyPassword.swift */; };
-		6387932F23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6387932E23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift */; };
 		639290A4252CA53200046171 /* CallSnapshotTestFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639290A3252CA53100046171 /* CallSnapshotTestFixture.swift */; };
 		639290A7252DEDB500046171 /* WireCallCenterV3+Degradation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639290A6252DEDB400046171 /* WireCallCenterV3+Degradation.swift */; };
 		63EB9B2D258131F700B44635 /* AVSActiveSpeakerChange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63EB9B2C258131F700B44635 /* AVSActiveSpeakerChange.swift */; };
@@ -1020,9 +1017,6 @@
 		632A581F25CC43DA00F0C4BD /* CallParticipantsListKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallParticipantsListKind.swift; sourceTree = "<group>"; };
 		632A582125CD9DF900F0C4BD /* CallParticipantsKindTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallParticipantsKindTests.swift; sourceTree = "<group>"; };
 		63495E4623FFF098002A7C59 /* ConversationTests+OTR.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+OTR.swift"; sourceTree = "<group>"; };
-		636B716123ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyPasswordRequestStrategyTests.swift; sourceTree = "<group>"; };
-		636B716723BF46EA00B624D6 /* ZMUserSession+VerifyPassword.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+VerifyPassword.swift"; sourceTree = "<group>"; };
-		6387932E23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyPasswordRequestStrategy.swift; sourceTree = "<group>"; };
 		639290A3252CA53100046171 /* CallSnapshotTestFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallSnapshotTestFixture.swift; sourceTree = "<group>"; };
 		639290A6252DEDB400046171 /* WireCallCenterV3+Degradation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WireCallCenterV3+Degradation.swift"; sourceTree = "<group>"; };
 		63EB9B2C258131F700B44635 /* AVSActiveSpeakerChange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVSActiveSpeakerChange.swift; sourceTree = "<group>"; };
@@ -1881,7 +1875,6 @@
 				0920833F1BA95EE100F82B29 /* UserClientRequestFactory.swift */,
 				166507802459D7CA005300C1 /* UserClientEventConsumer.swift */,
 				8798607A1C3D48A400218A3E /* DeleteAccountRequestStrategy.swift */,
-				6387932E23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift */,
 				16DABFAD1DCF98D3001973E3 /* CallingRequestStrategy.swift */,
 				547E5B591DDB67390038D936 /* UserProfileUpdateRequestStrategy.swift */,
 				F19F4F3B1E604AA700F4D8FF /* UserImageAssetUpdateStrategy.swift */,
@@ -1925,7 +1918,6 @@
 				1672A652234784B500380537 /* LabelDownstreamRequestStrategyTests.swift */,
 				16D0A118234B999600A83F87 /* LabelUpstreamRequestStrategyTests.swift */,
 				A938BDC923A7966700D4C208 /* ConversationRoleDownstreamRequestStrategyTests.swift */,
-				636B716123ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift */,
 				06F98D5E24379143007E914A /* SignatureRequestStrategyTests.swift */,
 				54BAB40C24A9EAC800EBC400 /* FeatureFlagRequestStrategyTests.swift */,
 			);
@@ -1954,7 +1946,6 @@
 				EE419B57256FEA3D004618E2 /* ZMUserSession.Configuration.swift */,
 				A93B528A250101AC0061255E /* ZMUserSession+Debugging.swift */,
 				EEEED9A923F6BD75008C94CA /* ZMUserSession+SelfUserProvider.swift */,
-				636B716723BF46EA00B624D6 /* ZMUserSession+VerifyPassword.swift */,
 				164EAF9B1F4455FA00B628C4 /* ZMUserSession+Actions.swift */,
 				16ED865923E2E91900CB1766 /* ZMUserSession+LifeCycle.swift */,
 				16E0FB86232F8933000E3235 /* ZMUserSession+Authentication.swift */,
@@ -3045,7 +3036,6 @@
 				F132C114203F20AB00C58933 /* ZMHotFixDirectoryTests.swift in Sources */,
 				5463C897193F3C74006799DE /* ZMTimingTests.m in Sources */,
 				1660AA0F1ECE0C870056D403 /* SearchResultTests.swift in Sources */,
-				636B716223ABE85D00B624D6 /* VerifyPasswordRequestStrategyTests.swift in Sources */,
 				54A3ACC31A261603008AF8DF /* BackgroundTests.m in Sources */,
 				BF889DC61D0ADE110031F3E6 /* AnalyticsTests.swift in Sources */,
 				54877C9619922C0B0097FB58 /* UserProfileTests.m in Sources */,
@@ -3196,7 +3186,6 @@
 				EE419B58256FEA3D004618E2 /* ZMUserSession.Configuration.swift in Sources */,
 				5E8BB89E2147E9DF00EEA64B /* AVSWrapper+Handlers.swift in Sources */,
 				F16C8BE82044129700677D31 /* ZMConversationTranscoder.swift in Sources */,
-				636B716823BF46EB00B624D6 /* ZMUserSession+VerifyPassword.swift in Sources */,
 				1626344920D7DB81000D4063 /* PushNotificationCategory.swift in Sources */,
 				F98EDCD71D82B913001E65CB /* LocalNotificationContentType.swift in Sources */,
 				F19E55A222B3A3FA005C792D /* UNNotificationResponse+SafeLogging.swift in Sources */,
@@ -3294,7 +3283,6 @@
 				165D3A3D1E1D60520052E654 /* ZMConversation+VoiceChannel.swift in Sources */,
 				EE1DEBC723D5F1F30087EE1F /* NSManagedObjectContext+TypingUsers.swift in Sources */,
 				EEE186B4259CC92D008707CA /* ZMUserSession+AppLock.swift in Sources */,
-				6387932F23A2403300FD23CF /* VerifyPasswordRequestStrategy.swift in Sources */,
 				165D3A221E1D43870052E654 /* VoiceChannel.swift in Sources */,
 				5EDF03EC2245563C00C04007 /* LinkPreviewAssetUploadRequestStrategy+Helper.swift in Sources */,
 				54991D581DEDCF2B007E282F /* AddressBook.swift in Sources */,
