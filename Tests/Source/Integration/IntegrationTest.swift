@@ -534,6 +534,25 @@ extension IntegrationTest {
             self.mockTransportSession.saveAndCreatePushChannelEvents()
         }
     }
+
+    func simulateNotificationStreamInterruption(
+        changesBeforeInterruption: ((_ session: MockTransportSessionObjectCreation) -> Void)? = nil,
+        changesAfterInterruption: ((_ session: MockTransportSessionObjectCreation) -> Void)? = nil) {
+
+        closePushChannelAndWaitUntilClosed()
+        changesBeforeInterruption.apply(mockTransportSession.performRemoteChanges)
+        mockTransportSession.performRemoteChanges { (session) in
+            session.clearNotifications()
+
+            if let changes = changesAfterInterruption {
+                changes(session)
+            } else {
+                // We always need some kind of change in order to not have an empty notification stream
+                self.user5.name = "User 5 \(UUID())"
+            }
+        }
+        openPushChannelAndWaitUntilOpened()
+    }
     
     func performSlowSync() {
         userSession?.applicationStatusDirectory?.syncStatus.forceSlowSync()
@@ -545,6 +564,13 @@ extension IntegrationTest {
         mockTransportSession.performRemoteChanges { session in
             self.mockTransportSession.pushChannel.keepOpen = false
             session.simulatePushChannelClosed()
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func openPushChannelAndWaitUntilOpened() {
+        mockTransportSession.performRemoteChanges { session in
+            self.mockTransportSession.pushChannel.keepOpen = true
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }

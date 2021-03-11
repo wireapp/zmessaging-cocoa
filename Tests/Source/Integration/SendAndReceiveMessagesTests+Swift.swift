@@ -151,156 +151,58 @@ class SendAndReceiveMessagesTests_Swift: ConversationTestsBase {
             XCTAssertEqual(msg.underlyingMessage?.text.content, expectedText);
         }
     }
-    
-    func enforceSlowSyncWithNotificationPayload(notificationPayload: NSDictionary) {
-        self.mockTransportSession.responseGeneratorBlock = { request in
-            if request.path.contains("/notifications/last") {
-                return nil
-            } else if request.path.contains("/notifications") {
-                self.mockTransportSession.responseGeneratorBlock = nil
-                return ZMTransportResponse.init(payload: notificationPayload, httpStatus: 404, transportSessionError: nil)
-            }
-            return nil
-        }
-    }
-    
+
     func testThatSystemMessageIsAddedIfClientWasInactiveAndCantFetchAnyNotifications() {
         // given
         XCTAssertTrue(self.login())
         let groupConversation = self.conversation(for: self.groupConversation)
-        
-        let firstMessageNonce = UUID.create()
-        self.mockTransportSession.performRemoteChanges { (session) in
-            let message = GenericMessage(content: Text(content: "Message Text", mentions: [], linkPreviews: [], replyingTo: nil), nonce: firstMessageNonce)
-            self.groupConversation.encryptAndInsertData(from: self.user1.clients.anyObject() as! MockUserClient,
-                                                        to: self.selfUser.clients.anyObject() as! MockUserClient,
-                                                        data: try! message.serializedData())
-            
-        }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+
         // when
-        self.enforceSlowSyncWithNotificationPayload(notificationPayload: [:])
-        self.recreateSessionManager()
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+        simulateNotificationStreamInterruption()
+
         // then
-        XCTAssertEqual((groupConversation!.lastMessage as! ZMSystemMessage).systemMessageType, ZMSystemMessageType.potentialGap)
+        XCTAssertEqual(groupConversation?.lastMessage?.systemMessageData?.systemMessageType, .potentialGap)
     }
 
     func testThatSystemMessageIsAddedIfClientWasInactiveAndCantFetchAllNotifications() {
         // given
         XCTAssertTrue(self.login())
-        
+
         let groupConversation = self.conversation(for: self.groupConversation)
-        
-        let firstMessageNonce = UUID.create()
-        self.mockTransportSession.performRemoteChanges { (session) in
-            let message = GenericMessage(content: Text(content: "Message Text", mentions: [], linkPreviews: [], replyingTo: nil), nonce: firstMessageNonce)
-            self.groupConversation.encryptAndInsertData(from: self.user1.clients.anyObject() as! MockUserClient,
-                                                        to: self.selfUser.clients.anyObject() as! MockUserClient,
-                                                        data: try! message.serializedData())
-        }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
-        let payloadNotificationID = UUID.create()
-        let lastMessageNonce = UUID.create()
-        let messageTimeStamp = Date().addingTimeInterval(1000)
+        let messageText = UUID().uuidString
         let fromClient = self.user2.clients.anyObject() as! MockUserClient
-        let toClient = self.selfUser.clients.anyObject() as! MockUserClient
-        
-        let message = GenericMessage(content: Text(content: "this should be inserted after the system message",
-                                                   mentions: [],
-                                                   linkPreviews: [],
-                                                   replyingTo: nil),
-                                     nonce: lastMessageNonce)
-        
-        let encryptedData = MockUserClient.encrypted(data: try! message.serializedData(), from: fromClient, to: toClient)
         
         // when
-        let payload: NSDictionary = [
-            "notifications" : [[
-                "id" : payloadNotificationID.transportString(),
-                "payload" : [[
-                    "conversation" : groupConversation?.remoteIdentifier?.transportString(),
-                    "type" : "conversation.otr-message-add",
-                    "from" : fromClient.user!.identifier,
-                    // We use a later date to simulate the time between the last message
-                    "time": messageTimeStamp.transportString(),
-                    "data": [
-                        "recipient": toClient.identifier,
-                        "sender": fromClient.identifier,
-                        "text": encryptedData.base64String()
-                    ]
-                ]]
-            ]]
-        ]
-        self.enforceSlowSyncWithNotificationPayload(notificationPayload: payload )
-        self.recreateSessionManager()
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-        
+        simulateNotificationStreamInterruption(changesAfterInterruption: { (session) in
+            self.remotelyInsert(text: messageText, from: fromClient, into: self.groupConversation)
+        })
+
         // then
-        let lastMessages = groupConversation?.lastMessages(limit: 50) as! [ZMMessage]
-        XCTAssertEqual((lastMessages[1] as! ZMSystemMessage).systemMessageType, ZMSystemMessageType.potentialGap)
-        XCTAssertEqual(lastMessages[0].nonce?.transportString(), lastMessageNonce.transportString())
+        let lastMessages = groupConversation!.lastMessages(limit: 50)
+        XCTAssertEqual(lastMessages[1].systemMessageData?.systemMessageType, .potentialGap)
+        XCTAssertEqual(lastMessages[0].textMessageData?.messageText, messageText)
     }
-    
-    private func performRemoteChangesNotInNotificationStream(_ changes: @escaping (_ session: MockTransportSessionObjectCreation) -> Void) {
-        // when
-        self.destroySessionManager()
-        
-        self.mockTransportSession.performRemoteChanges { (session) in
-            session.simulatePushChannelClosed()
-            changes(session)
-        }
-        
-        self.mockTransportSession.performRemoteChanges { (session) in
-            session.clearNotifications()
-        }
 
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-
-        self.enforceSlowSyncWithNotificationPayload(notificationPayload: ["notifications" : []])
-        self.createSessionManager()
-
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-
-        self.mockTransportSession.responseGeneratorBlock = nil
-    }
-    
     func testThatPotentialGapSystemMessageContainsAddedAndRemovedUsers() {
         // given
         XCTAssertTrue(self.login())
-    
-        self.userSession?.perform {
-            self.groupConversation.removeUsers(by: self.user2, removedUser: self.user3)
-        }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-    
-        let firstMessageNonce = UUID.create()
-        self.mockTransportSession.performRemoteChanges { (session) in
-            let message = GenericMessage(content: Text(content: "Message Text", mentions: [], linkPreviews: [], replyingTo: nil), nonce: firstMessageNonce)
-            self.groupConversation.encryptAndInsertData(from: self.user1.clients.anyObject() as! MockUserClient,
-                                                        to: self.selfUser.clients.anyObject() as! MockUserClient,
-                                                        data: try! message.serializedData())
-        }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-    
+        
         // when
-        self.performRemoteChangesNotInNotificationStream { (session) in
+        simulateNotificationStreamInterruption(changesBeforeInterruption: { session in
             self.groupConversation.removeUsers(by: self.user2, removedUser: self.user1)
             self.groupConversation.addUsers(by: self.user2, addedUsers: [self.user4!])
-        }
-    
+        })
+
+        // then
         let conversation = self.conversation(for: self.groupConversation)
         let systemMessage = conversation?.lastMessage as! ZMSystemMessage
     
         let addedUser = self.user(for: self.user4)
         let removedUser = self.user(for: self.user1)
     
-        // then
-        XCTAssertEqual(conversation!.localParticipants.count, 3)
-        XCTAssertEqual(systemMessage.users.count, 3)
+
+        XCTAssertEqual(conversation!.localParticipants.count, 4)
+        XCTAssertEqual(systemMessage.users.count, 4)
         XCTAssertEqual(systemMessage.addedUsers.count, 1)
         XCTAssertEqual(systemMessage.removedUsers.count, 1)
         XCTAssertEqual(systemMessage.addedUsers.first?.objectID, addedUser?.objectID)
@@ -314,34 +216,25 @@ class SendAndReceiveMessagesTests_Swift: ConversationTestsBase {
         XCTAssertTrue(self.login())
         let conversation = self.conversation(for: self.groupConversation)
         XCTAssertNotNil(conversation)
-    
-        let firstMessageNonce = UUID.create()
-        self.mockTransportSession.performRemoteChanges { (session) in
-            let message = GenericMessage(content: Text(content: "Message Text", mentions: [], linkPreviews: [], replyingTo: nil), nonce: firstMessageNonce)
-            self.groupConversation.encryptAndInsertData(from: self.user1.clients.anyObject() as! MockUserClient,
-                                                        to: self.selfUser.clients.anyObject() as! MockUserClient,
-                                                        data: try! message.serializedData())
-        }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-    
+
         // when
-        self.performRemoteChangesNotInNotificationStream { (session) in
+        simulateNotificationStreamInterruption(changesBeforeInterruption: { session in
             self.groupConversation.removeUsers(by: self.user2, removedUser: self.user1)
             self.groupConversation.addUsers(by: self.user2, addedUsers: [self.user4!])
-        }
-        let systemMessage = conversation?.lastMessage as! ZMSystemMessage
-    
+        })
+
         // then
+        let systemMessage = conversation?.lastMessage as! ZMSystemMessage
         XCTAssertEqual(systemMessage.users.count, 4)
         XCTAssertFalse(systemMessage.needsUpdatingUsers)
     
         // when
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        self.performRemoteChangesNotInNotificationStream { (session) in
+        simulateNotificationStreamInterruption(changesBeforeInterruption: { session in
             self.groupConversation.removeUsers(by: self.user2, removedUser: self.user3)
             self.groupConversation.addUsers(by: self.user2, addedUsers: [self.user1!, self.user5!])
-        }
-    
+        })
+
+        // then
         let secondSystemMessage = conversation?.lastMessage as! ZMSystemMessage
         XCTAssertNotEqual(systemMessage, secondSystemMessage)
     
@@ -352,7 +245,7 @@ class SendAndReceiveMessagesTests_Swift: ConversationTestsBase {
                             self.user(for: self.user1)]
         let removedUser = self.user(for: self.user3)
     
-        // then
+
         XCTAssertEqual(conversation!.localParticipants.count, 5)
         XCTAssertEqual(secondSystemMessage.users, Set(initialUsers))
         XCTAssertEqual(secondSystemMessage.addedUsers.count, 2)
@@ -367,30 +260,22 @@ class SendAndReceiveMessagesTests_Swift: ConversationTestsBase {
         // given
         XCTAssertTrue(self.login())
         var conversation = self.conversation(for: self.groupConversation)
-    
-        let firstMessageNonce = UUID.create()
-        self.mockTransportSession.performRemoteChanges { (session) in
-            let message = GenericMessage(content: Text(content: "Hello", mentions: [], linkPreviews: [], replyingTo: nil), nonce: firstMessageNonce)
-            self.groupConversation.encryptAndInsertData(from: self.user1.clients.anyObject() as! MockUserClient,
-                                                        to: self.selfUser.clients.anyObject() as! MockUserClient,
-                                                        data: try! message.serializedData())
-        }
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
-    
+
         // when
-        // add new user to conversation
+        // adding new user to conversation
         var newMockUser: MockUser?
-        self.performRemoteChangesNotInNotificationStream { (session) in
+        simulateNotificationStreamInterruption(changesBeforeInterruption: { (session) in
             newMockUser = session.insertUser(withName: "Bruno")
             self.groupConversation.addUsers(by: self.user2, addedUsers: [newMockUser!])
-        }
-    
+        })
+
         conversation = self.conversation(for: self.groupConversation)
         let systemMessage = conversation?.lastMessage as! ZMSystemMessage
 
         let addedUser = systemMessage.addedUsers.first
     
-        // then after fetching it should contain the full users
+        // then
+        // after fetching it should contain the full users
         XCTAssertEqual(systemMessage.users.count, 4)
         XCTAssertEqual(systemMessage.removedUsers.count, 0)
         XCTAssertEqual(systemMessage.addedUsers.count, 1)
