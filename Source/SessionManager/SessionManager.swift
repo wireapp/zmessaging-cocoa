@@ -669,6 +669,8 @@ public final class SessionManager : NSObject, SessionManagerType {
                     },
                     databaseLoadingFailure: { [weak self] in
                         self?.delegate?.sessionManagerDidFailToLoadDatabase()
+                        onWorkDone()
+                        group?.leave()
                     },
                     completion: { provider in
                         let userSession = self.startBackgroundSession(for: account, with: provider)
