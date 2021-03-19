@@ -23,7 +23,7 @@
 
 #import "ObjectTranscoderTests.h"
 #import "ZMUserTranscoder+Internal.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 
 static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";

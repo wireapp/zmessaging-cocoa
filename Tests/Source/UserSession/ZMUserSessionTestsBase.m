@@ -19,7 +19,7 @@
 
 #import <Foundation/Foundation.h>
 #include "ZMUserSessionTestsBase.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 @import WireSyncEngine;
 
 

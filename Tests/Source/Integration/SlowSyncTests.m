@@ -27,7 +27,7 @@
 #import "ZMLoginTranscoder+Internal.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMConversation+Testing.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 
 @interface SlowSyncTests : IntegrationTest

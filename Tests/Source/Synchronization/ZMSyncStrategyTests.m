@@ -29,11 +29,11 @@
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
 #import "MessagingTest+EventFactory.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 // Transcoders & strategies
 #import "MessagingTest+EventFactory.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 @interface OCMockObject (TearDown)
 - (void)tearDown;

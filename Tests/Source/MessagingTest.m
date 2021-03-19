@@ -43,7 +43,7 @@
 #import "ZMLoginTranscoder.h"
 #import "ZMLoginCodeRequestTranscoder.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 static ZMReachability *sharedReachabilityMock = nil;
 
@@ -206,6 +206,8 @@ static ZMReachability *sharedReachabilityMock = nil;
 
 - (void)tearDown;
 {
+    Require([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
+    
     BackgroundActivityFactory.sharedFactory.activityManager = nil;
 
     ZMConversationDefaultLastReadTimestampSaveDelay = self.originalConversationLastReadTimestampTimerValue;

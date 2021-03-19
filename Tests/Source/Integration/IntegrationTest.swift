@@ -56,21 +56,6 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
 
 }
 
-extension ZMUserSession.Configuration {
-
-    @objc
-    static var defaultConfig: ZMUserSession.Configuration {
-        Self.init(
-            appLockConfig: .init(
-                isAvailable: true,
-                isForced: false,
-                timeout: 19,
-                requireCustomPasscode: false
-            )
-        )
-    }
-}
-
 final class MockUnauthenticatedSessionFactory: UnauthenticatedSessionFactory {
 
     let transportSession: UnauthenticatedTransportSessionProtocol
@@ -141,10 +126,10 @@ extension IntegrationTest {
         destroyTimers()
         sharedSearchDirectory?.tearDown()
         sharedSearchDirectory = nil
-        userSession = nil
-        userSession?.tearDown()
         mockTransportSession?.cleanUp()
         mockTransportSession = nil
+        userSession = nil
+        userSession?.tearDown()
         sessionManager = nil
         selfUser = nil
         user1 = nil
@@ -210,6 +195,7 @@ extension IntegrationTest {
     @objc
     func recreateSessionManagerAndDeleteLocalData() {
         closePushChannelAndWaitUntilClosed()
+        mockTransportSession.resetReceivedRequests()
         destroySharedSearchDirectory()
         destroySessionManager()
         destroyPersistentStore()
@@ -221,7 +207,7 @@ extension IntegrationTest {
     func createSessionManager() {
         guard let application = application, let transportSession = mockTransportSession else { return XCTFail() }
         StorageStack.shared.createStorageAsInMemory = useInMemoryStore
-        let reachability = TestReachability()
+        let reachability = MockReachability()
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession, environment: mockEnvironment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             application: application,

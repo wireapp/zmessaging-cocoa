@@ -22,7 +22,7 @@
 @import WireDataModel;
 
 #import "ZMConnectionTranscoder+Internal.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 ////
 // TestObserver

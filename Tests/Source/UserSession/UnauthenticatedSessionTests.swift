@@ -110,14 +110,14 @@ public final class UnauthenticatedSessionTests: ZMTBaseTest {
     var transportSession: TestUnauthenticatedTransportSession!
     var sut: UnauthenticatedSession!
     var mockDelegate: MockUnauthenticatedSessionDelegate!
-    var reachability: TestReachability!
+    var reachability: MockReachability!
     var mockAuthenticationStatusDelegate: MockAuthenticationStatusDelegate!
     
     public override func setUp() {
         super.setUp()
         transportSession = TestUnauthenticatedTransportSession()
         mockDelegate = MockUnauthenticatedSessionDelegate()
-        reachability = TestReachability()
+        reachability = MockReachability()
         mockAuthenticationStatusDelegate = MockAuthenticationStatusDelegate()
         sut = UnauthenticatedSession(transportSession: transportSession,
                                      reachability: reachability,
