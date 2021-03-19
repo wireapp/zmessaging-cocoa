@@ -40,7 +40,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
         )
     }
 
-    override func session(for account: Account, storeProvider: LocalStoreProviderProtocol, configuration: ZMUserSession.Configuration = .defaultConfig) -> ZMUserSession? {
+    override func session(for account: Account, coreDataStack: CoreDataStack, configuration: ZMUserSession.Configuration = .defaultConfig) -> ZMUserSession? {
         return ZMUserSession(
             userId: account.userIdentifier,
             transportSession: transportSession,
@@ -49,7 +49,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
             analytics: analytics,
             application: application,
             appVersion: appVersion,
-            storeProvider: storeProvider,
+            storeProvider: coreDataStack,
             configuration: configuration
         )
     }

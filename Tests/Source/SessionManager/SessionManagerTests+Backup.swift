@@ -185,16 +185,16 @@ class SessionManagerTests_Backup: IntegrationTest {
         let result = backupActiveAcount(password: "idontneednopassword")
         guard let url = result.value else { return XCTFail("\(result.error!)") }
         XCTAssertNil(restoreAcount(password: "idontneednopassword", from: url).error)
-        XCTAssert(FileManager.default.fileExists(atPath: StorageStack.backupsDirectory.path))
-        XCTAssert(FileManager.default.fileExists(atPath: StorageStack.importsDirectory.path))
+        XCTAssert(FileManager.default.fileExists(atPath: CoreDataStack.backupsDirectory.path))
+        XCTAssert(FileManager.default.fileExists(atPath: CoreDataStack.importsDirectory.path))
         
         // When
         SessionManager.clearPreviousBackups(dispatchGroup: dispatchGroup)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // Then
-        XCTAssertFalse(FileManager.default.fileExists(atPath: StorageStack.backupsDirectory.path))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: StorageStack.importsDirectory.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: CoreDataStack.backupsDirectory.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: CoreDataStack.importsDirectory.path))
     }
     
     func DISABLED_testThatItDeletesOldEphemeralMessagesWhenRestoringFromABackup() {

@@ -45,13 +45,16 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
 {
     [super setUp];
     
-    self.syncMOC.zm_userImageCache = [[UserImageLocalCache alloc] initWithLocation:nil];
-    self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache;
+//    self.syncMOC.zm_userImageCache = [[UserImageLocalCache alloc] initWithLocation:nil];
+//    self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache;
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
-    self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
-    self.mockSyncStatus.mockPhase = SyncPhaseDone;
-    self.mockClientRegistrationDelegate = [[ZMMockClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC];
-    self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateOnline;
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        self.mockSyncStatus = [[MockSyncStatus alloc] initWithManagedObjectContext:self.syncMOC syncStateDelegate:self.syncStateDelegate];
+        self.mockSyncStatus.mockPhase = SyncPhaseDone;
+        self.mockClientRegistrationDelegate = [[ZMMockClientRegistrationStatus alloc] initWithManagedObjectContext:self.syncMOC];
+        self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateOnline;
+    }];
 
     self.sut = [[ZMUserTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
@@ -103,18 +106,19 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
 
 - (void)testThatItDoesNotRequestAUserWhileARequestForThatUserIsAlreadyInProgress
 {
-    
-    // given
-    [self.sut objectsDidChange:[NSSet setWithObject:[self insertUserWithRemoteID]]];
-    
-    ZMTransportRequest *firstRequest = [self.sut nextRequest];
-    XCTAssertNotNil(firstRequest);
-    
-    // when
-    ZMTransportRequest *request = [self.sut nextRequest];
-    
-    // then
-    XCTAssertNil(request);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [self.sut objectsDidChange:[NSSet setWithObject:[self insertUserWithRemoteID]]];
+
+        ZMTransportRequest *firstRequest = [self.sut nextRequest];
+        XCTAssertNotNil(firstRequest);
+
+        // when
+        ZMTransportRequest *request = [self.sut nextRequest];
+
+        // then
+        XCTAssertNil(request);
+    }];
 }
 
 - (void)testThatItDoesNotRequestUsersWhileARequestForThoseUsersIsAlreadyInProgress
@@ -125,26 +129,29 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     for (NSUInteger i = 0; i < userCount; ++i) {
         [users addObject:[self insertUserWithRemoteID]];
     }
-    [self.sut objectsDidChange:users];
-    
-    // For each request to /users we extract the IDs and put them into a set.
-    // While doing so, we check that the ID is not in the set already, ie. that
-    // it was not requested already.
-    NSMutableSet *requestedIDs = [NSMutableSet set];
-    for (size_t i = 0; i < (userCount / ZMUserTranscoderNumberOfUUIDsPerRequest) + 10UL; ++i) {
-        ZMTransportRequest *req = [self.sut nextRequest];
 
-        if ([req.path hasPrefix:USER_PATH_WITH_QUERY]) {
-            NSArray *ids = [[req.path substringFromIndex:USER_PATH_WITH_QUERY.length] componentsSeparatedByString:@","];
-            for (NSString *identifier in ids) {
-                XCTAssertFalse([requestedIDs containsObject:identifier]);
-                [requestedIDs addObject:identifier];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self.sut objectsDidChange:users];
+
+        // For each request to /users we extract the IDs and put them into a set.
+        // While doing so, we check that the ID is not in the set already, ie. that
+        // it was not requested already.
+        NSMutableSet *requestedIDs = [NSMutableSet set];
+        for (size_t i = 0; i < (userCount / ZMUserTranscoderNumberOfUUIDsPerRequest) + 10UL; ++i) {
+            ZMTransportRequest *req = [self.sut nextRequest];
+
+            if ([req.path hasPrefix:USER_PATH_WITH_QUERY]) {
+                NSArray *ids = [[req.path substringFromIndex:USER_PATH_WITH_QUERY.length] componentsSeparatedByString:@","];
+                for (NSString *identifier in ids) {
+                    XCTAssertFalse([requestedIDs containsObject:identifier]);
+                    [requestedIDs addObject:identifier];
+                }
             }
         }
-    }
-    // Finally we check that the number of IDs requested matches the number of users.
-    // This makes sure that the test doesn't pass just because we didn't request any / enough users.
-    XCTAssertEqual(requestedIDs.count, userCount);
+        // Finally we check that the number of IDs requested matches the number of users.
+        // This makes sure that the test doesn't pass just because we didn't request any / enough users.
+        XCTAssertEqual(requestedIDs.count, userCount);
+    }];
 }
 
 - (void)testThatItReturnsSelfUserInContext
@@ -190,7 +197,9 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     for (NSUInteger i = 0; i < userCount; ++i) {
         [allUsers addObject:[self insertUserWithRemoteID]];
     }
-    [self.sut objectsDidChange:[NSSet setWithArray:allUsers]];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self.sut objectsDidChange:[NSSet setWithArray:allUsers]];
+    }];
 
     ZMTransportResponse *failingResponse = [ZMTransportResponse responseWithTransportSessionError:
         [NSError errorWithDomain:ZMTransportSessionErrorDomain code:ZMTransportSessionErrorCodeTryAgainLater userInfo:nil]];
@@ -233,7 +242,10 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     for (NSUInteger i = 0; i < userCount; ++i) {
         [allUsers addObject:[self insertUserWithRemoteID]];
     }
-    [self.sut objectsDidChange:[NSSet setWithArray:allUsers]];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self.sut objectsDidChange:[NSSet setWithArray:allUsers]];
+    }];
     
     ZMTransportResponse *failingResponse = [ZMTransportResponse responseWithPayload:nil HTTPStatus:500 transportSessionError:nil];
 
@@ -267,17 +279,18 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
         [self.sut objectsDidChange:[NSSet setWithObject:user]];
     }];
     XCTAssertTrue(needsToBeUpdated);
-    NSDictionary *payload = @{
-                                  @"id" : [user.remoteIdentifier transportString],
-                                  @"name" : @"Roger",
-                              };
 
     __block ZMTransportRequest *userRequest;
     [self.syncMOC performGroupedBlockAndWait:^{
         userRequest = [self.sut nextRequest];
+        XCTAssertEqualObjects(userRequest.path, [USER_PATH_WITH_QUERY stringByAppendingString:[user.remoteIdentifier transportString]]);
+
+        NSDictionary *payload = @{
+            @"id" : [user.remoteIdentifier transportString],
+            @"name" : @"Roger",
+        };
+        [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     }];
-    XCTAssertEqualObjects(userRequest.path, [USER_PATH_WITH_QUERY stringByAppendingString:[user.remoteIdentifier transportString]]);
-    [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // when
@@ -285,63 +298,78 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
         user.needsToBeUpdatedFromBackend = YES;
         [self.sut objectsDidChange:[NSSet setWithObject:user]];
     }];
+    
     // then
     [self.syncMOC performGroupedBlockAndWait:^{
         userRequest = [self.sut nextRequest];
+        XCTAssertNotNil(userRequest);
+        XCTAssertEqualObjects(userRequest.path, [USER_PATH_WITH_QUERY stringByAppendingString:[user.remoteIdentifier transportString]]);
     }];
-    XCTAssertNotNil(userRequest);
-    XCTAssertEqualObjects(userRequest.path, [USER_PATH_WITH_QUERY stringByAppendingString:[user.remoteIdentifier transportString]]);
 }
 
 - (void)testThatItClearsNeedsToBeUpdatedFromBackendAfterSuccessfulRequest
 {
     // given
     ZMUser *user = [self insertUserWithRemoteID];
-    [self.sut objectsDidChange:[NSSet setWithObject:user]];
-    XCTAssertTrue(user.needsToBeUpdatedFromBackend);
-    NSArray *payload = @[ [self samplePayloadForUserID:user.remoteIdentifier][@"user"] ];
-    
-    ZMTransportRequest *userRequest = [self.sut nextRequest];
-    
-    // when
-    [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        [self.sut objectsDidChange:[NSSet setWithObject:user]];
+        XCTAssertTrue(user.needsToBeUpdatedFromBackend);
+        NSArray *payload = @[ [self samplePayloadForUserID:user.remoteIdentifier][@"user"] ];
+
+        ZMTransportRequest *userRequest = [self.sut nextRequest];
+
+        // when
+        [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil]];
+    }];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertFalse(user.needsToBeUpdatedFromBackend);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        XCTAssertFalse(user.needsToBeUpdatedFromBackend);
+    }];
 }
 
 - (void)testThatItClearsNeedsToBeUpdatedFromBackendAfterAPermanentFailedRequest
 {
-    // given
     ZMUser *user = [self insertUserWithRemoteID];
-    [self.sut objectsDidChange:[NSSet setWithObject:user]];
-    XCTAssertTrue(user.needsToBeUpdatedFromBackend);
-    NSArray *payload = @[ [self samplePayloadForUserID:user.remoteIdentifier][@"user"] ];
-    
-    ZMTransportRequest *userRequest = [self.sut nextRequest];
-    
-    // when
-    [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:400 transportSessionError:nil]];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        [self.sut objectsDidChange:[NSSet setWithObject:user]];
+        XCTAssertTrue(user.needsToBeUpdatedFromBackend);
+        NSArray *payload = @[ [self samplePayloadForUserID:user.remoteIdentifier][@"user"] ];
+
+        ZMTransportRequest *userRequest = [self.sut nextRequest];
+
+        // when
+        [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:400 transportSessionError:nil]];
+    }];
     WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertFalse(user.needsToBeUpdatedFromBackend);
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // then
+        XCTAssertFalse(user.needsToBeUpdatedFromBackend);
+    }];
 }
 
 - (void)testThatItDoesNotClearNeedsToBeUpdatedFromBackendAfterATemporarilyFailedRequest
 {
-    // given
     ZMUser *user = [self insertUserWithRemoteID];
-    XCTAssertTrue(user.needsToBeUpdatedFromBackend);
-    ZMTransportRequest *userRequest = [self.sut nextRequest];
-    
-    // when
-    [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:500 transportSessionError:nil]];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        XCTAssertTrue(user.needsToBeUpdatedFromBackend);
+        ZMTransportRequest *userRequest = [self.sut nextRequest];
+
+        // when
+        [userRequest completeWithResponse:[ZMTransportResponse responseWithPayload:@{} HTTPStatus:500 transportSessionError:nil]];
+    }];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    XCTAssertTrue(user.needsToBeUpdatedFromBackend);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        XCTAssertTrue(user.needsToBeUpdatedFromBackend);
+    }];
 }
 
 - (void)testThatItRequestsAllConnectedUsersAndSelfAndAnyPreviousUserBeingFetchedWhenSlowSyncIsReset
@@ -377,20 +405,20 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
         
         // when
         self.mockSyncStatus.mockPhase = SyncPhaseFetchingUsers;
+
+        // then
+        ZMTransportRequest *request = [self.sut nextRequest];
+        XCTAssertNotNil(request);
+        XCTAssertTrue([request.path hasPrefix:USER_PATH_WITH_QUERY]);
+        XCTAssertEqual(ZMMethodGET, request.method);
+
+        NSString *queryString = [request.path substringFromIndex:USER_PATH_WITH_QUERY.length];
+        NSArray *UUIDs = [queryString componentsSeparatedByString:@","];
+
+        for(ZMUser *user in nonConnectedUsers) {
+            XCTAssertTrue([UUIDs containsObject:[user.remoteIdentifier transportString]]);
+        }
     }];
-    
-    // then
-    ZMTransportRequest *request = [self.sut nextRequest];
-    XCTAssertNotNil(request);
-    XCTAssertTrue([request.path hasPrefix:USER_PATH_WITH_QUERY]);
-    XCTAssertEqual(ZMMethodGET, request.method);
-    
-    NSString *queryString = [request.path substringFromIndex:USER_PATH_WITH_QUERY.length];
-    NSArray *UUIDs = [queryString componentsSeparatedByString:@","];
-    
-    for(ZMUser *user in nonConnectedUsers) {
-        XCTAssertTrue([UUIDs containsObject:[user.remoteIdentifier transportString]]);
-    }
 }
 
 - (void)testThatItRequestsAllConnectedUsersAndSelfWhenSlowSyncIsReset
@@ -424,21 +452,21 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
         
         // when
         self.mockSyncStatus.mockPhase = SyncPhaseFetchingUsers;
+
+        // then
+        ZMTransportRequest *request = [self.sut nextRequest];
+        XCTAssertNotNil(request);
+        XCTAssertTrue([request.path hasPrefix:USER_PATH_WITH_QUERY]);
+        XCTAssertEqual(ZMMethodGET, request.method);
+
+        NSString *queryString = [request.path substringFromIndex:USER_PATH_WITH_QUERY.length];
+        NSArray *UUIDs = [queryString componentsSeparatedByString:@","];
+
+        XCTAssertEqual(connectedUsers.count, UUIDs.count);
+        for(ZMUser *user in connectedUsers) {
+            XCTAssertTrue([UUIDs containsObject:[user.remoteIdentifier transportString]]);
+        }
     }];
-    
-    // then
-    ZMTransportRequest *request = [self.sut nextRequest];
-    XCTAssertNotNil(request);
-    XCTAssertTrue([request.path hasPrefix:USER_PATH_WITH_QUERY]);
-    XCTAssertEqual(ZMMethodGET, request.method);
-    
-    NSString *queryString = [request.path substringFromIndex:USER_PATH_WITH_QUERY.length];
-    NSArray *UUIDs = [queryString componentsSeparatedByString:@","];
-    
-    XCTAssertEqual(connectedUsers.count, UUIDs.count);
-    for(ZMUser *user in connectedUsers) {
-        XCTAssertTrue([UUIDs containsObject:[user.remoteIdentifier transportString]]);
-    }
 }
 
 - (void)testThatCurrentSyncPhaseIsFinishedWhenAllConnectedUsersAndSelfAreFetched
@@ -460,48 +488,47 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
         }
         
         self.mockSyncStatus.mockPhase = SyncPhaseFetchingUsers;
+        ZMTransportRequest *request = [self.sut nextRequest];
+        XCTAssertNotNil(request);
+        ZMTransportResponse *response =[self successResponseForUsersRequest:request];
+
+        // when
+        [request completeWithResponse:response];
     }];
-    ZMTransportRequest *request = [self.sut nextRequest];
-    XCTAssertNotNil(request);
-    ZMTransportResponse *response =[self successResponseForUsersRequest:request];
-    
-    // when
-    [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
-    
 }
 
 - (void)testThatCurrentSyncPhaseIsFinishedWhenAllConnectedUsersAreFetchedWithMultipleRequests
 {
-    // given
-    NSUInteger numRequests = 3;
-    
-    NSUInteger const userCount = ZMUserTranscoderNumberOfUUIDsPerRequest * numRequests + 10;
     [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        NSUInteger numRequests = 3;
+        NSUInteger const userCount = ZMUserTranscoderNumberOfUUIDsPerRequest * numRequests + 10;
+
         for (NSUInteger i = 0; i < userCount; ++i) {
             ZMUser *user = [self insertUserWithRemoteID];
             user.needsToBeUpdatedFromBackend = YES;
             ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
             connection.to = user;
         }
-    }];
-    
-    self.mockSyncStatus.mockPhase = SyncPhaseFetchingUsers;
-    
-    // when
-    for(size_t i = 0; i < numRequests+1; ++i) {
-        ZMTransportRequest *request = [self.sut nextRequest];
-        if(request == nil) {
-            break;
+
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingUsers;
+
+        // when
+        for(size_t i = 0; i < numRequests+1; ++i) {
+            ZMTransportRequest *request = [self.sut nextRequest];
+            if(request == nil) {
+                break;
+            }
+            ZMTransportResponse *response =[self successResponseForUsersRequest:request];
+            [request completeWithResponse:response];
         }
-        ZMTransportResponse *response =[self successResponseForUsersRequest:request];
-        [request completeWithResponse:response];
-        WaitForAllGroupsToBeEmpty(0.5);
-    }
-    
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+
     // then
     XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
 }
@@ -518,16 +545,16 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
             ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.syncMOC];
             connection.to = user;
         }
+
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingUsers;
+
+        ZMTransportRequest *request = [self.sut nextRequest];
+        XCTAssertNotNil(request);
+        ZMTransportResponse *response = [self successResponseForUsersRequest:request];
+
+        // when
+        [request completeWithResponse:response];
     }];
-    
-    self.mockSyncStatus.mockPhase = SyncPhaseFetchingUsers;
-    
-    ZMTransportRequest *request = [self.sut nextRequest];
-    XCTAssertNotNil(request);
-    ZMTransportResponse *response = [self successResponseForUsersRequest:request];
-    
-    // when
-    [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -536,34 +563,40 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
 
 - (void)testThatTheCurrentSyncPhaseIsFinishedWhenThereAreNoLocalUsersToBeFetched
 {
-    // given
-    self.mockSyncStatus.mockPhase = SyncPhaseFetchingUsers;
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        self.mockSyncStatus.mockPhase = SyncPhaseFetchingUsers;
 
-    // when
-    ZMTransportRequest *request = [self.sut nextRequest];
-    XCTAssertNil(request);
-
+        // when
+        ZMTransportRequest *request = [self.sut nextRequest];
+        XCTAssertNil(request);
+    }];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
-    XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
+    [self.syncMOC performGroupedBlockAndWait:^{
+        XCTAssertTrue(self.mockSyncStatus.didCallFinishCurrentSyncPhase);
+    }];
+
 }
 
 - (void)testThatItDoesNotClearNeedsToBeUpdatedFromBackendWhenItIsUpdatedFromPushChannelData
 {
-    // given
     ZMUser *user = [self insertUserWithRemoteID];
-    XCTAssertTrue(user.needsToBeUpdatedFromBackend);
-    NSDictionary *payload = [self samplePayloadForUserID:user.remoteIdentifier];
-    
-    ZMUpdateEvent *event = [[ZMUpdateEvent alloc] initWithUuid:[NSUUID createUUID] payload:payload transient:NO decrypted:YES source:ZMUpdateEventSourceWebSocket];
-    
-    // when
+
     [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        XCTAssertTrue(user.needsToBeUpdatedFromBackend);
+        NSDictionary *payload = [self samplePayloadForUserID:user.remoteIdentifier];
+
+        ZMUpdateEvent *event = [[ZMUpdateEvent alloc] initWithUuid:[NSUUID createUUID] payload:payload transient:NO decrypted:YES source:ZMUpdateEventSourceWebSocket];
+
+        // when
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
+
+        // then
+        XCTAssertTrue(user.needsToBeUpdatedFromBackend);
     }];
-    // then
-    XCTAssertTrue(user.needsToBeUpdatedFromBackend);
 }
 
 - (void)testThatItProcessEventOfTypeZMUpdateEventUserUpdate
@@ -634,12 +667,10 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
 
         // when
         self.mockSyncStatus.mockPhase = SyncPhaseFetchingUsers;
+        ZMTransportRequest *request = [self.sut nextRequest];
+        ZMTransportResponse *response = [self successResponseForUsersRequest:request];
+        [request completeWithResponse:response];
     }];
-
-    ZMTransportRequest *request = [self.sut nextRequest];
-
-    ZMTransportResponse *response = [self successResponseForUsersRequest:request];
-    [request completeWithResponse:response];
     WaitForAllGroupsToBeEmpty(0.5);
 
     [self.syncMOC performGroupedBlockAndWait:^{
