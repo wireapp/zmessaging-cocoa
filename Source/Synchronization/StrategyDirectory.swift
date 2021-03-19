@@ -36,7 +36,7 @@ public class StrategyDirectory: NSObject, StrategyDirectoryProtocol {
     public let eventConsumers: [ZMEventConsumer]
     public let contextChangeTrackers: [ZMContextChangeTracker]
     
-    init(contextDirectory: ManagedObjectContextDirectory,
+    init(contextProvider: ContextProvider,
          applicationStatusDirectory: ApplicationStatusDirectory,
          cookieStorage: ZMPersistentCookieStorage,
          pushMessageHandler: PushMessageHandler,
@@ -44,7 +44,7 @@ public class StrategyDirectory: NSObject, StrategyDirectoryProtocol {
          updateEventProcessor: UpdateEventProcessor,
          localNotificationDispatcher: LocalNotificationDispatcher) {
         
-        self.strategies = Self.buildStrategies(contextDirectory: contextDirectory,
+        self.strategies = Self.buildStrategies(contextProvider: contextProvider,
                                                applicationStatusDirectory: applicationStatusDirectory,
                                                cookieStorage: cookieStorage,
                                                pushMessageHandler: pushMessageHandler,
@@ -73,7 +73,7 @@ public class StrategyDirectory: NSObject, StrategyDirectoryProtocol {
         }
     }
             
-    static func buildStrategies(contextDirectory: ManagedObjectContextDirectory,
+    static func buildStrategies(contextProvider: ContextProvider,
                                 applicationStatusDirectory: ApplicationStatusDirectory,
                                 cookieStorage: ZMPersistentCookieStorage,
                                 pushMessageHandler: PushMessageHandler,
@@ -81,7 +81,7 @@ public class StrategyDirectory: NSObject, StrategyDirectoryProtocol {
                                 updateEventProcessor: UpdateEventProcessor,
                                 localNotificationDispatcher: LocalNotificationDispatcher) -> [Any] {
         
-        let syncMOC = contextDirectory.syncContext!
+        let syncMOC = contextProvider.syncContext
         let strategies: [Any] = [
             UserClientRequestStrategy(
                 clientRegistrationStatus: applicationStatusDirectory.clientRegistrationStatus,

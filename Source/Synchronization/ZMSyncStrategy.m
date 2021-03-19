@@ -66,26 +66,26 @@
 ZM_EMPTY_ASSERTING_INIT()
 
 
-- (instancetype)initWithStoreProvider:(id<LocalStoreProviderProtocol>)storeProvider
-              notificationsDispatcher:(NotificationDispatcher *)notificationsDispatcher
-           applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
-                          application:(id<ZMApplication>)application
-                    strategyDirectory:(id<StrategyDirectoryProtocol>)strategyDirectory
-               eventProcessingTracker:(id<EventProcessingTrackerProtocol>)eventProcessingTracker
+- (instancetype)initWithContextProvider:(id<ContextProvider>)contextProvider
+                notificationsDispatcher:(NotificationDispatcher *)notificationsDispatcher
+             applicationStatusDirectory:(ApplicationStatusDirectory *)applicationStatusDirectory
+                            application:(id<ZMApplication>)application
+                      strategyDirectory:(id<StrategyDirectoryProtocol>)strategyDirectory
+                 eventProcessingTracker:(id<EventProcessingTrackerProtocol>)eventProcessingTracker
 {
     self = [super init];
     if (self) {
         self.notificationDispatcher = notificationsDispatcher;
         self.application = application;
-        self.syncMOC = storeProvider.contextDirectory.syncContext;
-        self.uiMOC = storeProvider.contextDirectory.uiContext;
+        self.syncMOC = contextProvider.syncContext;
+        self.uiMOC = contextProvider.viewContext;
         self.applicationStatusDirectory = applicationStatusDirectory;
         self.strategyDirectory = strategyDirectory;
         self.eventProcessingTracker = eventProcessingTracker;
         self.changeTrackerBootStrap = [[ZMChangeTrackerBootstrap alloc] initWithManagedObjectContext:self.syncMOC changeTrackers:self.strategyDirectory.contextChangeTrackers];
 
         ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:self.syncMOC]);
-        ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:storeProvider.contextDirectory.uiContext]);
+        ZM_ALLOW_MISSING_SELECTOR([[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:contextProvider.viewContext]);
 
         [application registerObserverForDidEnterBackground:self selector:@selector(appDidEnterBackground:)];
         [application registerObserverForWillEnterForeground:self selector:@selector(appWillEnterForeground:)];

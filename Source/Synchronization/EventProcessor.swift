@@ -53,12 +53,12 @@ class EventProcessor: UpdateEventProcessor {
     
     // MARK: Life Cycle
     
-    init(storeProvider: LocalStoreProviderProtocol,
+    init(storeProvider: CoreDataStack,
          syncStatus: SyncStatus,
          eventProcessingTracker: EventProcessingTrackerProtocol) {
-        self.syncContext = storeProvider.contextDirectory.syncContext
+        self.syncContext = storeProvider.syncContext
         self.eventContext = NSManagedObjectContext.createEventContext(withSharedContainerURL: storeProvider.applicationContainer,
-                                                                      userIdentifier: storeProvider.userIdentifier)
+                                                                      userIdentifier: storeProvider.account.userIdentifier)
         self.eventContext.add(syncContext.dispatchGroup)
         self.syncStatus = syncStatus
         self.eventDecoder = EventDecoder(eventMOC: eventContext, syncMOC: syncContext)
