@@ -67,7 +67,7 @@
                                        operationLoop:nil
                                          application:self.application
                                           appVersion:@"00000"
-                                       storeProvider:self.coreDataStack
+                                       coreDataStack:self.coreDataStack
                                        configuration:ZMUserSessionConfiguration.defaultConfig];
         
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
@@ -86,8 +86,6 @@
         [[NSFileManager defaultManager] removeItemAtURL:item error:nil];
     }
     
-    self.storeProvider = nil;
-
     self.baseURL = nil;
     self.cookieStorage = nil;
     self.validCookie = nil;

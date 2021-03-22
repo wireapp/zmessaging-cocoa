@@ -374,7 +374,7 @@
                                                          operationLoop:nil
                                                            application:self.application
                                                             appVersion:@"00000"
-                                                         storeProvider:self.coreDataStack
+                                                         coreDataStack:self.coreDataStack
                                                          configuration:ZMUserSessionConfiguration.defaultConfig];
     WaitForAllGroupsToBeEmpty(0.5);
 

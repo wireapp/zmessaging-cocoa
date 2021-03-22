@@ -30,7 +30,7 @@ public class SearchTask {
  
     fileprivate let transportSession: TransportSessionType
     fileprivate let searchContext: NSManagedObjectContext
-    fileprivate let contextProvider: ZMManagedObjectContextProvider
+    fileprivate let contextProvider: ContextProvider
     fileprivate let task: Task
     fileprivate var userLookupTaskIdentifier: ZMTaskIdentifier?
     fileprivate var directoryTaskIdentifier: ZMTaskIdentifier?
@@ -56,19 +56,19 @@ public class SearchTask {
     
     convenience init(request: SearchRequest,
                      searchContext: NSManagedObjectContext,
-                     contextProvider: ZMManagedObjectContextProvider,
+                     contextProvider: ContextProvider,
                      transportSession: TransportSessionType) {
         self.init(task: .search(searchRequest: request), searchContext: searchContext, contextProvider: contextProvider, transportSession: transportSession)
     }
     
     convenience init(lookupUserId userId: UUID,
                      searchContext: NSManagedObjectContext,
-                     contextProvider: ZMManagedObjectContextProvider,
+                     contextProvider: ContextProvider,
                      transportSession: TransportSessionType) {
         self.init(task: .lookup(userId: userId), searchContext: searchContext, contextProvider: contextProvider, transportSession: transportSession)
     }
     
-    public init(task: Task, searchContext: NSManagedObjectContext, contextProvider: ZMManagedObjectContextProvider, transportSession: TransportSessionType) {
+    public init(task: Task, searchContext: NSManagedObjectContext, contextProvider: ContextProvider, transportSession: TransportSessionType) {
         self.task = task
         self.transportSession = transportSession
         self.searchContext = searchContext
@@ -128,16 +128,16 @@ extension SearchTask {
             let teamMembers = activeMembers.filter({ $0.remoteIdentifier == userId})
             let connectedUsers = self.connectedUsers(matchingQuery: "").filter({ $0.remoteIdentifier == userId})
             
-            self.contextProvider.managedObjectContext.performGroupedBlock {
+            self.contextProvider.viewContext.performGroupedBlock {
                 
-                let copiedTeamMembers = teamMembers.compactMap(\.user).compactMap { self.contextProvider.managedObjectContext.object(with: $0.objectID) as? Member}
-                let copiedConnectedUsers = connectedUsers.compactMap { self.contextProvider.managedObjectContext.object(with: $0.objectID) as? ZMUser }
+                let copiedTeamMembers = teamMembers.compactMap(\.user).compactMap { self.contextProvider.viewContext.object(with: $0.objectID) as? Member}
+                let copiedConnectedUsers = connectedUsers.compactMap { self.contextProvider.viewContext.object(with: $0.objectID) as? ZMUser }
                 
                 let result = SearchResult(contacts: copiedConnectedUsers.map { ZMSearchUser(contextProvider: self.contextProvider, user: $0)},
                                           teamMembers: copiedTeamMembers.compactMap(\.user).map { ZMSearchUser(contextProvider: self.contextProvider, user: $0)},
                                           addressBook: [], directory: [], conversations: [], services: [])
                 
-                self.result = self.result.union(withLocalResult: result.copy(on: self.contextProvider.managedObjectContext))
+                self.result = self.result.union(withLocalResult: result.copy(on: self.contextProvider.viewContext))
 
                 self.tasksRemaining -= 1
             }
@@ -160,11 +160,11 @@ extension SearchTask {
             let teamMembers = request.searchOptions.contains(.teamMembers) ? self.teamMembers(matchingQuery: request.normalizedQuery, team: team, searchOptions: request.searchOptions) : []
             let conversations = request.searchOptions.contains(.conversations) ? self.conversations(matchingQuery: request.query) : []
             
-            self.contextProvider.managedObjectContext.performGroupedBlock {
+            self.contextProvider.viewContext.performGroupedBlock {
                 
-                let copiedConnectedUsers = connectedUsers.compactMap({ self.contextProvider.managedObjectContext.object(with: $0.objectID) as? ZMUser })
+                let copiedConnectedUsers = connectedUsers.compactMap({ self.contextProvider.viewContext.object(with: $0.objectID) as? ZMUser })
                 let searchConnectedUsers = copiedConnectedUsers.map { ZMSearchUser(contextProvider: self.contextProvider, user: $0) }
-                let copiedteamMembers = teamMembers.compactMap({ self.contextProvider.managedObjectContext.object(with: $0.objectID) as? Member })
+                let copiedteamMembers = teamMembers.compactMap({ self.contextProvider.viewContext.object(with: $0.objectID) as? Member })
                 let searchTeamMembers = copiedteamMembers.compactMap(\.user).map { ZMSearchUser(contextProvider: self.contextProvider, user: $0) }
                 
                 let result = SearchResult(contacts: searchConnectedUsers,
@@ -174,7 +174,7 @@ extension SearchTask {
                                           conversations: conversations,
                                           services: [])
                 
-                self.result = self.result.union(withLocalResult: result.copy(on: self.contextProvider.managedObjectContext))
+                self.result = self.result.union(withLocalResult: result.copy(on: self.contextProvider.viewContext))
                 
                 if request.searchOptions.contains(.addressBook) {
                     self.result = self.result.extendWithContactsFromAddressBook(request.normalizedQuery, contextProvider: self.contextProvider)
@@ -267,7 +267,7 @@ extension SearchTask {
         searchContext.performGroupedBlock {
             let request  = type(of: self).searchRequestForUser(withUUID: userId)
             
-            request.add(ZMCompletionHandler(on: self.contextProvider.managedObjectContext, block: { [weak self] (response) in
+            request.add(ZMCompletionHandler(on: self.contextProvider.viewContext, block: { [weak self] (response) in
                 defer {
                     self?.tasksRemaining -= 1
                 }
@@ -310,7 +310,7 @@ extension SearchTask {
         searchContext.performGroupedBlock {
             let request = type(of: self).searchRequestInDirectory(withQuery: searchRequest.query)
             
-            request.add(ZMCompletionHandler(on: self.contextProvider.managedObjectContext, block: { [weak self] (response) in
+            request.add(ZMCompletionHandler(on: self.contextProvider.viewContext, block: { [weak self] (response) in
                 
                 guard
                     let contextProvider = self?.contextProvider,
@@ -343,7 +343,7 @@ extension SearchTask {
         let teamMembersIDs = searchResult.teamMembers.compactMap(\.remoteIdentifier)
         
         guard
-            let teamID = ZMUser.selfUser(in: contextProvider.managedObjectContext).team?.remoteIdentifier,
+            let teamID = ZMUser.selfUser(in: contextProvider.viewContext).team?.remoteIdentifier,
             !teamMembersIDs.isEmpty
         else {
             completeRemoteSearch(searchResult: searchResult)
@@ -352,7 +352,7 @@ extension SearchTask {
         
         let request = type(of: self).fetchTeamMembershipRequest(teamID: teamID, teamMemberIDs: teamMembersIDs)
         
-        request.add(ZMCompletionHandler(on: contextProvider.managedObjectContext, block: { [weak self] (response) in
+        request.add(ZMCompletionHandler(on: contextProvider.viewContext, block: { [weak self] (response) in
             guard
                 let contextProvider = self?.contextProvider,
                 let rawData = response.rawData,
@@ -421,7 +421,7 @@ extension SearchTask {
         searchContext.performGroupedBlock {
             let request = type(of: self).searchRequestInDirectory(withHandle: searchRequest.query)
             
-            request.add(ZMCompletionHandler(on: self.contextProvider.managedObjectContext, block: { [weak self] (response) in
+            request.add(ZMCompletionHandler(on: self.contextProvider.viewContext, block: { [weak self] (response) in
                 
                 defer {
                     self?.tasksRemaining -= 1
@@ -508,7 +508,7 @@ extension SearchTask {
 
             let request = type(of: self).servicesSearchRequest(teamIdentifier: teamIdentifier, query: searchRequest.query)
             
-            request.add(ZMCompletionHandler(on: self.contextProvider.managedObjectContext, block: { [weak self] (response) in
+            request.add(ZMCompletionHandler(on: self.contextProvider.viewContext, block: { [weak self] (response) in
                 
                 defer {
                     self?.tasksRemaining -= 1

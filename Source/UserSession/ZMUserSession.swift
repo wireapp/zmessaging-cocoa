@@ -52,7 +52,7 @@ typealias UserSessionDelegate = UserSessionEncryptionAtRestDelegate
     & UserSessionAppLockDelegate
 
 @objcMembers
-public class ZMUserSession: NSObject, ZMManagedObjectContextProvider {
+public class ZMUserSession: NSObject {
     
     private let appVersion: String
     private var tokens: [Any] = []
@@ -609,4 +609,24 @@ private extension NSManagedObjectContext {
     var selfUserId: UUID? {
         ZMUser.selfUser(in: self).remoteIdentifier
     }
+}
+
+extension ZMUserSession: ContextProvider {
+
+    public var account: Account {
+        return coreDataStack.account
+    }
+
+    public var viewContext: NSManagedObjectContext {
+        return coreDataStack.viewContext
+    }
+
+    public var syncContext: NSManagedObjectContext {
+        return coreDataStack.syncContext
+    }
+
+    public var searchContext: NSManagedObjectContext {
+        return coreDataStack.searchContext
+    }
+
 }

@@ -98,22 +98,12 @@ final class SessionManagerTests: IntegrationTest {
         sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         manager.addAndSelect(account)
 
-        var completed = false
-        LocalStoreProvider.createStack(
-            applicationContainer: sharedContainer,
-            userIdentifier: currentUserIdentifier,
-            dispatchGroup: dispatchGroup,
-            completion: { _ in completed = true }
-        )
-        
-        XCTAssert(wait(withTimeout: 0.5) { completed })
-
         // when
         sut = createManager()
         let observer = SessionManagerObserverMock()
         let token = sut?.addSessionManagerCreatedSessionObserver(observer)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        
+
         // then
         XCTAssertNotNil(delegate.userSession)
         XCTAssertNil(sut?.unauthenticatedSession)

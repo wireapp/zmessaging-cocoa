@@ -45,8 +45,6 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
 {
     [super setUp];
     
-//    self.syncMOC.zm_userImageCache = [[UserImageLocalCache alloc] initWithLocation:nil];
-//    self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache;
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
 
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -173,13 +171,11 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
 - (void)testThatItReturnsSelfUserInUserSession
 {
     [self.syncMOC performGroupedBlockAndWait:^{
-        id session = [OCMockObject mockForClass:ZMUserSession.class];
-        [[[session stub] andReturn:self.syncMOC] managedObjectContext];
         // given
-        ZMUser *selfUser1 = [ZMUser selfUserInContext:self.syncMOC];
+        ZMUser *selfUser1 = [ZMUser selfUserInContext:self.uiMOC];
         
         // when
-        ZMUser *selfUser2 = [ZMUser selfUserInUserSession:session];
+        ZMUser *selfUser2 = [ZMUser selfUserInUserSession:self.coreDataStack];
         
         // then
         XCTAssertNotNil(selfUser1);

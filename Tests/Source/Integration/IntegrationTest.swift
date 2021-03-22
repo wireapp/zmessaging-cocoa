@@ -49,7 +49,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
             analytics: analytics,
             application: application,
             appVersion: appVersion,
-            storeProvider: coreDataStack,
+            coreDataStack: coreDataStack,
             configuration: configuration
         )
     }

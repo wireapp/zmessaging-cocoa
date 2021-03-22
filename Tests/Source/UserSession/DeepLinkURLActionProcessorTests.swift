@@ -28,7 +28,7 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
     override func setUp() {
         super.setUp()
         presentationDelegate = MockPresentationDelegate()
-        sut = WireSyncEngine.DeepLinkURLActionProcessor(contextProvider: contextDirectory!)
+        sut = WireSyncEngine.DeepLinkURLActionProcessor(contextProvider: coreDataStack!)
     }
     
     override func tearDown() {

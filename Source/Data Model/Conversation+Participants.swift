@@ -55,27 +55,27 @@ extension ZMConversation {
         addParticipants(participants,
                         transportSession: userSession.transportSession,
                         eventProcessor: userSession.updateEventProcessor!,
-                        contextProvider: userSession,
+                        contextProvider: userSession.coreDataStack,
                         completion: completion)
     }
     
     func addParticipants(_ participants: [UserType],
                          transportSession: TransportSessionType,
                          eventProcessor: UpdateEventProcessor,
-                         contextProvider: ZMManagedObjectContextProvider,
+                         contextProvider: ContextProvider,
                          completion: @escaping (VoidResult) -> Void) {
-        let users = participants.materialize(in: contextProvider.managedObjectContext)
+        let users = participants.materialize(in: contextProvider.viewContext)
         
         guard
             conversationType == .group,
             !users.isEmpty,
-            !users.contains(ZMUser.selfUser(in: contextProvider.managedObjectContext))
+            !users.contains(ZMUser.selfUser(in: contextProvider.viewContext))
         else { return completion(.failure(ConversationAddParticipantsError.invalidOperation)) }
         
         let request = ConversationParticipantRequestFactory.requestForAddingParticipants(Set(users), conversation: self)
         
         request.add(ZMCompletionHandler(on: managedObjectContext!) { [weak contextProvider, weak eventProcessor] response in
-            guard let syncMOC = contextProvider?.syncManagedObjectContext, let eventProcessor = eventProcessor else {
+            guard let syncMOC = contextProvider?.syncContext, let eventProcessor = eventProcessor else {
                 return  completion(.failure(ConversationAddParticipantsError.unknown))
             }
             
@@ -96,7 +96,7 @@ extension ZMConversation {
                     // Refresh user data since this operation might have failed
                     // due to a team member being removed/deleted from the team.
                     users.filter(\.isTeamMember).forEach({ $0.refreshData() })
-                    contextProvider?.managedObjectContext.enqueueDelayedSave()
+                    contextProvider?.viewContext.enqueueDelayedSave()
                 }
                 
                 let error = ConversationAddParticipantsError(response: response) ?? .unknown
@@ -112,14 +112,14 @@ extension ZMConversation {
         removeParticipant(participant,
                           transportSession: userSession.transportSession,
                           eventProcessor: userSession.updateEventProcessor!,
-                          contextProvider: userSession,
+                          contextProvider: userSession.coreDataStack,
                           completion: completion)
     }
     
     func removeParticipant(_ participant: UserType,
                                   transportSession: TransportSessionType,
                                   eventProcessor: UpdateEventProcessor,
-                                  contextProvider: ZMManagedObjectContextProvider,
+                                  contextProvider: ContextProvider,
                                   completion: @escaping (VoidResult) -> Void) {
         
         guard conversationType == .group,
@@ -131,7 +131,7 @@ extension ZMConversation {
         let request = ConversationParticipantRequestFactory.requestForRemovingParticipant(user, conversation: self)
         
         request.add(ZMCompletionHandler(on: managedObjectContext!) { [weak contextProvider, weak eventProcessor] response in
-            guard let syncMOC = contextProvider?.syncManagedObjectContext, let eventProcessor = eventProcessor else {
+            guard let syncMOC = contextProvider?.syncContext, let eventProcessor = eventProcessor else {
                 return  completion(.failure(ConversationRemoveParticipantError.unknown))
             }
             

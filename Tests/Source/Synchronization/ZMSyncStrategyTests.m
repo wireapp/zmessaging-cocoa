@@ -140,12 +140,12 @@
     
     EventProcessingTracker *eventProcessingTracker = [[EventProcessingTracker alloc] init];
         
-    self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.coreDataStack
-                                     notificationsDispatcher:notificationDispatcher
-                                  applicationStatusDirectory:self.applicationStatusDirectory
-                                                 application:self.application
-                                           strategyDirectory:mockStrategyDirectory
-                                      eventProcessingTracker:eventProcessingTracker];
+    self.sut = [[ZMSyncStrategy alloc] initWithContextProvider:self.coreDataStack
+                                       notificationsDispatcher:notificationDispatcher
+                                    applicationStatusDirectory:self.applicationStatusDirectory
+                                                   application:self.application
+                                             strategyDirectory:mockStrategyDirectory
+                                        eventProcessingTracker:eventProcessingTracker];
     
     self.application.applicationState = UIApplicationStateBackground;
     

@@ -92,7 +92,7 @@ class Conversation_ParticipantsTests: DatabaseTest {
         let receivedSuccess = expectation(description: "received success")
         
         // when
-        conversation.addParticipants([user], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+        conversation.addParticipants([user], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: coreDataStack!) { result in
             switch result {
             case .success:
                 receivedSuccess.fulfill()
@@ -123,7 +123,7 @@ class Conversation_ParticipantsTests: DatabaseTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.addParticipants([selfUser], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+        conversation.addParticipants([selfUser], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: coreDataStack!) { result in
             switch result {
             case .failure(let error):
                 if case ConversationAddParticipantsError.invalidOperation = error {
@@ -150,7 +150,7 @@ class Conversation_ParticipantsTests: DatabaseTest {
             let receivedError = expectation(description: "received error")
             
             // when
-            conversation.addParticipants([user], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+            conversation.addParticipants([user], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: coreDataStack!) { result in
                 switch result {
                 case .failure(let error):
                     if case ConversationAddParticipantsError.invalidOperation = error {
@@ -183,7 +183,7 @@ class Conversation_ParticipantsTests: DatabaseTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.addParticipants([user], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+        conversation.addParticipants([user], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: coreDataStack!) { result in
             switch result {
             case .failure(let error):
                 if case ConversationAddParticipantsError.invalidOperation = error {
@@ -218,7 +218,7 @@ class Conversation_ParticipantsTests: DatabaseTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.addParticipants([user], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+        conversation.addParticipants([user], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: coreDataStack!) { result in
             switch result {
             case .failure(let error):
                 if case ConversationAddParticipantsError.conversationNotFound = error {
@@ -267,7 +267,7 @@ class Conversation_ParticipantsTests: DatabaseTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.addParticipants([teamUser, nonTeamUser], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+        conversation.addParticipants([teamUser, nonTeamUser], transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: coreDataStack!) { result in
             switch result {
             case .failure(let error):
                 if case ConversationAddParticipantsError.invalidOperation = error {
@@ -326,7 +326,7 @@ class Conversation_ParticipantsTests: DatabaseTest {
         let receivedSuccess = expectation(description: "received success")
         
         // when
-        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: coreDataStack!) { result in
             switch result {
             case .success:
                 receivedSuccess.fulfill()
@@ -353,7 +353,7 @@ class Conversation_ParticipantsTests: DatabaseTest {
             let receivedError = expectation(description: "received error")
             
             // when
-            conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+            conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: coreDataStack!) { result in
                 switch result {
                 case .failure(let error):
                     if case ConversationRemoveParticipantError.invalidOperation = error {
@@ -387,7 +387,7 @@ class Conversation_ParticipantsTests: DatabaseTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: coreDataStack!) { result in
             switch result {
             case .failure(let error):
                 if case ConversationRemoveParticipantError.invalidOperation = error {
@@ -422,7 +422,7 @@ class Conversation_ParticipantsTests: DatabaseTest {
         let receivedError = expectation(description: "received error")
         
         // when
-        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: coreDataStack!) { result in
             switch result {
             case .failure(let error):
                 if case ConversationRemoveParticipantError.conversationNotFound = error {
@@ -457,7 +457,7 @@ class Conversation_ParticipantsTests: DatabaseTest {
         let receivedSuccess = expectation(description: "received success")
 
         // when
-        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: coreDataStack!) { result in
             switch result {
             case .success:
                 receivedSuccess.fulfill()
@@ -508,7 +508,7 @@ class Conversation_ParticipantsTests: DatabaseTest {
         }
         
         // when
-        conversation.removeParticipant(selfUser, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+        conversation.removeParticipant(selfUser, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: coreDataStack!) { result in
             switch result {
             case .success:
                 receivedSuccess.fulfill()
@@ -563,7 +563,7 @@ class Conversation_ParticipantsTests: DatabaseTest {
         }
         
         // when
-        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: contextDirectory!) { result in
+        conversation.removeParticipant(user, transportSession: mockTransportSession, eventProcessor: mockUpdateEventProcessor, contextProvider: coreDataStack!) { result in
             switch result {
             case .success:
                 receivedSuccess.fulfill()
