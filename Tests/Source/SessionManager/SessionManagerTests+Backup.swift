@@ -108,7 +108,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         
         let moc = sessionManager!.activeUserSession!.managedObjectContext
         let userId = ZMUser.selfUser(in: moc).remoteIdentifier!
-        let accountFolder = StorageStack.accountFolder(accountIdentifier: userId, applicationContainer: sharedContainer)
+        let accountFolder = CoreDataStack.accountFolder(accountIdentifier: userId, applicationContainer: sharedContainer)
         let fm = FileManager.default
         try fm.removeItem(at: accountFolder)
         let storePath = accountFolder.appendingPathComponent("store").path
