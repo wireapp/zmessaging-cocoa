@@ -65,4 +65,7 @@ import Foundation
     /// Last handle to have been suggested
     @objc var lastSuggestedHandle : String? { get }
 
+    /// Request setting the legal hold exposure consent.
+    func requestLegalHoldExposureConsentChange(isConsentGiven: Bool)
+
 }

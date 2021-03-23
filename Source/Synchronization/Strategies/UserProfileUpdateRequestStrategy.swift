@@ -37,6 +37,8 @@ import Foundation
     fileprivate var handleSetSync : ZMSingleRequestSync! = nil
     
     fileprivate var handleSuggestionSearchSync : ZMSingleRequestSync! = nil
+
+    fileprivate var legalHoldExposureConsentSync : ZMSingleRequestSync! = nil
     
     @available (*, unavailable, message: "use `init(managedObjectContext:appStateDelegate:userProfileUpdateStatus)`instead")
     override init(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) {
@@ -65,6 +67,7 @@ import Foundation
         self.handleCheckSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
         self.handleSetSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
         self.handleSuggestionSearchSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
+        self.legalHoldExposureConsentSync = ZMSingleRequestSync(singleRequestTranscoder: self, groupQueue: managedObjectContext)
     }
     
     @objc public override func nextRequestIfAllowed() -> ZMTransportRequest? {
@@ -108,6 +111,11 @@ import Foundation
         if self.userProfileUpdateStatus.currentlyGeneratingHandleSuggestion {
             self.handleSuggestionSearchSync.readyForNextRequestIfNotBusy()
             return self.handleSuggestionSearchSync.nextRequest()
+        }
+
+        if self.userProfileUpdateStatus.currentlySettingLegalHoldExposureConsent {
+            self.legalHoldExposureConsentSync.readyForNextRequest()
+            return self.legalHoldExposureConsentSync.nextRequest()
         }
         
         return nil
@@ -165,6 +173,11 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
                     "return" : 1
                 ] as NSDictionary
             return ZMTransportRequest(path: "/users/handles", method: .methodPOST, payload: payload)
+
+        case self.legalHoldExposureConsentSync:
+            let consentValue = self.userProfileUpdateStatus.legalHoldExposureConsentToSet!
+            let payload = ["legalhold_consent": consentValue ? "consent_given" : "consent_not_given"] as NSDictionary
+            return ZMTransportRequest(path: "/self/legalhold-consent", method: .methodPUT, payload: payload)
         
         default:
             return nil
@@ -260,6 +273,14 @@ extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
             } else {
                 self.userProfileUpdateStatus.didFailToFindHandleSuggestion()
             }
+
+        case self.legalHoldExposureConsentSync:
+            if response.result == .success {
+                self.userProfileUpdateStatus.didSetLegalHoldExposureConsent()
+            } else {
+                self.userProfileUpdateStatus.didFailToSetLegalHoldExposureConsent()
+            }
+
             
         default:
             break
