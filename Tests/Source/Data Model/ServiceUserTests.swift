@@ -63,6 +63,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var isUnderLegalHold: Bool = false
 
+    var consentsToLegalHoldExposure: Bool = false
+
     var allClients: [UserClientType]  = []
     
     var expiresAfter: TimeInterval = 0
