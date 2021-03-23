@@ -576,7 +576,6 @@ public final class SessionManager : NSObject, SessionManagerType {
             
             self?.activeUserSession?.close(deleteCookie: deleteCookie)
             self?.activeUserSession = nil
-            StorageStack.reset()
             
             if deleteAccount {
                 self?.deleteAccountData(for: account)
@@ -656,11 +655,11 @@ public final class SessionManager : NSObject, SessionManagerType {
                                                   dispatchGroup: self.dispatchGroup)
 
                 coreDataStack.loadStore { (error) in
-		    if error != nil {
-                        self?.delegate?.sessionManagerDidFailToLoadDatabase()
-		    } else {
+                    if error != nil {
+                        self.delegate?.sessionManagerDidFailToLoadDatabase()
+                    } else {
                         let userSession = self.startBackgroundSession(for: account,
-                                                                  with: coreDataStack)
+                                                                      with: coreDataStack)
                         completion(userSession)
                     }
                     onWorkDone()
@@ -680,7 +679,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         self.accountManager.remove(account)
         
         do {
-            try FileManager.default.removeItem(at: StorageStack.accountFolder(accountIdentifier: accountID, applicationContainer: sharedContainerURL))
+            try FileManager.default.removeItem(at: CoreDataStack.accountFolder(accountIdentifier: accountID, applicationContainer: sharedContainerURL))
         }
         catch let error {
             log.error("Impossible to delete the acccount \(account): \(error)")
