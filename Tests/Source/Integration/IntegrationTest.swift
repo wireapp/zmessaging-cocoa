@@ -94,7 +94,6 @@ extension IntegrationTest {
         sharedContainerDirectory = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory)
         deleteSharedContainerContent()
         ZMPersistentCookieStorage.setDoNotPersistToKeychain(!useRealKeychain)
-        StorageStack.shared.createStorageAsInMemory = useInMemoryStore
         
         pushRegistry = PushRegistryMock(queue: nil)
         application = ApplicationMock()
@@ -151,17 +150,12 @@ extension IntegrationTest {
         groupConversationWithServiceUser = nil
         application = nil
         notificationCenter = nil
-        resetInMemoryDatabases()
         deleteSharedContainerContent()
         sharedContainerDirectory = nil
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
     }
-    
-    func resetInMemoryDatabases() {
-        StorageStack.reset()
-    }
-    
+
     @objc
     func destroySessionManager() {
         destroyTimers()
@@ -198,7 +192,6 @@ extension IntegrationTest {
         mockTransportSession.resetReceivedRequests()
         destroySharedSearchDirectory()
         destroySessionManager()
-        destroyPersistentStore()
         deleteAuthenticationCookie()
         createSessionManager()
     }
@@ -206,7 +199,6 @@ extension IntegrationTest {
     @objc
     func createSessionManager() {
         guard let application = application, let transportSession = mockTransportSession else { return XCTFail() }
-        StorageStack.shared.createStorageAsInMemory = useInMemoryStore
         let reachability = MockReachability()
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession, environment: mockEnvironment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
@@ -252,12 +244,7 @@ extension IntegrationTest {
         sharedSearchDirectory?.tearDown()
         sharedSearchDirectory = nil
     }
-    
-    @objc
-    func destroyPersistentStore() {
-        StorageStack.reset()
-    }
-    
+
     @objc
     var unauthenticatedSession : UnauthenticatedSession? {
         return sessionManager?.unauthenticatedSession
