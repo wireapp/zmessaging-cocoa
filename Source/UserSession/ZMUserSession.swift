@@ -629,4 +629,8 @@ extension ZMUserSession: ContextProvider {
         return coreDataStack.searchContext
     }
 
+    public var eventContext: NSManagedObjectContext {
+        return coreDataStack.eventContext
+    }
+
 }

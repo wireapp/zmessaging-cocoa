@@ -22,14 +22,11 @@ import WireTesting
 
 class EventDecoderTest: MessagingTest {
     
-    var eventMOC: NSManagedObjectContext!
     var sut : EventDecoder!
     
     override func setUp() {
         super.setUp()
-        eventMOC = NSManagedObjectContext.createEventContext(withSharedContainerURL: sharedContainerURL, userIdentifier: userIdentifier)
         sut = EventDecoder(eventMOC: eventMOC, syncMOC: syncMOC)
-        eventMOC.add(dispatchGroup)
 
         let selfUser = ZMUser.selfUser(in: syncMOC)
         selfUser.remoteIdentifier = userIdentifier
@@ -41,8 +38,6 @@ class EventDecoderTest: MessagingTest {
     
     override func tearDown() {
         EventDecoder.testingBatchSize = nil
-        eventMOC.tearDownEventMOC()
-        eventMOC = nil
         sut = nil
         super.tearDown()
     }

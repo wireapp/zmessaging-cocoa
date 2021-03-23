@@ -57,9 +57,7 @@ class EventProcessor: UpdateEventProcessor {
          syncStatus: SyncStatus,
          eventProcessingTracker: EventProcessingTrackerProtocol) {
         self.syncContext = storeProvider.syncContext
-        self.eventContext = NSManagedObjectContext.createEventContext(withSharedContainerURL: storeProvider.applicationContainer,
-                                                                      userIdentifier: storeProvider.account.userIdentifier)
-        self.eventContext.add(syncContext.dispatchGroup)
+        self.eventContext = storeProvider.eventContext
         self.syncStatus = syncStatus
         self.eventDecoder = EventDecoder(eventMOC: eventContext, syncMOC: syncContext)
         self.eventProcessingTracker = eventProcessingTracker

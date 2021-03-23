@@ -226,6 +226,11 @@ static ZMReachability *sharedReachabilityMock = nil;
     return self.coreDataStack.searchContext;
 }
 
+- (NSManagedObjectContext *)eventMOC
+{
+    return self.coreDataStack.eventContext;
+}
+
 - (void)tearDown;
 {
     Require([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
