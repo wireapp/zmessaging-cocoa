@@ -38,7 +38,13 @@ public class SearchTask {
     fileprivate var handleTaskIdentifier: ZMTaskIdentifier?
     fileprivate var servicesTaskIdentifier: ZMTaskIdentifier?
     fileprivate var resultHandlers: [ResultHandler] = []
-    fileprivate var result: SearchResult = SearchResult(contacts: [], teamMembers: [], addressBook: [],  directory: [], conversations: [], services: [])
+    fileprivate var result: SearchResult = SearchResult(contacts: [],
+                                                        teamMembers: [],
+                                                        addressBook: [],
+                                                        directory: [],
+                                                        federation: .success([]),
+                                                        conversations: [],
+                                                        services: [])
     
     fileprivate var tasksRemaining = 0 {
         didSet {
@@ -101,6 +107,7 @@ public class SearchTask {
         performRemoteSearch()
         performRemoteSearchForTeamUser()
         performRemoteSearchForServices()
+        performRemoteSearchForFederatedUser()
 
         performUserLookup()
         performLocalLookup()
@@ -135,7 +142,11 @@ extension SearchTask {
                 
                 let result = SearchResult(contacts: copiedConnectedUsers.map { ZMSearchUser(contextProvider: self.contextProvider, user: $0)},
                                           teamMembers: copiedTeamMembers.compactMap(\.user).map { ZMSearchUser(contextProvider: self.contextProvider, user: $0)},
-                                          addressBook: [], directory: [], conversations: [], services: [])
+                                          addressBook: [],
+                                          directory: [],
+                                          federation: .success([]),
+                                          conversations: [],
+                                          services: [])
                 
                 self.result = self.result.union(withLocalResult: result.copy(on: self.contextProvider.managedObjectContext))
 
@@ -171,6 +182,7 @@ extension SearchTask {
                                           teamMembers: searchTeamMembers,
                                           addressBook: [],
                                           directory: [],
+                                          federation: .success([]),
                                           conversations: conversations,
                                           services: [])
                 
@@ -461,6 +473,7 @@ extension SearchTask {
                                 teamMembers: prevResult.teamMembers,
                                 addressBook: prevResult.addressBook,
                                 directory: result.directory + prevResult.directory,
+                                federation: prevResult.federation,
                                 conversations: prevResult.conversations,
                                 services: prevResult.services
                             )
@@ -479,19 +492,64 @@ extension SearchTask {
             self.transportSession.enqueueOneTime(request)
         }
     }
-    
+
     static func searchRequestInDirectory(withHandle handle : String) -> ZMTransportRequest {
         var handle = handle.lowercased()
-        
+
         if handle.hasPrefix("@") {
             handle = String(handle[handle.index(after: handle.startIndex)...])
         }
-        
+
         var url = URLComponents()
         url.path = "/users"
         url.queryItems = [URLQueryItem(name: "handles", value: handle)]
         let urlStr = url.string?.replacingOccurrences(of: "+", with: "%2B") ?? ""
         return ZMTransportRequest(getFromPath: urlStr)
+    }
+}
+
+extension SearchTask {
+
+    func performRemoteSearchForFederatedUser() {
+        guard
+            case .search(let searchRequest) = task,
+            searchRequest.searchOptions.contains(.federated),
+            let (handle, domain) = searchRequest.handleAndDomain
+        else {
+            return
+        }
+
+        tasksRemaining += 1
+
+        searchContext.performGroupedBlock {
+            let request = type(of: self).searchRequestInDirectory(withHandle: handle, domain: domain)
+
+            request.add(ZMCompletionHandler(on: self.contextProvider.managedObjectContext, block: { [weak self] (response) in
+
+                defer {
+                    self?.tasksRemaining -= 1
+                }
+
+                guard
+                    let contextProvider = self?.contextProvider,
+                    let result = SearchResult(federationResponse: response, contextProvider: contextProvider)
+                else {
+                    return
+                }
+
+                self?.result = self?.result.union(withFederationResult: result) ?? result
+            }))
+
+            request.add(ZMTaskCreatedHandler(on: self.searchContext, block: { [weak self] (taskIdentifier) in
+                self?.handleTaskIdentifier = taskIdentifier
+            }))
+
+            self.transportSession.enqueueOneTime(request)
+        }
+    }
+
+    static func searchRequestInDirectory(withHandle handle: String, domain: String) -> ZMTransportRequest {
+        return ZMTransportRequest(getFromPath: "/users/by-handle/\(domain)/\(handle)")
     }
 }
 

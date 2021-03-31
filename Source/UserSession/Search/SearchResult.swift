@@ -18,13 +18,18 @@
 
 import Foundation
 
+public enum FederationError: Error {
+    case domainTemporarilyNotAvailable
+}
+
 public struct SearchResult {
-    public var contacts:      [ZMSearchUser]
-    public var teamMembers:   [ZMSearchUser]
-    public var addressBook:   [ZMSearchUser]
-    public var directory:     [ZMSearchUser]
-    public var conversations: [ZMConversation]
-    public var services:      [ServiceUser]
+    public var contacts:        [ZMSearchUser]
+    public var teamMembers:     [ZMSearchUser]
+    public var addressBook:     [ZMSearchUser]
+    public var directory:       [ZMSearchUser]
+    public var federation:      Swift.Result<[ZMSearchUser], FederationError>
+    public var conversations:   [ZMConversation]
+    public var services:        [ServiceUser]
 }
 
 extension SearchResult {
@@ -49,6 +54,7 @@ extension SearchResult {
         contacts = []
         addressBook = []
         directory = searchUsers.filter({ !$0.isConnected && !$0.isTeamMember })
+        federation = .success([])
         conversations = []
         services = []
         
@@ -71,6 +77,7 @@ extension SearchResult {
         teamMembers = []
         addressBook = []
         directory = []
+        federation = .success([])
         conversations = []
         services = searchUsersServices
     }
@@ -87,6 +94,34 @@ extension SearchResult {
         teamMembers = []
         addressBook = []
         directory = [searchUser]
+        federation = .success([])
+        conversations = []
+        services = []
+    }
+
+    public init?(federationResponse response: ZMTransportResponse, contextProvider: ZMManagedObjectContextProvider) {
+        let result: Swift.Result<[ZMSearchUser], FederationError>
+
+        if response.result == .success {
+            guard
+                let payload = response.payload?.asDictionary() as? [String: Any],
+                let searchUser = ZMSearchUser.searchUser(from: payload, contextProvider: contextProvider)
+            else {
+                return nil
+            }
+
+            result = .success([searchUser])
+        } else if response.httpStatus == 422 || response.httpStatus == 500 {
+            result = .failure(.domainTemporarilyNotAvailable)
+        } else {
+            return nil
+        }
+
+        contacts = []
+        teamMembers = []
+        addressBook = []
+        directory = []
+        federation = result
         conversations = []
         services = []
     }
@@ -119,11 +154,23 @@ extension SearchResult {
         
         let copiedConversations = conversations.compactMap { context.object(with: $0.objectID) as? ZMConversation }
         
-        return SearchResult(contacts: contacts, teamMembers: teamMembers, addressBook: addressBook, directory: directory, conversations: copiedConversations, services: services)
+        return SearchResult(contacts: contacts,
+                            teamMembers: teamMembers,
+                            addressBook: addressBook,
+                            directory: directory,
+                            federation: federation,
+                            conversations: copiedConversations,
+                            services: services)
     }
     
     func union(withLocalResult result: SearchResult) -> SearchResult {
-        return SearchResult(contacts: result.contacts, teamMembers: result.teamMembers, addressBook: result.addressBook, directory: directory, conversations: result.conversations, services: services)
+        return SearchResult(contacts: result.contacts,
+                            teamMembers: result.teamMembers,
+                            addressBook: result.addressBook,
+                            directory: directory,
+                            federation: result.federation,
+                            conversations: result.conversations,
+                            services: services)
     }
     
     func union(withServiceResult result: SearchResult) -> SearchResult {
@@ -131,6 +178,7 @@ extension SearchResult {
                             teamMembers: teamMembers,
                             addressBook: addressBook,
                             directory: directory,
+                            federation: federation,
                             conversations: conversations,
                             services: result.services)
     }
@@ -140,6 +188,17 @@ extension SearchResult {
                             teamMembers: Array(Set(teamMembers).union(result.teamMembers)),
                             addressBook: addressBook,
                             directory: result.directory,
+                            federation: federation,
+                            conversations: conversations,
+                            services: services)
+    }
+
+    func union(withFederationResult result: SearchResult) -> SearchResult {
+        return SearchResult(contacts: contacts,
+                            teamMembers: teamMembers,
+                            addressBook: addressBook,
+                            directory: directory,
+                            federation: result.federation,
                             conversations: conversations,
                             services: services)
     }

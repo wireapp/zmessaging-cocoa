@@ -60,6 +60,7 @@ extension SearchResult {
                             teamMembers: teamMembers,
                             addressBook: contacts + additionalConnectedUsers + additionalNonConnectedUsers + searchUsersFromAddressBook,
                             directory: directory,
+                            federation: federation,
                             conversations: conversations,
                             services: services)
     }
