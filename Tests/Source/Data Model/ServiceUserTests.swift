@@ -187,6 +187,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     
     var isServiceUser: Bool = true
 
+    var isFederated: Bool = false
+
     var usesCompanyLogin: Bool = false
     
     var isAccountDeleted: Bool = false

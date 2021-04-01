@@ -78,7 +78,9 @@ public struct SearchRequest {
     }
 
     var handleAndDomain: (String, String)? {
-        let components = query.split(separator: "@").filter({ !$0.isEmpty })
+        let components = query.split(separator: "@")
+            .map({ String($0).trimmingCharacters(in: .whitespaces) })
+            .filter({ !$0.isEmpty })
 
         guard
             let handle = components.element(atIndex: 0),

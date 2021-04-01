@@ -44,5 +44,56 @@ class SearchRequestTests : MessagingTest {
         // then
         XCTAssertEqual(request.normalizedQuery, "abc")
     }
+
+    func testThatItParsesHandleAndDomain() throws {
+        // without leading @
+        try assertHandleAndDomain(from: "john@example.com", handle: "john", domain: "example.com")
+
+        // with leading @
+        try assertHandleAndDomain(from: "@john@example.com", handle: "john", domain: "example.com")
+
+        // with double @
+        try assertHandleAndDomain(from: "@@john@example.com", handle: "john", domain: "example.com")
+
+        // with trailing whitespace
+        try assertHandleAndDomain(from: "john@example.com ", handle: "john", domain: "example.com")
+
+        // with leading whitespace
+        try assertHandleAndDomain(from: " john@example.com ", handle: "john", domain: "example.com")
+    }
+
+    func testThatItDoesntParseHandleAndDomain_WhenQueryIsIncomplete() throws {
+
+        // missing domain
+        assertHandleAndDomainIsNil(from: "@john")
+
+        // missing handle
+        assertHandleAndDomainIsNil(from: "@@example.com")
+
+        // whitespace handle
+        assertHandleAndDomainIsNil(from: "@ @example.com")
+    }
+
+    // MARK: - Helpers
+
+    func assertHandleAndDomain(from query: String,
+                               handle expectedHandle: String,
+                               domain expectedDomain: String) throws {
+        // when
+        let request = SearchRequest(query: query, searchOptions: [])
+
+        // then
+        let (handle, domain) = try XCTUnwrap(request.handleAndDomain)
+        XCTAssertEqual(handle, expectedHandle)
+        XCTAssertEqual(domain, expectedDomain)
+    }
+
+    func assertHandleAndDomainIsNil(from query: String) {
+        // when
+        let request = SearchRequest(query: query, searchOptions: [])
+
+        // then
+        XCTAssertNil(request.handleAndDomain)
+    }
     
 }
