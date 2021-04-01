@@ -47,7 +47,7 @@ extension MessagingTest {
                                   inMemoryStore: shouldUseInMemoryStore,
                                   dispatchGroup: dispatchGroup)
 
-        stack.loadStore(completionHandler: { error in
+        stack.loadStores(completionHandler: { error in
             XCTAssertNil(error)
         })
 

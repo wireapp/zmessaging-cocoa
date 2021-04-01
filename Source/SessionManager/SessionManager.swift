@@ -654,7 +654,7 @@ public final class SessionManager : NSObject, SessionManagerType {
                                                   applicationContainer: self.sharedContainerURL,
                                                   dispatchGroup: self.dispatchGroup)
 
-                coreDataStack.loadStore { (error) in
+                coreDataStack.loadStores { (error) in
                     if error != nil {
                         self.delegate?.sessionManagerDidFailToLoadDatabase()
                     } else {
