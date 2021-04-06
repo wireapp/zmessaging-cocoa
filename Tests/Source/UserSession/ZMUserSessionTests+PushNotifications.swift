@@ -91,7 +91,7 @@ class ZMUserSessionTests_PushNotifications: ZMUserSessionTestsBase {
         handle(conversationAction: .like, category: .conversation, userInfo: userInfo)
 
         // then
-        XCTAssertEqual(conversation.lastMessage?.reactions.count, 1)
+        XCTAssertEqual((conversation.lastMessage as? ZMMessage)?.reactions.count, 1)
     }
 
     func testThatItCallsShowConversation_ForPushNotificationCategoryConversation() {

@@ -100,7 +100,7 @@ class ConversationStatusStrategyTests: MessagingTest {
             message.serverTimestamp = conversation.clearedTimeStamp
             message.visibleInConversation = conversation
             
-            XCTAssertFalse(conversation.lastMessage!.isDeleted)
+            XCTAssertFalse((conversation.lastMessage as! ZMMessage).isDeleted)
 
             // when
             self.sut.objectsDidChange(Set(arrayLiteral: conversation))

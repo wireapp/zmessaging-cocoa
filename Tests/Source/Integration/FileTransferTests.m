@@ -122,7 +122,7 @@
     XCTAssertEqualObjects(fullAssetUploadRequest.path, expectedAssetUploadPath);
     XCTAssertEqualObjects(fullAssetMessageRequest.path, expectedMessageAddPath);
 
-    ZMMessage *message = conversation.lastMessage;
+    ZMMessage *message = (ZMMessage *)conversation.lastMessage;
 
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
@@ -169,7 +169,7 @@
     XCTAssertEqualObjects(thumbnailAssetUploadRequest.path, expectedAssetUploadPath);
     XCTAssertEqualObjects(fullAssetUploadRequest.path, expectedAssetUploadPath);
 
-    ZMMessage *message = conversation.lastMessage;
+    ZMMessage *message = (ZMMessage *)conversation.lastMessage;
 
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
@@ -296,7 +296,7 @@
     XCTAssertEqualObjects(fetchUserClientRequest.path, expectedFetchUserClientPath);
     XCTAssertEqualObjects(secondMessageAddRequest.path, expectedMessageAddPath);
 
-    ZMMessage *message = conversation.lastMessage;
+    ZMMessage *message = (ZMMessage *)conversation.lastMessage;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
 }
@@ -349,7 +349,7 @@
     ZMTransportRequest *fullAssetGenericMessageRequest = requests[2];
     XCTAssertEqualObjects(fullAssetGenericMessageRequest.path, expectedMessageAddPath);
 
-    ZMMessage *message = conversation.lastMessage;
+    ZMMessage *message = (ZMMessage *)conversation.lastMessage;
 
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
@@ -405,7 +405,7 @@
     XCTAssertEqualObjects(requests[1].path, expectedAssetUploadPath);   // /assets/v3       (Medium)
     XCTAssertEqualObjects(requests[2].path, expectedMessageAddPath);    // /otr/messages    (Including Uploaded)
     
-    ZMMessage *message = conversation.lastMessage;
+    ZMMessage *message = (ZMMessage *)conversation.lastMessage;
     
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
@@ -624,7 +624,7 @@
     XCTAssertEqualObjects(fetchUserClientRequest.path, expectedFetchUserClientPath);
     XCTAssertEqualObjects(secondAssetMessageRequest.path, expectedMessageAddPath);
     
-    ZMMessage *message = conversation.lastMessage;
+    ZMMessage *message = (ZMMessage *)conversation.lastMessage;
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
 }
@@ -666,7 +666,7 @@
     XCTAssertEqualObjects(uploadAssetRequest.path, expectedAssetAddPath);
     XCTAssertEqualObjects(uploadMessageRequest.path, expectedMessageAddPath);
 
-    ZMMessage *message = conversation.lastMessage;
+    ZMMessage *message = (ZMMessage *)conversation.lastMessage;
 
     XCTAssertNotNil(message.fileMessageData);
     XCTAssertNil(message.imageMessageData);
