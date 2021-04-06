@@ -54,6 +54,7 @@ public extension Bundle {
         userIdentifier: UUID,
         dispatchGroup: ZMSDispatchGroup? = nil,
         migration: (() -> Void)? = nil,
+        databaseLoadingFailure: (() -> Void)? = nil,
         completion: @escaping (LocalStoreProviderProtocol) -> Void
         ) {
         StorageStack.shared.createManagedObjectContextDirectory(
@@ -61,6 +62,7 @@ public extension Bundle {
             applicationContainer: applicationContainer,
             dispatchGroup: dispatchGroup,
             startedMigrationCallback: { migration?() },
+            databaseLoadingFailureCallBack: databaseLoadingFailure,
             completionHandler: { contextDirectory in
                 let provider = LocalStoreProvider(
                     applicationContainer: applicationContainer,

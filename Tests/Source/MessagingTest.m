@@ -336,6 +336,7 @@ static ZMReachability *sharedReachabilityMock = nil;
                                                             applicationContainer:self.sharedContainerURL
                                                                    dispatchGroup:self.dispatchGroup
                                                         startedMigrationCallback:nil
+                                               databaseLoadingFailureCallBack:nil
                                                                completionHandler:^(ManagedObjectContextDirectory * _Nonnull directory) {
                                                                    self.contextDirectory = directory;
                                                                }];

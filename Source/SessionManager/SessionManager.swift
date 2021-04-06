@@ -46,6 +46,7 @@ public protocol SessionManagerDelegate: SessionActivationObserver {
                                        from selectedAccount: Account?,
                                        userSessionCanBeTornDown: @escaping () -> Void)
     func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void)
+    func sessionManagerDidFailToLoadDatabase()
     func sessionManagerDidBlacklistCurrentVersion()
     func sessionManagerDidBlacklistJailbrokenDevice()
 }
@@ -434,6 +435,13 @@ public final class SessionManager : NSObject, SessionManagerType {
         }
     }
 
+    public func removeDatabaseFromDisk() {
+        guard let account = accountManager.selectedAccount else {
+            return
+        }
+        delete(account: account)
+    }
+
     /// Creates an account with the given identifier and migrates its cookie storage.
     private func migrateAccount(with identifier: UUID) -> Account {
         let account = Account(userName: "", userIdentifier: identifier)
@@ -658,6 +666,11 @@ public final class SessionManager : NSObject, SessionManagerType {
                         if notifyAboutMigration {
                             self?.delegate?.sessionManagerWillMigrateAccount(userSessionCanBeTornDown: {})
                         }
+                    },
+                    databaseLoadingFailure: { [weak self] in
+                        self?.delegate?.sessionManagerDidFailToLoadDatabase()
+                        onWorkDone()
+                        group?.leave()
                     },
                     completion: { provider in
                         let userSession = self.startBackgroundSession(for: account, with: provider)
