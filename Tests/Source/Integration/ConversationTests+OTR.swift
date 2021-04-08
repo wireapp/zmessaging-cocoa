@@ -292,7 +292,7 @@ class ConversationTestsOTR_Swift: ConversationTestsBase {
         _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
         
         // THEN
-        XCTAssertEqual(conversation?.lastMessage, message)
+        XCTAssertEqual(conversation?.lastMessage as? ZMMessage, message)
         XCTAssertEqual(message?.deliveryState, ZMDeliveryState.sent)
     }
     

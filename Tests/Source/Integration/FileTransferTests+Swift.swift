@@ -55,7 +55,7 @@ class FileTransferTests_Swift: ConversationTestsBase {
         let conversation = self.conversation(for: self.selfToUser1Conversation)
         
         if !conversation!.lastMessage!.isKind(of: ZMAssetClientMessage.self) {
-            XCTFail(String(format: "Unexpected message type, expected ZMAssetClientMessage : %@", conversation!.lastMessage.self!))
+            XCTFail(String(format: "Unexpected message type, expected ZMAssetClientMessage : %@", (conversation!.lastMessage as! ZMMessage).self))
             return nil
         }
         
@@ -279,7 +279,7 @@ extension FileTransferTests_Swift {
         let conversation = self.conversation(for: self.selfToUser1Conversation)
 
         if !conversation!.lastMessage!.isKind(of: ZMAssetClientMessage.self) {
-            return XCTFail(String(format: "Unexpected message type, expected ZMAssetClientMessage : %@", conversation!.lastMessage.self!))
+            return XCTFail(String(format: "Unexpected message type, expected ZMAssetClientMessage : %@", (conversation!.lastMessage as! ZMMessage).self))
         }
 
         let message = conversation?.lastMessage as! ZMAssetClientMessage
@@ -355,7 +355,7 @@ extension FileTransferTests_Swift {
         let insertBlock = { (data: Data, mockConversation: MockConversation, from: MockUserClient, to: MockUserClient) -> () in
             mockConversation.insertOTRMessage(from: from, to: to, data: data)
             conversation = self.conversation(for: mockConversation)
-            observer = MessageChangeObserver.init(message: conversation?.lastMessage)
+            observer = MessageChangeObserver.init(message: conversation?.lastMessage as? ZMMessage)
         }
         let message = self.remotelyInsertAssetOriginalWithMimeType(mimeType: "video/mp4",
                                                                    updateMessage: updateMessage,
@@ -424,7 +424,7 @@ extension FileTransferTests_Swift {
         let insertBlock = { (data: Data, mockConversation: MockConversation, from: MockUserClient, to: MockUserClient) -> () in
             mockConversation.insertOTRMessage(from: from, to: to, data: data)
             conversation = self.conversation(for: mockConversation)
-            observer = MessageChangeObserver.init(message: conversation?.lastMessage)
+            observer = MessageChangeObserver.init(message: conversation?.lastMessage as? ZMMessage)
         }
         let message = self.remotelyInsertAssetOriginalWithMimeType(mimeType: "video/mp4",
                                                                    updateMessage: updateMessage,

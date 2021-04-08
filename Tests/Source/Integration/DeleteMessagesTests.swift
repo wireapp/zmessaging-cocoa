@@ -136,7 +136,7 @@ class DeleteMessagesTests: ConversationTestsBase {
         // then
         XCTAssertFalse(message.hasBeenDeleted)
         XCTAssertEqual(conversation.allMessages.count, 2) // system message & inserted message
-        XCTAssertEqual(conversation.lastMessage, message)
+        XCTAssertEqual(conversation.lastMessage as? ZMMessage, message as? ZMMessage)
     }
 
     func testThatItRetriesToSendADeletedMessageIfItCouldNotBeSentBefore() {
