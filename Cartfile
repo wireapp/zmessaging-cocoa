@@ -1,4 +1,4 @@
 github "wireapp/avs-ios-binaries" ~> 6.7.244
-github "wireapp/wire-ios-request-strategy" ~> 229.0.0
+github "wireapp/wire-ios-request-strategy" ~> 230.0.0
 github "wireapp/ZipArchive" "v2.2.3_xcode12.4"
 github "wireapp/libPhoneNumber-iOS" ~> 0.9.3
