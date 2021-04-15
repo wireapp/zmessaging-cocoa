@@ -193,6 +193,7 @@ extension IntegrationTest {
         destroySharedSearchDirectory()
         destroySessionManager()
         deleteAuthenticationCookie()
+        deleteSharedContainerContent()
         createSessionManager()
     }
     
