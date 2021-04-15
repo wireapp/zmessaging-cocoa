@@ -1402,9 +1402,9 @@ final class SessionManagerTests_AppLock: IntegrationTest {
 
         // When
         let switchedAccount = expectation(description: "switched account")
-        sessionManager!.select(account2) {
+        sessionManager?.select(account2, completion: { _ in
             switchedAccount.fulfill()
-        }
+        }, tearDownCompletion: nil)
 
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
 
