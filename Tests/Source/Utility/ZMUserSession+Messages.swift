@@ -22,9 +22,11 @@ extension ZMUserSession {
     @discardableResult func insertUnreadDotGeneratingMessageMessage(in conversation: ZMConversation) -> ZMSystemMessage {
         let newTime = conversation.lastServerTimeStamp?.addingTimeInterval(5) ?? Date()
 
+        let user = ZMUser.insertNewObject(in: self.managedObjectContext)
         let message = ZMSystemMessage(nonce: UUID(), managedObjectContext: self.managedObjectContext)
         message.serverTimestamp = newTime
         message.systemMessageType = .missedCall
+        message.sender = user
         conversation.lastServerTimeStamp = message.serverTimestamp
         conversation.mutableMessages.add(message)
         return message
