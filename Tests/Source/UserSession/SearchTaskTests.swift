@@ -1032,7 +1032,106 @@ class SearchTaskTests : DatabaseTest {
         task.performUserLookup()
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
-    
+
+    // MARK: Federated search
+
+    func testThatItSendsAFederatedUserSearchRequest() {
+        // given
+        let searchRequest = SearchRequest(query: "john@example.com", searchOptions: .federated)
+        let task = SearchTask(request: searchRequest, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+
+        // when
+        task.performRemoteSearchForFederatedUser()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // then
+        let requestPath = mockTransportSession.receivedRequests().first?.path
+        XCTAssertEqual(requestPath, "/users/by-handle/example.com/john")
+    }
+
+    func testThatItCallsCompletionHandlerForFederatedUserSearch_WhenUserExists() {
+        // given
+        let federatedDomain = "example.com"
+        let resultArrived = expectation(description: "received result")
+
+        mockTransportSession.federatedDomains = [federatedDomain]
+        mockTransportSession.performRemoteChanges { (remoteChanges) in
+            let mockUser = remoteChanges.insertUser(withName: "John Doe")
+            mockUser.handle = "john"
+            mockUser.domain = federatedDomain
+        }
+
+        let searchRequest = SearchRequest(query: "john@example.com", searchOptions: .federated)
+        let task = SearchTask(request: searchRequest,
+                              searchContext: searchMOC,
+                              contextProvider: contextDirectory!,
+                              transportSession: mockTransportSession)
+
+        // expect
+        task.onResult { (result, _) in
+            resultArrived.fulfill()
+            XCTAssertEqual(try! result.federation.get().first?.name, "John Doe")
+        }
+
+        // when
+        task.performRemoteSearchForFederatedUser()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+
+    func testThatItCallsCompletionHandlerForFederatedUserSearch_WhenDomainIsUnavailable() {
+        // given
+        let resultArrived = expectation(description: "received result")
+
+        mockTransportSession.performRemoteChanges { (remoteChanges) in
+            let mockUser = remoteChanges.insertUser(withName: "John Doe")
+            mockUser.handle = "john"
+            mockUser.domain = "example.com"
+        }
+
+        let searchRequest = SearchRequest(query: "john@example.com", searchOptions: .federated)
+        let task = SearchTask(request: searchRequest,
+                              searchContext: searchMOC,
+                              contextProvider: contextDirectory!,
+                              transportSession: mockTransportSession)
+
+        // expect
+        task.onResult { (result, _) in
+            resultArrived.fulfill()
+
+            if case .failure(let error) = result.federation {
+                XCTAssertEqual(error, .domainTemporarilyNotAvailable)
+            } else {
+                XCTFail()
+            }
+        }
+
+        // when
+        task.performRemoteSearchForFederatedUser()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+
+    func testThatItCallsCompletionHandlerForFederatedUserSearch_WhenUserDoesntExist() {
+        // given
+        let resultArrived = expectation(description: "received result")
+        mockTransportSession.federatedDomains = ["example.com"]
+
+        let searchRequest = SearchRequest(query: "john@example.com", searchOptions: .federated)
+        let task = SearchTask(request: searchRequest,
+                              searchContext: searchMOC,
+                              contextProvider: contextDirectory!,
+                              transportSession: mockTransportSession)
+
+        // expect
+        task.onResult { (result, _) in
+            resultArrived.fulfill()
+            XCTAssertEqual(try! result.federation.get(), [])
+        }
+
+        // when
+        task.performRemoteSearchForFederatedUser()
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
+
     // MARK: Combined results
     
     func testThatRemoteResultsIncludePreviousLocalResults() {
