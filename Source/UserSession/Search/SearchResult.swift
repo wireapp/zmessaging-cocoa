@@ -100,7 +100,7 @@ extension SearchResult {
         services = []
     }
 
-    public init?(federationResponse response: ZMTransportResponse, contextProvider: ZMManagedObjectContextProvider) {
+    public init?(federationResponse response: ZMTransportResponse, contextProvider: ContextProvider) {
         let result: Swift.Result<[ZMSearchUser], FederationError>
 
         if response.result == .success {

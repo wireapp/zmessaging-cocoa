@@ -524,7 +524,7 @@ extension SearchTask {
         searchContext.performGroupedBlock {
             let request = type(of: self).searchRequestInDirectory(withHandle: handle, domain: domain)
 
-            request.add(ZMCompletionHandler(on: self.contextProvider.managedObjectContext, block: { [weak self] (response) in
+            request.add(ZMCompletionHandler(on: self.contextProvider.viewContext, block: { [weak self] (response) in
 
                 defer {
                     self?.tasksRemaining -= 1
