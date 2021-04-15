@@ -1038,7 +1038,7 @@ class SearchTaskTests : DatabaseTest {
     func testThatItSendsAFederatedUserSearchRequest() {
         // given
         let searchRequest = SearchRequest(query: "john@example.com", searchOptions: .federated)
-        let task = SearchTask(request: searchRequest, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: searchRequest, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
 
         // when
         task.performRemoteSearchForFederatedUser()
@@ -1064,7 +1064,7 @@ class SearchTaskTests : DatabaseTest {
         let searchRequest = SearchRequest(query: "john@example.com", searchOptions: .federated)
         let task = SearchTask(request: searchRequest,
                               searchContext: searchMOC,
-                              contextProvider: contextDirectory!,
+                              contextProvider: coreDataStack!,
                               transportSession: mockTransportSession)
 
         // expect
@@ -1091,7 +1091,7 @@ class SearchTaskTests : DatabaseTest {
         let searchRequest = SearchRequest(query: "john@example.com", searchOptions: .federated)
         let task = SearchTask(request: searchRequest,
                               searchContext: searchMOC,
-                              contextProvider: contextDirectory!,
+                              contextProvider: coreDataStack!,
                               transportSession: mockTransportSession)
 
         // expect
@@ -1118,7 +1118,7 @@ class SearchTaskTests : DatabaseTest {
         let searchRequest = SearchRequest(query: "john@example.com", searchOptions: .federated)
         let task = SearchTask(request: searchRequest,
                               searchContext: searchMOC,
-                              contextProvider: contextDirectory!,
+                              contextProvider: coreDataStack!,
                               transportSession: mockTransportSession)
 
         // expect
