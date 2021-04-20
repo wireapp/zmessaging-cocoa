@@ -115,3 +115,9 @@ public enum CallClosedReason : Int32 {
         }
     }
 }
+
+extension CallClosedReason: SafeForLoggingStringConvertible {
+    public var safeForLoggingDescription: String {
+        String(describing: self)
+    }
+}

@@ -492,6 +492,7 @@ extension WireCallCenterV3 {
 
     public func closeCall(conversationId: UUID, reason: CallClosedReason = .normal) {
         avsWrapper.endCall(conversationId: conversationId)
+        zmLog.safePublic("call closed - reason: \(reason)")
         if let previousSnapshot = callSnapshots[conversationId] {
             if previousSnapshot.isGroup {
                 let callState : CallState = .incoming(video: previousSnapshot.isVideo, shouldRing: false, degraded: isDegraded(conversationId: conversationId))

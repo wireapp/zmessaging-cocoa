@@ -19,6 +19,8 @@
 import Foundation
 import WireUtilities
 
+private let zmLog = ZMSLog(tag: "calling")
+
 class CallParticipantsSnapshot {
 
     // MARK: - Properties
@@ -52,8 +54,8 @@ class CallParticipantsSnapshot {
             let userIsTrusted = zmuser.isTrusted
 
             userTrustMap[zmuser] = userIsTrusted
-
             if userWasTrusted && !userIsTrusted {
+                zmLog.safePublic("degrading call security due to a change in a participant's trust.")
                 callCenter.callDidDegrade(conversationId: conversationId, degradedUser: zmuser)
                 break
             }
