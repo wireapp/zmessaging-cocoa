@@ -679,7 +679,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         self.accountManager.remove(account)
         
         do {
-            try FileManager.default.removeItem(at: CoreDataStack.accountFolder(accountIdentifier: accountID, applicationContainer: sharedContainerURL))
+            try FileManager.default.removeItem(at: CoreDataStack.accountDataFolder(accountIdentifier: accountID, applicationContainer: sharedContainerURL))
         }
         catch let error {
             log.error("Impossible to delete the acccount \(account): \(error)")

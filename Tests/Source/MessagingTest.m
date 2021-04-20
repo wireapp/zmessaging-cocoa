@@ -115,7 +115,7 @@ static ZMReachability *sharedReachabilityMock = nil;
 
 - (NSURL *)accountDirectory
 {
-    return [CoreDataStack accountFolderWithAccountIdentifier:self.userIdentifier applicationContainer:self.sharedContainerURL];
+    return [CoreDataStack accountDataFolderWithAccountIdentifier:self.userIdentifier applicationContainer:self.sharedContainerURL];
 }
 
 - (NSURL *)keyStoreURL
@@ -181,7 +181,7 @@ static ZMReachability *sharedReachabilityMock = nil;
 - (void)setupKeyStore
 {
     [self performPretendingUiMocIsSyncMoc:^{
-        NSURL *url = [CoreDataStack accountFolderWithAccountIdentifier:self.userIdentifier
+        NSURL *url = [CoreDataStack accountDataFolderWithAccountIdentifier:self.userIdentifier
                                                   applicationContainer:self.sharedContainerURL];
         [self.uiMOC setupUserKeyStoreInAccountDirectory:url
                                    applicationContainer:self.sharedContainerURL];
