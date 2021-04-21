@@ -150,9 +150,10 @@ extension IntegrationTest {
         groupConversationWithServiceUser = nil
         application = nil
         notificationCenter = nil
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
         deleteSharedContainerContent()
         sharedContainerDirectory = nil
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
     }
 
