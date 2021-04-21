@@ -110,7 +110,7 @@ static ZMReachability *sharedReachabilityMock = nil;
 
 - (NSURL *)storeURL
 {
-    return self.accountDirectory.URLAppendingPersistentStoreLocation;
+    return self.accountDirectory.URLByAppendingPersistentStoreLocation;
 }
 
 - (NSURL *)accountDirectory
