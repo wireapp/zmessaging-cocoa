@@ -38,22 +38,22 @@ class CallParticipantsSnapshot {
 
     private var participants = [CallParticipant]() {
         didSet {
-            updateUserTrustMap()
+            updateUserVerifiedMap()
             notifyChange()
         }
     }
 
-    private var userTrustMap = [ZMUser: Bool]()
+    private var userVerifiedMap = [ZMUser: Bool]()
 
-    private func updateUserTrustMap() {
+    private func updateUserVerifiedMap() {
         for user in participants.map(\.user) {
             let zmuser = user as! ZMUser
-            let userWasTrusted = userTrustMap[zmuser] ?? false
-            let userIsTrusted = zmuser.isTrusted
+            let userWasVerified = userVerifiedMap[zmuser] ?? false
+            let userIsVerified = zmuser.isVerified
 
-            userTrustMap[zmuser] = userIsTrusted
+            userVerifiedMap[zmuser] = userIsVerified
 
-            if userWasTrusted && !userIsTrusted {
+            if userWasVerified && !userIsVerified {
                 callCenter.callDidDegrade(conversationId: conversationId, degradedUser: zmuser)
                 break
             }
