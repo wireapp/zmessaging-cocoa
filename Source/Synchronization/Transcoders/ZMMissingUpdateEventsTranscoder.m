@@ -184,7 +184,7 @@ NSUInteger const ZMMissingUpdateEventsTranscoderListPageSize = 500;
     
     ZMLogWithLevelAndTag(ZMLogLevelInfo, ZMTAG_EVENT_PROCESSING, @"Downloaded %lu event(s)", (unsigned long)parsedEvents.count);
     
-    [self.eventProcessor storeUpdateEvents:parsedEvents ignoreBuffer:YES];
+    [self.eventProcessor storeAndProcessUpdateEvents:parsedEvents ignoreBuffer:YES];
     [self.pushNotificationStatus didFetchEventIds:eventIds lastEventId:latestEventId finished:!self.listPaginator.hasMoreToFetch];
     
     [tp warnIfLongerThanInterval];

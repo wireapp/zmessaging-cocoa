@@ -24,6 +24,8 @@ extension NSNotification.Name {
 
 @objc
 public protocol UpdateEventProcessor: class {
+
+    func storeBufferedEvents()
             
     @objc(storeUpdateEvents:ignoreBuffer:)
     func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool)
@@ -74,12 +76,6 @@ class EventProcessor: UpdateEventProcessor {
     /// /// - Returns: **True** if there are still more events to process
     @objc
     public func processEventsIfReady() -> Bool { // TODO jacob shouldn't be public
-        guard isReadyToProcessEvents else {
-            return  true
-        }
-        
-        eventBuffer?.processAllEventsInBuffer()
-        
         if syncContext.encryptMessagesAtRest {
             guard let encryptionKeys = syncContext.encryptionKeys else {
                 return true
@@ -110,10 +106,17 @@ class EventProcessor: UpdateEventProcessor {
             updateEvents.forEach({ eventBuffer?.addUpdateEvent($0) })
         }
     }
+
+    public func storeBufferedEvents() {
+        eventBuffer?.processAllEventsInBuffer()
+    }
     
     public func storeAndProcessUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool) {
         storeUpdateEvents(updateEvents, ignoreBuffer: ignoreBuffer)
-        _ = processEventsIfReady()
+
+        if ignoreBuffer || isReadyToProcessEvents {
+            _ = processEventsIfReady()
+        }
     }
         
     private func processStoredUpdateEvents(with encryptionKeys: EncryptionKeys? = nil) {

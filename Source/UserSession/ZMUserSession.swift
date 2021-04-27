@@ -520,6 +520,8 @@ extension ZMUserSession: ZMSyncStateDelegate {
     }
     
     public func didFinishQuickSync() {
+
+        updateEventProcessor?.storeBufferedEvents()
         processEvents()
                 
         managedObjectContext.performGroupedBlock { [weak self] in
