@@ -54,10 +54,17 @@ class CallParticipantsSnapshot {
             userVerifiedMap[zmuser] = userIsVerified
 
             if userWasVerified && !userIsVerified {
-                callCenter.callDidDegrade(conversationId: conversationId, degradedUser: zmuser)
+                guard let selfUser = selfUser else { return }
+                let degradedUser = selfUser.isTrusted ? zmuser : selfUser
+                callCenter.callDidDegrade(conversationId: conversationId, degradedUser: degradedUser)
                 break
             }
         }
+    }
+
+    private var selfUser: ZMUser? {
+        guard let moc = callCenter.uiMOC else { return nil }
+        return ZMUser.selfUser(in: moc)
     }
 
     /// Worst network quality of all the participants.
