@@ -139,6 +139,7 @@ import Foundation
                 self.messageReplyObserver = ManagedObjectContextChangeObserver(context: self.managedObjectContext, callback: { [weak self] in
                     self?.updateBackgroundTask(with: message)
                 })
+                self.saveOrRollbackChanges()
             } catch {
                 Logging.messageProcessing.warn("Failed to reply to message from user notification. Reason: \(error.localizedDescription)")
             }
