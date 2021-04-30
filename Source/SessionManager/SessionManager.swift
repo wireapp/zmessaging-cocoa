@@ -654,6 +654,10 @@ public final class SessionManager : NSObject, SessionManagerType {
                                                   applicationContainer: self.sharedContainerURL,
                                                   dispatchGroup: self.dispatchGroup)
 
+                if coreDataStack.needsMigration {
+                    self.delegate?.sessionManagerWillMigrateAccount(userSessionCanBeTornDown: {})
+                }
+
                 coreDataStack.loadStores { (error) in
                     if error != nil {
                         self.delegate?.sessionManagerDidFailToLoadDatabase()
