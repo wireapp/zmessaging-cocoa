@@ -299,7 +299,7 @@ class CallParticipantsSnapshotTests: MessagingTest {
     }
 
     private func setupDegradationTest(degradedClient: UserClient) {
-        // Given / When
+        // Given
         let sut = createSut(members: [])
 
         // trust clients
