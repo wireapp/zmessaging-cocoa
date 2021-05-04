@@ -104,7 +104,7 @@ public class ZMUserSession: NSObject {
     }
     
     public var searchManagedObjectContext: NSManagedObjectContext { // TODO jacob we don't want this to be public
-        return coreDataStack.viewContext// TODO jacob
+        return coreDataStack.searchContext
     }
     
     public var sharedContainerURL: URL { // TODO jacob we don't want this to be public
