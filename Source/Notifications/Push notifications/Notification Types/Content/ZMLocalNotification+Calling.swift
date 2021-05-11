@@ -34,7 +34,8 @@ extension ZMLocalNotification {
         let managedObjectContext: NSManagedObjectContext
         
         var notificationType: LocalNotificationType {
-            return LocalNotificationType.calling(callState)
+            //TODO Katerina it's a temp fix
+            return LocalNotificationType.failedMessage//calling(callState)
         }
         
         let ignoredCallStates : [CallState] = [
