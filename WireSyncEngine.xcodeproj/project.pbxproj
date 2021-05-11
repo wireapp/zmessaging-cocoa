@@ -17,7 +17,6 @@
 		06BBF7012473D51D00A26626 /* MessagingTest+Swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF7002473D51D00A26626 /* MessagingTest+Swift.swift */; };
 		06DE14CD24B85B06006CB6B3 /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DE14CC24B85B06006CB6B3 /* SyncStatus.swift */; };
 		06DE14CF24B85CA0006CB6B3 /* ZMSyncStateDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 06DE14CE24B85BD0006CB6B3 /* ZMSyncStateDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		06DE14D524B866D9006CB6B3 /* UpdateEventsStoreMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DE14D324B866BE006CB6B3 /* UpdateEventsStoreMigrationTests.swift */; };
 		06F98D602437916B007E914A /* SignatureRequestStrategyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06F98D5E24379143007E914A /* SignatureRequestStrategyTests.swift */; };
 		092083401BA95EE100F82B29 /* UserClientRequestFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0920833F1BA95EE100F82B29 /* UserClientRequestFactory.swift */; };
 		0920C4DA1B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0920C4D81B305FF500C55728 /* UserSessionGiphyRequestStateTests.swift */; };
@@ -151,7 +150,6 @@
 		169BA1E825ECE78A00374343 /* OCMock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09B978F31B679B6200A30B38 /* OCMock.framework */; };
 		169BA1E925ECEA1C00374343 /* PushRegistryMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169E303120D29C200012C219 /* PushRegistryMock.swift */; };
 		169BA1EA25ECEA5400374343 /* ApplicationMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 543ED0001D79E0EE00A9CDF3 /* ApplicationMock.swift */; };
-		169BA1EB25ECEA9000374343 /* UserNotificationCenterMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA2773C211DE4C9004AF00F /* UserNotificationCenterMock.swift */; };
 		169BA1EC25ECEA9600374343 /* MockUser+LoginCredentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E67168F2174CA6300522E61 /* MockUser+LoginCredentials.swift */; };
 		169BA1ED25ECEA9A00374343 /* OperationLoopNewRequestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163FB9922052EA4600E74F83 /* OperationLoopNewRequestObserver.swift */; };
 		169BA1EF25ECEAD200374343 /* WireCallCenterV3Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D3A1A1E1D43870052E654 /* WireCallCenterV3Mock.swift */; };
@@ -533,7 +531,6 @@
 		EE6654642445D4EE00CBF8D3 /* MockAddressBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6654632445D4EE00CBF8D3 /* MockAddressBook.swift */; };
 		EE95DECD247C0049001EA010 /* SessionManagerConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE95DECC247C0049001EA010 /* SessionManagerConfigurationTests.swift */; };
 		EEA2773A211DCFF1004AF00F /* UserNotificationCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA27739211DCFF1004AF00F /* UserNotificationCenter.swift */; };
-		EEA2773D211DE4C9004AF00F /* UserNotificationCenterMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA2773C211DE4C9004AF00F /* UserNotificationCenterMock.swift */; };
 		EEE186B4259CC92D008707CA /* ZMUserSession+AppLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE186B3259CC92D008707CA /* ZMUserSession+AppLock.swift */; };
 		EEE186B6259CCA14008707CA /* SessionManager+AppLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE186B5259CCA14008707CA /* SessionManager+AppLock.swift */; };
 		EEEA75FA1F8A6142006D1070 /* ZMLocalNotification+ExpiredMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEEA75F51F8A613F006D1070 /* ZMLocalNotification+ExpiredMessages.swift */; };
@@ -699,7 +696,6 @@
 		06BBF7002473D51D00A26626 /* MessagingTest+Swift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MessagingTest+Swift.swift"; sourceTree = "<group>"; };
 		06DE14CC24B85B06006CB6B3 /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		06DE14CE24B85BD0006CB6B3 /* ZMSyncStateDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZMSyncStateDelegate.h; sourceTree = "<group>"; };
-		06DE14D324B866BE006CB6B3 /* UpdateEventsStoreMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateEventsStoreMigrationTests.swift; sourceTree = "<group>"; };
 		06F98D5E24379143007E914A /* SignatureRequestStrategyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignatureRequestStrategyTests.swift; sourceTree = "<group>"; };
 		0920833C1BA84F3100F82B29 /* UserClientRequestStrategyTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserClientRequestStrategyTests.swift; sourceTree = "<group>"; };
 		0920833F1BA95EE100F82B29 /* UserClientRequestFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserClientRequestFactory.swift; sourceTree = "<group>"; };
@@ -1220,7 +1216,6 @@
 		EE95DECC247C0049001EA010 /* SessionManagerConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManagerConfigurationTests.swift; sourceTree = "<group>"; };
 		EEA1ED4025BEBABF006D07D3 /* AppLockIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockIntegrationTests.swift; sourceTree = "<group>"; };
 		EEA27739211DCFF1004AF00F /* UserNotificationCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserNotificationCenter.swift; sourceTree = "<group>"; };
-		EEA2773C211DE4C9004AF00F /* UserNotificationCenterMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserNotificationCenterMock.swift; sourceTree = "<group>"; };
 		EEB568181FA22FBE003ADA3A /* ZMLocalNotificationLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ZMLocalNotificationLocalizationTests.swift; path = Tests/Source/Notifications/PushNotifications/ZMLocalNotificationLocalizationTests.swift; sourceTree = SOURCE_ROOT; };
 		EEE186B3259CC92D008707CA /* ZMUserSession+AppLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSession+AppLock.swift"; sourceTree = "<group>"; };
 		EEE186B5259CCA14008707CA /* SessionManager+AppLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionManager+AppLock.swift"; sourceTree = "<group>"; };
@@ -2932,7 +2927,6 @@
 				169BA21625ED0F8900374343 /* UserProfileTests.m in Sources */,
 				169BA20D25ED0F5E00374343 /* APNSTests+Swift.swift in Sources */,
 				169BA24925EF743F00374343 /* SessionManagerTests+Backup.swift in Sources */,
-				169BA1EB25ECEA9000374343 /* UserNotificationCenterMock.swift in Sources */,
 				169BA26225EFA32000374343 /* ZMUser+Testing.m in Sources */,
 				169BA22D25ED0FEF00374343 /* AvailabilityTests.swift in Sources */,
 				169BA1F025ECEB0E00374343 /* SessionManagerTests.swift in Sources */,
@@ -3030,7 +3024,6 @@
 				879634421F7BEC5100FC79BA /* DispatchQueueSerialAsyncTests.swift in Sources */,
 				54AB428E1DF5C5B400381F2C /* TopConversationsDirectoryTests.swift in Sources */,
 				EEF4010323A8E1EF007B1A97 /* Conversation_RoleTests.swift in Sources */,
-				EEA2773D211DE4C9004AF00F /* UserNotificationCenterMock.swift in Sources */,
 				169BA25525EF78F200374343 /* ZMUserSession+DefaultConfiguration.swift in Sources */,
 				1645ED1B244DE345007A82D6 /* TeamMembersDownloadRequestStrategy.swift in Sources */,
 				549552541D645683004F21F6 /* AddressBookTests.swift in Sources */,
@@ -3092,7 +3085,6 @@
 				1626344720D79C22000D4063 /* ZMUserSessionTests+PushNotifications.swift in Sources */,
 				16D3FD021E3A5C0D0052A535 /* ZMConversationVoiceChannelRouterTests.swift in Sources */,
 				1636EB0123F6FD2A00CD9527 /* MockURLActionDelegate.swift in Sources */,
-				06DE14D524B866D9006CB6B3 /* UpdateEventsStoreMigrationTests.swift in Sources */,
 				5492C6C519ACCCA8008F41E2 /* ConnectionTests.m in Sources */,
 				1658C23A1F5404F000889F22 /* FlowManagerMock.swift in Sources */,
 				3E1858BC1951D6DA005FE78F /* MemoryLeaksObserver.m in Sources */,
