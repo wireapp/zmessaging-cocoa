@@ -42,15 +42,22 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
     
     weak public var conversation: ZMConversation?
     
-    public var participants: [CallParticipant] {
-        guard let callCenter = callCenter, let conversationId = conversation?.remoteIdentifier else { return [] }
-        
-        return callCenter.callParticipants(conversationId: conversationId)
-    }
-    
     public required init(conversation: ZMConversation) {
         self.conversation = conversation
         super.init()
+    }
+        
+    public var participants: [CallParticipant] {
+        return participants(ofKind: .all, activeSpeakersLimit: nil)
+    }
+
+    public func participants(ofKind kind: CallParticipantsListKind, activeSpeakersLimit limit: Int?) -> [CallParticipant] {
+        guard
+            let callCenter = callCenter,
+            let conversationId = conversation?.remoteIdentifier
+        else { return [] }
+        
+        return callCenter.callParticipants(conversationId: conversationId, kind: kind, activeSpeakersLimit: limit)
     }
     
     public var state: CallState {
@@ -122,7 +129,35 @@ public class VoiceChannelV3 : NSObject, VoiceChannel {
 
         return callCenter.isConferenceCall(conversationId: remoteIdentifier)
     }
-    
+
+    public var firstDegradedUser: UserType? {
+        guard
+            let conversationId = conversation?.remoteIdentifier,
+            let degradedUser = callCenter?.degradedUser(conversationId: conversationId)
+        else {
+            return conversation?.localParticipants.first(where: {
+                !$0.isTrusted
+            })
+        }
+
+        return degradedUser
+    }
+
+    public var videoGridPresentationMode: VideoGridPresentationMode {
+        get {
+            guard
+                let remoteIdentifier = conversation?.remoteIdentifier,
+                let callCenter = callCenter
+            else {
+                return .allVideoStreams
+            }
+            return callCenter.videoGridPresentationMode(conversationId: remoteIdentifier)
+        }
+        set {
+            guard let remoteIdentifier = conversation?.remoteIdentifier else { return }
+            callCenter?.setVideoGridPresentationMode(newValue, for: remoteIdentifier)
+        }
+    }
 }
 
 extension VoiceChannelV3 : CallActions {
@@ -180,12 +215,10 @@ extension VoiceChannelV3 : CallActionsInternal {
         var joined = false
         
         switch state {
-        case .incoming(video: _, shouldRing: _, degraded: let degraded):
-            if !degraded {
-                joined = callCenter?.answerCall(conversation: conversation, video: video) ?? false
-            }
+        case .incoming(video: _, shouldRing: _, degraded: _):
+            joined = callCenter?.answerCall(conversation: conversation, video: video) ?? false
         default:
-            joined = self.callCenter?.startCall(conversation: conversation, video: video) ?? false
+            joined = callCenter?.startCall(conversation: conversation, video: video) ?? false
         }
         
         return joined
@@ -240,5 +273,9 @@ extension VoiceChannelV3 : CallObservers {
     /// Add observer of the mute state. Returns a token which needs to be retained as long as the observer should be active.
     public func addMuteStateObserver(_ observer: MuteStateObserver) -> Any {
         return WireCallCenterV3.addMuteStateObserver(observer: observer, context: conversation!.managedObjectContext!)
+    }
+
+    public func addActiveSpeakersObserver(_ observer: ActiveSpeakersObserver) -> Any {
+        return WireCallCenterV3.addActiveSpeakersObserver(observer: observer, context: conversation!.managedObjectContext!)
     }
 }

@@ -21,7 +21,7 @@ import Foundation
 import WireSyncEngine
 import WireTransport
 
-class DeleteAccountRequestStrategyTests: MessagingTest, PostLoginAuthenticationObserver {
+class DeleteAccountRequestStrategyTests: MessagingTest, AccountDeletedObserver {
     
     fileprivate var sut : DeleteAccountRequestStrategy!
     fileprivate var mockApplicationStatus : MockApplicationStatus!
@@ -82,9 +82,8 @@ class DeleteAccountRequestStrategyTests: MessagingTest, PostLoginAuthenticationO
         // given
         ZMUser.selfUser(in: self.uiMOC).remoteIdentifier = UUID()
         self.uiMOC.setPersistentStoreMetadata(NSNumber(value: true), key: DeleteAccountRequestStrategy.userDeletionInitiatedKey)
-        
-        observers.append(PostLoginAuthenticationNotification.addObserver(self,
-                                                        context: self.uiMOC))
+    
+        observers.append(AccountDeletedNotification.addObserver(observer: self, queue: DispatchGroupQueue(queue: .main)))
 
         // when
         let request1 : ZMTransportRequest! = self.sut.nextRequest()

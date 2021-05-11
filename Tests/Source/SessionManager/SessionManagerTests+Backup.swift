@@ -108,7 +108,7 @@ class SessionManagerTests_Backup: IntegrationTest {
         
         let moc = sessionManager!.activeUserSession!.managedObjectContext
         let userId = ZMUser.selfUser(in: moc).remoteIdentifier!
-        let accountFolder = StorageStack.accountFolder(accountIdentifier: userId, applicationContainer: sharedContainer)
+        let accountFolder = CoreDataStack.accountDataFolder(accountIdentifier: userId, applicationContainer: sharedContainer)
         let fm = FileManager.default
         try fm.removeItem(at: accountFolder)
         let storePath = accountFolder.appendingPathComponent("store").path
@@ -141,6 +141,30 @@ class SessionManagerTests_Backup: IntegrationTest {
         XCTAssertEqual(result.error as? SessionManager.BackupError, .invalidFileExtension)
     }
     
+    func testThatItCanRestoreFileWithAHyphenInTheFileExtension() throws {
+        // Given
+        XCTAssert(login())
+        
+        let backupResult = backupActiveAcount(password: name)
+        guard let url = backupResult.value else { return XCTFail("\(backupResult.error!)") }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd"
+        let fileExtensionWithHyphen = "Wire-\(self.selfUser!.handle!)-Backup_\(formatter.string(from: .init())).ios-wbu"
+        
+        let fm = FileManager.default
+        try fm.createDirectory(atPath: backupURL.path, withIntermediateDirectories: true, attributes: nil)
+        let dataURL = backupURL.appendingPathComponent(fileExtensionWithHyphen)
+        try? fm.copyItem(at: url, to: dataURL)
+        
+        // When
+        XCTAssertEqual(dataURL.lastPathComponent, fileExtensionWithHyphen)
+        let result = restoreAcount(password: name, from: dataURL)
+        
+        // Then
+        XCTAssertNil(result.error, "\(result.error!)")
+    }
+    
     func testThatItReturnsAnErrorWhenImportingFileWithWrongPassword() throws {
         // Given
         XCTAssert(login())
@@ -161,16 +185,16 @@ class SessionManagerTests_Backup: IntegrationTest {
         let result = backupActiveAcount(password: "idontneednopassword")
         guard let url = result.value else { return XCTFail("\(result.error!)") }
         XCTAssertNil(restoreAcount(password: "idontneednopassword", from: url).error)
-        XCTAssert(FileManager.default.fileExists(atPath: StorageStack.backupsDirectory.path))
-        XCTAssert(FileManager.default.fileExists(atPath: StorageStack.importsDirectory.path))
+        XCTAssert(FileManager.default.fileExists(atPath: CoreDataStack.backupsDirectory.path))
+        XCTAssert(FileManager.default.fileExists(atPath: CoreDataStack.importsDirectory.path))
         
         // When
         SessionManager.clearPreviousBackups(dispatchGroup: dispatchGroup)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.2))
         
         // Then
-        XCTAssertFalse(FileManager.default.fileExists(atPath: StorageStack.backupsDirectory.path))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: StorageStack.importsDirectory.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: CoreDataStack.backupsDirectory.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: CoreDataStack.importsDirectory.path))
     }
     
     func DISABLED_testThatItDeletesOldEphemeralMessagesWhenRestoringFromABackup() {

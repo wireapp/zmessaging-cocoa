@@ -19,34 +19,31 @@
 import Foundation
 @testable import WireSyncEngine
 
-class CompanyLoginURLActionProcessorTests: ZMTBaseTest, WireSyncEngine.CompanyLoginURLActionProcessorDelegate, PreLoginAuthenticationObserver {
+class CompanyLoginURLActionProcessorTests: ZMTBaseTest, WireSyncEngine.CompanyLoginURLActionProcessorDelegate {
     
     var isAllowedToCreateNewAccount: Bool = true
     var sut: WireSyncEngine.CompanyLoginURLActionProcessor!
     var authenticationStatus: ZMAuthenticationStatus!
-    var receivedSSOCode: UUID? = nil
-    var observerToken: Any?
+    var delegate: MockAuthenticationStatusDelegate!
     
     override func setUp() {
         super.setUp()
 
+        delegate = MockAuthenticationStatusDelegate()
         let userInfoParser = MockUserInfoParser()
         let groupQueue = DispatchGroupQueue(queue: DispatchQueue.main)
-        authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue, userInfoParser: userInfoParser)
+        authenticationStatus = ZMAuthenticationStatus(delegate: delegate,
+                                                      groupQueue: groupQueue,
+                                                      userInfoParser: userInfoParser)
         sut = WireSyncEngine.CompanyLoginURLActionProcessor(delegate: self, authenticationStatus: authenticationStatus)
     }
     
     override func tearDown() {
         sut = nil
+        delegate = nil
         authenticationStatus = nil
-        receivedSSOCode = nil
-        observerToken = nil
         
         super.tearDown()
-    }
-    
-    func companyLoginCodeDidBecomeAvailable(_ code: UUID) {
-        receivedSSOCode = code
     }
     
     func testThatAuthenticationStatusIsInformed_OnCompanyLoginSuccessAction() {
@@ -68,20 +65,19 @@ class CompanyLoginURLActionProcessorTests: ZMTBaseTest, WireSyncEngine.CompanyLo
         isAllowedToCreateNewAccount = false
         let ssoCode = UUID()
         let action: URLAction = .startCompanyLogin(code: ssoCode)
-        let urlActionDelegate = MockURLActionDelegate()
+        let presentationDelegate = MockPresentationDelegate()
         
         // when
-        sut.process(urlAction: action, delegate: urlActionDelegate)
+        sut.process(urlAction: action, delegate: presentationDelegate)
         
         // then
-        XCTAssertEqual(urlActionDelegate.failedToPerformActionCalls.count, 1)
-        XCTAssertEqual(urlActionDelegate.failedToPerformActionCalls.first?.0, action)
-        XCTAssertEqual(urlActionDelegate.failedToPerformActionCalls.first?.1 as? SessionManager.AccountError, .accountLimitReached)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.count, 1)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.first?.0, action)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.first?.1 as? SessionManager.AccountError, .accountLimitReached)
     }
     
     func testThatSSOCodeIsPropagatedToAuthenticationStatus_OnStartCompanyLoginAction() {
         // given
-        observerToken = PreLoginAuthenticationNotification.register(self, context: authenticationStatus)
         let ssoCode = UUID()
         let action: URLAction = .startCompanyLogin(code: ssoCode)
         
@@ -89,7 +85,6 @@ class CompanyLoginURLActionProcessorTests: ZMTBaseTest, WireSyncEngine.CompanyLo
         sut.process(urlAction: action, delegate: nil)
         
         // then
-        XCTAssertEqual(receivedSSOCode, ssoCode)
+        XCTAssertEqual(delegate.receivedSSOCode, ssoCode)
     }
-    
 }

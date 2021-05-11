@@ -35,11 +35,11 @@ public final class CallStateObserver : NSObject {
     fileprivate let systemMessageGenerator = CallSystemMessageGenerator()
     
     @objc public init(localNotificationDispatcher: LocalNotificationDispatcher,
-                      contextProvider: ZMManagedObjectContextProvider,
+                      contextProvider: ContextProvider,
                       callNotificationStyleProvider: CallNotificationStyleProvider) {
         
-        self.uiContext = contextProvider.managedObjectContext
-        self.syncContext = contextProvider.syncManagedObjectContext
+        self.uiContext = contextProvider.viewContext
+        self.syncContext = contextProvider.syncContext
         self.notificationStyleProvider = callNotificationStyleProvider
         self.localNotificationDispatcher = localNotificationDispatcher
         

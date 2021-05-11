@@ -138,21 +138,21 @@ extension SessionManager: PKPushRegistryDelegate {
     // MARK: Helpers
     
     public func configureUserNotifications() {
-        guard application.shouldRegisterUserNotificationSettings ?? true else { return }
+        guard (application as? NotificationSettingsRegistrable)?.shouldRegisterUserNotificationSettings ?? true else { return }
         notificationCenter.setNotificationCategories(PushNotificationCategory.allCategories)
         notificationCenter.requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { _, _ in })
         notificationCenter.delegate = self
     }
     
     public func updatePushToken(for session: ZMUserSession) {
-        session.managedObjectContext.performGroupedBlock {
+        session.managedObjectContext.performGroupedBlock { [weak session] in
             // Refresh the tokens if needed
             if #available(iOS 13.0, *) {
                 self.application.registerForRemoteNotifications()
             } else {
                 if let token = self.pushRegistry.pushToken(for: .voIP) {
                     let pushToken = PushToken.createVOIPToken(from: token)
-                    session.setPushToken(pushToken)
+                    session?.setPushToken(pushToken)
                 }
             }
         }
@@ -176,9 +176,10 @@ extension SessionManager: PKPushRegistryDelegate {
         var foundSession: Bool = false
         self.backgroundUserSessions.forEach { accountId, backgroundSession in
             if session == backgroundSession, let account = self.accountManager.account(with: accountId) {
-                self.select(account) {
+                
+                self.select(account, completion: { _ in
                     completion()
-                }
+                })
                 foundSession = true
                 return
             }
@@ -190,40 +191,29 @@ extension SessionManager: PKPushRegistryDelegate {
     }
 }
 
-// MARK: - ShowContentDelegate
-
-@objc
-public protocol ShowContentDelegate: class {
-    func showConversation(_ conversation: ZMConversation, at message: ZMConversationMessage?)
-    func showConversationList()
-    func showUserProfile(user: UserType)
-    func showConnectionRequest(userId: UUID)
-}
-
-
 extension SessionManager {
     
     public func showConversation(_ conversation: ZMConversation,
                                  at message: ZMConversationMessage? = nil,
                                  in session: ZMUserSession) {
         activateAccount(for: session) {
-            self.showContentDelegate?.showConversation(conversation, at: message)
+            self.presentationDelegate?.showConversation(conversation, at: message)
         }
     }
     
     public func showConversationList(in session: ZMUserSession) {
         activateAccount(for: session) {
-            self.showContentDelegate?.showConversationList()
+            self.presentationDelegate?.showConversationList()
         }
     }
 
 
     public func showUserProfile(user: UserType) {
-        self.showContentDelegate?.showUserProfile(user: user)
+        self.presentationDelegate?.showUserProfile(user: user)
     }
 
     public func showConnectionRequest(userId: UUID) {
-        self.showContentDelegate?.showConnectionRequest(userId: userId)
+        self.presentationDelegate?.showConnectionRequest(userId: userId)
     }
 
 }

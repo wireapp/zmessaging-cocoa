@@ -32,8 +32,15 @@ struct CallSnapshot {
     let videoState: VideoState
     let networkQuality: NetworkQuality
     let isConferenceCall: Bool
+    let degradedUser: ZMUser?
+    let activeSpeakers: [AVSActiveSpeakersChange.ActiveSpeaker]
+    let videoGridPresentationMode: VideoGridPresentationMode
     var conversationObserverToken : NSObjectProtocol?
 
+    var isDegradedCall: Bool {
+        return degradedUser != nil
+    }
+    
     /**
      * Updates the snapshot with the new state of the call.
      * - parameter callState: The new state of the call computed from AVS.
@@ -49,6 +56,9 @@ struct CallSnapshot {
                             videoState: videoState,
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
+                            activeSpeakers: activeSpeakers,
+                            videoGridPresentationMode: videoGridPresentationMode,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -67,6 +77,9 @@ struct CallSnapshot {
                             videoState: videoState,
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
+                            activeSpeakers: activeSpeakers,
+                            videoGridPresentationMode: videoGridPresentationMode,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -85,6 +98,9 @@ struct CallSnapshot {
                             videoState: videoState,
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
+                            activeSpeakers: activeSpeakers,
+                            videoGridPresentationMode: videoGridPresentationMode,
                             conversationObserverToken: conversationObserverToken)
     }
 
@@ -103,7 +119,76 @@ struct CallSnapshot {
                             videoState: videoState,
                             networkQuality: networkQuality,
                             isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
+                            activeSpeakers: activeSpeakers,
+                            videoGridPresentationMode: videoGridPresentationMode,
                             conversationObserverToken: conversationObserverToken)
     }
 
+    /**
+     * Updates the snapshot with the new degraded user.
+     *
+     * A user degrades the call if they were previously trusted by the self
+     * client and then joined the call with an unverified device.
+     * 
+     * - parameter degradedUser: The user who degraded the call.
+     */
+
+    func updateDegradedUser(_ degradedUser: ZMUser) -> CallSnapshot {
+        return CallSnapshot(callParticipants: callParticipants,
+                            callState: callState,
+                            callStarter: callStarter,
+                            isVideo: isVideo,
+                            isGroup: isGroup,
+                            isConstantBitRate: isConstantBitRate,
+                            videoState: videoState,
+                            networkQuality: networkQuality,
+                            isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
+                            activeSpeakers: activeSpeakers,
+                            videoGridPresentationMode: videoGridPresentationMode,
+                            conversationObserverToken: conversationObserverToken)
+    }
+    
+    /**
+     * Updates the snapshot with the new audio levels of the call.
+     * - parameter activeSpeakers: The new active speakers of the call computed from AVS.
+     */
+    
+    func updateActiveSpeakers(_ activeSpeakers: [AVSActiveSpeakersChange.ActiveSpeaker]) -> CallSnapshot {
+        return CallSnapshot(callParticipants: callParticipants,
+                            callState: callState,
+                            callStarter: callStarter,
+                            isVideo: isVideo,
+                            isGroup: isGroup,
+                            isConstantBitRate: isConstantBitRate,
+                            videoState: videoState,
+                            networkQuality: networkQuality,
+                            isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
+                            activeSpeakers: activeSpeakers,
+                            videoGridPresentationMode: videoGridPresentationMode,
+                            conversationObserverToken: conversationObserverToken)
+    }
+    
+    /**
+     * Updates the snapshot with the new presentation mode of the video grid.
+     * - parameter presentationMode: The new mode of presentation in video grid
+     */
+    
+    func updateVideoGridPresentationMode(_ presentationMode: VideoGridPresentationMode) -> CallSnapshot {
+        return CallSnapshot(callParticipants: callParticipants,
+                            callState: callState,
+                            callStarter: callStarter,
+                            isVideo: isVideo,
+                            isGroup: isGroup,
+                            isConstantBitRate: isConstantBitRate,
+                            videoState: videoState,
+                            networkQuality: networkQuality,
+                            isConferenceCall: isConferenceCall,
+                            degradedUser: degradedUser,
+                            activeSpeakers: activeSpeakers,
+                            videoGridPresentationMode: presentationMode,
+                            conversationObserverToken: conversationObserverToken)
+    }
 }

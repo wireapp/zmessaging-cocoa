@@ -20,29 +20,50 @@ import Foundation
 import LocalAuthentication
 import WireDataModel
 
-extension ZMUserSession {
+public protocol UserSessionEncryptionAtRestInterface {
+    var encryptMessagesAtRest: Bool { get }
+    var isDatabaseLocked: Bool { get }
+    
+    func setEncryptionAtRest(enabled: Bool, skipMigration: Bool) throws
+    func unlockDatabase(with context: LAContext) throws
+    func registerDatabaseLockedHandler(_ handler: @escaping (_ isDatabaseLocked: Bool) -> Void) -> Any
+}
+
+protocol UserSessionEncryptionAtRestDelegate: class {
+    
+    func setEncryptionAtRest(enabled: Bool, account: Account, encryptionKeys: EncryptionKeys)
+    
+}
+
+extension ZMUserSession: UserSessionEncryptionAtRestInterface {
+
+    /// Enable or disable encryption at rest.
+    ///
+    /// When toggling encryption at rest the existing database needs to be migrated. The migration happens
+    /// asynchronously on the sync context and only after a successful migration is the feature toggled. In
+    /// the case that the migration fails, the sync context is reset to a clean state.
+    ///
+    /// - Parameters:
+    ///     - enabled: When **true**, messages will be encrypted at rest.
+    ///     - skipMigration: When **true**, existing messsages will not be migrated to be under encryption at rest. Defaults to **false**.
+    ///
+    /// - Throws: `MigrationError` if it's not possible to start the migration.
+
+    public func setEncryptionAtRest(enabled: Bool, skipMigration: Bool = false) throws {
+        guard enabled != encryptMessagesAtRest else { return }
+
+        let encryptionKeys = try coreDataStack.encryptionKeysForSettingEncryptionAtRest(enabled: enabled)
+        
+        if skipMigration {
+            try managedObjectContext.enableEncryptionAtRest(encryptionKeys: encryptionKeys, skipMigration: true)
+        } else {
+            delegate?.setEncryptionAtRest(enabled: enabled,
+                                          account: coreDataStack.account,
+                                          encryptionKeys: encryptionKeys)
+        }
+    }
     
     public var encryptMessagesAtRest: Bool {
-        
-        set {
-            do {
-                let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
-
-                try EncryptionKeys.deleteKeys(for: account)
-                storeProvider.contextDirectory.clearEncryptionKeysInAllContexts()
-
-                if newValue {
-                    let keys = try EncryptionKeys.createKeys(for: account)
-                    storeProvider.contextDirectory.storeEncryptionKeysInAllContexts(encryptionKeys: keys)
-                }
-                
-                managedObjectContext.encryptMessagesAtRest = newValue
-                managedObjectContext.saveOrRollback()
-            } catch {
-                Logging.EAR.error("Failed to enabling/disabling database encryption")
-            }
-        }
-        
         get {
             return managedObjectContext.encryptMessagesAtRest
         }
@@ -67,7 +88,7 @@ extension ZMUserSession {
         guard managedObjectContext.encryptMessagesAtRest else { return }
         
         BackgroundActivityFactory.shared.notifyWhenAllBackgroundActivitiesEnd { [weak self] in
-            self?.storeProvider.contextDirectory.clearEncryptionKeysInAllContexts()
+            self?.coreDataStack.clearEncryptionKeysInAllContexts()
         
             if let notificationContext = self?.managedObjectContext.notificationContext {
                 DatabaseEncryptionLockNotification(databaseIsEncrypted: true).post(in: notificationContext)
@@ -76,22 +97,14 @@ extension ZMUserSession {
     }
     
     public func unlockDatabase(with context: LAContext) throws {
-        let account = Account(userName: "", userIdentifier: ZMUser.selfUser(in: managedObjectContext).remoteIdentifier)
-        let keys = try EncryptionKeys.init(account: account, context: context)
+        let keys = try EncryptionKeys.init(account: coreDataStack.account, context: context)
 
-        storeProvider.contextDirectory.storeEncryptionKeysInAllContexts(encryptionKeys: keys)
+        coreDataStack.storeEncryptionKeysInAllContexts(encryptionKeys: keys)
         
         DatabaseEncryptionLockNotification(databaseIsEncrypted: false).post(in: managedObjectContext.notificationContext)
         
         syncManagedObjectContext.performGroupedBlock {
-            guard let syncStrategy = self.syncStrategy else { return }
-            
-            let hasMoreEventsToProcess = syncStrategy.processEventsAfterUnlockingDatabase()
-            
-            self.managedObjectContext.performGroupedBlock { [weak self] in
-                self?.isPerformingSync = hasMoreEventsToProcess
-                self?.updateNetworkState()
-            }
+            self.processEvents()
         }
     }
     

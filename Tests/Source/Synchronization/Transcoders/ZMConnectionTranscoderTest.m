@@ -22,7 +22,7 @@
 
 #import "ObjectTranscoderTests.h"
 #import "ZMConnectionTranscoder+Internal.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 @interface ZMConnectionTranscoderTest : ObjectTranscoderTests
 
@@ -57,8 +57,13 @@
 
 - (void)tearDown
 {
+    [(id)self.syncStateDelegate stopMocking];
+    self.syncStateDelegate = nil;
+
     [self.mockClientRegistrationDelegate tearDown];
     self.mockClientRegistrationDelegate = nil;
+
+    self.mockSyncStatus = nil;
     self.sut = nil;
     [super tearDown];
 }

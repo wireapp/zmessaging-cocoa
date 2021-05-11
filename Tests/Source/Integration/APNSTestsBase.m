@@ -19,7 +19,7 @@
 @import WireMockTransport;
 
 #import "IntegrationTest.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 #import "APNSTestsBase.h"
 
 @implementation APNSTestsBase
@@ -30,15 +30,6 @@
     
     [self createSelfUserAndConversation];
     [self createExtraUsersAndConversations];
-}
-
-- (void)closePushChannelAndWaitUntilClosed
-{
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        session.pushChannel.keepOpen = NO;
-        [session simulatePushChannelClosed];
-    }];
-    WaitForAllGroupsToBeEmpty(0.2);
 }
 
 - (NSDictionary *)noticePayloadForLastEvent

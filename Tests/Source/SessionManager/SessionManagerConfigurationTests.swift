@@ -28,13 +28,13 @@ class SessionManagerConfigurationTests: XCTestCase {
             "blacklistDownloadInterval": 21600,
             "blockOnJailbreakOrRoot": false,
             "wipeOnJailbreakOrRoot": true,
-            "forceAppLock": false,
-            "appLockTimeout": 10,
             "authenticateAfterReboot": false,
-            "useBiometricsOrAccountPassword": true,
             "messageRetentionInterval": 3600,
+            "encryptionAtRestEnabledByDefault": false,
+            "useBiometricsOrCustomPasscode": true,
+            "forceAppLock": true,
+            "appLockTimeout": 60
         }
-
         """
 
         let decoder = JSONDecoder()
@@ -51,6 +51,9 @@ class SessionManagerConfigurationTests: XCTestCase {
         XCTAssertEqual(result.messageRetentionInterval, 3600)
         XCTAssertEqual(result.authenticateAfterReboot, false)
         XCTAssertEqual(result.failedPasswordThresholdBeforeWipe, nil)
+        XCTAssertEqual(result.encryptionAtRestEnabledByDefault, false)
+        XCTAssertEqual(result.useBiometricsOrCustomPasscode, true)
+        XCTAssertEqual(result.forceAppLock, true)
+        XCTAssertEqual(result.appLockTimeout, 60)
     }
-
 }

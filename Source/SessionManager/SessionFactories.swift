@@ -18,7 +18,7 @@
 
 
 import avs
-
+import WireDataModel
 
 open class AuthenticatedSessionFactory {
 
@@ -29,7 +29,6 @@ open class AuthenticatedSessionFactory {
     let application: ZMApplication
     var environment: BackendEnvironmentProvider
     let reachability: ReachabilityProvider & TearDownCapable
-    weak var showContentDelegate: ShowContentDelegate?
 
     public init(
         appVersion: String,
@@ -38,9 +37,7 @@ open class AuthenticatedSessionFactory {
         flowManager: FlowManagerType,
         environment: BackendEnvironmentProvider,
         reachability: ReachabilityProvider & TearDownCapable,
-        analytics: AnalyticsType? = nil,
-        showContentDelegate: ShowContentDelegate? = nil
-        ) {
+        analytics: AnalyticsType? = nil) {
         self.appVersion = appVersion
         self.mediaManager = mediaManager
         self.flowManager = flowManager
@@ -48,34 +45,39 @@ open class AuthenticatedSessionFactory {
         self.application = application
         self.environment = environment
         self.reachability = reachability
-        self.showContentDelegate = showContentDelegate
     }
 
-    func session(for account: Account, storeProvider: LocalStoreProviderProtocol) -> ZMUserSession? {
+    func session(
+        for account: Account,
+        coreDataStack: CoreDataStack,
+        configuration: ZMUserSession.Configuration) -> ZMUserSession? {
+
         let transportSession = ZMTransportSession(
             environment: environment,
             cookieStorage: environment.cookieStorage(for: account),
             reachability: reachability,
             initialAccessToken: nil,
-            applicationGroupIdentifier: nil
+            applicationGroupIdentifier: nil,
+            applicationVersion: appVersion
         )
 
         let userSession = ZMUserSession(
+            userId: account.userIdentifier,
             transportSession: transportSession,
             mediaManager: mediaManager,
             flowManager:flowManager,
             analytics: analytics,
             application: application,
             appVersion: appVersion,
-            storeProvider: storeProvider,
-            showContentDelegate: showContentDelegate
+            coreDataStack: coreDataStack,
+            configuration: configuration
         )
-        
+
         userSession.startRequestLoopTracker()
-        
+
         return userSession
     }
-    
+
 }
 
 
@@ -83,15 +85,24 @@ open class UnauthenticatedSessionFactory {
 
     var environment: BackendEnvironmentProvider
     let reachability: ReachabilityProvider
+    let appVersion: String
 
-    init(environment: BackendEnvironmentProvider, reachability: ReachabilityProvider) {
+    init(appVersion: String,
+         environment: BackendEnvironmentProvider,
+         reachability: ReachabilityProvider) {
         self.environment = environment
         self.reachability = reachability
+        self.appVersion = appVersion
     }
 
-    func session(withDelegate delegate: UnauthenticatedSessionDelegate) -> UnauthenticatedSession {
-        let transportSession = UnauthenticatedTransportSession(environment: environment, reachability: reachability)
-        return UnauthenticatedSession(transportSession: transportSession, reachability: reachability, delegate: delegate)
+    func session(delegate: UnauthenticatedSessionDelegate,
+                 authenticationStatusDelegate: ZMAuthenticationStatusDelegate) -> UnauthenticatedSession {
+        let transportSession = UnauthenticatedTransportSession(environment: environment,
+                                                               reachability: reachability,
+                                                               applicationVersion: appVersion)
+        return UnauthenticatedSession(transportSession: transportSession,
+                                      reachability: reachability,
+                                      delegate: delegate,
+                                      authenticationStatusDelegate: authenticationStatusDelegate)
     }
-
 }

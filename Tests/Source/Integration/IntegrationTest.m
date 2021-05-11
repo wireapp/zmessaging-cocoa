@@ -22,7 +22,7 @@
 @import UIKit;
 
 #import "IntegrationTest.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 #import <WireSyncEngine/WireSyncEngine.h>
 
 @implementation IntegrationTest
@@ -34,6 +34,7 @@
 
     self.mockMediaManager = [[MockMediaManager alloc] init];
     self.mockEnvironment = [[MockEnvironment alloc] init];
+    self.mockLoginDelegete = [[MockLoginDelegate alloc] init];
     
     self.currentUserIdentifier = [NSUUID createUUID];
     [self _setUp];

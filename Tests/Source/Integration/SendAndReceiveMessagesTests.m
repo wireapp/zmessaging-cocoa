@@ -22,7 +22,7 @@
 @import WireDataModel;
 
 #import "ConversationTestsBase.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 
 @interface TestConversationObserver : NSObject <ZMConversationObserver>
@@ -127,7 +127,6 @@
     
     ZMConversation *conversation =  [self conversationForMockConversation:self.groupConversation];
     
-    XCTAssertEqual(conversation.allMessages.count, 3u);
     id<ZMConversationMessage> originalMessage = conversation.lastMessage;
     XCTAssertEqualWithAccuracy([conversation.lastReadServerTimeStamp timeIntervalSince1970], [originalMessage.serverTimestamp timeIntervalSince1970], 0.1);
     [self spinMainQueueWithTimeout:0.5]; // if the tests run too fast the new message would otherwise have the same timestamp
@@ -413,10 +412,10 @@
     XCTAssertNotEqual(groupConversation.displayName, newName);
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversation changeNameByUser:session.selfUser name:newName];
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
+        [self.groupConversation changeNameByUser:((MockTransportSession *)session).selfUser name:newName];
         [self spinMainQueueWithTimeout:0.2];
-        [self.groupConversation addUsersByUser:session.selfUser addedUsers:@[self.user4]];
+        [self.groupConversation addUsersByUser:((MockTransportSession *)session).selfUser addedUsers:@[self.user4]];
     }];
     WaitForAllGroupsToBeEmpty(0.1);
     
@@ -482,14 +481,14 @@
     XCTAssertNotEqual(groupConversation.displayName, newName1);
     
     // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversation changeNameByUser:session.selfUser name:newName1];
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
+        [self.groupConversation changeNameByUser:((MockTransportSession *)session).selfUser name:newName1];
     }];
     WaitForAllGroupsToBeEmpty(0.1);
     
     
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [self.groupConversation changeNameByUser:session.selfUser name:newName2];
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
+        [self.groupConversation changeNameByUser:((MockTransportSession *)session).selfUser name:newName2];
     }];
     WaitForAllGroupsToBeEmpty(0.1);
     

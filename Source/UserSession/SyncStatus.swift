@@ -32,7 +32,7 @@
     case done
         
     var isLastSlowSyncPhase : Bool {
-        return self == .fetchingLabels
+        return self == Self.lastSlowSyncPhase
     }
     
     var isSyncing : Bool {
@@ -41,6 +41,10 @@
 
     var nextPhase: SyncPhase {
         return SyncPhase(rawValue: rawValue + 1) ?? .done
+    }
+
+    static var lastSlowSyncPhase: SyncPhase {
+        return .fetchingLabels
     }
     
     public var description: String {
@@ -115,7 +119,7 @@ extension Notification.Name {
     }
     
     public var isSyncing : Bool {
-        return currentSyncPhase.isSyncing
+        return currentSyncPhase.isSyncing || !pushChannelIsOpen
     }
         
     public init(managedObjectContext: NSManagedObjectContext, syncStateDelegate: ZMSyncStateDelegate) {

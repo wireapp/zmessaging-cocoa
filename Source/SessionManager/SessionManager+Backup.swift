@@ -42,21 +42,34 @@ extension SessionManager {
     }
 
     public func backupActiveAccount(password: String, completion: @escaping BackupResultClosure) {
-        guard let userId = accountManager.selectedAccount?.userIdentifier,
-              let clientId = activeUserSession?.selfUserClient?.remoteIdentifier,
-              let handle = activeUserSession.flatMap(ZMUser.selfUser)?.handle else { return completion(.failure(BackupError.noActiveAccount)) }
+        guard
+            let userId = accountManager.selectedAccount?.userIdentifier,
+            let clientId = activeUserSession?.selfUserClient?.remoteIdentifier,
+            let handle = activeUserSession.flatMap(ZMUser.selfUser)?.handle,
+            let activeUserSession = activeUserSession
+        else {
+            return completion(.failure(BackupError.noActiveAccount))
+        }
 
-        StorageStack.backupLocalStorage(
+        CoreDataStack.backupLocalStorage(
             accountIdentifier: userId,
             clientIdentifier: clientId,
             applicationContainer: sharedContainerURL,
             dispatchGroup: dispatchGroup,
-            completion: { [dispatchGroup] in SessionManager.handle(result: $0, password: password, accountId: userId, dispatchGroup: dispatchGroup, completion: completion, handle: handle) }
+            encryptionKeys: activeUserSession.managedObjectContext.encryptionKeys,
+            completion: { [dispatchGroup] in
+                SessionManager.handle(result: $0,
+                                      password: password,
+                                      accountId: userId,
+                                      dispatchGroup: dispatchGroup,
+                                      completion: completion,
+                                      handle: handle)
+            }
         )
     }
     
     private static func handle(
-        result: Result<StorageStack.BackupInfo>,
+        result: Result<CoreDataStack.BackupInfo>,
         password: String,
         accountId: UUID,
         dispatchGroup: ZMSDispatchGroup? = nil,
@@ -93,9 +106,9 @@ extension SessionManager {
         }
 
         guard let userId = unauthenticatedSession?.authenticationStatus.authenticatedUserIdentifier else { return completion(.failure(BackupError.notAuthenticated)) }
-
+        
         // Verify the imported file has the correct file extension.
-        guard location.pathExtension == BackupMetadata.fileExtension else { return completion(.failure(BackupError.invalidFileExtension)) }
+        guard BackupFileExtensions.allCases.contains(where: { $0.rawValue == location.pathExtension }) else { return completion(.failure(BackupError.invalidFileExtension)) }
         
         SessionManager.workerQueue.async(group: dispatchGroup) { [weak self] in
             guard let `self` = self else { return }
@@ -114,7 +127,7 @@ extension SessionManager {
             
             let url = SessionManager.unzippedBackupURL(for: location)
             guard decryptedURL.unzip(to: url) else { return complete(.failure(BackupError.compressionError)) }
-            StorageStack.importLocalStorage(
+            CoreDataStack.importLocalStorage(
                 accountIdentifier: userId,
                 from: url,
                 applicationContainer: self.sharedContainerURL,
@@ -144,21 +157,21 @@ extension SessionManager {
     
     /// Deletes all previously exported and imported backups.
     public static func clearPreviousBackups(dispatchGroup: ZMSDispatchGroup? = nil) {
-        StorageStack.clearBackupDirectory(dispatchGroup: dispatchGroup)
+        CoreDataStack.clearBackupDirectory(dispatchGroup: dispatchGroup)
     }
     
     private static func unzippedBackupURL(for url: URL) -> URL {
         let filename = url.deletingPathExtension().lastPathComponent
-        return StorageStack.importsDirectory.appendingPathComponent(filename)
+        return CoreDataStack.importsDirectory.appendingPathComponent(filename)
     }
     
-    private static func compress(backup: StorageStack.BackupInfo) throws -> URL {
+    private static func compress(backup: CoreDataStack.BackupInfo) throws -> URL {
         let url = temporaryURL(for: backup.url)
         guard backup.url.zipDirectory(to: url) else { throw BackupError.compressionError }
         return url
     }
 
-    private static func targetBackupURL(for backup: StorageStack.BackupInfo, handle: String) -> URL {
+    private static func targetBackupURL(for backup: CoreDataStack.BackupInfo, handle: String) -> URL {
         let component = backup.metadata.backupFilename(for: handle)
         return backup.url.deletingLastPathComponent().appendingPathComponent(component)
     }
@@ -170,11 +183,17 @@ extension SessionManager {
 
 // MARK: - Compressed Filename
 
+/// There are some external apps that users can use to transfer backup files, which can modify their attachments and change the underscore with a dash. For this reason, we accept 2 types of file extensions to restore conversations.
+fileprivate enum BackupFileExtensions: String, CaseIterable {
+    case fileExtensionWithUnderscore = "ios_wbu"
+    case fileExtensionWithHyphen = "ios-wbu"
+}
+
 fileprivate extension BackupMetadata {
     
     static let nameAppName = "Wire"
     static let nameFileName = "Backup"
-    static let fileExtension = "ios_wbu"
+    static let fileExtension = BackupFileExtensions.fileExtensionWithUnderscore.rawValue
 
     private static let formatter: DateFormatter = {
        let formatter = DateFormatter()

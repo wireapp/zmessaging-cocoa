@@ -45,7 +45,7 @@ public class UnauthenticatedSession: NSObject {
     public internal(set) var accountId: UUID?
     public let groupQueue: DispatchGroupQueue
     private(set) public var authenticationStatus: ZMAuthenticationStatus!
-    public let registrationStatus: RegistrationStatus 
+    public let registrationStatus: RegistrationStatus
     let reachability: ReachabilityProvider
     private(set) var operationLoop: UnauthenticatedOperationLoop!
     private let transportSession: UnauthenticatedTransportSessionProtocol
@@ -54,7 +54,10 @@ public class UnauthenticatedSession: NSObject {
 
     weak var delegate: UnauthenticatedSessionDelegate?
 
-    init(transportSession: UnauthenticatedTransportSessionProtocol, reachability: ReachabilityProvider, delegate: UnauthenticatedSessionDelegate?) {
+    init(transportSession: UnauthenticatedTransportSessionProtocol,
+         reachability: ReachabilityProvider,
+         delegate: UnauthenticatedSessionDelegate?,
+         authenticationStatusDelegate: ZMAuthenticationStatusDelegate?) {
         self.delegate = delegate
         self.groupQueue = DispatchGroupQueue(queue: .main)
         self.registrationStatus = RegistrationStatus()
@@ -62,8 +65,11 @@ public class UnauthenticatedSession: NSObject {
         self.reachability = reachability
         super.init()
 
-        self.authenticationStatus = ZMAuthenticationStatus(groupQueue: groupQueue, userInfoParser: self)
-        self.urlActionProcessors = [CompanyLoginURLActionProcessor(delegate: self, authenticationStatus: authenticationStatus)]
+        self.authenticationStatus = ZMAuthenticationStatus(delegate: authenticationStatusDelegate,
+                                                           groupQueue: groupQueue,
+                                                           userInfoParser: self)
+        self.urlActionProcessors = [CompanyLoginURLActionProcessor(delegate: self,
+                                                                   authenticationStatus: authenticationStatus)]
         self.operationLoop = UnauthenticatedOperationLoop(
             transportSession: transportSession,
             operationQueue: groupQueue,
@@ -84,7 +90,8 @@ public class UnauthenticatedSession: NSObject {
         if self.reachability.mayBeReachable {
             block()
         } else {
-            authenticationStatus.notifyAuthenticationDidFail(NSError(code: .networkError, userInfo:nil))
+            let error = NSError(code: .networkError, userInfo: nil)
+            authenticationStatus.notifyAuthenticationDidFail(error)
         }
     }
 }
@@ -99,7 +106,7 @@ extension UnauthenticatedSession: CompanyLoginURLActionProcessorDelegate {
 
 extension UnauthenticatedSession: URLActionProcessor {
     
-    func process(urlAction: URLAction, delegate: URLActionDelegate?) {
+    func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         urlActionProcessors.forEach({ $0.process(urlAction: urlAction, delegate: delegate) })
     }
     

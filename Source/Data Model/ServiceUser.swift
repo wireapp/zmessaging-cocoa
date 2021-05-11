@@ -180,20 +180,16 @@ public extension ServiceUser {
     }
     
     func createConversation(in userSession: ZMUserSession, completionHandler: @escaping (Result<ZMConversation>) -> Void) {
-        guard let eventProcessor = userSession.operationLoop?.syncStrategy else {
-            completionHandler(.failure(AddBotError.general))
-            return
-        }
         
         createConversation(transportSession: userSession.transportSession,
-                           eventProcessor: eventProcessor,
+                           eventProcessor: userSession.updateEventProcessor!,
                            contextProvider: userSession,
                            completionHandler: completionHandler)
     }
     
     internal func createConversation(transportSession: TransportSessionType,
                                      eventProcessor: UpdateEventProcessor,
-                                     contextProvider: ZMManagedObjectContextProvider,
+                                     contextProvider: ContextProvider,
                                      completionHandler: @escaping (Result<ZMConversation>) -> Void) {
         
         guard transportSession.reachability.mayBeReachable else {
@@ -206,8 +202,8 @@ public extension ServiceUser {
             return
         }
         
-        let selfUser = ZMUser.selfUser(in: contextProvider.managedObjectContext)
-        let conversation = ZMConversation.insertNewObject(in: contextProvider.managedObjectContext)
+        let selfUser = ZMUser.selfUser(in: contextProvider.viewContext)
+        let conversation = ZMConversation.insertNewObject(in: contextProvider.viewContext)
         
         conversation.lastModifiedDate = Date()
         conversation.conversationType = .group
@@ -239,7 +235,7 @@ public extension ServiceUser {
             })
         }
         
-        contextProvider.managedObjectContext.saveOrRollback()
+        contextProvider.viewContext.saveOrRollback()
     }
 }
 
@@ -288,15 +284,15 @@ public extension ZMConversation {
     func add(serviceUser serviceUserData: ServiceUserData, in userSession: ZMUserSession, completionHandler: @escaping (VoidResult) -> Void) {
         add(serviceUser: serviceUserData,
             transportSession: userSession.transportSession,
-            eventProcessor: userSession.operationLoop!.syncStrategy,
-            contextProvider: userSession,
+            eventProcessor: userSession.updateEventProcessor!,
+            contextProvider: userSession.coreDataStack,
             completionHandler: completionHandler)
     }
     
     internal func add(serviceUser serviceUserData: ServiceUserData,
                       transportSession: TransportSessionType,
                       eventProcessor: UpdateEventProcessor,
-                      contextProvider: ZMManagedObjectContextProvider,
+                      contextProvider: ContextProvider,
                       completionHandler: @escaping (VoidResult) -> Void) {
         
         guard transportSession.reachability.mayBeReachable else {
@@ -306,7 +302,7 @@ public extension ZMConversation {
         
         let request = serviceUserData.requestToAddService(to: self)
         
-        request.add(ZMCompletionHandler(on: contextProvider.managedObjectContext, block: { [weak contextProvider] (response) in
+        request.add(ZMCompletionHandler(on: contextProvider.viewContext, block: { [weak contextProvider] (response) in
             
             guard response.httpStatus == 201,
                   let responseDictionary = response.payload?.asDictionary(),
@@ -319,7 +315,7 @@ public extension ZMConversation {
             completionHandler(.success)
             
             
-            contextProvider?.syncManagedObjectContext.performGroupedBlock {
+            contextProvider?.syncContext.performGroupedBlock {
                 eventProcessor.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
             }
         }))

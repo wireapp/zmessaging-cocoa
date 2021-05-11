@@ -20,60 +20,11 @@
 import Foundation
 @testable import WireSyncEngine
 
-class TestRegistrationStatusDelegate: RegistrationStatusDelegate {
 
-    var activationCodeSentCalled = 0
-    func activationCodeSent() {
-        activationCodeSentCalled += 1
-    }
-
-    var activationCodeSendingFailedCalled = 0
-    var activationCodeSendingFailedError: Error?
-    func activationCodeSendingFailed(with error: Error) {
-        activationCodeSendingFailedCalled += 1
-        activationCodeSendingFailedError = error
-    }
-
-    var activationCodeValidatedCalled = 0
-    func activationCodeValidated() {
-        activationCodeValidatedCalled += 1
-    }
-
-    var activationCodeValidationFailedCalled = 0
-    var activationCodeValidationFailedError: Error?
-    func activationCodeValidationFailed(with error: Error) {
-        activationCodeValidationFailedCalled += 1
-        activationCodeValidationFailedError = error
-    }
-
-    var teamRegisteredCalled = 0
-    func teamRegistered() {
-        teamRegisteredCalled += 1
-    }
-
-    var userRegisteredCalled = 0
-    func userRegistered() {
-        userRegisteredCalled += 1
-    }
-
-    var teamRegistrationFailedCalled = 0
-    var teamRegistrationFailedError: Error?
-    func teamRegistrationFailed(with error: Error) {
-        teamRegistrationFailedCalled += 1
-        teamRegistrationFailedError = error
-    }
-
-    var userRegistrationFailedCalled = 0
-    var userRegistrationError: Error?
-    func userRegistrationFailed(with error: Error) {
-        userRegistrationFailedCalled += 1
-        userRegistrationError = error
-    }
-}
 
 class RegistrationStatusTests : MessagingTest{
     var sut : WireSyncEngine.RegistrationStatus!
-    var delegate: TestRegistrationStatusDelegate!
+    var delegate: MockRegistrationStatusDelegate!
     var email: String!
     var code: String!
     var team: UnregisteredTeam!
@@ -83,7 +34,7 @@ class RegistrationStatusTests : MessagingTest{
         super.setUp()
         
         sut = WireSyncEngine.RegistrationStatus()
-        delegate = TestRegistrationStatusDelegate()
+        delegate = MockRegistrationStatusDelegate()
         sut.delegate = delegate
         email = "some@foo.bar"
         code = "123456"

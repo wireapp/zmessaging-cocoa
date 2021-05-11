@@ -25,7 +25,7 @@
 #import "MessagingTest.h"
 #import "ZMMissingUpdateEventsTranscoder+Internal.h"
 #import <WireSyncEngine/WireSyncEngine-Swift.h>
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 
 static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
@@ -33,13 +33,13 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 @interface ZMMissingUpdateEventsTranscoderTests : MessagingTest
 
 @property (nonatomic, readonly) ZMMissingUpdateEventsTranscoder *sut;
-@property (nonatomic, readonly) id syncStrategy;
 @property (nonatomic, readonly) id<PreviouslyReceivedEventIDsCollection> mockEventIDsCollection;
 @property (nonatomic) id mockPushNotificationStatus;
 @property (nonatomic) id requestSync;
 @property (nonatomic) BOOL mockHasPushNotificationEventsToFetch;
 @property (nonatomic) MockSyncStatus *mockSyncStatus;
 @property (nonatomic) OperationStatus *mockOperationStatus;
+@property (nonatomic) MockUpdateEventProcessor *mockUpdateEventProcessor;
 @property (nonatomic) id syncStateDelegate;
 @property (nonatomic) id mockApplicationDirectory;
 
@@ -57,6 +57,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     self.mockOperationStatus = [[OperationStatus alloc] init];
     self.mockOperationStatus.isInBackground = NO;
     self.mockPushNotificationStatus = [OCMockObject niceMockForClass:PushNotificationStatus.class];
+    self.mockUpdateEventProcessor = [[MockUpdateEventProcessor alloc] init];
     
     self.mockApplicationDirectory = [OCMockObject niceMockForClass:ApplicationStatusDirectory.class];
     [[[self.mockApplicationDirectory stub] andReturnValue:@(ZMSynchronizationStateQuickSyncing)] synchronizationState];
@@ -68,16 +69,13 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
         [invocation setReturnValue:&value];
     }] hasEventsToFetch];
     
-    _syncStrategy = [OCMockObject niceMockForClass:ZMSyncStrategy.class];
     _mockEventIDsCollection = OCMProtocolMock(@protocol(PreviouslyReceivedEventIDsCollection));
 
-    [[[(id) self.syncStrategy stub] andReturn:self.uiMOC] syncMOC];
-    [self verifyMockLater:self.syncStrategy];
     [self verifyMockLater:self.mockPushNotificationStatus];
     
     _sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithManagedObjectContext:self.uiMOC
                                                             notificationsTracker:nil
-                                                                  eventProcessor:self.syncStrategy
+                                                                  eventProcessor:self.mockUpdateEventProcessor
                                             previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
                                                                applicationStatus:self.mockApplicationDirectory
                                                           pushNotificationStatus:self.mockPushNotificationStatus
@@ -86,10 +84,9 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
 }
 
 - (void)tearDown {
-    [_syncStrategy stopMocking];
-    _syncStrategy = nil;
-    
     _mockEventIDsCollection = nil;
+    
+    self.mockUpdateEventProcessor = nil;
     
     [self.mockPushNotificationStatus stopMocking];
     _mockPushNotificationStatus = nil;
@@ -211,7 +208,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     XCTAssertEqual(request.method, ZMMethodGET);
 }
 
-- (void)testThatItPassesTheDownloadedEventsToTheSyncStrategyOnSuccess
+- (void)testThatItPassesTheDownloadedEventsToEventProcessorOnSuccess
 {
     // when
     NSDictionary *payload1 = @{
@@ -236,15 +233,16 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     NSMutableArray *expectedEvents = [NSMutableArray array];
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:payload1]];
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:payload2]];
-
-    // expect
-    [[(id)self.syncStrategy expect] storeUpdateEvents:expectedEvents ignoreBuffer:YES];
     
     // when
     [(id)self.sut.listPaginator didReceiveResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:200 transportSessionError:nil] forSingleRequest:self.requestSync];
+    
+    // then
+    XCTAssertEqualObjects(self.mockUpdateEventProcessor.storedEvents, expectedEvents);
+    
 }
 
-- (void)testThatItPassesTheDownloadedEventsToTheSyncStrategyOn404
+- (void)testThatItPassesTheDownloadedEventsToTheEventProcessorOn404
 {
     // when
     NSDictionary *payload1 = @{
@@ -272,11 +270,12 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:payload1]];
     [expectedEvents addObjectsFromArray:[ZMUpdateEvent eventsArrayFromPushChannelData:payload2]];
     
-    // expect
-    [[(id)self.syncStrategy expect] storeUpdateEvents:expectedEvents ignoreBuffer:YES];
-    
     // when
     [(id)self.sut.listPaginator didReceiveResponse:[ZMTransportResponse responseWithPayload:payload HTTPStatus:404 transportSessionError:nil] forSingleRequest:self.requestSync];
+    
+    // then
+    XCTAssertEqualObjects(self.mockUpdateEventProcessor.storedEvents, expectedEvents);
+    
 }
 
 - (void)testThatHasNoLastUpdateEventIDOnStartup
@@ -403,7 +402,7 @@ static NSString * const LastUpdateEventIDStoreKey = @"LastUpdateEventID";
     // when
     ZMMissingUpdateEventsTranscoder *sut = [[ZMMissingUpdateEventsTranscoder alloc] initWithManagedObjectContext:self.syncMOC
                                                                                             notificationsTracker:nil
-                                                                                                  eventProcessor:self.syncStrategy
+                                                                                                  eventProcessor:self.mockUpdateEventProcessor
                                                                             previouslyReceivedEventIDsCollection:(id)self.mockEventIDsCollection
                                                                                                applicationStatus:self.mockApplicationDirectory
                                                                                           pushNotificationStatus:self.mockPushNotificationStatus

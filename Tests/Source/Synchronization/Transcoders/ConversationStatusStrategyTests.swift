@@ -100,7 +100,7 @@ class ConversationStatusStrategyTests: MessagingTest {
             message.serverTimestamp = conversation.clearedTimeStamp
             message.visibleInConversation = conversation
             
-            XCTAssertFalse(conversation.lastMessage!.isDeleted)
+            XCTAssertFalse((conversation.lastMessage as! ZMMessage).isDeleted)
 
             // when
             self.sut.objectsDidChange(Set(arrayLiteral: conversation))
@@ -122,7 +122,7 @@ class ConversationStatusStrategyTests: MessagingTest {
             
             // when
             let request = self.sut.fetchRequestForTrackedObjects()
-            let result = self.syncMOC.executeFetchRequestOrAssert(request) as! [NSManagedObject]
+            let result = self.syncMOC.executeFetchRequestOrAssert(request! ) as! [NSManagedObject]
             if (result.count > 0) {
                 self.sut.addTrackedObjects(Set<NSManagedObject>(result))
             } else {

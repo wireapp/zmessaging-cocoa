@@ -20,6 +20,7 @@ import XCTest
 import WireTesting
 import WireRequestStrategy
 import PushKit
+import LocalAuthentication
 @testable import WireSyncEngine
 
 final class SessionManagerTests: IntegrationTest {
@@ -36,7 +37,7 @@ final class SessionManagerTests: IntegrationTest {
     func createManager(launchOptions: LaunchOptions = [:]) -> SessionManager? {
         guard let application = application else { return nil }
         let environment = MockEnvironment()
-        let reachability = TestReachability()
+        let reachability = MockReachability()
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: mockTransportSession, environment: environment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
             application: application,
@@ -83,6 +84,7 @@ final class SessionManagerTests: IntegrationTest {
         
         // then
         XCTAssertNil(delegate.userSession)
+        XCTAssertTrue(delegate.sessionManagerDidFailToLogin)
         XCTAssertNotNil(sut?.unauthenticatedSession)
         withExtendedLifetime(token) {
             XCTAssertEqual([], observer.createdUserSession)
@@ -97,22 +99,12 @@ final class SessionManagerTests: IntegrationTest {
         sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = NSData.secureRandomData(ofLength: 16)
         manager.addAndSelect(account)
 
-        var completed = false
-        LocalStoreProvider.createStack(
-            applicationContainer: sharedContainer,
-            userIdentifier: currentUserIdentifier,
-            dispatchGroup: dispatchGroup,
-            completion: { _ in completed = true }
-        )
-        
-        XCTAssert(wait(withTimeout: 0.5) { completed })
-
         // when
         sut = createManager()
         let observer = SessionManagerObserverMock()
         let token = sut?.addSessionManagerCreatedSessionObserver(observer)
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        
+
         // then
         XCTAssertNotNil(delegate.userSession)
         XCTAssertNil(sut?.unauthenticatedSession)
@@ -131,53 +123,50 @@ final class SessionManagerTests: IntegrationTest {
         
         let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
 
-        var realSessionManager: SessionManager! = nil
         let observer = SessionManagerObserverMock()
         var createToken: Any? = nil
         var destroyToken: Any? = nil
-        SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: MockMediaManager(),
-                              analytics: nil,
-                              delegate: nil,
-                              showContentDelegate: nil,
-                              application: application,
-                              environment: sessionManager!.environment,
-                              configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
-                                
-                                let environment = MockEnvironment()
-                                let reachability = TestReachability()
-                                let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    application: application,
-                                    mediaManager: MockMediaManager(),
-                                    flowManager: FlowManagerMock(),
-                                    transportSession: self.mockTransportSession,
-                                    environment: environment,
-                                    reachability: reachability
-                                )
-                                
-                                sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
-                                sessionManager.start(launchOptions: [:])
-                                
-                                // WHEN
-                                createToken = sessionManager.addSessionManagerCreatedSessionObserver(observer)
-                                destroyToken = sessionManager.addSessionManagerDestroyedSessionObserver(observer)
-                                
-                                withExtendedLifetime(createToken) {
-                                    sessionManager.loadSession(for: account) { userSession in
-                                        realSessionManager = sessionManager
-                                        XCTAssertNotNil(userSession)
-                                        sessionManagerExpectation.fulfill()
-                                    }
-                                }
+        
+        let testSessionManager = SessionManager(appVersion: "0.0.0",
+                                                mediaManager: mockMediaManager,
+                                                analytics: nil,
+                                                delegate: nil,
+                                                application: application,
+                                                environment: sessionManager!.environment,
+                                                configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1))
+        
+        let environment = MockEnvironment()
+        let reachability = MockReachability()
+        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
+            application: application,
+            mediaManager: MockMediaManager(),
+            flowManager: FlowManagerMock(),
+            transportSession: self.mockTransportSession,
+            environment: environment,
+            reachability: reachability
+        )
+        
+        testSessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+        testSessionManager.start(launchOptions: [:])
+        
+        // WHEN
+        createToken = testSessionManager.addSessionManagerCreatedSessionObserver(observer)
+        destroyToken = testSessionManager.addSessionManagerDestroyedSessionObserver(observer)
+        
+        withExtendedLifetime(createToken) {
+            testSessionManager.loadSession(for: account) { userSession in
+                XCTAssertNotNil(userSession)
+                sessionManagerExpectation.fulfill()
+            }
         }
         
         // THEN
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
-        XCTAssertEqual([realSessionManager.activeUserSession!], observer.createdUserSession)
+        XCTAssertEqual([testSessionManager.activeUserSession!], observer.createdUserSession)
         
         // AND WHEN
         withExtendedLifetime(destroyToken) {
-            realSessionManager.tearDownBackgroundSession(for: account.userIdentifier)
+            testSessionManager.tearDownBackgroundSession(for: account.userIdentifier)
         }
     
         // THEN
@@ -218,52 +207,49 @@ final class SessionManagerTests: IntegrationTest {
         guard let application = application else { return XCTFail() }
         
         let sessionManagerExpectation = self.expectation(description: "Session manager and sessions are loaded")
-        
-        var realSessionManager: SessionManager! = nil
         let observer = SessionManagerObserverMock()
         
         var destroyToken: Any? = nil
-        SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: MockMediaManager(),
-                              analytics: nil,
-                              delegate: nil,
-                              showContentDelegate: nil,
-                              application: application,
-                              environment: sessionManager!.environment,
-                              configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
-                                
-                                let environment = MockEnvironment()
-                                let reachability = TestReachability()
-                                let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    application: application,
-                                    mediaManager: MockMediaManager(),
-                                    flowManager: FlowManagerMock(),
-                                    transportSession: self.mockTransportSession,
-                                    environment: environment,
-                                    reachability: reachability
-                                )
-                                
-                                sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
-                                sessionManager.start(launchOptions: [:])
-                                
-                                // WHEN
-                                destroyToken = sessionManager.addSessionManagerDestroyedSessionObserver(observer)
-                                
-                                sessionManager.loadSession(for: account1) { userSession in
-                                    realSessionManager = sessionManager
-                                    XCTAssertNotNil(userSession)
-                                    
-                                    // load second account
-                                    realSessionManager.loadSession(for: account2) { userSession in
-                                        XCTAssertNotNil(userSession)
-                                        sessionManagerExpectation.fulfill()
-                                    }
-                                }
+        
+        let testSessionManager = SessionManager(appVersion: "0.0.0",
+                                                mediaManager: mockMediaManager,
+                                                analytics: nil,
+                                                delegate: self.delegate,
+                                                application: application,
+                                                environment: sessionManager!.environment,
+                                                configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1),
+                                                detector: jailbreakDetector)
+        
+        let environment = MockEnvironment()
+        let reachability = MockReachability()
+        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
+            application: application,
+            mediaManager: MockMediaManager(),
+            flowManager: FlowManagerMock(),
+            transportSession: self.mockTransportSession,
+            environment: environment,
+            reachability: reachability
+        )
+        
+        testSessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+        testSessionManager.start(launchOptions: [:])
+        
+        // WHEN
+        destroyToken = testSessionManager.addSessionManagerDestroyedSessionObserver(observer)
+        
+        testSessionManager.loadSession(for: account1) { userSession in
+            XCTAssertNotNil(userSession)
+            
+            // load second account
+            testSessionManager.loadSession(for: account2) { userSession in
+                XCTAssertNotNil(userSession)
+                sessionManagerExpectation.fulfill()
+            }
         }
         
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
-        XCTAssertEqual(realSessionManager.backgroundUserSessions.count, 2)
-        XCTAssertEqual(realSessionManager.backgroundUserSessions[account2.userIdentifier], realSessionManager.activeUserSession)
+        XCTAssertEqual(testSessionManager.backgroundUserSessions.count, 2)
+        XCTAssertEqual(testSessionManager.backgroundUserSessions[account2.userIdentifier], testSessionManager.activeUserSession)
         
         withExtendedLifetime(destroyToken) {
             NotificationCenter.default.post(Notification(name: UIApplication.didReceiveMemoryWarningNotification))
@@ -277,25 +263,22 @@ final class SessionManagerTests: IntegrationTest {
         
         //GIVEN
         guard let application = application else { return XCTFail() }
-        let sessionManagerExpectation = self.expectation(description: "Session manager has detected a jailbroken device")
         let jailbreakDetector = MockJailbreakDetector(jailbroken: true)
         let configuration = SessionManagerConfiguration(blockOnJailbreakOrRoot: true)
         
         //WHEN
-        SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: mockMediaManager,
-                              analytics: nil,
-                              delegate: self.delegate,
-                              showContentDelegate: nil,
-                              application: application,
-                              environment: sessionManager!.environment,
-                              configuration: configuration,
-                              detector: jailbreakDetector) { sessionManager in
-                                //THEN
-                                XCTAssertTrue(self.delegate.jailbroken)
-                                sessionManagerExpectation.fulfill()
-        }
-    
+        let _ = SessionManager(appVersion: "0.0.0",
+                               mediaManager: mockMediaManager,
+                               analytics: nil,
+                               delegate: self.delegate,
+                               application: application,
+                               environment: sessionManager!.environment,
+                               configuration: configuration,
+                               detector: jailbreakDetector)
+        
+        XCTAssertTrue(self.delegate.jailbroken)
+        XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
+        
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
     }
     
@@ -414,7 +397,7 @@ class SessionManagertests_AccountDeletion: IntegrationTest {
         }
         let account = self.createAccount()
         
-        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        let accountFolder = CoreDataStack.accountDataFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
         
         try FileManager.default.createDirectory(at: accountFolder, withIntermediateDirectories: true, attributes: nil)
         
@@ -434,7 +417,7 @@ class SessionManagertests_AccountDeletion: IntegrationTest {
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
         
         let account = sessionManager!.accountManager.selectedAccount!
-        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        let accountFolder = CoreDataStack.accountDataFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
         
         // when
         performIgnoringZMLogError {
@@ -477,7 +460,7 @@ class SessionManagerTests_AuthenticationFailure: IntegrationTest {
         
         // then
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        let accountFolder = CoreDataStack.accountDataFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
         
         XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
     }
@@ -518,6 +501,91 @@ class SessionManagerTests_AuthenticationFailure: IntegrationTest {
     
 }
 
+class SessionManagerTests_EncryptionAtRestMigration: IntegrationTest {
+    
+    override var useInMemoryStore: Bool {
+        return false
+    }
+    
+    override func setUp() {
+        super.setUp()
+        createSelfUserAndConversation()
+        createExtraUsersAndConversations()
+    }
+    
+    func testThatDatabaseIsMigrated_WhenEncryptionAtRestIsEnabled() throws {
+        // given
+        XCTAssertTrue(login())
+        let expectedText = "Hello World"
+        userSession?.perform({
+            let groupConversation = self.conversation(for: self.groupConversation)
+            try! groupConversation?.appendText(content: expectedText)
+        })
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        try userSession?.setEncryptionAtRest(enabled: true)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(userSession?.encryptMessagesAtRest, true)
+        
+        try userSession?.unlockDatabase(with: LAContext())
+        let groupConversation = self.conversation(for: self.groupConversation)
+        let clientMessage = groupConversation?.lastMessage as? ZMClientMessage
+        XCTAssertEqual(clientMessage?.messageText, expectedText)
+    }
+    
+    func testThatDatabaseIsMigrated_WhenEncryptionAtRestIsDisabled() throws {
+        // given
+        XCTAssertTrue(login())
+        let expectedText = "Hello World"
+        try userSession?.setEncryptionAtRest(enabled: true, skipMigration: true)
+        userSession?.perform({
+            let groupConversation = self.conversation(for: self.groupConversation)
+            try! groupConversation?.appendText(content: expectedText)
+        })
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // when
+        try userSession?.setEncryptionAtRest(enabled: false)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        
+        // then
+        XCTAssertEqual(userSession?.encryptMessagesAtRest, false)
+        
+        let groupConversation = self.conversation(for: self.groupConversation)
+        let clientMessage = groupConversation?.lastMessage as? ZMClientMessage
+        XCTAssertEqual(clientMessage?.messageText, expectedText)
+    }
+    
+}
+
+class SessionManagerTests_EncryptionAtRestIsEnabledByDefault_Option: IntegrationTest {
+    
+    override func setUp() {
+        super.setUp()
+        createSelfUserAndConversation()
+    }
+    
+    override var useInMemoryStore: Bool {
+        return false
+    }
+    
+    override var sessionManagerConfiguration: SessionManagerConfiguration {
+        return SessionManagerConfiguration(encryptionAtRestIsEnabledByDefault: true)
+    }
+    
+    func testThatEncryptionAtRestIsEnabled_OnActiveUserSession() {
+        // given
+        XCTAssertTrue(login())
+        
+        // then
+        XCTAssertTrue(sessionManager!.activeUserSession!.encryptMessagesAtRest)
+    }
+    
+}
+
 class SessionManagerTests_PasswordVerificationFailure_With_DeleteAccountAfterThreshold: IntegrationTest {
     private var threshold: Int? = 2
     override func setUp() {
@@ -539,7 +607,7 @@ class SessionManagerTests_PasswordVerificationFailure_With_DeleteAccountAfterThr
         
         // then
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        let accountFolder = CoreDataStack.accountDataFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
         
         XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
     }
@@ -554,7 +622,7 @@ class SessionManagerTests_PasswordVerificationFailure_With_DeleteAccountAfterThr
         
         // then
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        let accountFolder = CoreDataStack.accountDataFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
         
         XCTAssertTrue(FileManager.default.fileExists(atPath: accountFolder.path))
     }
@@ -582,7 +650,7 @@ class SessionManagerTests_AuthenticationFailure_With_DeleteAccountOnAuthentictio
         
         // then
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        let accountFolder = CoreDataStack.accountDataFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
         
         XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
     }
@@ -597,7 +665,7 @@ class SessionManagerTests_AuthenticationFailure_With_DeleteAccountOnAuthentictio
         
         // then
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        let accountFolder = StorageStack.accountFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
+        let accountFolder = CoreDataStack.accountDataFolder(accountIdentifier: account.userIdentifier, applicationContainer: sharedContainer)
         
         XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
     }
@@ -626,7 +694,7 @@ class SessionManagerTests_AuthenticationFailure_With_DeleteAccountOnAuthentictio
         
         // then
         guard let sharedContainer = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory) else { return XCTFail() }
-        let accountFolder = StorageStack.accountFolder(accountIdentifier: additionalAccount.userIdentifier, applicationContainer: sharedContainer)
+        let accountFolder = CoreDataStack.accountDataFolder(accountIdentifier: additionalAccount.userIdentifier, applicationContainer: sharedContainer)
         
         XCTAssertFalse(FileManager.default.fileExists(atPath: accountFolder.path))
     }
@@ -646,7 +714,8 @@ class SessionManagerTests_Teams: IntegrationTest {
         let teamName = "Wire"
         let image = MockAsset(in: mockTransportSession.managedObjectContext, forID: selfUser.previewProfileAssetIdentifier!)
         self.mockTransportSession.performRemoteChanges { session in
-            _ = session.insertTeam(withName: teamName, isBound: true, users: [self.selfUser])
+            let team = session.insertTeam(withName: teamName, isBound: true, users: [self.selfUser])
+            team.creator = self.selfUser
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -672,6 +741,7 @@ class SessionManagerTests_Teams: IntegrationTest {
         var team: MockTeam!
         self.mockTransportSession.performRemoteChanges { session in
             team = session.insertTeam(withName: "Wire", isBound: true, users: [self.selfUser])
+            team.creator = self.selfUser
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
@@ -697,6 +767,7 @@ class SessionManagerTests_Teams: IntegrationTest {
         var team: MockTeam!
         self.mockTransportSession.performRemoteChanges { session in
             team = session.insertTeam(withName: "Wire", isBound: true, users: [self.selfUser])
+            team.creator = self.selfUser
             asset = session.insertAsset(with: UUID(), assetToken: UUID(), assetData: assetData, contentType: "image/jpeg")
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -740,6 +811,7 @@ class SessionManagerTests_Teams: IntegrationTest {
         // when
         sessionManager?.logoutCurrentSession()
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        closePushChannelAndWaitUntilClosed()
         XCTAssert(login())
         
         // then
@@ -783,13 +855,19 @@ class SessionManagerTests_Teams: IntegrationTest {
         sessionManager?.accountManager.addOrUpdate(account2)
         sessionManager?.accountManager.addOrUpdate(account3)
         
-        let recorder = PreLoginAuthenticationNotificationRecorder(authenticationStatus: sessionManager!.unauthenticatedSession!.authenticationStatus)
-        
         // when
         XCTAssert(login(ignoreAuthenticationFailures: true))
-
+        
         // then
-        XCTAssertEqual(NSError(code: .accountLimitReached, userInfo: nil), recorder.notifications.last!.error)
+        guard
+            let delegate = mockLoginDelegete,
+            let error = delegate.currentError
+        else {
+            return XCTFail()
+        }
+        
+        XCTAssertTrue(delegate.didCallAuthenticationDidFail)
+        XCTAssertEqual(error, NSError(code: .accountLimitReached, userInfo: nil))
     }
 
     func testThatItChecksAccountsForExistingAccount() {
@@ -887,50 +965,46 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
         let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
         
         // WHEN
-        var realSessionManager: SessionManager! = nil
-        SessionManager.create(appVersion: "0.0.0",
-                              mediaManager: MockMediaManager(),
-                              analytics: nil,
-                              delegate: nil,
-                              showContentDelegate: nil,
-                              application: application,
-                              environment: sessionManager!.environment,
-                              configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
-                                
-                                let environment = MockEnvironment()
-                                let reachability = TestReachability()
-                                let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                                    application: application,
-                                    mediaManager: MockMediaManager(),
-                                    flowManager: FlowManagerMock(),
-                                    transportSession: self.mockTransportSession,
-                                    environment: environment,
-                                    reachability: reachability
-                                )
-                                
-                                sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
-                                sessionManager.start(launchOptions: [:])
-                                
-                                sessionManager.loadSession(for: account) { userSession in
-                                    realSessionManager = sessionManager
-                                    XCTAssertNotNil(userSession)
-                                    sessionManagerExpectation.fulfill()
-                                }
+        let testSessionManager = SessionManager(appVersion: "0.0.0",
+                                                mediaManager: mockMediaManager,
+                                                analytics: nil,
+                                                delegate: nil,
+                                                application: application,
+                                                environment: sessionManager!.environment,
+                                                configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1))
+        let environment = MockEnvironment()
+        let reachability = MockReachability()
+        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
+            application: application,
+            mediaManager: MockMediaManager(),
+            flowManager: FlowManagerMock(),
+            transportSession: self.mockTransportSession,
+            environment: environment,
+            reachability: reachability
+        )
+        
+        testSessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+        testSessionManager.start(launchOptions: [:])
+        
+        testSessionManager.loadSession(for: account) { userSession in
+            XCTAssertNotNil(userSession)
+            sessionManagerExpectation.fulfill()
         }
+        
         
         // THEN
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
-        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
+        XCTAssertNotNil(testSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // WHEN
         NotificationCenter.default.post(name: UIApplication.didReceiveMemoryWarningNotification, object: nil)
         
         // THEN
-        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
+        XCTAssertNotNil(testSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // CLEANUP
-        realSessionManager.tearDownAllBackgroundSessions()
+        testSessionManager.tearDownAllBackgroundSessions()
     }
     
     func testThatItUnloadBackgroundUserSessionFromMemoryWarning() {
@@ -943,50 +1017,47 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
         let sessionManagerExpectation = self.expectation(description: "Session manager and session is loaded")
 
         // WHEN
-        var realSessionManager: SessionManager! = nil
-        SessionManager.create(appVersion: "0.0.0",
-                       mediaManager: MockMediaManager(),
-                       analytics: nil,
-                       delegate: nil,
-                       showContentDelegate: nil,
-                       application: application,
-                       environment: sessionManager!.environment,
-                       configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1)) { sessionManager in
-                        
-                        let environment = MockEnvironment()
-                        let reachability = TestReachability()
-                        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
-                            application: application,
-                            mediaManager: MockMediaManager(),
-                            flowManager: FlowManagerMock(),
-                            transportSession: self.mockTransportSession,
-                            environment: environment,
-                            reachability: reachability
-                        )
-                        
-                        sessionManager.authenticatedSessionFactory = authenticatedSessionFactory
-                        sessionManager.start(launchOptions: [:])
-
-            sessionManager.withSession(for: account) { userSession in
-                realSessionManager = sessionManager
-                XCTAssertNotNil(userSession)
-                sessionManagerExpectation.fulfill()
-            }
+        let testSessionManager = SessionManager(appVersion: "0.0.0",
+                                                mediaManager: mockMediaManager,
+                                                analytics: nil,
+                                                delegate: nil,
+                                                application: application,
+                                                environment: sessionManager!.environment,
+                                                configuration: SessionManagerConfiguration(blacklistDownloadInterval: -1))
+        
+        let environment = MockEnvironment()
+        let reachability = MockReachability()
+        let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
+            application: application,
+            mediaManager: MockMediaManager(),
+            flowManager: FlowManagerMock(),
+            transportSession: self.mockTransportSession,
+            environment: environment,
+            reachability: reachability
+        )
+        
+        testSessionManager.authenticatedSessionFactory = authenticatedSessionFactory
+        testSessionManager.start(launchOptions: [:])
+        
+        testSessionManager.withSession(for: account) { userSession in
+            XCTAssertNotNil(userSession)
+            sessionManagerExpectation.fulfill()
         }
+
         
         // THEN
         XCTAssertTrue(self.waitForCustomExpectations(withTimeout: 0.5))
         
-        XCTAssertNotNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
+        XCTAssertNotNil(testSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // WHEN
         NotificationCenter.default.post(name: UIApplication.didReceiveMemoryWarningNotification, object: nil)
         
         // THEN
-        XCTAssertNil(realSessionManager.backgroundUserSessions[account.userIdentifier])
+        XCTAssertNil(testSessionManager.backgroundUserSessions[account.userIdentifier])
         
         // CLEANUP
-        realSessionManager.tearDownAllBackgroundSessions()
+        testSessionManager.tearDownAllBackgroundSessions()
     }
     
     func prepareSession(for account: Account) {
@@ -1298,6 +1369,83 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
     }
 }
 
+final class SessionManagerTests_AppLock: IntegrationTest {
+
+    private var appLock: MockAppLock!
+
+    override func setUp() {
+        super.setUp()
+        // Mock transport doesn't support multiple accounts at the moment so we pretend to be offline
+        // in order to avoid the user session's getting stuck in a request loop.
+        mockTransportSession.doNotRespondToRequests = true
+        appLock = MockAppLock()
+    }
+
+    override func tearDown() {
+        sessionManager!.tearDownAllBackgroundSessions()
+        appLock = nil
+        mockTransportSession.doNotRespondToRequests = false
+        super.tearDown()
+    }
+
+    func test_ItBeginsAppLockTimer_WhenChangingTheActiveUserSession() {
+        // Given
+        let account1 = addAccount(name: "Account 1", userIdentifier: currentUserIdentifier)
+        let account2 = addAccount(name: "Account 2", userIdentifier: .create())
+
+        weak var session1: ZMUserSession?
+        sessionManager?.loadSession(for: account1, completion: { (session) in
+            session1 = session
+            session1?.appLockController = self.appLock
+        })
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(sessionManager!.activeUserSession, session1)
+
+        // When
+        let switchedAccount = expectation(description: "switched account")
+        sessionManager?.select(account2, completion: { _ in
+            switchedAccount.fulfill()
+        }, tearDownCompletion: nil)
+
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+
+        // Then
+        XCTAssertEqual(appLock.methodCalls.beginTimer.count, 1)
+    }
+
+    func test_ItBeginAppLockTimer_WhenTheAppResignsActive() {
+        // Given
+        let account1 = addAccount(name: "Account 1", userIdentifier: currentUserIdentifier)
+
+        // Make account 1 the active session.
+        weak var session1: ZMUserSession?
+        sessionManager?.loadSession(for: account1, completion: { (session) in
+            session1 = session
+            session1?.appLockController = self.appLock
+        })
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertEqual(sessionManager!.activeUserSession, session1)
+
+        // When
+        let notification = Notification(name: UIApplication.willResignActiveNotification)
+        sessionManager!.applicationWillResignActive(notification)
+
+        // Then
+        XCTAssertEqual(appLock.methodCalls.beginTimer.count, 1)
+    }
+
+    private func addAccount(name: String, userIdentifier: UUID) -> Account {
+        let account = Account(userName: name, userIdentifier: userIdentifier)
+        let cookie = NSData.secureRandomData(ofLength: 16)
+        sessionManager!.environment.cookieStorage(for: account).authenticationCookieData = cookie
+        sessionManager!.accountManager.addOrUpdate(account)
+        return account
+    }
+
+}
+
 extension NSManagedObjectContext {
     func createSelfUserAndSelfConversation() {
         let selfUser = ZMUser.selfUser(in: self)
@@ -1370,14 +1518,14 @@ extension SessionManagerTests {
         // GIVEN
         let id = UUID(uuidString: "1E628B42-4C83-49B7-B2B4-EF27BFE503EF")!
         let url = URL(string: "wire://start-sso/wire-\(id)")!
-        let urlActionDelegate = MockURLActionDelegate()
+        let presentationDelegate = MockPresentationDelegate()
 
-        sessionManager?.urlActionDelegate = urlActionDelegate
+        sessionManager?.presentationDelegate = presentationDelegate
         XCTAssertTrue(login())
         XCTAssertNotNil(userSession)
         
         // WHEN
-        try sessionManager?.openURL(url, options: [:])
+        try sessionManager?.openURL(url)
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // THEN
@@ -1388,18 +1536,20 @@ extension SessionManagerTests {
 
 // MARK: - Mocks
 class SessionManagerTestDelegate: SessionManagerDelegate {
-
     var onLogout: ((NSError?) -> Void)?
     func sessionManagerWillLogout(error: Error?, userSessionCanBeTornDown: (() -> Void)?) {
         onLogout?(error as NSError?)
         userSessionCanBeTornDown?()
     }
     
-    func sessionManagerDidFailToLogin(account: Account?, error: Error) {
-        // no op
+    var sessionManagerDidFailToLogin: Bool = false
+    func sessionManagerDidFailToLogin(error: Error?) {
+        sessionManagerDidFailToLogin = true
     }
     
-    func sessionManagerWillOpenAccount(_ account: Account, userSessionCanBeTornDown: @escaping () -> Void) {
+    func sessionManagerWillOpenAccount(_ account: Account,
+                                       from selectedAccount: Account?,
+                                       userSessionCanBeTornDown: @escaping () -> Void) {
         userSessionCanBeTornDown()
     }
     
@@ -1407,26 +1557,29 @@ class SessionManagerTestDelegate: SessionManagerDelegate {
         // no op
     }
     
-    var jailbroken = false
+    func sessionManagerDidFailToLoadDatabase() {
+        // no op
+    }
     
+    var jailbroken = false
     func sessionManagerDidBlacklistJailbrokenDevice() {
         jailbroken = true
     }
     
     var userSession : ZMUserSession?
-    func sessionManagerActivated(userSession: ZMUserSession) {
+    func sessionManagerDidChangeActiveUserSession(userSession: ZMUserSession) {
         self.userSession = userSession
+    }
+
+    func sessionManagerDidReportLockChange(forSession session: UserSessionAppLockInterface) {
+        // No op
     }
     
     var startedMigrationCalled = false
-    func sessionManagerWillMigrateAccount(_ account: Account) {
+    func sessionManagerWillMigrateAccount(userSessionCanBeTornDown: @escaping () -> Void) {
         startedMigrationCalled = true
     }
     
-    func sessionManagerWillMigrateLegacyAccount() {
-        // no op
-    }
-
 }
 
 class SessionManagerObserverMock: SessionManagerCreatedSessionObserver, SessionManagerDestroyedSessionObserver {
@@ -1447,26 +1600,6 @@ class SessionManagerObserverMock: SessionManagerCreatedSessionObserver, SessionM
         destroyedUserSessions.append(accountId)
     }
     
-}
-
-class TestReachability: NSObject, ReachabilityProvider, TearDownCapable {
-    var mayBeReachable = true
-    var isMobileConnection = true
-    var oldMayBeReachable = true
-    var oldIsMobileConnection = true
-    
-    var tearDownCalled = false
-    func tearDown() {
-        tearDownCalled = true
-    }
-    
-    func add(_ observer: ZMReachabilityObserver, queue: OperationQueue?) -> Any {
-        return NSObject()
-    }
-    
-    func addReachabilityObserver(on queue: OperationQueue?, block: @escaping ReachabilityObserverBlock) -> Any {
-        return NSObject()
-    }
 }
 
 class MockForegroundNotificationResponder: NSObject, ForegroundNotificationResponder {

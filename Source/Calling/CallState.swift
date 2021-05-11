@@ -27,25 +27,61 @@ private let zmLog = ZMSLog(tag: "calling")
 
 public struct CallParticipant: Hashable {
     
-    public let user: ZMUser
+    public let user: UserType
     public let clientId: String
+    public let userId: UUID
     public let state: CallParticipantState
-
-    public init(user: ZMUser, clientId: String, state: CallParticipantState) {
+    public let activeSpeakerState: ActiveSpeakerState
+        
+    /// convenience init method for ZMUser
+    /// - Parameters:
+    ///   - user: the call participant ZMUser
+    ///   - clientId: the call participant's client
+    ///   - state: the call participant's state
+    public init(user: ZMUser,
+                clientId: String,
+                state: CallParticipantState,
+                activeSpeakerState: ActiveSpeakerState) {
         self.user = user
         self.clientId = clientId
+        self.userId = user.remoteIdentifier
         self.state = state
+        self.activeSpeakerState = activeSpeakerState
     }
 
-    init?(member: AVSCallMember, context: NSManagedObjectContext) {
+    /// Init with separated user and user id to allow CallParticipant to be Hashable even though user is not Hashable
+    /// - Parameters:
+    ///   - user: the call participant user
+    ///   - userId: the call participant user's id
+    ///   - clientId: the call participant's client
+    ///   - state: the call participant's state
+    public init(user: UserType,
+                userId: UUID,
+                clientId: String,
+                state: CallParticipantState,
+                activeSpeakerState: ActiveSpeakerState) {
+        self.user = user
+        self.clientId = clientId
+        self.userId = userId
+        self.state = state
+        self.activeSpeakerState = activeSpeakerState
+    }
+
+    init?(member: AVSCallMember, activeSpeakerState: ActiveSpeakerState = .inactive, context: NSManagedObjectContext) {
         guard let user = ZMUser(remoteID: member.client.userId, createIfNeeded: false, in: context) else { return nil }
-        self.init(user: user, clientId: member.client.clientId, state: member.callParticipantState)
+        self.init(user: user, userId: user.remoteIdentifier, clientId: member.client.clientId, state: member.callParticipantState, activeSpeakerState: activeSpeakerState)
     }
 
     // MARK: - Hashable
 
+    public static func == (lhs: CallParticipant, rhs: CallParticipant) -> Bool {
+        return lhs.userId == rhs.userId &&
+               lhs.clientId == rhs.clientId &&
+               lhs.state == rhs.state
+    }
+
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(user.remoteIdentifier)
+        hasher.combine(userId)
         hasher.combine(clientId)
     }
 
@@ -56,7 +92,7 @@ public struct CallParticipant: Hashable {
  * The state of a participant in a call.
  */
 
-public enum CallParticipantState: Equatable {
+public enum CallParticipantState: Equatable, Hashable {
     /// Participant is not in the call
     case unconnected
     /// A network problem occured but the call may still connect
@@ -108,4 +144,89 @@ public enum MicrophoneState: Int32, Codable {
     case unmuted = 0
     /// Sender is muted
     case muted = 1
+}
+
+/**
+ * The speaking activity state of a participant in the call.
+ */
+
+public enum ActiveSpeakerState: Hashable {
+    /// Participant is an active speaker
+    case active(audioLevelNow: Int)
+    /// Participant is not an active speaker
+    case inactive
+}
+
+/**
+ * The current state of a call.
+ */
+
+public enum CallState: Equatable {
+
+    /// There's no call
+    case none
+    /// Outgoing call is pending
+    case outgoing(degraded: Bool)
+    /// Incoming call is pending
+    case incoming(video: Bool, shouldRing: Bool, degraded: Bool)
+    /// Call is answered
+    case answered(degraded: Bool)
+    /// Call is established (data is flowing)
+    case establishedDataChannel
+    /// Call is established (media is flowing)
+    case established
+    /// Call is over and audio/video is guranteed to be stopped
+    case mediaStopped
+    /// Call in process of being terminated
+    case terminating(reason: CallClosedReason)
+    /// Unknown call state
+    case unknown
+
+    /**
+     * Logs the current state to the calling logs.
+     */
+
+    func logState() {
+        switch self {
+        case .answered(degraded: let degraded):
+            zmLog.debug("answered call, degraded: \(degraded)")
+        case .incoming(video: let isVideo, shouldRing: let shouldRing, degraded: let degraded):
+            zmLog.debug("incoming call, isVideo: \(isVideo), shouldRing: \(shouldRing), degraded: \(degraded)")
+        case .establishedDataChannel:
+            zmLog.debug("established data channel")
+        case .established:
+            zmLog.debug("established call")
+        case .outgoing(degraded: let degraded):
+            zmLog.debug("outgoing call, , degraded: \(degraded)")
+        case .terminating(reason: let reason):
+            zmLog.debug("terminating call reason: \(reason)")
+        case .mediaStopped:
+            zmLog.debug("media stopped")
+        case .none:
+            zmLog.debug("no call")
+        case .unknown:
+            zmLog.debug("unknown call state")
+        }
+    }
+
+    /**
+     * Updates the state of the call when the security level changes.
+     * - parameter securityLevel: The new security level of the conversation for the call.
+     * - returns: The current status, updated with the appropriate degradation information.
+     */
+
+    func update(withSecurityLevel securityLevel: ZMConversationSecurityLevel) -> CallState {
+        let degraded = securityLevel == .secureWithIgnored
+
+        switch self {
+        case .incoming(video: let video, shouldRing: let shouldRing, degraded: _):
+            return .incoming(video: video, shouldRing: shouldRing, degraded: degraded)
+        case .outgoing:
+            return .outgoing(degraded: degraded)
+        case .answered:
+            return .answered(degraded: degraded)
+        default:
+            return self
+        }
+    }
 }

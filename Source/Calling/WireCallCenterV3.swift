@@ -1,6 +1,6 @@
 /*
  * Wire
- * Copyright (C) 2016 Wire Swiss GmbH
+ * Copyright (C) 2021 Wire Swiss GmbH
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,10 +34,6 @@ public class WireCallCenterV3: NSObject {
     /// The maximum number of participants for a legacy video call.
 
     let legacyVideoParticipantsLimit = 4
-
-    /// Whether conference calling is enabled.
-
-    var useConferenceCalling = false
 
     // MARK: - Properties
 
@@ -188,6 +184,9 @@ extension WireCallCenterV3 {
             videoState: video ? .started : .stopped,
             networkQuality: .normal,
             isConferenceCall: isConferenceCall,
+            degradedUser: nil,
+            activeSpeakers: [],
+            videoGridPresentationMode: .allVideoStreams,
             conversationObserverToken: token
         )
     }
@@ -273,13 +272,14 @@ extension WireCallCenterV3 {
     /**
      * Determines the degradation of the conversation.
      * - parameter conversationId: The identifier of the conversation to check the state of.
-     * - returns: Whether the conversation has degraded security.
+     * - returns: Whether the conversation has degraded security or the call in the conversation has a degraded user.
      */
 
     public func isDegraded(conversationId: UUID) -> Bool {
         let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: uiMOC!)
-        let degraded = conversation?.securityLevel == .secureWithIgnored
-        return degraded
+        let isConversationDegraded = conversation?.securityLevel == .secureWithIgnored
+        let isCallDegraded = callSnapshots[conversationId]?.isDegradedCall ?? false
+        return isConversationDegraded || isCallDegraded
     }
 
     /// Returns conversations with active calls.
@@ -313,24 +313,64 @@ extension WireCallCenterV3 {
         return callSnapshots[conversationId]?.isConferenceCall ?? false
     }
 
+    func degradedUser(conversationId: UUID) -> ZMUser? {
+        return callSnapshots[conversationId]?.degradedUser
+    }
+    
+    public func videoGridPresentationMode(conversationId: UUID) -> VideoGridPresentationMode {
+        return callSnapshots[conversationId]?.videoGridPresentationMode ?? .allVideoStreams
+    }
+
 }
 
 // MARK: - Call Participants
 
 extension WireCallCenterV3 {
     
-    /// Returns the callParticipants currently in the conversation
-    func callParticipants(conversationId: UUID) -> [CallParticipant] {
+    /// Get a list of callParticipants of a given kind for a conversation
+    /// - Parameters:
+    ///   - conversationId: the remote identifier of the conversation
+    ///   - kind: the kind of participants expected in return
+    ///   - activeSpeakersLimit: the limit of active speakers to be included
+    /// - Returns: the callParticipants currently in the conversation, according to the specified kind
+    func callParticipants(conversationId: UUID,
+                          kind: CallParticipantsListKind,
+                          activeSpeakersLimit limit: Int? = nil) -> [CallParticipant]
+    {
         guard
-            let context = uiMOC,
-            let callParticipants = callSnapshots[conversationId]?.callParticipants
+            let callMembers = callSnapshots[conversationId]?.callParticipants.members.array,
+            let context = uiMOC
         else {
             return []
         }
+
+        let activeSpeakers = self.activeSpeakers(conversationId: conversationId, limitedBy: limit)
         
-        return callParticipants.members.array.compactMap {
-            CallParticipant(member: $0, context: context)
+        return callMembers.compactMap { member in
+            var activeSpeakerState: ActiveSpeakerState = .inactive
+            
+            if let activeSpeaker = activeSpeakers.first(where: { $0.client == member.client }) {
+                activeSpeakerState = kind.state(ofActiveSpeaker: activeSpeaker)
+            }
+            
+            if kind == .smoothedActiveSpeakers && activeSpeakerState == .inactive {
+                return nil
+            }
+            
+            return CallParticipant(member: member, activeSpeakerState: activeSpeakerState, context: context)
         }
+    }
+    
+    private func activeSpeakers(conversationId: UUID, limitedBy limit: Int? = nil) -> [AVSActiveSpeakersChange.ActiveSpeaker] {
+        guard let activeSpeakers = callSnapshots[conversationId]?.activeSpeakers else {
+            return []
+        }
+        
+        guard let limit = limit else {
+            return activeSpeakers
+        }
+        
+        return Array(activeSpeakers.prefix(limit))
     }
 
     /// Returns the remote identifier of the user that initiated the call.
@@ -367,8 +407,10 @@ extension WireCallCenterV3 {
         
         endAllCalls(exluding: conversationId)
         
-        let callType = self.callType(for: conversation, startedWithVideo: video)
-        
+        let callType = self.callType(for: conversation,
+                                     startedWithVideo: video,
+                                     isConferenceCall: isConferenceCall(conversationId: conversationId))
+
         if !video {
             setVideoState(conversationId: conversationId, videoState: VideoState.stopped)
         }
@@ -381,7 +423,11 @@ extension WireCallCenterV3 {
             if previousSnapshot != nil {
                 callSnapshots[conversationId] = previousSnapshot!.update(with: callState)
             }
-            
+
+            if conversation.conversationType == .group {
+                muted = true
+            }
+
             if let context = uiMOC, let callerId = initiatorForCall(conversationId: conversationId) {
                 WireCallCenterCallStateNotification(context: context, callState: callState, conversationId: conversationId, callerId: callerId, messageTime:nil, previousCallState: previousSnapshot?.callState).post(in: context.notificationContext)
             }
@@ -404,16 +450,16 @@ extension WireCallCenterV3 {
         
         let conversationType: AVSConversationType
 
-        switch (conversation.conversationType, useConferenceCalling) {
-        case (.group, false):
-            conversationType = .group
-        case (.group, true):
+        switch conversation.conversationType {
+        case .group:
             conversationType = .conference
         default:
             conversationType = .oneToOne
         }
 
-        let callType = self.callType(for: conversation, startedWithVideo: video)
+        let callType = self.callType(for: conversation,
+                                     startedWithVideo: video,
+                                     isConferenceCall: conversationType == .conference)
 
         let started = avsWrapper.startCall(conversationId: conversationId,
                                            callType: callType,
@@ -515,15 +561,20 @@ extension WireCallCenterV3 {
     public func setVideoCaptureDevice(_ captureDevice: CaptureDevice, for conversationId: UUID) {
         flowManager.setVideoCaptureDevice(captureDevice, for: conversationId)
     }
+    
+    public func setVideoGridPresentationMode(_ presentationMode: VideoGridPresentationMode, for conversationId: UUID) {
+        if let snapshot = callSnapshots[conversationId] {
+            callSnapshots[conversationId] = snapshot.updateVideoGridPresentationMode(presentationMode)
+        }
+    }
 
-    private func callType(for conversation: ZMConversation, startedWithVideo: Bool) -> AVSCallType {
-        if !useConferenceCalling && conversation.localParticipants.count > legacyVideoParticipantsLimit {
+    private func callType(for conversation: ZMConversation, startedWithVideo: Bool, isConferenceCall: Bool) -> AVSCallType {
+        if !isConferenceCall && conversation.localParticipants.count > legacyVideoParticipantsLimit {
             return .audioOnly
         } else {
             return startedWithVideo ? .video : .normal
         }
     }
-
 }
 
 // MARK: - AVS Integration

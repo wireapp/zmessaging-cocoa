@@ -669,23 +669,14 @@ extension ZMLocalNotificationTests_Message {
         let event = ZMUpdateEvent(fromEventStreamPayload: payload as ZMTransportData, uuid: UUID())!
         return ZMLocalNotification(event: event, conversation: message.conversation!, managedObjectContext: uiMOC)
     }
-
-    func bodyForEditNote(_ conversation: ZMConversation, sender: ZMUser, text: String) -> String {
-        let message = try! conversation.appendText(content: "Foo") as! ZMClientMessage
+    
+    func testThatItDoesntCreateANotificationForAnEditMessage() {
+        let message = try! oneOnOneConversation.appendText(content: "Foo") as! ZMClientMessage
         message.markAsSent()
-        let note = editNote(message, sender: sender, text: text)
-        XCTAssertNotNil(note)
-        return note!.body
+        let note = editNote(message, sender: sender, text: "Edited Text")
+        XCTAssertNil(note)
     }
-
-    func testThatItCreatesANotificationForAnEditMessage(){
-        XCTAssertEqual(bodyForEditNote(oneOnOneConversation, sender: sender, text: "Edited Text"), "Edited Text")
-        XCTAssertEqual(bodyForEditNote(groupConversation, sender: sender, text: "Edited Text"), "Super User: Edited Text")
-        XCTAssertEqual(bodyForEditNote(groupConversationWithoutUserDefinedName, sender: sender, text: "Edited Text"), "Super User: Edited Text")
-        XCTAssertEqual(bodyForEditNote(groupConversationWithoutName, sender: sender, text: "Edited Text"), "Super User in a conversation: Edited Text")
-        XCTAssertEqual(bodyForEditNote(invalidConversation, sender: sender, text: "Edited Text"), "Super User in a conversation: Edited Text")
-    }
-
+    
 }
 
 // MARK: - Categories
@@ -718,9 +709,10 @@ extension ZMLocalNotificationTests_Message {
         XCTAssertEqual(note.category, .conversationWithLikeAndMute)
     }
 
-    func testThatItGeneratesCorrectCategoryIfEncryptionAtRestIsEnabledForTeamUser() {
+    func testThatItGeneratesCorrectCategoryIfEncryptionAtRestIsEnabledForTeamUser() throws {
         // GIVEN
-        uiMOC.encryptMessagesAtRest = true
+        let encryptionKeys = try EncryptionKeys.createKeys(for: Account(userName: "", userIdentifier: UUID()))
+        try uiMOC.enableEncryptionAtRest(encryptionKeys: encryptionKeys, skipMigration: true)
 
         // WHEN
         let note = textNotification(oneOnOneConversation, sender: sender, text: "Hello", isEphemeral: false)!
@@ -729,9 +721,10 @@ extension ZMLocalNotificationTests_Message {
         XCTAssertEqual(note.category, .conversationUnderEncryptionAtRestWithMute)
     }
 
-    func testThatItGeneratesCorrectCategoryIfEncryptionAtRestIsEnabledForNormalUser() {
+    func testThatItGeneratesCorrectCategoryIfEncryptionAtRestIsEnabledForNormalUser() throws {
         // GIVEN
-        uiMOC.encryptMessagesAtRest = true
+        let encryptionKeys = try EncryptionKeys.createKeys(for: Account(userName: "", userIdentifier: UUID()))
+        try uiMOC.enableEncryptionAtRest(encryptionKeys: encryptionKeys, skipMigration: true)
 
         let team = Team.insertNewObject(in: uiMOC)
         team.name = "Wire Amazing Team"

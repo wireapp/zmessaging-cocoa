@@ -22,7 +22,7 @@
 
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 #import "APNSTestsBase.h"
 
 @interface APNSTests : APNSTestsBase
@@ -42,7 +42,7 @@
     __block NSDictionary *conversationTransportData;
     
     __block NSString *convIdentifier;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
         conversationTransportData = (NSDictionary *)conversation.transportData;
         convIdentifier = conversation.identifier;
@@ -95,7 +95,7 @@
     __block NSDictionary *conversationTransportData;
     
     __block NSString *convIdentifier;
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
+    [self.mockTransportSession performRemoteChanges:^ (id<MockTransportSessionObjectCreation>  _Nonnull __strong session) {
         MockConversation *conversation = [session insertGroupConversationWithSelfUser:self.selfUser otherUsers:@[self.user1]];
         conversationTransportData = (NSDictionary *)conversation.transportData;
         convIdentifier = conversation.identifier;

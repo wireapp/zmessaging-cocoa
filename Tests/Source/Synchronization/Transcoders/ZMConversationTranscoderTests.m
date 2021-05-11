@@ -26,7 +26,7 @@
 #import "ObjectTranscoderTests.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMConversationTranscoder+Internal.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 
 static NSString *const CONVERSATIONS_PATH = @"/conversations";
@@ -1619,7 +1619,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     NSString *name = @"Procrastination";
     
     
-    [self.syncMOC performGroupedBlockAndWaitWithReasonableTimeout:^{
+    [self.syncMOC performGroupedBlockThenWaitForReasonableTimeout:^{
         ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user1.remoteIdentifier = [NSUUID createUUID];
         NSUUID *user1ID = user1.remoteIdentifier;
@@ -1685,7 +1685,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     
     __block NSDate *currentLastModified;
     
-    [self.syncMOC performGroupedBlockAndWaitWithReasonableTimeout:^{
+    [self.syncMOC performGroupedBlockThenWaitForReasonableTimeout:^{
         ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user1.remoteIdentifier = [NSUUID createUUID];
         NSUUID *user1ID = user1.remoteIdentifier;
@@ -1744,7 +1744,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
 {
     // given
     __block ZMTransportRequest *request;
-    [self.syncMOC performGroupedBlockAndWaitWithReasonableTimeout:^{
+    [self.syncMOC performGroupedBlockThenWaitForReasonableTimeout:^{
         ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
         user1.remoteIdentifier = [NSUUID createUUID];
         
@@ -1766,7 +1766,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [request completeWithResponse:[ZMTransportResponse responseWithPayload:nil HTTPStatus:430 transportSessionError:nil]];
     WaitForAllGroupsToBeEmpty(0.5);
     
-    [self.syncMOC performGroupedBlockAndWaitWithReasonableTimeout:^{
+    [self.syncMOC performGroupedBlockThenWaitForReasonableTimeout:^{
         [self.syncMOC saveOrRollback];
     }];
     

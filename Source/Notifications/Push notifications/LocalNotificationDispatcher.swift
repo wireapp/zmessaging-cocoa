@@ -52,7 +52,14 @@ import UserNotifications
     func scheduleLocalNotification(_ note: ZMLocalNotification) {
         Logging.push.safePublic("Scheduling local notification with id=\(note.id)")
         
-        notificationCenter.add(note.request, withCompletionHandler: nil)
+        notificationCenter.add(note.request, withCompletionHandler: { error in
+            if let error = error {
+                Logging.push.safePublic("Error scheduling local notification")
+                Logging.push.error("Scheduling Error: \(error)")
+            } else {
+                Logging.push.safePublic("Successfully scheduled local notification")
+            }
+        })
     }
 
     /// Determines if the notification content should be hidden as reflected in the store
@@ -100,9 +107,9 @@ extension LocalNotificationDispatcher: ZMEventConsumer {
                     eventNotifications.cancelCurrentNotifications(messageNonce: messageID)
                 }
                 
-                if receivedMessage.hasEdited || receivedMessage.hasHidden || receivedMessage.hasDeleted {
-                    // Cancel notification for message that was edited, deleted or hidden
-                    cancelMessageForEditingMessage(receivedMessage)
+                if receivedMessage.hasHidden || receivedMessage.hasDeleted {
+                    // Cancel notification for message that was deleted or hidden
+                    cancelMessageForDeletedMessage(receivedMessage)
                 }
             }
                         
@@ -136,7 +143,7 @@ extension LocalNotificationDispatcher {
 
 // MARK: - Failed messages
 
-extension LocalNotificationDispatcher {
+extension LocalNotificationDispatcher: PushMessageHandler {
 
     /// Informs the user that the message failed to send
     public func didFailToSend(_ message: ZMMessage) {
@@ -178,14 +185,10 @@ extension LocalNotificationDispatcher {
         self.allNotificationSets.forEach { $0.cancelNotifications(conversation) }
     }
     
-    func cancelMessageForEditingMessage(_ genericMessage: GenericMessage) {
+    func cancelMessageForDeletedMessage(_ genericMessage: GenericMessage) {
         var idToDelete : UUID?
-        
-        if genericMessage.hasEdited {
-            let replacingID = genericMessage.edited.replacingMessageID
-            idToDelete = UUID(uuidString: replacingID)
-        }
-        else if genericMessage.hasDeleted {
+
+        if genericMessage.hasDeleted {
             let deleted = genericMessage.deleted.messageID
             idToDelete = UUID(uuidString: deleted)
         }

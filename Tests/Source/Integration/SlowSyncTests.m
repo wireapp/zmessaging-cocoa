@@ -27,7 +27,7 @@
 #import "ZMLoginTranscoder+Internal.h"
 #import "ZMConversationTranscoder.h"
 #import "ZMConversation+Testing.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 
 @interface SlowSyncTests : IntegrationTest
@@ -166,7 +166,7 @@
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/conversations?ids=%@,%@,%@,%@", selfConversationIdentifier, selfToUser1ConversationIdentifier, selfToUser2ConversationIdentifier, groupConversationIdentifier]],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@", user1Identifier, user2Identifier]],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@", user3Identifier]],
-             [ZMTransportRequest requestGetFromPath:@"/teams?size=50"],
+             [ZMTransportRequest requestGetFromPath:@"/teams"],
              [ZMTransportRequest requestGetFromPath:@"/properties/labels"]
              ];
 
@@ -240,53 +240,6 @@
     XCTAssertTrue(hasNotificationsRequest);
 }
 
-- (void)testThatItDoesASlowSyncAfterTheWebSocketWentDownAndNotificationsReturnsAnError
-{
-    // given
-    XCTAssertTrue([self login]);
-    
-    [self.mockTransportSession resetReceivedRequests];
-
-    // make /notifications fail
-    __block BOOL hasNotificationsRequest = NO;
-    __block BOOL hasConversationsRequest = NO;
-    __block BOOL hasConnectionsRequest = NO;
-    __block BOOL hasUserRequest = NO;
-    
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        if([request.path hasPrefix:@"/notifications"]) {
-            if (!(hasConnectionsRequest && hasConversationsRequest && hasUserRequest)) {
-                return [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
-            }
-            hasNotificationsRequest = YES;
-        }
-        if ([request.path hasPrefix:@"/users"]) {
-            hasUserRequest = YES;
-        }
-        if ([request.path hasPrefix:@"/conversations?ids="]) {
-            hasConversationsRequest = YES;
-        }
-        if ([request.path hasPrefix:@"/connections?size="]) {
-            hasConnectionsRequest = YES;
-        }
-        return nil;
-    };
-    
-    // when
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session simulatePushChannelClosed];
-        [session simulatePushChannelOpened];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-
-    XCTAssertTrue(hasNotificationsRequest);
-    XCTAssertTrue(hasUserRequest);
-    XCTAssertTrue(hasConversationsRequest);
-    XCTAssertTrue(hasConnectionsRequest);
-}
-
 - (void)testThatTheUIIsNotifiedWhenTheSyncIsComplete
 {
     // given
@@ -297,9 +250,9 @@
     XCTAssertTrue([self login]);
     
     // then
-    XCTAssertEqual(stateRecoder.stateChanges.count, 2u);
-    ZMNetworkState state1 = (ZMNetworkState)[stateRecoder.stateChanges.firstObject intValue];
-    ZMNetworkState state2 = (ZMNetworkState)[stateRecoder.stateChanges.lastObject intValue];
+    XCTAssertEqual(stateRecoder.stateChanges_objc.count, 2u);
+    ZMNetworkState state1 = (ZMNetworkState)[stateRecoder.stateChanges_objc.firstObject intValue];
+    ZMNetworkState state2 = (ZMNetworkState)[stateRecoder.stateChanges_objc.lastObject intValue];
 
     XCTAssertEqual(state1, ZMNetworkStateOnlineSynchronizing);
     XCTAssertEqual(state2, ZMNetworkStateOnline);
@@ -316,49 +269,6 @@
     // then
     XCTAssertNotNil([[ZMUser selfUserInUserSession:self.userSession] emailAddress]);
 }
-
-- (void)testThatAccountDeletedIfTeamIsDiscoveredToBeDeletedDuringSlowSync
-{
-    // given
-    __block MockTeam *mockTeam;
-    [self.mockTransportSession performRemoteChanges:^(id<MockTransportSessionObjectCreation> _Nonnull session) {
-        mockTeam = [session insertTeamWithName:@"Foo" isBound: YES users:[NSSet setWithObject:self.selfUser]];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    XCTAssertTrue([self login]);
-    XCTAssertNotNil([ZMUser selfUserInUserSession:self.userSession].team);
-    
-    // when
-    // block requests to /notifications to enforce slowSync
-    __block BOOL hasTeamRequest = NO;
-
-    self.mockTransportSession.responseGeneratorBlock = ^ZMTransportResponse *(ZMTransportRequest *request) {
-        if([request.path hasPrefix:@"/notifications"]) {
-            if (!hasTeamRequest){
-                return [ZMTransportResponse responseWithPayload:nil HTTPStatus:404 transportSessionError:nil];
-            }
-        }
-        if ([request.path hasPrefix:@"/teams"]) {
-            hasTeamRequest = YES;
-        }
-        return nil;
-    };
-    
-    [self.mockTransportSession performRemoteChanges:^(MockTransportSession<MockTransportSessionObjectCreation> *session) {
-        [session simulatePushChannelClosed];
-        [session removeMemberWithUser:self.selfUser fromTeam:mockTeam];
-        [session saveAndCreatePushChannelEvents]; // clears the team.member-leave event from the push channel events
-        [session simulatePushChannelOpened];
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(hasTeamRequest);
-    XCTAssertNil(self.userSession); // user session has been closed
-    XCTAssertEqual(self.sessionManager.accountManager.accounts.count, 0ul); // account has been deleted
-}
-
 
 - (ZMUser *)findUserWithUUID:(NSString *)UUIDString inMoc:(NSManagedObjectContext *)moc {
     ZMUser *user = [ZMUser userWithRemoteID:[UUIDString UUID] createIfNeeded:NO inContext:moc];

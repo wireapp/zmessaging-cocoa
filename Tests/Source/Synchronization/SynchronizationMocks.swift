@@ -77,9 +77,13 @@ class MockAuthenticationStatus: ZMAuthenticationStatus {
     
     var mockPhase: ZMAuthenticationPhase
     
-    init(phase: ZMAuthenticationPhase = .authenticated, userInfoParser: UserInfoParser) {
+    init(delegate: ZMAuthenticationStatusDelegate,
+         phase: ZMAuthenticationPhase = .authenticated,
+         userInfoParser: UserInfoParser) {
         self.mockPhase = phase
-        super.init(groupQueue: DispatchGroupQueue(queue: .main), userInfoParser: userInfoParser)
+        super.init(delegate: delegate,
+                   groupQueue: DispatchGroupQueue(queue: .main),
+                   userInfoParser: userInfoParser)
     }
     
     override var currentPhase: ZMAuthenticationPhase {
@@ -226,6 +230,8 @@ public class MockSyncStatus : SyncStatus {
     @objc public var didCallFinishSlowSync = false
     @objc public var didCallStartQuickSync = false
     @objc public var didCallFinishQuickSync = false
+    @objc public var didCallFailRegisterUserClient = false
+    @objc public var didCallDeleteUserClient = false
     
     public func didStartSlowSync() {
         didCallStartSlowSync = true
@@ -243,8 +249,16 @@ public class MockSyncStatus : SyncStatus {
         didCallFinishQuickSync = true
     }
     
-    public func didRegister(_ userClient: UserClient!) {
+    public func didRegisterSelfUserClient(_ userClient: UserClient!) {
         registeredUserClient = userClient
+    }
+    
+    public func didFailToRegisterSelfUserClient(error: Error!) {
+        didCallFailRegisterUserClient = true
+    }
+    
+    public func didDeleteSelfUserClient(error: Error!) {
+        didCallDeleteUserClient = true
     }
 }
 
@@ -255,4 +269,81 @@ public class MockSyncStatus : SyncStatus {
     }
 
     fileprivate(set) var failedToSend: [ZMMessage] = []
+}
+
+@objcMembers public class MockEventConsumer: NSObject, ZMEventConsumer {
+    
+    public var eventsProcessed: [ZMUpdateEvent] = []
+    public var processEventsCalled: Bool = false
+    public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
+        processEventsCalled = true
+        eventsProcessed.append(contentsOf: events)
+    }
+    
+    public var eventsProcessedWhileInBackground: [ZMUpdateEvent] = []
+    public var processEventsWhileInBackgroundCalled: Bool = false
+    public func processEventsWhileInBackground(_ events: [ZMUpdateEvent]) {
+        processEventsWhileInBackgroundCalled = true
+        eventsProcessedWhileInBackground.append(contentsOf: events)
+    }
+    
+    public var messageNoncesToPrefetchCalled: Bool = false
+    public func messageNoncesToPrefetch(toProcessEvents events: [ZMUpdateEvent]) -> Set<UUID> {
+        messageNoncesToPrefetchCalled = true
+        
+        return Set(events.compactMap(\.messageNonce))
+    }
+    
+    public var conversationRemoteIdentifiersToPrefetchCalled: Bool = false
+    public func conversationRemoteIdentifiersToPrefetch(toProcessEvents events: [ZMUpdateEvent]) -> Set<UUID> {
+        conversationRemoteIdentifiersToPrefetchCalled = true
+        
+        return Set(events.compactMap(\.conversationUUID))
+    }
+    
+}
+
+@objcMembers public class MockContextChangeTracker: NSObject, ZMContextChangeTracker {
+    
+    public var objectsDidChangeCalled: Bool = false
+    public func objectsDidChange(_ object: Set<NSManagedObject>) {
+        objectsDidChangeCalled = true
+    }
+    
+    public var fetchRequest: NSFetchRequest<NSFetchRequestResult>?
+    public var fetchRequestForTrackedObjectsCalled: Bool = false
+    public func fetchRequestForTrackedObjects() -> NSFetchRequest<NSFetchRequestResult>? {
+        fetchRequestForTrackedObjectsCalled = true
+        return fetchRequest
+    }
+    
+    public var addTrackedObjectsCalled = false
+    public func addTrackedObjects(_ objects: Set<NSManagedObject>) {
+        addTrackedObjectsCalled = true
+    }
+    
+}
+
+@objcMembers public class MockRequestStrategy: NSObject, RequestStrategy {
+    
+    
+    public var mockRequestQueue: [ZMTransportRequest] = []
+    public var mockRequest: ZMTransportRequest? {
+        set {
+            if let request = newValue {
+                mockRequestQueue = [request]
+            } else {
+                mockRequestQueue = []
+            }
+        }
+        get {
+            mockRequestQueue.last
+        }
+    }
+    public var nextRequestCalled = false
+    public func nextRequest() -> ZMTransportRequest? {
+        nextRequestCalled = true
+        return mockRequestQueue.popLast()
+    }
+    
 }

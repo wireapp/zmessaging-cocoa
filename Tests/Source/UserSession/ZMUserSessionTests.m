@@ -23,7 +23,7 @@
 @import avs;
 
 #include "ZMUserSessionTestsBase.h"
-#import "WireSyncEngine_iOS_Tests-Swift.h"
+#import "Tests-Swift.h"
 
 @interface ZMUserSessionTests : ZMUserSessionTestsBase
 
@@ -44,36 +44,6 @@
 - (void)didReceiveNotification:(NSNotification *)notification
 {
     self.lastReceivedNotification = notification;
-}
-
-- (void)testThatItSetsTheUserAgentOnStart;
-{
-    // given
-    NSString *version = @"The-version-123";
-    id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
-    [[[transportSession stub] andReturn:[OCMockObject niceMockForClass:[ZMPersistentCookieStorage class]]] cookieStorage];
-    
-    // expect
-    id userAgent = [OCMockObject mockForClass:ZMUserAgent.class];
-    [[[userAgent expect] classMethod] setWireAppVersion:version];
-    
-    // when
-    ZMUserSession *session = [[ZMUserSession alloc] initWithTransportSession:transportSession
-                                                                mediaManager:self.mediaManager
-                                                                 flowManager:self.flowManagerMock
-                                                                   analytics:nil
-                                                               operationLoop:nil
-                                                                 application:self.application
-                                                                  appVersion:version
-                                                               storeProvider:self.storeProvider
-                                                         showContentDelegate:nil];
-    XCTAssertNotNil(session);
-    
-    // then
-    [userAgent verify];
-    [userAgent stopMocking];
-    [session tearDown];
-    [transportSession stopMocking];
 }
 
 - (void)testThatWeCanGetAManagedObjectContext
@@ -178,38 +148,13 @@
 {
     // given
     UserClient *userClient = [self createSelfClient];
-    id pushChannel = [OCMockObject niceMockForProtocol:@protocol(ZMPushChannel)];
-    id transportSession = [OCMockObject niceMockForClass:ZMTransportSession.class];
-    id cookieStorage = [OCMockObject niceMockForClass:ZMPersistentCookieStorage.class];
-    id sessionManager = [[MockSessionManager alloc] init];
-
-    // expect
-    [[pushChannel expect] setClientID:userClient.remoteIdentifier];
-    [[[transportSession stub] andReturn:pushChannel] pushChannel];
-    [[[transportSession stub] andReturn:cookieStorage] cookieStorage];
     
     // when
-    ZMUserSession *userSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
-                                                                    mediaManager:self.mediaManager
-                                                                     flowManager:self.flowManagerMock
-                                                                       analytics:nil
-                                                                   operationLoop:nil
-                                                                     application:self.application
-                                                                      appVersion:@"00000"
-                                                                   storeProvider:self.storeProvider
-                                                             showContentDelegate:nil];
-    userSession.sessionManager = sessionManager;
-    XCTAssertFalse([(MockSessionManager *)sessionManager updatePushTokenCalled]);
-    [userSession didRegisterUserClient:userClient];
+    [self.sut didRegisterSelfUserClient:userClient];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    [pushChannel verify];
-    [transportSession verify];
-
-    XCTAssert([self waitForAllGroupsToBeEmptyWithTimeout:0.5]);
-    XCTAssertTrue([(MockSessionManager *)sessionManager updatePushTokenCalled]);
-
-    [userSession tearDown];
+    XCTAssertEqualObjects(self.mockPushChannel.clientID, userClient.remoteIdentifier);
 }
 
 - (void)testThatItReturnsTheFingerprintForSelfUserClient
@@ -409,23 +354,28 @@
 - (void)testThatItSetsItselfAsADelegateOfTheTransportSessionAndForwardsUserClientID
 {
     // given
-    UserClient *selfClient = [self createSelfClient];;
+    UserClient *selfClient = [self createSelfClient];
+    NSUUID *userId = NSUUID.createUUID;
     
     self.mockPushChannel = [[MockPushChannel alloc] init];
-    self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com" userIdentifier:NSUUID.createUUID];
+    self.cookieStorage = [ZMPersistentCookieStorage storageForServerName:@"usersessiontest.example.com" userIdentifier:userId];
     RecordingMockTransportSession *transportSession = [[RecordingMockTransportSession alloc] initWithCookieStorage:self.cookieStorage pushChannel:self.mockPushChannel];
 
 
     // when
-    ZMUserSession *testSession = [[ZMUserSession alloc] initWithTransportSession:transportSession
-                                                                    mediaManager:self.mediaManager
-                                                                     flowManager:self.flowManagerMock
-                                                                       analytics:nil
-                                                                   operationLoop:nil
-                                                                     application:self.application
-                                                                      appVersion:@"00000"
-                                                                   storeProvider:self.storeProvider
-                                                             showContentDelegate:nil];
+    ZMUserSession *testSession = [[ZMUserSession alloc] initWithUserId:userId
+                                                      transportSession:transportSession
+                                                          mediaManager:self.mediaManager
+                                                           flowManager:self.flowManagerMock
+                                                             analytics:nil
+                                                        eventProcessor:nil
+                                                     strategyDirectory:nil
+                                                          syncStrategy:nil
+                                                         operationLoop:nil
+                                                           application:self.application
+                                                            appVersion:@"00000"
+                                                         coreDataStack:self.coreDataStack
+                                                         configuration:ZMUserSessionConfiguration.defaultConfig];
     WaitForAllGroupsToBeEmpty(0.5);
 
     // then
@@ -472,16 +422,6 @@
     
     // then
     XCTAssertTrue([self waitForOfflineStatus]);
-}
-
-- (void)testThatWeSetUserSessionToSyncDoneWhenSyncIsDone
-{
-    // when
-    [self.sut didStartQuickSync];
-    [self.sut didFinishQuickSync];
-    
-    // then
-    XCTAssertTrue([self waitForStatus:ZMNetworkStateOnline]);
 }
 
 - (void)testThatItNotifiesThirdPartyServicesWhenSyncIsDone
@@ -637,8 +577,8 @@
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(stateRecorder.stateChanges.count, 1u);
-    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges.firstObject intValue], ZMNetworkStateOnlineSynchronizing);
+    XCTAssertEqual(stateRecorder.stateChanges_objc.count, 1u);
+    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges_objc.firstObject intValue], ZMNetworkStateOnlineSynchronizing);
     
     // after
     token = nil;
@@ -655,7 +595,7 @@
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(stateRecorder.stateChanges.count, 0u);
+    XCTAssertEqual(stateRecorder.stateChanges_objc.count, 0u);
     
     // after
     token = nil;
@@ -673,8 +613,8 @@
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(stateRecorder.stateChanges.count, 1u);
-    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges.firstObject intValue], ZMNetworkStateOffline);
+    XCTAssertEqual(stateRecorder.stateChanges_objc.count, 1u);
+    XCTAssertEqual((ZMNetworkState)[stateRecorder.stateChanges_objc.firstObject intValue], ZMNetworkStateOffline);
     
     // after
     token = nil;
@@ -693,7 +633,7 @@
     
     // then
     WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssertEqual(stateRecorder.stateChanges.count, 0u);
+    XCTAssertEqual(stateRecorder.stateChanges_objc.count, 0u);
     
     // after
     token = nil;

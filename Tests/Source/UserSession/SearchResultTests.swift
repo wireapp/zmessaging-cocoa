@@ -45,7 +45,7 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "", searchOptions: [.directory], contextProvider: contextDirectory!)
+        let result = SearchResult(payload: payload, query: "", searchOptions: [.directory], contextProvider: coreDataStack!)
         
         // then
         XCTAssertEqual(result?.directory.count, 1)
@@ -78,7 +78,7 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "", searchOptions: [.directory], contextProvider: contextDirectory!)
+        let result = SearchResult(payload: payload, query: "", searchOptions: [.directory], contextProvider: coreDataStack!)
         
         // then
         XCTAssertEqual(result?.directory.count, 1)
@@ -99,7 +99,7 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: name, searchOptions: [.directory], contextProvider: contextDirectory!)
+        let result = SearchResult(payload: payload, query: name, searchOptions: [.directory], contextProvider: coreDataStack!)
         
         // then
         XCTAssertEqual(result?.directory.count, 2)
@@ -121,7 +121,7 @@ class SearchResultTests : DatabaseTest {
             ]]
         
         // when
-        let result = SearchResult(payload: payload, query: "@\(name)", searchOptions: [.directory], contextProvider: contextDirectory!)!
+        let result = SearchResult(payload: payload, query: "@\(name)", searchOptions: [.directory], contextProvider: coreDataStack!)!
         
         // then
         XCTAssertEqual(result.directory.count, 1)
@@ -150,7 +150,7 @@ class SearchResultTests : DatabaseTest {
         let result = SearchResult(payload: payload,
                                   query: "",
                                   searchOptions: [.directory, .teamMembers],
-                                  contextProvider: contextDirectory!)
+                                  contextProvider: coreDataStack!)
         
         // then
         XCTAssertEqual(result?.teamMembers.count, 1)
@@ -179,7 +179,7 @@ class SearchResultTests : DatabaseTest {
         let result = SearchResult(payload: payload,
                                   query: "",
                                   searchOptions: [.directory, .teamMembers, .excludeNonActiveTeamMembers],
-                                  contextProvider: contextDirectory!)
+                                  contextProvider: coreDataStack!)
         
         // then
         XCTAssertEqual(result?.teamMembers.count, 0)
@@ -206,7 +206,7 @@ class SearchResultTests : DatabaseTest {
         var result = SearchResult(payload: payload,
                                   query: "",
                                   searchOptions: [.directory, .teamMembers],
-                                  contextProvider: contextDirectory!)
+                                  contextProvider: coreDataStack!)
         
         let membership = createMembershipPayload(userID: remoteTeamMemberID, createdBy: selfUser.remoteIdentifier, permissions: .partner)
         let membershipListPayload = WireSyncEngine.MembershipListPayload.init(hasMore: false, members: [membership])
@@ -244,7 +244,7 @@ class SearchResultTests : DatabaseTest {
         var result = SearchResult(payload: payload,
                                   query: "",
                                   searchOptions: [.directory, .teamMembers],
-                                  contextProvider: contextDirectory!)
+                                  contextProvider: coreDataStack!)
         
         let membership = createMembershipPayload(userID: remoteTeamMemberID, createdBy: nil, permissions: .partner)
         let membershipListPayload = WireSyncEngine.MembershipListPayload.init(hasMore: false, members: [membership])
@@ -252,7 +252,7 @@ class SearchResultTests : DatabaseTest {
         result?.extendWithMembershipPayload(payload: membershipListPayload)
         
         // when
-        result?.filterBy(searchOptions: .excludeNonActivePartners, query: "", contextProvider: contextDirectory!)
+        result?.filterBy(searchOptions: .excludeNonActivePartners, query: "", contextProvider: coreDataStack!)
         
         // then
         XCTAssertEqual(result?.teamMembers.count, 0)
@@ -279,7 +279,7 @@ class SearchResultTests : DatabaseTest {
         var result = SearchResult(payload: payload,
                                   query: "",
                                   searchOptions: [.directory, .teamMembers],
-                                  contextProvider: contextDirectory!)
+                                  contextProvider: coreDataStack!)
         
         let membership = createMembershipPayload(userID: remoteTeamMemberID, createdBy: selfUser.remoteIdentifier, permissions: .partner)
         let membershipListPayload = WireSyncEngine.MembershipListPayload.init(hasMore: false, members: [membership])
@@ -287,7 +287,7 @@ class SearchResultTests : DatabaseTest {
         result?.extendWithMembershipPayload(payload: membershipListPayload)
         
         // when
-        result?.filterBy(searchOptions: .excludeNonActivePartners, query: "", contextProvider: contextDirectory!)
+        result?.filterBy(searchOptions: .excludeNonActivePartners, query: "", contextProvider: coreDataStack!)
         
         // then
         XCTAssertEqual(result?.teamMembers.count, 1)
@@ -315,7 +315,7 @@ class SearchResultTests : DatabaseTest {
         var result = SearchResult(payload: payload,
                                   query: "",
                                   searchOptions: [.directory, .teamMembers],
-                                  contextProvider: contextDirectory!)
+                                  contextProvider: coreDataStack!)
         
         let membership = createMembershipPayload(userID: remoteTeamMemberID, createdBy: nil, permissions: .partner)
         let membershipListPayload = WireSyncEngine.MembershipListPayload.init(hasMore: false, members: [membership])
@@ -323,7 +323,7 @@ class SearchResultTests : DatabaseTest {
         result?.extendWithMembershipPayload(payload: membershipListPayload)
         
         // when
-        result?.filterBy(searchOptions: .excludeNonActivePartners, query: "@aaa", contextProvider: contextDirectory!)
+        result?.filterBy(searchOptions: .excludeNonActivePartners, query: "@aaa", contextProvider: coreDataStack!)
         
         // then
         XCTAssertEqual(result?.teamMembers.count, 1)

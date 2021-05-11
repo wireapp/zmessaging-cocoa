@@ -20,26 +20,6 @@ import XCTest
 import WireRequestStrategy
 import WireDataModel
 
-extension ZMConversation {
-    @objc var isFullyMuted: Bool {
-        get {
-            return mutedMessageTypes == .all
-        }
-        set {
-            mutedMessageTypes = newValue ? .all : .none
-        }
-    }
-    
-    @objc var isMutedDisplayingMentions: Bool {
-        get {
-            return mutedMessageTypes == .regular
-        }
-        set {
-            mutedMessageTypes = newValue ? .regular : .none
-        }
-    }
-}
-
 class ZMConversationTranscoderTests_Swift: ObjectTranscoderTests {
     
     var sut: ZMConversationTranscoder!
@@ -394,10 +374,17 @@ extension ZMConversationTranscoderTests_Swift : ZMSyncStateDelegate {
         // nop
     }
         
-    func didRegister(_ userClient: UserClient!) {
+    public func didRegisterSelfUserClient(_ userClient: UserClient!) {
         // nop
     }
     
+    public func didFailToRegisterSelfUserClient(error: Error!) {
+        // nop
+    }
+    
+    public func didDeleteSelfUserClient(error: Error!) {
+        // nop
+    }
 }
 
 // MARK: - Update events

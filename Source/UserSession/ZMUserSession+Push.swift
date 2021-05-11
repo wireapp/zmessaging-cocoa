@@ -120,7 +120,7 @@ extension ZMUserSession {
             syncMOC.saveOrRollback()
         }
     }
-
+    
     public func registerCurrentPushToken() {
         managedObjectContext.performGroupedBlock {
             self.sessionManager?.updatePushToken(for: self)
@@ -142,6 +142,14 @@ extension ZMUserSession {
             syncMOC.saveOrRollback()
         }
     }
+    
+    /// Count number of conversations with unread messages and update the application icon badge count.
+    func calculateBadgeCount() {
+        let accountID = coreDataStack.account.userIdentifier
+        let unreadCount = Int(ZMConversation.unreadConversationCount(in: self.syncManagedObjectContext))
+        Logging.push.safePublic("Updating badge count for \(accountID) to \(SanitizedString(stringLiteral: String(unreadCount)))")
+        self.sessionManager?.updateAppIconBadge(accountID: accountID, unreadCount: unreadCount)
+    }
 }
 
 extension ZMUserSession {
@@ -149,8 +157,6 @@ extension ZMUserSession {
     public func receivedPushNotification(with payload: [AnyHashable: Any], completion: @escaping () -> Void) {
         Logging.network.debug("Received push notification with payload: \(payload)")
         
-        let accountID = self.storeProvider.userIdentifier;
-
         syncManagedObjectContext.performGroupedBlock {
             let notAuthenticated = !self.isAuthenticated
             
@@ -159,15 +165,8 @@ extension ZMUserSession {
                 completion()
                 return
             }
-            
-            // once notification processing is finished, it's safe to update the badge
-            let completionHandler = {
-                completion()
-                let unreadCount = Int(ZMConversation.unreadConversationCount(in: self.syncManagedObjectContext))
-                self.sessionManager?.updateAppIconBadge(accountID: accountID, unreadCount: unreadCount)
-            }
-            
-            self.operationLoop?.fetchEvents(fromPushChannelPayload: payload, completionHandler: completionHandler)
+                        
+            self.operationLoop?.fetchEvents(fromPushChannelPayload: payload, completionHandler: completion)
         }
     }
     

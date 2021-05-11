@@ -25,7 +25,47 @@ class CallParticipantsSnapshot {
 
     private unowned var callCenter: WireCallCenterV3
     private let conversationId: UUID
-    private(set) var members: OrderedSetState<AVSCallMember>
+
+    private(set) var members: OrderedSetState<AVSCallMember> {
+        didSet {
+            guard let moc = callCenter.uiMOC else { return }
+
+            participants = members
+                .map { CallParticipant(member: $0, context: moc) }
+                .compactMap(\.self)
+        }
+    }
+
+    private var participants = [CallParticipant]() {
+        didSet {
+            updateUserVerifiedMap()
+            notifyChange()
+        }
+    }
+
+    private var userVerifiedMap = [ZMUser: Bool]()
+
+    private func updateUserVerifiedMap() {
+        for user in participants.map(\.user) {
+            let zmuser = user as! ZMUser
+            let userWasVerified = userVerifiedMap[zmuser] ?? false
+            let userIsVerified = zmuser.isVerified
+
+            userVerifiedMap[zmuser] = userIsVerified
+
+            if userWasVerified && !userIsVerified {
+                guard let selfUser = selfUser else { return }
+                let degradedUser = selfUser.isTrusted ? zmuser : selfUser
+                callCenter.callDidDegrade(conversationId: conversationId, degradedUser: degradedUser)
+                break
+            }
+        }
+    }
+
+    private var selfUser: ZMUser? {
+        guard let moc = callCenter.uiMOC else { return nil }
+        return ZMUser.selfUser(in: moc)
+    }
 
     /// Worst network quality of all the participants.
 
@@ -48,7 +88,6 @@ class CallParticipantsSnapshot {
 
     func callParticipantsChanged(participants: [AVSCallMember]) {
         members = type(of:self).removeDuplicateMembers(participants)
-        notifyChange()
     }
 
     func callParticipantNetworkQualityChanged(client: AVSClient, networkQuality: NetworkQuality) {
@@ -77,10 +116,6 @@ class CallParticipantsSnapshot {
 
     private func notifyChange() {
         guard let context = callCenter.uiMOC else { return }
-        
-        let participants = members
-            .map { CallParticipant(member: $0, context: context) }
-            .compactMap(\.self)
 
         WireCallCenterCallParticipantNotification(conversationId: conversationId, participants: participants)
             .post(in: context.notificationContext)

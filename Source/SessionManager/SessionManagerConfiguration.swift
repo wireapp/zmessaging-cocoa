@@ -62,16 +62,41 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
     ///
     /// The default value of this property is `nil`, i.e. threshold is ignored
     public var failedPasswordThresholdBeforeWipe: Int?
+    
+    /// The `encryptionAtRestEnabledByDefault` configures if the encryption at rest will be enabled by default for all sessions.
+    ///
+    /// The default value of this property is `false`
+    public var encryptionAtRestEnabledByDefault: Bool
+
+    /// If set to true, then the app lock feature will use biometric authentication if available,
+    /// or fallback on the custom passcode.
+
+    public var useBiometricsOrCustomPasscode: Bool
+
+    /// If set to true, the the app lock feature will be mandatory and can not be disabled by the
+    /// user.
+
+    public var forceAppLock: Bool
+
+    /// The amount of seconds in the background before the app will relock.
+
+    public var appLockTimeout: UInt
 
     // MARK: - Init
     
-    public init(wipeOnCookieInvalid: Bool = false,
-                blacklistDownloadInterval: TimeInterval = 6 * 60 * 60,
-                blockOnJailbreakOrRoot: Bool = false,
-                wipeOnJailbreakOrRoot: Bool = false,
-                messageRetentionInterval: TimeInterval? = nil,
-                authenticateAfterReboot: Bool = false,
-                failedPasswordThresholdBeforeWipe: Int? = nil) {
+    public init(
+        wipeOnCookieInvalid: Bool = false,
+        blacklistDownloadInterval: TimeInterval = 6 * 60 * 60,
+        blockOnJailbreakOrRoot: Bool = false,
+        wipeOnJailbreakOrRoot: Bool = false,
+        messageRetentionInterval: TimeInterval? = nil,
+        authenticateAfterReboot: Bool = false,
+        failedPasswordThresholdBeforeWipe: Int? = nil,
+        encryptionAtRestIsEnabledByDefault: Bool = false,
+        useBiometricsOrCustomPasscode: Bool = false,
+        forceAppLock: Bool = false,
+        appLockTimeout: UInt = 10) {
+
         self.wipeOnCookieInvalid = wipeOnCookieInvalid
         self.blacklistDownloadInterval = blacklistDownloadInterval
         self.blockOnJailbreakOrRoot = blockOnJailbreakOrRoot
@@ -79,6 +104,10 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         self.messageRetentionInterval = messageRetentionInterval
         self.authenticateAfterReboot = authenticateAfterReboot
         self.failedPasswordThresholdBeforeWipe = failedPasswordThresholdBeforeWipe
+        self.encryptionAtRestEnabledByDefault = encryptionAtRestIsEnabledByDefault
+        self.useBiometricsOrCustomPasscode = useBiometricsOrCustomPasscode
+        self.forceAppLock = forceAppLock
+        self.appLockTimeout = appLockTimeout
     }
 
     required public init(from decoder: Decoder) throws {
@@ -90,18 +119,28 @@ public class SessionManagerConfiguration: NSObject, NSCopying, Codable {
         messageRetentionInterval = try container.decodeIfPresent(TimeInterval.self, forKey: .messageRetentionInterval)
         authenticateAfterReboot = try container.decode(Bool.self, forKey: .authenticateAfterReboot)
         failedPasswordThresholdBeforeWipe = try container.decodeIfPresent(Int.self, forKey: .failedPasswordThresholdBeforeWipe)
+        encryptionAtRestEnabledByDefault = try container.decode(Bool.self, forKey: .encryptionAtRestEnabledByDefault)
+        useBiometricsOrCustomPasscode = try container.decode(Bool.self, forKey: .useBiometricsOrCustomPasscode)
+        forceAppLock = try container.decode(Bool.self, forKey: .forceAppLock)
+        appLockTimeout = try container.decode(UInt.self, forKey: .appLockTimeout)
     }
 
     // MARK: - Methods
     
     public func copy(with zone: NSZone? = nil) -> Any {
-        let copy = SessionManagerConfiguration(wipeOnCookieInvalid: wipeOnCookieInvalid,
-                                               blacklistDownloadInterval: blacklistDownloadInterval,
-                                               blockOnJailbreakOrRoot: blockOnJailbreakOrRoot,
-                                               wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot,
-                                               messageRetentionInterval: messageRetentionInterval,
-                                               authenticateAfterReboot: authenticateAfterReboot,
-                                               failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe)
+        let copy = SessionManagerConfiguration(
+            wipeOnCookieInvalid: wipeOnCookieInvalid,
+            blacklistDownloadInterval: blacklistDownloadInterval,
+            blockOnJailbreakOrRoot: blockOnJailbreakOrRoot,
+            wipeOnJailbreakOrRoot: wipeOnJailbreakOrRoot,
+            messageRetentionInterval: messageRetentionInterval,
+            authenticateAfterReboot: authenticateAfterReboot,
+            failedPasswordThresholdBeforeWipe: failedPasswordThresholdBeforeWipe,
+            encryptionAtRestIsEnabledByDefault: encryptionAtRestEnabledByDefault,
+            useBiometricsOrCustomPasscode: useBiometricsOrCustomPasscode,
+            forceAppLock: forceAppLock,
+            appLockTimeout: appLockTimeout
+        )
         
         return copy
     }
@@ -132,6 +171,25 @@ extension SessionManagerConfiguration {
         case messageRetentionInterval
         case authenticateAfterReboot
         case failedPasswordThresholdBeforeWipe
+        case encryptionAtRestEnabledByDefault
+        case useBiometricsOrCustomPasscode
+        case forceAppLock
+        case appLockTimeout
+    }
+
+}
+
+// MARK: - Helpers
+
+extension SessionManagerConfiguration {
+
+    var appLockConfig: AppLockController.Config {
+        return .init(
+            isAvailable: true,
+            isForced: forceAppLock,
+            timeout: appLockTimeout,
+            requireCustomPasscode: useBiometricsOrCustomPasscode
+        )
     }
 
 }
