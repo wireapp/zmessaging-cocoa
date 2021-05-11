@@ -11,6 +11,7 @@
 		067BB08125074EA200946EC8 /* LoginFlowTests+PushToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067BB08025074EA200946EC8 /* LoginFlowTests+PushToken.swift */; };
 		067BB08F250789D500946EC8 /* BuildType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067BB08E250789D500946EC8 /* BuildType.swift */; };
 		063AF985264B2DF800DCBCED /* CallClosedReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0625690E264AE6560041C17B /* CallClosedReason.swift */; };
+		063AF9DE264B2FDA00DCBCED /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 063AF9DD264B2FDA00DCBCED /* Logging.swift */; };
 		06B99C7B242B51A300FEAFDE /* SignatureRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06B99C7A242B51A300FEAFDE /* SignatureRequestStrategy.swift */; };
 		06BBF7012473D51D00A26626 /* MessagingTest+Swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF7002473D51D00A26626 /* MessagingTest+Swift.swift */; };
 		06DE14CD24B85B06006CB6B3 /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DE14CC24B85B06006CB6B3 /* SyncStatus.swift */; };
@@ -684,6 +685,7 @@
 /* Begin PBXFileReference section */
 		068E655924C8223400403926 /* LocalNotificationContentTypeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNotificationContentTypeTest.swift; sourceTree = "<group>"; };
 		0625690E264AE6560041C17B /* CallClosedReason.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallClosedReason.swift; sourceTree = "<group>"; };
+		063AF9DD264B2FDA00DCBCED /* Logging.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		06B99C7A242B51A300FEAFDE /* SignatureRequestStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignatureRequestStrategy.swift; sourceTree = "<group>"; };
 		06BBF6EC246EB56B00A26626 /* ConversationTests+List.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+List.swift"; sourceTree = "<group>"; };
 		06BBF6EF246ECB2400A26626 /* ConversationTests+Archiving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConversationTests+Archiving.swift"; sourceTree = "<group>"; };
@@ -2376,6 +2378,7 @@
 		A9EADFFF19DBF20A00FD386C /* Utility */ = {
 			isa = PBXGroup;
 			children = (
+				063AF9DD264B2FDA00DCBCED /* Logging.swift */,
 				5430E9231BAA0D9F00395E05 /* WireSyncEngineLogs.h */,
 				874F142C1C16FD9700C15118 /* Device.swift */,
 				87508E9F1D08264000162483 /* ZMSound.swift */,
@@ -3342,6 +3345,7 @@
 				BF3C1B1720DBE254001CE126 /* Conversation+MessageDestructionTimeout.swift in Sources */,
 				1659114F1DEF1F6E007FA847 /* LocalNotificationDispatcher+Calling.swift in Sources */,
 				16DABFAE1DCF98D3001973E3 /* CallingRequestStrategy.swift in Sources */,
+				063AF9DE264B2FDA00DCBCED /* Logging.swift in Sources */,
 				54DE9BEB1DE74FFB00EFFB9C /* RandomHandleGenerator.swift in Sources */,
 				F1C51FE91FB4A9C7009C2269 /* RegistrationStrategy.swift in Sources */,
 				549816301A432BC800A7CE2E /* ZMSelfStrategy.m in Sources */,

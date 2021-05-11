@@ -140,7 +140,7 @@ import Foundation
                     self?.updateBackgroundTask(with: message)
                 })
             } catch {
-                WireDataModel.Logging.messageProcessing.warn("Failed to reply to message from user notification. Reason: \(error.localizedDescription)")
+                Logging.messageProcessing.warn("Failed to reply to message from user notification. Reason: \(error.localizedDescription)")
             }
         }
     }
@@ -157,7 +157,7 @@ import Foundation
             let confirmation = GenericMessage(content: Confirmation(messageId: originalMessage.nonce!, type: .read))
             try conversation.appendClientMessage(with: confirmation)
         } catch {
-            WireDataModel.Logging.messageProcessing.warn("Failed to append read receipt from user notification. Reason: \(error.localizedDescription)")
+            Logging.messageProcessing.warn("Failed to append read receipt from user notification. Reason: \(error.localizedDescription)")
         }
     }
     
