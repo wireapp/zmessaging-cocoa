@@ -24,20 +24,6 @@ extension NSNotification.Name {
     static let calculateBadgeCount = NSNotification.Name(rawValue: "calculateBadgeCountNotication")
 }
 
-@objc
-public protocol UpdateEventProcessor: class {
-            
-    @objc(storeUpdateEvents:ignoreBuffer:)
-    func storeUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool)
-    
-    @objc(storeAndProcessUpdateEvents:ignoreBuffer:)
-    func storeAndProcessUpdateEvents(_ updateEvents: [ZMUpdateEvent], ignoreBuffer: Bool)
-    
-    func processEventsIfReady() -> Bool
-    
-    var eventConsumers: [ZMEventConsumer] { get set }
-}
-
 class EventProcessor: UpdateEventProcessor {
     
     let syncContext: NSManagedObjectContext
