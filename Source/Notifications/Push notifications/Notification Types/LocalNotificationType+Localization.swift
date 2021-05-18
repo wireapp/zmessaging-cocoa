@@ -227,7 +227,7 @@ extension LocalNotificationType {
         }
     }
     
-    func messageBodyText(sender: ZMUser?, conversation: ZMConversation?) -> String {
+    func messageBodyText(sender: ZMUser?, conversation: ZMConversation?, reason: ParticipantsRemovedReason? = nil) -> String {
         
         if case LocalNotificationType.event(let eventType) = self {
             return messageBodyText(eventType: eventType, senderName: sender?.name)
@@ -238,6 +238,7 @@ extension LocalNotificationType {
         var senderKey = self.senderKey(sender, conversation)
         var conversationTypeKey : String? = (conversation?.conversationType != .oneOnOne) ? GroupKey : OneOnOneKey
         let conversationKey = self.conversationKey(conversation)
+        let reasonKey = reason?.stringValue
         
         var arguments : [CVarArg] = []
         
@@ -289,7 +290,7 @@ extension LocalNotificationType {
             arguments.append(conversationName)
         }
         
-        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey, mentionOrReplyKey].compactMap({ $0 }).joined(separator: ".")
+        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey, mentionOrReplyKey, reasonKey].compactMap({ $0 }).joined(separator: ".")
         return .localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
     }
     
