@@ -227,7 +227,7 @@ extension LocalNotificationType {
         }
     }
     
-    func messageBodyText(sender: ZMUser?, conversation: ZMConversation?, reason: ParticipantsRemovedReason? = nil) -> String {
+    func messageBodyText(sender: ZMUser?, conversation: ZMConversation?, reason: ZMParticipantsRemovedReason? = nil) -> String {
         
         if case LocalNotificationType.event(let eventType) = self {
             return messageBodyText(eventType: eventType, senderName: sender?.name)
