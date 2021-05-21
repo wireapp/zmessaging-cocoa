@@ -117,7 +117,7 @@
 - (void)testThatItNotifiesTheSyncStatus_WhenThePushChannelIsOpened
 {
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:(ZMPushChannelConnection *)self.mockPushChannel withResponse:nil];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen];
     
     // then
     XCTAssertNotNil(self.syncStatus.pushChannelEstablishedDate);
@@ -126,10 +126,10 @@
 - (void)testThatItNotifiesTheSyncStatus_WhenThePushChannelIsClosed
 {
     // given
-    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:(ZMPushChannelConnection *)self.mockPushChannel withResponse:nil];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen];
     
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:(ZMPushChannelConnection *)self.mockPushChannel withResponse:nil error:nil];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose];
     
     // then
     XCTAssertNil(self.syncStatus.pushChannelEstablishedDate);
@@ -308,7 +308,7 @@
     XCTAssertGreaterThan(expectedEvents.count, 0u);
     
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannel:(ZMPushChannelConnection *)self.mockPushChannel didReceiveTransportData:eventData];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidReceiveTransportData:eventData];
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
@@ -328,7 +328,7 @@
     
     // when
     [self performIgnoringZMLogError:^{
-        [(id<ZMPushChannelConsumer>)self.sut pushChannel:(ZMPushChannelConnection *)self.mockPushChannel didReceiveTransportData:eventdata];
+        [(id<ZMPushChannelConsumer>)self.sut pushChannelDidReceiveTransportData:eventdata];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
     
@@ -343,7 +343,7 @@
     
     // when
     [self performIgnoringZMLogError:^{
-        [(id<ZMPushChannelConsumer>)self.sut pushChannel:(ZMPushChannelConnection *)self.mockPushChannel didReceiveTransportData:eventdata];
+        [(id<ZMPushChannelConsumer>)self.sut pushChannelDidReceiveTransportData:eventdata];
         WaitForAllGroupsToBeEmpty(0.5);
     }];
     
@@ -353,11 +353,8 @@
 
 - (void)testThatItSendsANotificationWhenClosingThePushChannelAndRemovingConsumers
 {
-    // given
-    NSHTTPURLResponse *response = [[NSHTTPURLResponse alloc] init];
-    
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose:(ZMPushChannelConnection *)self.mockPushChannel withResponse:response error:nil];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidClose];
     
     // then
     XCTAssertEqual(self.pushChannelNotifications.count, 1u);
@@ -367,11 +364,8 @@
 
 - (void)testThatItSendsANotificationWhenOpeningThePushChannel
 {
-    // given
-    NSHTTPURLResponse *response = [[NSHTTPURLResponse alloc] init];
-
     // when
-    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen:(ZMPushChannelConnection *)self.mockPushChannel withResponse:response];
+    [(id<ZMPushChannelConsumer>)self.sut pushChannelDidOpen];
     
     // then
     XCTAssertEqual(self.pushChannelNotifications.count, 1u);

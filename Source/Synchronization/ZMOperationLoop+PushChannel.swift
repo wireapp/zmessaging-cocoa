@@ -30,7 +30,7 @@ extension ZMOperationLoop: ZMPushChannelConsumer {
         }
     }
     
-    public func pushChannelDidClose(with response: HTTPURLResponse?, error: Error?) {
+    public func pushChannelDidClose() {
         NotificationInContext(name: ZMOperationLoop.pushChannelStateChangeNotificationName,
                               context: syncMOC.notificationContext,
                               object: self,
@@ -40,7 +40,7 @@ extension ZMOperationLoop: ZMPushChannelConsumer {
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
     
-    public func pushChannelDidOpen(with response: HTTPURLResponse?) {
+    public func pushChannelDidOpen() {
         NotificationInContext(name: ZMOperationLoop.pushChannelStateChangeNotificationName,
                               context: syncMOC.notificationContext,
                               object: self,
