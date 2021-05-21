@@ -34,7 +34,7 @@ import Foundation
  }
  
  public enum ConversationAddParticipantsError: Error {
-    case unknown, invalidOperation, accessDenied, notConnectedToUser, conversationNotFound, tooManyMembers, conversationNeedsLegalHoldConsent, participantNeedsLegalHoldConsent
+    case unknown, invalidOperation, accessDenied, notConnectedToUser, conversationNotFound, tooManyMembers, missingLegalholdConsent
     
     init?(response: ZMTransportResponse) {
         switch (response.httpStatus, response.payloadLabel()) {
@@ -43,8 +43,7 @@ import Foundation
         case (403, "not-connected"?): self = .notConnectedToUser
         case (404, "no-conversation"?): self = .conversationNotFound
         case (403, "too-many-members"?): self = .tooManyMembers
-        case (412, "conv-needs-lh-consent"?): self = .conversationNeedsLegalHoldConsent
-        case (412, "they-need-lh-consent"?): self = .participantNeedsLegalHoldConsent
+        case (412, "missing-legalhold-consent"?): self = .missingLegalholdConsent
         case (400..<499, _): self = .unknown
         default: return nil
         }
