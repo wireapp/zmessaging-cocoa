@@ -275,10 +275,16 @@ extension LocalNotificationType {
                     arguments.append(string)
                 }
                 conversationTypeKey = nil
-            
-            case .participantsAdded, .participantsRemoved:
+
+            case .participantsAdded:
                 conversationTypeKey = nil // System messages don't follow the template and is missing the `group` suffix
                 senderKey = SelfKey
+
+            case .participantsRemoved:
+                conversationTypeKey = nil // System messages don't follow the template and is missing the `group` suffix
+                senderKey = SelfKey
+                /// If there is a reason for removal, we should display a simple message "You were removed"
+                mentionOrReplyKey = reasonKey != nil ? NoUserNameKey : nil
             
             default:
                 break
@@ -290,7 +296,7 @@ extension LocalNotificationType {
             arguments.append(conversationName)
         }
         
-        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey, mentionOrReplyKey, reasonKey].compactMap({ $0 }).joined(separator: ".")
+        let localizationKey = [baseKey, conversationTypeKey, senderKey, conversationKey, mentionOrReplyKey].compactMap({ $0 }).joined(separator: ".")
         return .localizedStringWithFormat(localizationKey.pushFormatString, arguments: arguments)
     }
     

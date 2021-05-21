@@ -125,7 +125,6 @@
 "push.notification.member.join.self.nousername" = "You were added";
 
 "push.notification.member.leave.self" = "%1$@ removed you";
-"push.notification.member.leave.self.legalhold-policy-conflict" = "You were removed from a group, because there are users with Legal Hold";
 "push.notification.member.leave.self.noconversationname" = "%1$@ removed you from a conversation";
 "push.notification.member.leave.self.nousername.noconversationname" = "You were removed from a conversation";
 "push.notification.member.leave.self.nousername" = "You were removed";
