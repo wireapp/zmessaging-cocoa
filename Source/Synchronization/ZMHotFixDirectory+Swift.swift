@@ -40,7 +40,7 @@ import Foundation
     public static func updateClientCapabilities(_ context: NSManagedObjectContext) {
         guard let _ = ZMUser.selfUser(in: context).selfClient() else { return }
 
-        UserClient.updateCapabilities(context)
+        UserClient.triggerSelfClientCapabilityUpdate(context)
         context.enqueueDelayedSave()
     }
 

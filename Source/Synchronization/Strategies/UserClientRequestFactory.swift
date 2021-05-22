@@ -172,17 +172,17 @@ public final class UserClientRequestFactory {
         throw UserClientRequestError.clientNotRegistered
     }
 
-    public func updateClientCapabilitiesRequest(_ client: UserClient) throws -> ZMUpstreamRequest {
-        if let remoteIdentifier = client.remoteIdentifier {
-            let payload: [String: Any] = [
-                "capabilities": ["legalhold-implicit-consent"]
-            ]
-            let request = ZMTransportRequest(path: "/clients/\(remoteIdentifier)", method: ZMTransportRequestMethod.methodPUT, payload: payload as ZMTransportData)
-            request.add(storeCapabilities(client))
-
-            return ZMUpstreamRequest(keys: Set(arrayLiteral: ZMUserClientNeedsToUpdateCapabilitiesKey), transportRequest: request, userInfo: nil)
+    public func updateClientCapabilitiesRequest(_ client: UserClient) -> ZMUpstreamRequest? {
+        guard let remoteIdentifier = client.remoteIdentifier else {
+            return nil
         }
-        throw UserClientRequestError.clientNotRegistered
+        let payload: [String: Any] = [
+            "capabilities": ["legalhold-implicit-consent"]
+        ]
+        let request = ZMTransportRequest(path: "/clients/\(remoteIdentifier)", method: ZMTransportRequestMethod.methodPUT, payload: payload as ZMTransportData)
+        request.add(storeCapabilities(client))
+
+        return ZMUpstreamRequest(keys: Set(arrayLiteral: ZMUserClientNeedsToUpdateCapabilitiesKey), transportRequest: request, userInfo: nil)
     }
     
     /// Password needs to be set
