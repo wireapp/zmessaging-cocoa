@@ -38,10 +38,7 @@ import Foundation
     }
 
     public static func updateClientCapabilities(_ context: NSManagedObjectContext) {
-        guard let _ = ZMUser.selfUser(in: context).selfClient() else { return }
-
         UserClient.triggerSelfClientCapabilityUpdate(context)
-        context.enqueueDelayedSave()
     }
 
     /// In the model schema version 2.6 we removed the flags `needsToUploadMedium` and `needsToUploadPreview` on `ZMAssetClientMessage`
