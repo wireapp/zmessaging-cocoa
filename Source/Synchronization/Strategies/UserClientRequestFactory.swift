@@ -172,9 +172,9 @@ public final class UserClientRequestFactory {
         throw UserClientRequestError.clientNotRegistered
     }
 
-    public func updateClientCapabilitiesRequest(_ client: UserClient) -> ZMUpstreamRequest? {
+    public func updateClientCapabilitiesRequest(_ client: UserClient) throws -> ZMUpstreamRequest? {
         guard let remoteIdentifier = client.remoteIdentifier else {
-            return nil
+            throw UserClientRequestError.clientNotRegistered
         }
         let payload: [String: Any] = [
             "capabilities": ["legalhold-implicit-consent"]
