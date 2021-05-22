@@ -176,4 +176,37 @@ class ZMHotFixTests_Integration: MessagingTest {
         }
     }
 
+    ///TODO Katerina check version before merging
+    func testThatItMarksClientsNeedsToUpdateCapabilities_379_1_0() {
+        let selfClient = self.createSelfClient(self.syncMOC)
+        syncMOC.performGroupedBlock {
+            // GIVEN
+            self.syncMOC.setPersistentStoreMetadata("379.0.0", key: "lastSavedVersion")
+            self.syncMOC.setPersistentStoreMetadata(NSNumber(booleanLiteral: true), key: "HasHistory")
+
+            selfClient.needsToUpdateCapabilities = false
+            self.syncMOC.saveOrRollback()
+            XCTAssertFalse(selfClient.hasLocalModifications(forKey: ZMUserClientNeedsToUpdateCapabilitiesKey))
+
+
+            // WHEN
+            let sut = ZMHotFix(syncMOC: self.syncMOC)
+            self.performIgnoringZMLogError {
+                sut!.applyPatches(forCurrentVersion: "379.1.0")
+            }
+        }
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        syncMOC.performGroupedBlock {
+            XCTAssertTrue(selfClient.needsToUpdateCapabilities)
+            XCTAssertTrue(selfClient.hasLocalModifications(forKey: ZMUserClientNeedsToUpdateCapabilitiesKey))
+        }
+    }
+
+    func createSelfClient(_ context: NSManagedObjectContext) -> UserClient {
+        let selfClient = UserClient.insertNewObject(in: context)
+        selfClient.remoteIdentifier = nil
+        selfClient.user = ZMUser.selfUser(in: context)
+        return selfClient
+    }
 }
