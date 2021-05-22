@@ -205,8 +205,10 @@ class ZMHotFixTests_Integration: MessagingTest {
 
     func createSelfClient(_ context: NSManagedObjectContext) -> UserClient {
         let selfClient = UserClient.insertNewObject(in: context)
-        selfClient.remoteIdentifier = nil
+        selfClient.remoteIdentifier = UUID().transportString()
         selfClient.user = ZMUser.selfUser(in: context)
+        context.saveOrRollback()
+        context.setPersistentStoreMetadata(selfClient.remoteIdentifier, key: "PersistedClientId")
         return selfClient
     }
 }
