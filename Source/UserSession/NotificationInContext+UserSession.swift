@@ -124,8 +124,8 @@ extension ZMConversation {
 
 @objcMembers public class ZMConnectionLimitNotification : NSObject {
 
-    private static let limitReached = Notification.Name(rawValue: "ZMConnectionLimitReachedNotification")
-    private static let missingLegalHoldConsent = Notification.Name(rawValue: "ZMConnectionMissingLegalHoldConsentNotification")
+    public static let limitReached = Notification.Name(rawValue: "ZMConnectionLimitReachedNotification")
+    public static let missingLegalHoldConsent = Notification.Name(rawValue: "ZMConnectionMissingLegalHoldConsentNotification")
     
     public static func addConnectionLimitObserver(_ observer: ZMConnectionLimitObserver, context: NSManagedObjectContext) -> Any {
         return NotificationInContext.addObserver(name: self.limitReached, context: context.notificationContext) {
