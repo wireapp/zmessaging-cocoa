@@ -165,9 +165,23 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
                     [self.managedObjectContext enqueueDelayedSave];
                 }
             }
-            
             [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
-                [ZMConnectionLimitNotification notifyInContext:self.managedObjectContext];
+                [ZMConnectionNotification notifyLimitReachedInContext:self.managedObjectContext];
+            }];
+        }
+
+        if (response.HTTPStatus == 412 && [[response payloadLabel] isEqualToString:@"missing-legalhold-consent"])
+        {
+            if (conversationID != nil) {
+                ZMConversation *syncConversation = [self.managedObjectContext objectRegisteredForID:conversationID];
+                if (syncConversation != nil) {
+                    [self.managedObjectContext deleteObject:syncConversation];
+                    [self.managedObjectContext enqueueDelayedSave];
+                }
+            }
+
+            [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
+                [ZMConnectionNotification notifyMissingLegalHoldConsentInContext:self.managedObjectContext ];
             }];
         }
     }];

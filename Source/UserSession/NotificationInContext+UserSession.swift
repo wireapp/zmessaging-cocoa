@@ -115,26 +115,40 @@ extension ZMConversation {
 }
 
 // MARK: - Connection limit reached
-@objc public protocol ZMConnectionLimitObserver: NSObjectProtocol {
+@objc public protocol ZMConnectionFailureObserver: NSObjectProtocol {
     
     func connectionLimitReached()
+    func missingConnectionLegalHoldConsent()
 }
 
 
-@objcMembers public class ZMConnectionLimitNotification : NSObject {
+@objcMembers public class ZMConnectionNotification : NSObject {
 
-    private static let name = Notification.Name(rawValue: "ZMConnectionLimitReachedNotification")
+    public static let limitReached = Notification.Name(rawValue: "ZMConnectionLimitReachedNotification")
+    public static let missingLegalHoldConsent = Notification.Name(rawValue: "ZMConnectionMissingLegalHoldConsentNotification")
     
-    public static func addConnectionLimitObserver(_ observer: ZMConnectionLimitObserver, context: NSManagedObjectContext) -> Any {
-        return NotificationInContext.addObserver(name: self.name, context: context.notificationContext) {
+    public static func addConnectionLimitObserver(_ observer: ZMConnectionFailureObserver, context: NSManagedObjectContext) -> Any {
+        return NotificationInContext.addObserver(name: self.limitReached, context: context.notificationContext) {
             [weak observer] _ in
             observer?.connectionLimitReached()
         }
     }
+
+    public static func addConnectionMissingLegalHoldConsentObserver(_ observer: ZMConnectionFailureObserver, context: NSManagedObjectContext) -> Any {
+        return NotificationInContext.addObserver(name: self.missingLegalHoldConsent, context: context.notificationContext) {
+            [weak observer] _ in
+            observer?.missingConnectionLegalHoldConsent()
+        }
+    }
     
-    @objc(notifyInContext:)
-    public static func notify(context: NSManagedObjectContext) {
-        NotificationInContext(name: self.name, context: context.notificationContext).post()
+    @objc(notifyLimitReachedInContext:)
+    public static func notifyLimitReached(context: NSManagedObjectContext) {
+        NotificationInContext(name: limitReached, context: context.notificationContext).post()
+    }
+
+    @objc(notifyMissingLegalHoldConsentInContext:)
+    public static func notifyMissingLegalHoldConsent(context: NSManagedObjectContext) {
+        NotificationInContext(name: missingLegalHoldConsent, context: context.notificationContext).post()
     }
 }
 
