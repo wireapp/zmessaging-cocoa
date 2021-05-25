@@ -55,7 +55,7 @@
         self.connectionLimitObserverToken = [ZMConnectionNotification addConnectionLimitObserver:self context:moc];
 
         self.missingLegalHoldConsent = NO;
-        self.missingConnectionLegalHoldConsentToken = [ZMConnectionNotification addConnectionMissingLegalHoldConsentObserver:self context:moc];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(missingConnectionLegalHoldConsent) name:ZMConnectionNotification.missingLegalHoldConsent object:nil];
     }
     return self;
 }

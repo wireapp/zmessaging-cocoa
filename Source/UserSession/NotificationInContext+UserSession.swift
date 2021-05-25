@@ -118,7 +118,6 @@ extension ZMConversation {
 @objc public protocol ZMConnectionFailureObserver: NSObjectProtocol {
     
     func connectionLimitReached()
-    func missingConnectionLegalHoldConsent()
 }
 
 
@@ -134,13 +133,6 @@ extension ZMConversation {
         }
     }
 
-    public static func addConnectionMissingLegalHoldConsentObserver(_ observer: ZMConnectionFailureObserver, context: NSManagedObjectContext) -> Any {
-        return NotificationInContext.addObserver(name: self.missingLegalHoldConsent, context: context.notificationContext) {
-            [weak observer] _ in
-            observer?.missingConnectionLegalHoldConsent()
-        }
-    }
-    
     @objc(notifyLimitReachedInContext:)
     public static func notifyLimitReached(context: NSManagedObjectContext) {
         NotificationInContext(name: limitReached, context: context.notificationContext).post()

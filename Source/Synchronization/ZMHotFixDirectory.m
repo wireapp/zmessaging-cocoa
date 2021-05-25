@@ -209,8 +209,7 @@ static NSString* ZMLogTag ZM_UNUSED = @"HotFix";
                      }],
                     /// We need to set implicit legalhold consent capability for the SelfClient
                     [ZMHotFixPatch
-                     ///TODO Katerina: check version before merging!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                     patchWithVersion:@"379.1.0"
+                     patchWithVersion:@"380.0.0"
                      patchCode:^(NSManagedObjectContext *context){
                          [ZMHotFixDirectory updateClientCapabilities:context];
                      }],
