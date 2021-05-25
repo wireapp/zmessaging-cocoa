@@ -176,8 +176,7 @@ class ZMHotFixTests_Integration: MessagingTest {
         }
     }
 
-    ///TODO Katerina check version before merging
-    func testThatItMarksClientsNeedsToUpdateCapabilities_379_1_0() {
+    func testThatItMarksClientsNeedsToUpdateCapabilities_380_0_0() {
         let selfClient = self.createSelfClient(self.syncMOC)
         syncMOC.performGroupedBlock {
             // GIVEN
@@ -192,7 +191,7 @@ class ZMHotFixTests_Integration: MessagingTest {
             // WHEN
             let sut = ZMHotFix(syncMOC: self.syncMOC)
             self.performIgnoringZMLogError {
-                sut!.applyPatches(forCurrentVersion: "379.1.0")
+                sut!.applyPatches(forCurrentVersion: "380.0.0")
             }
         }
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
