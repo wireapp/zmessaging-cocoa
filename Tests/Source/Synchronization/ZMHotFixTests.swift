@@ -176,11 +176,11 @@ class ZMHotFixTests_Integration: MessagingTest {
         }
     }
 
-    func testThatItMarksClientsNeedsToUpdateCapabilities_380_0_0() {
+    func testThatItMarksClientsNeedsToUpdateCapabilities_381_0_0() {
         let selfClient = self.createSelfClient(self.syncMOC)
         syncMOC.performGroupedBlock {
             // GIVEN
-            self.syncMOC.setPersistentStoreMetadata("379.0.0", key: "lastSavedVersion")
+            self.syncMOC.setPersistentStoreMetadata("380.0.0", key: "lastSavedVersion")
             self.syncMOC.setPersistentStoreMetadata(NSNumber(booleanLiteral: true), key: "HasHistory")
 
             selfClient.needsToUpdateCapabilities = false
@@ -191,7 +191,7 @@ class ZMHotFixTests_Integration: MessagingTest {
             // WHEN
             let sut = ZMHotFix(syncMOC: self.syncMOC)
             self.performIgnoringZMLogError {
-                sut!.applyPatches(forCurrentVersion: "380.0.0")
+                sut!.applyPatches(forCurrentVersion: "381.0.0")
             }
         }
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
