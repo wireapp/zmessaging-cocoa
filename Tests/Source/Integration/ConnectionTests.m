@@ -28,7 +28,7 @@
 // TestObserver
 ///
 
-@interface MockConnectionLimitObserver : NSObject <ZMConnectionLimitObserver>
+@interface MockConnectionLimitObserver : NSObject <ZMConnectionFailureObserver>
 
 @property (nonatomic) id connectionLimitObserverToken;
 @property (nonatomic) id missingConnectionLegalHoldConsentToken;
