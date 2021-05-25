@@ -166,7 +166,7 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
                 }
             }
             [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
-                [ZMConnectionLimitNotification notifyLimitReachedInContext:self.managedObjectContext];
+                [ZMConnectionNotification notifyLimitReachedInContext:self.managedObjectContext];
             }];
         }
 
@@ -181,7 +181,7 @@ NSUInteger ZMConnectionTranscoderPageSize = 90;
             }
 
             [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
-                [ZMConnectionLimitNotification notifyMissingLegalHoldConsentInContext:self.managedObjectContext ];
+                [ZMConnectionNotification notifyMissingLegalHoldConsentInContext:self.managedObjectContext ];
             }];
         }
     }];

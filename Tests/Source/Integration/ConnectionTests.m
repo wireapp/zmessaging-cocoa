@@ -52,10 +52,10 @@
     self = [super init];
     if  (self) {
         self.reachedConnectionLimit = NO;
-        self.connectionLimitObserverToken = [ZMConnectionLimitNotification addConnectionLimitObserver:self context:moc];
+        self.connectionLimitObserverToken = [ZMConnectionNotification addConnectionLimitObserver:self context:moc];
 
         self.missingLegalHoldConsent = NO;
-        self.missingConnectionLegalHoldConsentToken = [ZMConnectionLimitNotification addConnectionMissingLegalHoldConsentObserver:self context:moc];
+        self.missingConnectionLegalHoldConsentToken = [ZMConnectionNotification addConnectionMissingLegalHoldConsentObserver:self context:moc];
     }
     return self;
 }
