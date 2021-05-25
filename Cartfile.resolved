@@ -16,3 +16,4 @@ github "wireapp/wire-ios-system" "32.0.0"
 github "wireapp/wire-ios-testing" "23.0.1"
 github "wireapp/wire-ios-transport" "fix/native-websocket-SQCORE-612"
 github "wireapp/wire-ios-utilities" "40.0.0"
+
