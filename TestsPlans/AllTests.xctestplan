@@ -61,7 +61,8 @@
     },
     {
       "skippedTests" : [
-        "AvailabilityTests"
+        "AvailabilityTests",
+        "SessionManagerTests"
       ],
       "target" : {
         "containerPath" : "container:WireSyncEngine.xcodeproj",
