@@ -522,6 +522,22 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     return [[ZMUpstreamRequest alloc] initWithKeys:[NSSet setWithObject:ZMConversationUserDefinedNameKey] transportRequest:request userInfo:nil];
 }
 
+- (ZMCompletionHandler *)rejectedConversationCompletionHandler
+{
+    ZM_WEAK(self);
+
+    return [ZMCompletionHandler handlerOnGroupQueue:self.managedObjectContext block:^(ZMTransportResponse *response) {
+        ZM_STRONG(self);
+
+        if (response.HTTPStatus == 412 && [[response payloadLabel] isEqualToString:@"missing-legalhold-consent"])
+        {
+            [self.managedObjectContext.zm_userInterfaceContext performGroupedBlock:^{
+                [ZMConversation notifyMissingLegalHoldConsentInContext:self.managedObjectContext];
+            }];
+        }
+    }];
+}
+
 - (ZMUpstreamRequest *)requestForInsertingObject:(ZMManagedObject *)managedObject forKeys:(NSSet *)keys;
 {
     NOT_USED(keys);
@@ -563,6 +579,8 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     }
     
     request = [ZMTransportRequest requestWithPath:ConversationsPath method:ZMMethodPOST payload:payload];
+    [request addCompletionHandler:[self rejectedConversationCompletionHandler]];
+
     return [[ZMUpstreamRequest alloc] initWithTransportRequest:request];
 }
 
