@@ -95,7 +95,7 @@ public final class UserClientRequestFactory {
         return completionHandler
     }
 
-    func storeCapabilities(_ client: UserClient) -> ZMCompletionHandler {
+    func storeCapabilitiesHandler(_ client: UserClient) -> ZMCompletionHandler {
         let completionHandler = ZMCompletionHandler(on: client.managedObjectContext!, block: { [weak client] response in
             guard let client = client else { return }
             if response.result == .success {
@@ -180,7 +180,7 @@ public final class UserClientRequestFactory {
             "capabilities": ["legalhold-implicit-consent"]
         ]
         let request = ZMTransportRequest(path: "/clients/\(remoteIdentifier)", method: ZMTransportRequestMethod.methodPUT, payload: payload as ZMTransportData)
-        request.add(storeCapabilities(client))
+        request.add(storeCapabilitiesHandler(client))
 
         return ZMUpstreamRequest(keys: Set(arrayLiteral: ZMUserClientNeedsToUpdateCapabilitiesKey), transportRequest: request, userInfo: nil)
     }
