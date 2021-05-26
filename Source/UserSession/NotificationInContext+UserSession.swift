@@ -117,11 +117,11 @@ extension ZMConversation {
 // MARK: Add conversation
 @objc extension ZMConversation {
 
-    public static let conversationMissingLegalHoldConsent = Notification.Name(rawValue: "ZMConversationMissingLegalHoldConsentNotification")
+    public static let missingLegalHoldConsentNotificationName = Notification.Name(rawValue: "ZMConversationMissingLegalHoldConsentNotification")
 
     @objc(notifyMissingLegalHoldConsentInContext:)
     public static func notifyMissingLegalHoldConsent(context: NSManagedObjectContext) {
-        NotificationInContext(name: conversationMissingLegalHoldConsent, context: context.notificationContext).post()
+        NotificationInContext(name: missingLegalHoldConsentNotificationName, context: context.notificationContext).post()
     }
 
 }
