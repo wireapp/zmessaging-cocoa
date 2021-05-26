@@ -352,8 +352,7 @@ private class NewSystemMessageNotificationBuilder : EventNotificationBuilder {
     }
     
     override func bodyText() -> String {
-        let reason = event.participantsRemovedReason
-        return notificationType.messageBodyText(sender: sender, conversation: conversation, reason: reason).trimmingCharacters(in: .whitespaces)
+        return notificationType.messageBodyText(sender: sender, conversation: conversation).trimmingCharacters(in: .whitespaces)
     }
     
     override var notificationType: LocalNotificationType {
