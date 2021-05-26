@@ -114,6 +114,18 @@ extension ZMConversation {
     func typingDidChange(conversation: ZMConversation, typingUsers: [UserType])
 }
 
+// MARK: Add conversation
+@objc extension ZMConversation {
+
+    public static let missingLegalHoldConsentNotificationName = Notification.Name(rawValue: "ZMConversationMissingLegalHoldConsentNotification")
+
+    @objc(notifyMissingLegalHoldConsentInContext:)
+    public static func notifyMissingLegalHoldConsent(context: NSManagedObjectContext) {
+        NotificationInContext(name: missingLegalHoldConsentNotificationName, context: context.notificationContext).post()
+    }
+
+}
+
 // MARK: - Connection limit reached
 @objc public protocol ZMConnectionFailureObserver: NSObjectProtocol {
     
