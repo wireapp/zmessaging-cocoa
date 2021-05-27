@@ -191,7 +191,7 @@ class ZMHotFixTests_Integration: MessagingTest {
             // WHEN
             let sut = ZMHotFix(syncMOC: self.syncMOC)
             self.performIgnoringZMLogError {
-                sut!.applyPatches(forCurrentVersion: "381.1.0")
+                sut!.applyPatches(forCurrentVersion: "381.0.1")
             }
         }
         XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
