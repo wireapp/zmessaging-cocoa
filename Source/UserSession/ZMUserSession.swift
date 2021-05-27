@@ -557,6 +557,7 @@ extension ZMUserSession: ZMSyncStateDelegate {
         // The push token can only be registered after client registration
         transportSession.pushChannel.clientID = userClient.remoteIdentifier
         registerCurrentPushToken()
+        UserClient.triggerSelfClientCapabilityUpdate(syncContext)
         
         managedObjectContext.performGroupedBlock { [weak self] in
             guard let accountId = self?.managedObjectContext.selfUserId else {
