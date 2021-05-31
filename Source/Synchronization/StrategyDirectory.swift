@@ -182,7 +182,7 @@ public class StrategyDirectory: NSObject, StrategyDirectoryProtocol {
             ZMUserTranscoder(
                 managedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory,
-                syncStatus: applicationStatusDirectory.syncStatus),
+                syncProgress: applicationStatusDirectory.syncStatus),
             ZMLastUpdateEventIDTranscoder(
                 managedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory,

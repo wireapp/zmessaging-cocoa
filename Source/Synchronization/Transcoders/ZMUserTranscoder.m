@@ -32,7 +32,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
 @interface ZMUserTranscoder ()
 
 @property (nonatomic) ZMRemoteIdentifierObjectSync *remoteIDObjectSync;
-@property (nonatomic, weak) SyncStatus *syncStatus;
+@property (nonatomic, weak) id<SyncProgress> syncProgress;
 @property (nonatomic) BOOL didStartSyncing;
 
 @end
@@ -48,11 +48,11 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
 
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc
                            applicationStatus:(id<ZMApplicationStatus>)applicationStatus
-                                  syncStatus:(SyncStatus *)syncStatus;
+                                syncProgress:(id<SyncProgress>)syncProgress;
 {
     self = [super initWithManagedObjectContext:moc applicationStatus:applicationStatus];
     if (self) {
-        self.syncStatus = syncStatus;
+        self.syncProgress = syncProgress;
         self.remoteIDObjectSync = [[ZMRemoteIdentifierObjectSync alloc] initWithTranscoder:self managedObjectContext:self.managedObjectContext];
     }
     return self;
@@ -78,7 +78,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
     // we move on to the next sync phase manually.
     if (userIds.count == 0) {
         self.didStartSyncing = NO;
-        [self.syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
+        [self.syncProgress finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
     } else {
         [self.remoteIDObjectSync addRemoteIdentifiersThatNeedDownload:userIds];
     }
@@ -91,7 +91,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
 
 - (BOOL)isSyncing
 {
-    return self.syncStatus.currentSyncPhase == self.expectedSyncPhase;
+    return self.syncProgress.currentSyncPhase == self.expectedSyncPhase;
 }
 
 - (ZMTransportRequest *)nextRequestIfAllowed
@@ -230,7 +230,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
 {
     NOT_USED(sync);
     
-    SyncStatus *syncStatus = self.syncStatus;
+    id<SyncProgress> syncProgress = self.syncProgress;
     
     switch(response.result) {
         case ZMTransportResponseStatusSuccess:
@@ -242,7 +242,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
             
             if (self.remoteIDObjectSync.isDone && self.isSyncing) {
                 self.didStartSyncing = NO;
-                [syncStatus finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
+                [syncProgress finishCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
             }
             break;
         }
@@ -251,7 +251,7 @@ NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest = 1600 / 25; // UUID as
             [self updateUsersFromPayload:nil expectedRemoteIdentifiers:remoteIdentifiers];
             if (self.isSyncing) {
                 self.didStartSyncing = NO;
-                [syncStatus failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
+                [syncProgress failCurrentSyncPhaseWithPhase:self.expectedSyncPhase];
             }
             break;
         }

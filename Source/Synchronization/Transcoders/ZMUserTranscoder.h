@@ -22,7 +22,6 @@
 @import WireRequestStrategy;
 
 @class NSManagedObjectContext;
-@class SyncStatus;
 
 extern NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest;
 
@@ -35,7 +34,7 @@ extern NSUInteger const ZMUserTranscoderNumberOfUUIDsPerRequest;
 
 - (instancetype _Nonnull)initWithManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
                                     applicationStatus:(id<ZMApplicationStatus> _Nonnull)applicationStatus
-                                           syncStatus:(SyncStatus * _Nonnull)syncStatus;
+                                         syncProgress:(id<SyncProgress> _Nonnull)syncProgress;
 
 + (ZMTransportRequest * _Nullable)requestForRemoteIdentifiers:(NSArray * _Nonnull)remoteIdentifiers;
 

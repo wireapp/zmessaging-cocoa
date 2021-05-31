@@ -54,7 +54,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
         self.mockApplicationStatus.mockSynchronizationState = ZMSynchronizationStateOnline;
     }];
 
-    self.sut = [[ZMUserTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus syncStatus:self.mockSyncStatus];
+    self.sut = [[ZMUserTranscoder alloc] initWithManagedObjectContext:self.syncMOC applicationStatus:self.mockApplicationStatus syncProgress:self.mockSyncStatus];
     WaitForAllGroupsToBeEmpty(0.5);
 }
 
