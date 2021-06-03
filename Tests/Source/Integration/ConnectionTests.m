@@ -28,10 +28,12 @@
 // TestObserver
 ///
 
-@interface MockConnectionLimitObserver : NSObject <ZMConnectionLimitObserver>
+@interface MockConnectionLimitObserver : NSObject <ZMConnectionFailureObserver>
 
 @property (nonatomic) id connectionLimitObserverToken;
+@property (nonatomic) id missingConnectionLegalHoldConsentToken;
 @property (nonatomic) BOOL reachedConnectionLimit;
+@property (nonatomic) BOOL missingLegalHoldConsent;
 
 @end
 
@@ -42,11 +44,18 @@
     self.reachedConnectionLimit = YES;
 }
 
+- (void)missingConnectionLegalHoldConsent {
+    self.missingLegalHoldConsent = YES;
+}
+
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc {
     self = [super init];
     if  (self) {
         self.reachedConnectionLimit = NO;
-        self.connectionLimitObserverToken = [ZMConnectionLimitNotification addConnectionLimitObserver:self context:moc];
+        self.connectionLimitObserverToken = [ZMConnectionNotification addConnectionLimitObserver:self context:moc];
+
+        self.missingLegalHoldConsent = NO;
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(missingConnectionLegalHoldConsent) name:ZMConnectionNotification.missingLegalHoldConsent object:nil];
     }
     return self;
 }
@@ -1011,6 +1020,61 @@
     
     // then
     XCTAssertTrue(observer.reachedConnectionLimit);
+}
+
+#pragma mark - MissingLegalHoldConsent
+
+- (ZMCustomResponseGeneratorBlock)responseBlockForMissingLegalHoldConsent;
+{
+    return ^ZMTransportResponse *(ZMTransportRequest *request) {
+        if (![request.path hasPrefix:@"/connections"] || (request.method == ZMMethodGET)) {
+            return nil;
+        }
+        NSDictionary *payload = @{@"label": @"missing-legalhold-consent"};
+        return [[ZMTransportResponse alloc] initWithPayload:payload HTTPStatus:412 transportSessionError:nil headers:nil];
+    };
+
+}
+
+- (void)testThatItDeletesTheConversationWhenConnectionIsRejectedByBackend_MissingLegalHoldConsent
+{
+    // given
+    NSString *searchUserName = @"Karl McUser";
+    [self createUserWithName:searchUserName uuid:NSUUID.createUUID];
+
+    self.mockTransportSession.responseGeneratorBlock = self.responseBlockForMissingLegalHoldConsent;
+
+    XCTAssertTrue([self login]);
+    ZMConversationList *conversations = [ZMConversationList conversationsInUserSession:self.userSession];
+    NSUInteger beforeInsertingCount = conversations.count;
+
+    // when
+    [self searchAndConnectToUserWithName:searchUserName searchQuery:@"McUser"];
+    [self.mockTransportSession waitForAllRequestsToCompleteWithTimeout:0.5];
+
+    // then
+    XCTAssertEqual(conversations.count, beforeInsertingCount);
+}
+
+- (void)testThatItNotifiesObserversAboutMissingLegalHoldConsentWhenInsertingAnObject
+{
+    // given
+    NSString *searchUserName = @"Karl McUser";
+    NSUUID *userID = [NSUUID createUUID];
+    [self createUserWithName:searchUserName uuid:userID];
+
+    self.mockTransportSession.responseGeneratorBlock = self.responseBlockForMissingLegalHoldConsent;
+
+    XCTAssertTrue([self login]);
+    MockConnectionLimitObserver *observer = [[MockConnectionLimitObserver alloc] initWithManagedObjectContext:self.userSession.managedObjectContext];
+    XCTAssertFalse(observer.missingLegalHoldConsent);
+
+    // when
+    [self searchAndConnectToUserWithName:searchUserName searchQuery:@"McUser"];
+    [self.mockTransportSession waitForAllRequestsToCompleteWithTimeout:0.5];
+
+    // then
+    XCTAssertTrue(observer.missingLegalHoldConsent);
 }
 
 - (void)testThatItResetsTheConversationWhenAConnectionStatusChangeFromPendingToAcceptedIsRejectedByTheBackend

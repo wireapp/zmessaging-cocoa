@@ -52,6 +52,8 @@ final class DummyServiceUser: NSObject, ServiceUser {
     var teamName: String? = nil
     
     var isBlocked: Bool = false
+
+    var blockState: ZMBlockState = .none
     
     var isExpired: Bool = false
     
