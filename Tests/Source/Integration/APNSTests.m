@@ -31,6 +31,7 @@
 
 - (void)testThatItFetchesTheNotificationStreamWhenReceivingNotificationOfTypeNotice
 {
+    ///TODO: crash on M1?
     XCTAssertTrue([self login]);
     
     [self closePushChannelAndWaitUntilClosed]; // do not use websocket
