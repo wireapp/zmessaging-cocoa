@@ -154,16 +154,6 @@ ZM_EMPTY_ASSERTING_INIT()
 }
 #endif
 
-- (CallingRequestStrategy *)callingRequestStrategy{
-    return [self.strategyDirectory.requestStrategies firstObjectMatchingWithBlock:^BOOL(id obj) {
-        if ([obj isKindOfClass:CallingRequestStrategy.self]) {
-            return YES;
-        }
-        
-        return NO;
-    }];
-}
-
 - (ZMTransportRequest *)nextRequest
 {
     if (!self.didFetchObjects) {
