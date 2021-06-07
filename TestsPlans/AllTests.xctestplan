@@ -48,6 +48,7 @@
   "testTargets" : [
     {
       "skippedTests" : [
+        "AnalyticsTests",
         "AvailabilityTests",
         "EventProcessingPerformanceTests",
         "SessionManagerTests\/testThatSessionManagerSetsUpAPNSEnvironmentOnLaunch()"
@@ -60,7 +61,8 @@
     },
     {
       "skippedTests" : [
-        "AvailabilityTests"
+        "AvailabilityTests",
+        "SessionManagerTests"
       ],
       "target" : {
         "containerPath" : "container:WireSyncEngine.xcodeproj",

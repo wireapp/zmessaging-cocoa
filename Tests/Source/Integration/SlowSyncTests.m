@@ -203,13 +203,18 @@
             [mutableRequests removeObject:request];
             clientRegistrationCallCount++;
         }
+
+        if ([request.path containsString:@"clients"] && request.method == ZMMethodPUT) {
+            [mutableRequests removeObject:request];
+            clientRegistrationCallCount++;
+        }
         
         if ([request.path hasPrefix:@"/notifications?size=500"]) {
             [mutableRequests removeObject:request];
             notificationStreamCallCount++;
         }
     }];
-    XCTAssertEqual(clientRegistrationCallCount, 1u);
+    XCTAssertEqual(clientRegistrationCallCount, 2u);
     XCTAssertEqual(notificationStreamCallCount, 1u);
     
     AssertArraysContainsSameObjects(expectedRequests, mutableRequests);

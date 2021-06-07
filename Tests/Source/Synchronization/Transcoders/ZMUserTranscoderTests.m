@@ -44,7 +44,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
 - (void)setUp
 {
     [super setUp];
-
+    
     self.syncStateDelegate = [OCMockObject niceMockForProtocol:@protocol(ZMSyncStateDelegate)];
 
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -171,14 +171,12 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
 - (void)testThatItReturnsSelfUserInUserSession
 {
     [self.syncMOC performGroupedBlockAndWait:^{
-        id session = [OCMockObject mockForClass:ZMUserSession.class];
-        [[[session stub] andReturn:self.syncMOC] managedObjectContext];
         // given
-        ZMUser *selfUser1 = [ZMUser selfUserInContext:self.syncMOC];
-
+        ZMUser *selfUser1 = [ZMUser selfUserInContext:self.uiMOC];
+        
         // when
-        ZMUser *selfUser2 = [ZMUser selfUserInUserSession:session];
-
+        ZMUser *selfUser2 = [ZMUser selfUserInUserSession:self.coreDataStack];
+        
         // then
         XCTAssertNotNil(selfUser1);
         XCTAssertEqual(selfUser1, selfUser2);
@@ -244,7 +242,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
     [self.syncMOC performGroupedBlockAndWait:^{
         [self.sut objectsDidChange:[NSSet setWithArray:allUsers]];
     }];
-
+    
     ZMTransportResponse *failingResponse = [ZMTransportResponse responseWithPayload:nil HTTPStatus:500 transportSessionError:nil];
 
     // 1st request:
@@ -296,7 +294,7 @@ static NSString *const USER_PATH_WITH_QUERY = @"/users?ids=";
         user.needsToBeUpdatedFromBackend = YES;
         [self.sut objectsDidChange:[NSSet setWithObject:user]];
     }];
-
+    
     // then
     [self.syncMOC performGroupedBlockAndWait:^{
         userRequest = [self.sut nextRequest];

@@ -34,7 +34,7 @@ public struct SearchResult {
 
 extension SearchResult {
     
-    public init?(payload: [AnyHashable : Any], query: String, searchOptions: SearchOptions, contextProvider: ZMManagedObjectContextProvider) {
+    public init?(payload: [AnyHashable : Any], query: String, searchOptions: SearchOptions, contextProvider: ContextProvider) {
         guard let documents = payload["documents"] as? [[String : Any]] else {
             return nil
         }
@@ -66,7 +66,7 @@ extension SearchResult {
         }
     }
     
-    public init?(servicesPayload servicesFullPayload: [AnyHashable : Any], query: String, contextProvider: ZMManagedObjectContextProvider) {
+    public init?(servicesPayload servicesFullPayload: [AnyHashable : Any], query: String, contextProvider: ContextProvider) {
         guard let servicesPayload = servicesFullPayload["services"] as? [[String : Any]] else {
             return nil
         }
@@ -82,7 +82,8 @@ extension SearchResult {
         services = searchUsersServices
     }
     
-    public init?(userLookupPayload: [AnyHashable : Any], contextProvider: ZMManagedObjectContextProvider) {
+    public init?(userLookupPayload: [AnyHashable : Any], contextProvider: ContextProvider
+    ) {
         guard let userLookupPayload = userLookupPayload as? [String : Any],
               let searchUser = ZMSearchUser.searchUser(from: userLookupPayload, contextProvider: contextProvider),
               searchUser.user == nil ||
@@ -99,7 +100,7 @@ extension SearchResult {
         services = []
     }
 
-    public init?(federationResponse response: ZMTransportResponse, contextProvider: ZMManagedObjectContextProvider) {
+    public init?(federationResponse response: ZMTransportResponse, contextProvider: ContextProvider) {
         let result: Swift.Result<[ZMSearchUser], FederationError>
 
         if response.result == .success {
@@ -136,10 +137,10 @@ extension SearchResult {
     
     mutating func filterBy(searchOptions: SearchOptions,
                            query: String,
-                           contextProvider: ZMManagedObjectContextProvider) {
+                           contextProvider: ContextProvider) {
         guard searchOptions.contains(.excludeNonActivePartners) else { return }
         
-        let selfUser = ZMUser.selfUser(in: contextProvider.managedObjectContext)
+        let selfUser = ZMUser.selfUser(in: contextProvider.viewContext)
         let isHandleQuery = query.hasPrefix("@")
         let queryWithoutAtSymbol = (isHandleQuery ? String(query[query.index(after: query.startIndex)...]) : query).lowercased()
         

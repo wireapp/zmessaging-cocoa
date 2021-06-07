@@ -40,7 +40,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
         )
     }
 
-    override func session(for account: Account, storeProvider: LocalStoreProviderProtocol, configuration: ZMUserSession.Configuration = .defaultConfig) -> ZMUserSession? {
+    override func session(for account: Account, coreDataStack: CoreDataStack, configuration: ZMUserSession.Configuration = .defaultConfig) -> ZMUserSession? {
         return ZMUserSession(
             userId: account.userIdentifier,
             transportSession: transportSession,
@@ -49,7 +49,7 @@ final class MockAuthenticatedSessionFactory: AuthenticatedSessionFactory {
             analytics: analytics,
             application: application,
             appVersion: appVersion,
-            storeProvider: storeProvider,
+            coreDataStack: coreDataStack,
             configuration: configuration
         )
     }
@@ -94,7 +94,6 @@ extension IntegrationTest {
         sharedContainerDirectory = Bundle.main.appGroupIdentifier.map(FileManager.sharedContainerDirectory)
         deleteSharedContainerContent()
         ZMPersistentCookieStorage.setDoNotPersistToKeychain(!useRealKeychain)
-        StorageStack.shared.createStorageAsInMemory = useInMemoryStore
         
         pushRegistry = PushRegistryMock(queue: nil)
         application = ApplicationMock()
@@ -151,17 +150,13 @@ extension IntegrationTest {
         groupConversationWithServiceUser = nil
         application = nil
         notificationCenter = nil
-        resetInMemoryDatabases()
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
         deleteSharedContainerContent()
         sharedContainerDirectory = nil
-        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
     }
-    
-    func resetInMemoryDatabases() {
-        StorageStack.reset()
-    }
-    
+
     @objc
     func destroySessionManager() {
         destroyTimers()
@@ -198,15 +193,14 @@ extension IntegrationTest {
         mockTransportSession.resetReceivedRequests()
         destroySharedSearchDirectory()
         destroySessionManager()
-        destroyPersistentStore()
         deleteAuthenticationCookie()
+        deleteSharedContainerContent()
         createSessionManager()
     }
     
     @objc
     func createSessionManager() {
         guard let application = application, let transportSession = mockTransportSession else { return XCTFail() }
-        StorageStack.shared.createStorageAsInMemory = useInMemoryStore
         let reachability = MockReachability()
         let unauthenticatedSessionFactory = MockUnauthenticatedSessionFactory(transportSession: transportSession, environment: mockEnvironment, reachability: reachability)
         let authenticatedSessionFactory = MockAuthenticatedSessionFactory(
@@ -252,12 +246,7 @@ extension IntegrationTest {
         sharedSearchDirectory?.tearDown()
         sharedSearchDirectory = nil
     }
-    
-    @objc
-    func destroyPersistentStore() {
-        StorageStack.reset()
-    }
-    
+
     @objc
     var unauthenticatedSession : UnauthenticatedSession? {
         return sessionManager?.unauthenticatedSession

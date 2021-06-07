@@ -22,18 +22,6 @@ let UserRequestURL = "/users?ids="
 
 class FakeSearchDirectory : NSObject {}
 
-extension SearchUserImageStrategyTests: ZMManagedObjectContextProvider {
-    
-    var managedObjectContext: NSManagedObjectContext? {
-        return uiMOC
-    }
-    
-    var syncManagedObjectContext: NSManagedObjectContext? {
-        return syncMOC
-    }
-    
-}
-
 class SearchUserImageStrategyTests : MessagingTest {
     
     var sut: SearchUserImageStrategy!
@@ -55,7 +43,7 @@ class SearchUserImageStrategyTests : MessagingTest {
     }
     
     func createSearchUser() -> ZMSearchUser {
-        return ZMSearchUser(contextProvider: self, name: "Foo", handle: "foo", accentColor: .brightOrange, remoteIdentifier: UUID())
+        return ZMSearchUser(contextProvider: coreDataStack, name: "Foo", handle: "foo", accentColor: .brightOrange, remoteIdentifier: UUID())
     }
     
     func userIDs(from searchUsers: Set<ZMSearchUser>) -> Set<UUID> {

@@ -176,4 +176,38 @@ class ZMHotFixTests_Integration: MessagingTest {
         }
     }
 
+    func testThatItMarksClientsNeedsToUpdateCapabilities_381_0_0() {
+        let selfClient = self.createSelfClient(self.syncMOC)
+        syncMOC.performGroupedBlock {
+            // GIVEN
+            self.syncMOC.setPersistentStoreMetadata("380.0.0", key: "lastSavedVersion")
+            self.syncMOC.setPersistentStoreMetadata(NSNumber(booleanLiteral: true), key: "HasHistory")
+
+            selfClient.needsToUpdateCapabilities = false
+            self.syncMOC.saveOrRollback()
+            XCTAssertFalse(selfClient.hasLocalModifications(forKey: ZMUserClientNeedsToUpdateCapabilitiesKey))
+
+
+            // WHEN
+            let sut = ZMHotFix(syncMOC: self.syncMOC)
+            self.performIgnoringZMLogError {
+                sut!.applyPatches(forCurrentVersion: "381.0.1")
+            }
+        }
+        XCTAssertTrue(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        syncMOC.performGroupedBlock {
+            XCTAssertTrue(selfClient.needsToUpdateCapabilities)
+            XCTAssertTrue(selfClient.hasLocalModifications(forKey: ZMUserClientNeedsToUpdateCapabilitiesKey))
+        }
+    }
+
+    func createSelfClient(_ context: NSManagedObjectContext) -> UserClient {
+        let selfClient = UserClient.insertNewObject(in: context)
+        selfClient.remoteIdentifier = UUID().transportString()
+        selfClient.user = ZMUser.selfUser(in: context)
+        context.saveOrRollback()
+        context.setPersistentStoreMetadata(selfClient.remoteIdentifier, key: "PersistedClientId")
+        return selfClient
+    }
 }

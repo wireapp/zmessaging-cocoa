@@ -28,23 +28,24 @@
 @class ApplicationStatusDirectory;
 @class CallingRequestStrategy;
 @class ZMMissingUpdateEventsTranscoder;
+@class CoreDataStack;
 
 @protocol ZMTransportData;
 @protocol ZMSyncStateDelegate;
 @protocol ApplicationStateOwner;
 @protocol ZMApplication;
-@protocol LocalStoreProviderProtocol;
 @protocol EventProcessingTrackerProtocol;
 @protocol StrategyDirectoryProtocol;
+@protocol ContextProvider;
 
 @interface ZMSyncStrategy : NSObject <TearDownCapable, RequestStrategy>
 
-- (instancetype _Nonnull )initWithStoreProvider:(id<LocalStoreProviderProtocol> _Nonnull)storeProvider
-                        notificationsDispatcher:(NotificationDispatcher * _Nonnull)notificationsDispatcher
-                     applicationStatusDirectory:(ApplicationStatusDirectory * _Nonnull)applicationStatusDirectory
-                                    application:(id<ZMApplication> _Nonnull)application
-                              strategyDirectory:(id<StrategyDirectoryProtocol> _Nonnull)strategyDirectory
-                         eventProcessingTracker:(id<EventProcessingTrackerProtocol> _Nonnull)eventProcessingTracker;
+- (instancetype _Nonnull )initWithContextProvider:(id<ContextProvider> _Nonnull)contextProvider
+                          notificationsDispatcher:(NotificationDispatcher * _Nonnull)notificationsDispatcher
+                       applicationStatusDirectory:(ApplicationStatusDirectory * _Nonnull)applicationStatusDirectory
+                                      application:(id<ZMApplication> _Nonnull)application
+                                strategyDirectory:(id<StrategyDirectoryProtocol> _Nonnull)strategyDirectory
+                           eventProcessingTracker:(id<EventProcessingTrackerProtocol> _Nonnull)eventProcessingTracker;
 
 - (void)tearDown;
 

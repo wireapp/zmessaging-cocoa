@@ -20,7 +20,7 @@ import Foundation
 
 extension ZMOperationLoop: ZMPushChannelConsumer {
     
-    public func pushChannel(_ channel: ZMPushChannelConnection, didReceive data: ZMTransportData) {
+    public func pushChannelDidReceive(_ data: ZMTransportData) {
         Logging.network.info("Push Channel:\n\(data)")
         
         if let events = ZMUpdateEvent.eventsArray(fromPushChannelData: data), !events.isEmpty {
@@ -30,7 +30,7 @@ extension ZMOperationLoop: ZMPushChannelConsumer {
         }
     }
     
-    public func pushChannelDidClose(_ channel: ZMPushChannelConnection, with response: HTTPURLResponse?, error: Error?) {
+    public func pushChannelDidClose() {
         NotificationInContext(name: ZMOperationLoop.pushChannelStateChangeNotificationName,
                               context: syncMOC.notificationContext,
                               object: self,
@@ -40,7 +40,7 @@ extension ZMOperationLoop: ZMPushChannelConsumer {
         RequestAvailableNotification.notifyNewRequestsAvailable(nil)
     }
     
-    public func pushChannelDidOpen(_ channel: ZMPushChannelConnection, with response: HTTPURLResponse?) {
+    public func pushChannelDidOpen() {
         NotificationInContext(name: ZMOperationLoop.pushChannelStateChangeNotificationName,
                               context: syncMOC.notificationContext,
                               object: self,

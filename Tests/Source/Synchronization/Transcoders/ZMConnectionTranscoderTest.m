@@ -1105,7 +1105,7 @@
     }];
 }
 
-- (void)testThatItDeletesAConversationWhenTheBackEndRefusesTheConnection
+- (void)testThatItDeletesAConversationWhenTheBackEndRefusesTheConnection_LimitReachedError
 {
     NSUUID *selfUserID = [NSUUID createUUID];
     [self.syncMOC performGroupedBlockAndWait:^{
@@ -1142,6 +1142,54 @@
         NSDictionary *payload = @{@"label": @"connection-limit"};
         
         ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:payload HTTPStatus:403 transportSessionError:nil headers:nil];
+        [request completeWithResponse:response];
+    }];
+    WaitForAllGroupsToBeEmpty(0.5);
+
+    // then
+    [self.syncMOC performGroupedBlockAndWait:^{
+        XCTAssertNil([self.syncMOC existingObjectWithID:connectionMoid error:nil]);
+        XCTAssertNil([self.syncMOC existingObjectWithID:conversationMoid error:nil]);
+    }];
+}
+
+- (void)testThatItDeletesAConversationWhenTheBackEndRefusesTheConnection_MissingLegalHoldConsentError
+{
+    NSUUID *selfUserID = [NSUUID createUUID];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
+        selfUser.remoteIdentifier = [NSUUID createUUID];
+        selfUser.name = @"Neal Stephenson";
+        selfUser.remoteIdentifier = selfUserID;
+    }];
+
+    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    user.name = @"John";
+    user.remoteIdentifier = [NSUUID createUUID];
+
+    ZMConnection *connection = [ZMConnection insertNewSentConnectionToUser:user];
+    connection.message = @"hmm";
+    [self markUserAndConversationAsUpdatedForConnection:connection];
+    XCTAssert([self.uiMOC saveOrRollback]);
+    NSManagedObjectID *connectionMoid = connection.objectID;
+    NSManagedObjectID *conversationMoid = connection.conversation.objectID;
+
+    NSUUID *connectionID = [NSUUID createUUID];
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMConnection *syncConnection = (id) [self.syncMOC objectWithID:connectionMoid];
+        for (id<ZMContextChangeTracker> tracker in self.sut.contextChangeTrackers) {
+            [tracker objectsDidChange:[NSSet setWithObject:syncConnection]];
+        }
+        syncConnection.conversation.remoteIdentifier = connectionID;
+    }];
+
+    // when
+    [self.syncMOC performGroupedBlockAndWait:^{
+        ZMTransportRequest *request = [self.sut nextRequest];
+        XCTAssertNotNil(request);
+        NSDictionary *payload = @{@"label": @"missing-legalhold-consent"};
+
+        ZMTransportResponse *response = [[ZMTransportResponse alloc] initWithPayload:payload HTTPStatus:412 transportSessionError:nil headers:nil];
         [request completeWithResponse:response];
     }];
     WaitForAllGroupsToBeEmpty(0.5);

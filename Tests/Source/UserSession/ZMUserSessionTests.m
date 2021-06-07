@@ -151,6 +151,7 @@
     
     // when
     [self.sut didRegisterSelfUserClient:userClient];
+    WaitForAllGroupsToBeEmpty(0.5);
     
     // then
     XCTAssertEqualObjects(self.mockPushChannel.clientID, userClient.remoteIdentifier);
@@ -373,7 +374,7 @@
                                                          operationLoop:nil
                                                            application:self.application
                                                             appVersion:@"00000"
-                                                         storeProvider:self.storeProvider
+                                                         coreDataStack:self.coreDataStack
                                                          configuration:ZMUserSessionConfiguration.defaultConfig];
     WaitForAllGroupsToBeEmpty(0.5);
 

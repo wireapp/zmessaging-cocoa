@@ -75,8 +75,6 @@
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects1;
 @property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects2;
 
-@property (nonatomic) id<LocalStoreProviderProtocol> storeProvider;
-
 @end
 
 @implementation ZMSyncStrategyTests;
@@ -134,21 +132,20 @@
     self.fetchRequestForTrackedObjects1.predicate = [NSPredicate predicateWithFormat:@"name != nil"];
     self.fetchRequestForTrackedObjects2 = [NSFetchRequest fetchRequestWithEntityName:@"Conversation"];
     self.fetchRequestForTrackedObjects2.predicate = [NSPredicate predicateWithFormat:@"userDefinedName != nil"];
-        
-    self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
+
     self.applicationStatusDirectory = [[ApplicationStatusDirectory alloc] initWithManagedObjectContext:self.syncMOC cookieStorage:[[FakeCookieStorage alloc] init] requestCancellation:self application:self.application syncStateDelegate:self analytics:nil];
     
     NotificationDispatcher *notificationDispatcher =
-    [[NotificationDispatcher alloc] initWithManagedObjectContext:self.contextDirectory .uiContext];
+    [[NotificationDispatcher alloc] initWithManagedObjectContext:self.coreDataStack.viewContext];
     
     EventProcessingTracker *eventProcessingTracker = [[EventProcessingTracker alloc] init];
         
-    self.sut = [[ZMSyncStrategy alloc] initWithStoreProvider:self.storeProvider
-                                     notificationsDispatcher:notificationDispatcher
-                                  applicationStatusDirectory:self.applicationStatusDirectory
-                                                 application:self.application
-                                           strategyDirectory:mockStrategyDirectory
-                                      eventProcessingTracker:eventProcessingTracker];
+    self.sut = [[ZMSyncStrategy alloc] initWithContextProvider:self.coreDataStack
+                                       notificationsDispatcher:notificationDispatcher
+                                    applicationStatusDirectory:self.applicationStatusDirectory
+                                                   application:self.application
+                                             strategyDirectory:mockStrategyDirectory
+                                        eventProcessingTracker:eventProcessingTracker];
     
     self.application.applicationState = UIApplicationStateBackground;
     
@@ -161,7 +158,6 @@
     self.fetchRequestForTrackedObjects1 = nil;
     self.fetchRequestForTrackedObjects2 = nil;
     self.syncStateDelegate = nil;
-    self.storeProvider = nil;
     [self.sut tearDown];
     self.sut = nil;
     [super tearDown];

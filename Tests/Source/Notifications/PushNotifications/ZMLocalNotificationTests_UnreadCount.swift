@@ -58,7 +58,7 @@ class ZMLocalNotificationTests_UnreadCount: ZMLocalNotificationTests {
     func testThatUnreadCountIsntIncreased_ForContentTypesWithoutUserGeneratedContent() {
         let contentTypes: [LocalNotificationContentType] = [.messageTimerUpdate(nil),
                                                             .participantsAdded,
-                                                            .participantsRemoved,
+                                                            .participantsRemoved(reason: .none),
                                                             .reaction(emoji: "❤️")]
         
         contentTypes.forEach { contentType in

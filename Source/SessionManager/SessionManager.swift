@@ -23,11 +23,17 @@ import WireUtilities
 import CallKit
 import PushKit
 import UserNotifications
+import WireDataModel
 
 
 private let log = ZMSLog(tag: "SessionManager")
 public typealias LaunchOptions = [UIApplication.LaunchOptionsKey : Any]
 
+public extension Bundle {
+    @objc var appGroupIdentifier: String? {
+        return bundleIdentifier.map { "group." + $0 }
+    }
+}
 
 @objc public enum CallNotificationStyle : UInt {
     case pushNotifications
@@ -417,21 +423,8 @@ public final class SessionManager : NSObject, SessionManagerType {
         if let account = accountManager.selectedAccount {
             selectInitialAccount(account, launchOptions: launchOptions)
         } else {
-            // We do not have an account, this means we are either dealing with a fresh install,
-            // or an update from a previous version and need to store the initial Account.
-            // In order to do so we open the old database and get the user identifier.
-            LocalStoreProvider.fetchUserIDFromLegacyStore(
-                in: sharedContainerURL,
-                migration: { [weak self] in self?.delegate?.sessionManagerWillMigrateAccount(userSessionCanBeTornDown: {}) },
-                completion: { [weak self] userIdentifier in
-                    guard let strongSelf = self, let userIdentifier = userIdentifier else {
-                        self?.createUnauthenticatedSession()
-                        self?.delegate?.sessionManagerDidFailToLogin(error: nil)
-                        return
-                    }
-                    let account = strongSelf.migrateAccount(with: userIdentifier)
-                    self?.selectInitialAccount(account, launchOptions: launchOptions)
-            })
+            createUnauthenticatedSession()
+            delegate?.sessionManagerDidFailToLogin(error: nil)
         }
     }
 
@@ -583,7 +576,6 @@ public final class SessionManager : NSObject, SessionManagerType {
             
             self?.activeUserSession?.close(deleteCookie: deleteCookie)
             self?.activeUserSession = nil
-            StorageStack.reset()
             
             if deleteAccount {
                 self?.deleteAccountData(for: account)
@@ -658,27 +650,25 @@ public final class SessionManager : NSObject, SessionManagerType {
                 group?.leave()
             }
             else {
-                LocalStoreProvider.createStack(
-                    applicationContainer: self.sharedContainerURL,
-                    userIdentifier: account.userIdentifier,
-                    dispatchGroup: self.dispatchGroup,
-                    migration: { [weak self] in
-                        if notifyAboutMigration {
-                            self?.delegate?.sessionManagerWillMigrateAccount(userSessionCanBeTornDown: {})
-                        }
-                    },
-                    databaseLoadingFailure: { [weak self] in
-                        self?.delegate?.sessionManagerDidFailToLoadDatabase()
-                        onWorkDone()
-                        group?.leave()
-                    },
-                    completion: { provider in
-                        let userSession = self.startBackgroundSession(for: account, with: provider)
-                        completion(userSession)
-                        onWorkDone()
-                        group?.leave()
+                let coreDataStack = CoreDataStack(account: account,
+                                                  applicationContainer: self.sharedContainerURL,
+                                                  dispatchGroup: self.dispatchGroup)
+
+                if coreDataStack.needsMigration {
+                    self.delegate?.sessionManagerWillMigrateAccount(userSessionCanBeTornDown: {})
                 }
-                )
+
+                coreDataStack.loadStores { (error) in
+                    if error != nil {
+                        self.delegate?.sessionManagerDidFailToLoadDatabase()
+                    } else {
+                        let userSession = self.startBackgroundSession(for: account,
+                                                                      with: coreDataStack)
+                        completion(userSession)
+                    }
+                    onWorkDone()
+                    group?.leave()
+                }
             }
         })
     }
@@ -693,7 +683,7 @@ public final class SessionManager : NSObject, SessionManagerType {
         self.accountManager.remove(account)
         
         do {
-            try FileManager.default.removeItem(at: StorageStack.accountFolder(accountIdentifier: accountID, applicationContainer: sharedContainerURL))
+            try FileManager.default.removeItem(at: CoreDataStack.accountDataFolder(accountIdentifier: accountID, applicationContainer: sharedContainerURL))
         }
         catch let error {
             log.error("Impossible to delete the acccount \(account): \(error)")
@@ -747,14 +737,14 @@ public final class SessionManager : NSObject, SessionManagerType {
         registerObservers(account: account, session: userSession)
     }
     
-    private func deleteMessagesOlderThanRetentionLimit(provider: LocalStoreProviderProtocol) {
+    private func deleteMessagesOlderThanRetentionLimit(contextProvider: ContextProvider) {
         guard let messageRetentionInternal = configuration.messageRetentionInterval else { return }
         
         log.debug("Deleting messages older than the retention limit = \(messageRetentionInternal)")
         
-        provider.contextDirectory.syncContext.performGroupedBlock {
+        contextProvider.syncContext.performGroupedBlock {
             do {
-                try ZMMessage.deleteMessagesOlderThan(Date(timeIntervalSinceNow: -messageRetentionInternal), context: provider.contextDirectory.syncContext)
+                try ZMMessage.deleteMessagesOlderThan(Date(timeIntervalSinceNow: -messageRetentionInternal), context: contextProvider.syncContext)
             } catch {
                 log.error("Failed to delete messages older than the retention limit")
             }
@@ -762,17 +752,17 @@ public final class SessionManager : NSObject, SessionManagerType {
     }
 
     // Creates the user session for @c account given, calls @c completion when done.
-    private func startBackgroundSession(for account: Account, with provider: LocalStoreProviderProtocol) -> ZMUserSession {
+    private func startBackgroundSession(for account: Account, with coreDataStack: CoreDataStack) -> ZMUserSession {
         let sessionConfig = ZMUserSession.Configuration(appLockConfig: configuration.appLockConfig)
 
         guard let newSession = authenticatedSessionFactory.session(for: account,
-                                                                   storeProvider: provider,
+                                                                   coreDataStack: coreDataStack,
                                                                    configuration: sessionConfig) else {
             preconditionFailure("Unable to create session for \(account)")
         }
         
         self.configure(session: newSession, for: account)
-        self.deleteMessagesOlderThanRetentionLimit(provider: provider)
+        self.deleteMessagesOlderThanRetentionLimit(contextProvider: coreDataStack)
         self.updateSystemBootTimeIfNeeded()
 
         log.debug("Created ZMUserSession for account \(String(describing: account.userName)) — \(account.userIdentifier)")

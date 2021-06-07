@@ -22,23 +22,6 @@
 #import "Tests-Swift.h"
 @import WireSyncEngine;
 
-
-@implementation MockLocalStoreProvider
-
-- (instancetype)initWithSharedContainerDirectory:(NSURL *)sharedContainerDirectory userIdentifier:(NSUUID *)userIdentifier contextDirectory:(ManagedObjectContextDirectory *)contextDirectory
-{
-    self = [super init];
-    if (self) {
-        self.userIdentifier = userIdentifier;
-        self.accountContainer = [[sharedContainerDirectory URLByAppendingPathComponent:@"AccountData"] URLByAppendingPathComponent:userIdentifier.UUIDString];
-        self.applicationContainer = sharedContainerDirectory;
-        self.contextDirectory = contextDirectory;
-    }
-    return self;
-}
-
-@end
-
 @implementation ThirdPartyServices
 
 - (void)userSessionIsReadyToUploadServicesData:(ZMUserSession *)userSession;
@@ -66,7 +49,6 @@
     self.mockSessionManager = [[MockSessionManager alloc] init];
     self.mediaManager = [[MockMediaManager alloc] init];
     self.flowManagerMock = [[FlowManagerMock alloc] init];
-    self.storeProvider = [[MockLocalStoreProvider alloc] initWithSharedContainerDirectory:self.sharedContainerURL userIdentifier:self.userIdentifier contextDirectory:self.contextDirectory];
 
     NSUUID *userId = [NSUUID createUUID];
     [ZMUser selfUserInContext:self.syncMOC].remoteIdentifier = userId;
@@ -85,7 +67,7 @@
                                        operationLoop:nil
                                          application:self.application
                                           appVersion:@"00000"
-                                       storeProvider:self.storeProvider
+                                       coreDataStack:self.coreDataStack
                                        configuration:ZMUserSessionConfiguration.defaultConfig];
         
     self.sut.thirdPartyServicesDelegate = self.thirdPartyServices;
@@ -98,21 +80,12 @@
 
 - (void)tearDown
 {
-    [self tearDownUserInfoObjectsOfMOC:self.syncMOC];
-    [self.syncMOC.userInfo removeAllObjects];
-    
-    [self tearDownUserInfoObjectsOfMOC:self.uiMOC];
-    [self.uiMOC.userInfo removeAllObjects];
-    
-    [super cleanUpAndVerify];
     NSURL *cachesURL = [[NSFileManager defaultManager] cachesURLForAccountWith:self.userIdentifier in:self.sut.sharedContainerURL];
     NSArray *items = [[NSFileManager defaultManager] contentsOfDirectoryAtURL:cachesURL includingPropertiesForKeys:nil options:0 error:nil];
     for (NSURL *item in items) {
         [[NSFileManager defaultManager] removeItemAtURL:item error:nil];
     }
     
-    self.storeProvider = nil;
-
     self.baseURL = nil;
     self.cookieStorage = nil;
     self.validCookie = nil;

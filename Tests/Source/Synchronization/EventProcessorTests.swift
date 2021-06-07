@@ -22,7 +22,6 @@ import XCTest
 class EventProcessorTests: MessagingTest {
     
     var sut: EventProcessor!
-    var storeProvider: MockLocalStoreProvider!
     var syncStatus: SyncStatus!
     var syncStateDelegate: ZMSyncStateDelegate!
     var eventProcessingTracker: EventProcessingTracker!
@@ -39,14 +38,10 @@ class EventProcessorTests: MessagingTest {
         
         syncStateDelegate = MockSyncStateDelegate()
         
-        syncStatus = SyncStatus(managedObjectContext: contextDirectory.syncContext,
+        syncStatus = SyncStatus(managedObjectContext: coreDataStack.syncContext,
                                 syncStateDelegate: syncStateDelegate)
-        
-        storeProvider = MockLocalStoreProvider(sharedContainerDirectory: sharedContainerURL,
-                                               userIdentifier: userIdentifier,
-                                               contextDirectory: contextDirectory)
-        
-        sut = EventProcessor(storeProvider: storeProvider,
+
+        sut = EventProcessor(storeProvider: coreDataStack,
                              syncStatus: syncStatus,
                              eventProcessingTracker: eventProcessingTracker)
         sut.eventConsumers = mockEventsConsumers
@@ -56,7 +51,6 @@ class EventProcessorTests: MessagingTest {
         eventProcessingTracker = nil
         syncStateDelegate = nil
         syncStatus = nil
-        storeProvider = nil
         sut = nil
         
         super.tearDown()

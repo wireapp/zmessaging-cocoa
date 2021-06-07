@@ -84,7 +84,7 @@ class SearchTaskTests : DatabaseTest {
         }
         
         let request = SearchRequest(query: "bob", searchOptions: [.directory])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -121,7 +121,7 @@ class SearchTaskTests : DatabaseTest {
         
         let remoteResultArrived = expectation(description: "received remote result")
         let request = SearchRequest(query: "einstein", searchOptions: [.directory])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -143,7 +143,7 @@ class SearchTaskTests : DatabaseTest {
         let user = createConnectedUser(withName: "userA")
         
         let request = SearchRequest(query: "userA", searchOptions: [.contacts])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -162,7 +162,7 @@ class SearchTaskTests : DatabaseTest {
         _ = createConnectedUser(withName: "userA")
         
         let request = SearchRequest(query: "serA", searchOptions: [.contacts])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -181,7 +181,7 @@ class SearchTaskTests : DatabaseTest {
         let user = createConnectedUser(withName: "userA")
         
         let request = SearchRequest(query: "user", searchOptions: [.contacts])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -202,7 +202,7 @@ class SearchTaskTests : DatabaseTest {
         _ = createConnectedUser(withName: "Any Body")
         
         let request = SearchRequest(query: "Some Body", searchOptions: [.contacts])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -223,7 +223,7 @@ class SearchTaskTests : DatabaseTest {
         _ = createConnectedUser(withName: "Bob")
         
         let request = SearchRequest(query: "Gr", searchOptions: [.contacts])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -242,7 +242,7 @@ class SearchTaskTests : DatabaseTest {
         let user1 = createConnectedUser(withName: "Somebody")
         
         let request = SearchRequest(query: "someBodY", searchOptions: [.contacts])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -261,7 +261,7 @@ class SearchTaskTests : DatabaseTest {
         let user1 = createConnectedUser(withName: "Sömëbodÿ")
         
         let request = SearchRequest(query: "Sømebôdy", searchOptions: [.contacts])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -284,7 +284,7 @@ class SearchTaskTests : DatabaseTest {
         let user3 = createConnectedUser(withName: "Somebody")
         
         let request = SearchRequest(query: "Some", searchOptions: [.contacts])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -305,7 +305,7 @@ class SearchTaskTests : DatabaseTest {
         let user = createConnectedUser(withName: "Somebody")
         
         let request = SearchRequest(query: "Some", searchOptions: [.contacts])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -335,7 +335,7 @@ class SearchTaskTests : DatabaseTest {
         uiMOC.saveOrRollback()
         
         let request = SearchRequest(query: "@member", searchOptions: [.teamMembers], team: team)
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -374,7 +374,7 @@ class SearchTaskTests : DatabaseTest {
         uiMOC.saveOrRollback()
         
         let request = SearchRequest(query: "", searchOptions: [.teamMembers, .excludeNonActiveTeamMembers], team: team)
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -408,7 +408,7 @@ class SearchTaskTests : DatabaseTest {
         uiMOC.saveOrRollback()
         
         let request = SearchRequest(query: "", searchOptions: [.teamMembers, .excludeNonActiveTeamMembers], team: team)
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -456,7 +456,7 @@ class SearchTaskTests : DatabaseTest {
         uiMOC.saveOrRollback()
         
         let request = SearchRequest(query: "", searchOptions: [.teamMembers, .excludeNonActivePartners], team: team)
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -486,7 +486,7 @@ class SearchTaskTests : DatabaseTest {
         uiMOC.saveOrRollback()
         
         let request = SearchRequest(query: "@abc", searchOptions: [.teamMembers, .excludeNonActivePartners], team: team)
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -517,7 +517,7 @@ class SearchTaskTests : DatabaseTest {
         uiMOC.saveOrRollback()
         
         let request = SearchRequest(query: "", searchOptions: [.teamMembers, .excludeNonActivePartners], team: team)
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -538,7 +538,7 @@ class SearchTaskTests : DatabaseTest {
         let conversation = createGroupConversation(withName: "Somebody")
         
         let request = SearchRequest(query: "Somebody", searchOptions: [.conversations])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -557,7 +557,7 @@ class SearchTaskTests : DatabaseTest {
         _ = createGroupConversation(withName: "Somebody")
         
         let request = SearchRequest(query: "mebo", searchOptions: [.conversations])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -579,7 +579,7 @@ class SearchTaskTests : DatabaseTest {
         _ = createGroupConversation(withName: "New Day Rising")
         
         let request = SearchRequest(query: "Records", searchOptions: [.conversations])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -598,7 +598,7 @@ class SearchTaskTests : DatabaseTest {
         let conversation = createGroupConversation(withName: "SoMEBody")
         
         let request = SearchRequest(query: "someBodY", searchOptions: [.conversations])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -617,7 +617,7 @@ class SearchTaskTests : DatabaseTest {
         let conversation = createGroupConversation(withName: "Sömëbodÿ")
         
         let request = SearchRequest(query: "Sømebôdy", searchOptions: [.conversations])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -642,7 +642,7 @@ class SearchTaskTests : DatabaseTest {
         uiMOC.saveOrRollback()
         
         let request = SearchRequest(query: "Conversation", searchOptions: [.conversations])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -670,7 +670,7 @@ class SearchTaskTests : DatabaseTest {
         uiMOC.saveOrRollback()
         
         let request = SearchRequest(query: "Rei", searchOptions: [.conversations, .contacts])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -694,7 +694,7 @@ class SearchTaskTests : DatabaseTest {
         uiMOC.saveOrRollback()
         
         let request = SearchRequest(query: "Rei", searchOptions: [.conversations])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -715,7 +715,7 @@ class SearchTaskTests : DatabaseTest {
         let conversation3 = createGroupConversation(withName: "FooB")
         
         let request = SearchRequest(query: "Foo", searchOptions: [.conversations])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -745,7 +745,7 @@ class SearchTaskTests : DatabaseTest {
         uiMOC.saveOrRollback()
         
         let request = SearchRequest(query: "Foo", searchOptions: [.conversations])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -765,7 +765,7 @@ class SearchTaskTests : DatabaseTest {
         _ = createGroupConversation(withName: "Landspeed Records")
         
         let request = SearchRequest(query: "@records", searchOptions: [.conversations])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -790,7 +790,7 @@ class SearchTaskTests : DatabaseTest {
         uiMOC.saveOrRollback()
         
         let request = SearchRequest(query: "Beach", searchOptions: [.conversations], team: team)
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -808,7 +808,7 @@ class SearchTaskTests : DatabaseTest {
     func testThatItSendsASearchRequest() {
         // given
         let request = SearchRequest(query: "Steve O'Hara & Söhne", searchOptions: [.directory])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // when
         task.performRemoteSearch()
@@ -821,7 +821,7 @@ class SearchTaskTests : DatabaseTest {
     func testThatItDoesNotSendASearchRequestIfSeachingLocally() {
         // given
         let request = SearchRequest(query: "Steve O'Hara & Söhne", searchOptions: [.contacts])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // when
         task.performRemoteSearch()
@@ -834,7 +834,7 @@ class SearchTaskTests : DatabaseTest {
     func testThatItEncodesAPlusCharacterInTheSearchURL() {
         // given
         let request = SearchRequest(query: "foo+bar@example.com", searchOptions: [.directory])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // when
         task.performRemoteSearch()
@@ -852,7 +852,7 @@ class SearchTaskTests : DatabaseTest {
         
         // given
         let request = SearchRequest(query: "$&+,/:;=?@", searchOptions: [.directory])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // when
         task.performRemoteSearch()
@@ -866,7 +866,7 @@ class SearchTaskTests : DatabaseTest {
         // given
         let resultArrived = expectation(description: "received result")
         let request = SearchRequest(query: "User", searchOptions: [.directory])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         mockTransportSession.performRemoteChanges { (remoteChanges) in
             remoteChanges.insertUser(withName: "User A")
@@ -888,7 +888,7 @@ class SearchTaskTests : DatabaseTest {
     func testThatItMakesRequestToFetchTeamMembershipMetadata() {
         // given
         let request = SearchRequest(query: "User", searchOptions: [.directory, .teamMembers])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         mockTransportSession.performRemoteChanges { (remoteChanges) in
             let userA = remoteChanges.insertUser(withName: "User A")
@@ -912,7 +912,7 @@ class SearchTaskTests : DatabaseTest {
         // given
         let resultArrived = expectation(description: "received result")
         let request = SearchRequest(query: "User", searchOptions: [.directory, .teamMembers])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         mockTransportSession.performRemoteChanges { (remoteChanges) in
             let userA = remoteChanges.insertUser(withName: "User A")
@@ -942,7 +942,7 @@ class SearchTaskTests : DatabaseTest {
     func testThatItSendsASearchServicesRequest() {
         // given
         let request = SearchRequest(query: "Steve O'Hara & Söhne", searchOptions: [.services])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // when
         task.performRemoteSearchForServices()
@@ -956,7 +956,7 @@ class SearchTaskTests : DatabaseTest {
         // given
         let resultArrived = expectation(description: "received result")
         let request = SearchRequest(query: "Service", searchOptions: [.services])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         mockTransportSession.performRemoteChanges { (remoteChanges) in
             remoteChanges.insertService(withName: "Service A",
@@ -1001,7 +1001,7 @@ class SearchTaskTests : DatabaseTest {
     func testThatItSendsAUserLookupRequest() {
         // given
         let userId = UUID()
-        let task = SearchTask(lookupUserId: userId, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(lookupUserId: userId, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // when
         task.performUserLookup()
@@ -1020,7 +1020,7 @@ class SearchTaskTests : DatabaseTest {
             let mockUser = remoteChanges.insertUser(withName: "User A")
             userId = UUID(uuidString: mockUser.identifier)!
         }
-        let task = SearchTask(lookupUserId: userId, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(lookupUserId: userId, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -1038,7 +1038,7 @@ class SearchTaskTests : DatabaseTest {
     func testThatItSendsAFederatedUserSearchRequest() {
         // given
         let searchRequest = SearchRequest(query: "john@example.com", searchOptions: .federated)
-        let task = SearchTask(request: searchRequest, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: searchRequest, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
 
         // when
         task.performRemoteSearchForFederatedUser()
@@ -1064,7 +1064,7 @@ class SearchTaskTests : DatabaseTest {
         let searchRequest = SearchRequest(query: "john@example.com", searchOptions: .federated)
         let task = SearchTask(request: searchRequest,
                               searchContext: searchMOC,
-                              contextProvider: contextDirectory!,
+                              contextProvider: coreDataStack!,
                               transportSession: mockTransportSession)
 
         // expect
@@ -1091,7 +1091,7 @@ class SearchTaskTests : DatabaseTest {
         let searchRequest = SearchRequest(query: "john@example.com", searchOptions: .federated)
         let task = SearchTask(request: searchRequest,
                               searchContext: searchMOC,
-                              contextProvider: contextDirectory!,
+                              contextProvider: coreDataStack!,
                               transportSession: mockTransportSession)
 
         // expect
@@ -1118,7 +1118,7 @@ class SearchTaskTests : DatabaseTest {
         let searchRequest = SearchRequest(query: "john@example.com", searchOptions: .federated)
         let task = SearchTask(request: searchRequest,
                               searchContext: searchMOC,
-                              contextProvider: contextDirectory!,
+                              contextProvider: coreDataStack!,
                               transportSession: mockTransportSession)
 
         // expect
@@ -1144,7 +1144,7 @@ class SearchTaskTests : DatabaseTest {
         }
         
         let request = SearchRequest(query: "user", searchOptions: [.contacts, .directory])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -1180,7 +1180,7 @@ class SearchTaskTests : DatabaseTest {
         }
         
         let request = SearchRequest(query: "user", searchOptions: [.contacts, .directory])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, _) in
@@ -1211,7 +1211,7 @@ class SearchTaskTests : DatabaseTest {
         let localResultArrived = expectation(description: "received local result")
         let user = createConnectedUser(withName: "userA")
         let request = SearchRequest(query: "user", searchOptions: [.contacts])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, completed) in
@@ -1233,7 +1233,7 @@ class SearchTaskTests : DatabaseTest {
         }
         
         let request = SearchRequest(query: "user", searchOptions: [.directory])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, completed) in
@@ -1258,7 +1258,7 @@ class SearchTaskTests : DatabaseTest {
         }
         
         let request = SearchRequest(query: "user", searchOptions: [.contacts, .directory])
-        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: contextDirectory!, transportSession: mockTransportSession)
+        let task = SearchTask(request: request, searchContext: searchMOC, contextProvider: coreDataStack!, transportSession: mockTransportSession)
         
         // expect
         task.onResult { (result, completed) in
