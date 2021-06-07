@@ -181,7 +181,7 @@ extension VoiceChannelV3 : CallActions {
         userSession.syncManagedObjectContext.performGroupedBlock {
             let conversationId = conversation.objectID
             if let syncConversation = (try? userSession.syncManagedObjectContext.existingObject(with: conversationId)) as? ZMConversation {
-                userSession.syncStrategy?.callingRequestStrategy.dropPendingCallMessages(for: syncConversation)
+                userSession.syncStrategy?.callingRequestStrategy?.dropPendingCallMessages(for: syncConversation)
             }
         }
         leave(userSession: userSession, completion: nil)

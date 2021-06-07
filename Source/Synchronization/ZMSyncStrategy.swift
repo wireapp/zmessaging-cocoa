@@ -20,7 +20,7 @@
 import Foundation
 
 extension ZMSyncStrategy {
-    func callingRequestStrategy() -> CallingRequestStrategy? {
+    var callingRequestStrategy: CallingRequestStrategy? {
         return strategyDirectory?.requestStrategies.first(where: { requestStrategy in
             requestStrategy is CallingRequestStrategy
         }) as? CallingRequestStrategy
