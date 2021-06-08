@@ -19,14 +19,15 @@
 import XCTest
 
 class ConversationTests_Join: ConversationTestsBase {
-    
-    func testThatTheUserJoinsAConversation_OnSuccessfulResponse() {
+
+    func testConversationJoin_WhenTheSelfUserJoinsAConversation_OnSuccessfulResponse() {
         // GIVEN
         XCTAssert(login())
 
+        //Convert MockUser -> ZMUser
+        let selfUser_zmUser = user(for: self.selfUser)!
         let uuid = UUID.create()
-        let connectedUser = user(for: self.selfUser)!
-        let newConversation = ZMConversation.fetch(withRemoteIdentifier: uuid, in: connectedUser.managedObjectContext!)
+        let newConversation = ZMConversation.fetch(withRemoteIdentifier: uuid, in: selfUser_zmUser.managedObjectContext!)
         XCTAssertNil(newConversation)
 
         mockTransportSession.responseGeneratorBlock = {[weak self] request in
@@ -41,14 +42,14 @@ class ConversationTests_Join: ConversationTestsBase {
                     "users" : [
                         [
                             "conversation_role": "wire_member",
-                            "id": connectedUser.remoteIdentifier.transportString()
+                            "id": self?.selfUser.identifier
                         ]
                     ],
                     "user_ids": [
-                        connectedUser.remoteIdentifier.transportString()
+                        self?.selfUser.identifier
                     ]
                 ],
-                "from": connectedUser.remoteIdentifier.transportString()] as ZMTransportData
+                "from": self?.selfUser.identifier] as ZMTransportData
 
             return ZMTransportResponse(payload: responsePayload, httpStatus: 200, transportSessionError: nil)
         }
@@ -57,20 +58,21 @@ class ConversationTests_Join: ConversationTestsBase {
         ZMConversation.join(key: "test-key",
                             code: "test-code",
                             userSession: userSession!,
-                            managedObjectContext: connectedUser.managedObjectContext!,
+                            managedObjectContext: self.selfUser.managedObjectContext!,
                             completion: { _ in })
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // THEN
-        let conversation = ZMConversation.fetch(withRemoteIdentifier: uuid, in: connectedUser.managedObjectContext!)
+        let conversation = ZMConversation.fetch(withRemoteIdentifier: uuid, in: selfUser_zmUser.managedObjectContext!)
         XCTAssertNotNil(conversation)
-        XCTAssertTrue(conversation!.localParticipants.contains(connectedUser))
+        XCTAssertTrue(conversation!.localParticipants.contains(user(for: self.selfUser)!))
     }
 
-    func testThatTheUserDoesNotJoinAConversation_OnFailureResponse() {
+    func testConversationJoin_WhenTheSelfUserDoesNotJoinAConversation_OnFailureResponse() {
         // GIVEN
         XCTAssert(login())
-        let connectedUser = user(for: self.selfUser)!
+        //Convert MockUser -> ZMUser
+        let selfUser_zmUser = user(for: self.selfUser)!
 
         mockTransportSession.responseGeneratorBlock = {[weak self] request in
             guard request.path == "/conversations/join" else { return nil }
@@ -85,7 +87,7 @@ class ConversationTests_Join: ConversationTestsBase {
         ZMConversation.join(key: "test-key",
                             code: "test-code",
                             userSession: userSession!,
-                            managedObjectContext: connectedUser.managedObjectContext!,
+                            managedObjectContext: selfUser_zmUser.managedObjectContext!,
                             completion: { result in
                                 // THEN
                                 if case .failure = result {
@@ -96,10 +98,11 @@ class ConversationTests_Join: ConversationTestsBase {
                             })
     }
 
-    func testThatTheUserIsAParticipantInTheConversation() {
+    func testConversationJoin_WhenTheSelfUsersIsAlreadyAParticipant() {
         // GIVEN
         XCTAssert(login())
-        let connectedUser = user(for: self.selfUser)!
+        //Convert MockUser -> ZMUser
+        let selfUser_zmUser = user(for: self.selfUser)!
 
         mockTransportSession.responseGeneratorBlock = {[weak self] request in
             guard request.path == "/conversations/join" else { return nil }
@@ -114,7 +117,7 @@ class ConversationTests_Join: ConversationTestsBase {
         ZMConversation.join(key: "test-key",
                             code: "test-code",
                             userSession: userSession!,
-                            managedObjectContext: connectedUser.managedObjectContext!,
+                            managedObjectContext: selfUser_zmUser.managedObjectContext!,
                             completion: { result in
                                 // THEN
                                 if case .success = result {
