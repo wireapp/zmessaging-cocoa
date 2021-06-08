@@ -70,26 +70,28 @@ extension ZMConversation {
                                                                                 code: code)
 
         request.add(ZMCompletionHandler(on: moc, block: { response in
-            if response.httpStatus == 200 {
-                if let payload = response.payload, let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
+            switch response.httpStatus {
+            case 200:
+                if let payload = response.payload,
+                   let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
                     guard let syncMOC = contextProvider?.syncContext, let eventProcessor = eventProcessor else {
                         return  completion(.failure(ConversationJoinError.unknown))
                     }
                     syncMOC.performGroupedBlock {
                         eventProcessor.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
                     }
+                    completion(.success)
                 }
+            /// The user is already a participant in the conversation
+            case 204:
                 completion(.success)
-            } else if response.httpStatus == 204 {
-                completion(.success)
-            } else {
+            default:
                 let error = ConversationJoinError(response: response) ?? .unknown
                 Logging.network.debug("Error joining conversation: \(error)")
                 completion(.failure(error))
             }
         }))
         transportSession.enqueueOneTime(request)
-
     }
 
 }
