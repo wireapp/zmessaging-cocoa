@@ -143,7 +143,7 @@ public class StrategyDirectory: NSObject, StrategyDirectoryProtocol {
             UserPropertyRequestStrategy(
                 withManagedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory),
-            UserProfileRequestStrategy(
+            UserProfileUpdateRequestStrategy(
                 managedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory,
                 userProfileUpdateStatus: applicationStatusDirectory.userProfileUpdateStatus),
