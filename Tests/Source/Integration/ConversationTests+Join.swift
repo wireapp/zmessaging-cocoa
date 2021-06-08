@@ -48,7 +48,7 @@ class ConversationTests_Join: ConversationTestsBase {
                         connectedUser.remoteIdentifier.transportString()
                     ]
                 ],
-                "from" :connectedUser.remoteIdentifier.transportString()] as ZMTransportData
+                "from": connectedUser.remoteIdentifier.transportString()] as ZMTransportData
 
             return ZMTransportResponse(payload: responsePayload, httpStatus: 200, transportSessionError: nil)
         }
