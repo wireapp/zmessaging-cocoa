@@ -213,9 +213,7 @@ public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMConte
         notification.post(in: managedObjectContext.notificationContext)
     }
 
-//}
-
-//extension TeamDownloadRequestStrategy: ZMSingleRequestTranscoder {
+    //MARK:- ZMSingleRequestTranscoder
     
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         return TeamDownloadRequestFactory.getTeamsRequest
@@ -235,9 +233,7 @@ public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMConte
         syncStatus.finishCurrentSyncPhase(phase: expectedSyncPhase)
     }
     
-//}
-
-//extension TeamDownloadRequestStrategy: ZMDownstreamTranscoder {
+    //MARK:- ZMDownstreamTranscoder
 
     public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
         guard downstreamSync as? ZMDownstreamObjectSync == self.downstreamSync, let team = object as? Team else { fatal("Wrong sync or object for: \(object.safeForLoggingDescription)") }
@@ -263,6 +259,8 @@ public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMConte
         managedObjectContext.delete(team)
     }
 }
+
+//MARK:- Event
 
 fileprivate extension ZMUpdateEvent {
 

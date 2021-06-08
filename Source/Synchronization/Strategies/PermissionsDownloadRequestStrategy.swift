@@ -105,9 +105,7 @@ public final class PermissionsDownloadRequestStrategy: AbstractRequestStrategy, 
         return [sync]
     }
 
-//}
-
-//extension PermissionsDownloadRequestStrategy: ZMDownstreamTranscoder {
+    //MARK:- ZMDownstreamTranscoder
 
     public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
         guard let member = object as? Member, downstreamSync as? ZMDownstreamObjectSync == sync else { fatal("Wrong object: \(object.safeForLoggingDescription)") }

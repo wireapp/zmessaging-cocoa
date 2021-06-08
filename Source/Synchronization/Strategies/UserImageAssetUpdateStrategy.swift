@@ -36,7 +36,6 @@ internal enum AssetTransportError: Error {
     }
 }
 
-//@objc
 public final class UserImageAssetUpdateStrategy: AbstractRequestStrategy, ZMContextChangeTrackerSource, ZMSingleRequestTranscoder, ZMDownstreamTranscoder {
     internal let requestFactory = AssetRequestFactory()
     internal var upstreamRequestSyncs = [ProfileImageSize : ZMSingleRequestSync]()
@@ -152,16 +151,15 @@ public final class UserImageAssetUpdateStrategy: AbstractRequestStrategy, ZMCont
         sync?.readyForNextRequestIfNotBusy()
         return sync?.nextRequest()
     }
-//}
 
-//extension UserImageAssetUpdateStrategy: ZMContextChangeTrackerSource {
+    //MARK:- ZMContextChangeTrackerSource
+    
     public var contextChangeTrackers: [ZMContextChangeTracker] {
         return Array(downstreamRequestSyncs.values)
     }
-//}
 
-
-//extension UserImageAssetUpdateStrategy: ZMDownstreamTranscoder {
+    //MARK:-  ZMDownstreamTranscoder
+    
     public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
         guard let whitelistSync = downstreamSync as? ZMDownstreamObjectSyncWithWhitelist else { return nil }
         guard let user = object as? ZMUser else { return nil }
@@ -197,9 +195,9 @@ public final class UserImageAssetUpdateStrategy: AbstractRequestStrategy, ZMCont
         
         user.setImage(data: response.rawData, size: size)
     }
-//}
 
-//extension UserImageAssetUpdateStrategy: ZMSingleRequestTranscoder {
+    //MARK:-  ZMSingleRequestTranscoder
+    
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         if let size = size(for: sync), let image = imageUploadStatus?.consumeImage(for: size) {
             let request = requestFactory.upstreamRequestForAsset(withData: image, shareable: true, retention: .eternal)

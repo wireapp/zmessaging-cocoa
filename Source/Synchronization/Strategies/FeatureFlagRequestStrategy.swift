@@ -19,7 +19,6 @@
 import Foundation
 
 // Get FeatureFlags
-//@objc
 public final class FeatureFlagRequestStrategy: AbstractRequestStrategy, ZMSingleRequestTranscoder {
     
     // MARK: - Private Property
@@ -66,10 +65,9 @@ public final class FeatureFlagRequestStrategy: AbstractRequestStrategy, ZMSingle
         singleRequestSync.readyForNextRequestIfNotBusy()
         return singleRequestSync.nextRequest()
     }
-//}
 
-// MARK: - ZMSingleRequestTranscoder
-//extension FeatureFlagRequestStrategy:  {
+    // MARK: - ZMSingleRequestTranscoder
+    
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         switch sync {
         case singleRequestSync:

@@ -90,11 +90,7 @@ public final class CallingRequestStrategy: AbstractRequestStrategy, ZMSingleRequ
         genericMessageStrategy.expireEntities(withDependency: conversation)
     }
     
-//}
-
 // MARK: - Single Request Transcoder
-
-//extension CallingRequestStrategy: ZMSingleRequestTranscoder {
 
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         switch sync {
@@ -173,11 +169,8 @@ public final class CallingRequestStrategy: AbstractRequestStrategy, ZMSingleRequ
             break
         }
     }
-//}
 
-// MARK: - Context Change Tracker
-
-//extension CallingRequestStrategy: ZMContextChangeTracker, ZMContextChangeTrackerSource {
+    // MARK: - Context Change Tracker
     
     public var contextChangeTrackers: [ZMContextChangeTracker] {
         return [self, self.genericMessageStrategy]
@@ -212,11 +205,7 @@ public final class CallingRequestStrategy: AbstractRequestStrategy, ZMSingleRequ
         }
     }
     
-//}
-
-// MARK: - Event Consumer
-
-//extension CallingRequestStrategy: ZMEventConsumer {
+    // MARK: - Event Consumer
 
     public func processEventsWhileInBackground(_ events: [ZMUpdateEvent]) {
         let serverTimeDelta = managedObjectContext.serverTimeDelta

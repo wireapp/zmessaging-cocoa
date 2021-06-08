@@ -18,7 +18,6 @@
 
 import Foundation
 
-//@objc
 public class LabelUpstreamRequestStrategy: AbstractRequestStrategy, ZMContextChangeTracker, ZMContextChangeTrackerSource, ZMSingleRequestTranscoder {
     
     fileprivate let jsonEncoder = JSONEncoder()
@@ -35,9 +34,7 @@ public class LabelUpstreamRequestStrategy: AbstractRequestStrategy, ZMContextCha
         return upstreamSync.nextRequest()
     }
     
-//}
-
-//extension LabelUpstreamRequestStrategy: ZMContextChangeTracker, ZMContextChangeTrackerSource {
+    //MARK:- ZMContextChangeTracker, ZMContextChangeTrackerSource
     
     public var contextChangeTrackers: [ZMContextChangeTracker] {
         return [self]
@@ -65,9 +62,7 @@ public class LabelUpstreamRequestStrategy: AbstractRequestStrategy, ZMContextCha
         upstreamSync.readyForNextRequestIfNotBusy()
     }
     
-//}
-
-//extension LabelUpstreamRequestStrategy: ZMSingleRequestTranscoder {
+//MARK:- ZMSingleRequestTranscoder
     
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         let fetchRequest = NSFetchRequest<Label>(entityName: Label.entityName())
