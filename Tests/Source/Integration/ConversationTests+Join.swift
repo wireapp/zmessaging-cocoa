@@ -24,8 +24,9 @@ class ConversationTests_Join: ConversationTestsBase {
         // GIVEN
         XCTAssert(login())
 
-        //Convert MockUser -> ZMUser
+        ///Convert MockUser -> ZMUser
         let selfUser_zmUser = user(for: self.selfUser)!
+
         let uuid = UUID.create()
         let newConversation = ZMConversation.fetch(withRemoteIdentifier: uuid, in: selfUser_zmUser.managedObjectContext!)
         XCTAssertNil(newConversation)
@@ -42,19 +43,20 @@ class ConversationTests_Join: ConversationTestsBase {
                     "users" : [
                         [
                             "conversation_role": "wire_member",
-                            "id": self?.selfUser.identifier
+                            "id": selfUser_zmUser.remoteIdentifier.transportString()
                         ]
                     ],
                     "user_ids": [
-                        self?.selfUser.identifier
+                        selfUser_zmUser.remoteIdentifier.transportString()
                     ]
                 ],
-                "from": self?.selfUser.identifier] as ZMTransportData
+                "from": selfUser_zmUser.remoteIdentifier.transportString()] as ZMTransportData
 
             return ZMTransportResponse(payload: responsePayload, httpStatus: 200, transportSessionError: nil)
         }
 
         // WHEN
+        /// Key and code values don't affect the test result, because the result is mocked
         ZMConversation.join(key: "test-key",
                             code: "test-code",
                             userSession: userSession!,
@@ -71,7 +73,8 @@ class ConversationTests_Join: ConversationTestsBase {
     func testConversationJoin_WhenTheSelfUserDoesNotJoinAConversation_OnFailureResponse() {
         // GIVEN
         XCTAssert(login())
-        //Convert MockUser -> ZMUser
+
+        ///Convert MockUser -> ZMUser
         let selfUser_zmUser = user(for: self.selfUser)!
 
         mockTransportSession.responseGeneratorBlock = {[weak self] request in
@@ -84,6 +87,7 @@ class ConversationTests_Join: ConversationTestsBase {
 
         // WHEN
         let conversationJoiningFailed = expectation(description: "Failed to join the conversation")
+        /// Key and code values don't affect the test result, because the result is mocked
         ZMConversation.join(key: "test-key",
                             code: "test-code",
                             userSession: userSession!,
@@ -101,7 +105,8 @@ class ConversationTests_Join: ConversationTestsBase {
     func testConversationJoin_WhenTheSelfUsersIsAlreadyAParticipant() {
         // GIVEN
         XCTAssert(login())
-        //Convert MockUser -> ZMUser
+
+        ///Convert MockUser -> ZMUser
         let selfUser_zmUser = user(for: self.selfUser)!
 
         mockTransportSession.responseGeneratorBlock = {[weak self] request in
@@ -114,6 +119,7 @@ class ConversationTests_Join: ConversationTestsBase {
 
         // WHEN
         let userIsParticipant = expectation(description: "The user was already a participant in the conversation")
+        /// Key and code values don't affect the test result, because the result is mocked
         ZMConversation.join(key: "test-key",
                             code: "test-code",
                             userSession: userSession!,
