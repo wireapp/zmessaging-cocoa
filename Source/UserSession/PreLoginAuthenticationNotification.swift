@@ -34,7 +34,6 @@ extension ZMUser {
 extension LoginCredentials {
 
     /// This will be used to set user info on the NSError
-//    @objc
     public var dictionaryRepresentation: [String: Any] {
         var userInfo: [String: Any] = [:]
         userInfo[ZMUserLoginCredentialsKey] = self
