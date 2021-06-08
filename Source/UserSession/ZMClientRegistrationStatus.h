@@ -64,7 +64,6 @@ extern NSString *const ZMPersistedClientIdKey;
 
 - (void)didFetchSelfUser;
 - (void)didRegisterClient:(UserClient *)client;
-//- (void)didFailToRegisterClient:(NSError *)error;
 
 - (void)didDetectCurrentClientDeletion;
 - (BOOL)clientIsReadyForRequests;

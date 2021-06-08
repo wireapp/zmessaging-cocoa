@@ -8,14 +8,13 @@
 
 import Foundation
 
+private let zmLog = ZMSLog(tag: "ZMClientRegistrationStatus")
+
 extension ZMClientRegistrationStatus {
     func didFail(toRegisterClient error: NSError?) {
         var error = error
-        ///TODO:
-//        ZMLogDebug("%@", NSStringFromSelector(#function))
         //we should not reset login state for client registration errors
-        
-        
+        zmLog.debug(#function)
         
         if let errorCode = error?.code,
            errorCode != ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue && errorCode != ZMUserSessionErrorCode.needsToRegisterEmailToRegisterClient.rawValue && errorCode != ZMUserSessionErrorCode.canNotRegisterMoreClients.rawValue {
@@ -28,12 +27,14 @@ extension ZMClientRegistrationStatus {
             error = NSError(domain: (error as NSError?)?.domain ?? "", code: errorCode, userInfo: ZMUser.selfUser(in: managedObjectContext).loginCredentials.dictionaryRepresentation)
         }
 
-        if let errorCode = error?.code, errorCode == ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue || errorCode == ZMUserSessionErrorCode.invalidCredentials.rawValue {
+        if let errorCode = error?.code,
+           errorCode == ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue || errorCode == ZMUserSessionErrorCode.invalidCredentials.rawValue {
             // set this label to block additional requests while we are waiting for the user to (re-)enter the password
             needsToCheckCredentials = true
         }
 
-        if let errorCode = error?.code, errorCode == ZMUserSessionErrorCode.canNotRegisterMoreClients.rawValue {
+        if let errorCode = error?.code,
+           errorCode == ZMUserSessionErrorCode.canNotRegisterMoreClients.rawValue {
             // Wait and fetch the clients before sending the error
             isWaitingForUserClients = true
             RequestAvailableNotification.notifyNewRequestsAvailable(self)
