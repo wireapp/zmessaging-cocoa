@@ -377,16 +377,6 @@ static NSString *ZMLogTag ZM_UNUSED = @"Authentication";
     [self.managedObjectContext saveOrRollback];
 }
 
-//- (void)invalidateCookieAndNotify
-//{
-//    self.emailCredentials = nil;
-//    [self.cookieStorage deleteKeychainItems];
-//
-//    ZMUser *selfUser = [ZMUser selfUserInContext:self.managedObjectContext];
-//    NSError *outError = [NSError userSessionErrorWithErrorCode:ZMUserSessionClientDeletedRemotely userInfo:selfUser.loginCredentials.dictionaryRepresentation];
-//    [self.registrationStatusDelegate didDeleteSelfUserClient:outError];
-//}
-
 - (void)didDeleteClient
 {
     if (self.isWaitingForClientsToBeDeleted) {
