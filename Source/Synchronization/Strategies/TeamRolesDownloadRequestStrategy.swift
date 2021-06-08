@@ -41,8 +41,8 @@ fileprivate extension Team {
     
 }
 
-@objc
-public final class TeamRolesDownloadRequestStrategy: AbstractRequestStrategy, ZMContextChangeTrackerSource, ZMRequestGeneratorSource, ZMRequestGenerator {
+//@objc
+public final class TeamRolesDownloadRequestStrategy: AbstractRequestStrategy, ZMContextChangeTrackerSource, ZMRequestGeneratorSource, ZMRequestGenerator, ZMDownstreamTranscoder {
     
     private (set) var downstreamSync: ZMDownstreamObjectSync!
     fileprivate unowned var syncStatus: SyncStatus
@@ -86,10 +86,10 @@ public final class TeamRolesDownloadRequestStrategy: AbstractRequestStrategy, ZM
             self.syncStatus.finishCurrentSyncPhase(phase: self.expectedSyncPhase)
         }
     }
-}
+//}
 
 
-extension TeamRolesDownloadRequestStrategy: ZMDownstreamTranscoder {
+//extension TeamRolesDownloadRequestStrategy: ZMDownstreamTranscoder {
     
     public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
         guard downstreamSync as? ZMDownstreamObjectSync == self.downstreamSync, let team = object as? Team else { fatal("Wrong sync or object for: \(object.safeForLoggingDescription)") }

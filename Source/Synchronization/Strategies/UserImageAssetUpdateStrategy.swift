@@ -36,7 +36,8 @@ internal enum AssetTransportError: Error {
     }
 }
 
-@objc public final class UserImageAssetUpdateStrategy: AbstractRequestStrategy {
+//@objc
+public final class UserImageAssetUpdateStrategy: AbstractRequestStrategy, ZMContextChangeTrackerSource, ZMSingleRequestTranscoder, ZMDownstreamTranscoder {
     internal let requestFactory = AssetRequestFactory()
     internal var upstreamRequestSyncs = [ProfileImageSize : ZMSingleRequestSync]()
     internal var deleteRequestSync: ZMSingleRequestSync?
@@ -151,9 +152,16 @@ internal enum AssetTransportError: Error {
         sync?.readyForNextRequestIfNotBusy()
         return sync?.nextRequest()
     }
-}
+//}
 
-extension UserImageAssetUpdateStrategy: ZMDownstreamTranscoder {
+//extension UserImageAssetUpdateStrategy: ZMContextChangeTrackerSource {
+    public var contextChangeTrackers: [ZMContextChangeTracker] {
+        return Array(downstreamRequestSyncs.values)
+    }
+//}
+
+
+//extension UserImageAssetUpdateStrategy: ZMDownstreamTranscoder {
     public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
         guard let whitelistSync = downstreamSync as? ZMDownstreamObjectSyncWithWhitelist else { return nil }
         guard let user = object as? ZMUser else { return nil }
@@ -189,15 +197,9 @@ extension UserImageAssetUpdateStrategy: ZMDownstreamTranscoder {
         
         user.setImage(data: response.rawData, size: size)
     }
-}
+//}
 
-extension UserImageAssetUpdateStrategy: ZMContextChangeTrackerSource {
-    public var contextChangeTrackers: [ZMContextChangeTracker] {
-        return Array(downstreamRequestSyncs.values)
-    }
-}
-
-extension UserImageAssetUpdateStrategy: ZMSingleRequestTranscoder {
+//extension UserImageAssetUpdateStrategy: ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         if let size = size(for: sync), let image = imageUploadStatus?.consumeImage(for: size) {
             let request = requestFactory.upstreamRequestForAsset(withData: image, shareable: true, retention: .eternal)

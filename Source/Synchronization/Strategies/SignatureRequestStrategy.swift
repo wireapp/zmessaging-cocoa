@@ -20,8 +20,8 @@
 import Foundation
 
 // Sign a PDF document
-@objc
-public final class SignatureRequestStrategy: AbstractRequestStrategy {
+//@objc
+public final class SignatureRequestStrategy: AbstractRequestStrategy, ZMSingleRequestTranscoder {
     
     // MARK: - Private Property
     private let syncContext: NSManagedObjectContext
@@ -76,10 +76,10 @@ public final class SignatureRequestStrategy: AbstractRequestStrategy {
         }
         return nil
     }
-}
+//}
 
 // MARK: - ZMSingleRequestTranscoder
-extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
+//extension SignatureRequestStrategy: ZMSingleRequestTranscoder {
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         switch sync {
         case requestSync:

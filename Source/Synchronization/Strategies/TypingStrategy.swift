@@ -107,7 +107,7 @@ class TypingEventQueue {
     }
 }
 
-public class TypingStrategy : AbstractRequestStrategy {
+public class TypingStrategy : AbstractRequestStrategy, TearDownCapable, ZMEventConsumer {
     
     fileprivate var typing : Typing!
     fileprivate let typingEventQueue = TypingEventQueue()
@@ -200,18 +200,18 @@ public class TypingStrategy : AbstractRequestStrategy {
         
         return request
     }
-}
+//}
 
-extension TypingStrategy: TearDownCapable {
+//extension TypingStrategy: TearDownCapable {
     public func tearDown() {
         typing.tearDown()
         typing = nil
         tornDown = true
         observers = []
     }
-}
+//}
 
-extension TypingStrategy : ZMEventConsumer {
+//extension TypingStrategy : ZMEventConsumer {
     
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
         guard liveEvents else { return }
