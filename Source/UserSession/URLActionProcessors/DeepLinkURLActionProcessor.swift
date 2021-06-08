@@ -30,6 +30,14 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
     
     func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         switch urlAction {
+        case let .joinConversation(key: key, code: code):
+            delegate?.shouldPerformAction(urlAction) { shouldJoin in
+                defer { delegate?.completedURLAction(urlAction) }
+                guard shouldJoin else { return }
+                // TODO: Make the join request
+                // TODO: On success, open conversation
+                // TODO: On fail, inform delegate
+            }
             
         case .openConversation(let id):
             guard let conversation = ZMConversation(remoteID: id, createIfNeeded: false, in: uiMOC) else {
@@ -38,17 +46,19 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
             }
             
             delegate?.showConversation(conversation, at: nil)
+            delegate?.completedURLAction(urlAction)
+
         case .openUserProfile(let id):
             if let user = ZMUser(remoteID: id, createIfNeeded: false, in: uiMOC) {
                 delegate?.showUserProfile(user: user)
             } else {
                 delegate?.showConnectionRequest(userId: id)
             }
+
+            delegate?.completedURLAction(urlAction)
             
         default:
-            break
+            delegate?.completedURLAction(urlAction)
         }
-        
-        delegate?.completedURLAction(urlAction)
     }
 }
