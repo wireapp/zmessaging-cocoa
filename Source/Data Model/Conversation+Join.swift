@@ -35,19 +35,16 @@ extension ZMConversation {
 
     /// Join a conversation using a reusable code
     /// - Parameters:
-    ///   - uri: full URI (containing key/code) to join a conversation (optional)
     ///   - key: stable conversation identifier
     ///   - code: conversation code
     ///   - userSession: user session
     ///   - completion: called when the user joines the conversation or when it fails
-    public static func join(uri: String? = nil,
-                     key: String,
-                     code: String,
-                     userSession: ZMUserSession,
-                     managedObjectContext: NSManagedObjectContext,
-                     completion: @escaping (VoidResult) -> Void) {
-        self.join(uri,
-                  key: key,
+    public static func join(key: String,
+                            code: String,
+                            userSession: ZMUserSession,
+                            managedObjectContext: NSManagedObjectContext,
+                            completion: @escaping (VoidResult) -> Void) {
+        self.join(key: key,
                   code: code,
                   transportSession: userSession.transportSession,
                   eventProcessor: userSession.updateEventProcessor,
@@ -56,18 +53,15 @@ extension ZMConversation {
                   completion: completion)
     }
 
-     static func join(_ uri: String?,
-              key: String,
-              code: String,
-              transportSession: TransportSessionType,
-              eventProcessor: UpdateEventProcessor?,
-              contextProvider: ContextProvider?,
-              moc: NSManagedObjectContext,
-              completion: @escaping (VoidResult) -> Void) {
+    static func join(key: String,
+                     code: String,
+                     transportSession: TransportSessionType,
+                     eventProcessor: UpdateEventProcessor?,
+                     contextProvider: ContextProvider?,
+                     moc: NSManagedObjectContext,
+                     completion: @escaping (VoidResult) -> Void) {
 
-        let request = ConversationJoinRequestFactory.requestForJoinConversation(uri: uri,
-                                                                                key: key,
-                                                                                code: code)
+        let request = ConversationJoinRequestFactory.requestForJoinConversation(key: key, code: code)
 
         request.add(ZMCompletionHandler(on: moc, block: { response in
             switch response.httpStatus {
@@ -98,10 +92,9 @@ extension ZMConversation {
 
 internal struct ConversationJoinRequestFactory {
 
-    static func requestForJoinConversation(uri: String?, key: String, code: String) -> ZMTransportRequest {
+    static func requestForJoinConversation(key: String, code: String) -> ZMTransportRequest {
         let path = "/conversations/join"
         let payload: [String: Any] = [
-            "uri": uri,
             "key": key,
             "code": code
         ]
