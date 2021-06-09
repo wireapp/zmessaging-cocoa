@@ -37,12 +37,12 @@ extension ZMClientRegistrationStatus {
             errorForDelegate = NSError(domain: error.domain, code: error.code, userInfo: ZMUser.selfUser(in: managedObjectContext).loginCredentials.dictionaryRepresentation)
         }
 
-        if error.code == ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue || error.code == ZMUserSessionErrorCode.invalidCredentials.rawValue {
+        if errorForDelegate.code == ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue || errorForDelegate.code == ZMUserSessionErrorCode.invalidCredentials.rawValue {
             // set this label to block additional requests while we are waiting for the user to (re-)enter the password
             needsToCheckCredentials = true
         }
 
-        if error.code == ZMUserSessionErrorCode.canNotRegisterMoreClients.rawValue {
+        if errorForDelegate.code == ZMUserSessionErrorCode.canNotRegisterMoreClients.rawValue {
             // Wait and fetch the clients before sending the error
             isWaitingForUserClients = true
             RequestAvailableNotification.notifyNewRequestsAvailable(self)
