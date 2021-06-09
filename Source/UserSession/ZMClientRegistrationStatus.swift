@@ -25,16 +25,16 @@ extension ZMClientRegistrationStatus {
     public func didFail(toRegisterClient error: NSError) {
         zmLog.debug(#function)
         
+        var error: NSError = error
+
         //we should not reset login state for client registration errors
         if error.code != ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue && error.code != ZMUserSessionErrorCode.needsToRegisterEmailToRegisterClient.rawValue && error.code != ZMUserSessionErrorCode.canNotRegisterMoreClients.rawValue {
             emailCredentials = nil
         }
-
-        var errorForDelegate: NSError = error
         
         if error.code == ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue {
             // help the user by providing the email associated with this account
-            errorForDelegate = NSError(domain: error.domain, code: error.code, userInfo: ZMUser.selfUser(in: managedObjectContext).loginCredentials.dictionaryRepresentation)
+            error = NSError(domain: error.domain, code: error.code, userInfo: ZMUser.selfUser(in: managedObjectContext).loginCredentials.dictionaryRepresentation)
         }
 
         if error.code == ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue || error.code == ZMUserSessionErrorCode.invalidCredentials.rawValue {
@@ -47,7 +47,7 @@ extension ZMClientRegistrationStatus {
             isWaitingForUserClients = true
             RequestAvailableNotification.notifyNewRequestsAvailable(self)
         } else {
-            registrationStatusDelegate.didFailToRegisterSelfUserClient(error: errorForDelegate)
+            registrationStatusDelegate?.didFailToRegisterSelfUserClient(error: error)
         }
     }
     
@@ -58,6 +58,6 @@ extension ZMClientRegistrationStatus {
 
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
         let outError = NSError.userSessionErrorWith(ZMUserSessionErrorCode.clientDeletedRemotely, userInfo: selfUser.loginCredentials.dictionaryRepresentation)
-        registrationStatusDelegate.didDeleteSelfUserClient(error: outError)
+        registrationStatusDelegate?.didDeleteSelfUserClient(error: outError)
     }
 }
