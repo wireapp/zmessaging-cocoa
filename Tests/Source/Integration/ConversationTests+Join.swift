@@ -20,11 +20,11 @@ import XCTest
 
 class ConversationTests_Join: ConversationTestsBase {
 
-    func testConversationJoin_WhenTheSelfUserJoinsAConversation_OnSuccessfulResponse() {
+    func testThatTheSelfUserJoinsAConversation_OnSuccessfulResponse() {
         // GIVEN
         XCTAssert(login())
 
-        ///Convert MockUser -> ZMUser
+        // Convert MockUser -> ZMUser
         let selfUser_zmUser = user(for: self.selfUser)!
 
         let uuid = UUID.create()
@@ -70,7 +70,7 @@ class ConversationTests_Join: ConversationTestsBase {
         XCTAssertTrue(conversation!.localParticipants.contains(user(for: self.selfUser)!))
     }
 
-    func testConversationJoin_WhenTheSelfUserDoesNotJoinAConversation_OnFailureResponse() {
+    func testThatTheSelfUserDoesNotJoinAConversation_OnFailureResponse() {
         // GIVEN
         XCTAssert(login())
 
@@ -102,7 +102,7 @@ class ConversationTests_Join: ConversationTestsBase {
                             })
     }
 
-    func testConversationJoin_WhenTheSelfUsersIsAlreadyAParticipant() {
+    func testThatAnErrorIsNotReported_WhenTheSelfUsersIsAlreadyAParticipant() {
         // GIVEN
         XCTAssert(login())
 
