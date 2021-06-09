@@ -66,19 +66,21 @@ extension ZMConversation {
         request.add(ZMCompletionHandler(on: moc, block: { response in
             switch response.httpStatus {
             case 200:
-                if let payload = response.payload,
-                   let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil) {
-                    guard let syncMOC = contextProvider?.syncContext, let eventProcessor = eventProcessor else {
-                        return  completion(.failure(ConversationJoinError.unknown))
-                    }
-                    syncMOC.performGroupedBlock {
-                        eventProcessor.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
-                    }
-                    completion(.success)
+                guard let payload = response.payload,
+                      let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil),
+                      let syncMOC = contextProvider?.syncContext, let eventProcessor = eventProcessor else {
+                    return  completion(.failure(ConversationJoinError.unknown))
                 }
+                
+                syncMOC.performGroupedBlock {
+                    eventProcessor.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
+                }
+                completion(.success)
+
             /// The user is already a participant in the conversation
             case 204:
                 completion(.success)
+                
             default:
                 let error = ConversationJoinError(response: response) ?? .unknown
                 Logging.network.debug("Error joining conversation: \(error)")
