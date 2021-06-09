@@ -252,7 +252,7 @@ public final class UserClientRequestStrategy: ZMObjectSyncStrategy, ZMObjectStra
         else {
             //first we try to register without password (credentials can be there, but they can not contain password)
             //if there is no password in credentials but it's required, we will recieve error from backend and only then will ask for password
-            let error = self.errorFromFailedInsertResponse(response)
+            let error = errorFromFailedInsertResponse(response)
             if error.code == Int(ZMUserSessionErrorCode.canNotRegisterMoreClients.rawValue) {
                 clientUpdateStatus?.needsToFetchClients(andVerifySelfClient: false)
             }
