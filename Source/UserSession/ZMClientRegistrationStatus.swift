@@ -50,7 +50,7 @@ extension ZMClientRegistrationStatus {
             isWaitingForUserClients = true
             RequestAvailableNotification.notifyNewRequestsAvailable(self)
         } else {
-            registrationStatusDelegate.didFailToRegisterSelfUserClient(error: error)
+            registrationStatusDelegate?.didFailToRegisterSelfUserClient(error: error)
         }
     }
     
@@ -61,6 +61,6 @@ extension ZMClientRegistrationStatus {
 
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
         let outError = NSError.userSessionErrorWith(ZMUserSessionErrorCode.clientDeletedRemotely, userInfo: selfUser.loginCredentials.dictionaryRepresentation)
-        registrationStatusDelegate.didDeleteSelfUserClient(error: outError)
+        registrationStatusDelegate?.didDeleteSelfUserClient(error: outError)
     }
 }
