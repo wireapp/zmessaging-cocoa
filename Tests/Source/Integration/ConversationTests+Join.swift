@@ -20,7 +20,7 @@ import XCTest
 
 class ConversationTests_Join: ConversationTestsBase {
 
-    func testConversationJoin_WhenTheSelfUserJoinsAConversation_OnSuccessfulResponse() {
+    func testThatTheSelfUserJoinsAConversation_OnSuccessfulResponse() {
         // GIVEN
         XCTAssert(login())
 
