@@ -26,7 +26,7 @@ extension ZMClientRegistrationStatusTests {
         selfUser.remoteIdentifier = UUID()
 
         // when
-        sut.didFail(toRegisterClient: tooManyClientsError() as NSError?)
+        sut.didFail(toRegisterClient: tooManyClientsError()! as NSError)
 
         // then
         XCTAssertEqual(sut.currentPhase, ZMClientRegistrationPhase.fetchingClients)
