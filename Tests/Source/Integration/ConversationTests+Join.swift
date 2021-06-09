@@ -24,7 +24,7 @@ class ConversationTests_Join: ConversationTestsBase {
         // GIVEN
         XCTAssert(login())
 
-        ///Convert MockUser -> ZMUser
+        // Convert MockUser -> ZMUser
         let selfUser_zmUser = user(for: self.selfUser)!
 
         let uuid = UUID.create()
