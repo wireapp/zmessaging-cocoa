@@ -102,7 +102,7 @@ class ConversationTests_Join: ConversationTestsBase {
                             })
     }
 
-    func testConversationJoin_WhenTheSelfUsersIsAlreadyAParticipant() {
+    func testThatAnErrorIsNotReported_WhenTheSelfUsersIsAlreadyAParticipant() {
         // GIVEN
         XCTAssert(login())
 
