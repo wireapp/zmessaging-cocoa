@@ -100,6 +100,7 @@ class ConversationTests_Join: ConversationTestsBase {
                                     XCTFail()
                                 }
                             })
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5, handler: nil))
     }
 
     func testThatAnErrorIsNotReported_WhenTheSelfUsersIsAlreadyAParticipant() {
@@ -132,7 +133,7 @@ class ConversationTests_Join: ConversationTestsBase {
                                     XCTFail()
                                 }
                             })
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5, handler: nil))
     }
-
 
 }
