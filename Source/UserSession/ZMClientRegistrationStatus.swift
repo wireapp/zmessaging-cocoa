@@ -22,35 +22,32 @@ private let zmLog = ZMSLog(tag: "ZMClientRegistrationStatus")
 
 extension ZMClientRegistrationStatus {
     @objc(didFailToRegisterClient:)
-    public func didFail(toRegisterClient error: NSError?) {
-        var error = error
-        //we should not reset login state for client registration errors
+    public func didFail(toRegisterClient error: NSError) {
         zmLog.debug(#function)
         
-        if let errorCode = error?.code,
-           errorCode != ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue && errorCode != ZMUserSessionErrorCode.needsToRegisterEmailToRegisterClient.rawValue && errorCode != ZMUserSessionErrorCode.canNotRegisterMoreClients.rawValue {
+        //we should not reset login state for client registration errors
+        if error.code != ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue && error.code != ZMUserSessionErrorCode.needsToRegisterEmailToRegisterClient.rawValue && error.code != ZMUserSessionErrorCode.canNotRegisterMoreClients.rawValue {
             emailCredentials = nil
         }
 
-        if let errorCode = error?.code,
-           errorCode == ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue {
+        var errorForDelegate: NSError = error
+        
+        if error.code == ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue {
             // help the user by providing the email associated with this account
-            error = NSError(domain: (error as NSError?)?.domain ?? "", code: errorCode, userInfo: ZMUser.selfUser(in: managedObjectContext).loginCredentials.dictionaryRepresentation)
+            errorForDelegate = NSError(domain: error.domain, code: error.code, userInfo: ZMUser.selfUser(in: managedObjectContext).loginCredentials.dictionaryRepresentation)
         }
 
-        if let errorCode = error?.code,
-           errorCode == ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue || errorCode == ZMUserSessionErrorCode.invalidCredentials.rawValue {
+        if error.code == ZMUserSessionErrorCode.needsPasswordToRegisterClient.rawValue || error.code == ZMUserSessionErrorCode.invalidCredentials.rawValue {
             // set this label to block additional requests while we are waiting for the user to (re-)enter the password
             needsToCheckCredentials = true
         }
 
-        if let errorCode = error?.code,
-           errorCode == ZMUserSessionErrorCode.canNotRegisterMoreClients.rawValue {
+        if error.code == ZMUserSessionErrorCode.canNotRegisterMoreClients.rawValue {
             // Wait and fetch the clients before sending the error
             isWaitingForUserClients = true
             RequestAvailableNotification.notifyNewRequestsAvailable(self)
         } else {
-            registrationStatusDelegate.didFailToRegisterSelfUserClient(error: error)
+            registrationStatusDelegate.didFailToRegisterSelfUserClient(error: errorForDelegate)
         }
     }
     
