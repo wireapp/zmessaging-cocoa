@@ -512,7 +512,7 @@ class SessionManagerTests_EncryptionAtRestMigration: IntegrationTest {
         createExtraUsersAndConversations()
     }
 
-    // @SF.Storage @TSFI.Client_Platform
+    // @SF.Storage @TSFI.ClientPlatform
     func testThatDatabaseIsMigrated_WhenEncryptionAtRestIsEnabled() throws {
         // given
         XCTAssertTrue(login())
@@ -536,7 +536,7 @@ class SessionManagerTests_EncryptionAtRestMigration: IntegrationTest {
         XCTAssertEqual(clientMessage?.messageText, expectedText)
     }
 
-    // @SF.Storage @TSFI.Client_Platform
+    // @SF.Storage @TSFI.ClientPlatform
     func testThatDatabaseIsMigrated_WhenEncryptionAtRestIsDisabled() throws {
         // given
         XCTAssertTrue(login())
@@ -577,7 +577,7 @@ class SessionManagerTests_EncryptionAtRestIsEnabledByDefault_Option: Integration
         return SessionManagerConfiguration(encryptionAtRestIsEnabledByDefault: true)
     }
 
-    // @SF.Storage @TSFI.Client_Platform
+    // @SF.Storage @TSFI.ClientPlatform
     func testThatEncryptionAtRestIsEnabled_OnActiveUserSession() {
         // given
         XCTAssertTrue(login())
