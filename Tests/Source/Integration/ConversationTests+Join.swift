@@ -70,7 +70,7 @@ class ConversationTests_Join: ConversationTestsBase {
         XCTAssertTrue(conversation!.localParticipants.contains(user(for: self.selfUser)!))
     }
 
-    func testConversationJoin_WhenTheSelfUserDoesNotJoinAConversation_OnFailureResponse() {
+    func testThatTheSelfUserDoesNotJoinAConversation_OnFailureResponse() {
         // GIVEN
         XCTAssert(login())
 
