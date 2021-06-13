@@ -34,11 +34,22 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
         switch urlAction {
         case let .joinConversation(key: key, code: code):
             delegate?.shouldPerformAction(urlAction) { shouldJoin in
-                defer { delegate?.completedURLAction(urlAction) }
                 guard shouldJoin else { return }
-                // TODO: Make the join request
-                // TODO: On success, open conversation
-                // TODO: On fail, inform delegate
+                ZMConversation.join(key: key,
+                                    code: code,
+                                    userSession: self.userSession,
+                                    managedObjectContext: self.uiMOC) { (result, conversation) in
+                    switch result {
+                    case .success:
+                        guard let conversation = conversation else {
+                            return
+                        }
+                        delegate?.showConversation(conversation, at: nil)
+                    case .failure(let error) :
+                        delegate?.failedToPerformAction(urlAction, error: error)
+                    }
+                    delegate?.completedURLAction(urlAction)
+                }
             }
             
         case .openConversation(let id):
