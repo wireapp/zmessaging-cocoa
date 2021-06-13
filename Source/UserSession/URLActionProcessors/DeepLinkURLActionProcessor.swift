@@ -22,10 +22,12 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
     
     var uiMOC: NSManagedObjectContext
     var syncMOC: NSManagedObjectContext
+    var userSession: ZMUserSession
     
-    init(contextProvider: ContextProvider) {
-        self.uiMOC = contextProvider.viewContext
-        self.syncMOC = contextProvider.syncContext
+    init(userSession: ZMUserSession) {
+        self.uiMOC = userSession.coreDataStack.viewContext
+        self.syncMOC = userSession.coreDataStack.syncContext
+        self.userSession = userSession
     }
     
     func process(urlAction: URLAction, delegate: PresentationDelegate?) {

@@ -322,7 +322,7 @@ public class ZMUserSession: NSObject {
     
     private func createURLActionProcessors() -> [URLActionProcessor] {
         return [
-            DeepLinkURLActionProcessor(contextProvider: coreDataStack),
+            DeepLinkURLActionProcessor(userSession: self),
             ConnectToBotURLActionProcessor(contextprovider: coreDataStack,
                                            transportSession: transportSession,
                                            eventProcessor: updateEventProcessor!)

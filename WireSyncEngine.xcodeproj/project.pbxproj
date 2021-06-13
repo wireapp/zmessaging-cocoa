@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		06018FE82676B7C90043F8F8 /* DeepLinkURLActionProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161ACB3E23F6E4C200ABFF33 /* DeepLinkURLActionProcessorTests.swift */; };
 		068E655A24C8223400403926 /* LocalNotificationContentTypeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 068E655924C8223400403926 /* LocalNotificationContentTypeTest.swift */; };
 		06B99C7B242B51A300FEAFDE /* SignatureRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06B99C7A242B51A300FEAFDE /* SignatureRequestStrategy.swift */; };
 		06BBF7012473D51D00A26626 /* MessagingTest+Swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF7002473D51D00A26626 /* MessagingTest+Swift.swift */; };
@@ -47,7 +48,6 @@
 		161ACB2F23F5BACA00ABFF33 /* ConnectToBotURLActionProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161ACB2E23F5BACA00ABFF33 /* ConnectToBotURLActionProcessor.swift */; };
 		161ACB3223F5BBA100ABFF33 /* CompanyLoginURLActionProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161ACB3123F5BBA100ABFF33 /* CompanyLoginURLActionProcessor.swift */; };
 		161ACB3A23F6BAFE00ABFF33 /* URLActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161ACB3923F6BAFE00ABFF33 /* URLActionTests.swift */; };
-		161ACB3F23F6E4C200ABFF33 /* DeepLinkURLActionProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161ACB3E23F6E4C200ABFF33 /* DeepLinkURLActionProcessorTests.swift */; };
 		161ACB4323F6EE4800ABFF33 /* CompanyLoginURLActionProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161ACB4223F6EE4800ABFF33 /* CompanyLoginURLActionProcessorTests.swift */; };
 		161C886623FD248A00CB0B8E /* RecordingMockTransportSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161C886423FD248A00CB0B8E /* RecordingMockTransportSession.swift */; };
 		161C887723FD4CFD00CB0B8E /* MockPushChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161C887623FD4CFD00CB0B8E /* MockPushChannel.swift */; };
@@ -3004,6 +3004,7 @@
 				169BA24225EF6F6700374343 /* ZMConversation+Testing.swift in Sources */,
 				169BA24625EF73B100374343 /* EventProcessingPerformanceTests.swift in Sources */,
 				169BA23625ED101C00374343 /* LoginFlowTests.m in Sources */,
+				06018FE82676B7C90043F8F8 /* DeepLinkURLActionProcessorTests.swift in Sources */,
 				169BA21225ED0F7600374343 /* UserTests+AccountDeletion.swift in Sources */,
 				169BA1DF25ECE4D000374343 /* IntegrationTest.m in Sources */,
 				169BA20C25ED0F5900374343 /* PushNotificationTokenTests.swift in Sources */,
@@ -3184,7 +3185,6 @@
 				F9B71F4C1CB2B841001DB03F /* NSManagedObjectContext+TestHelpers.m in Sources */,
 				F991CE151CB55512004D8465 /* ZMConversation+Testing.m in Sources */,
 				545434A919AB6ADA003892D9 /* ZMConversationTranscoderTests.m in Sources */,
-				161ACB3F23F6E4C200ABFF33 /* DeepLinkURLActionProcessorTests.swift in Sources */,
 				54D785011A37256C00F47798 /* ZMEncodedNSUUIDWithTimestampTests.m in Sources */,
 				161927242459E09C00DDD9EB /* UserClientEventConsumerTests.swift in Sources */,
 				632A582225CD9DF900F0C4BD /* CallParticipantsKindTests.swift in Sources */,

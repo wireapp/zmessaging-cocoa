@@ -43,7 +43,7 @@ extension ZMConversation {
                             code: String,
                             userSession: ZMUserSession,
                             managedObjectContext: NSManagedObjectContext,
-                            completion: @escaping (VoidResult) -> Void) {
+                            completion: @escaping (VoidResult, ZMConversation?) -> Void) {
         self.join(key: key,
                   code: code,
                   transportSession: userSession.transportSession,
@@ -59,32 +59,44 @@ extension ZMConversation {
                      eventProcessor: UpdateEventProcessor?,
                      contextProvider: ContextProvider?,
                      moc: NSManagedObjectContext,
-                     completion: @escaping (VoidResult) -> Void) {
+                     completion: @escaping (VoidResult, ZMConversation?) -> Void) {
 
         let request = ConversationJoinRequestFactory.requestForJoinConversation(key: key, code: code)
 
-        request.add(ZMCompletionHandler(on: moc, block: { response in
+        request.add(ZMCompletionHandler(on: moc, block: { [weak contextProvider, weak eventProcessor] response in
             switch response.httpStatus {
             case 200:
                 guard let payload = response.payload,
                       let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil),
-                      let syncMOC = contextProvider?.syncContext, let eventProcessor = eventProcessor else {
-                    return  completion(.failure(ConversationJoinError.unknown))
+                      let eventProcessor = eventProcessor,
+                      let syncMOC = contextProvider?.syncContext,
+                      let viewMOC = contextProvider?.viewContext,
+                      let conversationString = event.payload["conversation"] as? String
+                else {
+                    return completion(.failure(ConversationJoinError.unknown), nil)
                 }
-                
+
                 syncMOC.performGroupedBlock {
                     eventProcessor.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
-                }
-                completion(.success)
 
-            /// The user is already a participant in the conversation
+                    guard let conversationId = UUID(uuidString: conversationString),
+                          let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: syncMOC) else {
+                        return
+                    }
+
+                    viewMOC.performGroupedBlock {
+                        completion(.success, conversation)
+                    }
+                }
+
+            /// The user is already a participant in the conversation.
             case 204:
-                completion(.success)
-                
+                completion(.success, nil)
+
             default:
                 let error = ConversationJoinError(response: response) ?? .unknown
                 Logging.network.debug("Error joining conversation: \(error)")
-                completion(.failure(error))
+                completion(.failure(error), nil)
             }
         }))
         transportSession.enqueueOneTime(request)

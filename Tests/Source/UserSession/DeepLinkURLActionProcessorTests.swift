@@ -19,16 +19,15 @@
 import Foundation
 @testable import WireSyncEngine
 
-class DeepLinkURLActionProcessorTests: DatabaseTest {
+class DeepLinkURLActionProcessorTests: IntegrationTest {
 
     var presentationDelegate: MockPresentationDelegate!
     var sut: WireSyncEngine.DeepLinkURLActionProcessor!
 
-    
     override func setUp() {
         super.setUp()
         presentationDelegate = MockPresentationDelegate()
-        sut = WireSyncEngine.DeepLinkURLActionProcessor(contextProvider: coreDataStack!)
+        sut = WireSyncEngine.DeepLinkURLActionProcessor(userSession: userSession!)
     }
     
     override func tearDown() {
@@ -43,6 +42,7 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
         // given
         let conversationId = UUID()
         let action: URLAction = .openConversation(id: conversationId)
+        let uiMOC = userSession!.managedObjectContext
         let conversation = ZMConversation.insertNewObject(in: uiMOC)
         conversation.remoteIdentifier = conversationId
         
@@ -72,6 +72,7 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
         // given
         let userId = UUID()
         let action: URLAction = .openUserProfile(id: userId)
+        let uiMOC = userSession!.managedObjectContext
         let user = ZMUser.insertNewObject(in: uiMOC)
         user.remoteIdentifier = userId
         
