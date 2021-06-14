@@ -76,7 +76,7 @@ extension ZMConversation {
                     return completion(.failure(ConversationJoinError.unknown), nil)
                 }
 
-                syncMOC.performGroupedBlock {
+                syncMOC.performGroupedBlockAndWait {
                     eventProcessor.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
 
                     guard let conversationId = UUID(uuidString: conversationString),
