@@ -43,7 +43,7 @@ extension ZMConversation {
                             code: String,
                             userSession: ZMUserSession,
                             managedObjectContext: NSManagedObjectContext,
-                            completion: @escaping (VoidResult, ZMConversation?) -> Void) {
+                            completion: @escaping (Result<ZMConversation>) -> Void) {
         self.join(key: key,
                   code: code,
                   transportSession: userSession.transportSession,
@@ -59,7 +59,7 @@ extension ZMConversation {
                      eventProcessor: UpdateEventProcessor?,
                      contextProvider: ContextProvider?,
                      moc: NSManagedObjectContext,
-                     completion: @escaping (VoidResult, ZMConversation?) -> Void) {
+                     completion: @escaping (Result<ZMConversation>) -> Void) {
 
         let request = ConversationJoinRequestFactory.requestForJoinConversation(key: key, code: code)
 
@@ -73,7 +73,7 @@ extension ZMConversation {
                       let viewMOC = contextProvider?.viewContext,
                       let conversationString = event.payload["conversation"] as? String
                 else {
-                    return completion(.failure(ConversationJoinError.unknown), nil)
+                    return completion(.failure(ConversationJoinError.unknown))
                 }
 
                 syncMOC.performGroupedBlock {
@@ -81,22 +81,23 @@ extension ZMConversation {
 
                     guard let conversationId = UUID(uuidString: conversationString),
                           let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: syncMOC) else {
-                        return
+                        return completion(.failure(ConversationJoinError.unknown))
                     }
 
                     viewMOC.performGroupedBlock {
-                        completion(.success, conversation)
+                        completion(.success(conversation))
                     }
                 }
 
             /// The user is already a participant in the conversation.
             case 204:
-                completion(.success, nil)
+                /// TODO It's a temporary solution. The new endpoint will be introduced in the next PR, which we should call in this case and get the conversation
+                completion(.failure(ConversationJoinError.unknown))
 
             default:
                 let error = ConversationJoinError(response: response) ?? .unknown
                 Logging.network.debug("Error joining conversation: \(error)")
-                completion(.failure(error), nil)
+                completion(.failure(error))
             }
         }))
         transportSession.enqueueOneTime(request)
