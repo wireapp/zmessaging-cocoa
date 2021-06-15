@@ -22,7 +22,7 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
     
     var uiMOC: NSManagedObjectContext
     var syncMOC: NSManagedObjectContext
-
+    
     init(contextProvider: ContextProvider) {
         self.uiMOC = contextProvider.viewContext
         self.syncMOC = contextProvider.syncContext
