@@ -20,35 +20,37 @@ import Foundation
 
 class DeepLinkURLActionProcessor: URLActionProcessor {
     
-    var uiMOC: NSManagedObjectContext
-    var syncMOC: NSManagedObjectContext
+    var contextProvider: ContextProvider
+    var transportSession: TransportSessionType
+    var eventProcessor: UpdateEventProcessor
 
-    init(contextprovider: ContextProvider) {
-        self.uiMOC = contextprovider.viewContext
-        self.syncMOC = contextprovider.syncContext
+    init(contextProvider: ContextProvider,
+         transportSession: TransportSessionType,
+         eventProcessor: UpdateEventProcessor) {
+        self.contextProvider = contextProvider
+        self.transportSession = transportSession
+        self.eventProcessor = eventProcessor
     }
     
     func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         switch urlAction {
         case let .joinConversation(key: key, code: code):
-            delegate?.shouldPerformAction(urlAction) { [weak self] shouldJoin in
-                guard shouldJoin, let strongSelf = self else { return }
-                ZMConversation.join(key: key,
-                                    code: code,
-                                    transportSession: strongSelf.transportSession,
-                                    eventProcessor: strongSelf.eventProcessor,
-                                    moc: strongSelf.syncMOC) { (result) in
-                    switch result {
-                    case .success(let conversation):
-                        delegate?.showConversation(conversation, at: nil)
-                    case .failure(let error) :
-                        delegate?.failedToPerformAction(urlAction, error: error)
-                    }
-                    delegate?.completedURLAction(urlAction)
+            ZMConversation.join(key: key,
+                                code: code,
+                                transportSession: transportSession,
+                                eventProcessor: eventProcessor,
+                                contextProvider: contextProvider) { (result) in
+                switch result {
+                case .success(let conversation):
+                    delegate?.showConversation(conversation, at: nil)
+                case .failure(let error) :
+                    delegate?.failedToPerformAction(urlAction, error: error)
                 }
+                delegate?.completedURLAction(urlAction)
             }
             
         case .openConversation(let id):
+            let uiMOC = contextProvider.viewContext
             guard let conversation = ZMConversation(remoteID: id, createIfNeeded: false, in: uiMOC) else {
                 delegate?.failedToPerformAction(urlAction, error: DeepLinkRequestError.invalidConversationLink)
                 return
@@ -58,6 +60,7 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
             delegate?.completedURLAction(urlAction)
 
         case .openUserProfile(let id):
+            let uiMOC = contextProvider.viewContext
             if let user = ZMUser(remoteID: id, createIfNeeded: false, in: uiMOC) {
                 delegate?.showUserProfile(user: user)
             } else {
