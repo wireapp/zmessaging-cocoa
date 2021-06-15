@@ -34,7 +34,7 @@ class ConversationTests_Join: ConversationTestsBase {
                             code: "test-code",
                             transportSession: userSession!.transportSession,
                             eventProcessor: userSession!.updateEventProcessor!,
-                            moc: userSession!.coreDataStack.syncContext,
+                            contextProvider: userSession!.coreDataStack,
                             completion: { result in
                                 // THEN
                                 if case .success(let conversation) = result {
@@ -58,7 +58,7 @@ class ConversationTests_Join: ConversationTestsBase {
                             code: "wrong-code",
                             transportSession: userSession!.transportSession,
                             eventProcessor: userSession!.updateEventProcessor!,
-                            moc: userSession!.coreDataStack.syncContext,
+                            contextProvider: userSession!.coreDataStack,
                             completion: { result in
                                 // THEN
                                 if case .failure(let error) = result {

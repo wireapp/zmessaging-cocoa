@@ -31,9 +31,7 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
         mockTransportSession = MockTransportSession(dispatchGroup: dispatchGroup)
         mockUpdateEventProcessor = MockUpdateEventProcessor()
         presentationDelegate = MockPresentationDelegate()
-        sut = WireSyncEngine.DeepLinkURLActionProcessor(contextprovider: coreDataStack!,
-                                                        transportSession: mockTransportSession,
-                                                        eventProcessor: mockUpdateEventProcessor)
+        sut = WireSyncEngine.DeepLinkURLActionProcessor(contextprovider: coreDataStack!)
     }
     
     override func tearDown() {
