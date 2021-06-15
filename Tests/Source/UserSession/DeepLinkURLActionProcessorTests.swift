@@ -102,5 +102,32 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
         XCTAssertEqual(presentationDelegate.showConnectionRequestCalls.count, 1)
         XCTAssertEqual(presentationDelegate.showConnectionRequestCalls.first, userId)
     }
+
+    func testThatItAsksToJoinConversation() {
+        // given
+        let action: URLAction = .joinConversation(key: "test-key", code: "test-code")
+
+        // when
+        sut.process(urlAction: action, delegate: presentationDelegate)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // then
+        XCTAssertEqual(presentationDelegate.completedURLActionCalls.count, 1)
+        XCTAssertEqual(presentationDelegate.completedURLActionCalls.first, action)
+    }
+
+    func testThatItAsksToJoinConversation_WhenCodeIsInvalid() {
+        // given
+        let action: URLAction = .joinConversation(key: "test-key", code: "wrong-code")
+
+        // when
+        sut.process(urlAction: action, delegate: presentationDelegate)
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+
+        // then
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.count, 1)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.first?.0, action)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.first?.1 as? ConversationJoinError, ConversationJoinError.invalidCode)
+    }
     
 }

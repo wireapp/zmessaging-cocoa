@@ -21,12 +21,11 @@ import Foundation
 public enum ConversationJoinError: Error {
     case unknown, tooManyMembers, invalidCode
 
-    init?(response: ZMTransportResponse) {
+    init(response: ZMTransportResponse) {
         switch (response.httpStatus, response.payloadLabel()) {
         case (403, "too-many-members"?): self = .tooManyMembers
         case (404, "no-conversation-code"?): self = .invalidCode
-        case (400..<499, _): self = .unknown
-        default: return nil
+        default: self = .unknown
         }
     }
 }
@@ -54,7 +53,7 @@ extension ZMConversation {
     ///   - transportSession: session to handle requests
     ///   - eventProcessor: update event processor
     ///   - contextProvider: context provider
-    ///   - completion: called when the user joines the conversation or when it fails
+    ///   - completion: called when the user joines the conversation or when it fails. If the completion is a success, it is run in the main thread
     public static func join(key: String,
                             code: String,
                             transportSession: TransportSessionType,
@@ -63,25 +62,24 @@ extension ZMConversation {
                             completion: @escaping (Result<ZMConversation>) -> Void) {
 
         let request = ConversationJoinRequestFactory.requestForJoinConversation(key: key, code: code)
-        let syncMOC = contextProvider.syncContext
-        let uiMOC = contextProvider.viewContext
+        let syncContext = contextProvider.syncContext
+        let viewContext = contextProvider.viewContext
 
-        request.add(ZMCompletionHandler(on: syncMOC, block: { response in
+        request.add(ZMCompletionHandler(on: syncContext, block: { response in
             switch response.httpStatus {
             case 200:
                 guard let payload = response.payload,
                       let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil),
-                      let conversationString = event.payload["conversation"] as? String
-                else {
+                      let conversationString = event.payload["conversation"] as? String else {
                     return completion(.failure(ConversationJoinError.unknown))
                 }
 
-                syncMOC.performGroupedBlock {
+                syncContext.performGroupedBlock {
                     eventProcessor.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
 
-                    uiMOC.performGroupedBlock {
+                    viewContext.performGroupedBlock {
                         guard let conversationId = UUID(uuidString: conversationString),
-                              let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: uiMOC) else {
+                              let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: viewContext) else {
                             return completion(.failure(ConversationJoinError.unknown))
                         }
 
@@ -99,8 +97,8 @@ extension ZMConversation {
                 }
 
             default:
-                let error = ConversationJoinError(response: response) ?? .unknown
-                Logging.network.debug("Error joining conversation: \(error)")
+                let error = ConversationJoinError(response: response)
+                Logging.network.debug("Error joining conversation using a reusable code: \(error)")
                 completion(.failure(error))
             }
         }))
