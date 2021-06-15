@@ -87,7 +87,7 @@ extension ZMConversation {
                     }
                 }
 
-            /// The user is already a participant in the conversation.
+            /// The user is already a participant in the conversation
             case 204:
                 fetch(key: key,
                       code: code,

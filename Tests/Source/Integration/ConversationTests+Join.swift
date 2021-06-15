@@ -76,15 +76,7 @@ class ConversationTests_Join: ConversationTestsBase {
         XCTAssert(login())
 
         ///Convert MockUser -> ZMUser
-//        let selfUser_zmUser = user(for: self.selfUser)!
-
-        mockTransportSession.responseGeneratorBlock = {[weak self] request in
-            guard request.path == "/conversations/join" else {
-                return nil
-            }
-            self?.mockTransportSession.responseGeneratorBlock = nil
-            return ZMTransportResponse(payload: nil, httpStatus: 204, transportSessionError: nil)
-        }
+        let selfUser_zmUser = user(for: self.selfUser)!
 
         // WHEN
         let userIsParticipant = expectation(description: "The user was already a participant in the conversation")
@@ -97,6 +89,7 @@ class ConversationTests_Join: ConversationTestsBase {
                             completion: { result  in
                                 // THEN
                                 if case .success(let conversation) = result {
+                                    XCTAssertTrue(conversation.localParticipants.map(\.remoteIdentifier).contains(selfUser_zmUser.remoteIdentifier))
                                     userIsParticipant.fulfill()
                                 } else {
                                     XCTFail()
@@ -105,4 +98,49 @@ class ConversationTests_Join: ConversationTestsBase {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
 
+    func testThatTheConversationWithCorrectCodeExists() {
+        // GIVEN
+        XCTAssert(login())
+
+        // Convert MockUser -> ZMUser
+        let selfUser_zmUser = user(for: self.selfUser)!
+
+        // WHEN
+        /// Key value doesn't affect the test result
+        ZMConversation.fetch(key: "test-key",
+                             code: "existing-conversation-code",
+                             transportSession: userSession!.transportSession,
+                             managedObjectContext: userSession!.coreDataStack.viewContext) { result in
+            // THEN
+            if case .success(let conversation) = result {
+                XCTAssertNotNil(conversation)
+                XCTAssertTrue(conversation.localParticipants.map(\.remoteIdentifier).contains(selfUser_zmUser.remoteIdentifier))
+            } else {
+                XCTFail()
+            }
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItCanNotFetchAConversationWithInvalidCode() {
+        // GIVEN
+        XCTAssert(login())
+
+        // WHEN
+        let conversationFetchingFailed = expectation(description: "Failed to fetch the conversation")
+        /// Key value doesn't affect the test result
+        ZMConversation.fetch(key: "test-key",
+                             code: "wrong-code",
+                             transportSession: userSession!.transportSession,
+                             managedObjectContext: userSession!.coreDataStack.viewContext) { result in
+            // THEN
+            if case .failure(let error) = result {
+                XCTAssertEqual(error as! ConversationFetchError, ConversationFetchError.invalidCode)
+                conversationFetchingFailed.fulfill()
+            } else {
+                XCTFail()
+            }
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
 }
