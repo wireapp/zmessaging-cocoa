@@ -92,7 +92,7 @@ extension ZMConversation {
                 fetch(key: key,
                       code: code,
                       transportSession: transportSession,
-                      managedObjectContext: uiMOC) { result in
+                      managedObjectContext: viewContext) { result in
                     completion(result)
                 }
 
@@ -105,7 +105,7 @@ extension ZMConversation {
         transportSession.enqueueOneTime(request)
     }
 
-    /// Get a conversation using a reusable code
+    /// Fetch a conversation using a reusable code
     /// - Parameters:
     ///   - key: stable conversation identifier
     ///   - code: conversation code
