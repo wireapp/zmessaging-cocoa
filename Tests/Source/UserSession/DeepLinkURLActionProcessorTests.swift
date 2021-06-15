@@ -19,20 +19,28 @@
 import Foundation
 @testable import WireSyncEngine
 
-class DeepLinkURLActionProcessorTests: IntegrationTest {
+class DeepLinkURLActionProcessorTests: DatabaseTest {
 
     var presentationDelegate: MockPresentationDelegate!
     var sut: WireSyncEngine.DeepLinkURLActionProcessor!
+    var mockTransportSession: MockTransportSession!
+    var mockUpdateEventProcessor: MockUpdateEventProcessor!
 
     override func setUp() {
         super.setUp()
+        mockTransportSession = MockTransportSession(dispatchGroup: dispatchGroup)
+        mockUpdateEventProcessor = MockUpdateEventProcessor()
         presentationDelegate = MockPresentationDelegate()
-        sut = WireSyncEngine.DeepLinkURLActionProcessor(userSession: userSession!)
+        sut = WireSyncEngine.DeepLinkURLActionProcessor(contextprovider: coreDataStack!,
+                                                        transportSession: mockTransportSession,
+                                                        eventProcessor: mockUpdateEventProcessor)
     }
     
     override func tearDown() {
         presentationDelegate = nil
         sut = nil
+        mockTransportSession = nil
+        mockUpdateEventProcessor = nil
         super.tearDown()
     }
     
@@ -42,7 +50,6 @@ class DeepLinkURLActionProcessorTests: IntegrationTest {
         // given
         let conversationId = UUID()
         let action: URLAction = .openConversation(id: conversationId)
-        let uiMOC = userSession!.managedObjectContext
         let conversation = ZMConversation.insertNewObject(in: uiMOC)
         conversation.remoteIdentifier = conversationId
         
@@ -72,7 +79,6 @@ class DeepLinkURLActionProcessorTests: IntegrationTest {
         // given
         let userId = UUID()
         let action: URLAction = .openUserProfile(id: userId)
-        let uiMOC = userSession!.managedObjectContext
         let user = ZMUser.insertNewObject(in: uiMOC)
         user.remoteIdentifier = userId
         
