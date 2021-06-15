@@ -23,9 +23,9 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
     var uiMOC: NSManagedObjectContext
     var syncMOC: NSManagedObjectContext
 
-    init(contextprovider: ContextProvider) {
-        self.uiMOC = contextprovider.viewContext
-        self.syncMOC = contextprovider.syncContext
+    init(contextProvider: ContextProvider) {
+        self.uiMOC = contextProvider.viewContext
+        self.syncMOC = contextProvider.syncContext
     }
     
     func process(urlAction: URLAction, delegate: PresentationDelegate?) {
