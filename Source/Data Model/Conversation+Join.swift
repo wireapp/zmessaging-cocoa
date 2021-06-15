@@ -39,19 +39,18 @@ extension ZMConversation {
     ///   - code: conversation code
     ///   - transportSession: session to handle requests
     ///   - eventProcessor: update event processor
-    ///   - contextProvider: context provider
+    ///   - moc: the context that should be used to perform the request and process the event
     ///   - completion: called when the user joines the conversation or when it fails
     public static func join(key: String,
                             code: String,
                             transportSession: TransportSessionType,
                             eventProcessor: UpdateEventProcessor,
-                            contextProvider: ContextProvider,
+                            moc: NSManagedObjectContext,
                             completion: @escaping (Result<ZMConversation>) -> Void) {
 
         let request = ConversationJoinRequestFactory.requestForJoinConversation(key: key, code: code)
-        let syncMOC = contextProvider.syncContext
 
-        request.add(ZMCompletionHandler(on: syncMOC, block: { response in
+        request.add(ZMCompletionHandler(on: moc, block: { response in
             switch response.httpStatus {
             case 200:
                 guard let payload = response.payload,
@@ -61,11 +60,11 @@ extension ZMConversation {
                     return completion(.failure(ConversationJoinError.unknown))
                 }
 
-                syncMOC.performGroupedBlock {
+                moc.performGroupedBlock {
                     eventProcessor.storeAndProcessUpdateEvents([event], ignoreBuffer: true)
 
                     guard let conversationId = UUID(uuidString: conversationString),
-                          let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: syncMOC) else {
+                          let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: moc) else {
                         return completion(.failure(ConversationJoinError.unknown))
                     }
 
