@@ -37,17 +37,15 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
     func process(urlAction: URLAction, delegate: PresentationDelegate?) {
         switch urlAction {
         case let .joinConversation(key: key, code: code):
-            delegate?.shouldPerformAction(urlAction) { shouldJoin in
-                guard shouldJoin else { return }
+            delegate?.shouldPerformAction(urlAction) { [weak self] shouldJoin in
+                guard shouldJoin, let strongSelf = self else { return }
                 ZMConversation.join(key: key,
                                     code: code,
-                                    userSession: self.userSession,
-                                    managedObjectContext: self.uiMOC) { (result, conversation) in
+                                    transportSession: strongSelf.transportSession,
+                                    eventProcessor: strongSelf.eventProcessor,
+                                    moc: strongSelf.syncMOC) { (result) in
                     switch result {
-                    case .success:
-                        guard let conversation = conversation else {
-                            return
-                        }
+                    case .success(let conversation):
                         delegate?.showConversation(conversation, at: nil)
                     case .failure(let error) :
                         delegate?.failedToPerformAction(urlAction, error: error)
