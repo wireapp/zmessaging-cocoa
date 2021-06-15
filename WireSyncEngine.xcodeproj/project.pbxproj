@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		06018FE82676B7C90043F8F8 /* DeepLinkURLActionProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161ACB3E23F6E4C200ABFF33 /* DeepLinkURLActionProcessorTests.swift */; };
+		0601900B2678750D0043F8F8 /* DeepLinkURLActionProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161ACB3E23F6E4C200ABFF33 /* DeepLinkURLActionProcessorTests.swift */; };
 		068E655A24C8223400403926 /* LocalNotificationContentTypeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 068E655924C8223400403926 /* LocalNotificationContentTypeTest.swift */; };
 		06B99C7B242B51A300FEAFDE /* SignatureRequestStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06B99C7A242B51A300FEAFDE /* SignatureRequestStrategy.swift */; };
 		06BBF7012473D51D00A26626 /* MessagingTest+Swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF7002473D51D00A26626 /* MessagingTest+Swift.swift */; };
@@ -3012,7 +3012,6 @@
 				169BA24225EF6F6700374343 /* ZMConversation+Testing.swift in Sources */,
 				169BA24625EF73B100374343 /* EventProcessingPerformanceTests.swift in Sources */,
 				169BA23625ED101C00374343 /* LoginFlowTests.m in Sources */,
-				06018FE82676B7C90043F8F8 /* DeepLinkURLActionProcessorTests.swift in Sources */,
 				169BA21225ED0F7600374343 /* UserTests+AccountDeletion.swift in Sources */,
 				169BA1DF25ECE4D000374343 /* IntegrationTest.m in Sources */,
 				169BA20C25ED0F5900374343 /* PushNotificationTokenTests.swift in Sources */,
@@ -3139,6 +3138,7 @@
 				F96C8E821D7ECECF004B6D87 /* ZMLocalNotificationTests_Message.swift in Sources */,
 				EEA2773D211DE4C9004AF00F /* UserNotificationCenterMock.swift in Sources */,
 				169BA25525EF78F200374343 /* ZMUserSession+DefaultConfiguration.swift in Sources */,
+				0601900B2678750D0043F8F8 /* DeepLinkURLActionProcessorTests.swift in Sources */,
 				1645ED1B244DE345007A82D6 /* TeamMembersDownloadRequestStrategy.swift in Sources */,
 				549552541D645683004F21F6 /* AddressBookTests.swift in Sources */,
 				161C886623FD248A00CB0B8E /* RecordingMockTransportSession.swift in Sources */,

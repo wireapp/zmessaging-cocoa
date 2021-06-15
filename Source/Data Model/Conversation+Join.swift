@@ -37,40 +37,25 @@ extension ZMConversation {
     /// - Parameters:
     ///   - key: stable conversation identifier
     ///   - code: conversation code
-    ///   - userSession: user session
+    ///   - transportSession: session to handle requests
+    ///   - eventProcessor: update event processor
+    ///   - contextProvider: context provider
     ///   - completion: called when the user joines the conversation or when it fails
     public static func join(key: String,
                             code: String,
-                            userSession: ZMUserSession,
-                            managedObjectContext: NSManagedObjectContext,
+                            transportSession: TransportSessionType,
+                            eventProcessor: UpdateEventProcessor,
+                            contextProvider: ContextProvider,
                             completion: @escaping (Result<ZMConversation>) -> Void) {
-        self.join(key: key,
-                  code: code,
-                  transportSession: userSession.transportSession,
-                  eventProcessor: userSession.updateEventProcessor,
-                  contextProvider: userSession.coreDataStack,
-                  moc: managedObjectContext,
-                  completion: completion)
-    }
-
-    static func join(key: String,
-                     code: String,
-                     transportSession: TransportSessionType,
-                     eventProcessor: UpdateEventProcessor?,
-                     contextProvider: ContextProvider?,
-                     moc: NSManagedObjectContext,
-                     completion: @escaping (Result<ZMConversation>) -> Void) {
 
         let request = ConversationJoinRequestFactory.requestForJoinConversation(key: key, code: code)
+        let syncMOC = contextProvider.syncContext
 
-        request.add(ZMCompletionHandler(on: moc, block: { [weak contextProvider, weak eventProcessor] response in
+        request.add(ZMCompletionHandler(on: syncMOC, block: { response in
             switch response.httpStatus {
             case 200:
                 guard let payload = response.payload,
                       let event = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil),
-                      let eventProcessor = eventProcessor,
-                      let syncMOC = contextProvider?.syncContext,
-                      let viewMOC = contextProvider?.viewContext,
                       let conversationString = event.payload["conversation"] as? String
                 else {
                     return completion(.failure(ConversationJoinError.unknown))
@@ -84,9 +69,7 @@ extension ZMConversation {
                         return completion(.failure(ConversationJoinError.unknown))
                     }
 
-                    viewMOC.performGroupedBlock {
-                        completion(.success(conversation))
-                    }
+                    completion(.success(conversation))
                 }
 
             /// The user is already a participant in the conversation.

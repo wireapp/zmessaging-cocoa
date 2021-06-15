@@ -17,6 +17,7 @@
 //
 
 import XCTest
+@testable import WireSyncEngine
 
 class ConversationTests_Join: ConversationTestsBase {
 
@@ -31,8 +32,9 @@ class ConversationTests_Join: ConversationTestsBase {
         /// Key value doesn't affect the test result
         ZMConversation.join(key: "test-key",
                             code: "test-code",
-                            userSession: userSession!,
-                            managedObjectContext: self.selfUser.managedObjectContext!,
+                            transportSession: userSession!.transportSession,
+                            eventProcessor: userSession!.updateEventProcessor!,
+                            contextProvider: userSession!.coreDataStack,
                             completion: { result in
                                 // THEN
                                 if case .success(let conversation) = result {
@@ -49,16 +51,14 @@ class ConversationTests_Join: ConversationTestsBase {
         // GIVEN
         XCTAssert(login())
 
-        ///Convert MockUser -> ZMUser
-        let selfUser_zmUser = user(for: self.selfUser)!
-
         // WHEN
         let conversationJoiningFailed = expectation(description: "Failed to join the conversation")
         /// Key value doesn't affect the test result
         ZMConversation.join(key: "test-key",
                             code: "wrong-code",
-                            userSession: userSession!,
-                            managedObjectContext: selfUser_zmUser.managedObjectContext!,
+                            transportSession: userSession!.transportSession,
+                            eventProcessor: userSession!.updateEventProcessor!,
+                            contextProvider: userSession!.coreDataStack,
                             completion: { result in
                                 // THEN
                                 if case .failure(let error) = result {
