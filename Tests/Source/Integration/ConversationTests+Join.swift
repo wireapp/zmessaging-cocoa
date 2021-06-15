@@ -71,39 +71,38 @@ class ConversationTests_Join: ConversationTestsBase {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5, handler: nil))
     }
 
-    /// TODO : uncomment in the next PR when 204 is implemented
+    func testThatAnErrorIsNotReported_WhenTheSelfUsersIsAlreadyAParticipant() {
+        // GIVEN
+        XCTAssert(login())
 
-//    func testThatAnErrorIsNotReported_WhenTheSelfUsersIsAlreadyAParticipant() {
-//        // GIVEN
-//        XCTAssert(login())
-//
-//        ///Convert MockUser -> ZMUser
+        ///Convert MockUser -> ZMUser
 //        let selfUser_zmUser = user(for: self.selfUser)!
-//
-//        mockTransportSession.responseGeneratorBlock = {[weak self] request in
-//            guard request.path == "/conversations/join" else {
-//                return nil
-//            }
-//            self?.mockTransportSession.responseGeneratorBlock = nil
-//            return ZMTransportResponse(payload: nil, httpStatus: 204, transportSessionError: nil)
-//        }
-//
-//        // WHEN
-//        let userIsParticipant = expectation(description: "The user was already a participant in the conversation")
-//        /// Key and code values don't affect the test result, because the result is mocked
-//        ZMConversation.join(key: "test-key",
-//                            code: "test-code",
-//                            userSession: userSession!,
-//                            managedObjectContext: selfUser_zmUser.managedObjectContext!,
-//                            completion: { result  in
-//                                // THEN
-//                                if case .success(let conversation) = result {
-//                                    userIsParticipant.fulfill()
-//                                } else {
-//                                    XCTFail()
-//                                }
-//                            })
-//        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
-//    }
+
+        mockTransportSession.responseGeneratorBlock = {[weak self] request in
+            guard request.path == "/conversations/join" else {
+                return nil
+            }
+            self?.mockTransportSession.responseGeneratorBlock = nil
+            return ZMTransportResponse(payload: nil, httpStatus: 204, transportSessionError: nil)
+        }
+
+        // WHEN
+        let userIsParticipant = expectation(description: "The user was already a participant in the conversation")
+        /// Key value doesn't affect the test result
+        ZMConversation.join(key: "test-key",
+                            code: "existing-conversation-code",
+                            transportSession: userSession!.transportSession,
+                            eventProcessor: userSession!.updateEventProcessor!,
+                            contextProvider: userSession!.coreDataStack,
+                            completion: { result  in
+                                // THEN
+                                if case .success(let conversation) = result {
+                                    userIsParticipant.fulfill()
+                                } else {
+                                    XCTFail()
+                                }
+                            })
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
+    }
 
 }
