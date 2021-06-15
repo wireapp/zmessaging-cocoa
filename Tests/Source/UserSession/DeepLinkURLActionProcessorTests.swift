@@ -24,7 +24,6 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
     var presentationDelegate: MockPresentationDelegate!
     var sut: WireSyncEngine.DeepLinkURLActionProcessor!
 
-    
     override func setUp() {
         super.setUp()
         presentationDelegate = MockPresentationDelegate()
