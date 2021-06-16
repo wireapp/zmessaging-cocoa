@@ -113,6 +113,7 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
 
         // then
         XCTAssertEqual(mockUpdateEventProcessor.processedEvents.count, 1)
+        XCTAssertEqual(mockUpdateEventProcessor.processedEvents.first!.type, .conversationMemberJoin)
         XCTAssertEqual(presentationDelegate.completedURLActionCalls.count, 1)
         XCTAssertEqual(presentationDelegate.completedURLActionCalls.first, action)
     }
