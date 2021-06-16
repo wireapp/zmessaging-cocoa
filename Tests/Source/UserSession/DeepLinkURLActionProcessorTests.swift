@@ -112,6 +112,7 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
 
         // then
+        XCTAssertEqual(mockUpdateEventProcessor.processedEvents.count, 1)
         XCTAssertEqual(presentationDelegate.completedURLActionCalls.count, 1)
         XCTAssertEqual(presentationDelegate.completedURLActionCalls.first, action)
     }
