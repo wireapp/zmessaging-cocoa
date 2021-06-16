@@ -62,6 +62,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
     
     // MARK: - Database migration
     
+    // @SF.Storage @TSFI.ClientPlatform
     func testThatDelegateIsCalled_WhenEncryptionAtRestIsEnabled() throws {
         // given
         simulateLoggedInUser()
@@ -77,6 +78,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         XCTAssertEqual(userSessionDelegate.calledSetEncryptionAtRest?.0, true)
     }
     
+    // @SF.Storage @TSFI.ClientPlatform
     func testThatDelegateIsCalled_WhenEncryptionAtRestIsDisabled() throws {
         // given
         simulateLoggedInUser()
@@ -149,6 +151,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         XCTAssertFalse(sut.isDatabaseLocked)
     }
     
+    // @SF.Storage @TSFI.ClientPlatform
     func testThatDatabaseIsLocked_AfterEnteringBackground() throws {
         // given
         simulateLoggedInUser()
@@ -165,6 +168,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
 
     // MARK: - Database lock handler/observer
     
+    // @SF.Storage @TSFI.ClientPlatform
     func testThatDatabaseLockedHandlerIsCalled_AfterDatabaseIsLocked() throws {
         // given
         simulateLoggedInUser()
@@ -218,6 +222,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
 
     // MARK: - Misc
 
+    // @SF.Storage @TSFI.ClientPlatform
     func testThatOldEncryptionKeysAreReplaced_AfterActivatingEncryptionAtRest() throws {
         // given
         simulateLoggedInUser()
@@ -235,6 +240,7 @@ class ZMUserSessionTests_EncryptionAtRest: ZMUserSessionTestsBase {
         XCTAssertNotEqual(oldKeys, newKeys)
     }
 
+    // @SF.Storage @TSFI.ClientPlatform
     func testThatIfDatabaseIsLocked_ThenUserSessionLockIsSet() throws {
         // given
         simulateLoggedInUser()
