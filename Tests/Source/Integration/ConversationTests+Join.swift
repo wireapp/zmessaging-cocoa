@@ -21,6 +21,8 @@ import XCTest
 
 class ConversationTests_Join: ConversationTestsBase {
 
+    // MARK: - Join conversation
+
     func testThatTheSelfUserJoinsAConversation_OnSuccessfulResponse() {
         // GIVEN
         XCTAssert(login())
@@ -75,9 +77,6 @@ class ConversationTests_Join: ConversationTestsBase {
         // GIVEN
         XCTAssert(login())
 
-        ///Convert MockUser -> ZMUser
-        let selfUser_zmUser = user(for: self.selfUser)!
-
         // WHEN
         let userIsParticipant = expectation(description: "The user was already a participant in the conversation")
         /// Key value doesn't affect the test result
@@ -88,8 +87,8 @@ class ConversationTests_Join: ConversationTestsBase {
                             contextProvider: userSession!.coreDataStack,
                             completion: { result  in
                                 // THEN
-                                if case .success(let conversation) = result {
-                                    XCTAssertTrue(conversation.localParticipants.map(\.remoteIdentifier).contains(selfUser_zmUser.remoteIdentifier))
+                                if case .failure(let error) = result {
+                                    XCTAssertEqual(error as! ConversationJoinError, ConversationJoinError.unknown)
                                     userIsParticipant.fulfill()
                                 } else {
                                     XCTFail()
@@ -98,23 +97,26 @@ class ConversationTests_Join: ConversationTestsBase {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
 
-    func testThatTheConversationWithCorrectCodeExists() {
+    // MARK: - Fetch conversation Id and name
+
+    func testThatItReturnsIdAndName_ForExistingConversation_WithExistingConversationCode() {
         // GIVEN
         XCTAssert(login())
-
-        // Convert MockUser -> ZMUser
-        let selfUser_zmUser = user(for: self.selfUser)!
+        let viewContext = userSession!.coreDataStack.viewContext
 
         // WHEN
         /// Key value doesn't affect the test result
-        ZMConversation.fetch(key: "test-key",
-                             code: "existing-conversation-code",
-                             transportSession: userSession!.transportSession,
-                             managedObjectContext: userSession!.coreDataStack.viewContext) { result in
+        ZMConversation.fetchIdAndName(key: "test-key",
+                                      code: "existing-conversation-code",
+                                      transportSession: userSession!.transportSession,
+                                      eventProcessor: userSession!.updateEventProcessor!,
+                                      contextProvider: userSession!.coreDataStack) { (result) in
             // THEN
-            if case .success(let conversation) = result {
-                XCTAssertNotNil(conversation)
-                XCTAssertTrue(conversation.localParticipants.map(\.remoteIdentifier).contains(selfUser_zmUser.remoteIdentifier))
+            if case .success((let conversationID, let conversationName)) = result {
+                XCTAssertNotNil(conversationID)
+                XCTAssertNotNil(conversationName)
+                let conversation = ZMConversation.fetch(withRemoteIdentifier: conversationID, in: viewContext)
+                XCTAssertTrue(conversation!.isSelfConversation)
             } else {
                 XCTFail()
             }
@@ -122,17 +124,43 @@ class ConversationTests_Join: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
 
-    func testThatItCanNotFetchAConversationWithInvalidCode() {
+    func testThatItReturnsIdAndName_ForNewConversation_WithANewConversationCode() {
+        // GIVEN
+        XCTAssert(login())
+        let viewContext = userSession!.coreDataStack.viewContext
+
+        // WHEN
+        /// Key value doesn't affect the test result
+        ZMConversation.fetchIdAndName(key: "test-key",
+                                      code: "test-code",
+                                      transportSession: userSession!.transportSession,
+                                      eventProcessor: userSession!.updateEventProcessor!,
+                                      contextProvider: userSession!.coreDataStack) { (result) in
+            // THEN
+            if case .success((let conversationID, let conversationName)) = result {
+                XCTAssertNotNil(conversationID)
+                XCTAssertNotNil(conversationName)
+                let conversation = ZMConversation.fetch(withRemoteIdentifier: conversationID, in: viewContext)
+                XCTAssertNil(conversation)
+            } else {
+                XCTFail()
+            }
+        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItDoesNotReturnConversationIdAndName_WithWrongConversationCode() {
         // GIVEN
         XCTAssert(login())
 
         // WHEN
         let conversationFetchingFailed = expectation(description: "Failed to fetch the conversation")
         /// Key value doesn't affect the test result
-        ZMConversation.fetch(key: "test-key",
-                             code: "wrong-code",
-                             transportSession: userSession!.transportSession,
-                             managedObjectContext: userSession!.coreDataStack.viewContext) { result in
+        ZMConversation.fetchIdAndName(key: "test-key",
+                                      code: "wrong-code",
+                                      transportSession: userSession!.transportSession,
+                                      eventProcessor: userSession!.updateEventProcessor!,
+                                      contextProvider: userSession!.coreDataStack) { (result) in
             // THEN
             if case .failure(let error) = result {
                 XCTAssertEqual(error as! ConversationFetchError, ConversationFetchError.invalidCode)

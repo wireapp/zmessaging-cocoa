@@ -127,7 +127,7 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
         // then
         XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.count, 1)
         XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.first?.0, action)
-        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.first?.1 as? ConversationJoinError, ConversationJoinError.invalidCode)
+        XCTAssertEqual(presentationDelegate.failedToPerformActionCalls.first?.1 as? ConversationFetchError, ConversationFetchError.invalidCode)
     }
     
 }
