@@ -737,8 +737,6 @@
 		0994E1E31B835C4900A51721 /* project-debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "project-debug.xcconfig"; sourceTree = "<group>"; };
 		0994E1E41B835C4900A51721 /* project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = project.xcconfig; sourceTree = "<group>"; };
 		0994E1E71B835C4900A51721 /* swift.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = swift.xcconfig; sourceTree = "<group>"; };
-		0994E1E81B835C4900A51721 /* tests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = tests.xcconfig; sourceTree = "<group>"; };
-		0994E1E91B835C4900A51721 /* warnings-debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "warnings-debug.xcconfig"; sourceTree = "<group>"; };
 		0994E1F01B835C4900A51721 /* WireSyncEngine.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = WireSyncEngine.xcconfig; sourceTree = "<group>"; };
 		0994E1F11B835D1100A51721 /* version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = version.xcconfig; sourceTree = "<group>"; };
 		09B730941B3045E400A5CCC9 /* ProxiedRequestStatusTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProxiedRequestStatusTests.swift; sourceTree = "<group>"; };
@@ -1165,6 +1163,8 @@
 		A96190C923A6DDCE00B8665F /* WireDataModel.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WireDataModel.framework; path = Carthage/Build/iOS/WireDataModel.framework; sourceTree = "<group>"; };
 		A9692F881986476900849241 /* NSString_NormalizationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSString_NormalizationTests.m; sourceTree = "<group>"; };
 		A979873E267BA2A100DED1FB /* warnings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = warnings.xcconfig; path = "Carthage/Checkouts/wire-ios-system/Resources/Configurations/zmc-config/warnings.xcconfig"; sourceTree = SOURCE_ROOT; };
+		A979873F267BABA000DED1FB /* test-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "test-target.xcconfig"; path = "Carthage/Checkouts/wire-ios-system/Resources/Configurations/zmc-config/test-target.xcconfig"; sourceTree = SOURCE_ROOT; };
+		A9798743267BABC800DED1FB /* warnings-debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "warnings-debug.xcconfig"; path = "Carthage/Checkouts/wire-ios-system/Resources/Configurations/zmc-config/warnings-debug.xcconfig"; sourceTree = SOURCE_ROOT; };
 		A9B53AA924E12E240066FCC6 /* ZMAccountDeletedReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMAccountDeletedReason.swift; sourceTree = "<group>"; };
 		A9C02604266F5B4B002E542B /* ZMClientRegistrationStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZMClientRegistrationStatus.swift; sourceTree = "<group>"; };
 		A9C02609266F5D1B002E542B /* ZMClientRegistrationStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMClientRegistrationStatusTests.swift; sourceTree = "<group>"; };
@@ -1503,7 +1503,9 @@
 		0994E1DB1B835C4900A51721 /* zmc-config */ = {
 			isa = PBXGroup;
 			children = (
+				A9798743267BABC800DED1FB /* warnings-debug.xcconfig */,
 				A979873E267BA2A100DED1FB /* warnings.xcconfig */,
+				A979873F267BABA000DED1FB /* test-target.xcconfig */,
 				0994E1DD1B835C4900A51721 /* ios-test-host.xcconfig */,
 				0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */,
 				0994E1DF1B835C4900A51721 /* ios.xcconfig */,
@@ -1511,8 +1513,6 @@
 				0994E1E31B835C4900A51721 /* project-debug.xcconfig */,
 				0994E1E41B835C4900A51721 /* project.xcconfig */,
 				0994E1E71B835C4900A51721 /* swift.xcconfig */,
-				0994E1E81B835C4900A51721 /* tests.xcconfig */,
-				0994E1E91B835C4900A51721 /* warnings-debug.xcconfig */,
 			);
 			path = "zmc-config";
 			sourceTree = "<group>";
