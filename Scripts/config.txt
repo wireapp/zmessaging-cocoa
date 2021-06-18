@@ -1,4 +1,4 @@
 framework=WireSyncEngine
-organization=wireapp
+organization=billypchan
 repository=wire-ios-sync-engine
 release-name-format={GERMAN_TOWN}
