@@ -91,6 +91,7 @@ extension ZMConversation {
             /// The user is already a participant in the conversation
             case 204:
                 /// If we get to this case, then we need to re-sync local conversations
+                /// TODO: implement re-syncing conversations
                 Logging.network.debug("Local conversations should be re-synced with remote ones")
                 return completion(.failure(ConversationJoinError.unknown))
 
