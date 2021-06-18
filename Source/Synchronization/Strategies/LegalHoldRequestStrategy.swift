@@ -18,7 +18,6 @@
 
 import Foundation
 
-//@objc
 public class LegalHoldRequestStrategy: AbstractRequestStrategy, ZMSingleRequestTranscoder, ZMEventConsumer {
     
     fileprivate let syncStatus: SyncStatus
@@ -41,11 +40,7 @@ public class LegalHoldRequestStrategy: AbstractRequestStrategy, ZMSingleRequestT
         
         return singleRequstSync.nextRequest()
     }
-    
-//}
-
-//extension LegalHoldRequestStrategy {
-        
+            
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         let selfUser = ZMUser.selfUser(in: managedObjectContext)
         
@@ -97,9 +92,7 @@ public class LegalHoldRequestStrategy: AbstractRequestStrategy, ZMSingleRequestT
         }
     }
     
-//}
-
-//extension LegalHoldRequestStrategy: ZMEventConsumer {
+    //MARK:- ZMEventConsumer
     
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
         events.forEach(processUpdateEvent)

@@ -200,18 +200,17 @@ public class TypingStrategy : AbstractRequestStrategy, TearDownCapable, ZMEventC
         
         return request
     }
-//}
 
-//extension TypingStrategy: TearDownCapable {
+    //MARK:- TearDownCapable
+
     public func tearDown() {
         typing.tearDown()
         typing = nil
         tornDown = true
         observers = []
     }
-//}
 
-//extension TypingStrategy : ZMEventConsumer {
+    //MARK:-  ZMEventConsumer
     
     public func processEvents(_ events: [ZMUpdateEvent], liveEvents: Bool, prefetchResult: ZMFetchRequestBatchResult?) {
         guard liveEvents else { return }

@@ -51,15 +51,14 @@ public final class TeamImageAssetUpdateStrategy: AbstractRequestStrategy, ZMCont
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         return downstreamRequestSync?.nextRequest()
     }
-    //extension TeamImageAssetUpdateStrategy: ZMContextChangeTrackerSource {
+    
+    //MARK:- ZMContextChangeTrackerSource {
         
     public var contextChangeTrackers: [ZMContextChangeTracker] {
         return [downstreamRequestSync]
     }
 
-//}
-
-//extension TeamImageAssetUpdateStrategy : ZMDownstreamTranscoder {
+    //MARK:- ZMDownstreamTranscoder
     
     public func request(forFetching object: ZMManagedObject!, downstreamSync: ZMObjectSync!) -> ZMTransportRequest! {
         guard let team = object as? Team, let assetId = team.pictureAssetId else { return nil }
