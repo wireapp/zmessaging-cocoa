@@ -26,11 +26,9 @@ public extension ZMUserSession {
     final class Configuration: NSObject {
 
         // MARK: - Properties
-
         public let appLockConfig: AppLockController.Config
 
         // MARK: - Life cycle
-
         public init(appLockConfig: AppLockController.Config) {
             self.appLockConfig = appLockConfig
         }
