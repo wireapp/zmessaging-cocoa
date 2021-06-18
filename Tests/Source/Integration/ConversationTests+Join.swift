@@ -73,7 +73,7 @@ class ConversationTests_Join: ConversationTestsBase {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5, handler: nil))
     }
 
-    func testThatAnErrorIsNotReported_WhenTheSelfUsersIsAlreadyAParticipant() {
+    func testThatAnErrorIsReported_WhenTheSelfUsersIsAlreadyAParticipant() {
         // GIVEN
         XCTAssert(login())
 
