@@ -103,7 +103,7 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
         XCTAssertEqual(presentationDelegate.showConnectionRequestCalls.first, userId)
     }
 
-    func testThatItAsksToJoinConversation() {
+    func testThatItCompletesTheJoinConversationAction_WhenCodeIsValid() {
         // given
         let action: URLAction = .joinConversation(key: "test-key", code: "test-code")
 
@@ -118,7 +118,7 @@ class DeepLinkURLActionProcessorTests: DatabaseTest {
         XCTAssertEqual(presentationDelegate.completedURLActionCalls.first, action)
     }
 
-    func testThatItAsksToJoinConversation_WhenCodeIsInvalid() {
+    func testThatItReportsTheJoinConversationActionAsFailed_WhenCodeIsInvalid() {
         // given
         let action: URLAction = .joinConversation(key: "test-key", code: "wrong-code")
 
