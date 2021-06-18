@@ -40,7 +40,11 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
                                           transportSession: transportSession,
                                           eventProcessor: eventProcessor,
                                           contextProvider: contextProvider) { [weak self] (response) in
-                guard let strongSelf = self else { return }
+                guard let strongSelf = self,
+                      let delegate = delegate else {
+                    return
+                }
+
                 let viewContext = strongSelf.contextProvider.viewContext
 
                 switch response {
@@ -49,11 +53,14 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
                     /// If the conversation doesn't exist, we should initiate a request to join the conversation
                     if let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: viewContext),
                        conversation.isSelfAnActiveMember {
-                        delegate?.showConversation(conversation, at: nil)
-                        delegate?.completedURLAction(urlAction)
+                        delegate.showConversation(conversation, at: nil)
+                        delegate.completedURLAction(urlAction)
                     } else {
-                        delegate?.shouldPerformActionWithMessage(conversationName, action: urlAction) { shouldJoin in
-                            guard shouldJoin else { return }
+                        delegate.shouldPerformActionWithMessage(conversationName, action: urlAction) { shouldJoin in
+                            guard shouldJoin else {
+                                delegate.completedURLAction(urlAction)
+                                return
+                            }
                             ZMConversation.join(key: key,
                                                 code: code,
                                                 transportSession: strongSelf.transportSession,
@@ -61,18 +68,18 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
                                                 contextProvider: strongSelf.contextProvider) { (response) in
                                 switch response {
                                 case .success(let conversation):
-                                    delegate?.showConversation(conversation, at: nil)
+                                    delegate.showConversation(conversation, at: nil)
                                 case .failure(let error):
-                                    delegate?.failedToPerformAction(urlAction, error: error)
+                                    delegate.failedToPerformAction(urlAction, error: error)
                                 }
-                                delegate?.completedURLAction(urlAction)
+                                delegate.completedURLAction(urlAction)
                             }
                         }
                     }
 
                 case .failure(let error):
-                    delegate?.failedToPerformAction(urlAction, error: error)
-                    delegate?.completedURLAction(urlAction)
+                    delegate.failedToPerformAction(urlAction, error: error)
+                    delegate.completedURLAction(urlAction)
                 }
             }
             

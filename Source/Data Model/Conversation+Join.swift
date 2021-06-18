@@ -118,10 +118,12 @@ extension ZMConversation {
                                contextProvider: ContextProvider,
                                completion: @escaping (Result<(conversationId: UUID, conversationName: String)>) -> Void) {
 
-        let request = ConversationJoinRequestFactory.requestForGetConversation(key: key, code: code)
-        let viewContext = contextProvider.viewContext
+        guard let request = ConversationJoinRequestFactory.requestForGetConversation(key: key, code: code) else {
+            completion(.failure(ConversationFetchError.unknown))
+            return
+        }
 
-        request.add(ZMCompletionHandler(on: viewContext, block: { response in
+        request.add(ZMCompletionHandler(on: contextProvider.viewContext, block: { response in
             switch response.httpStatus {
             case 200:
                 guard let payload = response.payload as? [AnyHashable : Any],
@@ -157,11 +159,13 @@ internal struct ConversationJoinRequestFactory {
         return ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
     }
 
-    static func requestForGetConversation(key: String, code: String) -> ZMTransportRequest {
+    static func requestForGetConversation(key: String, code: String) -> ZMTransportRequest? {
         var url = URLComponents()
         url.path = "/conversations/join"
         url.queryItems = [URLQueryItem(name: "key", value: key), URLQueryItem(name: "code", value: code)]
-        let urlString = url.string ?? ""
+        guard let urlString = url.string else {
+            return nil
+        }
 
         return ZMTransportRequest(path: urlString, method: .methodGET, payload: nil)
     }

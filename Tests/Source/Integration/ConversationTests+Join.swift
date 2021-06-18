@@ -116,7 +116,7 @@ class ConversationTests_Join: ConversationTestsBase {
                 XCTAssertNotNil(conversationID)
                 XCTAssertNotNil(conversationName)
                 let conversation = ZMConversation.fetch(withRemoteIdentifier: conversationID, in: viewContext)
-                XCTAssertTrue(conversation!.isSelfConversation)
+                XCTAssertTrue(conversation!.isSelfAnActiveMember)
             } else {
                 XCTFail()
             }
