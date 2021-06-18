@@ -185,7 +185,6 @@
 		169BA21F25ED0FB400374343 /* ConversationTests+Deletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16519D5B231EA13A00C9D76D /* ConversationTests+Deletion.swift */; };
 		169BA22025ED0FB900374343 /* ConversationTests+ClearingHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF6F5246EF65600A26626 /* ConversationTests+ClearingHistory.swift */; };
 		169BA22125ED0FBD00374343 /* ConversationTests+LastRead.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF6F2246EF28800A26626 /* ConversationTests+LastRead.swift */; };
-		169BA22225ED0FC100374343 /* ConversationTests+Reactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF6F7246EF67400A26626 /* ConversationTests+Reactions.swift */; };
 		169BA22325ED0FC400374343 /* ConversationTests+Archiving.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF6EF246ECB2400A26626 /* ConversationTests+Archiving.swift */; };
 		169BA22425ED0FC900374343 /* ConversationTests+Participants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16904A83207E078C00C92806 /* ConversationTests+Participants.swift */; };
 		169BA22525ED0FCE00374343 /* ConversationTests+List.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06BBF6EC246EB56B00A26626 /* ConversationTests+List.swift */; };
@@ -316,7 +315,6 @@
 		5463C897193F3C74006799DE /* ZMTimingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5463C890193F38A6006799DE /* ZMTimingTests.m */; };
 		5467F1C41E0AE2EF008C1745 /* KeyValueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5467F1C31E0AE2EF008C1745 /* KeyValueStore.swift */; };
 		5467F1C61E0AE421008C1745 /* KeyValueStore+AccessToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5467F1C51E0AE421008C1745 /* KeyValueStore+AccessToken.swift */; };
-		546F815C1E685F6E00775059 /* LocalNotificationDispatcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546F815A1E685F1A00775059 /* LocalNotificationDispatcherTests.swift */; };
 		5474C80A1921309400185A3A /* MessagingTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 5474C8061921309400185A3A /* MessagingTest.m */; };
 		5474C80C1921309400185A3A /* MessagingTestTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5474C8081921309400185A3A /* MessagingTestTests.m */; };
 		54764B961C92FDC100BD25E3 /* 1900x1500.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 54DFAE211C92D979004B1D15 /* 1900x1500.jpg */; };
@@ -493,7 +491,6 @@
 		BF158D2F1CE087D8007C6F8A /* video.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = BF158D2E1CE087D8007C6F8A /* video.mp4 */; };
 		BF1F52C41ECC6DAF002FB553 /* ZMSimpleListRequestPaginator.h in Headers */ = {isa = PBXBuildFile; fileRef = 548213FE1A0253CC001AA4E0 /* ZMSimpleListRequestPaginator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF2A9D511D6B536E00FA7DBC /* EventDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2A9D501D6B536E00FA7DBC /* EventDecoder.swift */; };
-		BF2A9D551D6B5B9700FA7DBC /* EventDecoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2A9D541D6B5B9700FA7DBC /* EventDecoderTests.swift */; };
 		BF2A9D581D6B5BDB00FA7DBC /* StoreUpdateEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2A9D571D6B5BDB00FA7DBC /* StoreUpdateEventTests.swift */; };
 		BF2A9D5D1D6B63DB00FA7DBC /* StoreUpdateEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2A9D5A1D6B63DB00FA7DBC /* StoreUpdateEvent.swift */; };
 		BF2ADA001F41A3DF000980E8 /* SessionFactories.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2AD9FF1F41A3DF000980E8 /* SessionFactories.swift */; };
@@ -530,7 +527,6 @@
 		EE1DEBC723D5F1F30087EE1F /* NSManagedObjectContext+TypingUsers.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1DEBC523D5F1D00087EE1F /* NSManagedObjectContext+TypingUsers.swift */; };
 		EE419B58256FEA3D004618E2 /* ZMUserSession.Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE419B57256FEA3D004618E2 /* ZMUserSession.Configuration.swift */; };
 		EE5BF6351F8F907C00B49D06 /* ZMLocalNotificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5BF6341F8F907C00B49D06 /* ZMLocalNotificationTests.swift */; };
-		EE5BF6371F8F9D6100B49D06 /* ZMLocalNotificationTests_Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5BF6361F8F9D6100B49D06 /* ZMLocalNotificationTests_Event.swift */; };
 		EE5FEF0521E8948F00E24F7F /* ZMUserSession+DarwinNotificationCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5FEF0421E8948F00E24F7F /* ZMUserSession+DarwinNotificationCenter.swift */; };
 		EE6654642445D4EE00CBF8D3 /* MockAddressBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6654632445D4EE00CBF8D3 /* MockAddressBook.swift */; };
 		EE95DECD247C0049001EA010 /* SessionManagerConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE95DECC247C0049001EA010 /* SessionManagerConfigurationTests.swift */; };
@@ -3010,7 +3006,6 @@
 				169BA20225ED0F0600374343 /* UserRichProfileIntegrationTests.swift in Sources */,
 				169BA20925ED0F4A00374343 /* IsTypingTests.swift in Sources */,
 				169BA20A25ED0F5000374343 /* BackgroundTests.m in Sources */,
-				169BA22225ED0FC100374343 /* ConversationTests+Reactions.swift in Sources */,
 				169BA1ED25ECEA9A00374343 /* OperationLoopNewRequestObserver.swift in Sources */,
 				169BA1FB25ED0CB200374343 /* MockPushChannel.swift in Sources */,
 				169BA20625ED0F3800374343 /* ClientManagementTests.m in Sources */,
@@ -3102,13 +3097,11 @@
 				F9410F631DE44C2E007451FF /* TypingStrategyTests.swift in Sources */,
 				EE5BF6351F8F907C00B49D06 /* ZMLocalNotificationTests.swift in Sources */,
 				169BA25225EF778E00374343 /* TestUserProfileUpdateObserver.swift in Sources */,
-				EE5BF6371F8F9D6100B49D06 /* ZMLocalNotificationTests_Event.swift in Sources */,
 				BF50CFA71F39ACE8007833A4 /* MockUserInfoParser.swift in Sources */,
 				5E0EB1F92100A46F00B5DC2B /* MockCompanyLoginRequesterDelegate.swift in Sources */,
 				169BA24C25EF753100374343 /* MockReachability.swift in Sources */,
 				16DCAD6F1B147706008C1DD9 /* NSURL+LaunchOptionsTests.m in Sources */,
 				541228451AEE422C00D9ED1C /* ZMAuthenticationStatusTests.m in Sources */,
-				BF2A9D551D6B5B9700FA7DBC /* EventDecoderTests.swift in Sources */,
 				5E0EB1F72100A14A00B5DC2B /* CompanyLoginRequesterTests.swift in Sources */,
 				1671F9FF1E2FAF50009F3150 /* ZMLocalNotificationForTests_CallState.swift in Sources */,
 				EE6654642445D4EE00CBF8D3 /* MockAddressBook.swift in Sources */,
@@ -3184,7 +3177,6 @@
 				A901FE9B258B562F003EAF5C /* CallParticipantTests.swift in Sources */,
 				874A174A205812B6001C6760 /* ZMUserSessionTests.swift in Sources */,
 				7CE017172317D72A00144905 /* ZMCredentialsTests.swift in Sources */,
-				546F815C1E685F6E00775059 /* LocalNotificationDispatcherTests.swift in Sources */,
 				F1AE5F6F21F73388009CDBBC /* ZMUserSessionTests+Timers.swift in Sources */,
 				161ACB4323F6EE4800ABFF33 /* CompanyLoginURLActionProcessorTests.swift in Sources */,
 				5474C80A1921309400185A3A /* MessagingTest.m in Sources */,

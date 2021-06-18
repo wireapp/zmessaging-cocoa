@@ -87,7 +87,7 @@
     [testUUIDDataAttribute setName:@"testUUID_data"];
     [testUUIDDataAttribute setAttributeType:NSBinaryDataAttributeType];
     [testUUIDDataAttribute setOptional:YES];
-    [testUUIDDataAttribute setIndexed:YES];
+//    [testUUIDDataAttribute setIndexed:YES];
     
     
     NSAttributeDescription *needsToBeUpdatedFromBackendAttribute = [[NSAttributeDescription alloc] init];
@@ -146,7 +146,7 @@
     [remoteIdentifierDataAttribute setName:@"remoteIdentifier_data"];
     [remoteIdentifierDataAttribute setAttributeType:NSBinaryDataAttributeType];
     [remoteIdentifierDataAttribute setOptional:YES];
-    [remoteIdentifierDataAttribute setIndexed:YES];
+//    [remoteIdentifierDataAttribute setIndexed:YES];
     
     NSAttributeDescription *testUUIDAttribute = [[NSAttributeDescription alloc] init];
     [testUUIDAttribute setName:@"testUUID"];
@@ -158,7 +158,7 @@
     [testUUIDDataAttribute setName:@"testUUID_data"];
     [testUUIDDataAttribute setAttributeType:NSBinaryDataAttributeType];
     [testUUIDDataAttribute setOptional:YES];
-    [testUUIDDataAttribute setIndexed:YES];
+//    [testUUIDDataAttribute setIndexed:YES];
 
     NSAttributeDescription *needsToBeUpdatedFromBackendAttribute = [[NSAttributeDescription alloc] init];
     [needsToBeUpdatedFromBackendAttribute setName:@"needsToBeUpdatedFromBackend"];

@@ -275,33 +275,33 @@
     XCTAssertEqualObjects(name, uiUser.name);
 }
 
-- (void)testThatContextChangeTrackerIsInformed_WhenObjectIsInserted_OnUIContext {
-    // given
-    NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC]);
-    
-    // when
-    [self.uiMOC saveOrRollback];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(self.mockContextChangeTracker.objectsDidChangeCalled);
-}
+//- (void)testThatContextChangeTrackerIsInformed_WhenObjectIsInserted_OnUIContext {
+//    // given
+//    NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC]);
+//
+//    // when
+//    [self.uiMOC saveOrRollback];
+//    WaitForAllGroupsToBeEmpty(0.5);
+//
+//    // then
+//    XCTAssertTrue(self.mockContextChangeTracker.objectsDidChangeCalled);
+//}
 
-- (void)testThatContextChangeTrackerIsInformed_WhenObjectIsInserted_OnSyncContext {
-    // given
-    [self.syncMOC performGroupedBlockThenWaitForReasonableTimeout:^{
-        NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC]);
-    }];
-    
-    // when
-    [self.syncMOC performGroupedBlockThenWaitForReasonableTimeout:^{
-        XCTAssertTrue([self.syncMOC saveOrRollback]);
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(self.mockContextChangeTracker.objectsDidChangeCalled);
-}
+//- (void)testThatContextChangeTrackerIsInformed_WhenObjectIsInserted_OnSyncContext {
+//    // given
+//    [self.syncMOC performGroupedBlockThenWaitForReasonableTimeout:^{
+//        NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC]);
+//    }];
+//    
+//    // when
+//    [self.syncMOC performGroupedBlockThenWaitForReasonableTimeout:^{
+//        XCTAssertTrue([self.syncMOC saveOrRollback]);
+//    }];
+//    WaitForAllGroupsToBeEmpty(0.5);
+//    
+//    // then
+//    XCTAssertTrue(self.mockContextChangeTracker.objectsDidChangeCalled);
+//}
 
 - (void)testThatContextChangeTrackerIsInformed_WhenObjectIsUpdated_OnUIContext {
     // given
@@ -422,19 +422,19 @@
     XCTAssertTrue(uiMessage.causedSecurityLevelDegradation);
 }
 
-- (void)testThatItNotifiesTheOperationLoopOfNewOperation_WhenContextIsSaved
-{
-    // expect
-    [self expectationForNotification:@"RequestAvailableNotification" object:nil handler:nil];
-    
-    // when
-    NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC]);
-    [self.uiMOC saveOrRollback];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
-}
+//- (void)testThatItNotifiesTheOperationLoopOfNewOperation_WhenContextIsSaved
+//{
+//    // expect
+//    [self expectationForNotification:@"RequestAvailableNotification" object:nil handler:nil];
+//
+//    // when
+//    NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC]);
+//    [self.uiMOC saveOrRollback];
+//    WaitForAllGroupsToBeEmpty(0.5);
+//
+//    // then
+//    XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
+//}
 
 @end
 
