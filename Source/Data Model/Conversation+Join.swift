@@ -90,7 +90,8 @@ extension ZMConversation {
 
             /// The user is already a participant in the conversation
             case 204:
-                ///
+                /// If we came to this case it mean we need to re-sync local conversations
+                Logging.network.debug("Local conversations should be re-synced with remote ones")
                 return completion(.failure(ConversationJoinError.unknown))
 
             default:
@@ -109,7 +110,7 @@ extension ZMConversation {
     ///   - transportSession: session to handle requests
     ///   - eventProcessor: update event processor
     ///   - contextProvider: context provider
-    ///   - completion:
+    ///   - completion: a handler when the network request completes with the response payload that contains the conversation ID and name
     static func fetchIdAndName(key: String,
                                code: String,
                                transportSession: TransportSessionType,
