@@ -18,7 +18,7 @@
 
 import Foundation
 
-@objc public class UserProfileRequestStrategy : AbstractRequestStrategy {
+public class UserProfileRequestStrategy : AbstractRequestStrategy, ZMSingleRequestTranscoder {
     
     let userProfileUpdateStatus : UserProfileUpdateStatus
     
@@ -112,9 +112,8 @@ import Foundation
         
         return nil
     }
-}
 
-extension UserProfileRequestStrategy : ZMSingleRequestTranscoder {
+    //MARK:-  ZMSingleRequestTranscoder
     
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         switch sync {
