@@ -97,9 +97,9 @@ class ConversationTests_Join: ConversationTestsBase {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
 
-    // MARK: - Fetch conversation Id and name
+    // MARK: - Fetch conversation ID and name
 
-    func testThatItReturnsIdAndName_ForExistingConversation_WithExistingConversationCode() {
+    func testThatItReturnsConversationIdAndName_ForExistingConversationCode() {
         // GIVEN
         XCTAssert(login())
         let viewContext = userSession!.coreDataStack.viewContext
@@ -124,7 +124,7 @@ class ConversationTests_Join: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
 
-    func testThatItReturnsIdAndName_ForNewConversation_WithANewConversationCode() {
+    func testThatItReturnsConversationIdAndName_ForANewConversationCode() {
         // GIVEN
         XCTAssert(login())
         let viewContext = userSession!.coreDataStack.viewContext
@@ -149,7 +149,7 @@ class ConversationTests_Join: ConversationTestsBase {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
 
-    func testThatItDoesNotReturnConversationIdAndName_WithWrongConversationCode() {
+    func testThatItDoesNotReturnConversationIdAndName_ForWrongConversationCode() {
         // GIVEN
         XCTAssert(login())
 
