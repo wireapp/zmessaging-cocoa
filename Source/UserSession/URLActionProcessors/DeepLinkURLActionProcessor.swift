@@ -52,7 +52,7 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
                         delegate?.showConversation(conversation, at: nil)
                         delegate?.completedURLAction(urlAction)
                     } else {
-                        delegate?.shouldPerformActionWithTitle(conversationName, action: urlAction) { shouldJoin in
+                        delegate?.shouldPerformActionWithMessage(conversationName, action: urlAction) { shouldJoin in
                             ZMConversation.join(key: key,
                                                 code: code,
                                                 transportSession: strongSelf.transportSession,

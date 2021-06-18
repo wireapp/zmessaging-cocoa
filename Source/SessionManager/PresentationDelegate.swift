@@ -57,7 +57,7 @@ public protocol PresentationDelegate: class {
     /// - parameter decisionHandler: Block which should be executed when the decision has been to perform the action or not.
     /// - parameter shouldPerformAction: **true**: perform the action, **false**: abort the action
 
-    func shouldPerformActionWithTitle(_ message: String, action: URLAction, decisionHandler: @escaping (_ shouldPerformAction: Bool) -> Void)
+    func shouldPerformActionWithMessage(_ message: String, action: URLAction, decisionHandler: @escaping (_ shouldPerformAction: Bool) -> Void)
     
     /// Called when an URLAction was successfully performed.
     func completedURLAction(_ action: URLAction)
