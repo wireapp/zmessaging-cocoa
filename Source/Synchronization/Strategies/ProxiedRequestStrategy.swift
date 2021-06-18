@@ -37,7 +37,8 @@ extension ProxiedRequestType {
 }
 
 /// Perform requests to the Giphy search API
-@objc public final class ProxiedRequestStrategy : AbstractRequestStrategy {
+//@objc
+public final class ProxiedRequestStrategy : AbstractRequestStrategy {
     
     static fileprivate let BasePath = "/proxy"
     

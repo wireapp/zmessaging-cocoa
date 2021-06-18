@@ -21,7 +21,7 @@ import WireRequestStrategy
 import WireDataModel
 
 @objcMembers
-public final class CallingRequestStrategy: AbstractRequestStrategy {
+public final class CallingRequestStrategy: AbstractRequestStrategy, ZMSingleRequestTranscoder, ZMContextChangeTracker, ZMContextChangeTrackerSource, ZMEventConsumer {
 
     // MARK: - Private Properties
     
@@ -90,11 +90,11 @@ public final class CallingRequestStrategy: AbstractRequestStrategy {
         genericMessageStrategy.expireEntities(withDependency: conversation)
     }
     
-}
+//}
 
 // MARK: - Single Request Transcoder
 
-extension CallingRequestStrategy: ZMSingleRequestTranscoder {
+//extension CallingRequestStrategy: ZMSingleRequestTranscoder {
 
     public func request(for sync: ZMSingleRequestSync) -> ZMTransportRequest? {
         switch sync {
@@ -173,11 +173,11 @@ extension CallingRequestStrategy: ZMSingleRequestTranscoder {
             break
         }
     }
-}
+//}
 
 // MARK: - Context Change Tracker
 
-extension CallingRequestStrategy: ZMContextChangeTracker, ZMContextChangeTrackerSource {
+//extension CallingRequestStrategy: ZMContextChangeTracker, ZMContextChangeTrackerSource {
     
     public var contextChangeTrackers: [ZMContextChangeTracker] {
         return [self, self.genericMessageStrategy]
@@ -212,11 +212,11 @@ extension CallingRequestStrategy: ZMContextChangeTracker, ZMContextChangeTracker
         }
     }
     
-}
+//}
 
 // MARK: - Event Consumer
 
-extension CallingRequestStrategy: ZMEventConsumer {
+//extension CallingRequestStrategy: ZMEventConsumer {
 
     public func processEventsWhileInBackground(_ events: [ZMUpdateEvent]) {
         let serverTimeDelta = managedObjectContext.serverTimeDelta
