@@ -72,8 +72,8 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
 
                 case .failure(let error):
                     delegate?.failedToPerformAction(urlAction, error: error)
+                    delegate?.completedURLAction(urlAction)
                 }
-                delegate?.completedURLAction(urlAction)
             }
             
         case .openConversation(let id):
