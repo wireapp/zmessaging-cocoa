@@ -477,6 +477,10 @@
 		A951270E267CCC0200C5358B /* HTMLString.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A95126F1267CCC0200C5358B /* HTMLString.xcframework */; };
 		A9512710267CCC0200C5358B /* libPhoneNumber.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A95126F2267CCC0200C5358B /* libPhoneNumber.xcframework */; };
 		A9512712267CCC0200C5358B /* WireRequestStrategy.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A95126F3267CCC0200C5358B /* WireRequestStrategy.xcframework */; };
+		A951271C267CCD8500C5358B /* OCMock.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A951271A267CCD8500C5358B /* OCMock.xcframework */; };
+		A951271D267CCD8500C5358B /* OCMock.xcframework in Embed Framework */ = {isa = PBXBuildFile; fileRef = A951271A267CCD8500C5358B /* OCMock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A951271E267CCD8500C5358B /* WireTesting.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A951271B267CCD8500C5358B /* WireTesting.xcframework */; };
+		A951271F267CCD8500C5358B /* WireTesting.xcframework in Embed Framework */ = {isa = PBXBuildFile; fileRef = A951271B267CCD8500C5358B /* WireTesting.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A95D0B1223F6B75A0057014F /* AVSLogObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A95D0B1123F6B75A0057014F /* AVSLogObserver.swift */; };
 		A9692F8A1986476900849241 /* NSString_NormalizationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A9692F881986476900849241 /* NSString_NormalizationTests.m */; };
 		A9B53AAA24E12E240066FCC6 /* ZMAccountDeletedReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9B53AA924E12E240066FCC6 /* ZMAccountDeletedReason.swift */; };
@@ -685,6 +689,8 @@
 			dstSubfolderSpec = 10;
 			files = (
 				3E08B5631A67EDF800F23B9E /* WireSyncEngine.framework in Embed Framework */,
+				A951271F267CCD8500C5358B /* WireTesting.xcframework in Embed Framework */,
+				A951271D267CCD8500C5358B /* OCMock.xcframework in Embed Framework */,
 			);
 			name = "Embed Framework";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1149,6 +1155,8 @@
 		A95126F1267CCC0200C5358B /* HTMLString.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = HTMLString.xcframework; path = Carthage/Build/HTMLString.xcframework; sourceTree = "<group>"; };
 		A95126F2267CCC0200C5358B /* libPhoneNumber.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libPhoneNumber.xcframework; path = Carthage/Build/libPhoneNumber.xcframework; sourceTree = "<group>"; };
 		A95126F3267CCC0200C5358B /* WireRequestStrategy.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = WireRequestStrategy.xcframework; path = Carthage/Build/WireRequestStrategy.xcframework; sourceTree = "<group>"; };
+		A951271A267CCD8500C5358B /* OCMock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = OCMock.xcframework; path = Carthage/Build/OCMock.xcframework; sourceTree = "<group>"; };
+		A951271B267CCD8500C5358B /* WireTesting.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = WireTesting.xcframework; path = Carthage/Build/WireTesting.xcframework; sourceTree = "<group>"; };
 		A95D0B1123F6B75A0057014F /* AVSLogObserver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AVSLogObserver.swift; sourceTree = "<group>"; };
 		A9692F881986476900849241 /* NSString_NormalizationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSString_NormalizationTests.m; sourceTree = "<group>"; };
 		A9B53AA924E12E240066FCC6 /* ZMAccountDeletedReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMAccountDeletedReason.swift; sourceTree = "<group>"; };
@@ -1421,6 +1429,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				544BA1571A43424F00D3B852 /* WireSyncEngine.framework in Frameworks */,
+				A951271E267CCD8500C5358B /* WireTesting.xcframework in Frameworks */,
+				A951271C267CCD8500C5358B /* OCMock.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1764,6 +1774,8 @@
 		540029B61918CA8500578793 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A951271A267CCD8500C5358B /* OCMock.xcframework */,
+				A951271B267CCD8500C5358B /* WireTesting.xcframework */,
 				A95126E6267CCC0200C5358B /* avs.xcframework */,
 				A95126F1267CCC0200C5358B /* HTMLString.xcframework */,
 				A95126F2267CCC0200C5358B /* libPhoneNumber.xcframework */,
@@ -3679,6 +3691,10 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Tests/iOS Test Host/Test-Host-Prefix.pch";
 				INFOPLIST_FILE = "Tests/iOS Test Host/Test-Host-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
@@ -3693,6 +3709,10 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Tests/iOS Test Host/Test-Host-Prefix.pch";
 				INFOPLIST_FILE = "Tests/iOS Test Host/Test-Host-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.wire.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
