@@ -117,22 +117,24 @@ extension ZMConversationTranscoder {
         }
 
         let domain = (transportData as NSDictionary).optionalDictionary(forKey: "qualified_id")?.optionalString(forKey: "domain")
-        let conversation = ZMConversation.fetchOrCreate(with: convRemoteID, domain: domain, in: managedObjectContext)
+        var created = false
+        let conversation = ZMConversation.fetchOrCreate(with: convRemoteID,
+                                                        domain: domain,
+                                                        in: managedObjectContext,
+                                                        created: &created)
         conversation.update(transportData: transportData, serverTimeStamp: serverTimeStamp)
 
         let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
         let notInMyTeam = conversation.teamRemoteIdentifier == nil ||
             selfUser.team?.remoteIdentifier != conversation.teamRemoteIdentifier
 
-        // TODO jacob move to awakeFromInsert?
-        if conversation.isInserted,
+        if created,
            conversation.conversationType == .group,
            notInMyTeam {
             conversation.needsToDownloadRoles = true
         }
 
-        // TODO jacob check that isInserted has same behavior
-        if conversation.isInserted && conversation.conversationType != ZMConversationType.`self` {
+        if created && conversation.conversationType != ZMConversationType.`self` {
 
             // we just got a new conversation, we display new conversation header
             conversation.appendNewConversationSystemMessage(at: serverTimeStamp,
