@@ -37,6 +37,11 @@ class MockPresentationDelegate: PresentationDelegate {
         shouldPerformActionCalls.append(action)
         decisionHandler(isPerformingActions)
     }
+
+    func shouldPerformActionWithMessage(_ message: String, action: URLAction, decisionHandler: @escaping (Bool) -> Void) {
+        shouldPerformActionCalls.append(action)
+        decisionHandler(isPerformingActions)
+    }
     
     func completedURLAction(_ action: URLAction) {
         completedURLActionCalls.append(action)
