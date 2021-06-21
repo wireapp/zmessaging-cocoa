@@ -13,7 +13,7 @@ jobs:
         fetch-depth: '0'
 
     - name: guard for wire bot commit
-      if: ${{ github.event.head_commit.author.email == 'iosx+bot@wire.com' || github.event.head_commit.message == '[skip release]'}}
+      if: ${{ github.event.head_commit.author.email == 'iosx+bot@wire.com' || contains(github.event.head_commit.message, '[skip release]')}}
       run: |
           echo "exit for wire bot commit or skip release"
           exit 1
