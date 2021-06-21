@@ -22,7 +22,6 @@ public extension ZMUserSession {
 
     /// An object used to configure a user session.
 
-    @objc(ZMUserSessionConfiguration)
     final class Configuration: NSObject {
 
         // MARK: - Properties

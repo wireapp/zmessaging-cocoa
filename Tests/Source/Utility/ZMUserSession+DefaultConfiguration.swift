@@ -19,7 +19,6 @@ import Foundation
 
 extension ZMUserSession.Configuration {
 
-    @objc
     static var defaultConfig: ZMUserSession.Configuration {
         Self.init(
             appLockConfig: .init(
