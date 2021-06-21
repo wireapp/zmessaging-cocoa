@@ -148,13 +148,15 @@ extension ZMConversation {
 
 }
 
-internal struct ConversationJoinRequestFactory {
+struct ConversationJoinRequestFactory {
+
+    static let joinConversationsPath = "/conversations/join"
 
     static func requestForJoinConversation(key: String, code: String) -> ZMTransportRequest {
-        let path = "/conversations/join"
+        let path = joinConversationsPath
         let payload: [String: Any] = [
-            "key": key,
-            "code": code
+            URLQueryItem.Key.conversationKey: key,
+            URLQueryItem.Key.conversationCode: code
         ]
 
         return ZMTransportRequest(path: path, method: .methodPOST, payload: payload as ZMTransportData)
@@ -162,7 +164,7 @@ internal struct ConversationJoinRequestFactory {
 
     static func requestForGetConversation(key: String, code: String) -> ZMTransportRequest? {
         var url = URLComponents()
-        url.path = "/conversations/join"
+        url.path = joinConversationsPath
         url.queryItems = [URLQueryItem(name: URLQueryItem.Key.conversationKey, value: key),
                           URLQueryItem(name: URLQueryItem.Key.conversationCode, value: code)]
         guard let urlString = url.string else {
