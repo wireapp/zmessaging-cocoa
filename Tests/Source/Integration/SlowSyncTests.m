@@ -164,8 +164,6 @@
              [ZMTransportRequest requestGetFromPath:@"/connections?size=90"],
              [ZMTransportRequest requestGetFromPath:@"/conversations/ids?size=100"],
              [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/conversations?ids=%@,%@,%@,%@", selfConversationIdentifier, selfToUser1ConversationIdentifier, selfToUser2ConversationIdentifier, groupConversationIdentifier]],
-             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@,%@", user1Identifier, user2Identifier]],
-             [ZMTransportRequest requestGetFromPath:[NSString stringWithFormat:@"/users?ids=%@", user3Identifier]],
              [ZMTransportRequest requestGetFromPath:@"/teams"],
              [ZMTransportRequest requestGetFromPath:@"/properties/labels"]
              ];
@@ -194,11 +192,18 @@
     
     // then
     NSMutableArray *mutableRequests = [self.mockTransportSession.receivedRequests mutableCopy];
+    __block NSUInteger usersFetchCallCount = 0;
     __block NSUInteger clientRegistrationCallCount = 0;
     __block NSUInteger notificationStreamCallCount = 0;
     [self.mockTransportSession.receivedRequests enumerateObjectsUsingBlock:^(ZMTransportRequest *request, NSUInteger idx, BOOL *stop) {
         NOT_USED(stop);
         NOT_USED(idx);
+
+        if ([request.path hasPrefix:@"/users?ids="] && request.method == ZMMethodGET) {
+            [mutableRequests removeObject:request];
+            usersFetchCallCount++;
+        }
+
         if ([request.path containsString:@"clients"] && request.method == ZMMethodPOST) {
             [mutableRequests removeObject:request];
             clientRegistrationCallCount++;
@@ -208,12 +213,13 @@
             [mutableRequests removeObject:request];
             clientRegistrationCallCount++;
         }
-        
+
         if ([request.path hasPrefix:@"/notifications?size=500"]) {
             [mutableRequests removeObject:request];
             notificationStreamCallCount++;
         }
     }];
+    XCTAssertEqual(usersFetchCallCount, 2u);
     XCTAssertEqual(clientRegistrationCallCount, 2u);
     XCTAssertEqual(notificationStreamCallCount, 1u);
     

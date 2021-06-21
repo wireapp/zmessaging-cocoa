@@ -143,7 +143,7 @@ public class StrategyDirectory: NSObject, StrategyDirectoryProtocol {
             UserPropertyRequestStrategy(
                 withManagedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory),
-            UserProfileRequestStrategy(
+            UserProfileUpdateRequestStrategy(
                 managedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory,
                 userProfileUpdateStatus: applicationStatusDirectory.userProfileUpdateStatus),
@@ -179,10 +179,10 @@ public class StrategyDirectory: NSObject, StrategyDirectoryProtocol {
                 managedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory,
                 syncStatus: applicationStatusDirectory.syncStatus),
-            ZMUserTranscoder(
+            UserProfileRequestStrategy(
                 managedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory,
-                syncStatus: applicationStatusDirectory.syncStatus),
+                syncProgress: applicationStatusDirectory.syncStatus),
             ZMLastUpdateEventIDTranscoder(
                 managedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory,
