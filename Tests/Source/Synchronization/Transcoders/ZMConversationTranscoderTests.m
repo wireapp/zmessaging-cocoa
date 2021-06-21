@@ -996,7 +996,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         [self generateRequestAndCompleteWithResponse:response checkRequest:^(ZMTransportRequest *req __unused) {
             // Artificially set the needsToUpdateFromBackend to true
             for(NSString *remoteID in conversationIDs) {
-                ZMConversation * conversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:remoteID] createIfNeeded:YES inContext:self.sut.managedObjectContext];
+                ZMConversation * conversation = [ZMConversation fetchOrCreateWith:[NSUUID uuidWithTransportString:remoteID] domain:nil in:self.sut.managedObjectContext];
                 conversation.needsToBeUpdatedFromBackend = YES;
             }
         }];
@@ -1006,7 +1006,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     [self.syncMOC performGroupedBlockAndWait:^{
         // then
         for(NSString *remoteID in conversationIDs) {
-            ZMConversation * conversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:remoteID] createIfNeeded:YES inContext:self.sut.managedObjectContext];
+            ZMConversation * conversation = [ZMConversation fetchOrCreateWith:[NSUUID uuidWithTransportString:remoteID] domain:nil in:self.sut.managedObjectContext];
             XCTAssertFalse(conversation.needsToBeUpdatedFromBackend);
         }
     }];
@@ -1903,7 +1903,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    ZMConversation *conv = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:rawConversation[@"id"]] createIfNeeded:NO inContext:self.syncMOC];
+
+    ZMConversation *conv = [ZMConversation fetchWith:[NSUUID uuidWithTransportString:rawConversation[@"id"]] in:self.syncMOC];
     
     NSArray *messages = [[conv lastMessagesWithLimit:50] filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(ZMMessage * _Nonnull evaluatedObject, NSDictionary<NSString *,id> * _Nullable ZM_UNUSED bindings) {
         return [evaluatedObject isKindOfClass:[ZMSystemMessage class]] && [(ZMSystemMessage *)evaluatedObject systemMessageType] == ZMSystemMessageTypeNewClient && [[(ZMSystemMessage *)evaluatedObject clients] containsObject:(id<UserClientType>)selfClient];
@@ -1937,7 +1938,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     WaitForAllGroupsToBeEmpty(0.5);
     
     // then
-    ZMConversation *conv = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:rawConversation[@"id"]] createIfNeeded:NO inContext:self.syncMOC];
+    ZMConversation *conv = [ZMConversation fetchWith:[NSUUID uuidWithTransportString:rawConversation[@"id"]] in:self.syncMOC];
     
     NSArray *messages = [[conv lastMessagesWithLimit:50] filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(ZMMessage * _Nonnull evaluatedObject, NSDictionary<NSString *,id> * _Nullable ZM_UNUSED bindings) {
         return [evaluatedObject isKindOfClass:[ZMSystemMessage class]] && [(ZMSystemMessage *)evaluatedObject systemMessageType] == ZMSystemMessageTypeNewConversation;
@@ -2145,7 +2146,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     
     [self.syncMOC performGroupedBlockAndWait:^{
         // then
-        ZMConversation *createdConversation = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:NO inContext:self.syncMOC];
+        ZMConversation *createdConversation = [ZMConversation fetchWith:conversationID in:self.syncMOC];
         XCTAssertNotNil(createdConversation);
         XCTAssertTrue(createdConversation.isSelfAnActiveMember);
         
@@ -2460,7 +2461,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
         
         // then
-        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:remoteID createIfNeeded:NO inContext:self.syncMOC];
+        ZMConversation *conversation = [ZMConversation fetchWith:remoteID in:self.syncMOC];
         XCTAssertNotNil(conversation);
         XCTAssertTrue([self isConversation:conversation matchingPayload:innerPayload serverTimeStamp:serverTime]);
     }];
@@ -2476,7 +2477,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     NSUUID *remoteID = NSUUID.createUUID;
     __block NSManagedObjectID *localID;
     [self.syncMOC performGroupedBlockAndWait:^{
-        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:remoteID createIfNeeded:YES inContext:self.syncMOC];
+        ZMConversation *conversation = [ZMConversation fetchOrCreateWith:remoteID domain:nil in:self.syncMOC];
         XCTAssert([self.syncMOC saveOrRollback]);
         localID = conversation.objectID;
         // This should not be set, yet.
@@ -2549,7 +2550,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
         
         // then
-        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:remoteID createIfNeeded:NO inContext:self.syncMOC];
+        ZMConversation *conversation = [ZMConversation fetchWith:remoteID in:self.syncMOC];
         XCTAssertNil(conversation);
     }];
 }
@@ -2611,7 +2612,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
         
         // then
-        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:remoteID createIfNeeded:NO inContext:self.syncMOC];
+        ZMConversation *conversation = [ZMConversation fetchWith:remoteID in:self.syncMOC];
         XCTAssertNil(conversation);
     }];
 }
@@ -2707,7 +2708,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     
     [self.syncMOC performGroupedBlockAndWait:^{
         // SANITY CHECK - now I should have two conversations
-        ZMConversation *createdConversation = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:NO inContext:self.syncMOC];
+        ZMConversation *createdConversation = [ZMConversation fetchWith:conversationID in:self.syncMOC];
         XCTAssertNotNil(createdConversation);
         XCTAssertNotEqual(createdConversation, existingConnection.conversation);
         
@@ -2851,7 +2852,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         [self.sut processEvents:@[updateEvent] liveEvents:YES prefetchResult:nil];
         
         // then
-        conversation = [ZMConversation conversationWithRemoteID:conversationID createIfNeeded:NO inContext:self.syncMOC];
+        conversation = [ZMConversation fetchWith:conversationID in:self.syncMOC];
         XCTAssertNotNil(conversation);
         
         // given

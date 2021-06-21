@@ -264,7 +264,7 @@ extension CallingRequestStrategy: WireCallCenterTransport {
         }
         
         managedObjectContext.performGroupedBlock {
-            guard let conversation = ZMConversation(remoteID: conversationId, createIfNeeded: false, in: self.managedObjectContext) else {
+            guard let conversation = ZMConversation.fetch(with: conversationId, in: self.managedObjectContext) else {
                 self.zmLog.error("Not sending calling messsage since conversation doesn't exist")
                 completionHandler(500)
                 return

@@ -121,8 +121,9 @@
     XCTAssertNotNil(conversations);
     XCTAssertEqual(conversations.count, 3u);
     
-    
-    ZMConversation *actualSelfConversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:selfConversationIdentifier] createIfNeeded:NO inContext:self.userSession.managedObjectContext];
+
+
+    ZMConversation *actualSelfConversation = [ZMConversation fetchWith:[NSUUID uuidWithTransportString:selfConversationIdentifier] in:self.userSession.managedObjectContext];
     [actualSelfConversation assertMatchesConversation:self.selfConversation failureRecorder:NewFailureRecorder()];
     
     ZMConversation *actualSelfToUser1Conversation = [self findConversationWithIdentifier:selfToUser1ConversationIdentifier inMoc:self.userSession.managedObjectContext];
@@ -282,7 +283,7 @@
 }
 
 - (ZMUser *)findUserWithUUID:(NSString *)UUIDString inMoc:(NSManagedObjectContext *)moc {
-    ZMUser *user = [ZMUser userWithRemoteID:[UUIDString UUID] createIfNeeded:NO inContext:moc];
+    ZMUser *user = [ZMUser fetchWith:[UUIDString UUID] in:moc];
     XCTAssertNotNil(user);
     return user;
 }
@@ -312,7 +313,8 @@
 
 - (ZMConversation *)findConversationWithIdentifier:(NSString *)identifier inMoc:(NSManagedObjectContext *)moc
 {
-    ZMConversation *conversation = [ZMConversation conversationWithRemoteID:[NSUUID uuidWithTransportString:identifier] createIfNeeded:NO inContext:moc];
+
+    ZMConversation *conversation = [ZMConversation fetchWith:[NSUUID uuidWithTransportString:identifier] in:moc];
     XCTAssertNotNil(conversation);
     return conversation;
 }

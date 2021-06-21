@@ -116,25 +116,23 @@ extension ZMConversationTranscoder {
             return nil
         }
 
-        var conversationCreated: ObjCBool = false
-
-        guard let conversation = ZMConversation(remoteID: convRemoteID, createIfNeeded:
-            true, in: managedObjectContext, created: &conversationCreated) else { return nil }
-        
-
+        let domain = (transportData as NSDictionary).optionalDictionary(forKey: "qualified_id")?.optionalString(forKey: "domain")
+        let conversation = ZMConversation.fetchOrCreate(with: convRemoteID, domain: domain, in: managedObjectContext)
         conversation.update(transportData: transportData, serverTimeStamp: serverTimeStamp)
 
         let selfUser = ZMUser.selfUser(in: self.managedObjectContext)
         let notInMyTeam = conversation.teamRemoteIdentifier == nil ||
             selfUser.team?.remoteIdentifier != conversation.teamRemoteIdentifier
-        
-        if conversationCreated.boolValue,
+
+        // TODO jacob move to awakeFromInsert?
+        if conversation.isInserted,
            conversation.conversationType == .group,
            notInMyTeam {
             conversation.needsToDownloadRoles = true
         }
 
-        if conversation.conversationType != ZMConversationType.`self` && conversationCreated.boolValue == true {
+        // TODO jacob check that isInserted has same behavior
+        if conversation.isInserted && conversation.conversationType != ZMConversationType.`self` {
 
             // we just got a new conversation, we display new conversation header
             conversation.appendNewConversationSystemMessage(at: serverTimeStamp,
@@ -218,7 +216,7 @@ extension ZMConversationTranscoder {
         precondition(event.type == .conversationMessageTimerUpdate, "invalid update event type")
         guard let payload = event.payload["data"] as? [String : AnyHashable],
             let senderUUID = event.senderUUID,
-            let user = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext) else { return }
+            let user = ZMUser.fetch(with: senderUUID, domain: nil, in: managedObjectContext) else { return }
         
         var timeout: MessageDestructionTimeout?
         let timeoutIntegerValue = (payload["message_timer"] as? Int64) ?? 0
@@ -254,7 +252,7 @@ extension ZMConversationTranscoder {
               let readReceiptMode = payload["receipt_mode"] as? Int,
               let serverTimestamp = event.timestamp,
               let senderUUID = event.senderUUID,
-              let sender = ZMUser(remoteID: senderUUID, createIfNeeded: false, in: managedObjectContext)
+              let sender = ZMUser.fetch(with: senderUUID, domain: nil, in: managedObjectContext)
         else { return }
         
         // Discard event if it has already been applied
@@ -319,8 +317,9 @@ extension ZMConversation {
     
     fileprivate func updateRoleFromEventPayload(_ payload: [String: Any], userId: UUID) {
         guard let roleName = payload["conversation_role"] as? String else { return }
-        
-        let user = ZMUser(remoteID: userId, createIfNeeded: true, in: self.managedObjectContext!)!
+
+        // TODO jacob extract domain
+        let user = ZMUser.fetchOrCreate(with: userId, domain: nil, in: self.managedObjectContext!)
         let teamOrConvo: TeamOrConversation = self.team != nil ?
             TeamOrConversation.team(self.team!) : TeamOrConversation.conversation(self)
         let role = self.getRoles().first(where: {$0.name == roleName }) ??

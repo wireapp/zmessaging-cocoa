@@ -32,14 +32,14 @@ class DeepLinkURLActionProcessor: URLActionProcessor {
         switch urlAction {
             
         case .openConversation(let id):
-            guard let conversation = ZMConversation(remoteID: id, createIfNeeded: false, in: uiMOC) else {
+            guard let conversation = ZMConversation.fetch(with: id, domain: nil, in: uiMOC) else {
                 delegate?.failedToPerformAction(urlAction, error: DeepLinkRequestError.invalidConversationLink)
                 return
             }
             
             delegate?.showConversation(conversation, at: nil)
         case .openUserProfile(let id):
-            if let user = ZMUser(remoteID: id, createIfNeeded: false, in: uiMOC) {
+            if let user = ZMUser.fetch(with: id, domain: nil, in: uiMOC) {
                 delegate?.showUserProfile(user: user)
             } else {
                 delegate?.showConnectionRequest(userId: id)
