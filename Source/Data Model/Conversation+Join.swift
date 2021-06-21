@@ -163,7 +163,8 @@ internal struct ConversationJoinRequestFactory {
     static func requestForGetConversation(key: String, code: String) -> ZMTransportRequest? {
         var url = URLComponents()
         url.path = "/conversations/join"
-        url.queryItems = [URLQueryItem(name: "key", value: key), URLQueryItem(name: "code", value: code)]
+        url.queryItems = [URLQueryItem(name: URLQueryItem.Key.conversationKey, value: key),
+                          URLQueryItem(name: URLQueryItem.Key.conversationCode, value: code)]
         guard let urlString = url.string else {
             return nil
         }

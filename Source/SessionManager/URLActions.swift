@@ -189,7 +189,7 @@ extension URLAction {
     
 }
 
-private extension URLQueryItem.Key {
+extension URLQueryItem.Key {
 
     static let conversationKey = "key"
     static let conversationCode = "code"
