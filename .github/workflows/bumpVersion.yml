@@ -13,13 +13,13 @@ jobs:
         fetch-depth: '0'
 
     - name: guard for wire bot commit
-      if: ${{ github.event.head_commit.author.email == 'iosx+bot@wire.com' || github.event.head_commit.message == '[skip release]'}}
+      if: ${{ github.event.head_commit.author.email == 'iosx+bot@wire.com' || contains(github.event.head_commit.message, '[skip release]')}}
       run: |
           echo "exit for wire bot commit or skip release"
           exit 1
 
     - name: Bump version and push tag, dry run to get the next tag
-      uses: anothrNick/github-tag-action@1.26.0
+      uses: wireapp/github-tag-action@1.26.0
       id: dry_run
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -45,7 +45,7 @@ jobs:
         git push || true
 
     - name: Bump version and push tag, after version.xcconfig is updated
-      uses: anothrNick/github-tag-action@1.26.0
+      uses: wireapp/github-tag-action@1.26.0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         RELEASE_BRANCHES: develop
