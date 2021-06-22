@@ -54,7 +54,7 @@ extension ZMConversation {
     ///   - transportSession: session to handle requests
     ///   - eventProcessor: update event processor
     ///   - contextProvider: context provider
-    ///   - completion: called when the user joines the conversation or when it fails. If the completion is a success, it is run in the main thread
+    ///   - completion: called on the main thread when the user joins the conversation or when it fails. If the completion is a success, it is run in the main thread
     public static func join(key: String,
                             code: String,
                             transportSession: TransportSessionType,
