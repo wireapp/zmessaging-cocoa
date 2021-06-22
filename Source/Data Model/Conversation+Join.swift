@@ -66,7 +66,7 @@ extension ZMConversation {
         let syncContext = contextProvider.syncContext
         let viewContext = contextProvider.viewContext
 
-        request.add(ZMCompletionHandler(on: syncContext, block: { response in
+        request.add(ZMCompletionHandler(on: viewContext, block: { response in
             switch response.httpStatus {
             case 200:
                 guard let payload = response.payload,
