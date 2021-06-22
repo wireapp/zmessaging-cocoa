@@ -1083,7 +1083,8 @@ final class SessionManagerTests_MultiUserSession: IntegrationTest {
         self.userSession = nil
         XCTAssertNil(weakSession)
     }
-    // TODO katerina: move these tests to the NE
+    /// TODO katerina: move these tests to the NE
+
     //    func testThatItLoadsAccountForPush() {
     //        // GIVEN
     //        let account = Account(userName: "Test Account", userIdentifier: currentUserIdentifier)
