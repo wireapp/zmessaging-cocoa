@@ -136,6 +136,7 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
     if (!sameRemoteIdentifier) {
         return NO;
     }
+    const BOOL sameDomain = [NSObject isEqualOrBothNil:conversation.domain toObject:[[payload optionalDictionaryForKey:@"qualified_id"] optionalStringForKey:@"domain"]];
     const BOOL sameModifiedDate = nil == serverTimeStamp || [conversation.lastModifiedDate.transportString isEqualToString:serverTimeStamp.transportString];
     const BOOL sameCreator = [NSObject isEqualOrBothNil:conversation.creator.remoteIdentifier toObject:[payload uuidForKey:@"creator"]];
     const BOOL sameName = [NSObject isEqualOrBothNil:conversation.userDefinedName toObject:[payload optionalStringForKey:@"name"]];
@@ -158,7 +159,8 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         sameActiveUsers = sameActiveUsers && [activeParticipants containsObject:user.remoteIdentifier];
     }
     
-    return (sameModifiedDate
+    return (sameDomain
+            && sameModifiedDate
             && sameCreator
             && sameName
             && sameType
@@ -2460,6 +2462,51 @@ static NSString *const CONVERSATION_ID_REQUEST_PREFIX = @"/conversations?ids=";
         // when
         [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
         
+        // then
+        ZMConversation *conversation = [ZMConversation fetchWith:remoteID in:self.syncMOC];
+        XCTAssertNotNil(conversation);
+        XCTAssertTrue([self isConversation:conversation matchingPayload:innerPayload serverTimeStamp:serverTime]);
+    }];
+}
+
+- (void)testThatItProcessesConversationCreateEventsWithQualifiedID
+{
+    // given
+    NSUUID *selfUserID = [ZMUser selfUserInContext:self.uiMOC].remoteIdentifier;
+    NSUUID *remoteID = [NSUUID createUUID];
+    NSString *domain = @"example.com";
+    NSDictionary *innerPayload = @{
+                                   @"name" : @"foobarz",
+                                   @"creator" : @"3bc5750a-b965-40f8-aff2-831e9b5ac2e9",
+                                   @"members" : @{
+                                           @"self" : @{
+                                                   @"id" : selfUserID.transportString,
+                                                   },
+                                           @"others" : @[]
+                                           },
+                                   @"type" : @0,
+                                   @"id" : remoteID.transportString,
+                                   @"qualified_id" : @{
+                                           @"id" : remoteID.transportString,
+                                           @"domain" : domain
+                                   },
+                                   };
+
+    NSDate *serverTime = NSDate.date;
+    NSDictionary *payload = @{
+                              @"type" : @"conversation.create",
+                              @"data" : innerPayload,
+                              @"time" : serverTime.transportString
+                              };
+
+    ZMUpdateEvent *event = [ZMUpdateEvent eventFromEventStreamPayload:payload uuid:[NSUUID createUUID]];
+
+    [self.syncMOC performGroupedBlockAndWait:^{
+
+
+        // when
+        [self.sut processEvents:@[event] liveEvents:YES prefetchResult:nil];
+
         // then
         ZMConversation *conversation = [ZMConversation fetchWith:remoteID in:self.syncMOC];
         XCTAssertNotNil(conversation);
