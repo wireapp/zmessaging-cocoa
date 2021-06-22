@@ -246,7 +246,7 @@ extension EventDecoderTest {
         
         syncMOC.performGroupedBlock {
             // given
-            let event1 = self.eventStreamEvent(conversation: ZMConversation.selfConversation(in: self.syncMOC), genericMessage: GenericMessage(content: AvailabilityFactory.createAvailability(availability: .away)))
+            let event1 = self.eventStreamEvent(conversation: ZMConversation.selfConversation(in: self.syncMOC), genericMessage: GenericMessage(content: WireProtos.Availability(.away)))
             let event2 = self.eventStreamEvent()
             
             self.insert([event1, event2])
