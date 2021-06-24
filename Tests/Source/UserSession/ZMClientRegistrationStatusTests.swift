@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2019 Wire Swiss GmbH
+// Copyright (C) 2021 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +16,19 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import Foundation
+import XCTest
+@testable import WireSyncEngine
 
-extension LinkPreviewAssetUploadRequestStrategy {
+extension ZMClientRegistrationStatusTests {
+    func testThatItReturns_FetchingClients_WhenReceivingAnErrorWithTooManyClients() {
+        // given
+        let selfUser = ZMUser.selfUser(in: syncMOC)
+        selfUser.remoteIdentifier = UUID()
 
-    public static func create(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) -> LinkPreviewAssetUploadRequestStrategy {
-        return LinkPreviewAssetUploadRequestStrategy(managedObjectContext: managedObjectContext, applicationStatus: applicationStatus, linkPreviewPreprocessor: nil, previewImagePreprocessor: nil)
+        // when
+        sut.didFail(toRegisterClient: tooManyClientsError()! as NSError)
+
+        // then
+        XCTAssertEqual(sut.currentPhase, ZMClientRegistrationPhase.fetchingClients)
     }
-
 }

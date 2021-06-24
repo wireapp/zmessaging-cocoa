@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2019 Wire Swiss GmbH
+// Copyright (C) 2021 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +16,13 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import Foundation
+@testable import WireSyncEngine
 
-extension LinkPreviewAssetUploadRequestStrategy {
-
-    public static func create(withManagedObjectContext managedObjectContext: NSManagedObjectContext, applicationStatus: ApplicationStatus) -> LinkPreviewAssetUploadRequestStrategy {
-        return LinkPreviewAssetUploadRequestStrategy(managedObjectContext: managedObjectContext, applicationStatus: applicationStatus, linkPreviewPreprocessor: nil, previewImagePreprocessor: nil)
-    }
-
+extension UserChangeInfo {
+    @objc(addObserver:forUser:inUserSession:)
+    public static func add(observer: ZMUserObserver,
+                           user: UserType,
+                           userSession: ZMUserSession) -> NSObjectProtocol? {
+        return add(observer: observer, for: user, in: userSession.managedObjectContext)
+    }    
 }

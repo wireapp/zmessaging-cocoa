@@ -33,56 +33,35 @@ class OTRTests : IntegrationTest {
     func testThatItSendsEncryptedTextMessage() {
         // given
         XCTAssert(login())
-        
-        guard let conversation = self.conversation(for: self.selfToUser1Conversation) else {return XCTFail()}
-        
-        let client1 = user1.clients.anyObject() as! MockUserClient
-        let text = "Foo bar, but encrypted"
-        self.mockTransportSession.resetReceivedRequests()
+        guard let conversation = self.conversation(for: self.selfToUser1Conversation) else { return XCTFail()}
         
         // when
         var message: ZMConversationMessage?
         userSession?.perform {
+            let text = "Foo bar, but encrypted"
             message = try! conversation.appendText(content: text)
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertNotNil(message)
-        let expected = "/conversations/\(conversation.remoteIdentifier!.transportString())/otr/messages"
-        let requests = mockTransportSession.receivedRequests()
-        XCTAssertEqual(requests[0].path, expected)
-        XCTAssertEqual(requests[1].path, "/users/prekeys")
-        XCTAssertEqual(requests[2].path, "/users/\(user1.identifier)/clients/\(client1.identifier!)")
-        XCTAssertEqual(requests[3].path, expected)
+        XCTAssertEqual(message?.deliveryState, .sent)
     }
     
     func testThatItSendsEncryptedImageMessage() {
         // given
         XCTAssert(login())
-
         guard let conversation = self.conversation(for: self.selfToUser1Conversation) else { return XCTFail() }
-        self.mockTransportSession.resetReceivedRequests()
-        let imageData = self.verySmallJPEGData()
-        let client1 = user1.clients.anyObject() as! MockUserClient
         
         // when
         var message: ZMConversationMessage? = nil
         userSession?.perform {
+            let imageData = self.verySmallJPEGData()
              message = try! conversation.appendImage(from: imageData)
         }
-        
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
         
         // then
-        XCTAssertNotNil(message)
-        let requests = mockTransportSession.receivedRequests()
-        let messageSendingPath = "/conversations/\(conversation.remoteIdentifier!.transportString())/otr/messages"
-        XCTAssertEqual(requests[0].path, "/assets/v3")
-        XCTAssertEqual(requests[1].path, messageSendingPath)
-        XCTAssertEqual(requests[2].path, "/users/prekeys")
-        XCTAssertEqual(requests[3].path, "/users/\(user1.identifier)/clients/\(client1.identifier!)")
-        XCTAssertEqual(requests[4].path, messageSendingPath)
+        XCTAssertEqual(message?.deliveryState, .sent)
     }
     
     func testThatItSendsARequestToUpdateSignalingKeys() {

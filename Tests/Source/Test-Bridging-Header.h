@@ -26,3 +26,5 @@
 #import "CallKitDelegateTests+Mocking.h"
 #import "IntegrationTest.h"
 #import "APNSTestsBase.h"
+#import "ZMClientRegistrationStatusTests.h"
+#import "UserProfileTests.h"
