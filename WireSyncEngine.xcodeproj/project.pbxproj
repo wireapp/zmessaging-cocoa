@@ -475,7 +475,6 @@
 		A951270A267CCC0200C5358B /* WireTransport.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A95126EF267CCC0200C5358B /* WireTransport.xcframework */; };
 		A951270C267CCC0200C5358B /* WireLinkPreview.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A95126F0267CCC0200C5358B /* WireLinkPreview.xcframework */; };
 		A951270E267CCC0200C5358B /* HTMLString.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A95126F1267CCC0200C5358B /* HTMLString.xcframework */; };
-		A9512710267CCC0200C5358B /* libPhoneNumber.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A95126F2267CCC0200C5358B /* libPhoneNumber.xcframework */; };
 		A9512712267CCC0200C5358B /* WireRequestStrategy.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A95126F3267CCC0200C5358B /* WireRequestStrategy.xcframework */; };
 		A951271C267CCD8500C5358B /* OCMock.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A951271A267CCD8500C5358B /* OCMock.xcframework */; };
 		A951271D267CCD8500C5358B /* OCMock.xcframework in Embed Framework */ = {isa = PBXBuildFile; fileRef = A951271A267CCD8500C5358B /* OCMock.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -485,6 +484,8 @@
 		A9692F8A1986476900849241 /* NSString_NormalizationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A9692F881986476900849241 /* NSString_NormalizationTests.m */; };
 		A97E4F56267CF681006FC545 /* ZMUserSessionTestsBase+ZMUserSessionConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A97E4F55267CF681006FC545 /* ZMUserSessionTestsBase+ZMUserSessionConfiguration.swift */; };
 		A97E4F5B267CFB2D006FC545 /* ZMUserSessionTests_NetworkState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A97E4F5A267CFB2D006FC545 /* ZMUserSessionTests_NetworkState.swift */; };
+		A9AE551526863A8D002AE720 /* libPhoneNumberiOS.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9AE551426863A8D002AE720 /* libPhoneNumberiOS.xcframework */; };
+		A9AE551626863A8D002AE720 /* libPhoneNumberiOS.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A9AE551426863A8D002AE720 /* libPhoneNumberiOS.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A9B53AAA24E12E240066FCC6 /* ZMAccountDeletedReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9B53AA924E12E240066FCC6 /* ZMAccountDeletedReason.swift */; };
 		A9C02605266F5B4B002E542B /* ZMClientRegistrationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C02604266F5B4B002E542B /* ZMClientRegistrationStatus.swift */; };
 		A9C0260A266F5D1C002E542B /* ZMClientRegistrationStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C02609266F5D1B002E542B /* ZMClientRegistrationStatusTests.swift */; };
@@ -695,6 +696,17 @@
 				A951271D267CCD8500C5358B /* OCMock.xcframework in Embed Framework */,
 			);
 			name = "Embed Framework";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A9AE551726863A8D002AE720 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				A9AE551626863A8D002AE720 /* libPhoneNumberiOS.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -1157,7 +1169,6 @@
 		A95126EF267CCC0200C5358B /* WireTransport.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = WireTransport.xcframework; path = Carthage/Build/WireTransport.xcframework; sourceTree = "<group>"; };
 		A95126F0267CCC0200C5358B /* WireLinkPreview.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = WireLinkPreview.xcframework; path = Carthage/Build/WireLinkPreview.xcframework; sourceTree = "<group>"; };
 		A95126F1267CCC0200C5358B /* HTMLString.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = HTMLString.xcframework; path = Carthage/Build/HTMLString.xcframework; sourceTree = "<group>"; };
-		A95126F2267CCC0200C5358B /* libPhoneNumber.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libPhoneNumber.xcframework; path = Carthage/Build/libPhoneNumber.xcframework; sourceTree = "<group>"; };
 		A95126F3267CCC0200C5358B /* WireRequestStrategy.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = WireRequestStrategy.xcframework; path = Carthage/Build/WireRequestStrategy.xcframework; sourceTree = "<group>"; };
 		A951271A267CCD8500C5358B /* OCMock.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = OCMock.xcframework; path = Carthage/Build/OCMock.xcframework; sourceTree = "<group>"; };
 		A951271B267CCD8500C5358B /* WireTesting.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = WireTesting.xcframework; path = Carthage/Build/WireTesting.xcframework; sourceTree = "<group>"; };
@@ -1165,6 +1176,7 @@
 		A9692F881986476900849241 /* NSString_NormalizationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSString_NormalizationTests.m; sourceTree = "<group>"; };
 		A97E4F55267CF681006FC545 /* ZMUserSessionTestsBase+ZMUserSessionConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSessionTestsBase+ZMUserSessionConfiguration.swift"; sourceTree = "<group>"; };
 		A97E4F5A267CFB2D006FC545 /* ZMUserSessionTests_NetworkState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMUserSessionTests_NetworkState.swift; sourceTree = "<group>"; };
+		A9AE551426863A8D002AE720 /* libPhoneNumberiOS.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libPhoneNumberiOS.xcframework; path = Carthage/Build/libPhoneNumberiOS.xcframework; sourceTree = "<group>"; };
 		A9B53AA924E12E240066FCC6 /* ZMAccountDeletedReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMAccountDeletedReason.swift; sourceTree = "<group>"; };
 		A9C02604266F5B4B002E542B /* ZMClientRegistrationStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZMClientRegistrationStatus.swift; sourceTree = "<group>"; };
 		A9C02609266F5D1B002E542B /* ZMClientRegistrationStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMClientRegistrationStatusTests.swift; sourceTree = "<group>"; };
@@ -1454,7 +1466,6 @@
 			files = (
 				A951270C267CCC0200C5358B /* WireLinkPreview.xcframework in Frameworks */,
 				A95126FC267CCC0200C5358B /* WireProtos.xcframework in Frameworks */,
-				A9512710267CCC0200C5358B /* libPhoneNumber.xcframework in Frameworks */,
 				A95126F6267CCC0200C5358B /* WireImages.xcframework in Frameworks */,
 				A9512702267CCC0200C5358B /* WireDataModel.xcframework in Frameworks */,
 				A9512704267CCC0200C5358B /* WireSystem.xcframework in Frameworks */,
@@ -1462,6 +1473,7 @@
 				A951270A267CCC0200C5358B /* WireTransport.xcframework in Frameworks */,
 				A95126F8267CCC0200C5358B /* avs.xcframework in Frameworks */,
 				A9512712267CCC0200C5358B /* WireRequestStrategy.xcframework in Frameworks */,
+				A9AE551526863A8D002AE720 /* libPhoneNumberiOS.xcframework in Frameworks */,
 				A9512700267CCC0200C5358B /* PINCache.xcframework in Frameworks */,
 				A95126FA267CCC0200C5358B /* ZipArchive.xcframework in Frameworks */,
 				A95126F4267CCC0200C5358B /* SwiftProtobuf.xcframework in Frameworks */,
@@ -1781,11 +1793,11 @@
 		540029B61918CA8500578793 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A9AE551426863A8D002AE720 /* libPhoneNumberiOS.xcframework */,
 				A951271A267CCD8500C5358B /* OCMock.xcframework */,
 				A951271B267CCD8500C5358B /* WireTesting.xcframework */,
 				A95126E6267CCC0200C5358B /* avs.xcframework */,
 				A95126F1267CCC0200C5358B /* HTMLString.xcframework */,
-				A95126F2267CCC0200C5358B /* libPhoneNumber.xcframework */,
 				A95126EA267CCC0200C5358B /* PINCache.xcframework */,
 				A95126E4267CCC0200C5358B /* SwiftProtobuf.xcframework */,
 				A95126E9267CCC0200C5358B /* WireCryptobox.xcframework */,
@@ -2777,6 +2789,7 @@
 				5498158F1A43232400A7CE2E /* Frameworks */,
 				549815901A43232400A7CE2E /* Headers */,
 				549815911A43232400A7CE2E /* Resources */,
+				A9AE551726863A8D002AE720 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
