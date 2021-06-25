@@ -59,6 +59,19 @@ class URLActionTests: ZMTBaseTest {
     }
     
     // MARK: - Deep link
+
+    func testThatItParsesJoinConversationLink() throws {
+        // given
+        let key = "KpvjjQSDgp9aniYGUXqi"
+        let code = "L6NrwRNGgsc1ekCVJoBp"
+        let url = URL(string: "wire://conversation-join/?key=\(key)&code=\(code)")!
+
+        // when
+        let action = try URLAction(url: url)
+
+        // then
+        XCTAssertEqual(action, URLAction.joinConversation(key: key, code: code))
+    }
     
     func testThatItParsesOpenConversationLink() throws {
         // given
@@ -85,6 +98,18 @@ class URLActionTests: ZMTBaseTest {
         
         // then
         XCTAssertEqual(action, URLAction.openUserProfile(id: uuid))
+    }
+
+    func testThatItDiscardsInvalidJoinConversationLink() throws {
+        // given
+        let key = "KpvjjQSDgp9aniYGUXqi"
+        let url = URL(string: "wire://conversation-join/?key=\(key)")!
+
+        // when
+        XCTAssertThrowsError(try URLAction(url: url)) { (error) in
+            // then
+            XCTAssertEqual(error as? DeepLinkRequestError, .malformedLink)
+        }
     }
     
     func testThatItDiscardsInvalidOpenUserProfileLink() {
