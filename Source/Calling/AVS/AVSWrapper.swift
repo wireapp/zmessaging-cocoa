@@ -38,6 +38,7 @@ public protocol AVSWrapperType {
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
     func handleSFTResponse(data: Data?, context: WireCallMessageToken)
     func update(callConfig: String?, httpStatusCode: Int)
+    func requestVideoStreams(conversationId: UUID, clients: [AVSClient])
     var muted: Bool { get set }
 }
 
@@ -184,6 +185,12 @@ public class AVSWrapper: AVSWrapperType {
     /// Updates the calling config.
     public func update(callConfig: String?, httpStatusCode: Int) {
         wcall_config_update(handle, httpStatusCode == 200 ? 0 : EPROTO, callConfig ?? "")
+    }
+
+    /// Requests AVS to load video streams for the given clients list
+    public func requestVideoStreams(conversationId: UUID, clients: [AVSClient]) {
+        let videoStreams = AVSVideoStreams(conversationId: conversationId.transportString(), clients: clients)
+        wcall_request_video_streams(handle, conversationId.transportString(), 0, videoStreams.json)
     }
 
     // MARK: - C Callback Handlers
