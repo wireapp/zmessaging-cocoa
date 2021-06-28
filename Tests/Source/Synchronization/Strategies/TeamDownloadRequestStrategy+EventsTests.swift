@@ -105,7 +105,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         }
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertNotNil(Team.fetch(withRemoteIdentifier: teamId, in: uiMOC))
+        XCTAssertNotNil(Team.fetch(with: teamId, in: uiMOC))
 
         let payload: [String: Any] = [
             "type": "team.delete",
@@ -144,7 +144,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         }
 
         XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.1))
-        XCTAssertNotNil(Team.fetch(withRemoteIdentifier: teamId, in: uiMOC))
+        XCTAssertNotNil(Team.fetch(with: teamId, in: uiMOC))
 
         let payload: [String: Any] = [
             "type": "team.delete",
@@ -275,8 +275,8 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         processEvent(fromPayload: payload)
 
         // then
-        guard let user = ZMUser.fetch(withRemoteIdentifier: userId, in: uiMOC) else { return XCTFail("No user") }
-        guard let team = Team.fetch(withRemoteIdentifier: teamId, in: uiMOC) else { return XCTFail("No team") }
+        guard let user = ZMUser.fetch(with: userId, in: uiMOC) else { return XCTFail("No user") }
+        guard let team = Team.fetch(with: teamId, in: uiMOC) else { return XCTFail("No team") }
         guard let member = user.membership else { return XCTFail("No member") }
 
         XCTAssert(user.needsToBeUpdatedFromBackend)
@@ -311,8 +311,8 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
 
         // then
         syncMOC.performGroupedBlockAndWait {
-            guard let user = ZMUser.fetch(withRemoteIdentifier: userId, in: self.syncMOC) else { return XCTFail("No user") }
-            guard let team = Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC) else { return XCTFail("No team") }
+            guard let user = ZMUser.fetch(with: userId, in: self.syncMOC) else { return XCTFail("No user") }
+            guard let team = Team.fetch(with: teamId, in: self.syncMOC) else { return XCTFail("No team") }
             guard let member = user.membership else { return XCTFail("No member") }
 
             XCTAssert(user.needsToBeUpdatedFromBackend)
@@ -346,8 +346,8 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
 
         // then
         syncMOC.performGroupedBlockAndWait {
-            guard let user = ZMUser.fetch(withRemoteIdentifier: userId, in: self.syncMOC) else { return XCTFail("No user") }
-            guard let team = Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC) else { return XCTFail("No team") }
+            guard let user = ZMUser.fetch(with: userId, in: self.syncMOC) else { return XCTFail("No user") }
+            guard let team = Team.fetch(with: teamId, in: self.syncMOC) else { return XCTFail("No team") }
             guard let member = user.membership else { return XCTFail("No member") }
 
             XCTAssert(user.needsToBeUpdatedFromBackend)
@@ -375,8 +375,8 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
 
         // then
         syncMOC.performGroupedBlockAndWait {
-            XCTAssertNil(ZMUser.fetch(withRemoteIdentifier: userId, in: self.syncMOC))
-            XCTAssertNil(Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC))
+            XCTAssertNil(ZMUser.fetch(with: userId, in: self.syncMOC))
+            XCTAssertNil(Team.fetch(with: teamId, in: self.syncMOC))
         }
     }
 
@@ -405,9 +405,9 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
 
         // then
         syncMOC.performGroupedBlockAndWait {
-            guard let team = Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC) else { return XCTFail("No team") }
+            guard let team = Team.fetch(with: teamId, in: self.syncMOC) else { return XCTFail("No team") }
             XCTAssertFalse(team.needsToRedownloadMembers)
-            guard let member = Member.fetch(withRemoteIdentifier: userId, in: self.syncMOC) else { return XCTFail("No member") }
+            guard let member = Member.fetch(with: userId, in: self.syncMOC) else { return XCTFail("No member") }
             XCTAssert(member.needsToBeUpdatedFromBackend)
         }
     }
@@ -444,10 +444,10 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
 
         // then
         syncMOC.performGroupedBlockAndWait {
-            XCTAssertNotNil(ZMUser.fetch(withRemoteIdentifier: userId, in: self.syncMOC))
+            XCTAssertNotNil(ZMUser.fetch(with: userId, in: self.syncMOC))
 
             // users won't be deleted as we might be in other (non-team) conversations with them
-            guard let team = Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC) else { return XCTFail("No team") }
+            guard let team = Team.fetch(with: teamId, in: self.syncMOC) else { return XCTFail("No team") }
             XCTAssertEqual(team.members, [])
         }
     }
@@ -526,11 +526,11 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
 
         // then
         syncMOC.performGroupedBlockAndWait {
-            guard let user = ZMUser.fetch(withRemoteIdentifier: userId, in: self.syncMOC) else { return XCTFail("No User") }
-            guard Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC) != nil else { return XCTFail("No User") }
+            guard let user = ZMUser.fetch(with: userId, in: self.syncMOC) else { return XCTFail("No User") }
+            guard Team.fetch(with: teamId, in: self.syncMOC) != nil else { return XCTFail("No User") }
             XCTAssertNil(user.membership)
-            guard let teamConversation = ZMConversation.fetch(withRemoteIdentifier: teamConversationId, in: self.syncMOC) else { return XCTFail("No Team Conversation") }
-            guard let conversation = ZMConversation.fetch(withRemoteIdentifier: conversationId, in: self.syncMOC) else { return XCTFail("No Conversation") }
+            guard let teamConversation = ZMConversation.fetch(with: teamConversationId, in: self.syncMOC) else { return XCTFail("No Team Conversation") }
+            guard let conversation = ZMConversation.fetch(with: conversationId, in: self.syncMOC) else { return XCTFail("No Conversation") }
             XCTAssertFalse(teamConversation.localParticipants.contains(user))
             XCTAssertFalse(conversation.localParticipants.contains(user))
         }
@@ -583,12 +583,12 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         
         // then
         syncMOC.performGroupedBlockAndWait {
-            guard let user = ZMUser.fetch(withRemoteIdentifier: userId, in: self.syncMOC) else { return XCTFail("No User") }
-            guard Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC) != nil else { return XCTFail("No User") }
+            guard let user = ZMUser.fetch(with: userId, in: self.syncMOC) else { return XCTFail("No User") }
+            guard Team.fetch(with: teamId, in: self.syncMOC) != nil else { return XCTFail("No User") }
             XCTAssertNil(user.membership)
-            guard let teamConversation = ZMConversation.fetch(withRemoteIdentifier: teamConversationId, in: self.syncMOC) else { return XCTFail("No Team Conversation") }
-            guard let teamAnotherConversation = ZMConversation.fetch(withRemoteIdentifier: teamAnotherConversationId, in: self.syncMOC) else { return XCTFail("No Team Conversation") }
-            guard let conversation = ZMConversation.fetch(withRemoteIdentifier: conversationId, in: self.syncMOC) else { return XCTFail("No Conversation") }
+            guard let teamConversation = ZMConversation.fetch(with: teamConversationId, in: self.syncMOC) else { return XCTFail("No Team Conversation") }
+            guard let teamAnotherConversation = ZMConversation.fetch(with: teamAnotherConversationId, in: self.syncMOC) else { return XCTFail("No Team Conversation") }
+            guard let conversation = ZMConversation.fetch(with: conversationId, in: self.syncMOC) else { return XCTFail("No Conversation") }
             
             self.checkLastMessage(in: teamConversation, isLeaveMessageFor: user, at: timestamp)
             self.checkLastMessage(in: teamAnotherConversation, isLeaveMessageFor: user, at: timestamp)
@@ -616,7 +616,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
 
         syncMOC.performGroupedBlock {
             let team = Team.fetchOrCreate(with: teamId, create: true, in: self.syncMOC, created: nil)!
-            let user = ZMUser(remoteID: userId, createIfNeeded: true, in: self.syncMOC)!
+            let user = ZMUser.fetchOrCreate(with: userId, domain: nil, in: self.syncMOC)
             user.needsToBeUpdatedFromBackend = false
             let member = Member.getOrCreateMember(for: user, in: team, context: self.syncMOC)
             member.needsToBeUpdatedFromBackend = false
@@ -635,8 +635,8 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         processEvent(fromPayload: payload)
 
         // then
-        guard let user = ZMUser.fetch(withRemoteIdentifier: userId, in: uiMOC) else { return XCTFail("No user") }
-        guard let team = Team.fetch(withRemoteIdentifier: teamId, in: uiMOC) else { return XCTFail("No team") }
+        guard let user = ZMUser.fetch(with: userId, in: uiMOC) else { return XCTFail("No user") }
+        guard let team = Team.fetch(with: teamId, in: uiMOC) else { return XCTFail("No team") }
         guard let member = user.membership else { return XCTFail("No member") }
 
         XCTAssertFalse(user.needsToBeUpdatedFromBackend)
@@ -669,7 +669,7 @@ class TeamDownloadRequestStrategy_EventsTests: MessagingTest {
         
         // then
         syncMOC.performGroupedBlockAndWait {
-            XCTAssertNil(ZMConversation.fetch(withRemoteIdentifier: conversationId, in: self.syncMOC))
+            XCTAssertNil(ZMConversation.fetch(with: conversationId, in: self.syncMOC))
         }
     }
 

@@ -174,7 +174,7 @@ public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMConte
         guard let identifier = event.teamId, let data = event.dataPayload else { return }
         guard let team = Team.fetchOrCreate(with: identifier, create: false, in: managedObjectContext, created: nil) else { return }
         guard let addedUserId = (data[TeamEventPayloadKey.user.rawValue] as? String).flatMap(UUID.init) else { return }
-        guard let user = ZMUser(remoteID: addedUserId, createIfNeeded: true, in: managedObjectContext) else { return }
+        let user = ZMUser.fetchOrCreate(with: addedUserId, domain: nil, in: managedObjectContext)
         user.needsToBeUpdatedFromBackend = true
         _ = Member.getOrCreateMember(for: user, in: team, context: managedObjectContext)
     }
@@ -183,7 +183,7 @@ public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMConte
         guard let identifier = event.teamId, let data = event.dataPayload else { return }
         guard let team = Team.fetchOrCreate(with: identifier, create: false, in: managedObjectContext, created: nil) else { return }
         guard let removedUserId = (data[TeamEventPayloadKey.user.rawValue] as? String).flatMap(UUID.init) else { return }
-        guard let user = ZMUser(remoteID: removedUserId, createIfNeeded: false, in: managedObjectContext) else { return }
+        guard let user = ZMUser.fetch(with: removedUserId, in: managedObjectContext) else { return }
         if let member = user.membership {
             if user.isSelfUser {
                 deleteAccount()
@@ -199,7 +199,7 @@ public final class TeamDownloadRequestStrategy: AbstractRequestStrategy, ZMConte
     private func processUpdatedMember(with event: ZMUpdateEvent) {
         guard nil != event.teamId, let data = event.dataPayload else { return }
         guard let userId = (data[TeamEventPayloadKey.user.rawValue] as? String).flatMap(UUID.init) else { return }
-        guard let member = Member.fetch(withRemoteIdentifier: userId, in: managedObjectContext) else { return }
+        guard let member = Member.fetch(with: userId, in: managedObjectContext) else { return }
         member.needsToBeUpdatedFromBackend = true
     }
     
