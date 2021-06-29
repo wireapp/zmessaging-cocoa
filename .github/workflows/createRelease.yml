@@ -5,8 +5,8 @@ name: create release for latest tag
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the develop branch
-#   push:
-#     branches: [ develop ]
+  push:
+    branches: [ develop ]
 #   pull_request:
 #     branches: [ develop ]
   # Allows you to run this workflow manually from the Actions tab
@@ -33,7 +33,8 @@ jobs:
   # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
         with:
-          ref: ${{ steps.findtag.outputs.tag }}  # At the latest released version, found earlier.
+          fetch-depth: 1
+          ref: ${{ steps.findtag.outputs.tag }}
       
       # Runs a set of commands using the runners shell
       - name: carthage
