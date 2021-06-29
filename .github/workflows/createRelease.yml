@@ -43,6 +43,7 @@ jobs:
         with:
           name: carthage
       - shell: bash
+        continue-on-error: true
         run: |
           ls Carthage
 
