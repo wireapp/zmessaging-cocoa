@@ -47,6 +47,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: carthage
         env:
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
