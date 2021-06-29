@@ -48,7 +48,6 @@ jobs:
           zip -r ${{env.framework}}.xcframework.zip "${{env.framework}}.xcframework"
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             ${{env.framework}}.xcframework
