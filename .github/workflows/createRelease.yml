@@ -54,12 +54,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           carthage bootstrap --use-xcframeworks --platform ios --cache-builds
-### TODO: zip first
-#       - name: Upload build artifact of carthage
-#         uses: actions/upload-artifact@v2
-#         with:
-#           name: carthage
-#           path: Carthage
+
+      - name: zip carthage artifact for caching
+        continue-on-error: true
+        run: |
+          zip -r Carthage.zip Carthage
+
+      - name: Upload build artifact of carthage
+        uses: actions/upload-artifact@v2
+        continue-on-error: true
+        with:
+          name: carthage
+          path: Carthage.zip
 
       - name: archive and create xcframework
         run: |
