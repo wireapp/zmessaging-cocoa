@@ -45,8 +45,9 @@ jobs:
       - shell: bash
         continue-on-error: true
         run: |
+          unzip Carthage.zip
           ls Carthage
-### TODO: unzip first
+          rm Carthage.zip
 
       # Runs a set of commands using the runners shell
       - name: carthage
@@ -58,7 +59,8 @@ jobs:
       - name: zip carthage artifact for caching
         continue-on-error: true
         run: |
-          zip -r Carthage.zip Carthage
+          ##ignore source code
+          zip -r Carthage.zip Carthage -x Carthage/Checkouts
 
       - name: Upload build artifact of carthage
         uses: actions/upload-artifact@v2
