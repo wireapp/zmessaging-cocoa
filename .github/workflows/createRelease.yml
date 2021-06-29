@@ -1,10 +1,6 @@
-# This is a basic workflow to help you get started with Actions
-
 name: create release for latest tag
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the develop branch
   push:
     branches: [ develop ]
 #   pull_request:
@@ -31,11 +27,10 @@ jobs:
 
       - run: echo "This repo is at version ${{ steps.findtag.outputs.tag }}"
   
-  # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-#       - uses: actions/checkout@v2
-#         with:
-#           fetch-depth: 1
-#           ref: ${{ steps.findtag.outputs.tag }}
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+          ref: ${{ steps.findtag.outputs.tag }}
       
 #       - name: Download Carthage for cache-builds speed up
 #         uses: actions/download-artifact@v2
