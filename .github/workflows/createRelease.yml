@@ -38,7 +38,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: archive and create xcframework
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_SECRET }}
         run: |
           carthage bootstrap --use-xcframeworks --platform ios
           
@@ -54,4 +54,4 @@ jobs:
           files: |
             ${{env.framework}}.xcframework
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_SECRET }}
