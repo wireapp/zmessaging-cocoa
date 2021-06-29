@@ -46,6 +46,7 @@ jobs:
         continue-on-error: true
         run: |
           ls Carthage
+### TODO: unzip first
 
       # Runs a set of commands using the runners shell
       - name: carthage
@@ -53,12 +54,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           carthage bootstrap --use-xcframeworks --platform ios --cache-builds
-
-      - name: Upload build artifact of carthage
-        uses: actions/upload-artifact@v2
-        with:
-          name: carthage
-          path: Carthage
+### TODO: zip first
+#       - name: Upload build artifact of carthage
+#         uses: actions/upload-artifact@v2
+#         with:
+#           name: carthage
+#           path: Carthage
 
       - name: archive and create xcframework
         run: |
