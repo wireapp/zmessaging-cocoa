@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: create release
+name: create release for latest tag
 
 # Controls when the workflow will run
 on:
@@ -22,13 +22,35 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: oprypin/find-latest-tag@v1
+        with:
+          repository: billypchan/wire-ios-sync-engine
+          releases-only: false  # We know that all relevant tags have a GitHub release for them.
+        id: findtag  # The step ID to refer to later.
 
+      - run: echo "This repo is at version ${{ steps.findtag.outputs.tag }}"
+  
+  # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ steps.findtag.outputs.tag }}  # At the latest released version, found earlier.
+      
       # Runs a set of commands using the runners shell
       - name: archive and create xcframework
         run: |
           carthage bootstrap --use-xcframeworks --platform ios
-          xcodebuild archive -project ./${{env.framework}}.xcodeproj -scheme ${{env.framework}} -configuration Release -destination 'generic/platform=iOS' -archivePath './${{env.framework}}.framework-iphoneos.xcarchive' SKIP_INSTALL=NO  BUILD_LIBRARY_FOR_DISTRIBUTION=YES
+          
+          xcodebuild archive -project ${{env.framework}}.xcodeproj -scheme ${{env.framework}} -configuration Release -destination 'generic/platform=iOS' -archivePath './${{env.framework}}.framework-iphoneos.xcarchive' SKIP_INSTALL=NO  BUILD_LIBRARY_FOR_DISTRIBUTION=YES
           xcodebuild archive -project ${{env.framework}}.xcodeproj -scheme ${{env.framework}} -configuration Release -destination 'generic/platform=iOS Simulator' -archivePath './${{env.framework}}.framework-iphonesimulator.xcarchive' SKIP_INSTALL=NO  BUILD_LIBRARY_FOR_DISTRIBUTION=YES
-          xcodebuild -create-xcframework -framework './${{env.framework}}.framework-iphoneos.xcarchive/Products/Library/Frameworks/${{env.framework}}.framework' -framework './${{env.framework}}.framework-iphonesimulator.xcarchive/Products/Library/Frameworks/${{env.framework}}.framework' -output '../${{env.framework}}.xcframework'
+          
+          xcodebuild -create-xcframework -framework './${{env.framework}}.framework-iphoneos.xcarchive/Products/Library/Frameworks/${{env.framework}}.framework' -framework './${{env.framework}}.framework-iphonesimulator.xcarchive/Products/Library/Frameworks/${{env.framework}}.framework' -output '${{env.framework}}.xcframework'
+      - uses: meeDamian/github-release@2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.findtag.outputs.tag }}
+          name: release ${{ steps.findtag.outputs.tag }}
+          body: >
+            test release
+          gzip: folders
+          files: >
+            ${{env.framework}}.xcframework
