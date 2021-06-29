@@ -14,6 +14,7 @@ on:
 
 env:
   framework: 'WireSyncEngine'
+  GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_SECRET }}
 jobs:
   # This workflow contains a single job called "build"
   build:
@@ -36,18 +37,17 @@ jobs:
           fetch-depth: 1
           ref: ${{ steps.findtag.outputs.tag }}
       
-      - name: Download Carthage for cache-builds speed up
-        uses: actions/download-artifact@v2
-        with:
-          name: carthage
-      - shell: bash
-        run: |
-          ls Carthage
+#       - name: Download Carthage for cache-builds speed up
+#         uses: actions/download-artifact@v2
+#         with:
+#           name: carthage
+#       - shell: bash
+#         run: |
+#           ls Carthage
 
       # Runs a set of commands using the runners shell
       - name: carthage
         env:
-          GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_SECRET }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_SECRET }}
         run: |
           carthage bootstrap --use-xcframeworks --platform ios --cache-builds
@@ -73,5 +73,3 @@ jobs:
           tag_name: ${{ steps.findtag.outputs.tag }}
           files: |
             ${{env.framework}}.xcframework.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_SECRET }}
