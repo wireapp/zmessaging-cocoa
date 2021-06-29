@@ -14,7 +14,7 @@ on:
 
 env:
   framework: 'WireSyncEngine'
-  GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_SECRET }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   # This workflow contains a single job called "build"
   build:
@@ -48,8 +48,6 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: carthage
-        env:
-          GITHUB_ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_SECRET }}
         run: |
           carthage bootstrap --use-xcframeworks --platform ios --cache-builds
 
