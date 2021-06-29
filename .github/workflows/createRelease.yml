@@ -37,13 +37,14 @@ jobs:
           fetch-depth: 1
           ref: ${{ steps.findtag.outputs.tag }}
       
-#       - name: Download Carthage for cache-builds speed up
-#         uses: actions/download-artifact@v2
-#         with:
-#           name: carthage
-#       - shell: bash
-#         run: |
-#           ls Carthage
+      - name: Download Carthage for cache-builds speed up
+        uses: actions/download-artifact@v2
+        continue-on-error: true
+        with:
+          name: carthage
+      - shell: bash
+        run: |
+          ls Carthage
 
       # Runs a set of commands using the runners shell
       - name: carthage
