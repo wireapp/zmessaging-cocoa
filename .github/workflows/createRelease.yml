@@ -49,6 +49,8 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: carthage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           carthage bootstrap --use-xcframeworks --platform ios --cache-builds
 
