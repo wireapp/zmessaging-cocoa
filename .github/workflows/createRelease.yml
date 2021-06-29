@@ -53,11 +53,11 @@ jobs:
         run: |
           carthage bootstrap --use-xcframeworks --platform ios --cache-builds
 
-      - name: zip carthage artifact for caching
-        continue-on-error: true
-        run: |
-          ##ignore source code
-          zip -r Carthage.zip Carthage -x Carthage/Checkouts
+#       - name: zip carthage artifact for caching
+#         continue-on-error: true
+#         run: |
+#           ##ignore source code
+#           zip -r Carthage.zip Carthage -x Carthage/Checkouts
 
       - name: archive and create xcframework
         run: |
@@ -75,9 +75,9 @@ jobs:
           files: |
             ${{env.framework}}.xcframework.zip
 
-      - name: Upload build artifact of carthage
-        uses: actions/upload-artifact@v2
-        continue-on-error: true
-        with:
-          name: carthage
-          path: Carthage.zip
+#       - name: Upload build artifact of carthage
+#         uses: actions/upload-artifact@v2
+#         continue-on-error: true
+#         with:
+#           name: carthage
+#           path: Carthage.zip
