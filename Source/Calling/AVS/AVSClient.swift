@@ -18,12 +18,38 @@
 
 import Foundation
 
-struct AVSVideoStreams: Codable, JSONStringEncodable {
-    let conversationId: String
-    let clients: [AVSClient]
+/// Used to identify a participant in a call.
+
+public struct AVSClient: Hashable {
+
+    public let userId: UUID
+    public let clientId: String
+
+    public init(userId: UUID, clientId: String) {
+        self.userId = userId
+        self.clientId = clientId
+    }
+
+    init?(userClient: UserClient) {
+        guard
+            let userId = userClient.user?.remoteIdentifier,
+            let clientId = userClient.remoteIdentifier
+        else {
+            return nil
+        }
+
+        self.init(userId: userId, clientId: clientId)
+    }
+
+}
+
+extension AVSClient: Codable {
 
     enum CodingKeys: String, CodingKey {
-        case conversationId = "convid"
-        case clients
+
+        case userId = "userid"
+        case clientId = "clientid"
+
     }
+
 }

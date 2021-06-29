@@ -15,15 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
-
 import Foundation
 
-struct AVSVideoStreams: Codable, JSONStringEncodable {
-    let conversationId: String
-    let clients: [AVSClient]
+protocol JSONStringEncodable: Encodable { }
 
-    enum CodingKeys: String, CodingKey {
-        case conversationId = "convid"
-        case clients
+extension JSONStringEncodable {
+    var json: String? {
+        guard let data = try? JSONEncoder().encode(self) else { return nil }
+        return String(data: data, encoding: .utf8)
     }
 }

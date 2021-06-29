@@ -18,12 +18,17 @@
 
 import Foundation
 
-struct AVSVideoStreams: Codable, JSONStringEncodable {
-    let conversationId: String
-    let clients: [AVSClient]
+public struct AVSParticipantsChange: Codable {
 
-    enum CodingKeys: String, CodingKey {
-        case conversationId = "convid"
-        case clients
+    let convid: UUID
+    let members: [Member]
+
+    public struct Member: Codable {
+
+        let userid: UUID
+        let clientid: String
+        let aestab: AudioState
+        let vrecv: VideoState
+        let muted: MicrophoneState
     }
 }
