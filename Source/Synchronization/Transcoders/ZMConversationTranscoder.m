@@ -549,12 +549,29 @@ static NSString *const ConversationTeamManagedKey = @"managed";
     
     ZMTransportRequest *request = nil;
     ZMConversation *insertedConversation = (ZMConversation *) managedObject;
-    
-    NSArray *participantUUIDs = [[insertedConversation.localParticipantsExcludingSelf allObjects] mapWithBlock:^id(ZMUser *user) {
-        return [user.remoteIdentifier transportString];
-    }];
+    NSMutableDictionary *payload = [NSMutableDictionary new];
 
-    NSMutableDictionary *payload = [@{ @"users" : participantUUIDs } mutableCopy];
+    BOOL hasQualifiedUsers = [insertedConversation.localParticipantsExcludingSelf.allObjects filterWithBlock:^BOOL(ZMUser *user) {
+        return user.domain != nil;
+    }].count == insertedConversation.localParticipantsExcludingSelf.count;
+
+    if (hasQualifiedUsers) {
+        NSArray *qualifiedParticipantUUIDs = [[insertedConversation.localParticipantsExcludingSelf allObjects] mapWithBlock:^id(ZMUser *user) {
+            return @{
+                @"id": user.remoteIdentifier.transportString,
+                @"domain": user.domain
+            };
+        }];
+
+        payload[@"qualified_users"] = qualifiedParticipantUUIDs;
+        payload[@"users"] = @[];
+    } else {
+        NSArray *participantUUIDs = [[insertedConversation.localParticipantsExcludingSelf allObjects] mapWithBlock:^id(ZMUser *user) {
+            return [user.remoteIdentifier transportString];
+        }];
+
+        payload[@"users"] = participantUUIDs;
+    }
 
     payload[@"conversation_role"] = ZMConversation.defaultMemberRoleName;
 
