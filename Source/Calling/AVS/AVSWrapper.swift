@@ -38,7 +38,7 @@ public protocol AVSWrapperType {
     func handleResponse(httpStatus: Int, reason: String, context: WireCallMessageToken)
     func handleSFTResponse(data: Data?, context: WireCallMessageToken)
     func update(callConfig: String?, httpStatusCode: Int)
-    func requestVideoStreams(conversationId: UUID, clients: [AVSClient])
+    func requestVideoStreams(_ videoStreams: AVSVideoStreams, conversationId: UUID)
     var muted: Bool { get set }
 }
 
@@ -188,8 +188,7 @@ public class AVSWrapper: AVSWrapperType {
     }
 
     /// Requests AVS to load video streams for the given clients list
-    public func requestVideoStreams(conversationId: UUID, clients: [AVSClient]) {
-        let videoStreams = AVSVideoStreams(conversationId: conversationId.transportString(), clients: clients)
+    public func requestVideoStreams(_ videoStreams: AVSVideoStreams, conversationId: UUID) {
         wcall_request_video_streams(handle, conversationId.transportString(), 0, videoStreams.json)
     }
 

@@ -572,7 +572,8 @@ extension WireCallCenterV3 {
     ///   - conversationId: The identifier of the conversation where the video call is hosted.
     ///   - clients: The list of clients for which AVS should load video streams.
     public func requestVideoStreams(conversationId: UUID, clients: [AVSClient]) {
-        avsWrapper.requestVideoStreams(conversationId: conversationId, clients: clients)
+        let videoStreams = AVSVideoStreams(conversationId: conversationId.transportString(), clients: clients)
+        avsWrapper.requestVideoStreams(videoStreams, conversationId: conversationId)
     }
 
     private func callType(for conversation: ZMConversation, startedWithVideo: Bool, isConferenceCall: Bool) -> AVSCallType {

@@ -18,7 +18,7 @@
 
 import Foundation
 
-struct AVSVideoStreams: Codable, JSONStringEncodable {
+public struct AVSVideoStreams: Codable, Equatable, JSONStringEncodable {
     let conversationId: String
     let clients: [AVSClient]
 
