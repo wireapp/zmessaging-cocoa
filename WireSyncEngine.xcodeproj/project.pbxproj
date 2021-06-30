@@ -736,6 +736,8 @@
 		098CFBBA1B7B9C94000B02B1 /* BaseTestSwiftHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseTestSwiftHelpers.swift; sourceTree = "<group>"; };
 		09914E501BD6613600C10BF8 /* ConversationTests+OTR.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "ConversationTests+OTR.m"; path = "../E2EE/ConversationTests+OTR.m"; sourceTree = "<group>"; };
 		09914E521BD6613D00C10BF8 /* ZMDecodedAPSMessageTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMDecodedAPSMessageTest.m; sourceTree = "<group>"; };
+		0994E1DD1B835C4900A51721 /* ios-test-host.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "ios-test-host.xcconfig"; sourceTree = "<group>"; };
+		0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "ios-test-target.xcconfig"; sourceTree = "<group>"; };
 		0994E1DF1B835C4900A51721 /* ios.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ios.xcconfig; sourceTree = "<group>"; };
 		0994E1E21B835C4900A51721 /* project-common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "project-common.xcconfig"; sourceTree = "<group>"; };
 		0994E1E31B835C4900A51721 /* project-debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "project-debug.xcconfig"; sourceTree = "<group>"; };
@@ -1509,6 +1511,8 @@
 		0994E1DB1B835C4900A51721 /* zmc-config */ = {
 			isa = PBXGroup;
 			children = (
+				0994E1DD1B835C4900A51721 /* ios-test-host.xcconfig */,
+				0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */,
 				0994E1DF1B835C4900A51721 /* ios.xcconfig */,
 				0994E1E21B835C4900A51721 /* project-common.xcconfig */,
 				0994E1E31B835C4900A51721 /* project-debug.xcconfig */,
@@ -3687,6 +3691,7 @@
 /* Begin XCBuildConfiguration section */
 		169BA1DB25ECDBA300374343 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				INFOPLIST_FILE = "$(SRCROOT)/Tests/Resources/UnitTests-Info.plist";
@@ -3701,6 +3706,7 @@
 		};
 		169BA1DC25ECDBA300374343 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				INFOPLIST_FILE = "$(SRCROOT)/Tests/Resources/UnitTests-Info.plist";
@@ -3715,6 +3721,7 @@
 		};
 		3E1860AE191A56F7000FE027 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0994E1DD1B835C4900A51721 /* ios-test-host.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "WireSyncEngine Test Host.entitlements";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3728,6 +3735,7 @@
 		};
 		3E1860AF191A56F7000FE027 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0994E1DD1B835C4900A51721 /* ios-test-host.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "WireSyncEngine Test Host.entitlements";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3741,6 +3749,7 @@
 		};
 		3E1860D3191A649D000FE027 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				INFOPLIST_FILE = "$(SRCROOT)/Tests/Resources/UnitTests-Info.plist";
@@ -3755,6 +3764,7 @@
 		};
 		3E1860D4191A649D000FE027 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				INFOPLIST_FILE = "$(SRCROOT)/Tests/Resources/UnitTests-Info.plist";
