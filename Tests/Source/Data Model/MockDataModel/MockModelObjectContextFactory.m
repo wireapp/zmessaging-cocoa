@@ -87,8 +87,11 @@
     [testUUIDDataAttribute setName:@"testUUID_data"];
     [testUUIDDataAttribute setAttributeType:NSBinaryDataAttributeType];
     [testUUIDDataAttribute setOptional:YES];
+    //Prevent error: 'setIndexed:' is deprecated: first deprecated in iOS 11.0 - Use NSEntityDescription.indexes instead
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     [testUUIDDataAttribute setIndexed:YES];
-    
+#pragma clang diagnostic pop
     
     NSAttributeDescription *needsToBeUpdatedFromBackendAttribute = [[NSAttributeDescription alloc] init];
     [needsToBeUpdatedFromBackendAttribute setName:@"needsToBeUpdatedFromBackend"];
@@ -146,8 +149,11 @@
     [remoteIdentifierDataAttribute setName:@"remoteIdentifier_data"];
     [remoteIdentifierDataAttribute setAttributeType:NSBinaryDataAttributeType];
     [remoteIdentifierDataAttribute setOptional:YES];
+    //Prevent error: 'setIndexed:' is deprecated: first deprecated in iOS 11.0 - Use NSEntityDescription.indexes instead
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     [remoteIdentifierDataAttribute setIndexed:YES];
-    
+#pragma clang diagnostic pop
     NSAttributeDescription *testUUIDAttribute = [[NSAttributeDescription alloc] init];
     [testUUIDAttribute setName:@"testUUID"];
     [testUUIDAttribute setAttributeType:NSUndefinedAttributeType];
@@ -158,8 +164,12 @@
     [testUUIDDataAttribute setName:@"testUUID_data"];
     [testUUIDDataAttribute setAttributeType:NSBinaryDataAttributeType];
     [testUUIDDataAttribute setOptional:YES];
-    [testUUIDDataAttribute setIndexed:YES];
 
+    //Prevent error: 'setIndexed:' is deprecated: first deprecated in iOS 11.0 - Use NSEntityDescription.indexes instead
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    [testUUIDDataAttribute setIndexed:YES];
+#pragma clang diagnostic pop
     NSAttributeDescription *needsToBeUpdatedFromBackendAttribute = [[NSAttributeDescription alloc] init];
     [needsToBeUpdatedFromBackendAttribute setName:@"needsToBeUpdatedFromBackend"];
     [needsToBeUpdatedFromBackendAttribute setAttributeType:NSBooleanAttributeType];
