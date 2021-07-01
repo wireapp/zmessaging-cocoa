@@ -87,11 +87,6 @@
     [testUUIDDataAttribute setName:@"testUUID_data"];
     [testUUIDDataAttribute setAttributeType:NSBinaryDataAttributeType];
     [testUUIDDataAttribute setOptional:YES];
-    //Prevent error: 'setIndexed:' is deprecated: first deprecated in iOS 11.0 - Use NSEntityDescription.indexes instead
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [testUUIDDataAttribute setIndexed:YES];
-#pragma clang diagnostic pop
     
     NSAttributeDescription *needsToBeUpdatedFromBackendAttribute = [[NSAttributeDescription alloc] init];
     [needsToBeUpdatedFromBackendAttribute setName:@"needsToBeUpdatedFromBackend"];
@@ -107,6 +102,7 @@
     NSEntityDescription *mockEntity2 = [[NSEntityDescription alloc] init];
     [mockEntity2 setName:@"MockEntity2"];
     [mockEntity2 setManagedObjectClassName:NSStringFromClass([MockEntity2 class])];
+    mockEntity2.indexes = @[testUUIDDataAttribute];
 
     [mockEntity2 setProperties:@[fieldAttribute, modifiedDataFieldsAttribute, needsToBeUpdatedFromBackendAttribute, testUUIDAttribute, testUUIDDataAttribute]];
     return mockEntity2;
@@ -149,11 +145,9 @@
     [remoteIdentifierDataAttribute setName:@"remoteIdentifier_data"];
     [remoteIdentifierDataAttribute setAttributeType:NSBinaryDataAttributeType];
     [remoteIdentifierDataAttribute setOptional:YES];
-    //Prevent error: 'setIndexed:' is deprecated: first deprecated in iOS 11.0 - Use NSEntityDescription.indexes instead
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [remoteIdentifierDataAttribute setIndexed:YES];
-#pragma clang diagnostic pop
+    mockEntity.indexes = @[remoteIdentifierDataAttribute];
+
+    
     NSAttributeDescription *testUUIDAttribute = [[NSAttributeDescription alloc] init];
     [testUUIDAttribute setName:@"testUUID"];
     [testUUIDAttribute setAttributeType:NSUndefinedAttributeType];
@@ -164,12 +158,9 @@
     [testUUIDDataAttribute setName:@"testUUID_data"];
     [testUUIDDataAttribute setAttributeType:NSBinaryDataAttributeType];
     [testUUIDDataAttribute setOptional:YES];
+    mockEntity.indexes = @[testUUIDDataAttribute];
 
-    //Prevent error: 'setIndexed:' is deprecated: first deprecated in iOS 11.0 - Use NSEntityDescription.indexes instead
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [testUUIDDataAttribute setIndexed:YES];
-#pragma clang diagnostic pop
+    
     NSAttributeDescription *needsToBeUpdatedFromBackendAttribute = [[NSAttributeDescription alloc] init];
     [needsToBeUpdatedFromBackendAttribute setName:@"needsToBeUpdatedFromBackend"];
     [needsToBeUpdatedFromBackendAttribute setAttributeType:NSBooleanAttributeType];
