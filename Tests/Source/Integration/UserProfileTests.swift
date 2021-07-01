@@ -19,7 +19,6 @@
 @testable import WireSyncEngine
 
 extension UserChangeInfo {
-    @objc(addObserver:forUser:inUserSession:)
     public static func add(observer: ZMUserObserver,
                            user: UserType,
                            userSession: ZMUserSession) -> NSObjectProtocol? {
