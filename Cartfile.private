@@ -1,2 +1,2 @@
-github "billypchan/wire-ios-mocktransport" ~> 129.0.1
+github "billypchan/wire-ios-mocktransport" ~> 129.1
 github "billypchan/wire-ios-testing" ~> 23.0.16
