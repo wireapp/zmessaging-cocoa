@@ -2721,7 +2721,6 @@
 				3E186084191A56F6000FE027 /* Sources */,
 				3E186085191A56F6000FE027 /* Frameworks */,
 				3E186086191A56F6000FE027 /* Resources */,
-				096960A81B6670E5006DF53B /* Copy Carthage Frameworks */,
 			);
 			buildRules = (
 			);
@@ -2915,41 +2914,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		096960A81B6670E5006DF53B /* Copy Carthage Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/Carthage/Build/iOS/WireImages.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/OCMock.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/WireSystem.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/WireTesting.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/WireTransport.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/WireMockTransport.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/WireProtos.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/WireCryptobox.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/WireUtilities.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/libPhoneNumberiOS.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/PINCache.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/WireLinkPreview.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/WireRequestStrategy.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/avs.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/ZipArchive.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/HTMLString.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/SwiftProtobuf.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/WireDataModel.framework",
-			);
-			name = "Copy Carthage Frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# to run locally, replace with $(BUILT_PRODUCTS_DIR)/WireSyncEngine.framework\n/usr/local/bin/carthage copy-frameworks\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		169BA1CE25ECDBA300374343 /* Sources */ = {
