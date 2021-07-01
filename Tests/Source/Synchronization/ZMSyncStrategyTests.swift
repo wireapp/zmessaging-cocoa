@@ -21,7 +21,7 @@ import Foundation
 extension ZMSyncStrategyTests {
     func testThatContextChangeTrackerIsInformed_WhenObjectIsInserted_OnUIContext() {
         // given
-        ZMClientMessage(nonce: NSUUID.create(), managedObjectContext: uiMOC)
+        let _ = ZMClientMessage(nonce: NSUUID.create(), managedObjectContext: uiMOC)
         
         // when
         uiMOC.saveOrRollback()
@@ -29,5 +29,34 @@ extension ZMSyncStrategyTests {
         
         // then
         XCTAssertTrue(mockContextChangeTracker.objectsDidChangeCalled)
+    }
+    
+    func testThatContextChangeTrackerIsInformed_WhenObjectIsInserted_OnSyncContext() {
+        // given
+        syncMOC.performGroupedBlockThenWait(forReasonableTimeout: { [self] in
+            let _ = ZMClientMessage(nonce: NSUUID.create(), managedObjectContext: syncMOC)
+        })
+        
+        // when
+        syncMOC.performGroupedBlockThenWait(forReasonableTimeout: { [self] in
+            XCTAssertTrue(syncMOC.saveOrRollback())
+        })
+        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+        
+        // then
+        XCTAssertTrue(mockContextChangeTracker.objectsDidChangeCalled)
+    }
+    
+    func testThatItNotifiesTheOperationLoopOfNewOperation_WhenContextIsSaved() {
+        // expect
+        expectation(forNotification: NSNotification.Name("RequestAvailableNotification"), object: nil, handler: nil)
+        
+        // when
+        let _ = ZMClientMessage(nonce: NSUUID.create(), managedObjectContext: uiMOC)
+        uiMOC.saveOrRollback()
+        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+        
+        // then
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
 }
