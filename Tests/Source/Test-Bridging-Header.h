@@ -29,3 +29,4 @@
 #import "ZMClientRegistrationStatusTests.h"
 #import "UserProfileTests.h"
 #import "ZMOperationLoopTests.h"
+#import "ZMSyncStrategyTests.h"

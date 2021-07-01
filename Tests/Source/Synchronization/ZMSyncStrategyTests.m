@@ -17,15 +17,7 @@
 // 
 
 
-@import UIKit;
-@import WireTransport;
-@import WireSyncEngine;
-@import WireDataModel;
-@import WireRequestStrategy;
-@import OCMock;
-
-
-#import "MessagingTest.h"
+#import "ZMSyncStrategyTests.h"
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
 #import "MessagingTest+EventFactory.h"
@@ -61,21 +53,6 @@
 
 @end
 
-
-@interface ZMSyncStrategyTests : MessagingTest <ZMRequestCancellation, ZMSyncStateDelegate>
-
-@property (nonatomic) ZMSyncStrategy *sut;
-
-@property (nonatomic) MockSyncStateDelegate *syncStateDelegate;
-@property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
-
-@property (nonatomic) MockEventConsumer *mockEventConsumer;
-@property (nonatomic) MockContextChangeTracker *mockContextChangeTracker;
-
-@property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects1;
-@property (nonatomic) NSFetchRequest *fetchRequestForTrackedObjects2;
-
-@end
 
 @implementation ZMSyncStrategyTests;
 
@@ -275,6 +252,7 @@
     XCTAssertEqualObjects(name, uiUser.name);
 }
 
+///TODO:
 - (void)testThatContextChangeTrackerIsInformed_WhenObjectIsInserted_OnUIContext {
     // given
     NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC]);
