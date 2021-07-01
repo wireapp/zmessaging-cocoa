@@ -26,4 +26,4 @@ VALID_ARCHS[sdk=iphonesimulator*] = x86_64
 
 // Linking
 //
-FRAMEWORK_SEARCH_PATHS = $(DEVELOPER_FRAMEWORKS_DIR) $(inherited) $(PROJECT_DIR)/Carthage/Build/iOS
+FRAMEWORK_SEARCH_PATHS = $(DEVELOPER_FRAMEWORKS_DIR) $(inherited) $(PROJECT_DIR)/Carthage/Build
