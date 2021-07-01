@@ -23,9 +23,9 @@ extension ZMOperationLoopTests {
         // given
         let request = ZMTransportRequest(path: "/boo", method: .methodGET, payload: nil)
         request.add(ZMCompletionHandler(on:syncMOC,
-                                                         block: { [weak self] _ in
-                                                            _ = ZMClientMessage(nonce: NSUUID.create(), managedObjectContext: self!.syncMOC)
-        }))
+                                        block: { [weak self] _ in
+                                            _ = ZMClientMessage(nonce: NSUUID.create(), managedObjectContext: self!.syncMOC)
+                                        }))
         mockRequestStrategy.mockRequest = request
         
         RequestAvailableNotification.notifyNewRequestsAvailable(self) // this will enqueue `request`
@@ -45,5 +45,31 @@ extension ZMOperationLoopTests {
         // then
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         
+    }
+    
+    func testThatMOCIsSavedOnFailedRequest() {
+        // given
+        let request = ZMTransportRequest(path: "/boo", method: .methodGET, payload: nil)
+        request.add(ZMCompletionHandler(on: syncMOC,
+                                        block: { [weak self] _ in
+                                            _ = ZMClientMessage(nonce: NSUUID.create(), managedObjectContext: self!.syncMOC)
+                                        }))
+        mockRequestStrategy.mockRequest = request
+        
+        RequestAvailableNotification.notifyNewRequestsAvailable(self) // this will enqueue `request`
+        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+        
+        // expect
+        expectation(
+            forNotification: .NSManagedObjectContextDidSave,
+            object: nil,
+            handler: nil)
+        
+        // when
+        request.complete(with: ZMTransportResponse(payload: nil, httpStatus: 400, transportSessionError: nil))
+        _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
+        
+        // then
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
     }
 }
