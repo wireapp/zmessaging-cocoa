@@ -1172,6 +1172,7 @@
 		A9692F881986476900849241 /* NSString_NormalizationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSString_NormalizationTests.m; sourceTree = "<group>"; };
 		A97E4F55267CF681006FC545 /* ZMUserSessionTestsBase+ZMUserSessionConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSessionTestsBase+ZMUserSessionConfiguration.swift"; sourceTree = "<group>"; };
 		A97E4F5A267CFB2D006FC545 /* ZMUserSessionTests_NetworkState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMUserSessionTests_NetworkState.swift; sourceTree = "<group>"; };
+		A9A239AE268E124D004B1C22 /* ZMOperationLoopTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZMOperationLoopTests.h; sourceTree = "<group>"; };
 		A9B53AA924E12E240066FCC6 /* ZMAccountDeletedReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMAccountDeletedReason.swift; sourceTree = "<group>"; };
 		A9C02604266F5B4B002E542B /* ZMClientRegistrationStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZMClientRegistrationStatus.swift; sourceTree = "<group>"; };
 		A9C02609266F5D1B002E542B /* ZMClientRegistrationStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMClientRegistrationStatusTests.swift; sourceTree = "<group>"; };
@@ -2335,6 +2336,7 @@
 				BF2A9D561D6B5BB000FA7DBC /* Decoding */,
 				54A170661B300700001B41A5 /* Strategies */,
 				85D85104C6D06FA902E3253C /* ZMSyncStrategyTests.m */,
+				A9A239AE268E124D004B1C22 /* ZMOperationLoopTests.h */,
 				85D858D72B109C5D9A85645B /* ZMOperationLoopTests.m */,
 				F95ECF501B94BD05009F91BA /* ZMHotFixTests.m */,
 				F11E35D52040172200D4D5DB /* ZMHotFixTests.swift */,

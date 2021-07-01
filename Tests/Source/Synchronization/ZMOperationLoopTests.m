@@ -30,6 +30,7 @@
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
+#import "ZMOperationLoopTests.h"
 
 @interface ZMOperationLoopTests : MessagingTest
 
