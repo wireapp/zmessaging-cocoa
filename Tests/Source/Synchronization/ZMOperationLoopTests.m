@@ -17,39 +17,14 @@
 // 
 
 
-@import WireTransport;
-@import WireCryptobox;
-@import WireDataModel;
-@import avs;
-
 #import "MessagingTest.h"
 #import "ZMSyncStrategy.h"
-#import <WireSyncEngine/WireSyncEngine-Swift.h>
 #import "Tests-Swift.h"
 #import "MockModelObjectContextFactory.h"
 #import "ZMOperationLoop+Private.h"
 #import "ZMSyncStrategy+Internal.h"
 #import "ZMSyncStrategy+ManagedObjectChanges.h"
 #import "ZMOperationLoopTests.h"
-
-@interface ZMOperationLoopTests : MessagingTest
-
-@property (nonatomic) ZMOperationLoop *sut;
-@property (nonatomic) ZMPersistentCookieStorage *cookieStorage;
-@property (nonatomic) MockPushChannel* mockPushChannel;
-@property (nonatomic) RecordingMockTransportSession *mockTransportSesssion;
-@property (nonatomic) ApplicationStatusDirectory *applicationStatusDirectory;
-@property (nonatomic) PushNotificationStatus *pushNotificationStatus;
-@property (nonatomic) CallEventStatus *callEventStatus;
-@property (nonatomic) SyncStatus *syncStatus;
-@property (nonatomic) MockSyncStateDelegate *mockSyncDelegate;
-@property (nonatomic) MockRequestStrategy *mockRequestStrategy;
-@property (nonatomic) MockUpdateEventProcessor *mockUpdateEventProcessor;
-@property (nonatomic) MockRequestCancellation *mockRequestCancellation;
-@property (nonatomic) NSMutableArray *pushChannelNotifications;
-@property (nonatomic) id pushChannelObserverToken;
-
-@end
 
 @implementation ZMOperationLoopTests;
 

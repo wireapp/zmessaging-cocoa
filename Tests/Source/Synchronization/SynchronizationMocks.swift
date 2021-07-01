@@ -324,7 +324,8 @@ public class MockSyncStatus : SyncStatus {
     
 }
 
-@objcMembers public class MockRequestStrategy: NSObject, RequestStrategy {
+@objcMembers
+public class MockRequestStrategy: NSObject, RequestStrategy {
     
     
     public var mockRequestQueue: [ZMTransportRequest] = []
