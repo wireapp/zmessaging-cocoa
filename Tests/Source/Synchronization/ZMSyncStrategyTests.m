@@ -252,19 +252,6 @@
     XCTAssertEqualObjects(name, uiUser.name);
 }
 
-///TODO:
-- (void)testThatContextChangeTrackerIsInformed_WhenObjectIsInserted_OnUIContext {
-    // given
-    NOT_USED([[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC]);
-    
-    // when
-    [self.uiMOC saveOrRollback];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertTrue(self.mockContextChangeTracker.objectsDidChangeCalled);
-}
-
 - (void)testThatContextChangeTrackerIsInformed_WhenObjectIsInserted_OnSyncContext {
     // given
     [self.syncMOC performGroupedBlockThenWaitForReasonableTimeout:^{
