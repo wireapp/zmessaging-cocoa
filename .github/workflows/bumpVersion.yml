@@ -41,7 +41,7 @@ jobs:
         git config --global user.email "iosx@wire.com"
         git config --global user.name "Github action - Bump version"
         git add .
-        git commit -m"[skip ci] update version.xcconfig for '${{steps.dry_run.outputs.new_tag}}'" || true
+        git commit -m"update version.xcconfig for '${{steps.dry_run.outputs.new_tag}}'" || true
         git push || true
 
     - name: Bump version and push tag, after version.xcconfig is updated
