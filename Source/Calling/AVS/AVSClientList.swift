@@ -18,7 +18,7 @@
 
 import Foundation
 
-struct AVSClientList: Codable, JSONStringEncodable {
+struct AVSClientList: Codable {
 
     let clients: [AVSClient]
 

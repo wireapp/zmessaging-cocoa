@@ -433,7 +433,7 @@
 		634976F8268A200C00824A05 /* AVSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634976F7268A200C00824A05 /* AVSClient.swift */; };
 		634976FD268A205A00824A05 /* AVSClientList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634976FC268A205A00824A05 /* AVSClientList.swift */; };
 		63497702268A20EC00824A05 /* AVSParticipantsChange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63497701268A20EC00824A05 /* AVSParticipantsChange.swift */; };
-		6349770A268A250E00824A05 /* JSONStringEncodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63497709268A250E00824A05 /* JSONStringEncodable.swift */; };
+		6349770A268A250E00824A05 /* Encodable+JSONString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63497709268A250E00824A05 /* Encodable+JSONString.swift */; };
 		6349771E268B7C4300824A05 /* AVSVideoStreamsTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6349771D268B7C4300824A05 /* AVSVideoStreamsTest.swift */; };
 		639290A4252CA53200046171 /* CallSnapshotTestFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639290A3252CA53100046171 /* CallSnapshotTestFixture.swift */; };
 		639290A7252DEDB500046171 /* WireCallCenterV3+Degradation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639290A6252DEDB400046171 /* WireCallCenterV3+Degradation.swift */; };
@@ -1105,7 +1105,7 @@
 		634976F7268A200C00824A05 /* AVSClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVSClient.swift; sourceTree = "<group>"; };
 		634976FC268A205A00824A05 /* AVSClientList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVSClientList.swift; sourceTree = "<group>"; };
 		63497701268A20EC00824A05 /* AVSParticipantsChange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVSParticipantsChange.swift; sourceTree = "<group>"; };
-		63497709268A250E00824A05 /* JSONStringEncodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONStringEncodable.swift; sourceTree = "<group>"; };
+		63497709268A250E00824A05 /* Encodable+JSONString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Encodable+JSONString.swift"; sourceTree = "<group>"; };
 		6349771D268B7C4300824A05 /* AVSVideoStreamsTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVSVideoStreamsTest.swift; sourceTree = "<group>"; };
 		639290A3252CA53100046171 /* CallSnapshotTestFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallSnapshotTestFixture.swift; sourceTree = "<group>"; };
 		639290A6252DEDB400046171 /* WireCallCenterV3+Degradation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WireCallCenterV3+Degradation.swift"; sourceTree = "<group>"; };
@@ -2351,7 +2351,7 @@
 				5E8BB89D2147E9DF00EEA64B /* AVSWrapper+Handlers.swift */,
 				F90EC5A21E7BF1AC00A6779E /* AVSWrapper.swift */,
 				5E8BB8982147CD3F00EEA64B /* AVSBridging.swift */,
-				63497709268A250E00824A05 /* JSONStringEncodable.swift */,
+				63497709268A250E00824A05 /* Encodable+JSONString.swift */,
 			);
 			path = AVS;
 			sourceTree = "<group>";
@@ -3525,7 +3525,7 @@
 				634976F8268A200C00824A05 /* AVSClient.swift in Sources */,
 				D522571E2062552800562561 /* AssetDeletionRequestStrategy.swift in Sources */,
 				161ACB1623F1AFB000ABFF33 /* SessionManager+CallKitManagerDelegate.swift in Sources */,
-				6349770A268A250E00824A05 /* JSONStringEncodable.swift in Sources */,
+				6349770A268A250E00824A05 /* Encodable+JSONString.swift in Sources */,
 				1658C2371F503CF800889F22 /* FlowManager.swift in Sources */,
 				7CD279882338E52000E638CD /* ProcessInfo+SystemBootTime.swift in Sources */,
 				549710081F6FF5C100026EDD /* NotificationInContext+UserSession.swift in Sources */,

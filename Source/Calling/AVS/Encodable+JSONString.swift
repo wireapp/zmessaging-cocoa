@@ -15,13 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
+
 import Foundation
 
-protocol JSONStringEncodable: Encodable { }
-
-extension JSONStringEncodable {
+extension Encodable {
     func jsonString(_ encoder: JSONEncoder = JSONEncoder()) -> String? {
-        guard let data = try? JSONEncoder().encode(self) else { return nil }
+        guard let data = try? encoder.encode(self) else { return nil }
         return String(data: data, encoding: .utf8)
     }
 }
