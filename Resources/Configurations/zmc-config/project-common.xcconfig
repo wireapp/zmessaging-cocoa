@@ -16,32 +16,17 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-#include "./warnings.xcconfig"
+#include "warnings.xcconfig"
+#include "ios.xcconfig"
 #include "../version.xcconfig"
-
-// Architectures
-//
-SDKROOT = iphoneos
-ARCHS[sdk=iphoneos*] = arm64 armv7
-ARCHS[sdk=iphonesimulator*] = x86_64
-VALID_ARCHS[sdk=iphoneos*] = arm64 armv7
-SUPPORTED_PLATFORMS = iphoneos iphonesimulator
 
 // Code Signing
 //
 CODE_SIGN_IDENTITY[sdk=iphoneos*] = iPhone Developer
 
-// Deployment
-//
-IPHONEOS_DEPLOYMENT_TARGET = 10.0
-TARGETED_DEVICE_FAMILY = 1,2
-
-DYLIB_INSTALL_NAME_BASE = @rpath
-FRAMEWORK_VERSION = A
 
 // Linking
 //
-OTHER_LDFLAGS = -ObjC
 CARTHAGE_FOLDER[sdk=iphoneos*] = $(PROJECT_DIR)/Carthage/Build/iOS
 CARTHAGE_FOLDER[sdk=iphonesimulator*] = $(PROJECT_DIR)/Carthage/Build/iOS
 FRAMEWORK_SEARCH_PATHS = $(inherited) $(CARTHAGE_FOLDER) $(PLATFORM_DIR)/Developer/Library/Frameworks
