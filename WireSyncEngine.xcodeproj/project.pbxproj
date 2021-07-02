@@ -497,7 +497,6 @@
 		A9B53AAA24E12E240066FCC6 /* ZMAccountDeletedReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9B53AA924E12E240066FCC6 /* ZMAccountDeletedReason.swift */; };
 		A9C02605266F5B4B002E542B /* ZMClientRegistrationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C02604266F5B4B002E542B /* ZMClientRegistrationStatus.swift */; };
 		A9C0260A266F5D1C002E542B /* ZMClientRegistrationStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C02609266F5D1B002E542B /* ZMClientRegistrationStatusTests.swift */; };
-		A9C0261C266F62E3002E542B /* UserProfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C0261B266F62E3002E542B /* UserProfileTests.swift */; };
 		AF6415A41C9C17FF00A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt in Resources */ = {isa = PBXBuildFile; fileRef = AF6415A01C9C151700A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt */; };
 		AF6415A51C9C180200A535F5 /* ExternalMessageTextFixture.txt in Resources */ = {isa = PBXBuildFile; fileRef = AF6415A11C9C151700A535F5 /* ExternalMessageTextFixture.txt */; };
 		BF00441B1C737CE9007A6EA4 /* PushNotificationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF00441A1C737CE9007A6EA4 /* PushNotificationStatus.swift */; };
@@ -1177,7 +1176,6 @@
 		A9C02604266F5B4B002E542B /* ZMClientRegistrationStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZMClientRegistrationStatus.swift; sourceTree = "<group>"; };
 		A9C02609266F5D1B002E542B /* ZMClientRegistrationStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMClientRegistrationStatusTests.swift; sourceTree = "<group>"; };
 		A9C02611266F5DB8002E542B /* ZMClientRegistrationStatusTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZMClientRegistrationStatusTests.h; sourceTree = "<group>"; };
-		A9C0261B266F62E3002E542B /* UserProfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileTests.swift; sourceTree = "<group>"; };
 		A9C02620266F630E002E542B /* UserProfileTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UserProfileTests.h; sourceTree = "<group>"; };
 		A9F269C6257800940021B99A /* UserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserTests.swift; sourceTree = "<group>"; };
 		AF6415A01C9C151700A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = EncryptedBase64EncondedExternalMessageTestFixture.txt; sourceTree = "<group>"; };
@@ -2278,7 +2276,6 @@
 				163BB8151EE1B1AC00DF9384 /* SearchTests.swift */,
 				A9C02620266F630E002E542B /* UserProfileTests.h */,
 				54877C9419922C0B0097FB58 /* UserProfileTests.m */,
-				A9C0261B266F62E3002E542B /* UserProfileTests.swift */,
 				F190E0A81E8D516D003E81F8 /* UserProfileImageV3Tests.swift */,
 				3EEA678A199D079600AF7665 /* UserTests.m */,
 				A9F269C6257800940021B99A /* UserTests.swift */,
@@ -3034,7 +3031,6 @@
 				169BA1F225ECEB3300374343 /* MockMediaManager.swift in Sources */,
 				169BA23925ED103900374343 /* IntegrationTest+Messages.swift in Sources */,
 				169BA24D25EF753100374343 /* MockReachability.swift in Sources */,
-				A9C0261C266F62E3002E542B /* UserProfileTests.swift in Sources */,
 				169BA25625EF78F200374343 /* ZMUserSession+DefaultConfiguration.swift in Sources */,
 				169BA24F25EF76A400374343 /* NetworkStateRecorder.swift in Sources */,
 				169BA21D25ED0FAC00374343 /* ConversationTests+OTR.swift in Sources */,
