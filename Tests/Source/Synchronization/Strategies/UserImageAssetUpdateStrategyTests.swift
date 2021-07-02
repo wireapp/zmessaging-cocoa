@@ -72,7 +72,7 @@ class UserImageAssetUpdateStrategyTests : MessagingTest {
                                            applicationStatus: mockApplicationStatus,
                                            imageUploadStatus: updateStatus)
         
-        self.syncMOC.zm_userImageCache = UserImageLocalCache()
+        self.syncMOC.zm_userImageCache = UserImageLocalCache(location: nil)
         self.uiMOC.zm_userImageCache = self.syncMOC.zm_userImageCache
     }
     
