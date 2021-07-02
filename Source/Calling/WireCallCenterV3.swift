@@ -102,6 +102,9 @@ public class WireCallCenterV3: NSObject {
     /// once, but we may need to provide AVS with an updated list during the call.
     var clientsRequestCompletionsByConversationId = [UUID: (String) -> Void]()
 
+    let encoder = JSONEncoder()
+    let decoder = JSONDecoder()
+
     // MARK: - Initialization
     
     deinit {

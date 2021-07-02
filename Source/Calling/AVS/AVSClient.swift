@@ -46,10 +46,8 @@ public struct AVSClient: Hashable {
 extension AVSClient: Codable {
 
     enum CodingKeys: String, CodingKey {
-
         case userId = "userid"
         case clientId = "clientid"
-
     }
 
 }

@@ -20,7 +20,7 @@ import Foundation
 protocol JSONStringEncodable: Encodable { }
 
 extension JSONStringEncodable {
-    var json: String? {
+    func jsonString(_ encoder: JSONEncoder = JSONEncoder()) -> String? {
         guard let data = try? JSONEncoder().encode(self) else { return nil }
         return String(data: data, encoding: .utf8)
     }

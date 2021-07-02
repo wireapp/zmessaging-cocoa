@@ -51,6 +51,7 @@ public class AVSWrapper: AVSWrapperType {
 
     /// The wrapped `wcall` instance.
     private let handle: UInt32
+    private let encoder = JSONEncoder()
 
     // MARK: - Initialization
 
@@ -187,9 +188,12 @@ public class AVSWrapper: AVSWrapperType {
         wcall_config_update(handle, httpStatusCode == 200 ? 0 : EPROTO, callConfig ?? "")
     }
 
-    /// Requests AVS to load video streams for the given clients list
+    /// Requests AVS to load at list of video streams
+    /// - Parameters:
+    ///   - videoStreams: The payload containing a list of clients for which to load video
+    ///   - conversationId: The conversation identifier linked to the call
     public func requestVideoStreams(_ videoStreams: AVSVideoStreams, conversationId: UUID) {
-        wcall_request_video_streams(handle, conversationId.transportString(), 0, videoStreams.json)
+        wcall_request_video_streams(handle, conversationId.transportString(), 0, videoStreams.jsonString(encoder))
     }
 
     // MARK: - C Callback Handlers

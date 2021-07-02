@@ -21,7 +21,7 @@ import XCTest
 @testable import WireSyncEngine
 
 class AVSVideoStreamsTest: XCTestCase {
-    func testThat_JsonStringValue_IsConformTo_avsAPI() {
+    func testThatJSONStringValue_ConformsToAVSAPI() {
         // given
         let conversationId = UUID()
         let userId = UUID()
