@@ -16,12 +16,3 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@testable import WireSyncEngine
-
-extension UserChangeInfo {
-    public static func add(observer: ZMUserObserver,
-                           user: UserType,
-                           userSession: ZMUserSession) -> NSObjectProtocol? {
-        return add(observer: observer, for: user, in: userSession.managedObjectContext)
-    }    
-}
