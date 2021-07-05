@@ -33,7 +33,7 @@ class AVSVideoStreamsTest: XCTestCase {
         {\
         "convid":"\(conversationId.transportString())",\
         "clients":[\
-        \(client.json!)\
+        \(client.jsonString()!)\
         ]\
         }
         """
@@ -42,8 +42,6 @@ class AVSVideoStreamsTest: XCTestCase {
         let sut = AVSVideoStreams(conversationId: conversationId.transportString(), clients: [client])
 
         // then
-        XCTAssertEqual(sut.json, expectedJson)
+        XCTAssertEqual(sut.jsonString(), expectedJson)
     }
 }
-
-extension AVSClient: JSONStringEncodable {}
