@@ -188,7 +188,7 @@ public class AVSWrapper: AVSWrapperType {
         wcall_config_update(handle, httpStatusCode == 200 ? 0 : EPROTO, callConfig ?? "")
     }
 
-    /// Requests AVS to load at list of video streams
+    /// Requests AVS to load a list of video streams
     /// - Parameters:
     ///   - videoStreams: The payload containing a list of clients for which to load video
     ///   - conversationId: The conversation identifier linked to the call
