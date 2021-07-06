@@ -129,8 +129,8 @@ public class StrategyDirectory: NSObject, StrategyDirectoryProtocol {
             AssetV3PreviewDownloadRequestStrategy(
                 withManagedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory),
-            ClientMessageTranscoder(
-                in: syncMOC,
+            ClientMessageRequestStrategy(
+                withManagedObjectContext: syncMOC,
                 localNotificationDispatcher: pushMessageHandler,
                 applicationStatus: applicationStatusDirectory),
             DeliveryReceiptRequestStrategy(
@@ -155,7 +155,7 @@ public class StrategyDirectory: NSObject, StrategyDirectoryProtocol {
             LinkPreviewAssetDownloadRequestStrategy(
                 withManagedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory),
-            LinkPreviewUploadRequestStrategy(
+            LinkPreviewUpdateRequestStrategy(
                 withManagedObjectContext: syncMOC,
                 applicationStatus: applicationStatusDirectory),
             ImageV2DownloadRequestStrategy(
