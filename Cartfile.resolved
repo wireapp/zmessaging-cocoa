@@ -1,7 +1,7 @@
 github "billypchan/libPhoneNumber-iOS" "0.9.3"
 github "billypchan/ocmock" "v3.4.3"
 github "billypchan/wire-ios-cryptobox" "26.0.2"
-github "billypchan/wire-ios-data-model" "259.1"
+github "billypchan/wire-ios-data-model" "259.1.1"
 github "billypchan/wire-ios-images" "34.0.1"
 github "billypchan/wire-ios-link-preview" "30.0.2"
 github "billypchan/wire-ios-mocktransport" "129.1.2"
