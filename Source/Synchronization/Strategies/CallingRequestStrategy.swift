@@ -28,7 +28,7 @@ public final class CallingRequestStrategy: AbstractRequestStrategy, ZMSingleRequ
     private let zmLog = ZMSLog(tag: "calling")
     
     private var callCenter: WireCallCenterV3?
-    private let genericMessageStrategy: GenericMessageRequestStrategy
+    private let messageSync: ProteusMessageSync<GenericMessageEntity>
     private let flowManager: FlowManagerType
 
     private let callEventStatus: CallEventStatus
@@ -48,8 +48,8 @@ public final class CallingRequestStrategy: AbstractRequestStrategy, ZMSingleRequ
                 clientRegistrationDelegate: ClientRegistrationDelegate,
                 flowManager: FlowManagerType,
                 callEventStatus: CallEventStatus) {
-        
-        self.genericMessageStrategy = GenericMessageRequestStrategy(context: managedObjectContext, clientRegistrationDelegate: clientRegistrationDelegate)
+
+        self.messageSync = ProteusMessageSync(context: managedObjectContext, applicationStatus: applicationStatus)
         self.flowManager = flowManager
         self.callEventStatus = callEventStatus
         
@@ -79,15 +79,15 @@ public final class CallingRequestStrategy: AbstractRequestStrategy, ZMSingleRequ
     
     public override func nextRequestIfAllowed() -> ZMTransportRequest? {
         let request = callConfigRequestSync.nextRequest() ??
-                        clientDiscoverySync.nextRequest() ??
-                        genericMessageStrategy.nextRequest()
+                      clientDiscoverySync.nextRequest() ??
+                      messageSync.nextRequest()
         
         request?.forceToVoipSession()
         return request
     }
     
     public func dropPendingCallMessages(for conversation: ZMConversation) {
-        genericMessageStrategy.expireEntities(withDependency: conversation)
+        messageSync.expireMessages(withDependency: conversation)
     }
     
 // MARK: - Single Request Transcoder
@@ -173,7 +173,7 @@ public final class CallingRequestStrategy: AbstractRequestStrategy, ZMSingleRequ
     // MARK: - Context Change Tracker
     
     public var contextChangeTrackers: [ZMContextChangeTracker] {
-        return [self, self.genericMessageStrategy]
+        return [self] + messageSync.contextChangeTrackers
     }
     
     public func fetchRequestForTrackedObjects() -> NSFetchRequest<NSFetchRequestResult>? {
@@ -274,10 +274,13 @@ extension CallingRequestStrategy: WireCallCenterTransport {
             
             let genericMessage = GenericMessage(content: Calling(content: dataString))
             let recipients = targets.map { self.recipients(for: $0, in: self.managedObjectContext) } ?? .conversationParticipants
+            let message = GenericMessageEntity(conversation: conversation,
+                                               message: genericMessage,
+                                               targetRecipients: recipients,
+                                               completionHandler: nil)
 
-
-            self.genericMessageStrategy.schedule(message: genericMessage, inConversation: conversation, targetRecipients: recipients) { response in
-                if response.httpStatus == 201 {
+            self.messageSync.sync(message) { (result, response) in
+                if case .success(()) = result {
                     completionHandler(response.httpStatus)
                 }
             }
