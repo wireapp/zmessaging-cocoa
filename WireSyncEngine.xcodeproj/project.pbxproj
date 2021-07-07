@@ -479,7 +479,6 @@
 		A9A2395E268DEC3D004B1C22 /* WireDataModel.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9A23946268DEC3C004B1C22 /* WireDataModel.xcframework */; };
 		A9A23960268DEC3D004B1C22 /* WireProtos.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9A23947268DEC3C004B1C22 /* WireProtos.xcframework */; };
 		A9A23962268DEC3D004B1C22 /* WireCryptobox.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9A23948268DEC3C004B1C22 /* WireCryptobox.xcframework */; };
-		A9A23964268DEC3D004B1C22 /* WireMockTransport.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9A23949268DEC3C004B1C22 /* WireMockTransport.xcframework */; };
 		A9A23966268DEC3D004B1C22 /* SwiftProtobuf.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9A2394A268DEC3C004B1C22 /* SwiftProtobuf.xcframework */; };
 		A9A23968268DEC3D004B1C22 /* WireTransport.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9A2394B268DEC3D004B1C22 /* WireTransport.xcframework */; };
 		A9A2396A268DEC3D004B1C22 /* WireSystem.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9A2394C268DEC3D004B1C22 /* WireSystem.xcframework */; };
@@ -489,6 +488,7 @@
 		A9B53AAA24E12E240066FCC6 /* ZMAccountDeletedReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9B53AA924E12E240066FCC6 /* ZMAccountDeletedReason.swift */; };
 		A9C02605266F5B4B002E542B /* ZMClientRegistrationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C02604266F5B4B002E542B /* ZMClientRegistrationStatus.swift */; };
 		A9C0260A266F5D1C002E542B /* ZMClientRegistrationStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C02609266F5D1B002E542B /* ZMClientRegistrationStatusTests.swift */; };
+		A9CCBA952696631100122380 /* WireMockTransport.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9A23949268DEC3C004B1C22 /* WireMockTransport.xcframework */; };
 		AF6415A41C9C17FF00A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt in Resources */ = {isa = PBXBuildFile; fileRef = AF6415A01C9C151700A535F5 /* EncryptedBase64EncondedExternalMessageTestFixture.txt */; };
 		AF6415A51C9C180200A535F5 /* ExternalMessageTextFixture.txt in Resources */ = {isa = PBXBuildFile; fileRef = AF6415A11C9C151700A535F5 /* ExternalMessageTextFixture.txt */; };
 		BF00441B1C737CE9007A6EA4 /* PushNotificationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF00441A1C737CE9007A6EA4 /* PushNotificationStatus.swift */; };
@@ -1422,6 +1422,7 @@
 			files = (
 				544BA1571A43424F00D3B852 /* WireSyncEngine.framework in Frameworks */,
 				A9A23978268DEC53004B1C22 /* WireTesting.xcframework in Frameworks */,
+				A9CCBA952696631100122380 /* WireMockTransport.xcframework in Frameworks */,
 				A9A23976268DEC53004B1C22 /* OCMock.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1445,7 +1446,6 @@
 				A9A2395E268DEC3D004B1C22 /* WireDataModel.xcframework in Frameworks */,
 				A9A2395A268DEC3D004B1C22 /* WireImages.xcframework in Frameworks */,
 				A9A23960268DEC3D004B1C22 /* WireProtos.xcframework in Frameworks */,
-				A9A23964268DEC3D004B1C22 /* WireMockTransport.xcframework in Frameworks */,
 				A9A23958268DEC3D004B1C22 /* ZipArchive.xcframework in Frameworks */,
 				A9A23952268DEC3D004B1C22 /* PINCache.xcframework in Frameworks */,
 				A9A23956268DEC3D004B1C22 /* WireRequestStrategy.xcframework in Frameworks */,
