@@ -739,7 +739,6 @@
 		09914E521BD6613D00C10BF8 /* ZMDecodedAPSMessageTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZMDecodedAPSMessageTest.m; sourceTree = "<group>"; };
 		0994E1DD1B835C4900A51721 /* ios-test-host.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "ios-test-host.xcconfig"; sourceTree = "<group>"; };
 		0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "ios-test-target.xcconfig"; sourceTree = "<group>"; };
-		0994E1DF1B835C4900A51721 /* ios.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ios.xcconfig; sourceTree = "<group>"; };
 		0994E1E21B835C4900A51721 /* project-common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "project-common.xcconfig"; sourceTree = "<group>"; };
 		0994E1E31B835C4900A51721 /* project-debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "project-debug.xcconfig"; sourceTree = "<group>"; };
 		0994E1E41B835C4900A51721 /* project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = project.xcconfig; sourceTree = "<group>"; };
@@ -1173,6 +1172,7 @@
 		A9692F881986476900849241 /* NSString_NormalizationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSString_NormalizationTests.m; sourceTree = "<group>"; };
 		A97E4F55267CF681006FC545 /* ZMUserSessionTestsBase+ZMUserSessionConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserSessionTestsBase+ZMUserSessionConfiguration.swift"; sourceTree = "<group>"; };
 		A97E4F5A267CFB2D006FC545 /* ZMUserSessionTests_NetworkState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZMUserSessionTests_NetworkState.swift; sourceTree = "<group>"; };
+		A97E5AF626945DE70030D045 /* ios.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = ios.xcconfig; path = "Carthage/Checkouts/wire-ios-system/Resources/Configurations/zmc-config/ios.xcconfig"; sourceTree = SOURCE_ROOT; };
 		A9A239AE268E124D004B1C22 /* ZMOperationLoopTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZMOperationLoopTests.h; sourceTree = "<group>"; };
 		A9A239B2268E1514004B1C22 /* ZMOperationLoopTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZMOperationLoopTests.swift; sourceTree = "<group>"; };
 		A9A239CF268E1CFD004B1C22 /* ZMSyncStrategyTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZMSyncStrategyTests.h; sourceTree = "<group>"; };
@@ -1515,9 +1515,9 @@
 		0994E1DB1B835C4900A51721 /* zmc-config */ = {
 			isa = PBXGroup;
 			children = (
+				A97E5AF626945DE70030D045 /* ios.xcconfig */,
 				0994E1DD1B835C4900A51721 /* ios-test-host.xcconfig */,
 				0994E1DE1B835C4900A51721 /* ios-test-target.xcconfig */,
-				0994E1DF1B835C4900A51721 /* ios.xcconfig */,
 				0994E1E21B835C4900A51721 /* project-common.xcconfig */,
 				0994E1E31B835C4900A51721 /* project-debug.xcconfig */,
 				0994E1E41B835C4900A51721 /* project.xcconfig */,
