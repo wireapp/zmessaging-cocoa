@@ -20,12 +20,5 @@
 #include "../../../Carthage/Checkouts/wire-ios-system/Resources/Configurations/zmc-config/ios.xcconfig"
 #include "../version.xcconfig"
 
-
-// Linking
-//
-CARTHAGE_FOLDER[sdk=iphoneos*] = $(PROJECT_DIR)/Carthage/Build/iOS
-CARTHAGE_FOLDER[sdk=iphonesimulator*] = $(PROJECT_DIR)/Carthage/Build/iOS
-
-
 // info.plist
 INFOPLIST_PREPROCESS = YES
