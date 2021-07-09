@@ -40,9 +40,10 @@ extension ZMUser {
     func createFederatedOneToOne() -> ZMConversation? {
         let selfUser = ZMUser.selfUser(in: managedObjectContext!)
         let otherUser = self
+        let name = [otherUser.name ?? "-", selfUser.name ?? "-"].sorted().joined(separator: ", ")
         let conversation = ZMConversation.insertGroupConversation(moc: managedObjectContext!,
                                                                   participants: [selfUser, otherUser],
-                                                                  name: otherUser.name)
+                                                                  name: name)
 
         return conversation
     }
